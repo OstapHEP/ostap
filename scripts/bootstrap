@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd )"
+BUILD_DIR=$PROJECT_DIR/build
+
+mkdir -p $BUILD_DIR
+cd $BUILD_DIR
+export DYLD_LIBRARY_PATH=$BUILD_DIR/lib
+export LD_LIBRARY_PATH=$BUILD_DIR/lib
+cmake .. && make install && python ../python/example.py
