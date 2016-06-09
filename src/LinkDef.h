@@ -4,14 +4,14 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ namespace ostap;
-#pragma link C++ namespace ostap::math;
+// #pragma link C++ namespace ostap;
+// #pragma link C++ namespace ostap::math;
 
 #pragma link C++ class ostap::math::ValueWithError;
+#pragma link C++ class Eostap::math::qual_To;
 
-#pragma link C++ function lomont_compare_double;
-#pragma link C++ function next_double;
-#pragma link C++ function ostap::math::absMin<float>;
-#pragma link C++ function ostap::math::<double>;
+#pragma link C++ function ostap::math::lomont_compare_double;
+#pragma link C++ function ostap::math::next_double;
+#pragma link C++ function ostap::math::absMin;
 
 #endif  // __CINT__

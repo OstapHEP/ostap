@@ -2,4 +2,4 @@
 #include "ostap/math/ValueWithError.h"
 #include "ostap/math/Math.h"
 
-static const auto a = ostap::math::absMin<float>(1.0, 1.1);
+static const float _a = ostap::math::absMin<float>(1.0, 1.1);
