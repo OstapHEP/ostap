@@ -5,6 +5,6 @@ BUILD_DIR=$PROJECT_DIR/build
 
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
-export DYLD_LIBRARY_PATH=$BUILD_DIR/lib
-export LD_LIBRARY_PATH=$BUILD_DIR/lib
+export DYLD_LIBRARY_PATH=$BUILD_DIR/lib:$DYLD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$BUILD_DIR/lib:$LD_LIBRARY_PATH
 cmake .. && make install && python ../python/example.py
