@@ -12,6 +12,7 @@
 // GaudiKernel
 // ============================================================================
 #include "ostap/math/Lomont.h"
+#include "ostap/math/Math.h"
 // ============================================================================
 // Boost
 // ============================================================================
@@ -355,6 +356,8 @@ bool ostap::math::lomont_compare_double(const double af, const double bf,
 // ============================================================================
 double ostap::math::next_double(const double ad, const short ulps) {
   // ==========================================================================
+  ostap::math::knuth_equal_to_double(1,2);
+  ostap::math::absMin<float>(1.0,2.0);
   /// the final check
   static_assert(std::numeric_limits<double>::is_specialized &&
                     std::numeric_limits<Long>::is_specialized &&

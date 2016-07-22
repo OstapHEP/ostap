@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--- $Id: -->
+<!--- Author  : Juan PALACIOS -->
+<!--- Created : 2008-06-20 -->
+
+<lcgdict>
+  <class pattern = "ostap::math::ValueWithError*"       />
+  <class pattern = "ostap::math::Equal_To<*>"       />
+  <function name = "ostap::math::pow"             />
+  <function name = "ostap::math::::knuth_equal_to_double"  />
+</lcgdict>
