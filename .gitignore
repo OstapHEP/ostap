@@ -1,1 +1,19 @@
+# Python files #
+################
+# setup.py working directory
 build
+
+# Compiled source #
+###################
+*.py[ocd]
+
+# Editor temporary/working/backup files #
+#########################################
+.#*
+*~
+
+# Patches #
+###########
+*.patch
+*.diff
+
