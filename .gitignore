@@ -11,6 +11,15 @@ build
 #########################################
 .#*
 *~
+*.egg-info
+*.d
+*.o
+*.so
+
+# Log files and alike
+#####################
+*.log
+*.out
 
 # vscode
 .vscode/.*
@@ -20,3 +29,13 @@ build
 *.patch
 *.diff
 
+# Media files
+#############
+*.png
+*.jpg
+*.eps
+*.gif
+
+# ROOT files
+############
+*.root
