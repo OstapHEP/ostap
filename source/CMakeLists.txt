@@ -1,5 +1,6 @@
 # root_generate_dictionary(ostap_dict ${CMAKE_CURRENT_SOURCE_DIR}/dict/Dict.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/selections.xml)
 find_package(Boost REQUIRED)
+find_package(GSL   REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${Boost_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS})
 REFLEX_GENERATE_DICTIONARY(ostap_dict src/dict/Dict.h SELECTION src/dict/selections.xml)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostap_dict_rdict.pcm DESTINATION ${LIBRARY_OUTPUT_PATH})

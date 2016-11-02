@@ -1,0 +1,1467 @@
+// $Id$
+// ============================================================================
+#ifndef OSTAP_MATRIXUTILS_H
+#define OSTAP_MATRIXUTILS_H 1
+// ============================================================================
+// Include files
+// ============================================================================
+// STD & STL 
+// ============================================================================
+#include <algorithm>
+#include <functional>
+#include <utility>
+#include <cmath>
+#include <array>
+// ============================================================================
+// ROOT
+// ============================================================================
+#include "Math/SMatrix.h"
+#include "Math/SVector.h"
+#include "Math/Point3D.h"
+#include "Math/Vector4D.h"
+#include "Math/Vector3D.h"
+// ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/Math.h"
+// ============================================================================
+/** @file
+ *  The collection of functions for manipulation with matrices and vectors.
+ *  In particular it includes
+ *     - (re)setting all elements of matrices and vectors
+ *     - set the diagonal matrix to be proportional to unit matrix 
+ *     - efficient scaling of matrices&vectors
+ *     - minimal&maximal elements of matrices and vectors
+ *     - indices of the minimal&maximal elements of matrices and vectors 
+ *     - minima&maximal by absolute value elements of matrices and vectors 
+ *     - indices of minima&maximal by absolute value elements of 
+ *       matrices and vectors 
+ *     - the trace of the square matrices
+ *     - find the minimal/maximal/abs.minimal&abs.maximal 
+ *       diagonal elements of square matrices
+ *     - count number of elements which satisfy some criteria
+ *     - count number of diagonal elements which satisfy some criteria
+ *     - check the presence of elements which satisfy some criteria
+ *     - check the presence of diagonal elements which satisfy some criteria
+ *     - efficient element-by-element "equality" for matrices 
+ *     - few specific "updates" (in the spirit of BLAS)
+ *
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ */
+// ============================================================================
+namespace Ostap
+{
+  // ==========================================================================
+  namespace Math 
+  {
+    // ========================================================================
+    /// generic class 
+    template <class T>  class Equal_To ;
+    /// specialisation for matrices 
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    struct Equal_To<ROOT::Math::SMatrix<T,D1,D2,R> > 
+    {
+    public:
+      // ======================================================================
+      /** constructor
+       *  @see Ostap::Math::mULPS_double
+       */
+      Equal_To ( const unsigned int eps  = mULPS_double ) : m_cmp ( eps ) {}
+      // ======================================================================
+      /// comparison:
+      inline bool operator()
+      ( const ROOT::Math::SMatrix<T,D1,D2,R>& v1 , 
+        const ROOT::Math::SMatrix<T,D1,D2,R>& v2 ) const  
+      {
+        return &v1 == &v2 || 
+          std::equal ( v1.begin() , v1.end() , v2.begin() , m_cmp ) ;
+      }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the evaluator 
+      Equal_To<T> m_cmp ;                                 // the evaluator 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** set all elements of vector equal to some scalar value 
+     * 
+     *  @code 
+     *
+     *  Ostap::Vector3      vct   = ... ;
+     * 
+     *  // set all elements to be equal to 10.0 :
+     *  Ostap::Math::setToScalar( vct  , 10.0 ) ;
+     *  // set all elements to be eual to 0 :
+     *  Ostap::Math::setToScalar( vct  ) ;
+     * 
+     *  @endcode 
+     *  
+     *  @param m      (input/output)vector  to be modified
+     *  @param value  (input) new value for all vector elements 
+     *  @return number of modified vector elemenets (for consistency)
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D>
+    inline size_t 
+    setToScalar
+    ( ROOT::Math::SVector<T,D>& m , const T& value = T() ) 
+    { 
+      std::fill ( m.begin() , m.end() , value ) ; 
+      return D ;
+    } 
+    // ========================================================================
+    /** set all elements of matrix equal to some scalar value 
+     * 
+     *  @code 
+     *
+     *  Ostap::Matrix4x3    mtrx1 = ... ;
+     *  Ostap::SymMatrix5x5 mtrx2 = ... ; 
+     * 
+     *  // set all elements to be equal to 10.0 :
+     *  Ostap::Math::setToScalar( mtrx1 , 10.0 ) ;
+     *  // set all elements to be eual to 0 :
+     *  Ostap::Math::setToScalar( mtrx2 , 10.0 ) ;
+     * 
+     *  @endcode 
+     *  
+     *  @param m      (input/output) matrix to be modified
+     *  @param value  (input) new value for all matrix elements 
+     *  @return number of modified matrix elemenets 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    inline size_t 
+    setToScalar
+    ( ROOT::Math::SMatrix<T,D1,D2,R>& m , const T& value = T() ) 
+    { 
+      std::fill ( m.begin() , m.end() , value ) ; 
+      return m.end() - m.begin() ;
+    } 
+    // ========================================================================
+    /** set square matrix to be proportional to unit matrix 
+     *  
+     *  @code
+     * 
+     *  Ostap::Matrix4x4    mtrx1 = ... ;
+     *  Ostap::SymMatrix3x3 mtrx2 = ... ;
+     * 
+     *  // set mtrx1 to be equal unit matrix 
+     *  Ostap::Math::setToUnit ( mtrx1 ) ; 
+     *  // set mtrx2 to be equal unit matrix, multiplied by 2  
+     *  Ostap::Math::setToUnit ( mtrx2 , 2.0 ) ;
+     *  @endcode 
+     * 
+     *  @param[in,out] m  matrix to be modified 
+     *  @param[in] value  value to be used as diagonal elements
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */  
+    template <class T, unsigned int D, class R>
+    inline size_t 
+    setToUnit
+    ( ROOT::Math::SMatrix<T,D,D,R>& m , const T& value = T(1) ) 
+    { 
+      /// nullify the matrix:
+      std::fill ( m.begin() , m.end() , T(0.0) ) ; 
+      /// set diagonal elements 
+      for ( unsigned int i = 0 ; i < D ; ++i ) { m(i,i) = value ; }
+      return m.end() - m.begin() ;
+    }
+    // ========================================================================
+    /** efficient scale all elements of the matrix
+     *
+     *  @code 
+     * 
+     *  Ostap::Matrix4x3    mtrx1 = ...  ;
+     *  Ostap::SymMatrix5x5 mtrx2 = ... ;
+     *
+     *  // multiply all elements by 100:
+     *  Ostap::Math::scale ( mtrx1 , 100.0   ) ;
+     *
+     *  // divide all elements by 4 :
+     *  Ostap::Math::scale ( mtrx2 , 1.0/4.0 ) ;
+     *  
+     *  @endcode  
+     * 
+     *  @param m      (input/output) matrix to be modified
+     *  @param value  (input) scaling coefficient 
+     *  @return number of modified matrix elemenets 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    inline size_t 
+    scale 
+    ( ROOT::Math::SMatrix<T,D1,D2,R>& m , const T& value ) 
+    { 
+      typedef typename ROOT::Math::SMatrix<T,D1,D2,R>::iterator iterator ;
+      for ( iterator it = m.begin() ;  m.end() != it ; ++it ) { (*it) *= value ; }
+      return m.end() - m.begin() ;
+    } 
+    // ========================================================================
+    /** efficient scale all elements of the vector
+     *
+     *  @code 
+     * 
+     *  Ostap::Vector4      vct = ...  ;
+     *
+     *  // multiply all elements by 100:
+     *  Ostap::Math::scale ( vct , 100.0   ) ;
+     *
+     *  @endcode  
+     * 
+     *  @param m      (input/output) vector to be modified
+     *  @param value  (input) scaling coefficient 
+     *  @return number of modified vector elemenets  (for consistency) 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D>
+    inline size_t 
+    scale 
+    ( ROOT::Math::SVector<T,D>& m , const T& value ) 
+    { 
+      typedef typename ROOT::Math::SVector<T,D>::iterator iterator ;
+      for ( iterator it = m.begin() ;  m.end() != it ; ++it ) { (*it) *= value ; }
+      return D ;
+    } 
+    // ========================================================================
+    /** @struct _AbsCompare
+     *  The trivial structure for comparison of "numbers" by the absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-25
+     */
+    template <class T>
+    struct _AbsCompare : public std::binary_function<T,T,bool>
+    {
+      inline bool operator() ( const T v1 , const T v2 ) const 
+      { return std::abs( v1 ) < std::abs( v2 ) ; }
+    } ;
+    // ========================================================================
+    /** find the maximal element in matrix 
+     *  @param m (input) matrix to be studied
+     *  @return the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D1,unsigned int D2, class R>
+    inline T 
+    max_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
+    { return *std::max_element ( m.begin() , m.end() ) ; }
+    // ========================================================================
+    /** find the minimal element in matrix 
+     *  @param m (input) matrix to be studied
+     *  @return the minimal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D1,unsigned int D2, class R>
+    inline T 
+    min_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
+    { return *std::min_element ( m.begin() , m.end() ) ; }
+    // ========================================================================
+    /** find the maximal element in vector 
+     *  @param m (input) vector to be studied
+     *  @return the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D>
+    inline T 
+    max_element 
+    ( const ROOT::Math::SVector<T,D>& m ) 
+    { return *std::max_element ( m.begin() , m.end() ) ; }
+    // ========================================================================
+    /** find the minimal element in vector 
+     *  @param m (input) vector to be studied
+     *  @return the minimal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D>
+    inline T 
+    min_element 
+    ( const ROOT::Math::SVector<T,D>& m ) 
+    { return *std::min_element ( m.begin() , m.end() ) ; }
+    // ========================================================================
+    /** find the element in matrix with the maximal absolute value  
+     *
+     *  @code
+     *  
+     *  const Ostap::Matrix4x3 mtrx1 = ... ;
+     *  const Ostap::Matrix4x3 mtrx2 = ... ;
+     * 
+     *  // find the maximal absolute difference between elements : 
+     *  const double diff  = Ostap::Math::maxabs_element ( mtrx1 - mtrx2 ) ;
+     *  if ( diff < tolerance ) 
+     *   {
+     *      std::cout << " matrices are almost identical " << std::endl ;
+     *   }
+     *  
+     *  @endcode 
+     *  
+     *  @param m (input) matrix to be studied
+     *  @return the element with the maximal absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D1,unsigned int D2, class R>
+    inline T 
+    maxabs_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
+    { return *std::max_element ( m.begin() , m.end()  , _AbsCompare<T>() ) ; }
+    // ========================================================================
+    /** find the element in matrix with the minimal absolute value  
+     *  @param m (input) matrix to be studied
+     *  @return the element with the minimal absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D1,unsigned int D2, class R>
+    inline T 
+    minabs_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
+    { return *std::min_element ( m.begin() , m.end()  , _AbsCompare<T>() ) ; }
+    // ========================================================================
+    /** find an index of the  maximal element in matrix 
+     *  @param m (input) matrix to be studied
+     *  @param cmp comparison criteria
+     *  @return the pair (i,j)-index of the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D1,unsigned int D2, class R, class CMP>
+    inline std::pair<unsigned int,unsigned int> 
+    ind_max_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , CMP cmp ) 
+    { 
+      std::pair<unsigned int,unsigned int> result (0,0) ;
+      T tmp = m(0,0) ;
+      for ( unsigned int i = 0 ; i < D1 ; ++i ) 
+      {
+        for ( unsigned int j = 0 ; j < D2 ; ++j ) 
+        {
+          const T val = m(i,j) ;
+          if ( !cmp( tmp , val ) ) { continue ; }
+          tmp = val ; 
+          result.first  = i ; 
+          result.second = j ;
+        }
+      }
+      return result ;
+    } 
+    // ========================================================================
+    /** find an index of the maximal element in symmetric matrix 
+     *  @param m (input) symmetric matrix to be studied
+     *  @param cmp comparison criteria
+     *  @return the pair (i,j)-index of the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D, class CMP>
+    inline std::pair<unsigned int,unsigned int> 
+    ind_max_element 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& m , CMP cmp ) 
+    { 
+      std::pair<unsigned int,unsigned int> result (0,0) ;
+      T tmp = m(0,0) ;
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      {
+        for ( unsigned int j = i ; j < D ; ++j ) 
+        {
+          const T val = m(i,j) ;
+          if ( !cmp ( tmp , val ) ) { continue ; }
+          tmp = val ; 
+          result.first  = i ; 
+          result.second = j ;
+        }
+      }
+      return result ;
+    }     
+    // ========================================================================
+    /** find an index of the  maximal element in matrix 
+     *  @param m (input) matrix to be studied
+     *  @return the pair (i,j)-index of the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D1,unsigned int D2, class R>
+    inline std::pair<unsigned int,unsigned int> 
+    ind_max_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
+    { return ind_max_element ( m , std::less<T>() ) ; }
+    // ========================================================================
+    /** find an index of the minimal element in matrix 
+     *  @param m (input) matrix to be studied
+     *  @param cmp comparison criteria
+     *  @return the pair (i,j)-index of the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D1,unsigned int D2, class R, class CMP>
+    inline std::pair<unsigned int,unsigned int> 
+    ind_min_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , CMP cmp ) 
+    { 
+      std::pair<unsigned int,unsigned int> result (0,0) ;
+      T tmp = m(0,0) ;
+      for ( unsigned int i = 0 ; i < D1 ; ++i ) 
+      {
+        for ( unsigned int j = 0 ; j < D2 ; ++j ) 
+        {
+          const T val = m(i,j) ;
+          if ( !cmp( val , tmp ) ) { continue ; }
+          tmp = val ; 
+          result.first  = i ; 
+          result.second = j ;
+        }
+      }
+      return result ;
+    } 
+    // ========================================================================
+    /** find an index of the minimal element in symmetric matrix 
+     *  @param m (input) symmetric matrix to be studied
+     *  @param cmp comparison criteria
+     *  @return the pair (i,j)-index of the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D, class CMP>
+    inline std::pair<unsigned int,unsigned int> 
+    ind_min_element 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& m , CMP cmp ) 
+    { 
+      std::pair<unsigned int,unsigned int> result (0,0) ;
+      T tmp = m(0,0) ;
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      {
+        for ( unsigned int j = i ; j < D ; ++j ) 
+        {
+          const T val = m(i,j) ;
+          if ( !cmp ( tmp , val ) ) { continue ; }
+          tmp = val ; 
+          result.first  = i ; 
+          result.second = j ;
+        }
+      }
+      return result ;
+    } 
+    // ========================================================================
+    /** find an index of the minimal element in the matrix 
+     *
+     *  @code 
+     *  
+     *  const Ostap::Matrix4x4    mtrx1 = ... ;
+     *  const Ostap::SymMatrix5x5 mtrx2 = ... ;
+     * 
+     *  typedef std::pair<unsigned int,unsigned int> PAIR ;
+     *  
+     *  // get the minimal element in mtrx1:
+     *  PAIR index1 = Ostap::Math::ind_max_element ( mtrx1 ) ;
+     *
+     *  // get the minimal element in mtrx2:
+     *  PAIR index2 = Ostap::Math::ind_max_element ( mtrx2 ) ;
+     *
+     *  @endcode 
+     *
+     *  @param m (input) matrix to be studied 
+     *  @return the pair of indices for (the first) minimal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    inline std::pair<unsigned int,unsigned int> 
+    ind_min_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
+    { return ind_min_element( m , std::less<T>() ) ; } 
+    // ========================================================================
+    /** find an index of the maximal element in the vector 
+     *  @param m (input) vector to be studied
+     *  @param cmp comparison criteria
+     *  @return the index of the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D, class CMP>
+    inline unsigned int 
+    ind_max_element 
+    ( const ROOT::Math::SVector<T,D>& m , CMP cmp )
+    { return std::max_element( m.begin() , m.end() , cmp ) - m.begin() ; }    
+    // ========================================================================
+    /** find an index of the minimal element in the vector 
+     *  @param m (input) vector to be studied
+     *  @param cmp comparison criteria
+     *  @return the index of the minimal  element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D, class CMP>
+    inline unsigned int 
+    ind_min_element 
+    ( const ROOT::Math::SVector<T,D>& m , CMP cmp )
+    { return std::min_element( m.begin() , m.end() , cmp ) - m.begin() ; }
+    // ========================================================================
+    /** find an index of the maximal element in the vector 
+     *  @param m (input) vector to be studied
+     *  @return the index of the maximal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D>
+    inline unsigned int 
+    ind_max_element 
+    ( const ROOT::Math::SVector<T,D>& m )
+    { return std::max_element( m.begin() , m.end() ) - m.begin() ; }    
+    // ========================================================================
+    /** find an index of the minimal element in the vector 
+     *  @param m (input) vector to be studied
+     *  @return the index of the minimal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D>
+    inline unsigned int 
+    ind_min_element 
+    ( const ROOT::Math::SVector<T,D>& m )
+    { return std::min_element ( m.begin() , m.end() ) - m.begin() ; }    
+    // ========================================================================
+    /** find an index of the element with the maximal absolute value 
+     *
+     *  @code 
+     *  
+     *  const Ostap::Matrix4x4    mtrx1 = ... ;
+     *  const Ostap::SymMatrix5x5 mtrx2 = ... ;
+     * 
+     *  typedef std::pair<unsigned int,unsigned int> PAIR ;
+     *  
+     *  // get the element with the maximal absolute value in mtrx1:
+     *  PAIR index1 = Ostap::Math::ind_maxabs_element ( mtrx1 ) ;
+     *
+     *  // get the element with the maximal absolute value in mtrx2:
+     *  PAIR index2 = Ostap::Math::ind_maxabs_element ( mtrx2 ) ;
+     *
+     *  @endcode 
+     *
+     *  @param m (input) matrix to be studied 
+     *  @return the pair of indices for the element with 
+     *          the maximal absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    inline std::pair<unsigned int,unsigned int> 
+    ind_maxabs_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
+    { return ind_max_element( m , _AbsCompare<T>() ) ; } 
+    // ========================================================================
+    /** find an index of the element with the minimal absolute value 
+     *
+     *  @code 
+     *  
+     *  const Ostap::Matrix4x4    mtrx1 = ... ;
+     *  const Ostap::SymMatrix5x5 mtrx2 = ... ;
+     * 
+     *  typedef std::pair<unsigned int,unsigned int> PAIR ;
+     *  
+     *  // get the element with the minimal absolute value in mtrx1:
+     *  PAIR index1 = Ostap::Math::ind_minabs_element ( mtrx1 ) ;
+     *
+     *  // get the element with the minimal absolute value in mtrx2:
+     *  PAIR index2 = Ostap::Math::ind_minabs_element ( mtrx2 ) ;
+     *
+     *  @endcode 
+     *
+     *  @param m (input) matrix to be studied 
+     *  @return the pair of indices for the element with 
+     *          the maximal absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */    
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    inline std::pair<unsigned int,unsigned int> 
+    ind_minabs_element 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
+    { return ind_min_element( m , _AbsCompare<T>() ) ; } 
+    // ========================================================================
+    /** find an index of the element with maximal absolute value
+     *  @param m (input) vector to be studied
+     *  @return the index of the element with the maximal absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D>
+    inline unsigned int 
+    ind_maxabs_element 
+    ( const ROOT::Math::SVector<T,D>& m )
+    { return ind_max_element ( m , _AbsCompare<T>() ) ; }    
+    // ========================================================================
+    /** find an index of the element with minimal absolute value 
+     *  @param m (input) vector to be studied
+     *  @return the index of the element with minimal absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D>
+    inline unsigned int 
+    ind_minabs_element 
+    ( const ROOT::Math::SVector<T,D>& m )
+    { return ind_min_element ( m , _AbsCompare<T>() ) ; }
+    // ========================================================================
+    /** evaluate the trace (sum of diagonal elements) of the square matrix 
+     *
+     *  @code 
+     *  
+     *  const Ostap::Matrix4x4    mtrx1 = ... ;
+     *  const Ostap::SymMatrix3x3 mtrx2 = ... ;
+     * 
+     *  // evaluate the trace of mtrx1:
+     *  const double trace1 = Ostap::Math::trace ( mtrx1 ) ;
+     *  // evaluate the trace of mtrx2:
+     *  const double trace2 = Ostap::Math::trace ( mtrx2 ) ;
+     *
+     *  @endcode 
+     *
+     *  @param m (input) matrix to be studied 
+     *  @return trace (sum of diagonal elements) of the matrix 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D, class R>
+    inline T 
+    trace 
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    {
+      T result = m(0,0) ;
+      for ( unsigned int i = 1 ; i < D ; ++i ) { result += m(i,i) ; }
+      return result ;
+    }
+    /** evaluate the trace (sum of diagonal elements) of the square matrix 
+     *
+     *  @code 
+     *  
+     *  const Ostap::Matrix4x4    mtrx1 = ... ;
+     *  const Ostap::SymMatrix3x3 mtrx2 = ... ;
+     * 
+     *  // evaluate the trace of mtrx1:
+     *  const double trace1 = Ostap::Math::trace ( mtrx1 ) ;
+     *  // evaluate the trace of mtrx2:
+     *  const double trace2 = Ostap::Math::trace ( mtrx2 ) ;
+     *
+     *  @endcode 
+     *
+     *  @param m (input) matrix to be studied 
+     *  @return trace (sum of diagonal elements) of the matrix 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-05-24
+     */
+    template <class B, class T, unsigned int D, class R>
+    inline T 
+    trace 
+    ( const ROOT::Math::Expr<B,T,D,D,R>& m ) 
+    {
+      T result = m(0,0) ;
+      for ( unsigned int i = 1 ; i < D ; ++i ) { result += m(i,i) ; }
+      return result ;
+    }
+    // ========================================================================
+    /** find the minimal diagonal element 
+     *  @param   m (input) matrix to be studied 
+     *  @param   cmp comparison criteria
+     *  @return "min" diagonal element (in the sense of comparison criteria)
+     */
+    template <class T, unsigned int D, class R, class CMP>
+    inline T 
+    min_diagonal 
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m , CMP cmp ) 
+    {
+      T result = m(0,0);
+      for ( unsigned int i = 1 ; i < D ; ++i ) 
+      { 
+        const T value = m(i,i) ;  
+        if ( cmp ( value , result ) ) { result = value ; }
+      }
+      return result ;
+    }
+    // ========================================================================
+    /** find the maximal diagonal element 
+     *  @param   m (input) square matrix to be studied 
+     *  @param   cmp comparison criteria
+     *  @return "max" diagonal element (in the sense of comparison criteria)
+     */
+    template <class T, unsigned int D, class R, class CMP>
+    inline T 
+    max_diagonal 
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m , CMP cmp ) 
+    {
+      T result = m(0,0);
+      for ( unsigned int i = 1 ; i < D ; ++i ) 
+      { 
+        const T value = m(i,i) ;  
+        if ( cmp ( result , value ) ) { result = value ; }
+      }
+      return result ;
+    } 
+    // ========================================================================
+    /** find the maximal diagonal element of square matrix 
+     *
+     *  @code 
+     *
+     *  const Ostap::Matrix4x4    mtrx1 = ... ;
+     *  const Ostap::SymMatrix3x3 mtrx2 = ... ;
+     *  
+     *  // find the maximal diagonal element of mtrx1 
+     *  const double m1 = Ostap::Math::max_diagonal ( mtrx1 ) ;
+     *
+     *  // find the maximal diagonal element of mtrx2 
+     *  const double m2 = Ostap::Math::max_diagonal ( mtrx2 ) ;
+     *
+     *  @endcode
+     *
+     *  @param m (input) square matrix to be studied 
+     *  @return the maximal diagonal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.cyr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D, class R>
+    inline T 
+    max_diagonal 
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    { return max_diagonal( m , std::less<T>() ) ; }
+    // ========================================================================
+    /** find the maximal diagonal element of the square matrix 
+     *
+     *  @code 
+     *
+     *  const LHCb::Vertex* v = ..
+     *  const Ostap::Matrix3x3& covariance = v->covMatrix() ;
+     *  
+     *  // find the minimal diagonal element of covariance matrix:
+     *  const double m1 = Ostap::Math::min_diagonal ( covariance  ) ;
+     *
+     *  if ( 0 >= 0 ) 
+     *  {
+     *     std::err 
+     *      << " Invlid covarinace matrix" 
+     *      << " Non-positive elements on diagonal << m1 << std::endl ;
+     *  }
+     *
+     *  @endcode
+     *
+     *  @param m (input) square matrix to be studied 
+     *  @return the maximal diagonal element 
+     *  @author Vanya BELYAEV ibelyaev@physics.cyr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D, class R>
+    inline T 
+    min_diagonal 
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    { return min_diagonal( m , std::less<T>() ) ; }
+    // ========================================================================
+    /** find the diagonal element of square matrix with maximal absolute value 
+     *
+     *  @code 
+     *
+     *  const Ostap::Matrix4x4    mtrx1 = ... ;
+     *  const Ostap::SymMatrix3x3 mtrx2 = ... ;
+     *  
+     *  // find the diagonal element of mtrx1 with the maximal absolute value 
+     *  const double m1 = Ostap::Math::max_diagonal ( mtrx1 ) ;
+     *
+     *  // find the diagonal element of mtrx1 with the maximal absolute value 
+     *  const double m2 = Ostap::Math::max_diagonal ( mtrx2 ) ;
+     *
+     *  @endcode
+     *
+     *  @param m (input) square matrix to be studied 
+     *  @return the diagonal element withmaximal absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.cyr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D, class R>
+    inline T 
+    maxabs_diagonal 
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    { return max_diagonal( m , _AbsCompare<T>() ) ; }
+    // ========================================================================
+    /** find the diagonal element of the square matrix with 
+     *  the minimal absolute value 
+     *
+     *  @code 
+     *
+     *  const LHCb::Vertex* v = ..
+     *  const Ostap::Matrix3x3& covariance = v->covMatrix() ;
+     *  
+     *  // find the diagonal element with minimal absolute value 
+     *  const double m1 = Ostap::Math::min_diagonal ( covariance  ) ;
+     *
+     *  if ( 0.001 * Ostap::Units::micrometer ) 
+     *  {
+     *     std::err 
+     *      << " Non-realistic element on diagonal << m1 << std::endl ;
+     *  }
+     *
+     *  @endcode
+     *
+     *  @param m (input) square matrix to be studied 
+     *  @return the diagonal element with the minimal absolute value 
+     *  @author Vanya BELYAEV ibelyaev@physics.cyr.edu
+     *  @date 2006-05-24
+     */
+    template <class T, unsigned int D, class R>
+    inline T 
+    minabs_diagonal 
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    { return min_diagonal( m , _AbsCompare<T>() ) ; }
+    // ========================================================================
+    /** count the number of elements in matrix, which satisfy the certain criteria
+     * 
+     *  @code
+     * 
+     *  const Ostap::Matrix4x4 matrix = ... ;
+     *  
+     *  // number of NULL elements:
+     *  const size_t nulls = 
+     *      Ostap::Math::count_if ( matrix , 
+     *       std::bind2nd( std::equal_to<double>() , 0.0 ) ) ;
+     *
+     *  // number of elements in excess of 100.0 
+     *  const size_t large = 
+     *      Ostap::Math::count_if ( matrix , 
+     *       std::bind2nd( std::greater<double>() , 100.0 ) ) ;
+     * 
+     *  // number of elements which are less then 0.01 in absolute value 
+     *  const size_t small = 
+     *      Ostap::Math::count_if ( matrix , 
+     *       std::bind2nd( _AbsCompare<double>() , 0.01 ) ) ;
+     *  
+     * 
+     *  @endcode 
+     *  
+     *  @param m    (input) matrix to be studied 
+     *  @param pred (input) predicate to be tested 
+     *  @return number of elements for which the predicate is valid 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-04-24
+     */
+    template <class T, unsigned int D1, unsigned int D2, class R, class P>
+    inline size_t 
+    count_if 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , P pred )
+    { return std::count_if ( m.begin() , m.end() , pred ) ; }
+    // ========================================================================
+    /** count the number of elements in matrix, which satisfy the certain criteria
+     * 
+     *  @code
+     * 
+     *  const Ostap::SymMatrix4x4 matrix = ... ;
+     *  
+     *  // number of NULL elements:
+     *  const size_t nulls = 
+     *      Ostap::Math::count_if ( matrix , 
+     *       std::bind2nd( std::equal_to<double>() , 0.0 ) ) ;
+     *
+     *  // number of elements in excess of 100.0 
+     *  const size_t large = 
+     *      Ostap::Math::count_if ( matrix , 
+     *       std::bind2nd( std::greater<double>() , 100.0 ) ) ;
+     * 
+     *  // number of elements which are less then 0.01 in absolute value 
+     *  const size_t small = 
+     *      Ostap::Math::count_if ( matrix , 
+     *       std::bind2nd( Ostap::Math::_AbsCompare<double>() , 0.01 ) ) ;
+     *  
+     *  @endcode 
+     *  
+     *  If one needs check the presence of elements ("at least one")
+     *  a bit more efficient algorithm 
+     *   <c>Ostap::Math::check_if</c> should be used 
+     *  @see Ostap::Math::check_if 
+     *
+     *  @param m    (input) symmetric matrix to be studied 
+     *  @param pred (input) predicate to be tested 
+     *  @return number of elements for which the predicate is valid 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-04-24
+     */
+    template <class T, unsigned int D, class P>
+    inline size_t 
+    count_if 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& m , P pred )
+    { 
+      size_t result = 0 ;
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      {
+        if ( pred ( m ( i , i ) ) ) { result += 1 ; }
+        for ( unsigned int j = i + 1 ; j < D ; ++j ) 
+        {
+          if ( pred (  m ( i , j ) ) ) { result +=2 ; }  // ATTENTION! 
+        }
+      }
+      return result ;
+    } 
+    // ========================================================================
+    /** count number of diagonal elements in matrix, 
+     *  which satisfy certain criteria
+     * 
+     *  @code 
+     * 
+     *  const LHCb::Vertex* v = ... ;
+     *  const Ostap::SymMatrix3x3& covariance = v->covMatrix() ;
+     *
+     *  // count number of VERY small (and negative) diagonal elements:
+     *  const size_t bad = 
+     *   Ostap::Math::cound_diagonal( covariance , 
+     *   std::bind2nd( std::less<double>() , 0.01 * Ostap::Units::micrometer ) ;
+     *  if ( 0 != bad ) 
+     *   {
+     *      std::cerr << " #bad diagonal elements is " << bad << std::endl ;  
+     *   }
+     *  
+     *  @endcode 
+     *  
+     *  @param m    (input) square matrix to be studied 
+     *  @param pred (input) predicate to be tested 
+     *  @return number of diagonal elements for which the predicate is valid 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-04-24
+     */
+    template <class T, unsigned int D, class R, class P>
+    inline size_t 
+    count_diagonal
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m , P pred )
+    {
+      size_t result = 0 ;
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      { if ( pred ( m ( i , i ) ) ) { result += 1 ; } }
+      return result ;
+    } 
+    // ========================================================================
+    /** check the presence of at least one element which satisfy the 
+     *  criteria
+     *
+     *  @code 
+     * 
+     *  const LHCb::Vertex* v = ... ;
+     *  const Ostap::SymMatrix3x3& covariance = v->covMatrix() ;
+     *
+     *  // check for "infinities" 
+     *  const bool bad = 
+     *   Ostap::Math::check_if( covariance , 
+     *   std::bind2nd( std::greater<double>() , 1 * Ostap::Units::meter ) ;
+     *  if ( bad ) 
+     *   {
+     *      std::cerr << " bad elements are detected " << std::endl ; 
+     *   }
+     *  
+     *  @endcode 
+     *
+     *  In general this algorithm is faster than 
+     *   <c>Ostap::Math::count_if</c>
+     *  @see Ostap::Math::count_if 
+     *
+     *  @param m    (input)    matrix to be checked 
+     *  @param pred (input) predicate tobe tested 
+     *  @return true if at least one element is in the matrix 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-04-24
+     */
+    template <class T, unsigned int D1, unsigned int D2, class R, class P>
+    inline bool
+    check_if 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , P pred )
+    { return m.end() != std::find_if ( m.begin() , m.end() , pred ) ; }
+    // ========================================================================
+    /** check the presence of at least one diagonal element which satisfy the 
+     *  criteria
+     *
+     *  @code 
+     * 
+     *  const LHCb::Vertex* v = ... ;
+     *  const Ostap::SymMatrix3x3& covariance = v->covMatrix() ;
+     *
+     *  // check for "almost nulls"
+     *  const bool bad = 
+     *   Ostap::Math::check_diagonal( covariance , 
+     *   std::bind2nd( std::less<double>() , 0.001 * Ostap::Units::micrometer ) ;
+     *  if ( bad ) 
+     *   {
+     *      std::cerr << " bad diagonal elements are detected " << std::endl ; 
+     *   }
+     *  
+     *  @endcode 
+     *
+     *  @param m    (input) square matrix to be checked 
+     *  @param pred (input) predicate to be tested 
+     *  @return true if at least one element is in the matrix 
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-04-24
+     */
+    template <class T, unsigned int D, class R, class P>
+    inline bool
+    check_diagonal 
+    ( const ROOT::Math::SMatrix<T,D,D,R>& m , P pred )
+    { 
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      { if ( pred ( m ( i , i ) ) ) { return true ; } }
+      return false ;
+    } 
+    // ========================================================================
+    /** check the "equality" of the two matrices by checking 
+     *  element-by-element: true == pred( m1(i,j) , m2(i,j) ) 
+     *  
+     *  It is an efficient way to compare the matrices in the different
+     *  represenattions, e.g. symmetrical and non symmetrical matrices 
+     *  of the same size. Also the "tolerance" coudl be introduced 
+     *  for equality
+     *
+     *  @code 
+     * 
+     *  const Ostap::Matrix4x4 m1 = ... ;
+     *  const Ostap::SymMatrix4x4 m2 = ... ;
+     *  
+     *   // comparison criteria:
+     *   struct Equal : publuc std::binary_fuction<double,double,bool>
+     *   {
+     *     Equal ( const double value ) : m_threshold ( value ) {} ;
+     *     bool operator() ( const double v1 , const double v2 ) const 
+     *     {
+     *         return ::fabs( v1 , v2 ) < m_threshold ;
+     *     }
+     *    private: 
+     *    double m_threshold ;
+     *   } ;
+     *  
+     *   // "compare" the matrices 
+     *   const bool eq = 
+     *      Ostap::Math::equal_if ( m1 , m2 , Equal(0.001) ) ;
+     *  
+     *  @endcode 
+     *  @param m1   (input) the first matrix to be checked 
+     *  @param m2   (input) the second matrix to be checked 
+     *  @param pred (input) predicate to be tested 
+     *  @return true if at least once false == pred( m1(i,j) , m2(i,j) )
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-04-24
+     */    
+    template <class T1 , class T2 ,
+              unsigned int D1 , unsigned int D2 ,
+              class R1 , class R2 , class P>
+    inline bool 
+    equal_if  
+    ( const ROOT::Math::SMatrix<T1,D1,D2,R1>& m1 , 
+      const ROOT::Math::SMatrix<T2,D1,D2,R2>& m2 , P pred )
+    { 
+      for ( unsigned int i = 0 ; i < D1 ; ++i ) 
+      {
+        for ( unsigned int j = 0 ; j < D2 ; ++j ) 
+        {
+          if ( !pred( m1(i,j) , m2(i,j) ) ) { return false ; } // RETURN 
+        }
+      }
+      return true ;
+    } 
+    // ========================================================================
+    /** check the "equality" of the two matrices by checking 
+     *  element-by-element: true == pred( m1(i,j) , m2(i,j) ) 
+     *
+     *  The specialization for matrices of the same representation.
+     *  From the first principles it should be much more efficient. 
+     *
+     *  @code 
+     * 
+     *  const Ostap::Matrix4x4 m1 = ... ;
+     *  const Ostap::Matrix4x4 m2 = ... ;
+     *  
+     *   // comparison criteria:
+     *   struct Equal : publuc std::binary_fuction<double,double,bool>
+     *   {
+     *     Equal ( const double value ) : m_threshold ( value ) {} ;
+     *     bool operator() ( const double v1 , const double v2 ) const 
+     *     {
+     *         return ::fabs( v1 , v2 ) < m_threshold ;
+     *     }
+     *    private: 
+     *    double m_threshold ;
+     *   } ;
+     *  
+     *   // "compare" the matrices 
+     *   const bool eq = 
+     *      Ostap::Math::equal_if ( m1 , m2 , Equal(0.001) ) ;
+     *  
+     *  @endcode 
+     *  @param m1   (input) the first matrix to be checked 
+     *  @param m2   (input) the second matrix to be checked 
+     *  @param pred (input) predicate to be tested 
+     *  @return true if at least once false == pred( m1(i,j) , m2(i,j) )
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-04-24
+     */
+    template <class T,unsigned int D1, unsigned int D2,class R,class P>
+    inline bool 
+    equal_if  
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m1 , 
+      const ROOT::Math::SMatrix<T,D1,D2,R>& m2 , P pred )
+    { return std::equal ( m1.begin() , m1.end() , m2.begin() , pred ) ; } 
+    // ========================================================================
+    // UPDATE
+    // =========================================================================
+    /** update the symmetric matrix according to the rule m +=  s*v*v^T
+     *
+     *  @param left the symmetric matrix to be updated 
+     *  @param vect the vector 
+     *  @param scale the scale factor
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-01-10
+     */
+    template <class T, class T2, unsigned int D>
+    void update 
+    ( ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > & left  , 
+      const ROOT::Math::SVector<T2,D>&                         vect  , 
+      const double                                             scale ) 
+    {
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      {
+        for ( unsigned int j = i ; j < D ; ++j ) 
+        { left ( i , j ) += scale * vect(i) * vect(j) ; }
+      }
+    }
+    // =========================================================================
+    /** update the symmetric matrix according to the rule m +=  s*v*v^T
+     *
+     *  @param left the symmetric matrix to be updated 
+     *  @param vect the vector 
+     *  @param scale the scale factor
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-01-10
+     */
+    template <class T, class B, class T2, unsigned int D>
+    void update 
+    ( ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > & left  , 
+      const ROOT::Math::VecExpr<B,T2,D>&                       vect  , 
+      const double                                             scale ) 
+    {
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      {
+        for ( unsigned int j = i ; j < D ; ++j ) 
+        { left ( i , j ) += scale * vect(i) * vect(j) ; }
+      }
+    }
+    // =========================================================================
+    /** update the matrix according to the rule m +=  s*v1*v2^T
+     *
+     *  @param left the matrix to be updated 
+     *  @param vct1 the first vector 
+     *  @param vct2 the second vector 
+     *  @param scale the scale factor
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-01-10
+     */
+    template <class T, class R, class T2, class T3, unsigned int D1,unsigned int D2>
+    void update 
+    ( ROOT::Math::SMatrix<T,D1,D2,R>  & left        , 
+      const ROOT::Math::SVector<T2,D1>& vct1        , 
+      const ROOT::Math::SVector<T3,D2>& vct2        , 
+      const double                      scale = 1.0 ) 
+    {
+      for ( unsigned int i = 0 ; i < D1 ; ++i ) 
+      {
+        for ( unsigned int j = 0 ; j < D2 ; ++j ) 
+        { left ( i , j ) += scale * vct1(i) * vct2(j) ; }
+      }
+    }
+    // =========================================================================
+    /**  useful shortcut for product of vector, matrix and vector (v1^T*M*v2)
+     *  @param vct1 the first vector 
+     *  @param mtrx the matrix  
+     *  @param vct2 the second vector 
+     *  @return the product (v1^T*M*v2) 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-01-19
+     */
+    template<class T, class T1, class T2, class R, unsigned int D1, unsigned int D2>
+    T mult 
+    ( const ROOT::Math::SVector<T1,D1>&     vct1  ,
+      const ROOT::Math::SMatrix<T,D1,D2,R>& mtrx  , 
+      const ROOT::Math::SVector<T2,D2>&     vct2  ) 
+    { 
+      return ROOT::Math::Dot ( vct1 , mtrx * vct2 ) ; 
+    }
+    // =========================================================================
+    /** update the symmetric matrix according to the rule m +=  scale * ( m + m^T )  
+     *
+     *  @param left the matrix  to be updated 
+     *  @param right the matrix to be "symmetrized"  
+     *  @param scale the scale factor to be applied 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-01-10
+     */
+    template <class T, class T2, class R, unsigned int D>
+    void update 
+    ( ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >&   left        , 
+      const ROOT::Math::SMatrix<T2,D,D,R>&                      right       , 
+      const double                                              scale = 1.0 ) 
+    {
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      {
+        for ( unsigned int j = i ; j < D ; ++j ) 
+        { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
+      }
+    }
+    // =========================================================================
+    /** update the symmetric matrix according to the rule m +=  scale * ( m + m^T )  
+     *
+     *  @param left the matrix  to be updated 
+     *  @param right the matrix to be "symmetrized"  
+     *  @param scale the scale factor to be applied 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-01-10
+     */
+    template <class T, class T2, class B, class R, unsigned int D>
+    void update 
+    ( ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >&   left        , 
+      const ROOT::Math::Expr<B,T2,D,D,R>&                       right       , 
+      const double                                              scale = 1.0 ) 
+    {
+      for ( unsigned int i = 0 ; i < D ; ++i ) 
+      {
+        for ( unsigned int j = i ; j < D ; ++j ) 
+        { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
+      }
+    }
+    // ========================================================================
+    /** inversion of symmetric positively defined matrices
+     *  1) try fast method based on Cholesky's decomposiion 
+     *  2) in case of failure, swith to the regular inversion
+     *  @param what (INPUT) matrix to be inverted 
+     *  @param result (UPDATE) th einverse matrix 
+     *  @return problem flag     
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @thanks Manuel Schiller 
+     *  @date 2015-02-11
+     */
+    template <class T, unsigned int D>
+    inline int inverse 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& what   , 
+      ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >&       result ) 
+    {
+      int ifail = 0 ;     result = what.InverseChol ( ifail ) ;
+      if ( 0 != ifail ) { result = what.Inverse     ( ifail ) ; }
+      return ifail ;  
+    }
+    // ========================================================================
+
+    
+    // ========================================================================
+    // helper functions to allow proper operations in PyROOT
+    // ========================================================================
+    /// addition of matrices  (same type +  same type) -> matrix
+    template <class T,unsigned int D1, unsigned int D2, class R>
+    inline ROOT::Math::SMatrix<T,D1,D2,R>
+    _matrix_add_ 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& a ,
+      const ROOT::Math::SMatrix<T,D1,D2,R>& b ) { return a+b ; } 
+    // =========================================================================
+    /// addition of matrices (symmetric + general -> general ) 
+    template <class T,unsigned int D>
+    inline ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >
+    _matrix_add_ 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >  & a ,
+      const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >& b ) { return a + b ; }
+    // ========================================================================= 
+    /// addition of matrices (general + symmetric -> general
+    template <class T,unsigned int D>
+    inline ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >
+    _matrix_add_
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> > & a ,
+      const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >   & b ) { return a + b ; }
+    // =========================================================================
+
+    // =========================================================================
+    /// subtraction of matrices  (same type +  same type) -> matrix
+    template <class T,unsigned int D1, unsigned int D2, class R>
+    inline ROOT::Math::SMatrix<T,D1,D2,R>
+    _matrix_sub_ 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& a ,
+      const ROOT::Math::SMatrix<T,D1,D2,R>& b ) { return a-b ; } 
+    // =========================================================================
+    /// subtraction of matrices (symmetric + general -> general ) 
+    template <class T,unsigned int D>
+    inline ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >
+    _matrix_sub_ 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >  & a ,
+      const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >& b ) { return a - b ; }
+    // ========================================================================= 
+    /// addition of matrices (general + symmetric -> general
+    template <class T,unsigned int D>
+    inline ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >
+    _matrix_sub_
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> > & a ,
+      const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >   & b ) { return a - b ; }
+    // =========================================================================
+    
+    // =========================================================================    
+    // multiplication of matrices  ( general * general -> general ) 
+    template <class T,unsigned int D1, unsigned int D2, unsigned int D3, class R1, class R2>
+    inline ROOT::Math::SMatrix<T,D1,D3,ROOT::Math::MatRepStd<T,D1,D3> >
+    _matrix_mul_
+    ( const ROOT::Math::SMatrix<T,D1,D2,R1>& a ,
+      const ROOT::Math::SMatrix<T,D2,D3,R2>& b ) { return a * b ; }
+    // =========================================================================
+    /// multiplication of matrices ( general * symmetric -> general ) 
+    template <class T,unsigned int D1, unsigned int D2>
+    inline ROOT::Math::SMatrix<T,D1,D2,ROOT::Math::MatRepStd<T,D1,D2> >
+    _matrix_mul_ 
+    ( const ROOT::Math::SMatrix<T,D1,D2,ROOT::Math::MatRepStd<T,D1,D2> >& a ,  
+      const ROOT::Math::SMatrix<T,D2,D2,ROOT::Math::MatRepSym<T,D2> >   & b ) { return a * b ; }
+    // =========================================================================
+    /// multiplication of matrices ( symmetric * general -> general ) 
+    template <class T,unsigned int D1, unsigned int D2>
+    inline ROOT::Math::SMatrix<T,D1,D2,ROOT::Math::MatRepStd<T,D1,D2> >
+    _matrix_mul_ 
+    ( const ROOT::Math::SMatrix<T,D1,D1,ROOT::Math::MatRepSym<T,D1> >   & a , 
+      const ROOT::Math::SMatrix<T,D1,D2,ROOT::Math::MatRepStd<T,D1,D2> >& b ) { return a * b ; }
+    // =========================================================================
+    /// multiplication of matrices ( symmetric * symmetric -> general ) 
+    template <class T,unsigned int D>
+    inline ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >
+    _matrix_mul_ 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& a , 
+      const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& b ) { return a * b ; }
+    // =========================================================================
+    /// multiplication of matrices  ( matrix * vector ) -> expression
+    template <class T,unsigned int D1, unsigned int D2, class R>
+    inline ROOT::Math::SVector<T,D1>
+    _matrix_mul_
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& a ,
+      const ROOT::Math::SVector<T,D2>     & b ) { return a * b ; }
+    // =========================================================================
+    // multiplication of matrices  (  matrix * scalar -> matrix ) 
+    template <class T,unsigned int D1, unsigned int D2, class R1>
+    inline ROOT::Math::SMatrix<T,D1,D2,R1>
+    _matrix_mul_
+    ( const ROOT::Math::SMatrix<T,D1,D2,R1>& a ,
+      const double                           b ) { return a * b ; }
+    // =========================================================================
+    /// "right" multiplication of matrices  ( vector * matrix ) -> vector 
+    template <class T,unsigned int D1, unsigned int D2, class R>
+    inline ROOT::Math::SVector<T,D2>
+    _matrix_rmul_
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& a ,
+      const ROOT::Math::SVector<T,D1>     & b ) { return b * a ; }
+    // =========================================================================
+    // "right" multiplication of matrices  (  scalar * matrix -> matrix ) 
+    template <class T,unsigned int D1, unsigned int D2, class R1>
+    inline ROOT::Math::SMatrix<T,D1,D2,R1>
+    _matrix_rmul_
+    ( const ROOT::Math::SMatrix<T,D1,D2,R1>& a ,
+      const double                           b ) { return b * a ; }
+    // =========================================================================
+    // division of matrices  (  matrix / scalar -> matrix ) 
+    template <class T,unsigned int D1, unsigned int D2, class R1>
+    inline ROOT::Math::SMatrix<T,D1,D2,R1>
+    _matrix_div_
+    ( const ROOT::Math::SMatrix<T,D1,D2,R1>& a ,
+      const double                           b ) { return a / b ; }
+    // =========================================================================
+
+    
+    // ========================================================================
+    // addition of vectors:  vector + vector -> vector 
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>
+    _vector_add_ 
+    ( const ROOT::Math::SVector<T,D>& a ,
+      const ROOT::Math::SVector<T,D>& b ) { return a + b ; }
+    // ========================================================================
+    // addition of vectors:  vector + scalar  -> vector
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>
+    _vector_add_ 
+    ( const ROOT::Math::SVector<T,D>& a ,
+      const double                    b ) { return a + b ; }
+    // ========================================================================
+    // "right" addition of vectors:  scalar+vector  -> vector
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>
+    _vector_radd_ 
+    ( const ROOT::Math::SVector<T,D>& a ,
+      const double                    b ) { return b + a ; }
+    // ========================================================================
+    // subtraction of vectors:  vector - vector -> vector 
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>
+    _vector_sub_ 
+    ( const ROOT::Math::SVector<T,D>& a ,
+      const ROOT::Math::SVector<T,D>& b ) { return a - b ; }
+    // ========================================================================
+    // subtraction of vectors:  vector - scalar  -> vector
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>
+    _vector_sub_ 
+    ( const ROOT::Math::SVector<T,D>& a ,
+      const double                    b ) { return a - b ; }
+    // ========================================================================
+    // addition of vectors:  scalar - vector  -> vector
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>
+    _vector_rsub_ 
+    ( const ROOT::Math::SVector<T,D>& a ,
+      const double                    b ) { return b - a ; }
+
+    // ========================================================================
+    // multiplication:   vector * matrix -> vector 
+    template <class T,unsigned int D, unsigned int D1, class R>
+    inline ROOT::Math::SVector<T,D1>
+    _vector_mul_ 
+    ( const ROOT::Math::SVector<T,D>     & a ,
+      const ROOT::Math::SMatrix<T,D,D1,R>& b ) { return a * b ; }
+    // ========================================================================
+    // multiplication   vector * vector -> scalar
+    template <class T,unsigned int D>
+    inline double 
+    _vector_mul_ 
+    ( const ROOT::Math::SVector<T,D> & a ,
+      const ROOT::Math::SVector<T,D> & b ) 
+    {
+      double result = 0 ;
+      for ( unsigned int i = 0 ; i < D ; ++i ){ result += a[i]*b[i] ; }
+      return result ;
+    }
+    // ========================================================================
+    // multiplication:   vector * scalar -> vector 
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>     
+    _vector_mul_ 
+    ( const ROOT::Math::SVector<T,D>     & a ,
+      const double                         b ) { return a * b; }
+    // ========================================================================    
+    // "right" multiplication:   scalar * vector -> vector 
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>     
+    _vector_rmul_ 
+    ( const ROOT::Math::SVector<T,D>     & a ,
+      const double                         b ) { return b * a; }
+    // ========================================================================
+    // division:  vector / scalar -> vector 
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>     
+    _vector_div_ 
+    ( const ROOT::Math::SVector<T,D>     & a ,
+      const double                         b ) { return a / b; }
+    // ========================================================================
+
+    // ========================================================================
+  } //                                                    end of namespace Math
+  // ==========================================================================
+} //                                                     end of namespace Gaudi
+// ============================================================================
+// The END 
+// ============================================================================
+#endif // LHCBMATH_MATRIXUTILS_H
+// ============================================================================

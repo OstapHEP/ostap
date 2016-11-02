@@ -1,0 +1,214 @@
+#ifndef OSTAP_SVECTORWITHERROR_ICPP 
+#define OSTAP_SVECTORWITHERROR_ICPP 1
+// ============================================================================
+// Include files
+// ============================================================================
+// STD & STL 
+// ============================================================================
+#include <sstream>
+#include <cmath>
+// ============================================================================
+// LHCbMath
+// ============================================================================
+#include "Ostap/SVectorWithError.h"
+#include "Ostap/MatrixUtils.h"
+// ============================================================================
+/** @file 
+ *  The implementation file for class Ostap::Math::SVectorWithError
+ *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+ *  @date 2009-06-13
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline double 
+Ostap::Math::SVectorWithError<N,SCALAR>::chi2 
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
+{
+  Covariance s_cov2 ( this->cov2() ) ;
+  s_cov2 += right.cov2() ;
+  /// use Manuel's inverter:
+  const bool ok = s_cov2.InvertChol() ;
+  if  ( !ok ) { return -1 ; }                                        // RETURN  
+  /// calculate chi2 
+  return ROOT::Math::Similarity ( value() - right.value() , s_cov2 ) ;
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline double 
+Ostap::Math::SVectorWithError<N,SCALAR>::chi2 
+( const ROOT::Math::SVector<SCALAR,N>& right ) const
+{
+  Covariance s_cov2 ( this->cov2() ) ;
+  /// use Manuel's inverter:
+  const bool ok = s_cov2.InvertChol() ;
+  if  ( !ok ) { return -1 ; }                                        // RETURN  
+  /// calculate chi2 
+  return ROOT::Math::Similarity ( value() - right , s_cov2 ) ;
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+template <class B>
+inline double 
+Ostap::Math::SVectorWithError<N,SCALAR>::chi2 
+( const ROOT::Math::VecExpr<B,SCALAR,N>& right ) const
+{
+  Covariance s_cov2 ( this->cov2() ) ;
+  /// use Manuel's inverter:
+  const bool ok = s_cov2.InvertChol() ;
+  if  ( !ok ) { return -1 ; }                                        // RETURN  
+  /// calculate chi2 
+  return ROOT::Math::Similarity ( value() - right , s_cov2 ) ;
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+Ostap::Math::SVectorWithError<N,SCALAR> 
+Ostap::Math::SVectorWithError<N,SCALAR>::__add__  
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right  ) const 
+{ return ( (*this) + right ) ; }
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+Ostap::Math::SVectorWithError<N,SCALAR> 
+Ostap::Math::SVectorWithError<N,SCALAR>::__sub__  
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right  ) const 
+{ return ( (*this) - right ) ; }
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+Ostap::Math::SVectorWithError<N,SCALAR> 
+Ostap::Math::SVectorWithError<N,SCALAR>::__add__  
+( const ROOT::Math::SVector<SCALAR,N>& right  ) const 
+{ return ( (*this) + right ) ; }
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+Ostap::Math::SVectorWithError<N,SCALAR> 
+Ostap::Math::SVectorWithError<N,SCALAR>::__sub__  
+( const ROOT::Math::SVector<SCALAR,N>& right  ) const 
+{ return ( (*this) - right ) ; }
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+Ostap::Math::SVectorWithError<N,SCALAR> 
+Ostap::Math::SVectorWithError<N,SCALAR>::__radd__  
+( const ROOT::Math::SVector<SCALAR,N>& right  ) const 
+{ return ( (*this) + right ) ; }
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+Ostap::Math::SVectorWithError<N,SCALAR> 
+Ostap::Math::SVectorWithError<N,SCALAR>::__rsub__  
+( const ROOT::Math::SVector<SCALAR,N>& right  ) const 
+{ return ( right - (*this) ) ; }
+// ============================================================================
+// conversion to string
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline std::string  
+Ostap::Math::SVectorWithError<N,SCALAR>::toString   () const // conversion to string
+{
+  std::ostringstream os ;
+  this->fillStream ( os ) ;
+  return os.str() ;
+}
+// ============================================================================
+// printout 
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline std::ostream& 
+Ostap::Math::SVectorWithError<N,SCALAR>::fillStream ( std::ostream& s ) const 
+{
+  s << "( " ;
+  for ( unsigned int i = 0 ; i < N ; ++i ) 
+  {
+    if ( 0 != i ) { s << " , " ; }
+    s << value()(i) << " +- " ;
+    const double d = m_cov2(i,i) ;
+    s <<  ( 0 <= d ? std::sqrt ( d ) : -std::sqrt(-d) ) ;
+  }
+  return s << " )" ;
+} 
+// ============================================================================
+/*  get the correlation coefficient between "i" and "j"
+ *  for invalid setup , return large negative value 
+ *  @param i the first index 
+ *  @param j the second index 
+ *  @return correlation coefficient 
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline SCALAR Ostap::Math::SVectorWithError<N,SCALAR>::corr 
+( unsigned int i , 
+  unsigned int j ) const 
+{
+  static const SCALAR s_bad = -10000 ;
+  //
+  const SCALAR sii = cov2( i , i ) ;
+  const SCALAR sjj = cov2( j , j ) ;
+  //
+  if ( 0 >= sii || 0 >= sjj ) { return s_bad ; }                      // RETURN  
+  //
+  return cov2( i , j ) / std::sqrt ( sii * sjj ) ;                    // RETURN 
+}
+// ============================================================================
+/*  get the full correlation matrix 
+ *  @return false for invalid setup 
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline bool Ostap::Math::SVectorWithError<N,SCALAR>::corr 
+( typename Ostap::Math::SVectorWithError<N,SCALAR>::Covariance& corrm ) const
+{
+  bool OK = true ;
+  //
+  for ( unsigned int i = 0 ; i < N && OK ; ++i ) 
+  {
+    corrm ( i , i ) = 1 ;
+    //
+    const SCALAR sii = cov2 ( i , i ) ;
+    if   ( 0 >= sii ) { OK = false ; break ; }                       // BREAK
+    //
+    for ( unsigned int j =  i + 1 ; j < N && OK ; ++j ) 
+    {
+      const SCALAR sjj = cov2 ( j , j ) ;
+      if ( 0 >= sjj ) { OK = false ; break ; }                        // BREAK
+      //
+      corrm ( i , j ) = cov2 (i , j ) / std::sqrt ( sii * sjj ) ;   
+      //
+    }
+  }
+  //
+  if ( !OK ) { Ostap::Math::setToUnit ( corrm , -1. ) ; }
+  //
+  return OK ;
+}
+// ============================================================================
+// calculate the weighted average for two vectors 
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline 
+Ostap::Math::SVectorWithError<N,SCALAR>
+Ostap::Math::SVectorWithError<N,SCALAR>::mean
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
+{
+  int ifail1 = 0 ;  
+  int ifail2 = 0 ;  
+  const Covariance ic1 (       cov2().InverseChol ( ifail1 ) ) ;
+  const Covariance ic2 ( right.cov2().InverseChol ( ifail2 ) );
+  // calculate the covariance matrix 
+  Covariance        c  ( ic1 + ic2 ) ;
+  if ( 0 != ifail1 || 0 != ifail2 || !c.InvertChol() ) 
+  {
+    std::fill   ( c.begin() , c.end  () , -1.0 ) ;
+    return Self ( c ) ;
+  }
+  //
+  // calculate the weighted average
+  return Self ( c * ( ic1 * value() + ic2 * right.value() ) , c ) ;
+}
+// ============================================================================
+// The END 
+// ============================================================================
+#endif // OSTAP_SVECTORWITHERROR_ICPP 
+// ============================================================================

@@ -1,0 +1,162 @@
+// $Id$
+// ============================================================================
+#ifndef EIGENSYSTEM_ICPP
+#define EIGENSYSTEM_ICPP 1
+// ============================================================================
+// Include files
+// ============================================================================
+#include "Ostap/EigenSystem.h"
+// ============================================================================
+
+// ============================================================================
+// (fast) copy GSL vector into MathLib vector 
+// ============================================================================
+template <class T, unsigned int D>
+inline void Ostap::Math::GSL::_copy 
+( const gsl_vector*         input  , 
+  ROOT::Math::SVector<T,D>& output ) 
+{
+  for ( unsigned int i = 0 ; i < D ; ++i ) 
+  { output[i] = gsl_vector_get ( input , i ) ; }
+} 
+// ======================================================================
+// (fast) copy of GSL matrix into MathLib matrix into GSL  
+// ======================================================================
+template < class T, unsigned int D, class R> 
+inline void 
+Ostap::Math::GSL::_copy 
+( const gsl_matrix*             input  ,
+  ROOT::Math::SMatrix<T,D,D,R>& output ) 
+{
+  for ( unsigned int i = 0 ; i < D ; ++i ) 
+  {
+    for ( unsigned int j = 0 ; j < D ; ++j  ) 
+    { output ( i , j ) = gsl_matrix_get ( input , i , j ) ; } 
+  } 
+} 
+// ============================================================================
+// (fast) copy of symmetric MathLib matrix into GSL matrix 
+// ============================================================================
+template < class T, unsigned int D> 
+inline void Ostap::Math::GSL::_copy 
+( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& input , 
+  gsl_matrix* output ) 
+{
+  // fill GSL matrix 
+  for ( unsigned int i = 0 ; i < D ; ++i ) 
+  { 
+    const double _val = input( i , i ) ;
+    gsl_matrix_set ( output , i , i , _val ) ;
+    for ( unsigned int j = i + 1 ; j < D ; ++j ) 
+    { 
+      const double _val2 = input(i,j) ;
+      gsl_matrix_set ( output , i , j , _val2 ) ; 
+      gsl_matrix_set ( output , j , i , _val2 ) ; 
+    } 
+  }
+} 
+// ============================================================================
+// evaluate the eigenvalues of symmetrical matrix 
+// ============================================================================
+template <class T,unsigned int D>
+inline ROOT::Math::SVector<T,D>
+Ostap::Math::GSL::EigenSystem::eigenValues
+( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx , 
+  const bool sorted ) const 
+{
+  ROOT::Math::SVector<T,D> result ;
+  Ostap::StatusCode sc = eigenValues ( mtrx , result , sorted ) ;
+  if ( sc.isFailure() ) { Exception ( sc ) ; }
+  return result ;
+}
+// ============================================================================
+// evaluate the eigenvalues of symmetrical matrix 
+// ============================================================================
+template <class T,unsigned int D>
+inline Ostap::StatusCode
+Ostap::Math::GSL::EigenSystem::eigenValues
+( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
+  ROOT::Math::SVector<T,D>&                                     vals , 
+  const bool sorted ) const 
+{
+  Ostap::StatusCode sc = _fill ( mtrx ) ;
+  if ( sc.isFailure() ) { return sc ; }
+  // find eigenvalues (&sort them if needed)
+  sc = _fun1 ( sorted ) ;
+  if ( sc.isFailure() ) { return sc ; }                      // RETUEN 
+  // copy the vector 
+  _copy ( m_vector , vals ) ;
+  return Ostap::StatusCode::SUCCESS ;                               // RETURN 
+}
+// ============================================================================
+// evaluate the eigenvalues and eigenvectors of the symmetrical matrix 
+// ============================================================================
+template <class T, unsigned int D, class R>
+inline Ostap::StatusCode 
+Ostap::Math::GSL::EigenSystem::eigenVectors 
+( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
+  ROOT::Math::SVector<T,D>&                                     vals , 
+  ROOT::Math::SMatrix<T,D,D,R>&                                 vecs , 
+  const bool sorted ) const
+{
+  Ostap::StatusCode sc = _fill ( mtrx ) ;
+  if ( sc.isFailure() ) { return sc ; }
+  // find the eigenvalues and eigenvectors (&sort them if needed) 
+  sc = _fun2 ( sorted ) ;
+  if ( sc.isFailure() ) { return sc ; }                      // RETUEN 
+  // copy the vector 
+  _copy ( m_vector , vals ) ;
+  // copy the matrix 
+  _copy ( m_evec   , vecs ) ;
+  return Ostap::StatusCode::SUCCESS ;
+} 
+// ============================================================================
+// evaluate the eigenvalues and eigenvectors of the symmetrical matrix 
+// ============================================================================
+template <class T, unsigned int D>
+inline Ostap::StatusCode 
+Ostap::Math::GSL::EigenSystem::eigenVectors 
+( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
+  ROOT::Math::SVector<T,D>&                                     vals , 
+  std::vector<ROOT::Math::SVector<T,D> >&                       vecs , 
+  const bool sorted ) const
+{
+  Ostap::StatusCode sc = _fill ( mtrx ) ;
+  if ( sc.isFailure() ) { return sc ; }
+  // find the eigenvalues and eigenvectors (&sort them if needed) 
+  sc = _fun2 ( sorted ) ;
+  if ( sc.isFailure() ) { return sc ; }                      // RETUEN 
+  // copy the vector 
+  _copy ( m_vector , vals ) ;
+  // copy the matrix 
+  vecs.resize( D ) ;
+  for ( unsigned int i = 0 ; i < D ; ++i ) 
+  {
+    for ( unsigned int j = 0 ; j < D ; ++j  ) 
+    { (vecs[i])[j] = gsl_matrix_get ( m_evec , j , i ) ; } 
+  } 
+  return Ostap::StatusCode::SUCCESS ;  
+}
+// ============================================================================
+// fill the internal structures with the input data 
+// ============================================================================
+template <class T,unsigned int D>
+inline Ostap::StatusCode 
+Ostap::Math::GSL::EigenSystem::_fill
+( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ) const  
+{
+  // check/adjust the internal structures 
+  Ostap::StatusCode sc = _check ( D ) ;  
+  if ( sc.isFailure() ) { return sc ; }                      // RETURN   
+  // fill input GSL matrix 
+  _copy ( mtrx , m_matrix ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;                               // RETURN 
+}
+// ============================================================================
+
+// ============================================================================
+// The END 
+// ============================================================================
+#endif // EIGENSYSTEM_ICPP
+// ============================================================================
