@@ -2,6 +2,7 @@
 
 import cppyy
 cppyy.load_reflection_info("libostap")
+import ROOT
 
 ve = cppyy.gbl.ostap.math.ValueWithError(2, 1)
 print("value=%f, cov2=%f, error=%f"  % (ve.value(), ve.cov2(), ve.error()))
