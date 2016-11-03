@@ -15,13 +15,16 @@
 // Ostap 
 // ============================================================================
 #include "Ostap/StatusCode.h"
-#include "Ostap/Exception.h"
 #include "Ostap/Math.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Combine.h"
 #include "Ostap/Interpolation.h"
 #include "Ostap/ValueWithError.h"
+// ============================================================================
+// Local
+// ============================================================================
+#include "Exception.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Gaudi::Math::ValueWithError

@@ -5,8 +5,50 @@
 <!--- Created : 2008-06-20 -->
 
 <lcgdict>
-  <class pattern = "ostap::math::ValueWithError*"       />
-  <class pattern = "ostap::math::Equal_To<*>"       />
-  <function name = "ostap::math::pow"             />
-  <function name = "ostap::math::::knuth_equal_to_double"  />
+  
+  <class name = "Ostap::Math::ValueWithError"  />
+  <class name = "Ostap::StatusCode"            />
+
+  <!--
+      
+  <class pattern = "Ostap::Math::*"       />
+  <class pattern = "Ostap::Utils::*"      />
+  <class pattern = "Ostap::*"             />
+
+  <exclusion>
+    <class pattern = "Ostap::Math::details::*"     />
+    <class pattern = "Ostap::Math::Models::*"      />
+    <class pattern = "Ostap::Utils::details::*"    />
+    <class pattern = "Ostap::Math::TypeWrapper*"   />
+    <class name    = "Ostap::Math::Interpolation::DATAVCT" />
+
+    <class name   = "Ostap::Math::WorkSpace">
+      <field name = "m_workspace"/>      
+    </class>
+    
+        <class name   = "Ostap::Math::Spline">  
+        <field name = "m_spline"/>      
+        </class>
+        <class name   = "Ostap::Math::Interp2D">
+        <field name = "m_histo"/>      
+        </class>
+    
+    <class name   = "Ostap::Math::Bernstein2D">
+      <field name = "m_bx"/>      
+      <field name = "m_by"/>      
+    </class>
+    
+    <class name   = "Ostap::Math::Bernstein2DSym">
+      <field name = "m_b"/>      
+    </class>
+    <class name   = "Ostap::Math::Chi2Fit">  
+      <field name = "m_solu" />      
+      <field name = "m_cov2" />      
+    </class>
+
+
+  </exclusion>
+
+    -->
+  
 </lcgdict>

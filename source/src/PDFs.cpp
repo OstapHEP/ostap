@@ -8,7 +8,6 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/Exception.h"
 #include "Ostap/PDFs.h"
 // ============================================================================
 // ROOT 
@@ -19,6 +18,7 @@
 // Local 
 // ============================================================================
 #include "Iterator.h"
+#include "Exception.h"
 // ============================================================================
 /** @file 
  *  Implementation file for namespace Ostap::Models
@@ -7779,7 +7779,7 @@ ClassImp(Ostap::Models::ExpoPS2DPol) ;
 ClassImp(Ostap::Models::Expo2DPol) ;
 ClassImp(Ostap::Models::Expo2DPolSym) ;
 ClassImp(Ostap::Models::Spline2D) ;
-ClassImp(Ostap::Models::Spline2DSym) ;
+ClassImp(Ostap::Models::Spline2DSym) ; 
 // ============================================================================
 // The END 
 // ============================================================================

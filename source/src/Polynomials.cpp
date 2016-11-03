@@ -12,7 +12,6 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/Exception.h"
 #include "Ostap/Math.h"
 #include "Ostap/Power.h"
 #include "Ostap/Choose.h"
@@ -20,6 +19,10 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Polynomials.h"
+// ============================================================================
+// Local 
+// ============================================================================
+#include "Exception.h"
 // ============================================================================
 /** @file Implementation file for classes from file Ostap/Polynomials.h
  *  @see LHCbMath/Polynomials.h
