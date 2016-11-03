@@ -10,7 +10,6 @@
 // ============================================================================
 // Ostap 
 // ============================================================================
-#include "Ostap/Exception.h"
 #include "Ostap/Math.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/Power.h"
@@ -18,6 +17,10 @@
 #include "Ostap/Polynomials.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Bernstein.h"
+// ============================================================================
+// Local
+// ============================================================================
+#include "Exception.h"
 // ============================================================================
 /** @file 
  *  Implementation file for functions, related to Bernstein's polynomnials 

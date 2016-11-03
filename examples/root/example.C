@@ -1,4 +1,5 @@
+#include "Ostap/ValueWithError.h"
 {
-	ostap::math::ValueWithError b(2,1);
-	std::cout << b.value() << std::endl;
+	Ostap::Math::ValueWithError b(2,1);
+	std::cout << b << std::endl;
 }
