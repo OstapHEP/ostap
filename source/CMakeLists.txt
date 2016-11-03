@@ -8,11 +8,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostap_dict_rdict.pcm   DESTINATION ${L
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostap_dictDict.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 #---Create a shared library with geneated dictionary
 FILE(GLOB_RECURSE sourceVar src/*.cpp)
-##add_library(ostap SHARED ${sourceVar} ostap_dict.cxx)
-add_library(ostap SHARED 
-                  src/ValueWithError.cpp 
-                  src/StatusCode.cpp 
-                  ostap_dict.cxx)
+add_library(ostap SHARED ${sourceVar} ostap_dict.cxx)
 target_link_libraries(ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES})
 
 # #---Create  a main program using the library
