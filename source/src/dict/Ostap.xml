@@ -1,37 +1,46 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <!--- $Id: -->
-<!--- Author  : Juan PALACIOS -->
-<!--- Created : 2008-06-20 -->
 
 <lcgdict>
   
-  <class name = "Ostap::Math::ValueWithError"  />
-  <class name = "Ostap::StatusCode"            />
+  <class name       = "Ostap::Math::ValueWithError"  />
+  <class name       = "Ostap::StatusCode"            />
 
-  <!--
-      
-  <class pattern = "Ostap::Math::*"       />
-  <class pattern = "Ostap::Utils::*"      />
-  <class pattern = "Ostap::*"             />
+  <class name       = "Ostap::Formula"               />
+  <class name       = "Ostap::Selector"              />
+  <class name       = "Ostap::SelectorWithCuts"      />
 
+  <class pattern    = "Ostap::Math::*"               />
+  
+  <class pattern    = "Ostap::Utils::*"      />
+
+  <class pattern    = "Ostap::Models::*"     />
+
+  <class pattern    = "Ostap::*"             />
+  
+  <function pattern = "Ostap::Math::*"    />
+  
   <exclusion>
+    
     <class pattern = "Ostap::Math::details::*"     />
     <class pattern = "Ostap::Math::Models::*"      />
     <class pattern = "Ostap::Utils::details::*"    />
     <class pattern = "Ostap::Math::TypeWrapper*"   />
     <class name    = "Ostap::Math::Interpolation::DATAVCT" />
 
+    <class name    = "Ostap::Math::Bernstein2D::VB" />
+
     <class name   = "Ostap::Math::WorkSpace">
       <field name = "m_workspace"/>      
     </class>
     
-        <class name   = "Ostap::Math::Spline">  
-        <field name = "m_spline"/>      
-        </class>
-        <class name   = "Ostap::Math::Interp2D">
-        <field name = "m_histo"/>      
-        </class>
+    <class name   = "Ostap::Math::Spline">  
+      <field name = "m_spline"/>      
+    </class>
+    <class name   = "Ostap::Math::Interp2D">
+      <field name = "m_histo"/>      
+    </class>
     
     <class name   = "Ostap::Math::Bernstein2D">
       <field name = "m_bx"/>      
@@ -45,10 +54,8 @@
       <field name = "m_solu" />      
       <field name = "m_cov2" />      
     </class>
-
-
+        
   </exclusion>
-
-    -->
+  
   
 </lcgdict>

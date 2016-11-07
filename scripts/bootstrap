@@ -8,3 +8,4 @@ export DYLD_LIBRARY_PATH=$BUILD_DIR/lib:$DYLD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$BUILD_DIR/lib:$LD_LIBRARY_PATH
 cmake .. && make install && python ../examples/python/example.py && \
  cd ../examples/root && root -q example.C
+
