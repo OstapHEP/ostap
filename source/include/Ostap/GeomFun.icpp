@@ -1,0 +1,240 @@
+// $Id$ 
+// ============================================================================
+// include files
+// ============================================================================
+// STL
+// ============================================================================
+#include <math.h>
+// ============================================================================
+// GSL
+// ============================================================================
+#include "gsl/gsl_math.h"
+// ============================================================================
+// ROOT
+// ============================================================================
+#include "Math/VectorUtil.h"
+// ============================================================================
+template<typename aLine, typename aPlane, typename aPoint>
+bool Ostap::Math::intersection(const aLine& line,
+                               const aPlane& plane,
+                               aPoint& intersect,
+                               double& mu)
+{
+  bool canCalculate = true;
+
+  const double scalar = line.direction().Dot( plane.Normal() );
+  if ( std::fabs(scalar) < 1e-20 )
+  {
+    canCalculate = false;
+  }
+  else
+  {
+    mu = -( plane.Distance( line.beginPoint() ) ) / scalar;
+    intersect = line.position(mu);
+  }
+  return canCalculate;
+}
+// ============================================================================
+template<typename aLine, typename aPlane>
+bool Ostap::Math::intersection(const aPlane& plane0,
+                               const aPlane& plane1,
+                               aLine& intersect)
+{
+
+  const typename aLine::Vector  n0 = plane0.Normal();
+  const typename aLine::Vector  n1 = plane1.Normal();
+  const typename aPlane::Scalar d0 = -1*plane0.HesseDistance();
+  const typename aPlane::Scalar d1 = -1*plane1.HesseDistance();
+  const typename aLine::Vector  direction = n0.Cross(n1);
+
+  // do something to check if the planes are parallel.
+
+  const typename aPlane::Scalar det = n0.mag2()*n1.mag2() - gsl_pow_2( n0.Dot(n1) );
+
+  const typename aPlane::Scalar c0 = ( d0*n1.mag2() - d1*n0.Dot(n1)  )  / det;
+  const typename aPlane::Scalar c1 = ( d1*n0.mag2() - d0*n0.Dot(n1)  )  / det;
+
+  const typename aLine::Point point0 =
+    typename aLine::Point(c0*n0 + c1*n1);
+
+  intersect = aLine(point0, direction);
+
+  return true;
+}
+// ============================================================================
+template<typename aPoint, typename aPlane>
+bool Ostap::Math::intersection(const aPlane& plane0,
+                               const aPlane& plane1,
+                               const aPlane& plane2,
+                               aPoint& intersect)
+{
+  bool OK = true;
+
+  const typename aPlane::Vector n0 = plane0.Normal();
+  const typename aPlane::Vector n1 = plane1.Normal();
+  const typename aPlane::Vector n2 = plane2.Normal();
+  const typename aPlane::Vector::Scalar denom = n0.Dot( n1.Cross(n2) );
+
+  if ( std::fabs(denom) < 1e-20 )
+  {
+    OK = false;
+  }
+  else
+  {
+
+    const typename aPlane::Scalar d0 = -1*plane0.HesseDistance();
+    const typename aPlane::Scalar d1 = -1*plane1.HesseDistance();
+    const typename aPlane::Scalar d2 = -1*plane2.HesseDistance();
+
+    intersect = (d0*(n1.Cross(n2)) + d1*(n2.Cross(n0)) +
+                 d2*(n0.Cross(n1)))/denom;
+  }
+
+  return OK;
+}
+// ============================================================================
+template <typename aLine, typename aPoint>
+inline double Ostap::Math::closestPointParam
+( const aPoint&  point ,
+  const aLine&   line  )
+{
+  return ( line.direction().Dot( point - line.beginPoint() )
+           / line.direction().Mag2() );
+}
+// ============================================================================
+template <typename aLine, typename aPoint>
+inline aPoint
+Ostap::Math::closestPoint
+( const aPoint&  point ,
+  const aLine&   line  )
+{
+  return line.position ( closestPointParam ( point , line ) ) ;
+}
+// ============================================================================
+template<typename aPoint, typename aLine>
+double Ostap::Math::impactParameter
+( const aPoint&  point ,
+  const aLine&   line  )
+{
+  return ( point - Ostap::Math::closestPoint ( point , line ) ) . R () ;
+}
+// ============================================================================
+template <typename aLine, typename bLine>
+inline bool Ostap::Math::closestPointParams
+(const aLine& line0 ,
+ const bLine& line1 ,
+ double&      mu0   ,
+ double&      mu1   )
+{
+  /**
+   *  Let the points
+   * \f$\vec{\mathbf{v}}_0=\vec{\mathbf{p}}_0+\mu_0\vec{\mathbf{d}}_0\f$
+   * and
+   * \f$\vec{\mathbf{v}}_1=\vec{\mathbf{p}}_1+\mu_1\vec{\mathbf{d}}_1\f$
+   * be the closest points. It means that
+   *  \f[
+   *   \begin{pmatrix}
+   *     \left(\vec{\mathbf{p}}_0-\vec{\mathbf{p}}_1\right)\vec{\mathbf{d}}_0 \ \
+   *     \left(\vec{\mathbf{p}}_0-\vec{\mathbf{p}}_1\right)\vec{\mathbf{d}}_1 \ \
+   *   \end{pmatrix} =  0
+   *  \f]
+   *  The final system is:
+   *  \f[
+   *   \begin{pmatrix}
+   *      \vec{\mathbf{d}}^2_0                 & - \vec{\mathbf{d}}_0\vec{\mathbf{d}}_1 \ \
+   *      \vec{\mathbf{d}}_0\vec{\mathbf{d}}_1 & - \vec{\mathbf{d}}^2_1
+   *   \end{pmatrix}
+   *   \begin{pmatrix}
+   *     \mu_0 \\  \mu_1
+   *   \end{pmatrix} =
+   *   \begin{pmatrix}
+   *       \vec{\mathbf{d}}_0 \left( \vec{\mathbf{p}}_1 - \vec{\mathbf{p}}_0 \right) \ \
+   *       \vec{\mathbf{d}}_1 \left( \vec{\mathbf{p}}_1 - \vec{\mathbf{p}}_0 \right)
+   *   \end{pmatrix}
+   *  \f]
+   */
+  // lhs:
+
+  bool OK = true;
+
+  // the matrix:
+  const double a00 =  line0.direction().Mag2() ;
+  const double a10 =  line0.direction().Dot( line1.direction() ) ;
+  const double a01 = -a10 ;
+  const double a11 = -line1.direction().Mag2() ;
+
+  // the inverse determinant:
+  const double det =  ( a00 * a11 - a01 * a10 ) ; // det = -sin^2(angle(line0.dir,line1.dir))
+  if ( std::fabs(det) < 1e-10 )
+  {
+    OK = false; // parallel
+  }
+  else
+  {
+
+    const double detinv = 1.0 / det;
+
+    // rhs:
+    const typename aLine::Vector p1_p0 = line1.beginPoint() - line0.beginPoint() ;
+
+    const double b0  = p1_p0.Dot ( line0.direction() ) ;
+    const double b1  = p1_p0.Dot ( line1.direction() ) ;
+
+    // get the Kramer solutions:
+    
+    mu0 =  ( b0  * a11 - b1  * a01 ) * detinv ;
+    mu1 =  ( a00 * b1  - a10 * b0  ) * detinv ;
+
+  }
+
+  return OK ;
+}
+// ============================================================================
+template <typename aLine, typename bLine, typename aPoint>
+inline bool Ostap::Math::closestPoints
+(const aLine& line0 ,
+ const bLine& line1 ,
+ aPoint&      p0    ,
+ aPoint&      p1    )
+{
+  bool OK = true;
+  double mu0(0.);
+  double mu1(0.);
+  if ( !Ostap::Math::closestPointParams(line0, line1, mu0, mu1) ) 
+  {
+    OK = false;
+  }
+  else
+  {
+    p0 = line0.position(mu0);
+    p1 = line1.position(mu1);
+  }
+  return OK;
+}
+// ============================================================================
+template <typename aLine, typename bLine>
+inline double Ostap::Math::distance
+( const aLine& line0 ,
+  const bLine& line1 )
+{
+  typename aLine::Point p0;
+  typename bLine::Point p1;
+  const bool goodLines = Ostap::Math::closestPoints(line0, line1, p0, p1);
+  return ( !goodLines                                     ? 
+           impactParameter ( line0.beginPoint() , line1 ) : // lines are parallel
+           ( p0 - p1 ) . R () );
+}
+// ============================================================================
+template <typename aLine, typename bLine>
+bool Ostap::Math::parallel
+( const aLine& line0 ,
+  const bLine& line1 )
+{
+  const typename aLine::Vector& v0 = line0.direction();
+  const typename bLine::Vector& v1 = line1.direction();
+  const double cosTheta = v0.Dot(v1)/(v0.r()*v1.r());
+  return ( 1.0 - std::abs( cosTheta ) < 1e-10 );
+}
+// ============================================================================
+// The END
+// ============================================================================
