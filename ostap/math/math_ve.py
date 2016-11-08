@@ -422,8 +422,9 @@ if '__main__' == __name__ :
     for v in vars :
         logger.info ( 'Var = %s ' % v )  
         for f in funcs :
-            logger.info ( "\t%s\t%s =\t%s " % ( f.__name__ , v ,  f(v) ) ) 
+            logger.info ( "\t%s\t%s = %s " % ( f.__name__ , v ,  f(v) ) ) 
             
+    logger.info ( 80*'*' ) 
              
 # =============================================================================
 # The  END

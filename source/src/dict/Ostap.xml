@@ -4,23 +4,30 @@
 
 <lcgdict>
   
-  <class name       = "Ostap::Math::ValueWithError"  />
-  <class name       = "Ostap::StatusCode"            />
-
-  <class name       = "Ostap::Formula"               />
-  <class name       = "Ostap::Selector"              />
-  <class name       = "Ostap::SelectorWithCuts"      />
-
-  <class pattern    = "Ostap::Math::*"               />
+  <class pattern    = "Ostap::*"                 />
+  <class pattern    = "Ostap::Math::*"           />  
+  <class pattern    = "Ostap::Math::GSL::*"      />  
+  <class pattern    = "Ostap::Utils::*"          />
+  <class pattern    = "Ostap::Models::*"         />
   
-  <class pattern    = "Ostap::Utils::*"      />
+  <function pattern = "Ostap::Math::*"           />
+  <function pattern = "Ostap::Utils::*"          />
+  <function pattern = "Ostap::Utils::Histos::*"  />
 
-  <class pattern    = "Ostap::Models::*"     />
+  <function name = "Ostap::Math::_matrix_add_"   />
+  <function name = "Ostap::Math::_matrix_sub_"   />
+  <function name = "Ostap::Math::_matrix_mul_"   />
+  <function name = "Ostap::Math::_matrix_rmul_"  />
+  <function name = "Ostap::Math::_matrix_div_"   />
 
-  <class pattern    = "Ostap::*"             />
-  
-  <function pattern = "Ostap::Math::*"    />
-  
+  <function name = "Ostap::Math::_vector_add_"   />
+  <function name = "Ostap::Math::_vector_radd_"  />
+  <function name = "Ostap::Math::_vector_sub_"   />
+  <function name = "Ostap::Math::_vector_rsub_"  />
+  <function name = "Ostap::Math::_vector_mul_"   />
+  <function name = "Ostap::Math::_vector_rmul_"  />
+  <function name = "Ostap::Math::_vector_div_"   />
+
   <exclusion>
     
     <class pattern = "Ostap::Math::details::*"     />
@@ -28,9 +35,9 @@
     <class pattern = "Ostap::Utils::details::*"    />
     <class pattern = "Ostap::Math::TypeWrapper*"   />
     <class name    = "Ostap::Math::Interpolation::DATAVCT" />
-
+    
     <class name    = "Ostap::Math::Bernstein2D::VB" />
-
+    
     <class name   = "Ostap::Math::WorkSpace">
       <field name = "m_workspace"/>      
     </class>
@@ -54,8 +61,16 @@
       <field name = "m_solu" />      
       <field name = "m_cov2" />      
     </class>
-        
+    
+    <class pattern = "ROOT::Math::SVector*" />
+    <class pattern = "ROOT::Math::Plane3D*" />
+    <class pattern = "ROOT::Math::SMatrix*" />
+    <class pattern = "ROOT::Math::PositionVector*"     />
+    <class pattern = "ROOT::Math::DisplacementVector*" />
+    <class pattern = "ROOT::Math::LorentzVector*"      />
+
+
   </exclusion>
   
-  
+
 </lcgdict>

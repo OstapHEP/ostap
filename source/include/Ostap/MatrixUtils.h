@@ -1370,7 +1370,6 @@ namespace Ostap
       const double                           b ) { return a / b ; }
     // =========================================================================
 
-    
     // ========================================================================
     // addition of vectors:  vector + vector -> vector 
     template <class T,unsigned int D>

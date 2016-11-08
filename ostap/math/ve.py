@@ -248,7 +248,21 @@ if '__main__' == __name__ :
     logger.info ( ' Symbols : %s' %  list ( __all__     ) )
     logger.info ( 80*'*' ) 
 
+    a = VE(100,100)
+    b = VE(400,400)
 
+    logger.info ( 'a=%s, b=%s' % ( a , b ) )
+    
+    logger.info ( 'a+b         %s' % ( a + b ) )
+    logger.info ( 'a-b         %s' % ( a - b ) )
+    logger.info ( 'a*b         %s' % ( a * b ) )
+    logger.info ( 'a/b         %s' % ( a / b ) )
+    logger.info ( 'a/(a+b)     %s' % ( a.frac ( b ) ) )
+    logger.info ( '(a-b)/(a+b) %s' % ( a.asym ( b ) ) )
+    
+    logger.info ( 80*'*' )
+    
+    
 # =============================================================================
 # The END 
 # =============================================================================

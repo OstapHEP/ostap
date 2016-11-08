@@ -1240,7 +1240,7 @@ Ostap::Math::ValueWithError Ostap::Math::igamma
   const double bv = b.value() ;
   const double v  = Ostap::Math::igamma  ( bv ) ;
   //
-  const double d1 = - Ostap::Math::psi( bv ) / v ;
+  const double d1 = - Ostap::Math::psi( bv ) * v ;
   const double d2 = d1 * d1 ;
   const double e2 = d2 * b.cov2() ;
   //

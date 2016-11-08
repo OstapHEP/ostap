@@ -46,12 +46,14 @@ add_library(ostap SHARED src/BSpline.cpp
                          src/Interpolation.cpp
                          src/Iterator.cpp
                          src/Lomont.cpp
+                         src/LorentzVectorWithError.cpp
                          src/Math.cpp
                          src/Models.cpp
                          src/MoreMath.cpp
                          src/Mute.cpp
                          src/NStatEntity.cpp
                          src/PDFs.cpp
+                         src/Point3DWithError.cpp
                          src/Polynomials.cpp
                          src/PyIterator.cpp
                          src/PySelector.cpp
@@ -63,6 +65,7 @@ add_library(ostap SHARED src/BSpline.cpp
                          src/Tee.cpp
                          src/UStat.cpp
                          src/ValueWithError.cpp
+                         src/Vector3DWithError.cpp
                          src/WStatEntity.cpp    
                          src/nSphere.cpp       )    
 

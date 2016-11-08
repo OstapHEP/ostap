@@ -4631,73 +4631,73 @@ namespace Ostap
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
      *  @date 2015-07-11
      */ 
-    // class  QGSM : public RooAbsPdf 
-    // {
-    //   // ======================================================================
-    // public :
-    //   // ======================================================================
-    //   ClassDef(Ostap::Models::QGSM, 1) ;
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// constructor from all parameters
-    //   QGSM
-    //     ( const char*           name      , 
-    //       const char*           title     ,
-    //       RooAbsReal&           x         , 
-    //       RooAbsReal&           b         ,   // parameter b 
-    //       RooAbsReal&           mass      ) ; // particle mass (fixed)
-    //   /// "copy constructor"
-    //   QGSM 
-    //     ( const QGSM&           right     , 
-    //       const char*           name  = 0 )  ;
-    //   /// destructor 
-    //   virtual ~QGSM  () ;
-    //   /// clone 
-    //   virtual  QGSM* clone ( const char* name ) const ; 
-    //   // ======================================================================
-    // public: // some fake functionality
-    //   // ======================================================================
-    //   // fake default contructor, needed just for proper (de)serialization
-    //   QGSM  () {} ;
-    //   // ======================================================================  
-    // public:
-    //   // ======================================================================
-    //   // the actual evaluation of function 
-    //   virtual Double_t evaluate() const ;
-    //   // ======================================================================
-    // public: // integrals  
-    //   // ======================================================================      
-    //   virtual Int_t    getAnalyticalIntegral
-    //     ( RooArgSet&     allVars      , 
-    //       RooArgSet&     analVars     ,
-    //       const char* /* rangename */ ) const ;
-    //   virtual Double_t analyticalIntegral 
-    //     ( Int_t          code         ,  
-    //       const char*    rangeName    ) const ;
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// set all parameters 
-    //   void setPars () const ; // set all parameters 
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// access to underlying function 
-    //   const Ostap::Math::QGSM& function() const { return m_qgsm ; }
-    //   // ======================================================================
-    // protected: 
-    //   // ======================================================================
-    //   RooRealProxy m_x        ;
-    //   RooRealProxy m_b        ;
-    //   RooRealProxy m_mass     ;
-    //   // ======================================================================
-    // private:
-    //   // ======================================================================
-    //   /// the actual function
-    //   mutable Ostap::Math::QGSM m_qgsm ; // the actual function
-    //   // ======================================================================
-    // } ;
+    class  QGSM : public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::QGSM, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      QGSM
+        ( const char*           name      , 
+          const char*           title     ,
+          RooAbsReal&           x         , 
+          RooAbsReal&           b         ,   // parameter b 
+          RooAbsReal&           mass      ) ; // particle mass (fixed)
+      /// "copy constructor"
+      QGSM 
+        ( const QGSM&           right     , 
+          const char*           name  = 0 )  ;
+      /// destructor 
+      virtual ~QGSM  () ;
+      /// clone 
+      virtual  QGSM* clone ( const char* name ) const ; 
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      QGSM  () {} ;
+      // ======================================================================  
+    public:
+      // ======================================================================
+      // the actual evaluation of function 
+      virtual Double_t evaluate() const ;
+      // ======================================================================
+    public: // integrals  
+      // ======================================================================      
+      virtual Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      , 
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const ;
+      virtual Double_t analyticalIntegral 
+        ( Int_t          code         ,  
+          const char*    rangeName    ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters 
+      void setPars () const ; // set all parameters 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function 
+      const Ostap::Math::QGSM& function() const { return m_qgsm ; }
+      // ======================================================================
+    protected: 
+      // ======================================================================
+      RooRealProxy m_x        ;
+      RooRealProxy m_b        ;
+      RooRealProxy m_mass     ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::QGSM m_qgsm ; // the actual function
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class TwoExpos
      *  simple difference of two exponents
