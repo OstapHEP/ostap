@@ -69,9 +69,9 @@ import ROOT, sys
 from ostap.logger.logger import getLogger
 __logger = getLogger ( 'ostap.core.load_ostap' )
 # =============================================================================
-## 1) load LHCb-style file
+## 1) load Ostap-style file
 # =============================================================================
-import Ostap.LHCbStyle 
+import pstap.plotting.style 
 # =============================================================================
 # The Heart 
 # =============================================================================
