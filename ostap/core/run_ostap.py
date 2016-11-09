@@ -244,7 +244,7 @@ arguments = parse_args()
 # =============================================================================
 from ostap.logger.logger import getLogger
 if arguments.Color and not arguments.batch :
-    from ostap.loggerlogger import make_colors
+    from ostap.logger.logger import make_colors
     make_colors()
     del make_colors 
 logger = getLogger( 'ostap' )
@@ -265,9 +265,10 @@ else:
     level = logging.DEBUG-5  if arguments.Verbose else logging.INFO-1
     logging.disable ( level  )
 
-    import Ostap.Line
-    logger.info ( "Welcome to Ostap\n" + Ostap.Line.line )
+    from ostap.logger.line import line 
+    logger.info ( "Welcome to Ostap\n" +  line )
     logger.info ( __doc__ )
+    del line
     
     _vars = vars ( arguments )
     _keys = _vars.keys()
@@ -320,10 +321,10 @@ import ostap.core.startup
 if arguments.Quiet :
     from Ostap.Utils import mute
     with mute () : 
-        from   Ostap.OstapBender import *
+        from   ostap.core.load_ostap import *
     del mute
 else :
-    from   Ostap.OstapBender import *
+    from ostap.core.load_ostap import *
 
     
 # =============================================================================

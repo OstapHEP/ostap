@@ -1,18 +1,18 @@
 #!/usr/bin/env python 
 # -*- coding: utf-8 -*-
-
+# =============================================================================
 # Copyright Ostap developers
-
+# =============================================================================
 """Ostap simple logger.
 
 Bsed on the logging of the Gaudi software project of CERN:
 - Simple control (global and local)  over logging threshold.
  Primitive utilities for colorized logging.
 """
-
+# =============================================================================
 import logging
-
-__all__ = [
+# =============================================================================
+__all__ = (
     'getLogger'      , ## get (configured) logger
     'setLogging'     , ## set disable level according to MSG.Level
     'LogLevel'       , ## context manager to control output level 
@@ -30,8 +30,8 @@ __all__ = [
     'colored_string' , ## make a colored string
     #
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'
-    ]
-
+    )
+# =============================================================================
 # Message levels
 ALL     = 0
 VERBOSE = 1
@@ -41,9 +41,11 @@ WARNING = 4
 ERROR   = 5
 FATAL   = 6
 
+# =============================================================================
 ## some manipulations with logging module
 if not hasattr ( logging , 'VERBOSE' ) : logging.VERBOSE = 5
 
+# =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose2_(msg, *args, **kwargs):
     """Log a message with severity 'VERBOSE' on the root logger.
@@ -51,6 +53,7 @@ def _verbose2_(msg, *args, **kwargs):
     if len(logging.root.handlers) == 0: logging.basicConfig()
     logging.root.verbose (msg, *args, **kwargs)
 
+# =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose1_(self, msg, *args, **kwargs):
     """Log 'msg % args' with severity 'VERBOSE'.
@@ -58,6 +61,7 @@ def _verbose1_(self, msg, *args, **kwargs):
     if self.isEnabledFor(logging.VERBOSE):
             self._log(logging.VERBOSE, msg, args, **kwargs)
 
+# =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose2_(msg, *args, **kwargs):
     """Log a message with severity 'VERBOSE' on the root logger.
@@ -66,12 +70,15 @@ def _verbose2_(msg, *args, **kwargs):
         logging.basicConfig()
     logging.root.verbose (msg, *args, **kwargs)
 
+# =============================================================================
 ## add method 'verbose' to logger 
 logging.Logger.verbose = _verbose1_
 
+# =============================================================================
 ## add method 'verbose' to root logger 
 logging.verbose        = _verbose2_
 
+# =============================================================================
 ## convert MSG::Level into logging level 
 def setLogging ( output_level ) :
     """Convert MSG::Level into logging level 
@@ -486,12 +493,11 @@ if __name__ == '__main__' :
 
     setLogging ( 0 )
 
-    #logger = getLogger ( 'AnalysisPython.Logger' )
-    logger = getLogger ( __name__ )
-    #logger.info ( 80*'*'  ) 
+    logger = getLogger ( 'ostap.logger')
+    logger.info ( 80*'*'  ) 
     logger.info ( __doc__ ) 
     logger.info ( ' Symbols : %s ' %  list ( __all__ ) )
-    #logger.info ( 80*'*'  )
+    logger.info ( 80*'*'  )
     
     logger.verbose  ( 'This is VERBOSE  message'  ) 
     logger.debug    ( 'This is DEBUG    message'  ) 
@@ -547,3 +553,8 @@ if __name__ == '__main__' :
     logger.error    ( 'This is ERROR    message'  ) 
     logger.fatal    ( 'This is FATAL    message'  ) 
     logger.critical ( 'This is CRITICAL message'  ) 
+    logger.info ( 80*'*'  )
+
+# =============================================================================
+# The END 
+# =============================================================================
