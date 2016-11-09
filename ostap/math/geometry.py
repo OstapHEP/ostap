@@ -840,6 +840,44 @@ if '__main__' == __name__ :
     logger.info ( ' Date    : %s' %         __date__      )
     logger.info ( ' Symbols : %s' %  list ( __all__     ) )
     logger.info ( 80*'*' ) 
+    
+    p1  = Ostap.XYZPoint      (0,1,2)
+    v1  = Ostap.XYZVector     (2,1,0)
+    lv1 = Ostap.LorentzVector (2,1,0,3)
+    l1  = Ostap.XYZLine       ( p1 , v1 )
+    pl1 = Ostap.Plane3D       ( 1, 1, 1, 0 )
+
+    logger.info ( '3D-point       (x,y,z)           : %s' % p1  )
+    logger.info ( '3D-vector      (x,y,z)           : %s' % v1  )
+    logger.info ( 'Lorentz-vector ((px,py,pz),E)    : %s' % lv1 )
+    logger.info ( '3D-line        (point,direction) : %s' % l1  )
+    logger.info ( '3D-plane       (point,normal)    : %s' % pl1 )
+
+    pnt1   = Ostap.XYZPoint(-1,-2,-3)
+    pnt2   = Ostap.XYZPoint( 1,-2,-3)
+    line1  = Ostap.Math.XYZLine(Ostap.XYZPoint(0,1,2), Ostap.XYZVector(1,1,1)  )
+    line2  = Ostap.Math.XYZLine(Ostap.XYZPoint(1,3,0), Ostap.XYZVector(1,-1,2) )
+    plane1 = Ostap.Math.Plane3D ( 0 , 1, 2,  3 )
+    plane2 = Ostap.Math.Plane3D ( 1 , 8, 9,  0 )
+    plane3 = Ostap.Math.Plane3D ( 4 , 5, 6, -1 )
+    
+    logger.info ( ' line  : intersect          : %s' % ( line1.intersect ( plane1 )     ,) ) 
+    logger.info ( ' plane : intersect two      : %s' % ( plane1.line(plane2)            ,) )
+    logger.info ( ' plane : intersect three    : %s' % ( plane1.point(plane2,plane3)    ,) )
+    logger.info ( ' plane : intersect two      : %s' % ( plane1.intersect(plane2)       ,) )
+    logger.info ( ' plane : intersect three    : %s' % ( plane1.intersect(plane2,plane3),) )
+    logger.info ( ' line  : impactParameter    : %s' % ( line1.impactParameter ( pnt1 ) ,) )
+    logger.info ( ' point : impactParameter    : %s' % ( pnt1 .impactParameter ( line1 ),) )
+    logger.info ( ' line  : distance           : %s' % ( line1.distance  (line2)        ,) )
+    logger.info ( ' line  : closestPoints      : %s' % ( line1.closestPoints(line2)     ,) )
+    logger.info ( ' line  : closestPointParams : %s' % ( line1.closestPointParams(line2),) ) 
+    logger.info ( ' line  : closestPoint       : %s' % ( line1.closestPoint ( pnt2  )   ,) )
+    logger.info ( ' point : closestPoint       : %s' % ( pnt2 .closestPoint ( line1 )   ,) )
+    logger.info ( ' line  : closestPointParam  : %s' % ( line1.closestPointParam ( pnt1),) ) 
+    logger.info ( ' point : closestPointParam  : %s' % ( pnt1 .closestPointParam (line1),) ) 
+    logger.info ( ' line  : parallel           : %s' % ( line1.parallel  (line2)        ,) )
+    
+    logger.info ( 80*'*' ) 
 
 # =============================================================================
 # The END 

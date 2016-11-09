@@ -84,7 +84,6 @@ Ostap.Math.SVector5WithError  . __len__ = lambda s : 5
 Ostap.Math.SVector6WithError  . __len__ = lambda s : 6 
 Ostap.Math.SVector8WithError  . __len__ = lambda s : 8 
 
-
 for t in ( Ostap.Math.ValueWithError         ,
            Ostap.Math.Point3DWithError       ,
            Ostap.Math.Vector3DWithError      ,
@@ -233,6 +232,108 @@ def _ve_ne_ ( self , other ) :
 VE . __eq__ = _ve_eq_
 VE . __ne__ = _ve_ne_
 
+
+# =============================================================================
+# =============================================================================
+## get the (gaussian) random number according to parameters
+#
+#  @code
+#    >>> v = ...  ## the number with error
+#
+#    ## get 100 random numbers 
+#    >>> for i in range ( 0, 100 ) : print v.gauss()
+#    
+#    ## get only non-negative numbers 
+#    >>> for j in range ( 0, 100 ) : print v.gauss( lambda s : s > 0 )
+#
+#  @endcode
+#  @attention scipy is needed! 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-08-10
+# 
+def _gauss_ ( s , accept = lambda a : True , nmax = 1000 ) : 
+    """ Get the gaussian random number
+    >>> v = ...  ## the number with error
+    ## get 100 random numbers 
+    >>> for i in range ( 0, 100 ) : print v.gauss()    
+    ## get only non-negative numbers 
+    >>> for j in range ( 0, 100 ) : print v.gauss( lambda s : s > 0 )
+    
+    Attention: scipy is needed! 
+    """
+    #
+    if 0 >= s.cov2() or iszero ( s.cov2 () ) : return s.value() ## return
+    #
+    from scipy import random
+    _gauss = random.normal
+    #
+    v = s.value ()
+    e = s.error ()
+    #
+    for i in range( 0 , nmax ) : 
+        r = v + e * _gauss ()
+        if accept ( r ) : return r
+
+    logger.warning("Can'n generate proper random number %s" % s )
+    return v  
+# =============================================================================
+## generate poisson random number according to parameters 
+#  @code
+#    >>> v = ...  ## the number with error
+#
+#    ## get 100 random numbers 
+#    >>> for i in range ( 0, 100 ) : print v.poisson ( fluctuate = True )
+#    
+#    ## get only odd numbers 
+#    >>> for j in range ( 0, 100 ) : print v.poisson ( fluctuate = True , accept = lambda s : 1 ==s%2 )
+#
+#    ## do not fluctuate the mean of poisson:    
+#    >>> for j in range ( 0, 100 ) : print v.poisson ( fluctuate = False  )
+#
+#  @endcode
+#  @attention scipy is needed! 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-08-10   
+def _poisson_ ( s , fluctuate , accept = lambda s : True ) :
+    """Generate poisson random number according to parameters 
+    >>> v = ...  ## the number with error    
+    ## get 100 random numbers 
+    >>> for i in range ( 0, 100 ) : print v.poisson()    
+    ## get only odd numbers 
+    >>> for j in range ( 0, 100 ) : print v.poisson ( accept = lambda s : 1 ==s%2 )    
+    ## do not fluctuate the mean of poisson:    
+    >>> for j in range ( 0, 100 ) : print v.poisson ( fluctuate = False  )
+
+    Attention: scipy is needed! 
+    """
+    v = s.value() 
+    if v < 0 and not fluctuate :
+        raise TypeError, 'Negative mean without fluctuations (1)'
+    if v < 0 and s.cov2() <= 0 :
+        raise TypeError, 'Negative mean without fluctuations (2)'
+
+    e = s.error() 
+    if v < 0 and abs(v) > 3 * e  :
+        logger.warning ( "Very inefficient mean fluctuations: %s" % s ) 
+
+    mu = v
+    if fluctuate :
+        mu = s.gauss ()
+        while mu < 0 :
+            mu = s.gauss ()
+
+    from scipy import random
+    _poisson = random.poisson
+    
+    return _poisson ( mu ) 
+
+try :
+    from scipy import random
+    VE.gauss   = _gauss_
+    VE.poisson = _poisson_ 
+except ImportError :
+    logger.warning('scipy.random is not available') 
+    
 
 # =============================================================================
 if '__main__' == __name__ :

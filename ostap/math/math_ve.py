@@ -38,7 +38,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.math_ve' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 from   ostap.math.ve   import VE
-from   ostap.math.base import iszero, cpp 
+from   ostap.math.base import cpp, iszero, isequal
 _ln2_i = 1/math.log(2.0)                 ## useful constant 
 # =============================================================================
 
@@ -387,6 +387,18 @@ def hypot ( x , y , c = 0 ) :
     _y = VE ( y )
     return _hypot_ ( _x , _y , c )
 
+# =============================================================================
+## FIX
+#  @see https://sft.its.cern.ch/jira/browse/ROOT-6627'
+_a  = VE( 1  , 1 )
+_b  = VE( _a     )
+if     isequal ( _a.error () , _b.error () ) : pass 
+else :
+    jira = 'https://sft.its.cern.ch/jira/browse/ROOT-6627'
+    vers = ROOT.gROOT.GetVersion() 
+    logger.warning ( 'The problem %s is not solved yet ( ROOT %s) ' %  ( jira , vers ) )
+    logger.warning ( 'Temporarily disable cast of VE to float' )
+    del VE.__float__
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -415,7 +427,7 @@ if '__main__' == __name__ :
               gamma  , tgamma , lgamma , igamma ]
     
     ## use helper object:
-    from ostap.math.deriv import EvalVE 
+    from ostap.math.derivative import EvalVE 
     funcs += [ EvalVE ( math.sin , math.cos ) ,
                EvalVE ( math.sin )            ]
     
