@@ -127,7 +127,7 @@ class RootOnlyShelf(shelve.Shelf):
     Essentially it is nothing more than just shelve-like
     interface for ROOT-files
     Attention: It CRUCIALLY depends on the proper
-    TFile-decorations from Ostap.TFileDeco module
+    TFile-decorations from ostap.io.root_file module
     
     >>> db = RooOnlyShelf('mydb.root','c')
     >>> h1 = ...
@@ -142,8 +142,8 @@ class RootOnlyShelf(shelve.Shelf):
         >>> h1 = ...
         """
         self.__filename = filename 
-        from ostap.io.tfile_deco import ROOTCWD, open_mode  
-        with ROOTCWD() : ## preserve current directory in ROOT 
+        from ostap.io.root_file import ROOTCWD, open_mode  
+        with ROOTCWD() : ## NB: preserve current directory in ROOT!
             rfile = ROOT.TFile.Open ( filename   , open_mode ( mode ) , *args  )
             shelve.Shelf.__init__ ( self , rfile , writeback ) 
 

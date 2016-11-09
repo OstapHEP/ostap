@@ -3,7 +3,7 @@
 # =============================================================================
 # $Id$
 # =============================================================================
-## @file
+## @file roo_file.py
 #  Module with decoration of TFile objects for efficient use in python
 #  It provides TFile (well, actually any TDirectory) with python-like protocol
 #  @code
@@ -75,7 +75,7 @@ cpp = cppyy.gbl
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.io.tfile_deco' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.io.root_file' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for TFile objects')
