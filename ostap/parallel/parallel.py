@@ -42,7 +42,8 @@ try:
 except:
     
     ## 
-    logger.error ("Can't import ostap.parallel.mp_pathos:" , exc_info = True )
+    ## logger.error ("Can't import ostap.parallel.mp_pathos:" , exc_info = True )
+    logger.error ("Can't import ostap.parallel.mp_pathos" )
     from ostap.parallel.mp_gaudi import Task, WorkManager 
     logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
     
