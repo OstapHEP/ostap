@@ -22,11 +22,11 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.fixes.fixes')
 else                      : logger = getLogger ( __name__           ) 
 # =============================================================================
+## suppress welcome message from RooFit
 from ostap.logger.utils import mute
 with mute() :
     v = ROOT.RooRealVar()
     del v
-
 # =============================================================================
 # The EDN
 # =============================================================================

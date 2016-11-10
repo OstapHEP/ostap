@@ -281,31 +281,9 @@ def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
 
 # =============================================================================
 try :
-    from scipy.random import poisson as _poisson
+    from random                import poisson as _poisson 
 except ImportError :
-    logger.warning ('scipy.random.poisson is not accessible, use hand-made replacement')
-    _STEP = 500.0
-    _MAX  =  30.0
-    import math
-    _sqrt  = math.sqrt
-    _exp   = math.exp
-    _round = cpp.Ostap.Math.round
-    from random import uniform as _uniform
-    ## hand-made replacement for poisson random number generator  
-    def _poisson ( mu ) :
-        mu = float ( mu ) 
-        if _MAX <= mu :
-            r = _gauss ( mu , _sqrt( mu ) ) 
-            return max ( _round ( r ) , 0 )
-        x  = 0
-        p  = _exp ( -mu )
-        s  = p
-        u  = _uniform ( 0 , 1 )
-        while s < u :
-            x += 1
-            p *= mu / x
-            s += p
-        return x
+    from ostap.math.random_ext import poisson as _poisson 
 
 # =============================================================================
 ## generate poisson random number according to parameters 
