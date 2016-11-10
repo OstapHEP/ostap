@@ -71,7 +71,7 @@ __logger = getLogger ( 'ostap.core.load_ostap' )
 # =============================================================================
 ## 1) load Ostap-style file
 # =============================================================================
-import pstap.plotting.style 
+import ostap.plotting.style 
 # =============================================================================
 # The Heart 
 # =============================================================================
@@ -85,7 +85,8 @@ import ostap.io.shelve_ext
 
 # =============================================================================
 ## import useful context managers
-from Ostap.Utils import *
+from ostap.logger.utils import *
+from ostap.utils.utils  import *
 # ============================================================================= 
 ## prepend the path 
 if '.' not in sys.path :
@@ -93,9 +94,7 @@ if '.' not in sys.path :
     sys.path = ['.'] + sys.path 
     
 # =============================================================================
-cpp = Ostap.PyRoUts.cpp
-VE  = Ostap.PyRoUts.VE
-hID = Ostap.PyRoUts.hID 
+from ostap.core.core import cpp, Ostap, VE, SE, WSE, hID 
 # =============================================================================
 if '__main__' == __name__ :
 

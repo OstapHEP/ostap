@@ -101,6 +101,53 @@ def getCanvas ( name   = 'glCanvas' ,   ## canvas name
     return cnv
 
 # =============================================================================
+all_extensions = (
+    'pdf'  , 'png'  , 'gif' ,
+    'eps'  , 'ps'   ,
+    'cxx'  , 'c'    , 
+    'jpg'  , 'jpeg' , 'svg' , 
+    'root' , 'xml'  , 'xpm' , 
+    'tiff' , 'tex' 
+    )
+
+# =============================================================================
+## define simplified print for TCanvas 
+def _cnv_print_ ( cnv , fname , exts = ( 'pdf' , 'png' , 'eps', 'C' ) ) :
+    """A bit simplified version for TCanvas print
+    >>> canvas.print ( 'fig' )    
+    """
+    #
+    from ostap.logger.utils import rootWarning 
+    n,d,e = fname.rpartition('.')
+    if d and e.lower() in all_extensions : 
+        with rootWarning () :  
+            cnv.Print    ( fname )
+            logger.debug ( 'Canvas --> %s' % fname )
+            return cnv
+        
+    for ext in exts :
+        with rootWarning () :
+            name = fname + '.' + ext
+            cnv.Print   ( name )
+            logger.debug('Canvas --> %s' % name )
+            
+    return cnv 
+
+# =============================================================================
+## define streamer for canvas
+#  @code
+#  canvas >> 'a'    
+#  @endcode 
+def _cnv_rshift_ ( cnv , fname ) :
+    """Very simple print for canvas:
+    >>> canvas >> 'a'    
+    """
+    return _cnv_print_ ( cnv , fname )
+
+ROOT.TCanvas.print_     = _cnv_print_
+ROOT.TCanvas.__rshift__ = _cnv_rshift_
+
+# =============================================================================
 ## get all known canvases 
 def getCanvases () :
     """ Get all known canvases """ 

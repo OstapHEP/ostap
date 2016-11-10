@@ -21,10 +21,6 @@ __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
 import ROOT             ## attention here!!
-from   Ostap.Core        import hID,VE 
-import Ostap.HistoDeco 
-import Ostap.HParamDeco 
-# 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -33,6 +29,10 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.compare' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some specific comparison of histo-objects')
+# =============================================================================
+from   ostap.core.core     import hID,VE 
+import ostap.histos.histos 
+import ostap.histos.param
 # =============================================================================
 ## Can 1D-histogram can be considered as ``constant'' ?  
 def _h1_constant_ ( h1 , prob = 0.50 , opts = '0Q' ) :

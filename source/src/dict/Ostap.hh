@@ -27,6 +27,7 @@
 #include "Ostap/HistoProject.h"
 #include "Ostap/HistoStat.h"
 #include "Ostap/Interpolation.h"
+#include "Ostap/Iterator.h"
 #include "Ostap/Line.h"
 #include "Ostap/LineTypes.h"
 #include "Ostap/Lomont.h"

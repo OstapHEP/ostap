@@ -114,19 +114,22 @@ from ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
 # =============================================================================
 # Other decorations 
 # =============================================================================
-import Ostap.TreeDeco
-import Ostap.MinuitDeco
-import Ostap.HTextDeco
-import Ostap.HParamDeco
+import ostap.trees.trees
+import ostap.trees.cuts
 
-import ostap.histos.compare 
-import Ostap.io.root_file
+import ostap.histos.param
+import ostap.histos.compare
 
-import Ostap.MiscDeco
-import Ostap.Models 
-import Ostap.HepDATA 
-import Ostap.Canvas 
-import Ostap.RooFitDeco
+import ostap.io.root_file
+
+import ostap.math.models
+import ostap.utils.hepdata 
+import ostap.utils.pdg_format 
+
+import ostap.plotting.canvas
+
+import ostap.fitting.minuit 
+import ostap.fitting.roofit
 
 # =============================================================================
 ## graphs 
@@ -140,7 +143,7 @@ ROOT.gROOT.ProcessLine("gErrorIgnoreLevel = %d; " % iLevel )
 if '__main__' == __name__ :
             
     from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + Ostap.Line.line  ) 
+    logger.info ( __file__  + '\n' + line  ) 
     logger.info ( 80*'*'   )
     logger.info ( __doc__  )
     logger.info ( 80*'*' )

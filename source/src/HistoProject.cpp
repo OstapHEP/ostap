@@ -15,10 +15,7 @@
 #include "Ostap/StatVar.h"
 #include "Ostap/Formula.h"
 #include "Ostap/HistoProject.h"
-// ============================================================================
-//  Local
-// ============================================================================
-#include "Iterator.h"
+#include "Ostap/Iterator.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Analysis::HProject

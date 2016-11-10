@@ -5,16 +5,23 @@
 // ROOT&RooFit 
 // ============================================================================
 #include "TIterator.h"           // ROOT 
+#include "TCollection.h"         // ROOT 
 #include "RooAbsCollection.h"    // RooFit
 // ============================================================================
 // Local
 // ============================================================================
-#include "Iterator.h"
+#include "Ostap/Iterator.h"
 // ============================================================================
 // standard constructor: create and keep the ietrator 
 // ============================================================================  
 Ostap::Utils::Iterator::Iterator ( const RooAbsCollection& collection ) 
   : m_iterator( collection.createIterator() ) 
+{}
+// ============================================================================  
+// standard constructor: create and keep the ietrator 
+// ============================================================================  
+Ostap::Utils::Iterator::Iterator ( const TCollection& collection ) 
+  : m_iterator( collection.MakeIterator() ) 
 {}
 // ============================================================================  
 // invoke TIterator::Next

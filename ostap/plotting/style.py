@@ -17,9 +17,11 @@ __all__ = (
     'Style'      ,
     'label'      ,
     'latex'      , 
+    'font'       , 
     'ostapStyle' ,
     'ostapLabel' ,
     'ostapLatex' ,
+    'ostapFont'  ,
     'OstapStyle' 
     )
 # =============================================================================
@@ -37,20 +39,21 @@ lineWidth =   1
 
 ##define style for text
 label = ROOT.TText   (    )
-label . SetTextFont  ( ostapFont )
+label . SetTextFont  ( font )
 label . SetTextColor (  1 )
 label . SetTextSize  (  0.04 )
 label . SetTextAlign ( 12 )
 
 ## define style of latex text
-latex = ROOT.TLatex   ()
-latex . SetTextFont   ( ostapFont )
+latex = ROOT.TLatex   () 
+latex . SetTextFont   ( font )
 latex . SetTextColor  ( 1    )
 latex . SetTextSize   ( 0.04 )
 latex . SetTextAlign  ( 12   )
 
 ostapLatex = latex
 ostapLabel = label
+ostapFont  = font
 
 # =============================================================================
 ## define LHCb style for plots 
@@ -186,7 +189,7 @@ def OstapStyle ( name      = "OstapStyle"           ,
     
     return style 
 
-Style      = OstaStyle() 
+Style      = OstapStyle() 
 ostapStyle = Style
 
 
