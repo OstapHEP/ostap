@@ -234,6 +234,11 @@ VE . __ne__ = _ve_ne_
 
 
 # =============================================================================
+try :
+    from scipy.random import normal as _gauss
+except ImportError :
+    from random       import gauss  as _gauss
+    
 # =============================================================================
 ## get the (gaussian) random number according to parameters
 #
@@ -251,7 +256,7 @@ VE . __ne__ = _ve_ne_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-08-10
 # 
-def _gauss_ ( s , accept = lambda a : True , nmax = 1000 ) : 
+def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) : 
     """ Get the gaussian random number
     >>> v = ...  ## the number with error
     ## get 100 random numbers 
@@ -264,18 +269,44 @@ def _gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
     #
     if 0 >= s.cov2() or iszero ( s.cov2 () ) : return s.value() ## return
     #
-    from scipy import random
-    _gauss = random.normal
-    #
     v = s.value ()
     e = s.error ()
     #
-    for i in range( 0 , nmax ) : 
-        r = v + e * _gauss ()
+    for i in range( 0 , nmax ) :
+        r = _gauss ( v , e ) 
         if accept ( r ) : return r
 
     logger.warning("Can'n generate proper random number %s" % s )
     return v  
+
+# =============================================================================
+try :
+    from scipy.random import poisson as _poisson
+except ImportError :
+    logger.warning ('scipy.random.poisson is not accessible, use hand-made replacement')
+    _STEP = 500.0
+    _MAX  =  30.0
+    import math
+    _sqrt  = math.sqrt
+    _exp   = math.exp
+    _round = cpp.Ostap.Math.round
+    from random import uniform as _uniform
+    ## hand-made replacement for poisson random number generator  
+    def _poisson ( mu ) :
+        mu = float ( mu ) 
+        if _MAX <= mu :
+            r = _gauss ( mu , _sqrt( mu ) ) 
+            return max ( _round ( r ) , 0 )
+        x  = 0
+        p  = _exp ( -mu )
+        s  = p
+        u  = _uniform ( 0 , 1 )
+        while s < u :
+            x += 1
+            p *= mu / x
+            s += p
+        return x
+
 # =============================================================================
 ## generate poisson random number according to parameters 
 #  @code
@@ -294,7 +325,7 @@ def _gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
 #  @attention scipy is needed! 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-08-10   
-def _poisson_ ( s , fluctuate , accept = lambda s : True ) :
+def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
     """Generate poisson random number according to parameters 
     >>> v = ...  ## the number with error    
     ## get 100 random numbers 
@@ -306,6 +337,7 @@ def _poisson_ ( s , fluctuate , accept = lambda s : True ) :
 
     Attention: scipy is needed! 
     """
+    s = VE( s ) 
     v = s.value() 
     if v < 0 and not fluctuate :
         raise TypeError, 'Negative mean without fluctuations (1)'
@@ -321,19 +353,11 @@ def _poisson_ ( s , fluctuate , accept = lambda s : True ) :
         mu = s.gauss ()
         while mu < 0 :
             mu = s.gauss ()
-
-    from scipy import random
-    _poisson = random.poisson
     
     return _poisson ( mu ) 
 
-try :
-    from scipy import random
-    VE.gauss   = _gauss_
-    VE.poisson = _poisson_ 
-except ImportError :
-    logger.warning('scipy.random is not available') 
-    
+VE.gauss   = _ve_gauss_
+VE.poisson = _ve_poisson_ 
 
 # =============================================================================
 if '__main__' == __name__ :
