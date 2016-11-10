@@ -127,7 +127,6 @@ class DataAndLumi(Data2):
             len ( self.files ) ,
             len ( self.chain ) ) 
 
-
 # =============================================================================
 ## add it to original module 
 DATA.DataAndLumi = DataAndLumi 
