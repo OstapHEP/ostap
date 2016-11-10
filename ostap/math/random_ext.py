@@ -19,9 +19,9 @@ __version__ = "$Revision$"
 __date__    = "2012-04-28"
 # =============================================================================
 __all__ = (
-    'bifur'   ,  ## bifurcated gaussian
-    've_gau'  ,  ## gaussian using ValueWithError construction
-    'poisson' ,  ## poisson (missing in python random module) 
+    'bifur'    ,  ## bifurcated gaussian
+    've_gauss' ,  ## gaussian using ValueWithError construction
+    'poisson'  ,  ## poisson (missing in python random module) 
     )
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -53,10 +53,10 @@ def _bifur_ ( self , mu , sigma1 , sigma2 ) :
 # =============================================================================
 ## generate bifurcated gaussian using Value
 #  @see Ostap::Math::ValueWithError
-def _ve_gau_ ( self , val ) :
+def _ve_gauss_ ( self , val ) :
     """Generate the gaussian accoridng to Ostap.Math.ValueWithError
     >>> ve    = VE ( 1 , 2 ) 
-    >>> value = ve_gau ( ve  )
+    >>> value = ve_gauss ( ve  )
     """
     mean  = val.value ()
     sigma = val.error ()
@@ -91,18 +91,18 @@ except ImportError :
             p *= mu / x
             s += p
         return x
-
+    
 import random 
-if not hasattr ( random.Random , 'bifur'   ) : random.Random.bifur   = _bifur_
-if not hasattr ( random        , 'bifur'   ) : random.bifur          = random._inst.bifur
-if not hasattr ( random.Random , 've_gau'  ) : random.Random.ve_gau  = _ve_gau_
-if not hasattr ( random        , 've_gau'  ) : random.ve_gau         = random._inst.ve_gau
-if not hasattr ( random.Random , 'poisson' ) : random.Random.poisson = _poisson_
-if not hasattr ( random        , 'poisson' ) : random.poisson        = random._inst.poisson
+if not hasattr ( random.Random , 'bifur'     ) : random.Random.bifur     = _bifur_
+if not hasattr ( random        , 'bifur'     ) : random.bifur            = random._inst.bifur
+if not hasattr ( random.Random , 've_gauss'  ) : random.Random.ve_gauss  = _ve_gauss_
+if not hasattr ( random        , 've_gauss'  ) : random.ve_gauss         = random._inst.ve_gauss
+if not hasattr ( random.Random , 'poisson'   ) : random.Random.poisson   = _poisson_
+if not hasattr ( random        , 'poisson'   ) : random.poisson          = random._inst.poisson
 
-bifur   = random.bifur
-ve_gau  = random.ve_gau
-poisson = random.poisson
+bifur    = random.bifur
+ve_gauss = random.ve_gauss
+poisson  = random.poisson
 
 # =============================================================================
 if '__main__' == __name__  :

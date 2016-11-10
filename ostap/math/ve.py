@@ -234,11 +234,7 @@ VE . __ne__ = _ve_ne_
 
 
 # =============================================================================
-try :
-    from scipy.random import normal as _gauss
-except ImportError :
-    from random       import gauss  as _gauss
-    
+from random import gauss as _gauss     
 # =============================================================================
 ## get the (gaussian) random number according to parameters
 #
@@ -263,8 +259,6 @@ def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
     >>> for i in range ( 0, 100 ) : print v.gauss()    
     ## get only non-negative numbers 
     >>> for j in range ( 0, 100 ) : print v.gauss( lambda s : s > 0 )
-    
-    Attention: scipy is needed! 
     """
     #
     if 0 >= s.cov2() or iszero ( s.cov2 () ) : return s.value() ## return
@@ -272,19 +266,16 @@ def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
     v = s.value ()
     e = s.error ()
     #
-    for i in range( 0 , nmax ) :
-        r = _gauss ( v , e ) 
-        if accept ( r ) : return r
-
+    for i in xrange ( nmax  ) :
+        r = _gauss  ( v , e ) 
+        if accept   ( r     ) : return r
+        
     logger.warning("Can'n generate proper random number %s" % s )
-    return v  
+    return v
+
 
 # =============================================================================
-try :
-    from random                import poisson as _poisson 
-except ImportError :
-    from ostap.math.random_ext import poisson as _poisson 
-
+from ostap.math.random_ext import poisson as _poisson 
 # =============================================================================
 ## generate poisson random number according to parameters 
 #  @code
@@ -312,8 +303,6 @@ def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
     >>> for j in range ( 0, 100 ) : print v.poisson ( accept = lambda s : 1 ==s%2 )    
     ## do not fluctuate the mean of poisson:    
     >>> for j in range ( 0, 100 ) : print v.poisson ( fluctuate = False  )
-
-    Attention: scipy is needed! 
     """
     s = VE( s ) 
     v = s.value() 
