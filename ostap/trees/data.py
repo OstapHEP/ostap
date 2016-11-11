@@ -15,12 +15,6 @@
 #  >>> chain = data.chain
 #  >>> flist = data.files 
 #
-#  >>> data  = DataAndLumi('Bc/MyTree', '*.root' )
-#  >>> chain = data.chain
-#  >>> flist = data.files 
-#  >>> lumi  = data.lumi
-#  >>> print data.getLumi()
-#
 #  @endcode
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -69,7 +63,7 @@ __all__     = (
     'Files'       , ## collect files  
     'Data'        , ## collect files and create     TChain
     'Data2'       , ## collect files and create two TChain objects 
-    'DataAndLumi' )
+    )
 # =============================================================================
 import ROOT, glob 
 # =============================================================================
@@ -178,7 +172,7 @@ class Data(Files):
         Files.treatFile ( self , the_file )
         
         ## suppress Warning/Error messages from ROOT 
-        from Ostap.Utils import rootError
+        from ostap.logger.utils import rootError
         with rootError() :
             
             tmp = ROOT.TChain ( self.chain.GetName() )
@@ -232,7 +226,7 @@ class Data2(Data):
         Data.treatFile ( self , the_file )
 
         ## suppress Warning/Error messages from ROOT 
-        from Ostap.Utils import rootError
+        from ostap.logger.utils import rootError
         with rootError() :
             
             tmp = ROOT.TChain ( self.chain2.GetName() )
@@ -250,49 +244,6 @@ class Data2(Data):
                                                                     len ( self.chain  ) ,
                                                                     len ( self.chain2 ) )
     
-            
-# =============================================================================
-## @class DataAndLumi
-#  Simple utility to access to certain chain in the set of ROOT-files
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @author Alexander BARANOV a.baranov@cern.ch
-#  @date   2014-06-08  
-class DataAndLumi(Data2):
-    """Simple utility to access to certain chain in the set of ROOT-files    
-    >>> data  = DataAndLumi('Bc/MyTree', '*.root' )
-    >>> chain = data.chain
-    >>> flist = data.files 
-    >>> lumi  = data.lumi
-    >>> print data.getLumi() 
-    """
-
-    def __init__( self               ,
-                  chain              ,
-                  files       = []   ,
-                  description = ''   , 
-                  lumi_chain  = 'GetIntegratedLuminosity/LumiTuple' , 
-                  maxfiles    = 1000000                             ,
-                  silent      = False ) :  
-
-        if not description :
-            description = chain.GetName() if hasattr ( chain , 'GetName' ) else str(chain)
-        Data2.__init__ ( self , chain , lumi_chain , files , description , maxfiles  , silent ) 
-        self.lumi = self.chain2 
-        
-    ## get the luminosity 
-    def getLumi ( self ):
-        """Get the luminosity
-        """
-        from   Ostap.GetLumi import getLumi
-        return getLumi ( self.chain2  )
-
-    ## printout 
-    def __str__(self):
-        
-        return "<Luminosity: {}pb-1; #files: {}; Entries: {}>".format(
-            self.getLumi()     ,
-            len ( self.files ) ,
-            len ( self.chain ) ) 
     
 # =============================================================================
 if '__main__' == __name__ :
