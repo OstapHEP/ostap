@@ -83,7 +83,37 @@ import ostap.trees.data as DATA
 Files = DATA.Files
 Data  = DATA.Data 
 Data2 = DATA.Data2 
-            
+
+# =============================================================================
+## replacement for ostap.trees.data.Files to perform also globbing on EOS
+#  @attention result depends on EOS configuration and it is rather fragile
+def _globWithEOS( self , pattern ) :
+    """Replacement for ostap.trees.data.Files to perform also globbing on EOS
+    - attention: result depends on EOS configuration and it is rather fragile
+    """
+    _fs = []
+    if 0 <= pattern.find('/eos/') :
+        if  0 <= pattern.find ( '*' ) or 0 <= pattern.find ( '?' ) or \
+               0 <= pattern.find ( '[' ) or 0 <= pattern.find ( ']' )  : 
+            logger.warning('Globbing might not work for EOS-files "%s"' % pattern )
+            try : 
+                from ostap.contribs.lhcb.eos import EOS
+                with EOS() as eos :
+                    for f in eos.iglob ( pattern , root = True ) : _files.add ( f )
+            except OSError :
+                logger.debug ('EOS does not work')
+                pass
+            ## 
+        else : _fs.append ( pattern ) 
+    else :
+        for f in glob.iglob ( pattern ) : _fs.append ( f )
+
+    return _fs
+
+# =============================================================================
+## replace the default method 
+DATA.Files.globPattern = _globWithEOS
+
 # =============================================================================
 ## @class DataAndLumi
 #  Simple utility to access to certain chain in the set of ROOT-files

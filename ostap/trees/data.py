@@ -108,22 +108,8 @@ class Files(object):
         #
         _files = set() 
         for pattern in files :
-            ## experimental feature: try to match files on EOS 
-            if 0 <= pattern.find('/eos/lhcb/') :
-                if  0 <= pattern.find ( '*' ) or 0 <= pattern.find ( '?' ) or \
-                       0 <= pattern.find ( '[' ) or 0 <= pattern.find ( ']' )  : 
-                    logger.warning('Globbing might not work for EOS-files "%s"' % pattern )
-                    try : 
-                        from ostap.utils.eos import EOS
-                        with EOS() as eos :
-                            for f in eos.iglob ( pattern , root = True ) : _files.add ( f )
-                    except OSError :
-                        logger.debug ('EOS does not work')
-                        pass
-                    ## 
-                else : _files.add ( pattern ) 
-            else :
-                for f in glob.iglob ( pattern ) : _files.add ( f )
+            _fs = self.globPattern ( pattern )
+            for _f in _fs : _files.add ( _f )
                 
         if not self.silent :
             logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description ,
@@ -140,7 +126,11 @@ class Files(object):
 
         if not self.silent :
             logger.info ('Loaded: %s' % self )
-            
+
+    ## 
+    def globPattern ( self , pattern ) :
+        return [ f in glob.iglob ( pattern ) ]
+        
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         self.files.append ( the_file )
