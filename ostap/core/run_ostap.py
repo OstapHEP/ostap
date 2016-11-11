@@ -246,7 +246,7 @@ from ostap.logger.logger import getLogger
 if arguments.Color and not arguments.batch :
     from ostap.logger.logger import make_colors
     make_colors()
-    del make_colors 
+    del make_colors
 logger = getLogger( 'ostap' )
 # =============================================================================
 

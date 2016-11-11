@@ -41,15 +41,23 @@ from ostap.core.run_ostap import *
 if with_ipython () :
     raise RuntimeError("Can't start Ostap from ipython!")
 
-# =============================================================================
-## exit if batch 
-if arguments.batch : 
-    
+# ============================================================================= 
+if arguments.batch :
     ## nothing to do 
     logger.debug  ('Bye, bye...')
     exit () 
 
-elif arguments.embed : ## the only one option up to Ostap v1r9
+# ============================================================================= 
+if not arguments.simple : 
+    try :
+        import IPython
+    except ImportError :
+        logger.error ( "Can't use IPython, switch to ``simple'' interactive console" )
+        arguments.simple = True
+        arguments.embed  = False
+        
+# =============================================================================
+if arguments.embed : ## the only one option up to Ostap v1r9
 
     logger.info ('Start embedded interactive shell')
     
