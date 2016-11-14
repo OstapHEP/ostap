@@ -90,6 +90,9 @@ namespace Ostap
   inline std::ostream& operator<<( std::ostream& s, const WStatEntity& e )
   { return e.fillStream ( s ) ; }
   // ==========================================================================
+  /// conversion to string 
+  inline std::string to_string ( const WStatEntity& e ) { return e.toString() ;}
+  // ==========================================================================
 } //                                                 The end of namespace Ostap
 // ============================================================================
 // The END 

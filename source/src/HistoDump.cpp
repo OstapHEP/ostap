@@ -16,15 +16,16 @@
 #include "TProfile.h"
 #include "TAxis.h"
 // ============================================================================
-// Boost
-// ============================================================================
-#include "boost/format.hpp"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
 #include "Ostap/HistoDump.h"
+#include "Ostap/HistoStat.h"
 // ============================================================================
+// local 
+// =============================================================================
+#include "format.h"
+// =============================================================================
 namespace
 {
   // ==========================================================================
@@ -274,23 +275,15 @@ namespace
    *  @author Vanya BELYAEV  Ivan.BElyaev@nikhef.nl
    *  @date 2009-09-19
    */
-  inline std::string yLabel  ( double value )
-  {
-    boost::format fmt ( "%10.3g" ) ;
-    fmt % value ;
-    return fmt.str () ;
-  }
+  inline std::string yLabel  ( const double value ) 
+  { return Ostap::format ( "%10.3g" , value ) ; }
   // ==========================================================================
   /** make the label for x-axis
    *  @author Vanya BELYAEV  Ivan.BElyaev@nikhef.nl
    *  @date 2009-09-19
    */
-  inline std::string xLabel  ( const double value )
-  {
-    boost::format fmt ( "%9.3g" ) ;
-    fmt % value ;
-    return fmt.str () ;
-  }
+  inline std::string xLabel  ( const double value ) 
+  { return Ostap::format( "%9.3g" , value ) ; }
   // ==========================================================================
   /// get "correct" symbol
   char symbBin ( const Histo::Bin& bin    ,
@@ -321,9 +314,9 @@ namespace
     const bool                errors ,
     std::ostream&             stream )
   {
-    if (  40    > width  ) { return dumpText ( histo ,  40   , height , errors , stream ) ; }
-    if ( 200    < width  ) { return dumpText ( histo , 200   , height , errors , stream ) ; }
-    if ( 150    < height ) { return dumpText ( histo , width , 150    , errors , stream ) ; }
+    if (  60    > width  ) { return dumpText ( histo ,  60   , height , errors , stream ) ; }
+    if ( 240    < width  ) { return dumpText ( histo , 240   , height , errors , stream ) ; }
+    if ( 200    < height ) { return dumpText ( histo , width , 200    , errors , stream ) ; }
     if (  20    > height ) { return dumpText ( histo , width , 20     , errors , stream ) ; }
     if ( height > width  ) { return dumpText ( histo , width , width  , errors , stream ) ; }
     //
@@ -514,45 +507,41 @@ std::ostream& Ostap::Utils::Histos::histoDump
   if ( sc.isFailure() ) { return stream ; }  // RETURN
   //
   stream
-    << boost::format ( " Histo Name  : \"%s\"")
-    % histo -> GetName ()
+    << " Histo Name  : \"" << histo -> GetName  () << "\""
     << std::endl
-    << boost::format ( " Histo Title : \"%s\"")
-    % histo -> GetTitle ()
+    << " Histo Title : \"" << histo -> GetTitle () << "\""
     << std::endl
     << std::endl ;
   //
   stream
-    << boost::format ( " Mean        : %11.5g +- %-10.4g ")
-    % histo -> GetMean      ()
-    % histo -> GetMeanError ()
+    << Ostap::format ( " Mean        : %11.5g +- %-10.4g " , 
+                       Ostap::Utils::HistoStat::mean        ( histo ) , 
+                       Ostap::Utils::HistoStat::meanErr     ( histo ) ) 
     << std::endl
-    << boost::format ( " Rms         : %11.5g +- %-10.4g ")
-    % histo -> GetRMS      ()
-    % histo -> GetRMSError ()
+    << Ostap::format ( " Rms         : %11.5g +- %-10.4g " , 
+                       Ostap::Utils::HistoStat::rms         ( histo ) , 
+                       Ostap::Utils::HistoStat::rmsErr      ( histo ) ) 
     << std::endl
-    << boost::format ( " Skewness    : %11.5g            ")
-    % histo -> GetSkewness ()
+    << Ostap::format ( " Skewness    : %11.5g +- %-10.4g " , 
+                       Ostap::Utils::HistoStat::skewness    ( histo ) , 
+                       Ostap::Utils::HistoStat::skewnessErr ( histo ) ) 
     << std::endl
-    << boost::format ( " Kurtosis    : %11.5g            ")
-    % histo -> GetKurtosis ()
+    << Ostap::format ( " Kurtosis    : %11.5g +- %-10.4g " , 
+                       Ostap::Utils::HistoStat::kurtosis    ( histo ) , 
+                       Ostap::Utils::HistoStat::kurtosisErr ( histo ) ) 
     << std::endl
     << std::endl ;
   //
   stream
-    << boost::format ( " Entries     :\n | %=11s | %=11s | %=11s | %=11s | %=11s |")
-    % "All"
-    % "Underflow"
-    % "Overflow"
-    % "#Equivalent"
-    % "Integral"
-    << std::endl
-    << boost::format ( " | %=11.5g | %=11.5g | %=11.5g | %=11.5g | %=11.5g |")
-    % histo -> GetEntries ()
-    % histo -> GetBinContent ( 0                       )
-    % histo -> GetBinContent ( histo->GetNbinsX() + 1  )
-    % histo -> GetEffectiveEntries  ()
-    % histo -> Integral             ()
+    << " Entries     :" << std::endl  
+    << " |      All    |  Underflow  |  Overflow   | #Equivalent |  Integral   |"
+    << std::endl 
+    << Ostap::format ( " | %11.5g | %11.5g | %11.5g | %11.5g | %11.5g |"  , 
+                       histo -> GetEntries    ()                          ,
+                       histo -> GetBinContent ( 0                       ) , 
+                       histo -> GetBinContent ( histo->GetNbinsX() + 1  ) ,
+                       histo -> GetEffectiveEntries  ()                   , 
+                       histo -> Integral             ()                   ) 
     << std::endl
     << std::endl ;
   //
@@ -582,36 +571,53 @@ std::ostream& Ostap::Utils::Histos::histoDump
   if ( sc.isFailure() ) { return stream ; }  // RETURN
   //
   stream
-    << boost::format ( " Profile Name  : \"%s\"")
-    % histo -> GetName ()
+    << " Profile Name  : \"" << histo -> GetName  () << "\"" << std::endl
+    << " Profile Title : \"" << histo -> GetTitle () << "\"" << std::endl 
+    << std::endl ;
+  stream
+    << Ostap::format ( " Mean        : %11.5g +- %-10.4g " , 
+                       Ostap::Utils::HistoStat::mean        ( histo ) , 
+                       Ostap::Utils::HistoStat::meanErr     ( histo ) ) 
     << std::endl
-    << boost::format ( " Profile Title : \"%s\"")
-    % histo -> GetTitle ()
+    << Ostap::format ( " Rms         : %11.5g +- %-10.4g " , 
+                       Ostap::Utils::HistoStat::rms         ( histo ) , 
+                       Ostap::Utils::HistoStat::rmsErr      ( histo ) ) 
+    << std::endl
+    << Ostap::format ( " Skewness    : %11.5g +- %-10.4g " , 
+                       Ostap::Utils::HistoStat::skewness    ( histo ) , 
+                       Ostap::Utils::HistoStat::skewnessErr ( histo ) ) 
+    << std::endl
+    << Ostap::format ( " Kurtosis    : %11.5g +- %-10.4g " , 
+                       Ostap::Utils::HistoStat::kurtosis    ( histo ) , 
+                       Ostap::Utils::HistoStat::kurtosisErr ( histo ) ) 
     << std::endl
     << std::endl ;
   //
   stream
-    << boost::format ( " Mean          : %11.5g ") % histo -> GetMean      ()
-    << std::endl
-    << boost::format ( " Rms           : %11.5g ") % histo -> GetRMS      ()
+    << " Entries     :" << std::endl  
+    << " |      All    |  Underflow  |  Overflow   | #Equivalent |  Integral   |"
+    << std::endl 
+    << Ostap::format ( " | %11.5g | %11.5g | %11.5g | %11.5g | %11.5g |"  , 
+                       histo -> GetEntries    ()                          ,
+                       histo -> GetBinContent ( 0                       ) , 
+                       histo -> GetBinContent ( histo->GetNbinsX() + 1  ) ,
+                       histo -> GetEffectiveEntries  ()                   , 
+                       histo -> Integral             ()                   ) 
     << std::endl
     << std::endl ;
   //
   stream
-    << boost::format ( " Entries       :\n | %=11s | %=11s | %=11s | %=11s |")
-    % "All"
-    % "Underflow"
-    % "Overflow"
-    % "Integral"
+    << " Entries       :"  << std::endl 
+    << " | All         |  Underflow  |  Overflow   |   Integral  |"
     << std::endl
-    << boost::format ( " | %=11.5g | %=11.5g | %=11.5g | %=11.5g |")
-    % histo -> GetEntries ()
-    % histo -> GetBinContent ( 0                       )
-    % histo -> GetBinContent ( histo->GetNbinsX() + 1  )
-    % histo -> Integral             ()
+    << Ostap::format ( " | %11.5g | %11.5g | %11.5g | %11.5g |", 
+                       histo -> GetEntries    ()                          , 
+                       histo -> GetBinContent ( 0                       ) ,
+                       histo -> GetBinContent ( histo->GetNbinsX() + 1  ) ,
+                       histo -> Integral      ()                          ) 
     << std::endl
     << std::endl ;
-  //
+//
   return dumpText ( hist , width , height , true , stream ) ;
 }
 // ============================================================================

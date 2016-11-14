@@ -26,7 +26,8 @@ MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 #---Create a shared library with geneated dictionary
-add_library(ostap SHARED src/BSpline.cpp
+add_library(ostap SHARED src/format.cpp
+                         src/BSpline.cpp
                          src/Bernstein.cpp
                          src/Binomial.cpp
                          src/Choose.cpp

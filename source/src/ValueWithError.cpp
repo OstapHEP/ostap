@@ -8,10 +8,6 @@
 #include <sstream>
 #include <climits>
 // ============================================================================
-// Boost
-// ============================================================================
-#include "boost/format.hpp"
-// ============================================================================
 // Ostap 
 // ============================================================================
 #include "Ostap/StatusCode.h"
@@ -25,17 +21,13 @@
 // Local
 // ============================================================================
 #include "Exception.h"
+#include "format.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Gaudi::Math::ValueWithError
  *  @date 2009-06-03
  *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
  */
-// ============================================================================
-#ifdef __INTEL_COMPILER                                   // Disable ICC remark
-//            floating-point equality and inequality comparisons are unreliable
-#pragma warning(disable:1572) 
-#endif
 // ============================================================================
 // local namespace to hide the details
 // ============================================================================
@@ -284,15 +276,7 @@ std::ostream&
 Ostap::Math::ValueWithError::fillStream
 ( std::ostream&      s   ,
   const std::string& fmt ) const
-{
-  using namespace boost::io ;
-  //
-  boost::format printer ( fmt) ;
-  printer.exceptions ( all_error_bits ^ ( too_many_args_bit | too_few_args_bit ) ) ;
-  printer % value () % error () ;
-  //
-  return s << printer ;
-}
+{ return s << Ostap::format ( fmt , value() , error() ) ; }
 // ============================================================================
 // conversion to string
 // ============================================================================

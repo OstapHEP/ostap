@@ -292,7 +292,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                #
                Ostap.Math.GenGaussV1             ,
                Ostap.Math.GenGaussV2             ,
-               Ostap.Math.SkewGauss              ,
+               ## Ostap.Math.SkewGauss              , ## (temporarily removed)
                Ostap.Math.GammaDist              ,
                Ostap.Math.GenGammaDist           ,
                Ostap.Math.Amoroso                ,
@@ -461,7 +461,8 @@ for pdf in ( Ostap.Models.BreitWigner          ,
              Ostap.Models.BifurcatedGauss    ,
              Ostap.Models.GenGaussV1         , 
              Ostap.Models.GenGaussV2         , 
-             Ostap.Models.SkewGauss          ) :
+             ## Ostap.Models.SkewGauss          ## (temporarily removed) 
+             ) :
 
     pdf.sp_integrate = sp_integrate_1D_
 

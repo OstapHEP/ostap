@@ -36,7 +36,7 @@ Empricial PDFs to describe narrow peaks
   - bifurcated Gauissian
   - generalized normal v1 
   - generalized normal v2
-  - skew Gaussian
+  ## - skew Gaussian  (temporarily removed)
   - Bukin,
   - Student-T
   - bifurcated Student-T
@@ -80,7 +80,7 @@ __all__ = (
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
     'GenGaussV2_pdf'         , ## generalized normal v2 
-    'SkewGauss_pdf'          , ## skewed gaussian
+    ## 'SkewGauss_pdf'          , ## skewed gaussian (temporarily removed)
     'Bukin_pdf'              , ## generic Bukin PDF: skewed gaussian with exponential tails
     'StudentT_pdf'           , ## Student-T function 
     'BifurcatedStudentT_pdf' , ## bifurcated Student-T function
@@ -839,65 +839,65 @@ class GenGaussV2_pdf(MASS) :
             self.kappa  )
 
 models.append ( GenGaussV2_pdf )    
-# =============================================================================
-## @class SkewGauss_pdf
-#  Simple class that implements the skew normal distribution
-#  @see http://en.wikipedia.org/wiki/Skew_normal_distribution
-#  @see Ostap::Models::SkewGauss 
-#  @see Ostap::Math::SkewGauss 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2011-07-25
-class SkewGauss_pdf(MASS) :
-    """Skew normal distribution
-    see http://en.wikipedia.org/wiki/Skew_normal_distribution
+## # =============================================================================
+## ## @class SkewGauss_pdf
+## #  Simple class that implements the skew normal distribution
+## #  @see http://en.wikipedia.org/wiki/Skew_normal_distribution
+## #  @see Ostap::Models::SkewGauss 
+## #  @see Ostap::Math::SkewGauss 
+## #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+## #  @date 2011-07-25
+## class SkewGauss_pdf(MASS) :
+##     """Skew normal distribution
+##     see http://en.wikipedia.org/wiki/Skew_normal_distribution
     
-    The skew normal distribution is a continuous probability distribution that
-    generalises the normal distribution to allow for non-zero skewness.
+##     The skew normal distribution is a continuous probability distribution that
+##     generalises the normal distribution to allow for non-zero skewness.
 
-    Parameters:
-    - location
-    - omega>0   : scale
-    - alpha     : shape   (alpha=0 corresponds to gaussian distribuition)
-    """
-    def __init__ ( self             ,
-                   name             ,
-                   mn        = None ,
-                   mx        = None ,
-                   mass      = None ,
-                   mean      = None ,
-                   omega     = None ,
-                   alpha     = 0    ) : ## alpha=0 correspond to gaussian 
-        #
-        ## initialize the base
-        # 
-        MASS.__init__  ( self    , name  ,
-                         mn      , mx    , mass    ,
-                         mean    , omega ) 
+##     Parameters:
+##     - location
+##     - omega>0   : scale
+##     - alpha     : shape   (alpha=0 corresponds to gaussian distribuition)
+##     """
+##     def __init__ ( self             ,
+##                    name             ,
+##                    mn        = None ,
+##                    mx        = None ,
+##                    mass      = None ,
+##                    mean      = None ,
+##                    omega     = None ,
+##                    alpha     = 0    ) : ## alpha=0 correspond to gaussian 
+##         #
+##         ## initialize the base
+##         # 
+##         MASS.__init__  ( self    , name  ,
+##                          mn      , mx    , mass    ,
+##                          mean    , omega ) 
         
-        self.omega = self.sigma
-        sname  = self.omega.GetName  ()
-        stitle = self.omega.GetTitle ()
-        gname  = sname .replace ( 'sigma' , 'omega' )
-        gtitle = stitle.replace ( 'sigma' , 'omega' )
-        self.omega.SetName  ( gname  ) 
-        self.omega.SetTitle ( gtitle )
+##         self.omega = self.sigma
+##         sname  = self.omega.GetName  ()
+##         stitle = self.omega.GetTitle ()
+##         gname  = sname .replace ( 'sigma' , 'omega' )
+##         gtitle = stitle.replace ( 'sigma' , 'omega' )
+##         self.omega.SetName  ( gname  ) 
+##         self.omega.SetTitle ( gtitle )
 
-        self.alpha = makeVar ( alpha                      ,
-                               'alpha_%s'          % name ,
-                               '#alpha_{Skew}(%s)' % name , alpha , 
-                               0 , -100 , 100  ) 
-        #
-        ## finally build pdf
-        # 
-        self.pdf = Ostap.Models.SkewGauss (
-            "skewg_"         + name ,
-            "SkewGauss(%s)" % name ,
-            self.mass   ,
-            self.mean   ,
-            self.omega  ,
-            self.alpha  )
+##         self.alpha = makeVar ( alpha                      ,
+##                                'alpha_%s'          % name ,
+##                                '#alpha_{Skew}(%s)' % name , alpha , 
+##                                0 , -100 , 100  ) 
+##         #
+##         ## finally build pdf
+##         # 
+##         self.pdf = Ostap.Models.SkewGauss (
+##             "skewg_"         + name ,
+##             "SkewGauss(%s)" % name ,
+##             self.mass   ,
+##             self.mean   ,
+##             self.omega  ,
+##             self.alpha  )
 
-models.append ( SkewGauss_pdf )      
+## models.append ( SkewGauss_pdf )      
 # =============================================================================
 ## @class Bukin_pdf
 #  Bukin function, aka ``modified Novosibirsk function''

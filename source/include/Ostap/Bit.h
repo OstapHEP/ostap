@@ -8,15 +8,11 @@
 // STD & STL 
 // ============================================================================
 #include <functional>
+#include <limits>
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/TypeWrapper.h"
-// ============================================================================
-// Boost
-// ============================================================================
-#include "boost/integer_traits.hpp"
-#include "boost/static_assert.hpp"
 // ============================================================================
 /** @file
  *
@@ -78,12 +74,12 @@ namespace Ostap
       struct Check 
       {
         // ====================================================================
-        static_assert ( boost::integer_traits<TYPE>::is_specialized
-                        && boost::integer_traits<TYPE>::is_integral 
-                        &&!boost::integer_traits<TYPE>::is_signed   , 
+        static_assert ( std::numeric_limits<TYPE>::is_specialized
+                        && std::numeric_limits<TYPE>::is_integer 
+                        &&!std::numeric_limits<TYPE>::is_signed   , 
                         "Check: Inappropriate type") ;      
         // ====================================================================
-        enum { value =  N < (unsigned int) boost::integer_traits <TYPE>::digits } ;
+        enum { value =  N < (unsigned int) std::numeric_limits <TYPE>::digits } ;
         // ====================================================================
       };
       // ======================================================================
@@ -99,8 +95,9 @@ namespace Ostap
       {
       private:
         // ====================================================================
-        static_assert ( boost::integer_traits<TYPE>::is_specialized 
-                        &&!boost::integer_traits<TYPE>::is_signed   , 
+        static_assert ( std::numeric_limits<TYPE>::is_specialized 
+                        && std::numeric_limits<TYPE>::is_integer     
+                        &&!std::numeric_limits<TYPE>::is_signed     ,
                         "_IBit: Inappropriate type"                 ) ;      
         // ====================================================================
       public:
@@ -123,8 +120,9 @@ namespace Ostap
       {
       private:
         // ====================================================================
-        static_assert ( boost::integer_traits<TYPE>::is_specialized 
-                        &&!boost::integer_traits<TYPE>::is_signed   , 
+        static_assert ( std::numeric_limits<TYPE>::is_specialized 
+                        && std::numeric_limits<TYPE>::is_integer     
+                        &&!std::numeric_limits<TYPE>::is_signed     ,
                         "_IBits: Inappropriate type"                 ) ;      
         // ====================================================================
       public:
@@ -133,8 +131,8 @@ namespace Ostap
           { 
             value = 
             ( I & ( static_cast<TYPE> ( -1 )
-                    << ( boost::integer_traits<TYPE>::digits + N1 - N2 ) 
-                    >> ( boost::integer_traits<TYPE>::digits      - N2 ) ) ) 
+                    << ( std::numeric_limits<TYPE>::digits + N1 - N2 ) 
+                    >> ( std::numeric_limits<TYPE>::digits      - N2 ) ) ) 
             >> N1
           } ;
         // ====================================================================
@@ -150,9 +148,9 @@ namespace Ostap
       {
       private:
         // ====================================================================
-        static_assert ( boost::integer_traits<TYPE>::is_specialized
-                        && boost::integer_traits<TYPE>::is_integral 
-                        &&!boost::integer_traits<TYPE>::is_signed   , 
+        static_assert ( std::numeric_limits<TYPE>::is_specialized 
+                        && std::numeric_limits<TYPE>::is_integer     
+                        &&!std::numeric_limits<TYPE>::is_signed     ,
                         "_Bit: Inappropriate type"                  ) ;      
         // ====================================================================
       public:
@@ -175,25 +173,25 @@ namespace Ostap
       {
       private:
         // ====================================================================
-        static_assert ( boost::integer_traits<TYPE>::is_specialized
-                        && boost::integer_traits<TYPE>::is_integral 
-                        &&!boost::integer_traits<TYPE>::is_signed   , 
+        static_assert ( std::numeric_limits<TYPE>::is_specialized 
+                        && std::numeric_limits<TYPE>::is_integer     
+                        &&!std::numeric_limits<TYPE>::is_signed     ,
                         "_Bits: Inappropriate type"                  ) ;      
         // ====================================================================
         static_assert ( N1 < N2  &&
-                        N1 <  (unsigned int) boost::integer_traits<TYPE>::digits && 
-                        N2 <= (unsigned int) boost::integer_traits<TYPE>::digits , 
+                        N1 <  (unsigned int) std::numeric_limits<TYPE>::digits && 
+                        N2 <= (unsigned int) std::numeric_limits<TYPE>::digits , 
                         "_Bits: invalid indices"                     ) ;      
-        // ====================================================================
-      public:
+                        // ====================================================================
+        public:
         // ====================================================================
         inline TYPE operator() ( const TYPE value ) const
         {
           // ==================================================================
           static const TYPE s_mask = 
             ( static_cast<TYPE> ( -1 ) 
-              << ( boost::integer_traits<TYPE>::digits + N1 - N2 ) )  
-            >> ( boost::integer_traits<TYPE>::digits      - N2 ) ;
+              << ( std::numeric_limits<TYPE>::digits + N1 - N2 ) )    
+              >> ( std::numeric_limits<TYPE>::digits      - N2 ) ;
           // =================================================================
           return ( value & s_mask ) >> N1 ;
           // ==================================================================
@@ -310,13 +308,13 @@ namespace Ostap
     inline bool bit ( const TYPE value , const unsigned int N  ) 
     {
       // ======================================================================
-      static_assert ( boost::integer_traits<TYPE>::is_specialized
-                      && boost::integer_traits<TYPE>::is_integral 
-                      &&!boost::integer_traits<TYPE>::is_signed   , 
+      static_assert ( std::numeric_limits<TYPE>::is_specialized 
+                      && std::numeric_limits<TYPE>::is_integer     
+                      &&!std::numeric_limits<TYPE>::is_signed     ,
                       "bit: inappropriate type"                   ) ;
       // ======================================================================
       static const TYPE one = static_cast<TYPE>(1) ;
-      return N < (unsigned int) boost::integer_traits <TYPE>::digits ? 
+      return N < (unsigned int) std::numeric_limits<TYPE>::digits ? 
         ( value & ( one << N ) )!=0 : 0 ;
       // ======================================================================
     }  
@@ -327,21 +325,21 @@ namespace Ostap
                        const unsigned int N2    )
     {
       // ======================================================================
-      static_assert ( boost::integer_traits<TYPE>::is_specialized
-                      && boost::integer_traits<TYPE>::is_integral 
-                      &&!boost::integer_traits<TYPE>::is_signed   , 
+      static_assert ( std::numeric_limits<TYPE>::is_specialized 
+                      && std::numeric_limits<TYPE>::is_integer     
+                      &&!std::numeric_limits<TYPE>::is_signed     ,
                       "bits: inappropriate type"                   ) ;
       // ======================================================================
-      if ( N2 >  (unsigned int) boost::integer_traits<TYPE>::digits ) 
-      { return bits ( value , N1 , boost::integer_traits<TYPE>::digits ) ; } 
+      if ( N2 >  (unsigned int) std::numeric_limits<TYPE>::digits ) 
+      { return bits ( value , N1 , std::numeric_limits<TYPE>::digits ) ; } 
       // 
       if ( N1 >= N2 ||
-           N1 >= (unsigned int) boost::integer_traits<TYPE>::digits ) { return 0 ; }
+           N1 >= (unsigned int) std::numeric_limits<TYPE>::digits ) { return 0 ; }
       // ======================================================================
       const TYPE mask = 
         ( static_cast<TYPE> ( -1 ) 
-          << ( boost::integer_traits<TYPE>::digits + N1 - N2 ) )
-        >> ( boost::integer_traits<TYPE>::digits      - N2 ) ;
+          << ( std::numeric_limits <TYPE>::digits + N1 - N2 ) )
+        >> ( std::numeric_limits <TYPE>::digits      - N2 ) ;
       // ======================================================================
       return ( value & mask ) >> N1 ;
       // ======================================================================

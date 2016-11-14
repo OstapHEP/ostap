@@ -95,6 +95,9 @@ namespace Ostap
     std::ostream& fillStream ( std::ostream& o ) const 
     { return counter().fillStream ( o ) ; }
     // =====================================================================
+    /// conversion to string
+    std::string toString() const { return counter().toString () ; }
+    // =====================================================================
     /// reset method (likely not needed at all) 
     void reset() 
     {
@@ -142,6 +145,9 @@ namespace Ostap
   /// operator for addition of NStatEntity and a number
   inline NStatEntity operator-( const NStatEntity& e , 
                                 const double       v ) { return e + (-1*v)  ; }
+  // ==========================================================================
+  /// conversion to string 
+  inline std::string to_string ( const NStatEntity& e ) { return e.toString() ;}
   // ==========================================================================
 } //                                                     end of namespace Ostap 
 // ============================================================================

@@ -6,14 +6,11 @@
 // ============================================================================
 #include <cstdlib>
 #include <cmath>
+#include <limits>
 // ============================================================================
 // GSL 
 // ============================================================================
 #include "gsl/gsl_sys.h"
-// ============================================================================
-// Boost 
-// ============================================================================
-#include "boost/integer_traits.hpp"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -37,9 +34,16 @@
  *  @date 2007-11-27
  */
 // ============================================================================
-#ifdef __INTEL_COMPILER       // Disable ICC remark
-#pragma warning(disable:1572) // floating-point equality and inequality comparisons are unreliable
-#endif
+namespace 
+{
+  static_assert ( std::numeric_limits<long>::is_specialized     && 
+                  std::numeric_limits<long>::is_integer         && 
+                  std::numeric_limits<long>::is_signed           ,                  
+                  "std::numeric_limits<long> is not appropriate" ) ;
+  //
+  const long s_long_min = std::numeric_limits<long>::min () ;
+  const long s_long_max = std::numeric_limits<long>::max () ;
+}
 // ============================================================================
 /* compare two double numbers with relative precision 'epsilon'
  *
@@ -68,15 +72,15 @@ namespace
 {
   // ==========================================================================
   /// check the specialization 
-  static_assert ( boost::integer_traits<long> ::is_specialized     , 
-                  "boost::integer_traits<long> is not specialized" ) ;
-  static_assert ( boost::integer_traits<int>  ::is_specialized     , 
-                  "boost::integer_traits<int>  is not specialized" ) ;
+  static_assert ( std::numeric_limits<long> ::is_specialized     , 
+                  "std::numeric_limits<long> is not specialized" ) ;
+  static_assert ( std::numeric_limits<int>  ::is_specialized     , 
+                  "std::numeric_limits<int>  is not specialized" ) ;
   // ==========================================================================
-  const double s_MAX_L =  0.1 + boost::integer_traits<long>::const_max ;
-  const double s_MIN_L = -0.1 - boost::integer_traits<long>::const_max ;
-  const double s_MAX_I =  0.1 + boost::integer_traits<int>::const_max  ;
-  const double s_MIN_I = -0.1 - boost::integer_traits<int>::const_max  ;
+  const double s_MAX_L =  0.1 + std::numeric_limits<long>::max () ;
+  const double s_MIN_L = -0.1 - std::numeric_limits<long>::max () ;
+  const double s_MAX_I =  0.1 + std::numeric_limits<int>::max  () ;
+  const double s_MIN_I = -0.1 - std::numeric_limits<int>::max  () ;
   // ==========================================================================
 }
 // ============================================================================
@@ -273,6 +277,20 @@ float Ostap::Math::round_N ( const float x , const unsigned short n )
   const double xd = x ;
   return round_N ( xd , n ) ;
 }
+// ========================================================================
+/** round to nearest integer, rounds half integers to nearest even integer 
+ *  It is just a simple wrapper around boost::numeric::converter 
+ *  @author Vanya BELYAEV Ivan.BElyaev
+ */
+// ========================================================================
+long Ostap::Math::round ( const double x ) 
+{
+  return 
+    x <= s_long_min ? s_long_min :
+    x >= s_long_max ? s_long_max : long ( std::lround ( x )  ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // The END 

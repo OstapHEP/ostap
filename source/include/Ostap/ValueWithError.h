@@ -1136,6 +1136,10 @@ namespace Ostap
     inline void swap ( ValueWithError& left , 
                        ValueWithError& right ) { left.swap ( right ) ; }
     // ========================================================================
+    // converison to string
+    inline std::string to_string ( const ValueWithError& v ) 
+    { return v.toString() ; }
+    // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================
 } //                                                    end of namespace Ostap

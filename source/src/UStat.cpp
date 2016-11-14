@@ -24,10 +24,6 @@
 #include "RooDataSet.h"
 #include "RooGlobalFunc.h"
 // ============================================================================
-// Boost
-// ============================================================================
-#include "boost/progress.hpp"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Power.h"
@@ -107,15 +103,12 @@ Ostap::StatusCode Ostap::UStat::calculate
   const RooDataSet*  cloned = (RooDataSet*)data.Clone() ;
   //
   const unsigned int num    = data.numEntries () ;
-  boost::progress_display show_progress ( num ) ;
   //
   const RooArgSet * event_x = 0 ;
   const RooArgSet * event_y = 0 ;
   //
   for ( unsigned int i = 0 ; i < num ; ++i ) 
   {
-    // display progress 
-    ++show_progress ;
     //
     // 1. Get "Event"
     event_x = data . get(i) ;      

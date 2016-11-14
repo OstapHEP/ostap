@@ -4,21 +4,15 @@
 // ============================================================================
 // Include files
 // ============================================================================
+//  STD& STL 
+// ============================================================================
+#include <limits>
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/TypeWrapper.h"
 #include "Ostap/IPower.hpp"
 #include "Ostap/Power.h"
-// ============================================================================
-// Boost
-// ============================================================================
-#ifdef __INTEL_COMPILER        // Disable ICC warnings and remarks
-  #pragma warning(disable:177) // boost::lambda declared but never referenced
-  #pragma warning(push)
-#endif
-// ============================================================================
-#include "boost/integer_traits.hpp"
-#include "boost/static_assert.hpp"
 // ============================================================================
 /** @file
  *
@@ -86,17 +80,17 @@ namespace Ostap
       struct Check10 
       {
         // ====================================================================
-        static_assert (  boost::integer_traits<TYPE>::is_specialized && 
-                         boost::integer_traits<TYPE>::is_integral    && 
-                         !boost::integer_traits<TYPE>::is_signed      , 
+        static_assert (  std::numeric_limits<TYPE>::is_specialized && 
+                         std::numeric_limits<TYPE>::is_integer     && 
+                         !std::numeric_limits<TYPE>::is_signed      , 
                          "Check10: inappropriate type" ) ;
         // ====================================================================
         enum {
           /// Nth digit is "save"
-          safe  = ( N <  (unsigned int) boost::integer_traits<TYPE>::digits10 ) ,
-          /// Nth digit is still OK 
-          value = ( N <= (unsigned int) boost::integer_traits<TYPE>::digits10 )
-        } ;
+          safe  = N <  (unsigned int) std::numeric_limits<TYPE>::digits10 ,
+          /// Nth digit is still OK
+          value = N <= (unsigned int) std::numeric_limits<TYPE>::digits10 
+          } ;
         // ====================================================================
       };
       // ======================================================================
@@ -116,12 +110,12 @@ namespace Ostap
       struct _IDigit
       {
         // ====================================================================
-        static_assert (  boost::integer_traits<TYPE>::is_specialized  && 
-                         boost::integer_traits<TYPE>::is_integral     && 
-                         !boost::integer_traits<TYPE>::is_signed      , 
+        static_assert (  std::numeric_limits<TYPE>::is_specialized && 
+                         std::numeric_limits<TYPE>::is_integer     && 
+                         !std::numeric_limits<TYPE>::is_signed      , 
                          "_IDigit: inappropriate type" ) ;
         // ====================================================================
-        static_assert ( N <=  boost::integer_traits<TYPE>::digits10 , 
+        static_assert ( N <= std::numeric_limits <TYPE>::digits10 , 
                         "_IDigit: invalid index" )  ;
         // ====================================================================
         enum 
@@ -133,7 +127,7 @@ namespace Ostap
           } ;
         // ====================================================================
       } ;
-      // ======================================================================
+    // ======================================================================
       /** @struct _IDigits 
        *  Helper structure for compile-time evaluation of 
        *  range N1->N2 of decimal digits from the integral type 
@@ -150,14 +144,14 @@ namespace Ostap
       struct _IDigits
       {
         // ====================================================================
-        static_assert ( boost::integer_traits<TYPE>::is_specialized && 
-                        boost::integer_traits<TYPE>::is_integral    && 
-                        !boost::integer_traits<TYPE>::is_signed, 
+        static_assert (  std::numeric_limits<TYPE>::is_specialized && 
+                         std::numeric_limits<TYPE>::is_integer     && 
+                         !std::numeric_limits<TYPE>::is_signed      , 
                         "_IDigits: inappropriate type"              ) ;
         // ====================================================================
         static_assert ( N1 < N2  
-                        && N1 <= boost::integer_traits<TYPE>::digits10  
-                        && N2 <= boost::integer_traits<TYPE>::digits10 +1 , 
+                        && N1 <= std::numeric_limits<TYPE>::digits10  
+                        && N2 <= std::numeric_limits<TYPE>::digits10 +1 , 
                         "_IDigits: invalid indices" ) ;
         // ====================================================================
         enum { 
@@ -183,12 +177,12 @@ namespace Ostap
       struct _Digit : public std::unary_function<TYPE,int>
       {
         // ====================================================================
-        static_assert (  boost::integer_traits<TYPE>::is_specialized && 
-                         boost::integer_traits<TYPE>::is_integral    && 
-                         !boost::integer_traits<TYPE>::is_signed     , 
+        static_assert (  std::numeric_limits<TYPE>::is_specialized && 
+                         std::numeric_limits<TYPE>::is_integer     && 
+                         !std::numeric_limits<TYPE>::is_signed      , 
                          "_Digit: inappropriate type"                ) ;                         
         // ====================================================================
-        static_assert ( N <= boost::integer_traits<TYPE>::digits10   , 
+        static_assert ( N <= std::numeric_limits<TYPE>::digits10   , 
                         "_Digit: invaild index"                      ) ;
         // ====================================================================
         enum { value = Ostap::Math::IPower<unsigned long long,10,N>::value } ;
@@ -222,14 +216,14 @@ namespace Ostap
       {
       private:
         // ====================================================================
-        static_assert (  boost::integer_traits<TYPE>::is_specialized && 
-                         boost::integer_traits<TYPE>::is_integral    && 
-                         !boost::integer_traits<TYPE>::is_signed      , 
+        static_assert (  std::numeric_limits<TYPE>::is_specialized && 
+                         std::numeric_limits<TYPE>::is_integer     && 
+                         !std::numeric_limits<TYPE>::is_signed      , 
                          "_Digits: inappropriate type"                ) ;
         // ====================================================================
         static_assert ( N1 < N2  
-                        && N1 <=  boost::integer_traits<TYPE>::digits10     
-                        && N2 <=  boost::integer_traits<TYPE>::digits10 + 1 , 
+                        && N1 <= std::numeric_limits<TYPE>::digits10     
+                        && N2 <= std::numeric_limits<TYPE>::digits10 + 1 , 
                         "_Digits: invalid index"  ) ;
         // ====================================================================
         enum {
@@ -241,16 +235,9 @@ namespace Ostap
         // ====================================================================        
       public:
         // ====================================================================
-#ifdef __INTEL_COMPILER       // Disable ICC remark
-#pragma warning(disable:2259) //  non-pointer conversion may lose significant bits
-#pragma warning(push)
-#endif
         /// the only on eessential method 
         inline TYPE operator() ( const TYPE v ) const 
         { return static_cast<TYPE> (  ( v / val1 ) % val2 ) ; }
-#ifdef __INTEL_COMPILER         // Disable ICC remark
-#pragma warning(pop)
-#endif
         // ====================================================================
       } ;  
     }
@@ -365,14 +352,14 @@ namespace Ostap
     inline TYPE digit ( const TYPE value , const unsigned int N  ) 
     {
       // ======================================================================
-      static_assert (  boost::integer_traits<TYPE>::is_specialized && 
-                       boost::integer_traits<TYPE>::is_integral    && 
-                       !boost::integer_traits<TYPE>::is_signed     , 
+      static_assert (  std::numeric_limits<TYPE>::is_specialized && 
+                       std::numeric_limits<TYPE>::is_integer     && 
+                       !std::numeric_limits<TYPE>::is_signed      , 
                        "digit: inappropriate type"                 ) ;
       // ======================================================================
-      if      (  N > (unsigned int) boost::integer_traits<TYPE>::digits10 ) { return 0 ; } // RETURN 
-      else if (  N < (unsigned int) boost::integer_traits<TYPE>::digits10 ) 
-      {
+      if      (  N > (unsigned int) std::numeric_limits<TYPE>::digits10 ) { return 0 ; } // RETURN 
+      else if (  N < (unsigned int) std::numeric_limits<TYPE>::digits10 ) 
+        {
         // ====================================================================
         const TYPE ten = 10 ;
         const TYPE aux = Ostap::Math::pow ( ten , N ) ;
@@ -405,30 +392,26 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
      *  @date 2008-07-09
      */
-#ifdef __INTEL_COMPILER         // Disable ICC remark
-#pragma warning(disable:2259) //  non-pointer conversion may lose significant bits
-#pragma warning(push)
-#endif
     template <class TYPE>
     inline TYPE digits ( const TYPE         value , 
                          const unsigned int N1    ,
                          const unsigned int N2    ) 
     {
       // ======================================================================
-      static_assert (  boost::integer_traits<TYPE>::is_specialized && 
-                       boost::integer_traits<TYPE>::is_integral    && 
-                       !boost::integer_traits<TYPE>::is_signed     , 
+      static_assert (  std::numeric_limits<TYPE>::is_specialized && 
+                       std::numeric_limits<TYPE>::is_integer     && 
+                       !std::numeric_limits<TYPE>::is_signed      , 
                        "digits: inappropriate type"                ) ;
       // ======================================================================
-      if      (  N2 >  1 + boost::integer_traits<TYPE>::digits10 )
-      { return digits ( value , N1 , 1 + boost::integer_traits<TYPE>::digits10 ) ; }
+      if      (  N2 >  1 + std::numeric_limits<TYPE>::digits10 )
+      { return digits ( value , N1 , 1 + std::numeric_limits<TYPE>::digits10 ) ; }
       // ======================================================================
       if      (  N1 >= N2 || 
-                 N1 > (unsigned int) boost::integer_traits<TYPE>::digits10 )
+                 N1 > (unsigned int) std::numeric_limits<TYPE>::digits10 )
       { return 0 ; }                                                  // RETURN 
       //
-      if ( N1      < (unsigned int) boost::integer_traits<TYPE>::digits10 && 
-           N2 - N1 < (unsigned int) boost::integer_traits<TYPE>::digits10 ) 
+      if ( N1      < (unsigned int) std::numeric_limits<TYPE>::digits10 && 
+           N2 - N1 < (unsigned int) std::numeric_limits<TYPE>::digits10 ) 
       {
         // ====================================================================
         const TYPE ten = 10 ;
@@ -445,10 +428,6 @@ namespace Ostap
       return static_cast<TYPE>( (val/aux1)%aux2 ) ;                   // RETURN
       // ======================================================================
     }
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)        // Reenable ICC remark 2259
-#pragma warning(pop)        // Reenable ICC remark 177
-#endif
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
