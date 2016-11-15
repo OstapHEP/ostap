@@ -1744,7 +1744,7 @@ class BreitWigner_pdf(MASS) :
 
         if  None is convolution : self.pdf = self.breit
         else :
-            from Ostap.FitBasic import Convolution 
+            from ostap.fitting.basic import Convolution 
             self.conv = Convolution ( name        ,
                                       self.breit  , self.mass ,
                                       convolution , useFFT    ) 
