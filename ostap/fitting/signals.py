@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file signals.py
 #
 #  Set of useful PDFs for various ``signal'' 1D and 2D fits
@@ -16,9 +14,6 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 # 
-#                    $Revision$
-#  Last modification $Date$
-#                 by $Author$
 # =============================================================================
 """Set of useful PDFs for various ``signal'' 1D and 2D fits
 
@@ -1744,7 +1739,7 @@ class BreitWigner_pdf(MASS) :
 
         if  None is convolution : self.pdf = self.breit
         else :
-            from Ostap.FitBasic import Convolution 
+            from ostap.fitting.basic import Convolution 
             self.conv = Convolution ( name        ,
                                       self.breit  , self.mass ,
                                       convolution , useFFT    ) 

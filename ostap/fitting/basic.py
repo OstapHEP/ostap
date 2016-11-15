@@ -5,10 +5,6 @@
 #  Set of useful basic utilities to build various fit models 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-# 
-#                    $Revision$
-#  Last modification $Date$
-#                 by $Author$
 # =============================================================================
 """Set of useful basic utilities to build various fit models"""
 # =============================================================================
@@ -1153,7 +1149,7 @@ class Fit1D (PDF) :
         self.signal     =      signal 
         self.mass       = self.signal.mass
         #
-        from Ostap.FitBkgModels import makeBkg
+        from ostap.fitting.background import makeBkg
         if background : self.background = makeBkg ( background , 'Background' + suffix , self.mass )
         else          : self.background = makeBkg ( bpower     , 'Background' + suffix , self.mass )
         #
@@ -1361,7 +1357,7 @@ class Fit2D (PDF2) :
                                         self.signal1.pdf   ,
                                         self.signal2.pdf   )
 
-        from Ostap.FitBkgModels import makeBkg 
+        from ostap.fitting.background import makeBkg
         if bkg1 : self.bkg1 = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.m1 )
         else    : self.bkg1 = makeBkg ( power1 , 'Bkg(1)' + suffix , self.m1 )
         
@@ -1373,7 +1369,7 @@ class Fit2D (PDF2) :
                                         self.bkg1.pdf       ,
                                         self.signal2.pdf    )
         
-        from Ostap.FitBkgModels import makeBkg 
+        from ostap.fitting.background import makeBkg
         if bkg2 : self.bkg2 = makeBkg ( bkg2   , 'Bkg(2)' + suffix , self.m2 )
         else    : self.bkg2 = makeBkg ( power2 , 'Bkg(2)' + suffix , self.m2 )
         
@@ -1396,7 +1392,7 @@ class Fit2D (PDF2) :
         elif bkg2D and hasattr    ( bkg2D , 'pdf'          ) : self.bb_pdf = bkg2D.pdf
         else     :            
             
-            from Ostap.FitBkgModels import makeBkg 
+            from ostap.fitting.background import makeBkg
             if bkgA : self.bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.m1 )
             else    : self.bkgA = makeBkg ( powerA , 'Bkg(A)' + suffix , self.m1 )
             if bkgB : self.bkgB = makeBkg ( bkgB   , 'Bkg(B)' + suffix , self.m2 )
@@ -1577,7 +1573,7 @@ class Fit2DSym (PDF2) :
                                         self.signal1.pdf   ,
                                         self.signal2.pdf   )
 
-        from Ostap.FitBkgModels import makeBkg
+        from ostap.fitting.background import makeBkg
         if bkg1 : self.bkg1 = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.m1 )
         else    : self.bkg1 = makeBkg ( power1 , 'Bkg(1)' + suffix , self.m1 )
 
@@ -1642,7 +1638,7 @@ class Fit2DSym (PDF2) :
         elif bkg2D and hasattr    ( bkg2D , 'pdf'          ) : self.bb_pdf = bkg2D.pdf
         else     :            
             
-            from Ostap.FitBkgModels import makeBkg 
+            from ostap.fitting.backgrounds import makeBkg 
             if bkgA : self.bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.m1 )
             else    : self.bkgA = makeBkg ( powerA , 'Bkg(A)' + suffix , self.m1 )
             if bkgA : self.bkgB = makeBkg ( bkgA   , 'Bkg(B)' + suffix , self.m2 , the_phis = self.bkgA )

@@ -26,7 +26,8 @@ __date__    = "2011-06-07"
 # =============================================================================
 __all__     = (
     #
-    'cpp'             , ## global C++ namespace 
+    'cpp'             , ## global C++ namespace
+    'Ostap'           , ## C++ namespace Ostap 
     'rootID'          , ## construct the (global) unique ROOT identifier
     'funcID'          , ## construct the (global) unique ROOT identifier
     'funID'           , ## construct the (global) unique ROOT identifier
@@ -82,7 +83,7 @@ import ostap.fixes.fixes
 # =============================================================================
 logger.info ( 'Zillions of decorations for ROOT/RooFit objects')
 # =============================================================================
-from ostap.core.core import ( cpp      ,
+from ostap.core.core import ( cpp      , Ostap     , 
                               ROOTCWD  , rootID    , 
                               funcID   , funID     , fID             ,
                               histoID  , hID       , dsID            ,
