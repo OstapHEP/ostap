@@ -1,32 +1,35 @@
 # root_generate_dictionary(ostap_dict ${CMAKE_CURRENT_SOURCE_DIR}/dict/Dict.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/selections.xml)
-#set(BOOSTROOT1 /afs/cern.ch/sw/lcg/releases/LCG_86/Boost/1.62.0/x86_64-slc6-gcc49-opt)
-#set(Boost_NO_SYSTEM_PATHS ON)
-#set(BOOST_INCLUDEDIR ${BOOSTROOT1}/include/boost-1_62)
-#set(BOOST_LIBRARYDIR ${BOOSTROOT1}/lib)
-find_package(ROOT  REQUIRED COMPONENTS Smatrix GenVector Core MathCore MathMore Hist Matrix RIO Tree Thread TreePlayer RooFit RooFitCore PyROOT)
-find_package(Boost REQUIRED)
+
+find_package(ROOT  REQUIRED COMPONENTS Smatrix Core MathCore MathMore Hist Matrix RIO Tree Thread TreePlayer RooFit RooFitCore PyROOT)
 find_package(GSL   REQUIRED)
+
+## set(BOOSTROOT1 /afs/cern.ch/sw/lcg/releases/LCG_86/Boost/1.62.0/x86_64-slc6-gcc49-opt)
+## set(Boost_NO_SYSTEM_PATHS ON)
+## set(BOOST_INCLUDEDIR ${BOOSTROOT1}/include/boost-1_62)
+## set(BOOST_LIBRARYDIR ${BOOSTROOT1}/lib)
+## find_package(Boost REQUIRED)
+
 
 # function( MAKE_DICT name header selection )
 #    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} )
 #    add_library( ${name}Dict SHARED ${name}.cxx )
 #    add_dependencies(${name}Dict ${name}-dictgen)
-#    #set_target_properties( ${name}Dict PROPERTIES COMPILE_FLAGS ${ROOT_CXX_FLAGS} )
-#    target_link_libraries( ${name}Dict   ${ROOT_LIBRARIES})
+#    #set_target_properties( ${name} PROPERTIES COMPILE_FLAGS ${ROOT_CXX_FLAGS} )
+#    target_link_libraries( ${name}Dict ostap ${ROOT_LIBRARIES})
 # endfunction( MAKE_DICT )
 
 
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${Boost_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS})
 REFLEX_GENERATE_DICTIONARY(ostap_dict src/dict/Ostap.hh SELECTION src/dict/Ostap.xml)
 # MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 #---Create a shared library with geneated dictionary
-add_library(ostap SHARED 
+add_library(ostap SHARED src/format.cpp
                          src/BSpline.cpp
                          src/Bernstein.cpp
                          src/Binomial.cpp

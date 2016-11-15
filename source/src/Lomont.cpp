@@ -7,10 +7,6 @@
 #include <limits>
 #include <cassert>
 // ============================================================================
-// Boost 
-// ============================================================================
-#include "boost/integer_traits.hpp"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Lomont.h"
@@ -19,13 +15,13 @@ namespace
 {
   // prerequisites for "correct" Float 
   static_assert( std::numeric_limits<float>          ::is_specialized &&
-                 boost::integer_traits<int>          ::is_specialized && 
-                 boost::integer_traits<unsigned int> ::is_specialized &&
+                 std::numeric_limits<int>            ::is_specialized && 
+                 std::numeric_limits<unsigned int>   ::is_specialized &&
                  sizeof(float)==sizeof(int)                           && 
                  sizeof(float)==sizeof(unsigned int)                  &&
-                 32 == boost::integer_traits<unsigned int>::digits    , "FAILED ASSUMPTIONS") ;
+                 32 == std::numeric_limits<unsigned int>::digits , "FAILED ASSUMPTIONS") ;
   // ==========================================================================
-  // define proepr double 
+  // define proper double 
   // ==========================================================================
   template <bool I> 
   struct __Longs ;
@@ -50,8 +46,8 @@ namespace
   static_assert( std::numeric_limits<double>  ::is_specialized &&
                  std::numeric_limits<Long>    ::is_specialized && 
                  std::numeric_limits<ULong>   ::is_specialized &&
-                 boost::integer_traits<ULong> ::is_specialized &&
-                 boost::integer_traits<Long>  ::is_specialized &&
+                 std::numeric_limits<ULong>   ::is_specialized &&
+                 std::numeric_limits<Long>    ::is_specialized &&
                  sizeof(double)==sizeof(Long)                  && 
                  sizeof(double)==sizeof(ULong)                 &&
                  64 == std::numeric_limits<ULong>::digits      , "FAILED ASSUMPTIONS") ;
@@ -69,10 +65,10 @@ namespace
     // ========================================================================
     // prerequisites:
     static_assert( std::numeric_limits<float>          ::is_specialized &&
-                   boost::integer_traits<int>          ::is_specialized && 
-                   boost::integer_traits<unsigned int> ::is_specialized &&
+                   std::numeric_limits<int>            ::is_specialized && 
+                   std::numeric_limits<unsigned int>   ::is_specialized &&
                    sizeof(float)==sizeof(int)                           && 
-                   32 == boost::integer_traits<unsigned int>::digits    , "FAILED ASSUMPTIONS") ;
+                   32 == std::numeric_limits<unsigned int>::digits , "FAILED ASSUMPTIONS") ;
     // ========================================================================
   public:
     // ========================================================================
@@ -109,8 +105,8 @@ namespace
     static_assert( std::numeric_limits<double>  ::is_specialized &&
                    std::numeric_limits<Long>    ::is_specialized && 
                    std::numeric_limits<ULong>   ::is_specialized &&
-                   boost::integer_traits<ULong> ::is_specialized &&
-                   boost::integer_traits<Long>  ::is_specialized &&
+                   std::numeric_limits<ULong>   ::is_specialized &&
+                   std::numeric_limits<Long>    ::is_specialized &&
                    sizeof(double)==sizeof(Long)                  && 
                    sizeof(double)==sizeof(ULong)                 &&
                    64 == std::numeric_limits<ULong>::digits      , "FAILED ASSUMPTIONS") ;
@@ -185,18 +181,19 @@ bool Ostap::Math::lomont_compare_float
 {
   // ==========================================================================
   // prerequisites:
-  static_assert( std::numeric_limits<float>          ::is_specialized &&
-                 boost::integer_traits<int>          ::is_specialized && 
-                 boost::integer_traits<unsigned int> ::is_specialized &&
-                 sizeof(float)==sizeof(int)                           && 
-                 sizeof(float)==sizeof(unsigned int)                  &&
-                 32 == boost::integer_traits<unsigned int>::digits    , "FAILED ASSUMPTIONS") ;
+  static_assert( std::numeric_limits<float>        ::is_specialized &&
+                 std::numeric_limits<int>          ::is_specialized && 
+                 std::numeric_limits<unsigned int> ::is_specialized &&
+                 sizeof(float)==sizeof(int)                         && 
+                 sizeof(float)==sizeof(unsigned int)                &&
+                 32 == std::numeric_limits<unsigned int>::digits    , "FAILED ASSUMPTIONS") ;
   // ==========================================================================
   
   Cast_F caster ;
   
   //int ai = *reinterpret_cast<const int*>( &af ) ;
   //int bi = *reinterpret_cast<const int*>( &bf ) ;
+
   int ai = caster.f2i ( af ) ;
   int bi = caster.f2i ( bf ) ;
   
@@ -204,7 +201,11 @@ bool Ostap::Math::lomont_compare_float
   
   // assert ( (0==test) || ( boost::integer_traits<unsigned int>::const_max == test ) ) ;
   
-  int diff = ((( boost::integer_traits<int>::const_min - ai ) & (~test)) | ( ai& test )) - bi ;
+  
+  // int diff = ((( boost::integer_traits<int>::const_min - ai ) & (~test)) | ( ai& test )) - bi ;
+  
+  static const int const_min = std::numeric_limits<int>::min() ;
+  int diff = ((( const_min - ai ) & (~test)) | ( ai& test )) - bi ;
   
   int maxDiff_ = maxULPs ;
   
@@ -284,8 +285,8 @@ bool Ostap::Math::lomont_compare_double
   static_assert( std::numeric_limits<double>  ::is_specialized &&
                  std::numeric_limits<Long>    ::is_specialized && 
                  std::numeric_limits<ULong>   ::is_specialized &&
-                 boost::integer_traits<ULong> ::is_specialized &&
-                 boost::integer_traits<Long>  ::is_specialized &&
+                 std::numeric_limits<ULong>   ::is_specialized &&
+                 std::numeric_limits<Long>    ::is_specialized &&
                  sizeof(double)==sizeof(Long)                  && 
                  sizeof(double)==sizeof(ULong)                 &&
                  64 == std::numeric_limits<ULong>::digits      , "FAILED ASSUMPTIONS") ;
@@ -294,6 +295,7 @@ bool Ostap::Math::lomont_compare_double
   
   //Long ai = *reinterpret_cast<const Long*>( &af ) ;
   //Long bi = *reinterpret_cast<const Long*>( &bf ) ;
+  
   Long ai = caster.d2l ( af ) ;
   Long bi = caster.d2l ( bf ) ;
   
@@ -301,7 +303,10 @@ bool Ostap::Math::lomont_compare_double
   
   // assert ( (0==test) || ( boost::integer_traits<ULong>::const_max == test ) ) ;
   
-  Long diff = ((( boost::integer_traits<Long>::const_min - ai ) & (~test)) | ( ai& test )) - bi ;
+  // Long diff = ((( boost::integer_traits<Long>::const_min - ai ) & (~test)) | ( ai& test )) - bi ;
+  
+  static const Long const_min = std::numeric_limits<Long>::min() ;
+  Long diff = ((( const_min - ai ) & (~test)) | ( ai& test )) - bi ;
   
   Long maxDiff_ = maxULPs ;
   

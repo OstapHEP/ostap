@@ -391,6 +391,9 @@ namespace Ostap
   inline std::ostream& operator<<( std::ostream& o , const StatEntity& e ) 
   { return e.fillStream ( o ) ; }
   // ==========================================================================
+  /// conversion to string 
+  inline std::string to_string ( const StatEntity& s ) { return s.toString() ; }
+  // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
 // The END

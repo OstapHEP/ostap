@@ -6144,6 +6144,36 @@ def _uniform_bins_ ( histo ) :
 ROOT.TH1.uniform_bins = _uniform_bins_
 ROOT.TH1.uniform      = _uniform_bins_
 
+
+
+
+# =============================================================================
+## the actual function for text dump of the histogram
+def dumpHisto ( histo , *args ) :
+    """Dump the histogram/profile in text format (a'la HBOOK)
+    >>> histo
+    >>> print dumpHisto ( histo )
+    
+    >>> print histo.dump()
+    >>> print histo.dump( 20 , 20 )
+    >>> print histo.dump( 20 , 20 , True )
+    
+    Uses:
+    
+    """
+    return Ostap.Utils.Histos.histoDump ( histo , *args )
+
+dumpHisto .__doc__ = '\n'  + Ostap.Utils.Histos.histoDump . __doc__
+for t in  ( ROOT.TH1D             ,
+            ROOT.TH1F             ,
+            ROOT.TProfile         ) :
+    for method in ( 'dump'       ,
+                    'dumpHisto'  ,
+                    'dumpAsText' ) :
+        if not hasattr ( t , method ) :
+            setattr ( t , method , dumpHisto )
+
+# 
 # =============================================================================
 if '__main__' == __name__ :
     

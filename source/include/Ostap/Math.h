@@ -12,17 +12,11 @@
 #include <functional>
 #include <vector>
 #include <array>
+#include <type_traits>
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Lomont.h"
-// ============================================================================
-// Boost 
-// ============================================================================
-#include "boost/call_traits.hpp"
-#include "boost/integer_traits.hpp"
-#include "boost/static_assert.hpp"
-#include "boost/numeric/conversion/converter.hpp"
 // ============================================================================
 namespace Ostap
 {
@@ -69,6 +63,32 @@ namespace Ostap
      */
     const unsigned int mULPS_double = 1000 ;
     // ========================================================================
+    namespace detail
+    {
+      // ======================================================================
+      template <class T> struct param ;
+      //
+      template <class T> struct param<const T&> { typedef const T& param_type ; } ;
+      template <class T> struct param<const T*> { typedef const T* param_type ; } ;
+      template <class T> struct param<T&>: public param<const T&> {} ;
+      template <class T> struct param<T*>: public param<const T*> {} ;
+      //
+      template <class T, bool small> 
+      struct _param         { typedef const T& param_type ; } ;
+      template <class T> 
+      struct _param<T,true> { typedef const T  param_type ; } ;
+      //
+      template <class T> struct param 
+      {
+        typedef typename _param<T, 
+                                (std::is_arithmetic<T>::value) ||
+                                (std::is_pointer<T>   ::value) ||
+                                (std::is_enum<T>      ::value) ||
+                                (sizeof(T)<=sizeof(void*))>::param_type param_type ;
+      };
+      // ====================================================================
+    }
+    // ======================================================================
     /** @struct abs_less 
      *  comparison by absolute value 
      *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
@@ -78,8 +98,8 @@ namespace Ostap
     struct abs_less : std::binary_function<TYPE,TYPE,TYPE>
     {
       inline TYPE operator() 
-      ( typename boost::call_traits<const TYPE>::param_type v1 ,
-        typename boost::call_traits<const TYPE>::param_type v2 ) const 
+      ( typename detail::param<const TYPE>::param_type v1 ,
+        typename detail::param<const TYPE>::param_type v2 ) const 
       { return m_eval ( std::fabs( v1 ) , std::fabs( v2 ) ) ; }
       /// evaluator: 
       std::less<TYPE> m_eval ;
@@ -94,8 +114,8 @@ namespace Ostap
     struct abs_greater : std::binary_function<TYPE,TYPE,TYPE>
     {
       inline TYPE operator() 
-      ( typename boost::call_traits<const TYPE>::param_type v1 ,
-        typename boost::call_traits<const TYPE>::param_type v2 ) const 
+      ( typename detail::param<const TYPE>::param_type v1 ,
+        typename detail::param<const TYPE>::param_type v2 ) const 
       { return m_eval ( std::fabs( v1 ) , std::fabs( v2 ) ) ; }
       /// evaluator: 
       std::greater<TYPE> m_eval ;
@@ -157,7 +177,7 @@ namespace Ostap
     struct Equal_To : public std::binary_function<TYPE,TYPE,bool>
     {
       // ======================================================================
-      typedef typename boost::call_traits<const TYPE>::param_type T ;
+      typedef typename detail::param<const TYPE>::param_type T ;
       // ======================================================================
       /// comparison
       inline bool operator() ( T v1 , T v2 ) const
@@ -355,7 +375,7 @@ namespace Ostap
     struct Zero : public std::unary_function<TYPE,bool>
     {
       // ======================================================================
-      typedef typename boost::call_traits<const TYPE>::param_type T ;
+      typedef typename detail::param<const TYPE>::param_type T ;
       /// comparison
       inline bool operator() ( T v ) const { return m_cmp ( v , 0 ) ; }
       // ======================================================================
@@ -413,7 +433,7 @@ namespace Ostap
     struct NotZero : public std::unary_function<TYPE,bool>
     {
       // ======================================================================
-      typedef typename boost::call_traits<const TYPE>::param_type T ;
+      typedef typename detail::param<const TYPE>::param_type T ;
       /// comparison
       inline bool operator() ( T v ) const { return !m_zero ( v ) ; }
       // ======================================================================
@@ -569,39 +589,14 @@ namespace Ostap
     } ;
     // ========================================================================
     /** round to nearest integer, rounds half integers to nearest even integer 
-     *  It is just a simple wrapper around boost::numeric::converter 
      *  @author Vanya BELYAEV Ivan.BElyaev
      */
-    inline long round ( const double x ) 
-    {
-#ifdef __INTEL_COMPILER       // Disable ICC remark from Boost
-#pragma warning(disable:1572) // Floating-point equality and inequality comparisons are unreliable 
-#pragma warning(push)
-#endif
-      typedef boost::numeric::RoundEven<double> Rounder ;
-      typedef boost::numeric::make_converter_from 
-        <double,
-        boost::numeric::silent_overflow_handler,
-        Rounder>::to<long>::type Converter ;
-      return Converter::convert ( x ) ; 
-#ifdef __INTEL_COMPILER         // Re-enable ICC remark 1572
-#pragma warning(pop)
-#endif
-    }
+    long round ( const double x ) ;
     // ========================================================================
     /** round to nearest integer, rounds half integers to nearest even integer 
-     *  It is just a simple wrapper around boost::numeric::converter 
      *  @author Vanya BELYAEV Ivan.BElyaev
      */
-    inline long round ( const float  x ) 
-    {
-      typedef boost::numeric::RoundEven<float> Rounder ;
-      typedef boost::numeric::make_converter_from 
-        <float,
-        boost::numeric::silent_overflow_handler,
-        Rounder>::to<long>::type Converter ;
-      return Converter::convert ( x ) ; 
-    }    
+    inline long round ( const float  x ) { return round ( double ( x ) ) ; }
     // ========================================================================
     /** get mantissa and exponent 
      *  similar to std::frexp, but radix=10)

@@ -7,14 +7,14 @@
 #include <cmath>
 #include <sstream>
 // ============================================================================
-// Boost
-// ============================================================================
-#include "boost/format.hpp"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Math.h"
 #include "Ostap/WStatEntity.h"
+// ============================================================================
+// local
+// ============================================================================
+#include "format.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::WStatEntity
@@ -135,14 +135,13 @@ void Ostap::WStatEntity::reset ()
 // ============================================================================
 std::ostream& Ostap::WStatEntity::fillStream ( std::ostream& o ) const 
 {
-  boost::format fmt1 ("#=%|-11.5g| Sum=%|-11.5g|" ) ;
-  o << fmt1 % nEff() % m_sum ;
-  boost::format fmt2 ( " Mean=%|#10.4g| +- %|-#10.5g| Min/Max=%|#10.4g|/%|-#10.4g|" ) ;
-  o << fmt2 % mean() % rms() % m_values.min() % m_values.max() ;
-  return o ;
+  return 
+    o << Ostap::format ( "#=%-14.8g Sum=%-14.8g " , nEff() , m_sum ) 
+      << Ostap::format ( " Mean=%10.4g +- %-10.5g Min/Max=%10.4g/%-10.4g" ,
+                         mean() ,  rms() ,  m_values.min() ,  m_values.max() ) ;
 }
 // ============================================================================
-// convert to tring 
+// convert to string 
 // ============================================================================
 std::string Ostap::WStatEntity::toString () const
 {

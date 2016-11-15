@@ -11,23 +11,13 @@
 #include <cmath>
 #include <limits>
 // ============================================================================
-// Boost
-// ============================================================================
-#include "boost/format.hpp"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/StatEntity.h"
 // ============================================================================
-#ifdef __ICC
-// disable icc remark #1572: floating-point equality and inequality comparisons are unreliable
-//  A lot of comparisons are done and "meant".
-#pragma warning(disable:1572)
-// disable icc remark #2259: non-pointer conversion from "long double" to "double" may lose significant bits
-//  Internal operations are done with "long double", but the interface exposes only
-//  "double", so the conversions are required.
-#pragma warning(disable:2259)
-#endif
+// Local 
+// ============================================================================
+#include "format.h"
 // ============================================================================
 /** @file
  *  Implementation file for class StatEntity
@@ -209,11 +199,10 @@ std::string Ostap::StatEntity::toString () const
 // ============================================================================
 std::ostream& Ostap::StatEntity::fillStream ( std::ostream& o ) const
 {
-  boost::format fmt1 ("#=%|-7lu| Sum=%|-11.5g|" ) ;
-  o << fmt1 % nEntries() % sum() ;
-  boost::format fmt2 ( " Mean=%|#10.4g| +- %|-#10.5g| Min/Max=%|#10.4g|/%|-#10.4g|" ) ;
-  o << fmt2 % mean() % rms() % min() % max() ;
-  return o ;
+  return
+    o << Ostap::format ( "#=%-14.8g Sum=%-14.8g" , nEntries() , sum() )
+      << Ostap::format ( " Mean=%10.4g +- %-10.5g Min/Max=%10.4g/%-10.4g" ,
+                         mean() , rms() , min() , max() ) ;
 }
 // ============================================================================
 

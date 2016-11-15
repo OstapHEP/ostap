@@ -22,11 +22,6 @@
  *                 by $Author$
  */
 // ============================================================================
-#ifdef __INTEL_COMPILER      // Disable ICC warnings and remarks
-#pragma warning(disable:177) // boost::lambda declared but never referenced
-#pragma warning(push)
-#endif
-// ============================================================================
 namespace
 {
   // ==========================================================================
@@ -63,11 +58,8 @@ Ostap::Math::GSL::GSL_Error_Handler::GSL_Error_Handler ()
 // ============================================================================
 Ostap::Math::GSL::GSL_Error_Handler::~GSL_Error_Handler () 
 { gsl_set_error_handler ( m_old ) ; }
+
+
 // ============================================================================
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)        // Reenable ICC remark 2259
-#pragma warning(pop)        // Reenable ICC remark 177
-#endif
-// ============================================================================
-// the END 
+// The END 
 // ============================================================================
