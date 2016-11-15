@@ -1,6 +1,6 @@
 # root_generate_dictionary(ostap_dict ${CMAKE_CURRENT_SOURCE_DIR}/dict/Dict.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/selections.xml)
 
-find_package(ROOT  REQUIRED COMPONENTS Smatrix Core MathCore MathMore Hist Matrix RIO Tree Thread TreePlayer RooFit RooFitCore PyROOT)
+find_package(ROOT  REQUIRED COMPONENTS Smatrix Core MathCore MathMore Hist Matrix RIO Tree Thread TreePlayer RooFit RooFitCore PyROOT GenVector)
 find_package(GSL   REQUIRED)
 
 ## set(BOOSTROOT1 /afs/cern.ch/sw/lcg/releases/LCG_86/Boost/1.62.0/x86_64-slc6-gcc49-opt)
