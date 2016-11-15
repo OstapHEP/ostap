@@ -64,7 +64,7 @@ namespace Ostap
     /// get the statistic of weights 
     const Ostap::StatEntity& weights () const { return m_weights ; }
     /// get the statistic of values with non-zero weight 
-    const Ostap::StatEntity&  values () const { return m_values  ; }
+    const Ostap::StatEntity& values  () const { return m_values  ; }
     // ======================================================================
   public: // printout 
     // ======================================================================

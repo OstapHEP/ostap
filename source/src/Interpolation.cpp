@@ -9,14 +9,11 @@
 /** @file 
  *  Implementation file for interpolation functions 
  *  @see Ostap::Math::Interpolation
- *  @see LHCbMath/Interpolation.h
+ *  @see Ostap/Interpolation.h
  *  
  *  @date 2016-07-23 
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  *
- *                    $Revision$
- *  Last modification $Date$
- *                 by $author$
  */
 // ============================================================================
 /*  very simp;e lagrange interpolation 
@@ -47,7 +44,7 @@ double Ostap::Math::Interpolation::lagrange
                     ys.end   () , 
                     x           , 
                     0.0         , 
-                    [] ( double x ) { return x ; } , 
+                    [] ( double z ) { return z ; } , 
                     [] ( double y ) { return y ; } ) ;
 }
 // ============================================================================
@@ -200,7 +197,7 @@ double Ostap::Math::Interpolation::neville
   return neville ( xs.begin() , xs.end  () ,  
                    ys.begin() , ys.end  () , 
                    x          , 
-                   [] ( double x ) { return x ; } , 
+                   [] ( double z ) { return z ; } , 
                    [] ( double y ) { return y ; } ) ;
 }                   
 // ============================================================================
@@ -257,7 +254,7 @@ Ostap::Math::Interpolation::neville2
   return neville2 ( xs.begin() , xs.end  () ,  
                     ys.begin() , ys.end  () , 
                     x          , 
-                    [] ( double x ) { return x ; } , 
+                    [] ( double z ) { return z ; } , 
                     [] ( double y ) { return y ; } ) ;
 }                   
 // ============================================================================
