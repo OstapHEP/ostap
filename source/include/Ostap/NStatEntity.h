@@ -92,11 +92,10 @@ namespace Ostap
     /** printout  to std::ostream
      *  @param s the reference to the output stream
      */
-    std::ostream& fillStream ( std::ostream& o ) const 
-    { return counter().fillStream ( o ) ; }
+    std::ostream& fillStream ( std::ostream& o ) const ;
     // =====================================================================
     /// conversion to string
-    std::string toString() const { return counter().toString () ; }
+    std::string toString() const ;
     // =====================================================================
     /// reset method (likely not needed at all) 
     void reset() 

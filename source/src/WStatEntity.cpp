@@ -112,7 +112,7 @@ double Ostap::WStatEntity::rms () const
   return std::sqrt ( d ) ;
 }
 // ============================================================================
-// calculate effectiev number of entries 
+// calculate effective number of entries 
 // ============================================================================
 double Ostap::WStatEntity::nEff () const
 {
@@ -128,6 +128,7 @@ void Ostap::WStatEntity::reset ()
 {
   m_sum  = 0 ;
   m_sum2 = 0 ;
+  m_values .reset() ;
   m_weights.reset() ;
 }
 // ============================================================================

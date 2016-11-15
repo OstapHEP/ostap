@@ -6,6 +6,7 @@
 // ============================================================================
 #include <limits>
 #include <cassert>
+#include <sstream>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -43,6 +44,26 @@ Ostap::NStatEntity::NStatEntity ( const unsigned long N )
   , m_cnt2 () 
   , m_N    ( std::min ( std::max ( 1UL , N ) , s_max ) )
 {}
+// ===========================================================================
+/*  printout  to std::ostream
+ *  @param s the reference to the output stream
+ */
+// ===========================================================================
+std::ostream& Ostap::NStatEntity::fillStream ( std::ostream& o ) const 
+{
+  o << "N=" << m_N << " " ;
+  // print the longest counter 
+  return counter().fillStream ( o ) ;
+}
+// ===========================================================================
+// conversion to string
+// ===========================================================================
+std::string Ostap::NStatEntity::toString() const 
+{ 
+  std::ostringstream ost ;
+  fillStream ( ost )  ;
+  return ost.str () ;
+}
 // ===========================================================================
 // The END 
 // ===========================================================================
