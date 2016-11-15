@@ -5,10 +5,6 @@
 #  Set of useful basic utilities to build various fit models 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-# 
-#                    $Revision$
-#  Last modification $Date$
-#                 by $Author$
 # =============================================================================
 """Set of useful basic utilities to build various fit models"""
 # =============================================================================
