@@ -25,3 +25,9 @@ Build and run :code:`python/example.py`:
 ::
 
 ./scripts/bootstrap
+
+
+Communication
+-------------
+
+Slack channel: https://scikit-hep.slack.com/messages/ostap
