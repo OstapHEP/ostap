@@ -45,7 +45,11 @@ __all__     = (
     'inrange'          ,  ## Is float walue in range ?  
     ##
     'natural_entry'    ,  ## natual entry?   @see Gaudi::Math::natural_entry 
-    'natural_number'   ,  ## natual numnber? @see Gaudi::Math::natural_number 
+    'natural_number'   ,  ## natual numnber? @see Gaudi::Math::natural_number
+    ##
+    'StatusCode'       ,  ## status code
+    'SUCCESS'          ,  ## status code SUCCESS 
+    'FAILURE'          ,  ## status code FAILURE 
     )
 # =============================================================================
 import ROOT, cppyy, math, sys
@@ -173,6 +177,31 @@ def pwd() :
     """
     return ROOT.gROOT.CurrentDirectory().GetPath() 
 
+# =============================================================================
+## colors 
+# =============================================================================
+_FAILURE = Ostap.StatusCode.FAILURE 
+## printout of status code
+def _sc_print_ ( sc ) :
+    """Print the Status Code
+    >>> st = ...
+    >>> print st
+    """
+    BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+    ##
+    from ostap.logger.logger   import colored_string
+    if   sc.isSuccess     () : return colored_string( 'SUCCESS'     , WHITE , GREEN  , True ) 
+    elif sc.isRecoverable () : return colored_string( 'RECOVERABLE' , RED   , YELLOW , True ) 
+    elif _FAILURE != sc.getCode  () :
+        return colored_string('FAILURE[%d]' % sc.getCode() , YELLOW , RED   , True )
+    return colored_string('FAILURE' , YELLOW , RED , True ) 
+        
+StatusCode = Ostap.StatusCode 
+StatusCode .__repr__ = _sc_print_
+StatusCode .__str__  = _sc_print_
+
+SUCCESS = StatusCode(Ostap.StatusCode.SUCCESS)
+FAILURE = StatusCode(Ostap.StatusCode.FAILURE)
 
 # =============================================================================
 if '__main__' == __name__ :
