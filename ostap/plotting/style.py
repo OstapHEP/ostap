@@ -181,7 +181,14 @@ def OstapStyle ( name      = "OstapStyle"           ,
     ## histogram divisions: only 5 in x to avoid label overlaps
     style . SetNdivisions    ( 505 , "x" )
     style . SetNdivisions    ( 510 , "y" )
+
     
+    ## few useful line styles 
+    style.SetLineStyleString(11,"76  24"       );
+    style.SetLineStyleString(12,"60  16 8 16"  );
+    style.SetLineStyleString(13,"168 32"       );
+    style.SetLineStyleString(14,"32  32"       );
+
     if force : 
         logger.debug ('The style %s is forced' % style.GetName() )
         ROOT.gROOT.SetStyle   ( style.GetName()  )

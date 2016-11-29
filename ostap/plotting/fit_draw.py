@@ -17,14 +17,17 @@ __all__     = (
     'lineColor'             , ## line color 
     'lineStyle'             , ## line style 
     ##
-    'data_options'          , ## drawing options for data 
-    'data_options_nobars'   , ## drawing options for data without bars 
-    'signal_options'        , ## drawing options for "signal"     component(s) 
-    'background_options'    , ## drawing options for "background" component(s)
-    'crossterm1_options'    , ## drawing options for "crossterm1" component(s)
-    'crossterm2_options'    , ## drawing options for "crossterm2" component(s)    
-    'component_options'     , ## drawing options for "other"      component(s)
-    'total_fit_options'     , ## drawing options for the total fit curve
+    'keys'                  , ## predefines keys for draw-options
+    'draw_options'          , ## pickup draw-options from the dictionary
+    ##
+    'data_options'          , ## draw options for data 
+    'data_options_nobars'   , ## draw options for data without bars 
+    'signal_options'        , ## draw options for "signal"     component(s) 
+    'background_options'    , ## draw options for "background" component(s)
+    'crossterm1_options'    , ## draw options for "crossterm1" component(s)
+    'crossterm2_options'    , ## draw options for "crossterm2" component(s)    
+    'component_options'     , ## draw options for "other"      component(s)
+    'total_fit_options'     , ## draw options for the total fit curve
     ##
     'base_signal_color'     , ## base color for "signal"     component(s)
     'base_background_color' , ## base color for "background" component(s)
@@ -43,7 +46,45 @@ def lineWidth ( w ) : return ROOT.RooFit.LineWidth ( w )
 def lineStyle ( s ) : return ROOT.RooFit.LineStyle ( s )
 def lineColor ( c ) : return ROOT.RooFit.LineColor ( c )
 #
+## the list of predefined "draw"-keys 
+keys = (
+    'data_options'          ,
+    ##
+    'background_options'    ,
+    'base_background_color' ,
+    ##
+    'crossterm1_options'    ,
+    'base_crossterm1_color' ,
+    ##
+    'crossterm2_options'    ,
+    'base_crossterm2_color' ,
+    ##
+    'component_options'     ,
+    'base_component_color'  ,
+    ##
+    'signal_options'        ,
+    'base_signal_color'     ,
+    )
+# =============================================================================
+## get draw options:
+#  Collect predefined keys from  the dictioary
+#  @code
+#  def somefunc (  ... , **kwargs ) :
+#      draw_opts = draw_options ( kwargs )
+#  @endcode 
+def draw_options ( **kwargs ) :
+    """Collect predefined keys from  the dictioary
+    >>> def somefunc (  ... , **kwargs ) :
+    ...      draw_opts = draw_options ( kwargs )
+    """
+    options = {}
+    for k,v in kwargs.iteritems() :
+        if k.lower() in keys : options[ k.lower() ] = v
+        if k.lower() in ( 'draw' , 'draw_option' , 'draw_options' ) :
+            if isinstance ( v , dict ) : options.update ( v ) 
+    return options
 
+# =============================================================================
 ## plain, default
 data_options           = ()
 

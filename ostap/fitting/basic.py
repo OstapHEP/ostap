@@ -164,9 +164,14 @@ def fitArgs ( name , dataset = None , *args , **kwargs ) :
             continue
         _args.append ( a )
         
+    from ostap.plotting.fit_draw import keys     
     ncpu_added = False 
     for k,a in kwargs.iteritems() :
-        
+
+        ## skip "drawing" options 
+        if k.lower() in keys                                       : continue 
+        if k.lower() in ( 'draw' , 'draw_option', 'draw_options' ) : continue 
+ 
         if isinstance ( a , ROOT.RooCmdArg ) :
             logger.debug   ( '%s add keyword argument %s' % ( name , k ) )  
             _args.append ( a )
@@ -344,8 +349,13 @@ class PDF (object) :
             return  self.fitTo ( dataset , draw , nbins , silent , refit , *args , **kwargs ) 
 
 
-        ## draw it if requested 
-        frame = self.draw ( dataset , nbins = nbins , silent = silent ) if draw else None 
+        ## draw it if requested
+        from ostap.plotting.fit_draw import draw_options
+        draw_opts = draw_options ( **kwargs )
+        if draw_opts and not draw     : draw = draw_opts
+        if isinstance ( draw , dict ) : draw_opts.update( draw )
+        
+        frame = self.draw ( dataset , nbins = nbins , silent = silent , **draw_opts ) if draw else None 
 
         if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars()
             
@@ -362,18 +372,19 @@ class PDF (object) :
     
     ## helper method to draw set of components 
     def _draw ( self , what , frame , options , base_color ) :
-        """ Helper method to draw set of components
-        """
+        """ Helper method to draw set of components """
         i = 0 
         for cmp in what : 
-            cmps = ROOT.RooArgSet( cmp ) 
-            self.pdf .plotOn (
-                frame ,
-                ROOT.RooFit.Components ( cmps                        ) ,
-                ROOT.RooFit.LineColor  ( base_color + i ) , *options ) 
+            cmps = ROOT.RooArgSet( cmp )
+            if 0 <= base_color : 
+                self.pdf .plotOn ( frame ,
+                                   ROOT.RooFit.Components ( cmps                        ) ,
+                                   ROOT.RooFit.LineColor  ( base_color + i ) , *options )
+            else :
+                self.pdf .plotOn ( frame ,
+                                   ROOT.RooFit.Components ( cmps ) , *options )
+                
             i += 1
-            
-                        
         
     # ================================================================================
     ## draw fit results
@@ -565,10 +576,15 @@ class PDF (object) :
             m.hesse    ()
             result = m.save ()
             
+        from ostap.potting.fit_draw import draw_options
+        draw_opts = draw_options ( **kwargs )
+        if draw_opts and not draw : draw = draw_opts 
+        if isinstance ( draw , dict ) : draw_opts.update( draw )
+
         if not draw :
             return result, None 
-        
-        return result, self.draw ( hdataset , nbins = None , silent = silent )
+
+        return result, self.draw ( hdataset , nbins = None , silent = silent , **draw_opts )
 
     # =========================================================================
     ## perform sPlot-analysis 
