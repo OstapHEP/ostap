@@ -1,4 +1,4 @@
-image: mazurov/cern-root-ostap
+image: mazurov/cern-root-ostap:1.0.1
 build:
     script:
       - ./scripts/bootstrap
