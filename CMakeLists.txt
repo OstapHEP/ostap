@@ -1,5 +1,5 @@
 # CMakeLists.txt for event package. It creates a library with dictionary and a main program
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(ostap)
 
 ##set(CMAKE_CXX_COMPILER c++)
