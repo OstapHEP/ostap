@@ -1,3 +1,5 @@
+[![build status](https://gitlab.cern.ch/amazurov/ostap/badges/master/build.svg)](https://gitlab.cern.ch/amazurov/ostap/commits/master)
+
 # Ostap
 
 ## Setup
