@@ -1,12 +1,10 @@
-# CMakeLists.txt for event package. It creates a library with dictionary and a main program
+# Use compiler from PATH, not the system one
+# http://stackoverflow.com/a/29904501/504346
+find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
+find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
+
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(ostap)
-
-##set(CMAKE_CXX_COMPILER c++)
-#set(CMAKE_CXX_COMPILER g++)
-
-#set(CMAKE_CXX_COMPILER lcg-g++-4.9.3)
-##set(CMAKE_C_COMPILER   lcg-gcc-4.9.3)
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 #   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
