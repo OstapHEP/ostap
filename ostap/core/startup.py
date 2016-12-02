@@ -55,14 +55,9 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.core.startup' )
 else                      : logger = getLogger ( __name__ )
 # =============================================================================
-
-def with_ipython() :
-    try :
-        __IPYTHON__
-        return True
-    except NameError :
-        return False
+from ostap.utils.basic import with_ipython
     
+# =============================================================================
 ## check if the file is actually "empty"
 def _empty_ ( fname ) :
     
@@ -83,7 +78,7 @@ def _empty_ ( fname ) :
     except IOError :
         pass
      
-
+# =============================================================================
 import datetime, time 
 start_time  = datetime.datetime.now()
 start_time_ = time.time() 
@@ -116,18 +111,21 @@ def _rename_ ( base , version = 0  ) :
         else : os.rename ( fname , fnamep1 )
         
                 
+# =============================================================================
 ## write history at the end 
 def _prnt_() :
     end_time = datetime.datetime.now()
     delta    = time.time() - start_time_
     logger.info ( 'Ostap  session   ended %s [%.1fs]' %  ( end_time.strftime('%c') , delta ) )
 
+# =============================================================================
 ## line completer 
 import rlcompleter
 import readline
 readline.clear_history() 
 readline.parse_and_bind("tab: complete")
 
+# =============================================================================
 ## write history
 def write_history ( fname ) :
     """Write history file 
@@ -174,6 +172,7 @@ def write_history ( fname ) :
     if os.path.exists( fname ) and os.path.isfile ( fname ) and not _empty_ ( fname ) : 
         logger.info ( 'Ostap  history file: %s' % __history__ )
     
+# =============================================================================
 import atexit
 atexit.register ( _prnt_ )
 atexit.register ( write_history , __history__ )    
@@ -182,16 +181,8 @@ atexit.register ( write_history , __history__ )
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
     
 # =============================================================================
 # The END 

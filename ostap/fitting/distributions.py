@@ -24,13 +24,15 @@ __all__     = (
     'BetaPrime_pdf'      , ## Beta-prime distribution 
     'Landau_pdf'         , ## Landau distribution 
     'Argus_pdf'          , ## ARGUS distribution 
-    'TwoExpos_pdf'       , ## difference of two exponents 
+    'TwoExpos_pdf'       , ## difference of two exponents
+    'Tsallis_pdf'        , ## Tsallis PDF 
+    'QGSM_pdf'           , ## QGSM PDF 
     )
 # =============================================================================
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'Ostap.fitting.distributions' )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.distributions' )
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
 from   ostap.core.core     import cpp, Ostap, VE 
@@ -607,8 +609,8 @@ models.append ( Argus_pdf )
 #  @see Ostap::Models::TwoExpos
 #  @see Ostap::Math::TwoExpos
 class TwoExpos_pdf(PDF) :
-    """ Simple difference of two exponents
-    # \f$ f \propto 
+    r"""Simple difference of two exponents
+    # \f$ f  \propto 
     #        \mathrm{e}^{-a_1    x}       -\mathrm{e}^{-a_2 x} = 
     #        \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f$
     """
@@ -681,7 +683,7 @@ models.append ( TwoExpos_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Tsallis_pdf(PDF) :
-    """ Useful function to describe pT-spectra of particles 
+    r"""Useful function to describe pT-spectra of particles 
     #
     #  - C. Tsallis, 
     #  Possible generalization of Boltzmann-Gibbs statistics,
@@ -754,7 +756,7 @@ models.append ( Tsallis_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class QGSM_pdf(PDF) :
-    """ Useful function to describe pT-spectra of particles 
+    r""" Useful function to describe pT-spectra of particles 
     #
     # - A. B. Kaidalov and O. I. Piskunova, Z. Phys. C 30 (1986) 145.
     # - O. I. Piskounova, arXiv:1301.6539 [hep-ph]; 
@@ -802,23 +804,11 @@ class QGSM_pdf(PDF) :
 
 models.append ( QGSM_pdf )
 
-
-
 # =============================================================================
 if '__main__' == __name__ : 
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
-    for m in models : logger.info ( 'Model %s\n%s' % ( m.__name__ ,  m.__doc__  ) ) 
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger , symbols = models )
 
 # =============================================================================
 # The END 

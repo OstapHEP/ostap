@@ -20,7 +20,7 @@
 #  Last modification $Date$
 #                 by $Author$
 # =============================================================================
-""" Set of useful PDFs for various 1D and 2D fits
+"""Set of useful PDFs for various 1D and 2D fits
 
 It includes:
 
@@ -36,7 +36,7 @@ Empricial PDFs to describe narrow peaks :
   - bifurcated Gauissian
   - generalized normal v1 
   - generalized normal v2
-  - skew Gaussian
+  - skew Gaussian   ## temporarily disabled 
   - Bukin,
   - Student-T
   - bifurcated Student-T
@@ -84,7 +84,7 @@ __all__ = (
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
     'GenGaussV2_pdf'         , ## generalized normal v2 
-    'SkewGauss_pdf'          , ## skewed gaussian
+    ## 'SkewGauss_pdf'          , ## skewed gaussian
     'Bukin_pdf'              , ## generic Bukin PDF: skewed gaussian with exponential tails     
     'StudentT_pdf'           , ## Student-T function 
     'BifurcatedStudentT_pdf' , ## bifurcated Student-T function 
@@ -121,7 +121,6 @@ __all__ = (
     ##
     'Voigt_pdf'            , ## Voigt-profile 
     'PseudoVoigt_pdf'      , ## Voigt-profile 
-    'Pseudo_pdf'           , ## Voigt-profile 
     'BW23L_pdf'            , ## BW23L
     'Swanson_pdf'          , ## Swanson's S-wave cusp
     #
@@ -233,18 +232,9 @@ models += _models
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
-    for m in models : logger.info ( 'Model %s\n%s' % ( m.__name__ ,  m.__doc__  ) ) 
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger , symbols = models )
+    
  
 # =============================================================================
 # The END 

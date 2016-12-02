@@ -1,18 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
-#  Module with some simple but useful utilities
+#  Module with some simple but useful utilities for 
 #   - timing
 #   - memory
+#   - profiling
+#   - ... 
 #
+#  It is recommended to install psutil module 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 #  
 # =============================================================================
-"""Module with some simple but useful utilities"""
+"""Module with some simple but useful utilities for
+- timing
+- memory
+- profiling
+- etc
+
+It is recommended to install psutil module 
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -30,17 +38,39 @@ __all__     = (
     'Profiler'       , ## context manager to perform profiling
     ##
     'takeIt'         , ## take and later delete ...
+    'isatty'         , ## is the stream ``isatty'' ?
+    'with_ipython'   , ## do we run IPython? 
     )
 # =============================================================================
-import ROOT,cppyy, time, os,sys ## attention here!!
-cpp = cppyy.gbl
+import ROOT, time, os , sys ## attention here!!
 # =============================================================================
-# logging 
-# =============================================================================
-from   ostap.logger.logger import getLogger
+from   ostap.logger.logger import getLogger, isatty 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
 else                       : logger = getLogger( __name__            )
-del getLogger 
+del getLogger
+# =============================================================================
+## timing stuff
+from ostap.utils.timing import clocks, timing, timer
+## other useful stuff 
+from ostap.utils.basic  import isatty, with_ipython  
+# =============================================================================
+try :
+    import psutil 
+    def memory_usage ():
+        # return the memory usage in MB
+        process = psutil.Process(os.getpid())
+        mem     = process.get_memory_info()[0] / float(2 ** 20)
+        return mem
+except ImportError :
+    import resource
+    def memory_usage ():
+        rusage_denom = 1024.
+        if sys.platform == 'darwin':
+            # ... it seems that in OSX the output is different units ...
+            rusage_denom = rusage_denom * rusage_denom
+        mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / rusage_denom
+        return mem
+    
 # =============================================================================
 ## @class Memory
 #  Simple context manager to measure the virtual memory increase
@@ -81,16 +111,19 @@ class Memory(object):
     
     >>> delta = M.delta    
     """
-    _logger = logger 
+    from ostap.logger.logger import getLogger 
+    _logger = getLogger( 'ostap.utils.utils' )
+    del getLogger
+    
     def __init__  ( self , name = '' , logger = None , format = 'Memory %-18s %.1fMB') :
         self.name   = name
         self.logger = logger if logger else self._logger 
         self.format = format
     def __enter__ ( self ) :
-        self.memory = cpp.System.virtualMemory()
+        self.memory = memory_usage ()
         return self 
     def __exit__  ( self, *_ ) :
-        self.delta  = cpp.System.virtualMemory() - self.memory
+        self.delta  = memory_usage () - self.memory
         try :
             message = self.format          % ( self.name , self.delta ) 
         except TypeError :
@@ -119,200 +152,6 @@ def virtualMemory ( name = '' ) :
 memory = virtualMemory  ## ditto
 
 # =============================================================================
-## @class Clock
-#  Smple context manager to measure the clock counts
-#
-#  @code
-#
-#  with Clock() :
-#     <whatever action is>
-#     at the exit it prints the clock counts 
-#  @endcode
-#
-# Or:
-#
-#  @code
-#
-#  with Clock() as c :
-#     <whatever action is>
-#     at the exit it prints the clock counts 
-#
-#  print c.delta 
-# 
-#  @endcode
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2013-02-10                    
-class Clock(object):
-    """Simple context manager to measure the clock counts
-    >>> with Clock() :
-    ...  <whatever action is>
-    at the exit it prints the clock counts 
-    
-    >>> with Clock() as c :
-    ...  <whatever action is>
-    at the exit it prints the clock counts 
-    
-    >>> print c.delta 
-    """
-    _logger = logger 
-    def __init__  ( self , name = '' , logger = None , format = 'Clocks %-18s %s') :
-        self.name   = name
-        self.logger = logger if logger else self._logger 
-        self.format = format
-    def __enter__ ( self ) :
-        self.clock = time.clock()
-        return self 
-    def __exit__  ( self, *_ ) :
-        self.delta = time.clock() - self.clock
-        try :
-            message = self.format       % ( self.name , self.delta ) 
-        except TypeError :
-            message = 'Clocks %-18s %s' % ( self.name , self.delta )
-
-        self.logger.info ( message )
-        
-# =============================================================================
-## @class Timer
-#  Simple context manager to measure the time 
-#  @code
-#
-#  with Timer() :
-#     <whatever action is>
-#     at the exit it prints the time 
-#  @endcode
-#
-# Or:
-#
-#  @code
-#
-#  with Timer() as t :
-#     <whatever action is>
-#     at the exit it prints the clock counts 
-#
-#  print ct.delta 
-# 
-#  @endcode
-#
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2013-02-10
-#
-class Timer(object):
-    """Simple context manager to measure the time
-    
-    >>> with Timer() :
-    ...  <whatever action is>
-    at the exit it prints the time 
-    
-    Or:
-    
-    >>> with Timer() as t :
-    ...  <whatever action is>
-    at the exit it prints the clock counts 
-    
-    >>> print ct.delta 
-    """
-    _logger = logger 
-    def __init__  ( self , name = '' , logger = None , format = 'Timing %-18s %.3f' ) :
-        self.name   = name
-        self.logger = logger if logger else self._logger 
-        self.format = format
-    def __enter__ ( self ) :
-        self.time = time.time()
-        return self 
-    def __exit__  ( self, *_ ) :
-        self.delta = time.time() - self.time
-        
-        try :
-            message = self.format       % ( self.name , self.delta ) 
-        except TypeError :
-            message = 'Timing %-18s %s' % ( self.name , self.delta )
-
-        self.logger.info ( message )
-            
-# =============================================================================
-## Simple context manager to measure the clock counts
-#
-#  @code
-#
-#  with clocks () :
-#     <whatever action is>
-#     at the exit it prints the clock counts
-#
-#  @endcode
-#
-# Or:
-#
-#  @code
-#
-#  with clocks () as c :
-#     <whatever action is>
-#     at the exist it prints the clock counts 
-#
-#  print c.delta 
-# 
-#  @endcode
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2013-02-10                    
-def clocks ( name = '' ) :
-    """Simple context manager to measure the clock counts 
-    
-    >>> with clocks () :
-    ...   <whatever action is>
-    at the exit it prints the clock counts 
-    
-    >>> with clocks () as c :
-    ...   <whatever action is>
-    at the exit it prints the clock counts 
-    
-    >>>print c.delta
-    """
-    return Clock ( name )
-
-# =============================================================================
-## Simple context manager to measure the time
-#
-#  @code
-#
-#  with timer () :
-#     <whatever action is>
-#     at the exit it prints the time
-#
-#  @endcode
-#
-# Or: 
-#
-#  @code
-#
-#  with timer () as t :
-#     <whatever action is>
-#     at the exit it prints the clock counts 
-#
-#  print t.delta 
-# 
-#  @endcode
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2013-02-10                    
-def timing ( name = '' , logger = None ) :
-    """Simple context manager to measure the clock counts 
-    
-    >>> with timing () :
-    ...   <whatever action is>
-    at the exit it prints the clock counts 
-    
-    >>> with timing () as c :
-    ...   <whatever action is>
-    at the exit it prints the clock counts 
-    
-    >>> print c.delta
-    """
-    return Timer ( name , logger )
-
-# =============================================================================
-## ditto 
-timer = timing   # ditto
-
-
-# =============================================================================
 ## @class Profiler
 #  Very simple profiler, based on cProfile module
 #  @see https://docs.python.org/2/library/profile.html
@@ -325,7 +164,7 @@ timer = timing   # ditto
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2016-07-25                     
 class Profiler(object) :
-    """  Very simple profiler, based on cProfile module
+    """Very simple profiler, based on cProfile module
     - see https://docs.python.org/2/library/profile.html
     
     with profiler() :
@@ -378,7 +217,7 @@ class Profiler(object) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2016-07-25                     
 def profiler( name = '' ) :
-    """ Very simple profiler, based on cProfile module
+    """Very simple profiler, based on cProfile module
     - see https://docs.python.org/2/library/profile.html
     
     with profiler() :
@@ -399,7 +238,7 @@ def profiler( name = '' ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  date 2013-01-12
 class NoContext(object) :
-    """ Fake (empty) context manager to be used as empty placeholder
+    """Fake (empty) context manager to be used as empty placeholder
     >>> with NoContext() :
     ...         do_something() 
     """
@@ -449,7 +288,7 @@ class TakeIt(object):
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  date 2014-08-03    
 def takeIt (  other ):
-    """ Take some object, keep it and delete at the exit
+    """Take some object, keep it and delete at the exit
     >>> ds = dataset.reduce('pt>1')
     >>> with takeIt ( ds ) :
     ...    
@@ -482,7 +321,7 @@ def get_open_fds():
 #  The actual code is copied from http://stackoverflow.com/a/13624412
 #  @warning: it is likely to be "Linux-only" function
 def get_file_names_from_file_number(fds):
-    """ Get the actual file name from file descriptor 
+    """Get the actual file name from file descriptor 
     The actual code is copied from http://stackoverflow.com/a/13624412 
     """
     names = []
@@ -490,19 +329,18 @@ def get_file_names_from_file_number(fds):
         names.append(os.readlink('/proc/self/fd/%d' % fd))
     return names
 
-
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+    
+    try :
+        import psutil 
+        logger.info    ( '``psutils''  will be used for Memory' )
+    except ImportError :
+        logger.warning ( "``resource'' will be used for Memory: reports only max-values" )
+
     logger.info ( 80*'*' ) 
     
 # =============================================================================

@@ -9,6 +9,7 @@
 #  @date 2009-09-12
 # =============================================================================
 """Simple chi2-fit
+- see TH1(F/D).hFit 
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
@@ -139,18 +140,9 @@ ROOT.TH1D. hFit = _h_Fit_
 # =============================================================================
 if '__main__' == __name__  :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
 
-    
 # =============================================================================
 # The END 
 # =============================================================================

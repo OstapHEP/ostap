@@ -1355,7 +1355,7 @@ models.append ( JohnsonSU_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-024
 class Atlas_pdf(MASS) :
-    """Modified gaussian with exponential tails
+    r"""Modified gaussian with exponential tails
     \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\deltax/2}}}{2})\f$,
     where \f$\delta x = \left| x - \mu \right|/\sigma\f$
     Function is taken from http://arxiv.org/abs/arXiv:1507.07099    
@@ -1468,13 +1468,13 @@ models.append ( Sech_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
 class Logistic_pdf(MASS) :
-    """ Logistic, aka ``sech-square'' PDF
-     \f$ f(x;\mu;s) = \frac{1}{4s}sech^2\left(\frac{x-\mu}{2s}\right)\f$, 
-     where
-     \f$  s = \sigma \frac{\sqrt{3}}{\pi}\f$
-     - see https://en.wikipedia.org/wiki/Logistic_distribution
-     - see Ostap::Math::Logistic
-     - see Ostap::Models::Logistic
+    r""" Logistic, aka ``sech-square'' PDF
+    \f$ f(x;\mu;s) = \frac{1}{4s}sech^2\left(\frac{x-\mu}{2s}\right)\f$, 
+    where
+    \f$  s = \sigma \frac{\sqrt{3}}{\pi}\f$
+    - see https://en.wikipedia.org/wiki/Logistic_distribution
+    - see Ostap::Math::Logistic
+    - see Ostap::Models::Logistic
     """
     def __init__ ( self             ,
                    name             ,
@@ -2183,18 +2183,8 @@ models.append ( Swanson_pdf )
 # =============================================================================
 if '__main__' == __name__ : 
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + Ostap.Line.line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' )
-    for m in models : logger.info ( 'Model %s: %s' % ( m.__name__ ,  m.__doc__  ) ) 
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger , symbols = models )
     
 # =============================================================================
 # The END 

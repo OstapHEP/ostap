@@ -72,8 +72,7 @@ cpp_round_N = cpp.Ostap.Math.round_N
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def frexp10 ( value ) :
-    """
-    Get the mantissa (0.1<=m<1) and exponent for radix10
+    """Get the mantissa (0.1<=m<1) and exponent for radix10
     (similar for frexp, but use radix=10)
     
     >>> a,b = frexp10 ( value ) 
@@ -91,8 +90,7 @@ def frexp10 ( value ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def _frexp10_ ( value ) :
-    """
-    Get ``mantissa'' (1<=m<10) and exponent for radix10
+    """Get ``mantissa'' (1<=m<10) and exponent for radix10
     similar for frexp, but use radix=10
     >>> m,e = _frexp10_ ( value ) 
     """
@@ -107,8 +105,7 @@ def _frexp10_ ( value ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def _3digits_ ( value ) :
-    """
-    Get three first significant digits
+    """Get three first significant digits
     
     >>> nums = _3digits_ ( value ) 
     """
@@ -125,8 +122,7 @@ def _3digits_ ( value ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def round_N ( value , n ) :
-    """
-    Round value to to N-digits
+    """Round value to to N-digits
     
     >>> new_value = round_N ( value , 3 )    
     """
@@ -150,8 +146,7 @@ def round_N ( value , n ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_round_ ( value , error ) :
-    """
-    Make a rounding according to PDG prescription
+    """Make a rounding according to PDG prescription
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
     
@@ -201,8 +196,7 @@ def pdg_round_ ( value , error ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_round ( value , error ) :
-    """
-    Make a rounding according to PDG prescription
+    """Make a rounding according to PDG prescription
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
     
@@ -238,8 +232,7 @@ def pdg_round ( value , error ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_format ( value , error , latex = False ) :
-    """
-    Round value/error accoridng to PDG prescription and format it for print
+    """Round value/error accoridng to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -307,8 +300,7 @@ def pdg_format ( value , error , latex = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_format2( value , error1 , error2  , latex = False , mode = 'total' ) :
-    """
-    Round value/error accoridng to PDG prescription and format it for print
+    """Round value/error accoridng to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -393,8 +385,7 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'total' ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'total' ) :
-    """
-    Round value/error accoridng to PDG prescription and format it for print
+    """Round value/error accoridng to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -482,8 +473,7 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def _ve_pdg_ ( ve ) :
-    """
-    Make a rounding according to PDG prescription
+    """Make a rounding according to PDG prescription
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -521,8 +511,7 @@ def _ve_pdg_ ( ve ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def _ve_pdg_format_ ( ve , latex = False ) :
-    """
-    Round value/error accoridng to PDG prescription and format it for print
+    """Round value/error accoridng to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -555,17 +544,9 @@ if not hasattr ( math , 'round_N' ) : math.round_N = round_N
 # =============================================================================
 if '__main__' == __name__ :
 
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
-  
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+
     v = 1./3 
     for s in ( 1.e-6 , 1.e-3 , 1.e3 , 1.e6 ) : 
         for e in ( 0.000123 , 0.000456 , 0.000900 , 0.000986 ) :
