@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file models.py
 #
 #  Module with some useful utilities for simple functions and fit models.
@@ -10,9 +8,6 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-12-01
 #
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """Module with some useful fit-models"""
 # =============================================================================
@@ -818,17 +813,9 @@ for i in ( _D1.Derivative , _D2.Integral , _D2.IntegralCache ) :
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
-    
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+
 # =============================================================================
 # The END 
 # =============================================================================

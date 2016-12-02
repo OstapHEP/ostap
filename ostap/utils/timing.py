@@ -1,16 +1,27 @@
-
-__all__     = [
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# =============================================================================
+# @file
+# Set of useful utilities
+# =============================================================================
+"""Set of useful utilisties for timing
+"""
+# =============================================================================
+__all__     = (
     'clocks'         , ## context manager to count clocks 
     'timing'         , ## context manager to count time 
     'timer'          , ## ditto
-    ]
-
-from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils' )
-else                       : logger = getLogger( __name__ )
-del getLogger 
-from ostap.logger.logger import  logVerbose,  logDebug, logInfo, logWarning, logError
-
+    'Clock'          , ## context manager to count clocks 
+    'Timer'          , ## context manager to count time 
+   )
+# =============================================================================
+from   ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.timing' )
+else                       : logger = getLogger( __name__             )
+del getLogger
+# =============================================================================
+import time
+# ==============================================================================
 ## @class Clock
 #  Smple context manager to measure the clock counts
 #
@@ -45,6 +56,7 @@ class Clock(object):
     >>> print c.delta 
     """
     _logger = logger 
+    ##
     def __init__  ( self , name = '' , logger = None , format = 'Clocks %-18s %s') :
         self.name   = name
         self.logger = logger if logger else self._logger 
@@ -98,6 +110,7 @@ class Timer(object):
     >>> print ct.delta 
     """
     _logger = logger 
+    ##
     def __init__  ( self , name = '' , logger = None , format = 'Timing %-18s %.3f' ) :
         self.name   = name
         self.logger = logger if logger else self._logger 
@@ -137,7 +150,7 @@ class Timer(object):
 #  print c.delta 
 # 
 #  @endcode
-def clocks ( name = '' ) :
+def clocks ( name = '' , logger = None ) :
     """Simple context manager to measure the clock counts 
     
     >>> with clocks () :
@@ -150,7 +163,7 @@ def clocks ( name = '' ) :
     
     >>>print c.delta
     """
-    return Clock ( name )
+    return Clock ( name , logger )
 
 # =============================================================================
 ## Simple context manager to measure the time
@@ -191,3 +204,14 @@ def timing ( name = '' , logger = None ) :
 
 ## ditto 
 timer = timing   # ditto
+
+# =============================================================================
+if '__main__' == __name__ :
+    
+    with timer ( logger = logger ), clocks ( logger = logger ) :  
+        from ostap.utils.docme import docme
+        docme ( __name__ , logger = logger )
+        
+# =============================================================================
+# The END 
+# =============================================================================

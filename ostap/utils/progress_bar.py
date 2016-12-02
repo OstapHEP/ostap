@@ -3,7 +3,8 @@
 # =============================================================================
 # $Id$
 # =============================================================================
-## @file  progress bars for Ostap
+## @file
+#  Progress bars for Ostap
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date   2011-12-01
 #
@@ -143,20 +144,7 @@ def columns () :
 
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
-def _not_tty_ () :
-    """ Is sys.stdout attached to terminal or not ? 
-    """
-    try :
-        return not sys.stdout.isatty()
-    except : pass 
-    
-    try :
-        return not os.isatty ( sys.stdout.fileno() ) 
-    except : pass
-    
-    return False 
-
-
+from ostap.utils.basic import isatty 
 
 # =============================================================================
 ## @class ProgressBar
@@ -212,7 +200,7 @@ def _not_tty_ () :
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 class ProgressBar(object):
-    """ ProgressBar
+    """ProgressBar
     
     Use as class:
     
@@ -237,7 +225,7 @@ class ProgressBar(object):
     """
     def __init__(self, min_value = 0, max_value = 100, width=110 ,**kwargs):
 
-        self.silent   = _not_tty_() or kwargs.get( 'silent' , False ) 
+        self.silent   = kwargs.get( 'silent' , False ) or not isatty() 
 
         self.char = kwargs.get ( 'char' , '#'       ) ##
         self.mode = kwargs.get ( 'mode' , 'fixed'   ) ## fixed or dynamic
@@ -366,7 +354,7 @@ _done_ =    'Done        %-12d    \n'
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 class RunningBar(object):
-    """ RunningBar
+    """RunningBar
     
     >>> with RunningBar () as bar :
     >>>    for i in xrange(2000) :
@@ -378,10 +366,9 @@ class RunningBar(object):
     ...    <do something here>
     
     """
-    
     def __init__(self, *args ,**kwargs ) :
         
-        self.silent   = _not_tty_() or kwargs.get( 'silent' , False ) 
+        self.silent   = kwargs.get( 'silent' , False ) or not isatty() 
 
         self.amount   = 0 
         self.freq     = int ( kwargs.get( 'frequence' , 100 ) )
@@ -521,16 +508,8 @@ if __name__ == '__main__':
     from   ostap.logger.logger import getLogger
     logger = getLogger('ostap.utils.progress_bar')
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
   
     test_bars ()
     logger.info ( 80*'*' ) 

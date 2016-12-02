@@ -39,7 +39,7 @@ from   ostap.histos.histos import h1_axis , h2_axes
 from   ostap.logger.utils  import roo_silent 
 # =============================================================================
 from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.Basic' )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
 else                       : logger = getLogger ( __name__         )
 # =============================================================================
 _nemax = 20000  ## number of events per CPU-core 
@@ -2118,17 +2118,9 @@ class Generic2D_pdf(PDF2) :
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__ + '\n' + line  )
-    logger.info ( 80*'*' )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
-
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+    
 # =============================================================================
 # The END 
 # =============================================================================

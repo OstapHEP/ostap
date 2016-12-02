@@ -227,11 +227,9 @@ def parse_args ( args = [] ) :
     return parser.parse_args( v )
 
 # =============================================================================
-def with_ipython() :
-    try :
-        return __IPYTHON__
-    except NameError :
-        return False 
+## do we run IPython?
+from ostap.utils.basic import with_ipython
+
 # =============================================================================
 
 # =============================================================================

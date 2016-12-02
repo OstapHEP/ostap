@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  @see Ostap::StatEntity
 #  @see Ostap::WStatEntity
@@ -19,11 +17,12 @@ __version__ = ""
 # =============================================================================
 __all__     = (
     'SE'  , ## simple smart counter (1-bi histo)  C++ Ostap::StatEntity 
-    'SWE' , ## simple smart counter with weight :     Ostap::WStatEntity 
-    'NWE' , ## simple smart running counter     :     Ostap::NStatEntity 
+    'WSE' , ## simple smart counter with weight :     Ostap::WStatEntity 
+    'NSE' , ## simple smart running counter     :     Ostap::NStatEntity 
     ) 
 # =============================================================================
 import ROOT, cppyy
+# =============================================================================
 cpp   = cppyy.gbl
 Ostap = cpp.Ostap
 
@@ -76,24 +75,23 @@ WSE.__str__  = lambda s : 'WStat: '+ s.toString()
 # =============================================================================
 if '__main__' == __name__  :
     
-    print '*'*120
-    print                      __doc__
-    print ' Author  : %s ' %   __author__
-    print ' Version : %s ' %   __version__
-    print ' Date    : %s ' %   __date__
-    print '*'*120
+    from ostap.logger.logger import getLogger
+    logger = getLogger( 'ostap.stats.counters' )
     
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+
     import random
     
     cnt = SE() 
     for i in xrange(10000) :
         cnt += random.gauss(1,1)
         
-    print 'Counter:', cnt
-    print 'Mean : ', cnt.mean()
-    print 'RMS  : ', cnt.rms ()
+    logger.info ( 'Counter: %s' % cnt        ) 
+    logger.info ( 'Mean   : %s' % cnt.mean() ) 
+    logger.info ( 'RMS    : %s' % cnt.rms () ) 
     
-    print '*'*120
+    logger.info (80*'*')
     
 # =============================================================================
 # The END 

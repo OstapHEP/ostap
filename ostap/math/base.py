@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #
 #  Simple file to provide "easy" access in python for
@@ -83,7 +81,7 @@ __all__     = (
     'natural_number' , ## See Ostap::Math::natural_number  
     'natural_entry'  , ## See Ostap::Math::natural_entry
     ##
-    'double'         , ## construct std::vector<double>
+    'doubles'        , ## construct std::vector<double>
     'ints'           , ## construct std::vector<int>
     'uints'          , ## construct std::vector<unsigned int>
     'longs'          , ## construct std::vector<long>
@@ -424,16 +422,8 @@ COMPLEX.as_complex  = _cmplx_to_complex_
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
 
     _v = [ l for l in dir(Ostap     ) if 0 != l.find('__') ]
     print ' dir(Ostap)      : '

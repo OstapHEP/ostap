@@ -98,21 +98,12 @@ logging.addLevelName ( logging.INFO      , 'INFO   '  )
 logging.addLevelName ( logging.ERROR     , 'ERROR  '  )
 logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
 
-import sys,os 
+
+
 # =============================================================================
-## is sys.stdout attached to terminal or not  ?
-def _not_tty_ () :
-    """ Is sys.stdout attached to terminal or not ? 
-    """
-    try :
-        return not sys.stdout.isatty()
-    except : pass 
-    
-    try :
-        return not os.isatty ( sys.stdout.fileno() ) 
-    except : pass
-    
-    return False
+# - is sys.stdout attached to terminal or not ?
+# - do we run IPYTHON ? 
+from ostap.utils.basic import isatty, with_ipython  
 
 # =============================================================================
 # COLORS: 
@@ -125,14 +116,6 @@ def with_colors() :
     """Is colorization enabled ?"""
     global __with_colors__
     return bool(__with_colors__)
-# =============================================================================
-## helper function that allows to detect running ipython
-def with_ipython()  :
-    """Helper function that allows to detect running ipython"""
-    try :
-        return __IPYTHON__
-    except NameError :
-        return False
 # =============================================================================
 ## reset colorization of logging 
 def reset_colors() :
@@ -367,7 +350,7 @@ def make_colors () :
     """Colorize logging
     """
     if with_colors() : return
-    if _not_tty_  () : return  ## no colorization for non-TTY output 
+    if not isatty () : return  ## no colorization for non-TTY output 
     
     # ===================================================================================
     #The background is set with 40 plus the number of the color, and the foreground with 30
@@ -500,7 +483,7 @@ def keepColor () :
 
 ## reset colors
 ## for ipython mode and TTY output activate colors 
-if with_ipython() and not _not_tty_ () :
+if with_ipython() and isatty  () :
     make_colors()
     
 ## define default logging thresholds as 'INFO'
@@ -510,13 +493,12 @@ setLogging ( 3 )
 if __name__ == '__main__' :
 
     setLogging ( 0 )
-
-    logger = getLogger ( 'ostap.logger')
-    logger.info ( 80*'*'  ) 
-    logger.info ( __doc__ ) 
-    logger.info ( ' Symbols : %s ' %  list ( __all__ ) )
-    logger.info ( 80*'*'  )
     
+    logger = getLogger ( 'ostap.logger')
+
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+ 
     logger.verbose  ( 'This is VERBOSE  message'  ) 
     logger.debug    ( 'This is DEBUG    message'  ) 
     logger.info     ( 'This is INFO     message'  ) 

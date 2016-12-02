@@ -29,7 +29,10 @@ Supported types:
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
-__all__     = () 
+__all__     = (
+    'HepDataFile'  , ## the HepDATA file
+    'HepData'      , ## HepDATA record 
+    ) 
 # =============================================================================
 import ROOT
 # =============================================================================
@@ -181,6 +184,12 @@ class HepDataFile(HepDataBase) :
 #  metadata = { ... }
 #  ds = HepData ( histo , **metadata  )
 #  @encode
+#  @attention The object must have ``toHepDATA'' method 
+#  Currently followong types are supported 
+#  - ROOT.TH1F
+#  - ROOT.TH1D
+#  - ROOT.TGraphErrors 
+#  - ROOT.TGraphAsymmErrors 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 class HepData(HepDataBase) :
@@ -188,6 +197,12 @@ class HepData(HepDataBase) :
     >>> histo    = ...
     >>> metadata = { ... }
     >>> ds = HepData ( histo , **metadata )
+    The object must have ``toHepDATA'' method
+    Currently following types are supported 
+    - ROOT.TH1F
+    - ROOT.TH1D
+    - ROOT.TGraphErrors 
+    - ROOT.TGraphAsymmErrors 
     """
     def __init__ ( self  ,
                    histo ,
@@ -269,8 +284,7 @@ def _h1_hepdata_ ( histo      ,
     ...                     syst2 = [ 0.02 ,0.03 , .... , 0.8]   ,
     ...                     syst3 = lambda i : '%s:last' % h2[i] ) 
     
-    """
-    
+    """    
     ## the basic format 
     fmt   = '   %s TO %s ; %s +- %s ; '
     lines = [ '*data: x : y ' ]
@@ -389,6 +403,7 @@ def _tgae_hepdata_ ( graph      ,
     return '\n'.join(lines)+'\n'
 
 
+# =============================================================================
 for t in ( ROOT.TH1D         ,
            ROOT.TH1F         ,
            ROOT.TGraphErrors ) : 
@@ -400,22 +415,10 @@ ROOT.TGraphAsymmErrors .toHepDATA = _tgae_hepdata_  ## different one
 ROOT.TGraphAsymmErrors .toHepData = _tgae_hepdata_  ## different one 
 
 # =============================================================================
-
-
-# =============================================================================
 if '__main__' == __name__ :
-    
-    
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+        
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
 
 # =============================================================================
 # The END 

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 # @file sqliteshelve.py
 # 
 # This is SQLite-version of shelve database with compressed content 
@@ -63,9 +61,6 @@
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
 # 
-#                    $Revision$
-#  Last Modification $Date$
-#                 by $Author$
 # =============================================================================
 """This is SQLite-version of shelve database.
 
@@ -436,16 +431,8 @@ def tmpdb(*args, **kwargs):
 # =============================================================================
 if '__main__' == __name__ :
 
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
     
 # =============================================================================
 # The END 

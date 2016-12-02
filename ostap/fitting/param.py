@@ -7,10 +7,6 @@
 #  Auxillary utilities for parameterization of histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-#  
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """Auxillary utilities for parameterization of histograms 
 """
@@ -30,7 +26,7 @@ else                       : logger = getLogger( __name__              )
 # =============================================================================
 logger.debug ( 'Auxillary utilities for Histogram parameterisation')
 # =============================================================================
-import ostap.fitting.funcs
+import ostap.histos.histos 
 import ostap.fitting.fitresult 
 from   ostap.core.core import Ostap, funID
 
@@ -402,16 +398,8 @@ ROOT.TH2D . integral = _h2_integral_
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
 
 # =============================================================================
 # The END 

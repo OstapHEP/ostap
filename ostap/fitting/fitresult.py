@@ -7,12 +7,8 @@
 #  Tiny decoration for ROOT.FitResult object
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-#  
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
-"""Tiny decoration for ROOT.TF objects 
+"""Tiny decoration for ROOT.FitResult object
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -29,7 +25,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.fitresult' )
 else                       : logger = getLogger( __name__                  )
 # =============================================================================
 logger.debug ( 'Tiny decoration for ROOT.FitResult object')
-# =============================================================================
 # =============================================================================
 ## representation of TFitResult object 
 #  @code 
@@ -225,16 +220,8 @@ ROOT.TFitResultPtr.parnum       = _fit_parnum_
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
 
 # =============================================================================
 # The END 

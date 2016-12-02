@@ -55,6 +55,8 @@ models.append ( GammaDist_pdf )
 ## @class PtFitBase
 #  helper object  
 class PtFitBase(object) :
+    """Helper class fro fitting pT-spectra
+    """
     def __init__ ( self , ptmax , ptmin = 0 ) :
         self._integral = -1
         self._ptmin    = ptmin
@@ -274,18 +276,8 @@ def gammaDistTF1 ( ptmax , ptmin = 0 , mass = None , name = '' ) :
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__  + '\n' + line  ) 
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
-    for m in models : logger.info ( 'Model %s\n%s' % ( m.__name__ ,  m.__doc__  ) ) 
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger , symbols = models )
  
 # =============================================================================
 # The END 
