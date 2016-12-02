@@ -140,6 +140,24 @@ def columns () :
         pass
     
     return -1 
+
+# =============================================================================
+## is sys.stdout attached to terminal or not  ?
+def _not_tty_ () :
+    """ Is sys.stdout attached to terminal or not ? 
+    """
+    try :
+        return not sys.stdout.isatty()
+    except : pass 
+    
+    try :
+        return not os.isatty ( sys.stdout.fileno() ) 
+    except : pass
+    
+    return False 
+
+
+
 # =============================================================================
 ## @class ProgressBar
 #
@@ -219,6 +237,8 @@ class ProgressBar(object):
     """
     def __init__(self, min_value = 0, max_value = 100, width=110 ,**kwargs):
 
+        self.silent   = _not_tty_() or kwargs.get( 'silent' , False ) 
+
         self.char = kwargs.get ( 'char' , '#'       ) ##
         self.mode = kwargs.get ( 'mode' , 'fixed'   ) ## fixed or dynamic
         if not self.mode in ['fixed', 'dynamic']:
@@ -241,7 +261,6 @@ class ProgressBar(object):
         self._hashes  = -1 
         self._percent = -1 
 
-        self.silent   = kwargs.get( 'silent' , False ) 
         
         self.update_amount( self.min )
         self.build_bar ()
@@ -251,8 +270,7 @@ class ProgressBar(object):
         return self if self.silent else self.update_amount ( self.amount + add_amount )
 
     def update_amount(self, new_amount = None):
-        """
-        Update self.amount with 'new_amount', and then rebuild& show the bar 
+        """Update self.amount with 'new_amount', and then rebuild& show the bar 
         """
         if self.silent : return self   ## REALLY SILENT 
         ## 
@@ -270,8 +288,7 @@ class ProgressBar(object):
         return self
 
     def build_bar(self):
-        """
-        Figure new percent complete, and rebuild the bar string base on self.amount.
+        """Figure new percent complete, and rebuild the bar string base on self.amount.
         """
         diff         = float ( self.amount - self.min )
         percent_done = int   ( round ( ( diff / float ( self.span ) ) * 100.0 ) )
@@ -363,18 +380,19 @@ class RunningBar(object):
     """
     
     def __init__(self, *args ,**kwargs ) :
+        
+        self.silent   = _not_tty_() or kwargs.get( 'silent' , False ) 
+
         self.amount   = 0 
         self.freq     = int ( kwargs.get( 'frequence' , 100 ) )
         self.prefix   = kwargs.get ( 'description' , ''     ) 
-        self.silent   = kwargs.get ( 'silent'      , False  )
         self.update_amount() 
         
     def increment_amount(self, add_amount = 1):
         return self if self.silent else self.update_amount ( self.amount + add_amount )
 
     def update_amount(self, new_amount = None ):
-        """
-        Update self.amount with 'new_amount', and then rebuild the bar string.
+        """Update self.amount with 'new_amount', and then rebuild the bar string.
         """
         if self.silent : return self ## really silent 
         #
@@ -475,7 +493,7 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
             yield i
                         
 # =============================================================================
-## simlpe 
+## simple test 
 def test_bars ():
 
     limit = 1000000

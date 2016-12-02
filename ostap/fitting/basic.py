@@ -126,6 +126,43 @@ def makeVar ( var , name , comment , fix = None , *args ) :
 
     return var
 
+
+# =============================================================================
+## make a RooArgList of variables/fractions 
+def makeFracs ( N , pname , ptitle , model , fractions = True )  :
+    """Make a RooArgList of variables/fractions 
+    """
+    if not isinstance ( N , (int,long) ) : raise TypeError('Invalid N type %s' % type(N) )
+    elif   N < 2                         : raise TypeError('Invalid N=%d'      %      N  )
+    ##
+    fracs = ROOT.RooArgList()
+    n     = (N-1) if fractions else N
+    lst   = []
+    for i in range(1,n+1) :
+        if fractions : fi = makeVar ( None , pname  % i , ptitle % i , None , 1.0/N , 0 , 1     )
+        else         : fi = makeVar ( None , pname  % i , ptitle % i , None , 1     , 0 , 1.e+6 )
+        fracs.add  ( fi )
+        setattr ( model , fi.GetName() , fi ) 
+    ##    
+    return fracs
+
+# =============================================================================
+## helper function to build composite (non-extended) PDF from components 
+def addPdf ( pdflist , name , title , fname , ftitle , model , recursive = True ) :
+    """Helper function to build composite (non-extended) PDF from components 
+    """
+    ##
+    pdfs  = ROOT.RooArgList() 
+    for pdf in pdflist : pdfs.add  ( pdf )
+    fracs = makeFracs ( len ( pdfs ) , fname , ftitle , fractions = True , model = model ) 
+    pdf   = ROOT.RooAddPdf ( name , title , pdfs, fracs , recursive )
+    ##
+    setattr ( model , '_addPdf_'       + name , pdf   )
+    setattr ( model , '_addPdf_lst_'   + name , pdfs  )
+    setattr ( model , '_addPdf_fracs_' + name , fracs )
+    ##
+    return pdf, fracs , pdfs
+  
 # =============================================================================
 ## helper class to temporary change a range for the variable 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -224,9 +261,9 @@ class PDF (object) :
     """
     def __init__ ( self , name ) :
         self.name         = name
-        self._signals     = ROOT.RooArgSet ()
-        self._backgrounds = ROOT.RooArgSet ()
-        self._components  = ROOT.RooArgSet ()
+        self._signals     = ROOT.RooArgList ()
+        self._backgrounds = ROOT.RooArgList ()
+        self._components  = ROOT.RooArgList ()
         ## take care about sPlots 
         self._splots      = []
         
@@ -239,7 +276,7 @@ class PDF (object) :
 
     ## adjust PDF a little bit to avoid zeroes 
     def adjust ( self , value ) :
-        """
+        """Adjust PDF a little bit to avoid zeroes 
         """
         if hasattr ( self , 'adjusted' ) :
             logger.warning ( "PDF is already adjusted!")
@@ -248,7 +285,6 @@ class PDF (object) :
         self.adjusted = Adjust ( self.name , self.mass , self.pdf , value ) 
         self.old_pdf  = self.adjusted.old_pdf
         self.pdf      = self.adjusted.pdf
-        
         
     ## Create vector of phases (needed for various polynomial forms)
     def makePhis    ( self , num , the_phis = None ) :
@@ -323,10 +359,10 @@ class PDF (object) :
         #
         ## check the integrals (when possible)
         #
-        if hasattr ( self , 'alist2' ) :
+        if hasattr ( self , 'nums' ) and self.nums :
             
             nsum = VE()            
-            for i in self.alist2 :
+            for i in self.nums :
                 nsum += i.as_VE() 
                 if hasattr ( i , 'getMax' ) and i.getVal() > 0.95 * i.getMax() :
                     logger.warning ( 'PDF(%s).fitTo Variable %s == %s [close to maximum %s]'
@@ -613,10 +649,18 @@ class PDF (object) :
             
             return splot 
 
-    ## simple 'function-like' interface 
+    ## simple 'function-like' interface
+    #  @code
+    #  pdf = ...
+    #  x   = 0.45
+    #  print 'Value of PDF at x=%f is %f' % ( x , pdf ( x ) ) 
+    #  @endcode
     def __call__ ( self , x ) :
-        """ simple ``function-like// interface
-        """
+        """ Simple ``function-like// interface
+        >>> pdf = ...
+        >>> x = 0.45
+        >>> print 'Value of PDF at x=%f is %f' % ( x , pdf ( x ) ) 
+       """
         if isinstance ( self.mass , ROOT.RooRealVar ) :
             from ostap.fitting.roofit import SETVAR
             mn,mx = self.mass.xminmax()
@@ -832,8 +876,7 @@ class PDF2 (PDF) :
                 nbins    = 100  ,
                 silent   = True ,
                 in_range = None , *args , **kwargs ) :
-        """
-        Draw the projection over 2nd variable
+        """Draw the projection over 2nd variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
         >>> fy  = model.draw2 ( dataset , nbins = 100 ) ## draw results
@@ -859,8 +902,7 @@ class PDF2 (PDF) :
                    dataset = None ,  
                    xbins   = 20   ,
                    ybins   = 20   ) :
-        """
-        Make/draw 2D-histograms 
+        """Make/draw 2D-histograms 
         """
         
         _xbins = ROOT.RooFit.Binning ( xbins ) 
@@ -883,6 +925,10 @@ class PDF2 (PDF) :
     
     # =========================================================================
     ## make 1D-plot
+    #  @code
+    #  model.fitTo ( dataset , ... )
+    #  frame = model.draw( var1 , dataset , ... )  
+    #  @endcode 
     def draw ( self                         ,
                drawvar               = None ,
                dataset               = None ,
@@ -891,11 +937,11 @@ class PDF2 (PDF) :
                silent                = True ,
                in_range              = None ,
                **kwargs                     ) : 
+        """ Make 1D-plot:
+        >>> model.fitTo ( dataset , ... )
+        >>> frame = model.draw( var1 , dataset , ... )  
         """
-        Make 1D-plot:
-        """
-        
-        #
+                #
         ## special case:  do we need it? 
         # 
         if not drawvar : return self.draw_H2D( dataset , nbins , ybins )
@@ -950,12 +996,9 @@ class PDF2 (PDF) :
     
     # =========================================================================
     ## fit the 2D-histogram (and draw it)
-    #
     #  @code
-    #
     #  histo = ...
     #  r,f = model.fitHisto ( histo )
-    #
     #  @endcode
     def fitHisto ( self            ,
                    histo           ,
@@ -963,8 +1006,7 @@ class PDF2 (PDF) :
                    silent  = False ,
                    density = True  ,
                    chi2    = False , *args , **kwargs ) :
-        """Fit the histogram (and draw it)
-        
+        """Fit the histogram (and draw it)        
         >>> histo = ...
         >>> r,f = model.fitHisto ( histo , draw = True )        
         """
@@ -984,11 +1026,20 @@ class PDF2 (PDF) :
                                 histo.nbinsy() ,
                                 silent         , *args , **kwargs ) 
 
-    ## simple 'function-like' interface 
+    ## simple 'function-like' interface
+    #  @code
+    #  pdf = ...
+    #  x, y = 0.45, 0.88 
+    #  print 'Value of PDF at x=%f,y=%s is %f' % ( x , y , pdf ( x , y ) ) 
+    #  @endcode
     def __call__ ( self , x , y ) :
-        
+        """Simple 'function-like' interface
+        >>> pdf = ...
+        >>> x, y = 0.45, 0.88 
+        >>> print 'Value of PDF at x=%f,y=%s is %f' % ( x , y , pdf ( x , y ) ) 
+        """        
         if isinstance ( self.m1 , ROOT.RooRealVar ) and isinstance ( self.m2 , ROOT.RooRealVar ) :
-            from Ostap.RooFitDeco import SETVAR
+            from ostap.fitting.roofit import SETVAR
             mnx,mxx = self.m1.xminmax()
             mny,mxy = self.m2.xminmax()
             if mnx <= x <= mxx and mny <= y <= mxy : 
@@ -1139,28 +1190,91 @@ class H2D_pdf(H2D_dset,PDF2) :
                 self.dset  )
 
 # =============================================================================
+# =============================================================================
 ## @class Fit1D
-#  The actual model for 1D-mass fits 
+#  The actual model for 1D ``mass-like'' fits
+#  @code
+#  ## signal components 
+#  signal       = ... ## MUST be "Ostap"-object 
+#  signal_2     = ... ## can be Ostap-object or bare RooFit pdf 
+#  signal_3     = ... ## ditto
+#  ...
+#  signal_K     = ... ## ditto
+#  ## background components 
+#  background   = ... ## can be Ostap-object or bare RooFit pdf or just an integer number 
+#  background_1 = ... ## can be Ostap-object or bare RooFit pdf
+#  background_2 = ... ## can be Ostap-object or bare RooFit pdf
+#  ...
+#  background_M = ... ## can be Ostap-object or bare RooFit pdf
+#  ## ``other'' components 
+#  component_1  = ... ## can be Ostap-object or bare RooFit pdf 
+#  component_2  = ... ## can be Ostap-object or bare RooFit pdf
+#  ...
+#  component_N  = ... ## can be Ostap-object or bare RooFit pdf
+#  model = Fit1D (
+#    signal           = signal     ,
+#    othersignals     = [ signal_1 , signal_2 , ... , signal_K ] ,
+#    background       = background ,
+#    otherbackgrounds = [ background_1 , background_2 , ... , background_M ] ,
+#    others           = [ component_1  , component_2  , ... , component_N  ] ,
+#    ...
+#  )
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-08-02
 class Fit1D (PDF) :
-    """The actual fit-model for generic 1D-fits 
+    """The actual fit-model for generic 1D ``mass-like'' fits
+    ## 1) signal components 
+    >>> signal       = ... ## main signal: it MUST be Ostap-object 
+    >>> signal_2     = ... ## can be Ostap-object or bare RooFit pdf 
+    >>> signal_3     = ... ## ditto
+    ...
+    >>> signal_K     = ... ## ditto
+    ## 2) background components 
+    >>> background   = ... ## main ``background'': it can be Ostap-object or bare RooFit pdf or just an integer number 
+    >>> background_1 = ... ## can be Ostap-object or bare RooFit pdf
+    >>> background_2 = ... ## can be Ostap-object or bare RooFit pdf
+    ...
+    >>> background_M = ... ## can be Ostap-object or bare RooFit pdf
+    ## 3) ``other'' components (optional) 
+    >>> component_1  = ... ## can be Ostap-object or bare RooFit pdf 
+    >>> component_2  = ... ## can be Ostap-object or bare RooFit pdf
+    ...
+    >>> component_N  = ... ## can be Ostap-object or bare RooFit pdf
+    ## build a model:
+    model = Fit1D (
+    ... signal           = signal     ,
+    ... othersignals     = [ signal_1 , signal_2 , ... , signal_K ] ,
+    ... background       = background ,
+    ... otherbackgrounds = [ background_1 , background_2 , ... , background_M ] ,
+    ... others           = [ component_1  , component_2  , ... , component_N  ] ,
+    )
     """
-    def __init__ ( self                       , 
-                   signal                     , ## the main signal 
-                   background       = None    , ## the main background 
-                   othersignals     = []      , ## additional signal         components
-                   otherbackgrounds = []      , ## additional background     components
-                   others           = []      , ## additional non-classified components 
-                   suffix           = ''      ,
-                   name             = ''      ,
-                   bpower           = 0       ) :  
+    def __init__ ( self                          , 
+                   signal                        ,  ## the main signal 
+                   background          = None    ,  ## the main background 
+                   othersignals        = []      ,  ## additional signal         components
+                   otherbackgrounds    = []      ,  ## additional background     components
+                   others              = []      ,  ## additional non-classified components 
+                   suffix              = ''      ,  ## the suffix 
+                   name                = ''      ,  ## the name 
+                   bpower              = 0       ,  ## background 
+                   extended            = True    ,  ## extended fits ?
+                   combine_signals     = False   ,  ## combine signal PDFs into single "SIGNAL"     ? 
+                   combine_backgrounds = False   ,  ## combine signal PDFs into single "BACKGROUND" ?            
+                   combine_others      = False   ,  ## combine signal PDFs into single "COMPONENT"  ?             
+                   recursive           = True    ): ## recursive fractions for NON-extended models?
 
         #
-        if not name and signal.name : name = signal.name
-        #
+        if not name : 
+            if   signal.name and suffix : name = signal.name + suffix
+            elif signal.name            : name = signal.name + '1D' 
+            #
+            
+        # base class 
         PDF.__init__ ( self , name + suffix )
         #
+        self.extended   = extended 
         self.suffix     = suffix 
         self.signal     =      signal 
         self.mass       = self.signal.mass
@@ -1169,30 +1283,7 @@ class Fit1D (PDF) :
         if background : self.background = makeBkg ( background , 'Background' + suffix , self.mass )
         else          : self.background = makeBkg ( bpower     , 'Background' + suffix , self.mass )
         #
-        self.s = makeVar ( None , "S"+suffix , "Signal"     + suffix , None , 0 , 1.e+6 )
-        self.b = makeVar ( None , "B"+suffix , "Background" + suffix , None , 0 , 1.e+6 )
-        
-        self.S = self.s
-        self.B = self.b
-        
-        self.S_name = self.s.GetName()
-        self.B_name = self.b.GetName()
-
-        #
-        self.alist1 = ROOT.RooArgList (
-            self.signal     .pdf ,
-            self.background .pdf 
-            )
-        # 
-        self.alist2 = ROOT.RooArgList (
-            self.s  ,
-            self.b
-            )
-        
-        self.nums = [ self.s , self.b ]
-
-        #
-        ## update the lists of PDFs (for drawing)
+        ## update the lists of PDFs
         #
         self.signals     ().add ( self.signal     .pdf )
         self.backgrounds ().add ( self.background .pdf )
@@ -1200,92 +1291,178 @@ class Fit1D (PDF) :
         self.more_signals       = othersignals
         self.more_backgrounds   = otherbackgrounds
         self.more_components    = others
-
         #
         ## treat additional signals
         #
         for c in self.more_signals : 
-            
-            i = len ( self.signals() )
-            
-            if   isinstance ( c ,  ROOT.RooAbsPdf ) :
-                self.alist1    .add ( c     )
-                self.signals() .add ( c     ) 
-            elif hasattr    ( c ,'pdf' )            :
-                self.alist1    .add ( c.pdf )
-                self.signals() .add ( c.pdf ) 
-            else :
-                logger.warning('Fit1D(%s) Unknown signal component type %s, skip it!' % ( self.name , type(c) ) ) 
-                continue 
-            
-            si = makeVar ( None                            ,
-                           "S%s_%d"  % ( suffix , i ) ,
-                           "S(%d)%s" % ( i , suffix ) , None  ,  10 , 0  ,  1.e+6 )            
-            self.alist2.add  ( si )
-            
-            setattr ( self , si.GetName() , si )             
-            self.nums.append ( si ) 
-
+            if   isinstance ( c , ROOT.RooAbsPdf ) : self.signals() .add ( c     ) 
+            elif hasattr    ( c , 'pdf' )          : self.signals() .add ( c.pdf ) 
+            else : logger.error('Fit1D(%s): Unknown signal component type %s, skip it!' % ( self.name , type(c) ) ) 
         #
         ## treat additional backgounds 
         #
-        for c in self.more_backgrounds : 
-            
-            i = len ( self.backgrounds() )
-            
-            if   isinstance ( c ,  ROOT.RooAbsPdf ) :
-                self.alist1         .add ( c     )
-                self.backgrounds () .add ( c     ) 
-            elif hasattr    ( c ,'pdf' )            :
-                self.alist1         .add ( c.pdf )
-                self.backgrounds () .add ( c.pdf ) 
-            else :
-                logger.warning('Fit1D(%s) Unknown background component type %s, skip it!' % ( self.name , type(c) ) ) 
-                continue 
-            
-            si = makeVar ( None                       ,
-                           "B%s_%d"  % ( suffix , i ) ,
-                           "B(%d)%s" % ( i , suffix ) , None  ,  10 , 0  ,  1.e+6 )            
-            self.alist2.add  ( si )
-            
-            setattr ( self , si.GetName() , si )             
-            self.nums.append ( si ) 
-
-
+        for c in self.more_backgrounds :             
+            if   isinstance ( c ,  ROOT.RooAbsPdf ) : self.backgrounds () .add ( c     ) 
+            elif hasattr    ( c ,'pdf' )            : self.backgrounds () .add ( c.pdf ) 
+            else : logger.error('Fit1D(%s): Unknown background component type %s, skip it!' % ( self.name , type(c) ) ) 
         #
         ## treat additional components
         #
         for c in self.more_components : 
-            
-            i = len ( self.components() )
-            
-            if   isinstance ( c ,  ROOT.RooAbsPdf ) :
-                self.alist1         .add ( c     )
-                self.components () .add ( c     ) 
-            elif hasattr    ( c ,'pdf' )            :
-                self.alist1         .add ( c.pdf )
-                self.components () .add ( c.pdf ) 
-            else :
-                logger.warning('Fit1D(%s) Unknown additional component type %s, skip it!' % ( self.name , type(c) ) ) 
-                continue 
-            
-            si = makeVar ( None                       ,
-                           "O%s_%d"  % ( suffix , i ) ,
-                           "O(%d)%s" % ( i , suffix ) , None  ,  10 , 0  ,  1.e+6 )            
-            self.alist2.add  ( si )
-            
-            setattr ( self , si.GetName() , si )             
-            self.nums.append ( si ) 
-            
-            
-        #
-        ## final PDF
-        # 
-        self.pdf  = ROOT.RooAddPdf  ( "model_"    + suffix ,
-                                      "model(%s)" % suffix ,
-                                      self.alist1 ,
-                                      self.alist2 )
+            if   isinstance ( c ,  ROOT.RooAbsPdf ) : self.components () .add ( c     ) 
+            elif hasattr    ( c ,'pdf' )            : self.components () .add ( c.pdf ) 
+            else : logger.error('Fit1D(%s): Unknown additional component type %s, skip it!' % ( self.name , type(c) ) ) 
 
+        #
+        ## build PDF
+        #
+        
+        ## all fit components 
+        self.alist1 = ROOT.RooArgList ()
+
+        ## all fit fractions (or yields for extended fits) 
+        self.alist2 = ROOT.RooArgList ()
+        
+        
+        self.all_signals     = self.signals     ()
+        self.all_backgrounds = self.backgrounds ()
+        self.all_components  = self.components  ()
+        
+        self.save_signal     = self.signal
+        self.save_background = self.background
+        
+        ## combine signal components into single signal  (if needed) 
+        if combine_signals and 1 < len( self.signals() ) :
+            
+            sig , fracs , sigs = addPdf ( self.signals()        ,
+                                          'signal_'    + suffix ,
+                                          'signal(%s)' % suffix ,
+                                          'fS%s_%%d'   % suffix ,
+                                          'fS(%%d)%s'  % suffix , recursive = True , model = self )
+            ## new signal
+            self.signal      = Generic1D_pdf   ( sig , self.mass , 'SIGNAL_' + suffix )
+            self.all_signals = ROOT.RooArgList ( sig )
+            self._sigs       = sigs 
+            self.signals_fractions = fracs 
+            for fi in fracs : setattr ( self , fi.GetName() , fi ) 
+            logger.verbose('Fit1D(%s): %2d signals     are combined into single SIGNAL'     % ( self.name , len ( sigs ) ) ) 
+            
+        ## combine background components into single backhround (if needed ) 
+        if combine_backgrounds and 1 < len( self.backgrounds() ) :
+            
+            bkg , fracs , bkgs = addPdf ( self.backgrounds()        ,
+                                          'background_'    + suffix ,
+                                          'background(%s)' % suffix ,
+                                          'fB%s_%%d'       % suffix ,
+                                          'fB(%%d)%s'      % suffix , recursive = True , model = self )
+            ## new background
+            self.background      = Generic1D_pdf   ( bkg , self.mass , 'BACKGROUND_' + suffix )
+            self.all_backgrounds = ROOT.RooArgList ( bkg )
+            self._bkgs           = bkgs 
+            self.backgrounds_fractions = fracs 
+            for fi in fracs : setattr ( self , fi.GetName() , fi ) 
+            logger.verbose ('Fit1D(%s): %2d backgrounds are combined into single BACKGROUND' % ( self.name , len ( bkgs ) ) ) 
+
+        ## combine other components into single component (if needed ) 
+        if combine_others and 1 < len( self.components() ) :
+            
+            cmp , fracs , cmps = addPdf ( self.components()    ,
+                                          'other_'    + suffix ,
+                                          'other(%s)' % suffix ,
+                                          'fC%s_%%d'  % suffix ,
+                                          'fC(%%d)%s' % suffix , recursive = True , model = self )
+            ## save old background
+            self.other          = Generic1D_pdf   ( cmp , self.mass , 'COMPONENT_' + suffix )
+            self.all_components = ROOT.RooArgList ( cmp )
+            self.components_fractions = fracs 
+            for fi in fracs : setattr ( self , fi.GetName() , fi ) 
+            logger.verbose('Fit1D(%s): %2d components  are combined into single COMPONENT'    % ( self.name , len ( cmps ) ) )
+
+
+        self.nums   = [] 
+
+        ## build models 
+        if extended :
+            
+            ns = len ( self.all_signals )
+            if 1 == ns :
+                sf = makeVar ( None , "S"+suffix , "Signal"     + suffix , None , 1 , 0 , 1.e+6 )
+                self.alist1.add  ( self.all_signals[0]  )
+                self.alist2.add  ( sf ) 
+                self.s = sf
+                self.S = sf
+                self.S_name = self.s.GetName()
+                self.nums.append ( self.s ) 
+            elif 2 <= ns : 
+                fis = makeFracs ( ns , 'S%s_%%d' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False , model = self )
+                for s in self.all_signals : self.alist1.add ( s )
+                for f in fis :
+                    self.alist2.add  ( f )
+                    self.nums.append ( f ) 
+
+            nb = len ( self.all_backgrounds )
+            if 1 == nb :
+                bf = makeVar ( None , "B"+suffix , "Background" + suffix , None , 1 , 0 , 1.e+6 )
+                self.alist1.add  ( self.all_backgrounds[0]  )
+                self.alist2.add  ( bf ) 
+                self.b = bf
+                self.B = bf
+                self.B_name = self.b.GetName()
+                self.nums.append ( self.b ) 
+            elif 2 <= nb :
+                fib = makeFracs ( nb , 'B%s_%%d' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False , model = self )
+                for b in self.all_backgrounds : self.alist1.add ( b )
+                for f in fib :
+                    self.alist2.add  ( f )
+                    self.nums.append ( f ) 
+                    
+            nc = len ( self.all_components )
+            if 1 == nc :
+                cf = makeVar ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+6 )
+                self.alist1.add  ( self.new_components[0]  )
+                self.alist2.add  ( cf ) 
+                self.c = cf
+                self.C = cf
+                self.C_name = self.c.GetName()
+                self.nums.append ( self.c ) 
+            elif 2 <= nc : 
+                fic = makeFracs ( nc , 'C%s_%%d' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False , model = self )
+                for c in self.all_components : self.alist1.add ( c )
+                for f in fic :
+                    self.alist2.add  ( f )
+                    self.nums.append ( f ) 
+
+        else :
+
+            ns = len ( self.all_signals     )
+            nb = len ( self.all_backgrounds )
+            nc = len ( self.all_components  )
+            
+            for s in self.all_signals     : self.alist1.add ( s )
+            for b in self.all_backgrounds : self.alist1.add ( b )
+            for c in self.all_components  : self.alist1.add ( c )
+            
+            fic = makeFracs ( ns + nb + nc , 'f%s_%%d' % suffix ,  'f(%%d)%s'  % suffix , fractions  = True , model = self )
+            for f in fic :
+                self.alist2.add ( f )
+                setattr ( self , f.GetName() , f ) 
+
+        #
+        ## The final PDF
+        #       
+        if   self.name       : title = "model(%s)"     % self.name
+        else                 : title = "model(Fit1D)"
+        
+        name     = name if name else ( 'model_' + self.name )
+        
+        pdfargs  = name , title , self.alist1 , self.alist2
+        if not extended : pdfargs = pdfargs + ( True if recursive else False , ) ## RECURSIVE ? 
+        self.pdf = ROOT.RooAddPdf ( *pdfargs )
+        
+        if extended : 
+            logger.debug ( "Extended     model ``%s'' with %s/%s components"  % ( self.pdf.GetName() , len( self.alist1) , len(self.alist2) ) )
+        else : 
+            logger.debug ( "Non-extended model ``%s'' with %s/%s components"  % ( self.pdf.GetName() , len( self.alist1) , len(self.alist2) ) )
 
 # =============================================================================
 ## @class Fit2D
@@ -1322,7 +1499,6 @@ class Fit2D (PDF2) :
     >>> print r                       ## get results  
     >>> fx  = model.draw1 ()          ## visualize X-projection
     >>> fy  = model.draw2 ()          ## visualize X-projection
-
     """
     def __init__ ( self               ,
                    #

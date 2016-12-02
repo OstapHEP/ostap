@@ -98,6 +98,23 @@ logging.addLevelName ( logging.INFO      , 'INFO   '  )
 logging.addLevelName ( logging.ERROR     , 'ERROR  '  )
 logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
 
+import sys,os 
+# =============================================================================
+## is sys.stdout attached to terminal or not  ?
+def _not_tty_ () :
+    """ Is sys.stdout attached to terminal or not ? 
+    """
+    try :
+        return not sys.stdout.isatty()
+    except : pass 
+    
+    try :
+        return not os.isatty ( sys.stdout.fileno() ) 
+    except : pass
+    
+    return False
+
+# =============================================================================
 # COLORS: 
 # =============================================================================
 ## global flag to indicate if we use colored logging
@@ -350,6 +367,7 @@ def make_colors () :
     """Colorize logging
     """
     if with_colors() : return
+    if _not_tty_  () : return  ## no colorization for non-TTY output 
     
     # ===================================================================================
     #The background is set with 40 plus the number of the color, and the foreground with 30
@@ -481,8 +499,8 @@ def keepColor () :
 
 
 ## reset colors
-##  for ipython mode activate colors 
-if with_ipython() :
+## for ipython mode and TTY output activate colors 
+if with_ipython() and not _not_tty_ () :
     make_colors()
     
 ## define default logging thresholds as 'INFO'
