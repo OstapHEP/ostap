@@ -52,104 +52,10 @@ del getLogger
 ## timing stuff
 from ostap.utils.timing import clocks, timing, timer
 ## other useful stuff 
-from ostap.utils.basic  import isatty, with_ipython  
+from ostap.utils.basic  import isatty, with_ipython
+## ... and more useful stuff 
+from ostap.utils.memory import memory, virtualMemory, Memory 
 # =============================================================================
-try :
-    import psutil 
-    def memory_usage ():
-        # return the memory usage in MB
-        process = psutil.Process(os.getpid())
-        mem     = process.get_memory_info()[0] / float(2 ** 20)
-        return mem
-except ImportError :
-    import resource
-    def memory_usage ():
-        rusage_denom = 1024.
-        if sys.platform == 'darwin':
-            # ... it seems that in OSX the output is different units ...
-            rusage_denom = rusage_denom * rusage_denom
-        mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / rusage_denom
-        return mem
-    
-# =============================================================================
-## @class Memory
-#  Simple context manager to measure the virtual memory increase
-#
-#  @see System::virtualMemory
-#  @code
-#
-#  with Memory() :
-#     <whatever action is>
-#     at the exit it prints the chaneg in virtual memory 
-#  @endcode
-#
-# Or:
-#
-#  @code
-#
-#  with Memory() as Q :
-#     <whatever action is>
-#     at the exit it prints the chaneg in virtual memory
-#
-#  print Q.delta 
-# 
-#  @endcode
-#
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2013-02-10
-class Memory(object):
-    """Simple class to evaluate the change in virtual memory
-    to be used as context manager:
-    
-    >>> with Memory('here...') :
-    ...     <whatever action is>
-    at the exit it prints the change in virtual memory
-    
-    >>> with Memory('here...') as M :
-    >>> <whatever action is>
-    at the exit it prints the change in virtual memory
-    
-    >>> delta = M.delta    
-    """
-    from ostap.logger.logger import getLogger 
-    _logger = getLogger( 'ostap.utils.utils' )
-    del getLogger
-    
-    def __init__  ( self , name = '' , logger = None , format = 'Memory %-18s %.1fMB') :
-        self.name   = name
-        self.logger = logger if logger else self._logger 
-        self.format = format
-    def __enter__ ( self ) :
-        self.memory = memory_usage ()
-        return self 
-    def __exit__  ( self, *_ ) :
-        self.delta  = memory_usage () - self.memory
-        try :
-            message = self.format          % ( self.name , self.delta ) 
-        except TypeError :
-            message = 'Memory %-18s %.1fMB'% ( self.name , self.delta )
-
-        self.logger.info ( message )
- 
-# ============================================================================
-## create the context manager to monitor the virtual memory increase  
-def virtualMemory ( name = '' ) :
-    """Create the context manager to monitor the virtual memory increase:
-    
-    >>> with memory('here...') :
-    ...   <whatever action is>
-    at the exit it prints the change in virtual memory
-          
-    >>> with memory('here...') as m :
-    ...   <whatever action is>
-    at the exit it prints the change in virtual memory
-    
-    >>> delta = m.delta    
-    """
-    return Memory( name )
-
-## ditto 
-memory = virtualMemory  ## ditto
 
 # =============================================================================
 ## @class Profiler
@@ -335,12 +241,6 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
-    try :
-        import psutil 
-        logger.info    ( '``psutils''  will be used for Memory' )
-    except ImportError :
-        logger.warning ( "``resource'' will be used for Memory: reports only max-values" )
-
     logger.info ( 80*'*' ) 
     
 # =============================================================================
