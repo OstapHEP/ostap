@@ -319,7 +319,7 @@ def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
             idir = rdir.GetDirectory ( inam )            
             if not idir or not no_dir : _res.append ( inam )
             
-            if recursive and idir :
+            if recursive and idir and not idir is rdir :
                 ikeys = _rd_keys_ ( idir , recursive , no_dir )
                 for k in ikeys : _res.append ( inam + '/' + k )
                 
@@ -361,7 +361,7 @@ def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_di
             if not idir or not no_dir : 
                 obj = rdir.Get ( inam )
                 if fun ( inam , i , obj ) : yield inam , obj
-            if recursive and idir :
+            if recursive and idir and not idir is rdir :
                 for k, o in _rd_iteritems_ ( idir , fun , recursive , no_dir ) :
                     yield k,o
                     
@@ -391,7 +391,7 @@ def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
             idir   = rdir.GetDirectory ( inam ) 
             if not idir or not no_dir : 
                 if typ is None  or isinstance ( rdir.Get ( inam ) , typ ) : yield inam 
-            if recursive and idir  :
+            if recursive and idir  and not idir is rdir :
                 for k in _rd_iterkeys_ ( idir , typ , recursive , no_dir ) :
                     yield k
 
