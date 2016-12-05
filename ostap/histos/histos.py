@@ -5004,7 +5004,7 @@ def _h2_xstat_ ( h2 ) :
     >>> xstat = histo2.xstat()
     >>> print xstat
     """
-    _h2 = h2.ProjX()
+    _h2 =  h2.ProjX()
     _r  = _h2.xstat() 
     del _h2
     return _r
@@ -5029,11 +5029,10 @@ def _h2_ystat_ ( h2 ) :
     del _h2
     return _r
 
-ROOT.TH1F.xstat = _h2_xstat_
-ROOT.TH1D.xstat = _h2_xstat_
-ROOT.TH1F.ystat = _h2_ystat_
-ROOT.TH1D.ystat = _h2_ystat_
-
+ROOT.TH2F.xstat = _h2_xstat_
+ROOT.TH2D.xstat = _h2_xstat_
+ROOT.TH2F.ystat = _h2_ystat_
+ROOT.TH2D.ystat = _h2_ystat_
 
 # =============================================================================
 ## get some (weighted) statistic information on the histogram X-content
@@ -5050,7 +5049,7 @@ def _h3_zstat_ ( h3 ) :
     >>> zstat = histo3.zstat()
     >>> print zstat
     """
-    _h2 =  h3.ProjZ()
+    _h3 =  h3.ProjZ()
     _r  = _h3.xstat() 
     del _h3
     return _r
