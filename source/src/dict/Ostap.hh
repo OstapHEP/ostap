@@ -47,6 +47,7 @@
 #include "Ostap/Point3DWithError.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Power.h"
+#include "Ostap/Printable.h"
 #include "Ostap/PyIterator.h"
 #include "Ostap/PySelector.h"
 #include "Ostap/PySelectorWithCuts.h"

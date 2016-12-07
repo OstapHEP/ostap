@@ -1288,8 +1288,8 @@ def _rds_makeWeighted_ ( dataset , wvarname , varset = None , cuts = '' , vname 
 # =============================================================================
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
 
-
 RAD = ROOT.RooAbsData
+# =============================================================================
 ## change the default storage for RooDataSet 
 def setStorage ( new_type = RAD.Tree ) :
     """ Redefine the default storage 
@@ -1306,6 +1306,19 @@ def setStorage ( new_type = RAD.Tree ) :
     if   RAD.Tree   == the_type : logger.debug ( 'RooAbsData: Default storage type is Tree'   )
     elif RAD.Vector == the_type : logger.debug ( 'RooAbsData: Default storage type is Vector' )
     else : logger.debug ( 'RooAbsData: Default storage type is %s' % the_type  )
+
+# =============================================================================
+## make easy print for RooPrintable 
+def _rp_print_ ( o , opts = '' ) :
+    """Make easy print for RooPrintable
+    >>> o = ...
+    >>> print o 
+    """
+    return Ostap.Utils.print_printable ( o , opts )
+
+cpp.RooPrintable.print_printable = _rp_print_ 
+cpp.RooPrintable.__str__         = _pr_print_
+cpp.RooPrintable.__repr__        = _pr_print_
 
 # =============================================================================
 ## @class SETVAR

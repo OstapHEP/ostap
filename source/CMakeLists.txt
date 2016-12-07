@@ -64,6 +64,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PDFs.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp
+                         src/Printable.cpp
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
