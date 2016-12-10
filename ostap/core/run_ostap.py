@@ -28,10 +28,6 @@
 #  <a href="http://cern.ch/lhcb-comp/Analysis/LoKi/index.html">LoKi project:</a>
 #  <b>``C++ ToolKit for Smart and Friendly Physics Analysis''</b>
 #
-#  By usage of this code one clearly states the disagreement 
-#  with the smear campaign of Dr.O.Callot et al.: 
-#  ``No Vanya's lines are allowed in LHCb/Gaudi software''
-#
 #  @date   2012-02-15
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #
@@ -39,6 +35,7 @@
 #  Last modification $Date$
 #                 by $Author$
 # =============================================================================
+
 """ Simple interactive PyRoot-based analysis environment
 to provide access to zillions useful decorators for ROOT
 (and not only ROOT) objects&classes
@@ -47,14 +44,9 @@ This file is a part of BENDER project:
 
 ``Python-based Interactive Environment for Smart and Friendly Physics Analysis''
 
-The project has been designed with the kind help from Pere MATO and Andrey TSAREGORODTSEV. 
+The project has been designed with the kind help from Pere MATO and Andrey TSAREGORODTSEV.
 
 And it is based on the LoKi project: ``C++ ToolKit for Smart and Friendly Physics Analysis''
-
-By usage of this code one clearly states the disagreement with the smear campaign
-of Dr.O.Callot et al.:
-
-``No Vanya's lines are allowed in LHCb/Gaudi software''
 """
 # =============================================================================
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
@@ -263,10 +255,10 @@ else:
     level = logging.DEBUG-5  if arguments.Verbose else logging.INFO-1
     logging.disable ( level  )
 
-    from ostap.logger.line import line 
-    logger.info ( "Welcome to Ostap\n" +  line )
+    from ostap import banner
+    logger.info ( "Welcome to Ostap\n" +  banner )
     logger.info ( __doc__ )
-    del line
+    del banner
     
     _vars = vars ( arguments )
     _keys = _vars.keys()
