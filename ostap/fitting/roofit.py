@@ -1317,8 +1317,8 @@ def _rp_print_ ( o , opts = '' ) :
     return Ostap.Utils.print_printable ( o , opts )
 
 cpp.RooPrintable.print_printable = _rp_print_ 
-cpp.RooPrintable.__str__         = _pr_print_
-cpp.RooPrintable.__repr__        = _pr_print_
+cpp.RooPrintable.__str__         = _rp_print_
+cpp.RooPrintable.__repr__        = _rp_print_
 
 # =============================================================================
 ## @class SETVAR

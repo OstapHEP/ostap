@@ -590,7 +590,8 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
         logger.debug ("Open  ROOT file %s/'%s'" % ( fname , mode ) )
         result = rfile._old_init_ ( fname , open_mode ( mode ) , *args )
         if not rfile or not rfile.IsOpen() :
-            logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            ## logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            raise IOError   ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
         return result
     
 # =============================================================================
@@ -610,7 +611,8 @@ def _rf_new_open_ ( fname , mode = '' , *args ) :
         logger.debug ( "Open  ROOT file %s/'%s'" % ( fname , mode ) )
         fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
         if not fopen or not fopen.IsOpen() :
-            logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            ## logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            raise IOError   ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
         #
         return fopen
         

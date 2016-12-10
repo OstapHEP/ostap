@@ -121,9 +121,9 @@ namespace Ostap
    *  @param code    the code 
    */
   void throwException
-  ( const std::string& message           , 
-    const std::string& tag     = "Ostap" , 
-    const Ostap::StatusCode& code = Ostap::StatusCode::FAILURE ) ;
+  ( const std::string&       message           , 
+    const std::string&       tag     = "Ostap" , 
+    const Ostap::StatusCode& code    = Ostap::StatusCode::FAILURE ) ;
   // ===========================================================================  
 } //                                                      end of namespace Ostap
 // =============================================================================

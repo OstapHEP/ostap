@@ -12,7 +12,7 @@
 #  @date   2013-02-10
 #  
 # =============================================================================
-"""Module with some simple but useful utilities for
+"""Module with some simple but useful utilities for Ostap
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -20,8 +20,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'with_ipython' , ## do we run IPython ? 
-    'isatty'       , ## is the stream ``isatty'' ? 
+    'with_ipython'  , ## do we run IPython ? 
+    'isatty'        , ## is the stream ``isatty'' ?
     )
 # =============================================================================
 import sys,os 
@@ -57,6 +57,7 @@ def with_ipython()  :
         return __IPYTHON__
     except NameError :
         return False
+
 
 # =============================================================================
 if __name__ == '__main__' :

@@ -23,27 +23,31 @@ __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
     #
-    'tee_py'         , ## tee for Python's printouts
-    'tee_cpp'        , ## tee for C++'s    printouts
-    'output'         , ## redirect stdout/stderr into the file 
-    'mute_py'        , ## suppress stdout/strerr Python printout 
-    'silence_py'     , ## ditto 
-    'mute'           , ## context manager to suppress stdout/strerr printout 
-    'silence'        , ## ditto 
-    'rooSilent'      , ## control RooFit verbosity
-    'roo_silent'     , ## control RooFit verbosity 
-    'rootError'      , ## control ROOT verbosity 
-    'rootWarning'    , ## control ROOT verbosity 
-    'NoContext'      , ## empty context manager
-    'RooSilent'      , ## control RooFit verbosity
-    'ROOTIgnore'     , ## control ROOT verbosity, suppress ROOT errors 
+    'tee_py'             , ## tee for Python's printouts
+    'tee_cpp'            , ## tee for C++'s    printouts
+    'output'             , ## redirect stdout/stderr into the file 
+    'mute_py'            , ## suppress stdout/strerr Python printout 
+    'silence_py'         , ## ditto 
+    'mute'               , ## context manager to suppress stdout/strerr printout 
+    'silence'            , ## ditto 
+    'rooSilent'          , ## control RooFit verbosity
+    'roo_silent'         , ## control RooFit verbosity 
+    'rootError'          , ## control ROOT verbosity 
+    'rootWarning'        , ## control ROOT verbosity 
+    'NoContext'          , ## empty context manager
+    'RooSilent'          , ## control RooFit verbosity
+    'ROOTIgnore'         , ## control ROOT verbosity, suppress ROOT errors
     ## logging   
-    'logColor'       , ## swith on locally the colored logging
-    'logVerbose'     , ## redefine (locally) the logging level
-    'logDebug'       , ## redefine (locally) the logging level
-    'logInfo'        , ## redefine (locally) the logging level
-    'logWarning'     , ## redefine (locally) the logging level
-    'logError'       , ## redefine (locally) the logging level
+    'logColor'           , ## switch on   locally the colored logging
+    'logNoColor'         , ## switch off locally the colored logging
+    'logVerbose'         , ## redefine (locally) the logging level
+    'logDebug'           , ## redefine (locally) the logging level
+    'logInfo'            , ## redefine (locally) the logging level
+    'logWarning'         , ## redefine (locally) the logging level
+    'logError'           , ## redefine (locally) the logging level
+    ## convert ROOT Errors into C++/python exceptions 
+    'rootException'      , ## context manager to perform ROOT Error -> C++/Python exception
+    'RootError2Exception', ## context manager to perform ROOT Error -> C++/Python exception
     )
 # =============================================================================
 import ROOT,cppyy, time, os,sys ## attention here!!
@@ -52,11 +56,12 @@ ROOT_RooFit_ERROR = 4
 # =============================================================================
 # logging 
 # =============================================================================
-from   ostap.logger.logger import getLogger, logColor
+from   ostap.logger.logger import getLogger, logColor, logNoColor 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.utils' )
 else                       : logger = getLogger( __name__ )
 del getLogger 
 from   ostap.logger.logger import  logVerbose,  logDebug, logInfo, logWarning, logError
+from   ostap.utils.utils   import RootError2Exception, rootException 
 # =============================================================================
 ## @class MutePy
 #  Very simple context manager to suppress python printout 

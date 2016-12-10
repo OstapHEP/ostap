@@ -28,18 +28,20 @@ __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
     #
-    'virtualMemory'  , ## context manager to count virtual memory increase 
-    'memory'         , ## ditto
-    'clocks'         , ## context manager to count clocks 
-    'timing'         , ## context manager to count time 
-    'timer'          , ## ditto
-    'profiler'       , ## context manager to perform profiling
+    'virtualMemory'      , ## context manager to count virtual memory increase 
+    'memory'             , ## ditto
+    'clocks'             , ## context manager to count clocks 
+    'timing'             , ## context manager to count time 
+    'timer'              , ## ditto
+    'profiler'           , ## context manager to perform profiling
+    'rootException'      , ## context manager to perform ROOT Error -> C++/Python exception
     #
-    'Profiler'       , ## context manager to perform profiling
+    'Profiler'           , ## context manager to perform profiling 
+    'RootError2Exception', ## context manager to perform ROOT Error -> C++/Python exception
     ##
-    'takeIt'         , ## take and later delete ...
-    'isatty'         , ## is the stream ``isatty'' ?
-    'with_ipython'   , ## do we run IPython? 
+    'takeIt'             , ## take and later delete ...
+    'isatty'             , ## is the stream ``isatty'' ?
+    'with_ipython'       , ## do we run IPython? 
     )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
@@ -234,6 +236,59 @@ def get_file_names_from_file_number(fds):
     for fd in fds:
         names.append(os.readlink('/proc/self/fd/%d' % fd))
     return names
+
+
+# =============================================================================
+## helper context manager to activate ROOT Error -> Python exception converter 
+#  @see Ostap::Utils::useErrorHandler
+#  @see Ostap::Utils::ErrorSentry
+#  @code
+#  with RootError2Exception() :
+#  .... do something here 
+#  @endcode 
+class RootError2Exception (object) :
+    """Helper context manager to activate ROOT Error -> Python exception converter
+    #
+    with RootError2Exception() :
+    ... do something here 
+    """
+    def __init__ ( self ) :
+        print 'will be import ROOT'
+        import ROOT,cppyy 
+        Ostap = cppyy.gbl.Ostap
+        self.e_handler  = Ostap.Utils.useErrorHandler 
+        self.m_previous = False 
+
+    ## context manager entry point  
+    def __enter__ ( self ) :    
+        self.m_previous = self.e_handler ( True ) 
+        return self
+    
+    ## context manager exit point
+    def __exit__ ( self , *_ ) :    
+        if self.m_previous : self.e_handler ( False ) 
+        self.m_previous = False 
+
+    def __del__ ( self ) :
+        if self.m_previous : self.e_handler ( False ) 
+        
+
+# =============================================================================
+## helper context manager to activate ROOT Error -> Python exception converter 
+#  @see Ostap::Utils::useErrorHandler
+#  @see Ostap::Utils::ErrorSentry
+#  @code
+#  with rootException () :
+#  .... do something here 
+#  @endcode
+def rootException () :
+    """Helper context manager to activate ROOT Error -> Python exception converter
+    #
+    with rootException() :
+    ... do something here 
+    """
+    return RootError2Exception()
+
 
 # =============================================================================
 if '__main__' == __name__ :

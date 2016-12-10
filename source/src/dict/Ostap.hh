@@ -15,6 +15,7 @@
 #include "Ostap/Combine.h"
 #include "Ostap/Digit.h"
 #include "Ostap/EigenSystem.h"
+#include "Ostap/Error2Exception.h"
 #include "Ostap/Formula.h"
 #include "Ostap/GenericMatrixTypes.h"
 #include "Ostap/GenericVectorTypes.h"
