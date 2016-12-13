@@ -104,7 +104,8 @@ class ROOTCWD(object) :
     ## context manager ENTER 
     def __enter__ ( self ) :
         "Save current working directory"
-        self._dir = ROOT.gROOT.CurrentDirectory() 
+        self._dir = ROOT.gROOT.CurrentDirectory()
+        return self._dir 
         
     ## context manager EXIT 
     def __exit__  ( self , *_ ) :

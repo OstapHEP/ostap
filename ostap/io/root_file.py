@@ -616,27 +616,26 @@ def _rf_new_open_ ( fname , mode = '' , *args ) :
         fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
         if not fopen or not fopen.IsOpen() :
             logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
-            ## raise IOError   ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
-        #
+            
         return fopen
         
 # =============================================================================
-## create ROOT.TFile without making it a current working directory 
+## Close  ROOT.TFile without making it a current working directory 
 #  @code
 #  print ROOT.gROOT.CurrentDirectory()
 #  f = ROOT.TFile.Open('test_file.root','recreate')
+#  f.Close()
 #  print ROOT.gROOT.CurrentDirectory()
 #  @endcode
 def _rf_new_close_ ( rfile , options = '' ) :
-    """
-    Open/create ROOT-file without making it a current working directory
+    """Open/create ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile.Open('test_file.root','recreate')
+    >>> f.Close()
     >>> print ROOT.gROOT.CurrentDirectory()
     """
     if rfile and rfile.IsOpen() :
         with ROOTCWD() :
-            ##rfile .cd()
             logger.debug ( "Close ROOT file %s" % rfile.GetName() ) 
             rfile ._old_close_ ( options )
             
