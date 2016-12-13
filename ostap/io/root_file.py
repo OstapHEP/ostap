@@ -580,11 +580,13 @@ def open_mode ( mode ) :
 #  f = ROOT.TFile('test_file.root','recreate')
 #  print ROOT.gROOT.CurrentDirectory()
 #  @endcode
+#  @attention  IOError exception is raised for invalid file/open_mode 
 def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
     """Open/create ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile('test_file.root','recreate')
     >>> print ROOT.gROOT.CurrentDirectory()
+    Attention:  IOError exception is raised for invalid file/open_mode
     """
     with ROOTCWD() :
         logger.debug ("Open  ROOT file %s/'%s'" % ( fname , mode ) )
@@ -601,18 +603,20 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
 #  f = ROOT.TFile.Open('test_file.root','recreate')
 #  print ROOT.gROOT.CurrentDirectory()
 #  @endcode
+#  @attention  No exceptions are raised for invalid file/open_mode 
 def _rf_new_open_ ( fname , mode = '' , *args ) :
     """Open/create ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile.Open('test_file.root','recreate')
     >>> print ROOT.gROOT.CurrentDirectory()
+    ATTENTION: No exceptions are raised for invalid file/open_mode 
     """
     with ROOTCWD() :
         logger.debug ( "Open  ROOT file %s/'%s'" % ( fname , mode ) )
         fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
         if not fopen or not fopen.IsOpen() :
-            ## logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
-            raise IOError   ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            ## raise IOError   ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
         #
         return fopen
         
