@@ -14,20 +14,6 @@
   <function pattern = "Ostap::Utils::*"          />
   <function pattern = "Ostap::Utils::Histos::*"  />
 
-  <function name = "Ostap::Math::_matrix_add_"   />
-  <function name = "Ostap::Math::_matrix_sub_"   />
-  <function name = "Ostap::Math::_matrix_mul_"   />
-  <function name = "Ostap::Math::_matrix_rmul_"  />
-  <function name = "Ostap::Math::_matrix_div_"   />
-
-  <function name = "Ostap::Math::_vector_add_"   />
-  <function name = "Ostap::Math::_vector_radd_"  />
-  <function name = "Ostap::Math::_vector_sub_"   />
-  <function name = "Ostap::Math::_vector_rsub_"  />
-  <function name = "Ostap::Math::_vector_mul_"   />
-  <function name = "Ostap::Math::_vector_rmul_"  />
-  <function name = "Ostap::Math::_vector_div_"   />
-
   <exclusion>
     
     <class pattern = "Ostap::Math::details::*"     />
@@ -40,13 +26,6 @@
     
     <class name   = "Ostap::Math::WorkSpace">
       <field name = "m_workspace"/>      
-    </class>
-    
-    <class name   = "Ostap::Math::Spline">  
-      <field name = "m_spline"/>      
-    </class>
-    <class name   = "Ostap::Math::Interp2D">
-      <field name = "m_histo"/>      
     </class>
     
     <class name   = "Ostap::Math::Bernstein2D">
@@ -69,8 +48,6 @@
     <class pattern = "ROOT::Math::DisplacementVector*" />
     <class pattern = "ROOT::Math::LorentzVector*"      />
 
-
   </exclusion>
   
-
 </lcgdict>

@@ -121,13 +121,80 @@ def _v_iteritems_ ( self ) :
     for i in range(self.kSize) :
         yield i,self(i)
 
-_vector_add_  = Ostap.Math._vector_add_
-_vector_radd_ = Ostap.Math._vector_radd_
-_vector_sub_  = Ostap.Math._vector_sub_
-_vector_rsub_ = Ostap.Math._vector_rsub_
-_vector_mul_  = Ostap.Math._vector_mul_
-_vector_rmul_ = Ostap.Math._vector_rmul_
-_vector_div_  = Ostap.Math._vector_div_
+# =============================================================================
+## helper function for Linear Algebra multiplications 
+def _linalg_mul_ ( a  , b ) :    
+    if isinstance ( b , ( int , long , float ) ) :
+        b  = float( b )
+        v  = a.__class__( a )
+        v *= b
+        return v 
+    _ops_  = Ostap.Math.MultiplyOp ( a.__class__ , b.__class__ )
+    return _ops_.multiply ( a , b )
+
+# =============================================================================
+## helper function for "right" multiplication (Linear Algebra)
+def _linalg_rmul_ ( a , b ) :
+    if isinstance ( b , ( int , long , float ) ) :
+        b  = float( b )
+        v  = a.__class__( a )
+        v *= b
+        return v
+    return NotImplemented 
+
+# =============================================================================
+## helper function for Linear Algebra divisions 
+def _linalg_div_ ( a  , b ) :
+    if isinstance ( b , ( int , long , float ) ) :
+        b  = float( b )
+        v  = a.__class__( a )
+        v /= b
+        return v
+    return NotImplemented
+
+# =============================================================================
+## 
+def _vector_cross_ ( a, b ) :
+    try  : 
+        _ops_  = Ostap.Math.MultiplyOp ( a.__class__ , b.__class__ )
+        return _ops_.cross ( a , b )
+    except TypeError :
+        return NotImplemented 
+
+# =============================================================================
+## equality of vectors 
+def _vector_eq_ ( a , b ) :
+    """Equality for vectors
+    """
+    if         a    is      b   : return True 
+    elif len ( a ) != len ( b ) : return False
+    #
+    try  : 
+        _ops_  = Ostap.Math.Equal_To ( a.__class__ )() 
+        return _ops_ ( a , b )
+    except TypeError :
+        for i in len(a) :
+            if a[i] != b[i]   : return false
+        return True
+    
+# =============================================================================
+## equality of matrices 
+def _matrix_eq_ ( a , b ) :
+    """Equalty for matrices
+    """
+    if  a is b : return True
+    
+    try :
+        if   a.kRows != b.kRows : return False
+        elif a.kCols != b.kCols : return False
+    except :
+        pass
+        
+    try  : 
+        _ops_  = Ostap.Math.Equal_To ( a.__class__ )() 
+        return _ops_ ( a , b )
+    except TypeError :
+        return NotImplemented
 
 
 # =============================================================================
@@ -147,16 +214,23 @@ def deco_vector ( t ) :
         t ._old_rsub_   = t.__rsub__
         t ._old_div_    = t.__div__
 
-        t . __add__     = lambda a,b : _vector_add_  (a,b)
-        t . __radd__    = lambda a,b : _vector_radd_ (a,b)
-        t . __sub__     = lambda a,b : _vector_sub_  (a,b)
-        t . __rsub__    = lambda a,b : _vector_rsub_ (a,b)
-        t . __mul__     = lambda a,b : _vector_mul_  (a,b)
-        t . __rmul__    = lambda a,b : _vector_rmul_ (a,b)
-        t . __div__     = lambda a,b : _vector_div_  (a,b) 
+        _operations   = Ostap.Math.VctrOps( t )
+        
+        t.__add__       = lambda a,b : _operations.add  ( a , b )
+        t.__sub__       = lambda a,b : _operations.sub  ( a , b )
+        t.__radd__      = lambda a,b : _operations.add  ( a , b )
+        t.__rsub__      = lambda a,b : _operations.rsub ( a , b )
+        
+        t.__mul__       = lambda a,b : _linalg_mul_     ( a , b )
+        t.__rmul__      = lambda a,b : _linalg_rmul_    ( a , b )
+        t.__div__       = lambda a,b : _linalg_div_     ( a , b )
+        
+        t.__eq__        = lambda a,b : _vector_eq_      ( a , b )
+        t.__neq__       = lambda a,b : not ( a == b ) 
 
-        t . __rdiv__    = lambda s,*a :  NotImplemented 
-
+        t.cross         = lambda a,b : _vector_cross_   ( a , b )
+        
+        t.__rdiv__      = lambda s,*a :  NotImplemented 
 
         t. _new_str_    = _v_str_
         t. __str__      = _v_str_
@@ -397,15 +471,7 @@ _eigen_1_ .__doc__ += '\n' +  Ostap.Math.EigenSystems.eigenValues  . __doc__
 _eigen_2_ .__doc__ += '\n' +  Ostap.Math.EigenSystems.eigenVectors . __doc__
 
             
-_matrix_add_  = Ostap.Math._matrix_add_
-## _matrix_radd_ = Ostap.Math._matrix_add_ ## ditto 
-_matrix_sub_  = Ostap.Math._matrix_sub_
-## _matrix_rsub_ = Ostap.Math._matrix_rsub_
-_matrix_mul_  = Ostap.Math._matrix_mul_
-_matrix_rmul_ = Ostap.Math._matrix_rmul_
-_matrix_div_  = Ostap.Math._matrix_div_
-
-
+# =============================================================================
 ##  decorate the matrix  type 
 def deco_matrix ( m  ) :
     
@@ -427,15 +493,21 @@ def deco_matrix ( m  ) :
         m ._old_rsub_   = m.__rsub__
         m ._old_div_    = m.__div__
 
-        m . __add__     = lambda a,b : _matrix_add_  (a,b)
-        ## m . __radd__    = lambda a,b : _matrix_radd_ (a,b)
-        m . __sub__     = lambda a,b : _matrix_sub_  (a,b)
-        ## m . __rsub__    = lambda a,b : _matrix_rsub_ (a,b)
-        m . __mul__     = lambda a,b : _matrix_mul_  (a,b)
-        m . __rmul__    = lambda a,b : _matrix_rmul_ (a,b)
-        m . __div__     = lambda a,b : _matrix_div_  (a,b) 
+        _operations     = Ostap.Math.MtrxOps( m )
+        
+        m.__add__       = lambda a,b : _operations.add  ( a , b )
+        m.__sub__       = lambda a,b : _operations.sub  ( a , b )
+        m.__radd__      = lambda a,b : _operations.add  ( a , b )
+        m.__rsub__      = lambda a,b : _operations.rsub ( a , b )
+        
+        m.__mul__       = lambda a,b : _linalg_mul_     ( a , b )
+        m.__rmul__      = lambda a,b : _linalg_rmul_    ( a , b )
+        m.__div__       = lambda a,b : _linalg_div_     ( a , b )
+        
+        m.__rdiv__      = lambda s,*a :  NotImplemented 
 
-        m . __rdiv__    = lambda s,*a :  NotImplemented 
+        m.__eq__        = lambda a,b : _matrix_eq_      ( a , b )
+        m.__neq__       = lambda a,b : not ( a == b ) 
 
         
         m._increment_  = _mg_increment_
@@ -449,6 +521,7 @@ def deco_matrix ( m  ) :
         
     return m
 
+# =============================================================================
 ##  decorate the symmetrix matrix  type 
 def deco_symmatrix ( m ) :
 
@@ -471,15 +544,21 @@ def deco_symmatrix ( m ) :
         m ._old_rsub_   = m.__rsub__
         m ._old_div_    = m.__div__
 
-        m . __add__     = lambda a,b : _matrix_add_  (a,b)
-        ## m . __radd__    = lambda a,b : _matrix_radd_ (a,b)
-        m . __sub__     = lambda a,b : _matrix_sub_  (a,b)
-        ## m . __rsub__    = lambda a,b : _matrix_rsub_ (a,b)
-        m . __mul__     = lambda a,b : _matrix_mul_  (a,b)
-        m . __rmul__    = lambda a,b : _matrix_rmul_ (a,b)
-        m . __div__     = lambda a,b : _matrix_div_  (a,b) 
+        _operations     = Ostap.Math.MtrxOps( m )
+        
+        m.__add__       = lambda a,b : _operations.add  ( a , b )
+        m.__sub__       = lambda a,b : _operations.sub  ( a , b )
+        m.__radd__      = lambda a,b : _operations.add  ( a , b )
+        m.__rsub__      = lambda a,b : _operations.rsub ( a , b )
+        
+        m.__mul__       = lambda a,b : _linalg_mul_     ( a , b )
+        m.__rmul__      = lambda a,b : _linalg_rmul_    ( a , b )
+        m.__div__       = lambda a,b : _linalg_div_     ( a , b )
+        
+        m.__rdiv__      = lambda s,*a :  NotImplemented 
 
-        m . __rdiv__    = lambda s,*a :  NotImplemented 
+        m.__eq__        = lambda a,b : _matrix_eq_      ( a , b )
+        m.__neq__       = lambda a,b : not ( a == b ) 
 
         m._increment_  = _ms_increment_
         m.increment    = _ms_increment_
@@ -498,7 +577,6 @@ def deco_symmatrix ( m ) :
         m._decorated   = True
         
     return m
-
 
 Ostap.SymMatrix2x2        = Ostap.SymMatrix(2)
 Ostap.SymMatrix3x3        = Ostap.SymMatrix(3)
@@ -536,6 +614,85 @@ if '__main__' == __name__ :
         
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+    
+    logger.info('TEST vectors: ')
+    
+    LA3 = Ostap.Math.Vector3
+    l1  = LA3(0,1,2)
+    l2  = LA3(3,4,5)
+    
+    logger.info ( 'l1 , l2 : %s %s '  % ( l1 , l2  ) )
+    logger.info ( 'l1 + l2 : %s    '  % ( l1 + l2  ) )
+    logger.info ( 'l1 - l2 : %s    '  % ( l1 - l2  ) )
+    logger.info ( 'l1 * l2 : %s    '  % ( l1 * l2  ) )
+    logger.info ( 'l1 *  2 : %s    '  % ( l1 *  2  ) )
+    logger.info ( ' 2 * l2 : %s    '  % ( 2  * l2  ) )
+    logger.info ( 'l1 +  2 : %s    '  % ( l1 +  2  ) )
+    logger.info ( ' 2 + l2 : %s    '  % ( 2  + l2  ) )
+    logger.info ( 'l1 -  2 : %s    '  % ( l1 -  2  ) )
+    logger.info ( ' 2 - l2 : %s    '  % ( 2  - l2  ) )
+    logger.info ( 'l1 /  2 : %s    '  % ( l1 /  2  ) )
+    
+    l1 /= 2 
+    logger.info ( 'l1 /= 2 : %s    '  % l1 )
+    l1 *= 2 
+    logger.info ( 'l1 *= 2 : %s    '  % l1 )
+    l1 += 2 
+    logger.info ( 'l1 += 2 : %s    '  % l1 )
+    l1 -= 2 
+    logger.info ( 'l1 -= 2 : %s    '  % l1 )
+
+    logger.info('TEST matrices: ')
+    
+    m22 = Ostap.Math.Matrix(2,2) ()
+    m23 = Ostap.Math.Matrix(2,3) ()
+    s22 = Ostap.Math.SymMatrix(2)()
+    
+    l2  = Ostap.Math.Vector(2)()
+    l3  = Ostap.Math.Vector(3)()
+    
+    l2[0]    = 1
+    l2[1]    = 2
+    
+    l3[0]    = 1
+    l3[1]    = 2
+    l3[1]    = 3
+    
+    logger.info ( 'l2 , l3 : %s %s '  % ( l2 , l3  ) )
+    
+    m22[0,0] = 1
+    m22[0,1] = 1
+    m22[1,1] = 1
+    
+    m23[0,0] = 1
+    m23[1,1] = 1
+    m23[0,2] = 1
+    
+    s22[0,0] = 2
+    s22[1,0] = 1
+    s22[1,1] = 3
+    
+    logger.info ( 'm22\n%s'   % m22     ) 
+    logger.info ( 's22\n%s'   % s22     ) 
+    logger.info ( 'm23\n%s'   % m23     ) 
+    logger.info ( 'm22/3\n%s' % (m22/3) ) 
+    logger.info ( 'm23*3\n%s' % (m23*3) ) 
+
+    logger.info ( 'm22 * m23 :\n%s' % ( m22 * m23 ) ) 
+    logger.info ( 'm22 *  l2 : %s ' % ( m22 * l2  ) ) 
+    logger.info ( 'l2  * m22 : %s ' % ( l2  * m22 ) ) 
+    logger.info ( 'm23 *  l3 : %s ' % ( m23 * l3  ) ) 
+    logger.info ( 'l2  * m23 : %s ' % ( l2  * m23 ) )
+    
+    logger.info ( 'm22 * s22 + 2 * m22 :\n%s ' %  ( m22*s22 + 2*m22  ) )
+    logger.info ( 'm22 == m22*1.0 : %s ' % (  m22 == m22 * 1.0 ) )
+    logger.info ( 'm22 != m22*1.1 : %s ' % (  m22 != m22 * 1.1 ) )
+    logger.info ( 'm23 == m23*1.0 : %s ' % (  m23 == m23 * 1.0 ) )
+    logger.info ( 'm23 != m23*1.1 : %s ' % (  m23 != m23 * 1.1 ) )
+    logger.info ( 'l1  == l1 *1.0 : %s ' % (  l1  == l1  * 1.0 ) )
+    logger.info ( 'l1  != l1 *1.1 : %s ' % (  l1  != l1  * 1.1 ) )
+    logger.info ( 's22 == s22*1.0 : %s ' % (  s22 == s22 * 1.0 ) )
+    logger.info ( 's22 != s22*1.1 : %s ' % (  s22 != s22 * 1.1 ) )
 
 # =============================================================================
 # The END 
