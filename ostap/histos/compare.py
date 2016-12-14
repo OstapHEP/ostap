@@ -10,7 +10,8 @@
 #  @date   2014-05-10
 #  
 # =============================================================================
-"""Module with utilities for specific comparison of histograms/functions/shapes"""
+"""Module with utilities for specific comparison of histograms/functions/shapes
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -33,7 +34,7 @@ import ostap.histos.param
 # =============================================================================
 ## Can 1D-histogram can be considered as ``constant'' ?  
 def _h1_constant_ ( h1 , prob = 0.50 , opts = '0Q' ) :
-    """Can  1D-historgam be considered as constant ? 
+    """Can  1D-histogram be considered as constant ? 
     """
     # 
     if not isinstance ( h1 , ( ROOT.TH1D , ROOT.TH1F ) ) : return False 
@@ -49,53 +50,46 @@ def _h1_constant_ ( h1 , prob = 0.50 , opts = '0Q' ) :
 ROOT.TH1D.is_constant = _h1_constant_
 ROOT.TH1F.is_constant = _h1_constant_
 
-## # =============================================================================
-## ## compare the 1D-histograms trying to fit one with other
-## def _h1_cmp_fit_ ( h1              ,
-##                    h2              ,
-##                    rescale = False ,  
-##                    spline  = True  ,
-##                    opts    = ''    ) :
+# =============================================================================
+## compare the 1D-histograms trying to fit one with other
+def _h1_cmp_fit_ ( h1              ,
+                   h2              ,
+                   rescale = False ,  
+                   opts    = ''    ) :
+    """Compare histograms by refit of the first with functions,
+    extracted from the second one
 
-##     """Compare histograms by refit of the first with functions,
-##     extracted from the second one
+    >>> h1 = ... ## the first histo
+    >>> h2 = ... ## the second histo
+    >>> r  = h1.cmp_fit ( h2 )
+    >>> if r : print r.Prob()    
+    """    
+    if rescale :
+        h1 = h1.rescale_bins ( 1.0 ) 
+        h2 = h2.rescale_bins ( 1.0 )
 
-##     >>> h1 = ... ## the first histo
-##     >>> h2 = ... ## the second histo
-##     >>> r  = h1.cmp_fit ( h2 )
-##     >>> if r : print r.Prob()
-    
-##     """
-    
-##     if rescale :
-##         h1 = h1.rescale_bins ( 1.0 ) 
-##         h2 = h2.rescale_bins ( 1.0 )
+    f2 = h2.asTF () 
+    f2.ReleaseParameter ( 0 ) 
 
-##     f2 = h2.asTF ( spline = spline ) 
-##     f2.ReleaseParameter ( 0 ) 
-
-##     rf = h1.Fit ( f2 , 'S0Q' + opts ) 
-##     if 0 != rf.Status() :
-##         logger.warning("Can't fit with function " % rf.Status() )
-##         return None
+    rf = h1.Fit ( f2 , 'S0Q' + opts ) 
+    if 0 != rf.Status() :
+        logger.warning("Can't fit with function " % rf.Status() )
+        return None
             
-##     return rf
+    return rf
 
-## ROOT.TH1D.cmp_fit = _h1_cmp_fit_
-## ROOT.TH1F.cmp_fit = _h1_cmp_fit_ 
+ROOT.TH1D.cmp_fit = _h1_cmp_fit_
+ROOT.TH1F.cmp_fit = _h1_cmp_fit_ 
 
 # =============================================================================
 ## compare the 1D-historgams by chi2 
 def _h1_cmp_chi2_ ( h1              ,
                     h2              ,
                     rescale = False ) :
-
     """Compare histograms by chi2
-
     >>> h1 = ... ## the first histo
     >>> h2 = ... ## the second histo (or function or anything else) 
-    >>> chi2ndf,prob  = h1.cmp_chi2 ( h2 )
-    
+    >>> chi2ndf,prob  = h1.cmp_chi2 ( h2 )    
     """
     if rescale :
         h1 = h1.rescale_bins ( 1.0 )
@@ -179,8 +173,7 @@ ROOT.TH1F.chi2_cmp = _h1_chi2_cmp_
 #  
 def _h1_cmp_costheta_ ( h1              ,
                         h2              ,
-                        rescale = False ,  
-                        spline  = True  ) :
+                        rescale = False ) :  
     """Compare the 1D-historgams (as functions)
     Calculate scalar product and get ``the angle'' from it
     
@@ -193,12 +186,8 @@ def _h1_cmp_costheta_ ( h1              ,
         h1 = h1.rescale_bins ( 1.0 )
         h2 = h2.rescale_bins ( 1.0 )
 
-    if spline :
-        f1 = h1.asSpline ()
-        f2 = h2.asSpline ()
-    else :
-        f1 = h1.asFunc   ()
-        f2 = h2.asFunc   ()
+    f1 = h1.asFunc   ()
+    f2 = h2.asFunc   ()
 
     import warnings 
     with warnings.catch_warnings():
@@ -229,8 +218,7 @@ ROOT.TH1F.cmp_cos = _h1_cmp_costheta_
 #  where \f$ f^* \f$-are scaled functions, such \f$ |left| f^*\right| = 1 \f$ 
 def _h1_cmp_dist_ ( h1              ,
                     h2              ,
-                    rescale = False ,  
-                    spline  = True  ) :
+                    rescale = False ) : 
     """Calculate the norm of difference of scaled histograms/functions 
     |f1-f2|, such |f1|=1 and |f2|=1
     
@@ -243,12 +231,8 @@ def _h1_cmp_dist_ ( h1              ,
         h1 = h1.rescale_bins ( 1.0 )
         h2 = h2.rescale_bins ( 1.0 )
 
-    if spline  :
-        f1 = h1.asSpline ()        
-        f2 = h2.asSpline ()
-    else :
-        f1 = h1.asFunc   ()
-        f2 = h2.asFunc   ()
+    f1 = h1.asFunc   ()
+    f2 = h2.asFunc   ()
 
     import warnings 
     with warnings.catch_warnings():
@@ -280,8 +264,7 @@ ROOT.TH1F.cmp_dist = _h1_cmp_dist_
 #  where \f$ f^* \f$-are scaled functions, such \f$ |left| f^*\right| = 1 \f$ 
 def _h1_cmp_dist2_ ( h1              ,
                      h2              ,
-                     rescale = False ,  
-                     spline  = True  ) :
+                     rescale = False ) :   
     """Calculate the norm of difference of scaled histograms/functions 
     |(f1-f2)*2/(f1*f2)|, such |f1|=1 and |f2|=1
 
@@ -294,12 +277,9 @@ def _h1_cmp_dist2_ ( h1              ,
         h1 = h1.rescale_bins ( 1.0 )
         h2 = h2.rescale_bins ( 1.0 )
 
-    if spline  :
-        f1 = h1.asSpline ()        
-        f2 = h2.asSpline ()
-    else :
-        f1 = h1.asFunc   ()
-        f2 = h2.asFunc   ()
+
+    f1 = h1.asFunc   ()
+    f2 = h2.asFunc   ()
 
     import warnings 
     with warnings.catch_warnings():

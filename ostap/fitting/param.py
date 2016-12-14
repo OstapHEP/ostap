@@ -261,15 +261,6 @@ def _h1_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
 # =============================================================================
 ## construct helper class 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-03-27
-def _h1_as_spline_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
-    """Construct the function/spline from the histogram 
-    """
-    return H1Spline ( self , func , *args , **kwargs )
-
-# =============================================================================
-## construct helper class 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
     """Construct the helper function object from the histogram
@@ -280,16 +271,13 @@ def _h2_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_as_tf1_ ( self                           ,
-                  func   = lambda s : s.value () ,
-                  spline = False , *args , **kwargs ) :
+                  func   = lambda s : s.value () , *args , **kwargs ) :
     """Construct the function from the 1D-histogram
     >>> histo = ...
-    >>> fun1  = histo.asTF1 ( spline = False )
-    >>> fun2  = histo.asTF1 ( spline = True  ) 
+    >>> fun1  = histo.asTF1 ()
     """
     #
-    if spline : fun = _h1_as_spline_ ( self , func , *args , **kwargs )
-    else      : fun = _h1_as_fun_    ( self , func , *args , **kwargs )
+    fun = _h1_as_fun_    ( self , func , *args , **kwargs )
     #
     f1 = fun .tf1  ()
     nb = self.nbins()
@@ -386,8 +374,6 @@ ROOT.TH1F . asFunc   = _h1_as_fun_
 ROOT.TH1D . asFunc   = _h1_as_fun_ 
 ROOT.TH2F . asFunc   = _h2_as_fun_ 
 ROOT.TH2D . asFunc   = _h2_as_fun_ 
-ROOT.TH1F . asSpline = _h1_as_spline_ 
-ROOT.TH1D . asSpline = _h1_as_spline_ 
 
 ROOT.TH1F . integral = _h1_integral_ 
 ROOT.TH1D . integral = _h1_integral_
