@@ -13,12 +13,11 @@ namespace Ostap
     /// use local error handler for ROOT 
     bool useErrorHandler ( const bool use = true ) ;
     // ========================================================================
-    /** @class ErrorHandlerSentry Error2Exception.h Ostap/Error2Exception.h
+    /** @class ErrorSentry 
      *  Simple error handler for ROOT that converts error messages into exceptions
      *  @author Vanya Belyaev Ivan.Belayev@itep.ru
      *  @date   2016-12-10
      */
-    // ========================================================================
     class ErrorSentry
     {
     public:
@@ -34,10 +33,10 @@ namespace Ostap
       bool m_previous ; // is actually used? 
       // ======================================================================      
     } ;
-    // ========================================================================
+    // ========================================================================    
     /** @class GslError
      *  helper class to manipulate with GSL error handlers 
-     *  @author Vanya BELAYEV Ivan.Belyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
     class GslError
     {
@@ -45,54 +44,44 @@ namespace Ostap
     public:
       //=======================================================================
       /// constructor: make use of Gsl Error Handler: print error to stderr 
-      GslError () ; 
+      GslError  () ; 
       /// destructor: stop using the error  handler 
-      ~GslError() ;
+      ~GslError () ;
       // ======================================================================
-    private:
+    protected: 
       // ======================================================================
-      void*  m_previous ;
+      typedef  void handler ( const char* , const char* , int , int ) ;
+      GslError ( handler* h ) ;
+      handler*  m_previous ;
       // ======================================================================
     };
     // ========================================================================
     /** @class GslIgnore
      *  helper class to manipulate with GSL error handlers 
-     *  @author Vanya BELAYEV Ivan.Belyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
-    class GslIgnore
+    class GslIgnore : public GslError 
     {
       //=======================================================================
     public:
       //=======================================================================
       /// constructor: make use of Gsl Error Handler: ignore error 
-      GslIgnore  () ; 
-      /// destructor: stop using the error  handler 
-      ~GslIgnore () ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      void*  m_previous ;
+      GslIgnore  () ; // constructor: make use of Gsl Error Handler: ignore error 
       // ======================================================================
     };
     // ========================================================================
     /** @class GslException
      *  helper class to manipulate with GSL error handlers : 
      *  throw exception on error 
-     *  @author Vanya BELAYEV Ivan.Belyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
-    class GslException
+    class GslException : public GslError
     {
       //=======================================================================
     public:
       //=======================================================================
       /// constructor: make use of Gsl Error Handler: throw Exception 
-      GslException  () ; 
-      /// destructor: stop using the error  handler 
-      ~GslException () ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      void*  m_previous ;
+      GslException  () ; // constructor: make use of Gsl Error Handler: throw Exception 
       // ======================================================================
     };
     // ========================================================================

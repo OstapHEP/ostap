@@ -6,6 +6,7 @@
 // ============================================================================
 #include <iostream>
 #include <sstream>
+#include <sstream>
 // ============================================================================
 // Ostap 
 // ============================================================================
@@ -72,62 +73,30 @@ namespace
   }
 }
 // ============================================================================
-// constructor: loc
+// constructor: make use of Gsl Error Handler: print error to stderr 
 // ============================================================================
-Ostap::Math::GSL::GSL_Error_Handler::GSL_Error_Handler () 
-  : m_old ( 0 ) 
-{ m_old = gsl_set_error_handler ( &GSL_local_error ) ; }
-// ============================================================================
-// destructor/ unlock 
-// ============================================================================
-Ostap::Math::GSL::GSL_Error_Handler::~GSL_Error_Handler () 
-{ gsl_set_error_handler ( m_old ) ; }
-
+Ostap::Utils::GslError::GslError ( Ostap::Utils::GslError::handler* h )
+  : m_previous ( gsl_set_error_handler ( h ) ) 
+{ 
+  static_assert( std::is_same<handler,gsl_error_handler_t>::value  ,
+                 "``handler'' type is not ``gsl_error_handler_t''" ) ;
+}
 // ============================================================================
 // constructor: make use of Gsl Error Handler: print error to stderr 
 // ============================================================================
-Ostap::Utils::GslError::GslError() 
-  : m_previous(0) 
-{ m_previous = (void*) gsl_set_error_handler ( &GSL_local_error ) ; }
+Ostap::Utils::GslError::GslError () : GslError ( &GSL_local_error ) {}
 // ============================================================================
 // destructor: stop using the error  handler 
 // ============================================================================
-Ostap::Utils::GslError::~GslError() 
-{ 
-  if ( m_previous ) 
-  { gsl_set_error_handler ( (gsl_error_handler_t*) m_previous ) ; } 
-}
-
+Ostap::Utils::GslError::~GslError() { gsl_set_error_handler ( m_previous ) ; }
 // ============================================================================
 // constructor: make use of Gsl Error Handler: print error to stderr 
 // ============================================================================
-Ostap::Utils::GslIgnore::GslIgnore() 
-  : m_previous (0) 
-{ m_previous = (void*) gsl_set_error_handler ( &GSL_ignore_error ) ; }
-// ============================================================================
-// destructor: stop using the error  handler 
-// ============================================================================
-Ostap::Utils::GslIgnore::~GslIgnore() 
-{ 
-  if ( m_previous ) 
-  { gsl_set_error_handler ( (gsl_error_handler_t*) m_previous ) ; } 
-}
-
+Ostap::Utils::GslIgnore::GslIgnore() : GslError( &GSL_ignore_error ) {}
 // ============================================================================
 // constructor: make use of Gsl Error Handler: print error to stderr 
 // ============================================================================
-Ostap::Utils::GslException::GslException() 
-  : m_previous (0) 
-{ m_previous = (void*) gsl_set_error_handler ( &GSL_exception_error ) ; }
-// ============================================================================
-// destructor: stop using the error  handler 
-// ============================================================================
-Ostap::Utils::GslException::~GslException() 
-{ 
-  if ( m_previous ) 
-  { gsl_set_error_handler ( (gsl_error_handler_t*) m_previous ) ; } 
-}
-
+Ostap::Utils::GslException::GslException() : GslError( &GSL_exception_error ) {}
 // ============================================================================
 // The END 
 // ============================================================================

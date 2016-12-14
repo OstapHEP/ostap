@@ -33,19 +33,26 @@ __all__     = (
     'GslIgnore'          , ## context manager to ignore GSL errore
     'GslError'           , ## context manager to print  GSL errors 
     'GslException'       , ## context manager to turn   GSL errors into C++/Python exceptions
+    'setHandler'         , ## use ``global'' GSL handler 
+    'useHandler'         , ## ditto 
     )
 # =============================================================================
 import ROOT,cppyy 
 # =============================================================================
+## helper base class/context manager  
 class ErrHandler(object) :
+    handler = None 
     def __init__  ( self ) :
-        self.err_handler = None
+        self.err_handler = None 
+    def __enter__ ( self ) :
+        self.err_handler = self.handler ()
+        return self
     def __exit__  ( self , *_ ) :
         if self.err_handler : del self.err_handler
         self.err_handler = None
-    def __del__   ( self ) :
-        if self.err_handler : del self.err_handler
-
+    #def __del__   ( self ) :
+    #    if self.err_handler : del self.err_handler
+    #    self.err_handler = None 
 # =============================================================================
 ## @class GslIgnore
 #  Simple context manager to ignore all GSL errors
@@ -53,15 +60,12 @@ class ErrHandler(object) :
 #  with GslIgnore() :
 #      ... do something 
 #  @endcode 
-class GslIgnore   (ErrHandler) :
+class GslIgnore(ErrHandler) :
     """Simple context manager to ignore all GSL errors
     >>> with GslIgnore() :
     >>>    ... do something...
     """
-    def __enter__ ( self ) :
-        Ostap = cppyy.gbl.Ostap
-        self.err_handler = Ostap.Utils.GslIgnore    ()
-        return self
+    handler = cppyy.gbl.Ostap.Utils.GslIgnore
     
 # =============================================================================
 ## @class GslError
@@ -70,15 +74,12 @@ class GslIgnore   (ErrHandler) :
 #  with GslError() :
 #      ... do something 
 #  @endcode 
-class GslError    (ErrHandler) :
+class GslError(ErrHandler) :
     """Simple context manager to print GSL errors to stderr
     >>> with GslError() :
     >>>    ... do something...
     """
-    def __enter__ ( self ) :
-        Ostap = cppyy.gbl.Ostap
-        self.err_handler = Ostap.Utils.GslError     ()
-        return self
+    handler = cppyy.gbl.Ostap.Utils.GslError   
             
 # =============================================================================
 ## @class GslException
@@ -92,10 +93,7 @@ class GslException (ErrHandler) :
     >>> with GslError() :
     >>>    ... do something...
     """
-    def __enter__ ( self ) :
-        Ostap = cppyy.gbl.Ostap
-        self.err_handler = Ostap.Utils.GslException ()
-        return self
+    handler = cppyy.gbl.Ostap.Utils.GslException 
 
 # =============================================================================
 ## Simple context manager to ignore all GSL errors
@@ -136,17 +134,94 @@ def gslException () :
     """
     return GslException()
 
+
+# =============================================================================
+_global_gsl_handler = [] 
+def _setHandler ( handler ) :
+    global _global_gsl_handler
+    while _global_gsl_handler : 
+        _global_gsl_handler.pop() 
+    if handler: _global_gsl_handler.append ( handler ) 
+    return _global_gsl_handler
+
+# =============================================================================
+## Make use ``global'' GSL handler
+#  @code
+#  setHandler ( None        ) ## clean up global  handlers 
+#  setHandler ( 'Ignore'    ) ## ignore all GSL erorrs 
+#  setHandler ( 'Error'     ) ## print GSL errors to stderr and continue
+#  setHandler ( 'Exception' ) ## convert GSL errors into C++/Python exceptions 
+#  setHandler ( 'Raise'     ) ## ditto 
+#  setHandler ( 'Throw'     ) ## ditto 
+#  @endcode 
+def setHandler ( handler ) :
+    """Use ``global'' GSL handler
+    >>> setGlobalHandler ( None        ) ## clean up global  handlers 
+    >>> setGlobalHandler ( 'Ignore'    ) ## ignore all GSL erorrs 
+    >>> setGlobalHandler ( 'Error'     ) ## print GSL errors to stderr and continue
+    >>> setGlobalHandler ( 'Exception' ) ## convert GSL errors into C++/Python exceptions 
+    >>> setGlobalHandler ( 'Raise'     ) ## ditto 
+    >>> setGlobalHandler ( 'Throw'     ) ## ditto 
+    """
+    #
+    from   ostap.logger.logger import getLogger
+    logger = getLogger( 'ostap.utils.gsl' )
+    #
+    Ostap  = cppyy.gbl.Ostap
+    #
+    global _global_gls_handler
+    if   not  handler : _setHandler ( handler )
+    elif isinstance ( handler , str ) : 
+        hl = handler.lower()
+        if 'ignore' == hl  :
+            _setHandler ( Ostap.Utils.GslIgnore    () ) 
+            logger.debug('Global GSL error Handler: Ignore all GLS errors') 
+        elif hl in ( 'error' , 'print' ) : 
+            _setHandler ( Ostap.Utils.GslError     () ) 
+            logger.debug('Global GSL error Handler: print all GLS errors to stderr') 
+        elif hl in ( 'exception' , 'raise' , 'throw' ) : 
+            _setHandler ( Ostap.Utils.GslException () )
+            logger.debug('Global GSL error Handler: convert GLS errors to C++/Python exceptions')
+        else :
+            raise TypeError('Unknown handler type %s' % handler )
+    elif isinstance ( handler , Ostap.Utils.GslError ) :
+        _setHandler ( handler  )
+        logger.debug('Global Eror Handler: %s' % handler ) 
+    elif issubclass ( handler , Ostap.Utils.GslError ) :
+        h = _setHandler ( handler () )
+        logger.debug('Global Eror Handler: %s' % h )         
+    else : 
+        raise TypeError('Unknown handler type %s' % handler )
+
+## ditto 
+useHandler = setHandler 
 # =============================================================================
 if '__main__' == __name__ :
     
-    from   ostap.logger.logger import getLogger, isatty 
+    from   ostap.logger.logger import getLogger
     if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.gsl' )
     else                       : logger = getLogger( __name__          )
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
-    logger.info ( 80*'*' ) 
+
+    setHandler ( 'Error' )
+    with gslIgnore() , gslException() :
+        with gslError() :
+            setHandler( 'Exception')
+            setHandler( 'Exception')
+            setHandler( 'Exception')
+            setHandler( 'Exception')
+            setHandler( 'Ignore')
+            setHandler( 'Error')
+            setHandler( 'Error')
+            setHandler( 'Error')
+            setHandler( 'Error')
+        
+    logger.info ( 'Active handlers %s' % _global_gsl_handler ) 
+    del   _global_gsl_handler[:]
+    logger.info ( 'Active handlers %s' % _global_gsl_handler ) 
+    logger.info ( 80*'*' )
     
 # =============================================================================
 # The END 
