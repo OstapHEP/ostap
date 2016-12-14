@@ -1,32 +1,19 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# =============================================================================
-## @file
-#  Simple "value with error" utility
-#  @see Ostap::Math::ValueWithError
-#  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
-#  @date 2009-09-12
-# =============================================================================
-""" Simple ``value with error'' utility
+# Copyright (c) Ostap developpers.
 """
-# =============================================================================
-__author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
-__date__    = "2009-09-12"
-__version__ = "Version$Revision$"
-# =============================================================================
+Simple "value with error" utility.
+"""
+
 __all__     = (
-    'VE'  ,  ## Value with error  
-    'VVE' ,  ## vector of Values with Errors 
-    ) 
-# =============================================================================
+    'VE'  ,  # Value with error  
+    'VVE' ,  # vector of values with errors
+    )
+
 import ROOT, cppyy
-# =============================================================================
 # logging 
-# =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.ve' )
 else                       : logger = getLogger ( __name__        )
-# =============================================================================
+
 
 cpp       = cppyy.gbl
 std       = cpp.std 
@@ -46,10 +33,10 @@ VVE.Vector . __repr__ = lambda s : str( [ i for i in s ] )
 VVE.Vector . __len__  = lambda s : s.size ()
 
 
-
-## Sum the contents of the vector
+# Sum the contents of the vector
 def _ve_sum_ ( s ) :
-    """Sum the contents of the vector
+    """
+    Sum the contents of the vector.
     >>> v = ...
     >>> s = v.sum()
     """
@@ -58,7 +45,8 @@ def _ve_sum_ ( s ) :
 
 ## Sum the contents of the vector
 def _ve_asum_ ( s ) :
-    """Sum the contents of the vector
+    """
+    Sum the contents of the vector.
     >>> v = ...
     >>> s = v.abssum()
     """
@@ -96,16 +84,11 @@ for t in ( Ostap.Math.ValueWithError         ,
         t._new_str_ = t.toString
         t.__str__   = t.toString
         t.__repr__  = t.toString
-        
 
-# =============================================================================
-## get the B/S estimate from the formula 
-#  \f$ \sigma  = \fras{1}{S}\sqrt{1+\frac{B}{S}}\f$
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2012-10-15
 def _b2s_ ( s )  :
-    """Get B/S estimate from the equation:
-    error(S) = 1/sqrt(S) * sqrt ( 1 + B/S)
+    """
+    Get background-over-signal ratio B/S estimate from the equation:
+    error(S) = 1/sqrt(S) * sqrt ( 1 + B/S).
     >>> v = ...
     >>> b2s = v.b2s() ## get B/S estimate
     """
@@ -116,14 +99,11 @@ def _b2s_ ( s )  :
     #
     return c2/s - 1 
 
-# =============================================================================
-## get the precision with some  error estimation 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2012-10-15
 def _prec2_ ( s )  :
-    """Get precision with ``some'' error estimate 
+    """
+    Get precision with ``some'' error estimate.
     >>> v = ...
-    >>> p = v.prec ()     
+    >>> p = v.prec()
     """
     if not hasattr ( s , 'value' ) :
         return _prec_ ( VE ( s , 0 ) )
@@ -323,28 +303,3 @@ def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
 
 VE.gauss   = _ve_gauss_
 VE.poisson = _ve_poisson_ 
-
-# =============================================================================
-if '__main__' == __name__ :
-    
-    from ostap.utils.docme import docme
-    docme ( __name__ , logger = logger )
-
-    a = VE(100,100)
-    b = VE(400,400)
-
-    logger.info ( 'a=%s, b=%s' % ( a , b ) )
-    
-    logger.info ( 'a+b         %s' % ( a + b ) )
-    logger.info ( 'a-b         %s' % ( a - b ) )
-    logger.info ( 'a*b         %s' % ( a * b ) )
-    logger.info ( 'a/b         %s' % ( a / b ) )
-    logger.info ( 'a/(a+b)     %s' % ( a.frac ( b ) ) )
-    logger.info ( '(a-b)/(a+b) %s' % ( a.asym ( b ) ) )
-    
-    logger.info ( 80*'*' )
-    
-    
-# =============================================================================
-# The END 
-# =============================================================================
