@@ -51,8 +51,8 @@ except:
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap.logger.line import line 
-    logger.info ( __file__ + '\n' + line  )
+    from ostap import banner
+    logger.info ( __file__ + '\n' + banner )
     logger.info ( 80*'*' )
     logger.info ( __doc__  )
     logger.info ( 80*'*' )

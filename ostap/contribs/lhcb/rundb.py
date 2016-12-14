@@ -175,10 +175,10 @@ def fill_number ( run_number ) :
     
 # =============================================================================
 if '__main__' == __name__  :
-
-    from ostap.logger.line import line 
+    
+    from ostap import banner
     logger.info ( 80*'*' )        
-    logger.info ( __file__ + '\n' + line  )
+    logger.info ( __file__ + '\n' + banner )
     logger.info ( 80*'*' )
     logger.info ( __doc__  )
     logger.info ( 80*'*' )

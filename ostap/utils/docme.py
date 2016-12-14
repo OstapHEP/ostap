@@ -48,11 +48,11 @@ def docme( module , symbols = {} , logger = None ) :
 
     logger.info ( 80*'*' )
 
-    ## the file name and "the line"
-    _file_ = module.__file__ if hasattr ( module , '__file__' ) else None 
-    from ostap.logger.line import line 
-    if _file_ : logger.info ( _file_ + '\n' + line ) 
-    else      : logger.info (                 line ) 
+    ## the file name and the banner
+    _file_ = module.__file__ if hasattr ( module , '__file__' ) else None
+    from ostap import banner
+    if _file_ : logger.info ( _file_ + '\n' + banner ) 
+    else      : logger.info (                 banner ) 
 
     logger.info ( 80*'*' )
 
