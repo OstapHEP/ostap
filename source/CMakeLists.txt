@@ -15,7 +15,7 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif()
 
 function( MAKE_DICT name header selection )
-   REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} )
+   REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANTS)
    add_library( ${name}Dict SHARED ${name}.cxx )
    add_dependencies(${name}Dict ${name}-dictgen)
    #set_target_properties( ${name} PROPERTIES COMPILE_FLAGS ${ROOT_CXX_FLAGS} )
@@ -83,7 +83,13 @@ add_library(ostap SHARED src/format.cpp
 
 target_link_libraries(ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES})
 
-set_target_properties(ostap ostapDict PROPERTIES SUFFIX ".so")
+# For clang we need to define __MATH_LONG_DOUBLE_CONSTANTS for
+# defining M_El, M_PIl math constants.
+#set(COMPILE_DEFINITIONS -D__MATH_LONG_DOUBLE_CONSTANTS)
+# add_definitions(-D__MATH_LONG_DOUBLE_CONSTANTS)
+set_target_properties(ostap ostapDict PROPERTIES
+  SUFFIX ".so"
+  COMPILE_DEFINITIONS __MATH_LONG_DOUBLE_CONSTANTS)
 # #---Create  a main program using the library
 # add_executable(Main MainEvent.cxx)
 # target_link_libraries(Main Event)
