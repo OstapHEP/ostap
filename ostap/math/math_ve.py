@@ -129,8 +129,7 @@ def pow ( x , y , *a ) :
     """
     if   isinstance ( x , VE ) or isinstance ( y , VE ) : return x**y 
     return math.pow ( x , y , *a ) 
-
-
+ 
 # =============================================================================
 ## define ``sin'' function 
 def sin ( x ) :
@@ -316,15 +315,13 @@ _igamma_ = cpp.Ostap.Math.igamma
 #  \f$ f(x) = \frac{1}{\Gamma(x)}\f$
 #  @see https://en.wikipedia.org/wiki/Reciprocal_gamma_function
 def igamma ( x ) :
-    """'igamma' function taking into account the uncertainties
+    r"""'igamma' function taking into account the uncertainties
     \f$ f(x) = \frac{1}{\Gamma(x)}\f$
     - see https://en.wikipedia.org/wiki/Reciprocal_gamma_function
     """
     fun = getattr ( x , '__igamma__' , None )
     if fun : return fun()
     return _igamma_ ( x )
-
-
 
 _sech_ = cpp.Ostap.Math.sech 
 # =============================================================================
@@ -359,15 +356,24 @@ _fma_ = cpp.Ostap.Math.fma
 #  @param cxz  (INPUT) the correlation coefficient   -1<=c_xz<=1 
 #  @param cyz  (INPUT) the correlation coefficient   -1<=c_yz<=1 
 #  @return  fma(x,y,z)
+#  @code
+#  x = ...
+#  y = ...
+#  z = ...
+#  print fma ( x , y , z ) 
+#  @endcode 
 #  @warning invalid and small covariances are ignored
 def fma ( x , y , z , cxy = 0 , cxz = 0 , cyz = 0 ) : 
-    """ Evaluate fma(x,y,z)=x*y+z with uncertainties 
+    """ Evaluate fma(x,y,z)=x*y+z with uncertainties
+    >>> x = ...
+    >>> y = ...
+    >>> z = ...
+    >>> print fma ( x , y , z ) 
     """
     _x = VE ( x )
     _y = VE ( y )
     _z = VE ( z )
     return _fma_ ( _x , _y , _z , cxy , cxz , cyz )
-
 
 _hypot_ = cpp.Ostap.Math.hypot
 # =============================================================================
@@ -397,3 +403,38 @@ else :
     logger.warning ( 'The problem %s is not solved yet ( ROOT %s) ' %  ( jira , vers ) )
     logger.warning ( 'Temporarily disable cast of VE to float' )
     del VE.__float__
+
+
+# =============================================================================
+if '__main__' == __name__ :
+    
+    from ostap.utils.docme  import docme
+    docme ( __name__ , logger = logger )
+    
+    funcs = [ exp    , expm1  ,
+              log    , log10  , log1p  ,
+              sqrt   , cbrt   ,
+              sin    , cos    , tan    ,
+              sinh   , cosh   , tanh   , sech   ,
+              asin   , acos   , atan   ,
+              asinh  , acosh  , atanh  ,
+              erf    , erfc   , erfi   , erfcx  ,
+              probit ,
+              gamma  , tgamma , lgamma , igamma ]
+    
+    from ostap.math.derivative import EvalVE
+    funcs += [ EvalVE ( math.sin , math.cos ) ,
+               EvalVE ( math.sin )            ]
+    
+    vars  = [ VE ( 0.001 , 0.0001**2 ) , VE(1,0) , VE(1,0.1**2) , VE(10,0.01**2) ]
+    
+    for v in vars :
+        logger.info ( 'Var = %s ' % v )
+        for f in funcs :
+            logger.info ( "\t%s\t%s = %s " % ( f.__name__ , v ,  f(v) ) )
+            
+    logger.info ( 80*'*')
+    
+# =============================================================================
+# The END
+# =============================================================================

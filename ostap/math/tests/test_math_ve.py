@@ -1,20 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# ============================================================================= 
 # Copyright (c) Ostap developpers.
+# ============================================================================= 
 """
 Test module for ostap/math/math_ve.py.
 """
-
+# ============================================================================= 
 import math
 
-from ostap.utils.docme  import docme
 from ostap.math.ve      import VE
 from ostap.math.base    import cpp, iszero, isequal
 from ostap.math.math_ve import *
 
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.math_ve' )
+if '__main__' ==  __name__ : logger = getLogger ( 'test_math_ve' )
 else                       : logger = getLogger ( __name__             )
-
-docme ( __name__ , logger = logger )
 
 vars  = [ VE ( 0.001 , 0.0001**2 ) , VE(1,0) , VE(1,0.1**2) , VE(10,0.01**2) ]
 
@@ -39,3 +40,13 @@ def test_math_ve():
         logger.info ( 'Var = %s ' % v )
         for f in funcs :
             logger.info ( "\t%s\t%s = %s " % ( f.__name__ , v ,  f(v) ) )
+
+            
+# =============================================================================
+if '__main__' == __name__ :
+
+    test_math_ve()
+    
+# =============================================================================
+# The END 
+# =============================================================================

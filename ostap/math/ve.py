@@ -1,19 +1,31 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# ============================================================================= 
 # Copyright (c) Ostap developpers.
+# =============================================================================
+# @file
+# Simple ``value with error'' utility.
+# @code
+# @endcode
+# @see Ostap::Math::ValueWithError
+# ============================================================================= 
 """
-Simple "value with error" utility.
+Simple ``value with error'' utility.
 """
-
+# ============================================================================= 
 __all__     = (
     'VE'  ,  # Value with error  
     'VVE' ,  # vector of values with errors
     )
-
+# ============================================================================= 
 import ROOT, cppyy
+# ============================================================================= 
 # logging 
+# ============================================================================= 
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.ve' )
 else                       : logger = getLogger ( __name__        )
-
+# ============================================================================= 
 
 cpp       = cppyy.gbl
 std       = cpp.std 
@@ -33,20 +45,20 @@ VVE.Vector . __repr__ = lambda s : str( [ i for i in s ] )
 VVE.Vector . __len__  = lambda s : s.size ()
 
 
+# ============================================================================= 
 # Sum the contents of the vector
 def _ve_sum_ ( s ) :
-    """
-    Sum the contents of the vector.
+    """Sum the contents of the vector.
     >>> v = ...
     >>> s = v.sum()
     """
     return Ostap.Math.sum ( s )
 
 
+# ============================================================================= 
 ## Sum the contents of the vector
 def _ve_asum_ ( s ) :
-    """
-    Sum the contents of the vector.
+    """Sum the contents of the vector.
     >>> v = ...
     >>> s = v.abssum()
     """
@@ -85,9 +97,15 @@ for t in ( Ostap.Math.ValueWithError         ,
         t.__str__   = t.toString
         t.__repr__  = t.toString
 
+# ============================================================================= 
+## Get background-over-signal ratio B/S estimate from the equation:
+#  \f$ \frac{ \sigma(S)}{S} = \frac{1}{\sqrt{S}} \sqrt{ 1 + \frac{B}{S} } \f$
+#  @code
+#  v = VE( ... )
+#  print 'B/S=', v.b2s() 
+#  @endcode
 def _b2s_ ( s )  :
-    """
-    Get background-over-signal ratio B/S estimate from the equation:
+    """Get background-over-signal ratio B/S estimate from the equation:
     error(S) = 1/sqrt(S) * sqrt ( 1 + B/S).
     >>> v = ...
     >>> b2s = v.b2s() ## get B/S estimate
@@ -99,9 +117,10 @@ def _b2s_ ( s )  :
     #
     return c2/s - 1 
 
+# ============================================================================= 
+## Get precision with ``some'' error estimate.
 def _prec2_ ( s )  :
-    """
-    Get precision with ``some'' error estimate.
+    """Get precision with ``some'' error estimate.
     >>> v = ...
     >>> p = v.prec()
     """
@@ -251,7 +270,6 @@ def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
     logger.warning("Can'n generate proper random number %s" % s )
     return v
 
-
 # =============================================================================
 from ostap.math.random_ext import poisson as _poisson 
 # =============================================================================
@@ -303,3 +321,58 @@ def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
 
 VE.gauss   = _ve_gauss_
 VE.poisson = _ve_poisson_ 
+
+# =============================================================================
+## decorated classes 
+_decorated_classes_  = (
+    Ostap.Math.ValueWithError         ,
+    Ostap.Math.ValueWithError.Vector  ,
+    Ostap.Math.Point3DWithError       ,
+    Ostap.Math.Vector3DWithError      ,
+    Ostap.Math.LorentzVectorWithError ,
+    Ostap.Math.SVector2WithError      )
+
+# =============================================================================
+## decorated methods 
+_new_methods_ = (
+    VE.Vector  . __str__  ,
+    VE.Vector  . __repr__ , 
+    VVE.Vector . __str__  ,
+    VVE.Vector . __repr__ , 
+    VVE.Vector . __len__  , 
+    VE . b2s              , 
+    VE . prec             , 
+    VE . precision        , 
+    VE . __lt__           ,
+    VE . __le__           , 
+    VE . __gt__           , 
+    VE . __ge__           , 
+    VE . __eq__           , 
+    VE . __ne__           , 
+    VE . gauss            , 
+    VE . poisson          ,
+   )
+
+# =============================================================================
+if '__main__' == __name__ :
+    
+    from ostap.utils.docme  import docme
+    docme ( __name__ , logger = logger )
+    
+    a = VE(100,100)
+    b = VE(400,400)
+    
+    logger.info ( 'a=%s, b=%s' % ( a , b ) )
+    
+    logger.info ( 'a+b         %s' % ( a + b ) )
+    logger.info ( 'a-b         %s' % ( a - b ) )
+    logger.info ( 'a*b         %s' % ( a * b ) )
+    logger.info ( 'a/b         %s' % ( a / b ) )
+    logger.info ( 'a/(a+b)     %s' % ( a.frac ( b ) ) )
+    logger.info ( '(a-b)/(a+b) %s' % ( a.asym ( b ) ) )
+
+    logger.info ( 80*'*')
+    
+# =============================================================================
+# The END
+# =============================================================================

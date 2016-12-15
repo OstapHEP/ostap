@@ -41,6 +41,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Combine.cpp
                          src/Chi2Fit.cpp
                          src/EigenSystem.cpp   
+                         src/Error2Exception.cpp   
                          src/Exception.cpp
                          src/Faddeeva.cpp 
                          src/Formula.cpp   
