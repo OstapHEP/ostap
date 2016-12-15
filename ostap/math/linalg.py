@@ -738,6 +738,18 @@ for i in range(11) :
         deco_matrix ( t2 ) 
 
 # =============================================================================
+_decorated_classes_ = (
+    Ostap.Vector(2)     ,
+    Ostap.Matrix(2,3)   , 
+    Ostap.SymMatrix(2)  , 
+    )
+
+_new_methods_ = (
+    Ostap.Vector    , 
+    Ostap.Matrix    , 
+    Ostap.SymMatrix , 
+    )
+# =============================================================================
 if '__main__' == __name__ :
         
     from ostap.utils.docme import docme

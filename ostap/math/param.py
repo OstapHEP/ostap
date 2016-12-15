@@ -515,8 +515,6 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
 bernsteineven_sum = beziereven_sum
 
 
-
-
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -51,19 +51,13 @@
   >>> import ostap.math.base 
 
   Important: All types are defined in corresponding
-               C++ namespaces: Gaudi & Gaudi::Math
+               C++ namespaces: Ostap & Ostap::Math
 
-  >>> import LHCbMath.Types
-  >>> from GaudiPython.Bindings import gbl as cpp ## get global C++ namespace
-  >>> Gaudi = cpp.Gaudi                           ## get C++ namespace Gaudi
-  >>> p3 = Gaudi.XYZPoint(0,1,2)                  ## use C++ type Gaudi::XYZPoint
+  >>> Ostap = cpp.Ostap                          ## get C++ namespace Gaudi
+  >>> p3 = Ostap.XYZPoint(0,1,2)                  ## use C++ type Gaudi::XYZPoint
 
-  >>> dir( Gaudi.Math )
-  >>> dir( Gaudi      )
-
-  Last modification $Date$
-                 by $Author$
-
+  >>> dir( Ostap.Math )
+  >>> dir( Ostap      )
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
@@ -270,16 +264,20 @@ SPD.__repr__ = SPD.__str__
 # Imporve operations with std.complex 
 # =============================================================================
 COMPLEX = cpp.std.complex('double')
-
+# =============================================================================
 def _cmplx_to_complex_ ( s ) :
     """convert to complex"""
     return  complex    ( s.real() , s.imag() )
+
+# =============================================================================
 def _cmplx_negate_     ( s ) :
     """Negation:
     >>> v  = ...
     >>> v1 = -v
     """
     return -complex    ( s.real() , s.imag() )
+
+# =============================================================================
 def _cmplx_abs_        ( s ) :
     """Absolute value
     >>> print abs(v) 
@@ -288,6 +286,8 @@ def _cmplx_abs_        ( s ) :
     sr = s.real()
     si = s.imag()
     return math.sqrt( sr * sr + si * si ) 
+
+# =============================================================================
 def _cmplx_norm_       ( s ) :
     """Norm (squared absolute value)
     >>> print v.norm()
@@ -295,45 +295,57 @@ def _cmplx_norm_       ( s ) :
     sr = s.real()
     si = s.imag()
     return sr * sr + si * si
+
+# =============================================================================
 def _cmplx_conjugate_  ( s ) :
     """Get complex conjugated
     >>> vc = v.conjugate() 
     """
     return complex     ( s.real() , -s.imag() )
     
+# =============================================================================
 def _cmplx_add_        ( s , o ) :
     """add complex values 
     >>> r = v + other  
     """
     return o + complex ( s.real() , s.imag() )
+
+# =============================================================================
 def _cmplx_mul_        ( s , o ) :
     """multiply  complex values 
     >>> r = v * other  
     """
     return o * complex ( s.real() , s.imag() )
 
+# =============================================================================
 def _cmplx_div_        ( s , o ) :
-    return (1.0/o) * complex ( s.real() , s.imag() )
     """divide complex values 
     >>> r = v / other  
     """
+    return (1.0/o) * complex ( s.real() , s.imag() )
+
+# =============================================================================
 def _cmplx_rdiv_       ( s , o ) :
     """divide complex values 
     >>> r = other / v 
     """
     return o       * ( 1.0 / complex ( s.real() , s.imag() ) )
 
+# =============================================================================
 def _cmplx_sub_        ( s , o ) :
     """subtract complex values 
     >>> r = v - other 
     """
     return (-o   ) + complex ( s.real() , s.imag() )
+
+# =============================================================================
 def _cmplx_rsub_       ( s , o ) :
     """subtract complex values 
     >>> r = other - v 
     """
     return   o     - complex ( s.real() , s.imag() )
 
+# =============================================================================
 def _cmplx_pow_  ( s , o ) :
     """power function 
     >>> r = v ** other  
@@ -342,6 +354,7 @@ def _cmplx_pow_  ( s , o ) :
         o = complex ( o.real() , o.imag() ) 
     return complex ( s.real() , s.imag() ) ** o
 
+# =============================================================================
 def _cmplx_rpow_  ( s , o ) :
     """power function 
     >>> r = other **v  
@@ -349,6 +362,7 @@ def _cmplx_rpow_  ( s , o ) :
     return o ** complex ( s.real() , s.imag() )
 
 
+# =============================================================================
 def _cmplx_eq_    ( s , o ) :
     """equality:
     >>> r = v == other  
@@ -357,6 +371,7 @@ def _cmplx_eq_    ( s , o ) :
         return s.real() == o.real() and s.imag() == o.imag()
     return complex( s.real() , s.imag() ) == o
 
+# =============================================================================
 def _cmplx_ne_    ( s , o ) :
     """non-equality:
     >>> r = v != other  
@@ -377,21 +392,25 @@ COMPLEX.__rmul__    = _cmplx_mul_
 COMPLEX.__rdiv__    = _cmplx_rdiv_
 COMPLEX.__rsub__    = _cmplx_rsub_
 
+# =============================================================================
 def _cmplx_iadd_ ( s , o ) :
     x = s + o
     s.real(x.real)
     s.imag(x.imag)
     
+# =============================================================================
 def _cmplx_isub_ ( s , o ) :
     x = s - o
     s.real(x.real)
     s.imag(x.imag)
 
+# =============================================================================
 def _cmplx_imul_ ( s , o ) :
     x = s * o
     s.real(x.real)
     s.imag(x.imag)
 
+# =============================================================================
 def _cmplx_idiv_ ( s , o ) :
     x = s / o
     s.real(x.real)
@@ -418,6 +437,10 @@ COMPLEX.conj        = _cmplx_conjugate_
 COMPLEX.to_complex  = _cmplx_to_complex_ 
 COMPLEX.as_complex  = _cmplx_to_complex_ 
 
+## decorated classes 
+_decorated_classes_  = (
+    COMPLEX ,
+    )
 
 # =============================================================================
 if '__main__' == __name__ :
