@@ -78,6 +78,7 @@ def docme( module , symbols = {} , logger = None ) :
         logger.info ( "Date    : %s" % _date_ ) 
 
     _done_ = set ()
+    
     ## Public symbols 
     _all_     = module.__all__    if hasattr ( module , '__all__' ) else None
     if _all_ :
@@ -92,9 +93,25 @@ def docme( module , symbols = {} , logger = None ) :
                 logger.info ( "``%s''" %        key ) 
             _done_.add ( sym ) 
         logger.info ( 80*'*' )
-            
-    if not symbols : return
 
+    _klasses_  = getattr ( module , '_decorated_classes_' , () )
+    if _klasses_ :
+        logger.info ( "Decorated classes : %s" % [ getattr ( k ,'__name__' , k ) for k in _klasses_ ] )
+        for sym in _klasses_ :
+            if hasattr ( sym , '__doc__' ) and sym.__doc__ :
+                d = sym.__doc__.replace( '\n' , '\n#' )
+                logger.info ( "Decorated class ``%s''\n# - %s" % ( getattr ( sym , '__name__' , sym ) , d ) )
+        
+        logger.info ( 80*'*' )
+
+    _methods_  = getattr ( module , '_new_methods_' , () )
+    if _methods_ :
+        for sym in _methods_ :
+            if hasattr ( sym , '__doc__' ) and sym.__doc__ :
+                d = sym.__doc__.replace( '\n' , '\n#' )
+                logger.info ( "New method\n# - %s" % d )        
+        logger.info ( 80*'*' )
+        
     if isinstance ( symbols , dict ) :
         
         keys = symbols.keys()
@@ -110,6 +127,8 @@ def docme( module , symbols = {} , logger = None ) :
             else : 
                 logger.info ( "``%s''" %        key ) 
 
+        logger.info ( 80*'*' )
+
     elif isinstance ( symbols , ( list , set , tuple ) ) :
 
         for sym in symbols : 
@@ -121,7 +140,7 @@ def docme( module , symbols = {} , logger = None ) :
             else : 
                 logger.info ( "``%s''" %        key ) 
                         
-    logger.info ( 80*'*' )
+        logger.info ( 80*'*' )
 
 # =============================================================================
 if '__main__' == __name__ :
