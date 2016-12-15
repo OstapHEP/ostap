@@ -353,7 +353,7 @@ def _sum_var_old_ ( tree , expression ) :
     
     >>> dataset = ...
     ## get corrected number of signale events  
-    >>> n_corr  = dataset.sumVar ( 'S_sw/effic' )
+    >>> n_corr  = dataset.sumVar_( 'S_sw/effic' )
     
     """
     _h_one_.Reset() 
@@ -646,6 +646,48 @@ ROOT.TChain.slice  = lambda s,*x : _not_implemented_( s , 'slice'  , *x )
 ROOT.TChain.slices = lambda s,*x : _not_implemented_( s , 'slices' , *x ) 
 
 
+# =============================================================================
+_decorated_classes_ = (
+    ROOT.TTree   ,
+    ROOT.TChain     
+    )
+_new_methods_       = (
+    #
+    ROOT.TTree .withCuts  ,
+    ROOT.TChain.withCuts  ,
+    ROOT.TTree. __len__   ,
+    #
+    ROOT.TTree .__call__  ,
+    ROOT.TChain.__call__  ,
+    #
+    ROOT.TTree .project   ,
+    ROOT.TChain.project   ,
+    #
+    ROOT.TTree .statVar   ,
+    ROOT.TChain.statVar   ,
+    ROOT.TTree .statCov   ,
+    ROOT.TChain.statCov   ,
+    #
+    ROOT.TTree .vminmax   ,
+    ROOT.TChain.vminmax   ,
+    #
+    ROOT.TTree .sumVar_   ,
+    ROOT.TChain.sumVar_   ,
+    #
+    ROOT.TTree .sumVar    ,
+    ROOT.TChain.sumVar    ,
+    #
+    ROOT.TTree .branches  , 
+    ROOT.TTree .__repr__  , 
+    ROOT.TTree .__str__   ,
+    #
+    ROOT.TChain.files        ,
+    ROOT.TChain.__getslice__ ,
+    #
+    ROOT.TTree.slice        ,
+    ROOT.TTree.slices       ,
+    # 
+    )
 # =============================================================================
 if '__main__' == __name__ :
     

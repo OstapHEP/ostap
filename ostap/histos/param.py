@@ -1082,7 +1082,7 @@ def _h1_concavespline_ ( h1               ,
 
 # =============================================================================
 
-
+_new_methods_ = []
 # =============================================================================
 ## decorate histograms 
 for t in ( ROOT.TH1D , ROOT.TH1F ) :
@@ -1110,7 +1110,27 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.convexspline   = _h1_convexspline_ 
     t.concavespline  = _h1_concavespline_ 
 
-
+    _new_methods_ += [
+        _h1_bernstein_     ,
+        _h1_bernsteineven_ ,
+        _h1_chebyshev_     ,
+        _h1_legendre_      ,
+        _h1_fourier_       ,
+        _h1_polinomial_    ,
+        _h1_positive_      ,
+        _h1_positiveeven_  ,
+        _h1_monothonic_    ,
+        _h1_convex_        ,
+        _h1_convexpoly_    ,
+        _h1_concavepoly_   ,
+        _h1_bspline_       ,
+        _h1_pspline_       ,
+        _h1_mspline_       ,
+        _h1_cspline_       ,
+        _h1_convexspline_  ,
+        _h1_concavespline_ ,
+        ]
+    
 # =============================================================================
 ## parameterize positive histogram with certain PDF
 def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
@@ -1545,6 +1565,21 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.pdf_convexpoly         = _h1_pdf_convexpoly_
     t.pdf_concavepoly        = _h1_pdf_concavepoly_
 
+    _new_methods_ += [
+        _h1_pdf_positive_    ,
+        _h1_pdf_even_        ,
+        _h1_pdf_monothonic_  ,
+        _h1_pdf_increasing_  ,
+        _h1_pdf_decreasing_  ,
+        _h1_pdf_convex_      ,
+        _h1_pdf_convex_increasing_ ,
+        _h1_pdf_convex_decreasing_ ,
+        _h1_pdf_concave_      ,
+        _h1_pdf_concave_increasing_ ,
+        _h1_pdf_concave_decreasing_ ,
+        _h1_pdf_convexpoly_   ,
+        _h1_pdf_concavepoly_  ,        
+        ]
 # =============================================================================
 ## parameterize/fit histogram with the positive  b-spline 
 #  @code
@@ -1708,7 +1743,13 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.pdf_convexSpline  = _h1_pdf_convexSpline_
     t.pdf_concaveSpline = _h1_pdf_concaveSpline_
 
-
+    _new_methods_ += [
+        _h1_pdf_pspline_        ,
+        _h1_pdf_mspline_        ,
+        _h1_pdf_cspline_        ,
+        _h1_pdf_convexSpline_   ,
+        _h1_pdf_concaveSpline_  ,
+        ]
 # =============================================================================
 ## make a histogram representation in terms of Legendre polynomials
 #  @code 
@@ -1891,6 +1932,21 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
     h.bernstein_sum     = _h1_bezier_sum_
     h.beziereven_sum    = _h1_beziereven_sum_
     h.bernsteineven_sum = _h1_beziereven_sum_
+
+    _new_methods_ .append ( legendre_sum   )
+    _new_methods_ .append ( chebyshev_sum  )
+    _new_methods_ .append ( fourier_sum    )
+    _new_methods_ .append ( cosine_sum     )
+    _new_methods_ .append ( bezier_sum     )
+    _new_methods_ .append ( beziereven_sum )
+
+# =============================================================================
+_decorated_classes = (
+    ROOT.TH1D ,
+    ROOT.TH1F ,
+    )
+
+_new_methods_ = tuple ( _new_methods_ )
     
 
 # =============================================================================

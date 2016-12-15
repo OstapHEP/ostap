@@ -73,6 +73,10 @@ WSE.__repr__ = lambda s : 'WStat: '+ s.toString()
 WSE.__str__  = lambda s : 'WStat: '+ s.toString()
 
 # =============================================================================
+_decorated_classes_ = (
+    SE , WSE , NSE 
+    )
+# =============================================================================
 if '__main__' == __name__  :
     
     from ostap.logger.logger import getLogger

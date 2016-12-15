@@ -73,8 +73,7 @@ def getCanvas ( name   = 'glCanvas' ,   ## canvas name
                 title  = 'Ostap'    ,   ## canvas title
                 width  = 1000       ,   ## canvas width
                 height = 800        ) : ## canvas height 
-    """
-    Get create canvas/create new canvas
+    """Get create canvas/create new canvas
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
     """
@@ -155,6 +154,13 @@ def _remove_canvases_() :
 import atexit
 atexit.register ( _remove_canvases_ )
 
+# =============================================================================
+_decorated_classes_  = (
+    ROOT.TCanvas , 
+    )
+_new_methods_        = (
+    ROOT.TCanvas.__rshift__ , 
+    )
 # =============================================================================
 if '__main__' == __name__ :
     

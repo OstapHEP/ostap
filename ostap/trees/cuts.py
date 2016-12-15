@@ -174,6 +174,22 @@ ROOT.TCut . __rmul__   = lambda s,o : ROOT.TCut(o)*s
 
 ROOT.TCut . __repr__   = ROOT.TCut.__str__ 
 
+
+# =============================================================================
+_decorated_classes_ = (
+    ROOT.TCut ,
+    )
+_new_methods_       = (
+    #
+    ROOT.TCut . __add__    ,
+    ROOT.TCut . __and__    ,
+    ROOT.TCut . __or__     ,
+    ROOT.TCut . __mul__    ,
+    ROOT.TCut . __invert__ ,
+    #
+    ROOT.TCut . strip      ,
+    ROOT.TCut . replace    ,    
+    )
 # =============================================================================
 if '__main__' == __name__ :
         
