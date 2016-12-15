@@ -95,6 +95,7 @@ def docme( module , symbols = {} , logger = None ) :
         logger.info ( 80*'*' )
 
     _klasses_  = getattr ( module , '_decorated_classes_' , () )
+    _klasses_  = set ( _klasses_ ) 
     if _klasses_ :
         logger.info ( "Decorated classes : %s" % [ getattr ( k ,'__name__' , k ) for k in _klasses_ ] )
         for sym in _klasses_ :
@@ -105,6 +106,7 @@ def docme( module , symbols = {} , logger = None ) :
         logger.info ( 80*'*' )
 
     _methods_  = getattr ( module , '_new_methods_' , () )
+    _methods_  = set ( _methods_ ) 
     if _methods_ :
         for sym in _methods_ :
             if hasattr ( sym , '__doc__' ) and sym.__doc__ :

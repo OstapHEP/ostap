@@ -1795,6 +1795,96 @@ def lw_graph ( histo , func ) :
     """
     return _lw_graph_ ( histo , func ) 
 
+
+# =============================================================================
+_decorated_classes_ = (
+    ROOT.TH1F              ,
+    ROOT.TH1D              ,
+    ROOT.TGraph            , 
+    ROOT.TGraphErrors      ,
+    ROOT.TGraphAsymmErrors 
+    )
+
+_new_methods_      = (
+    #
+    ROOT.TGraph       . __len__       ,
+    ROOT.TGraph       . __contains__  ,
+    ROOT.TGraph       . __iter__      ,
+    ROOT.TGraph       . __call__      , 
+    #
+    ROOT.TGraph       . xmin          ,
+    ROOT.TGraph       . ymin          ,
+    ROOT.TGraph       . xmax          ,
+    ROOT.TGraph       . ymax          ,
+    #
+    ROOT.TGraph       . xminmax       ,
+    ROOT.TGraph       . yminmax       ,
+    ROOT.TGraph       .  minmax       ,
+    #
+    ROOT.TGraph       . __getitem__   ,
+    ROOT.TGraph       . __setitem__   ,
+    ROOT.TGraph       . iteritems     ,
+    #
+    ROOT.TGraphErrors . __getitem__   ,
+    ROOT.TGraphErrors . __setitem__   ,
+    ROOT.TGraphErrors . iteritems     ,
+    #
+    ROOT.TGraphErrors . xmin          ,
+    ROOT.TGraphErrors . ymin          ,
+    ROOT.TGraphErrors . xmax          ,
+    ROOT.TGraphErrors . ymax          , 
+    #
+    ROOT.TGraphAsymmErrors.__len__       ,
+    ROOT.TGraphAsymmErrors.__contains__  ,
+    ROOT.TGraphAsymmErrors.__iter__      ,
+    ROOT.TGraphAsymmErrors. iteritems    ,
+    ROOT.TGraphAsymmErrors.__getitem__   ,
+    ROOT.TGraphAsymmErrors.__setitem__   ,
+    # 
+    ROOT.TGraphAsymmErrors . xmin        ,
+    ROOT.TGraphAsymmErrors . ymin        ,
+    ROOT.TGraphAsymmErrors . xmax        ,
+    ROOT.TGraphAsymmErrors . ymax        ,
+    #
+    ROOT.TGraph       . integral          ,
+    ROOT.TGraph       . asTF1             ,
+    # 
+    ROOT.TGraph            .__getslice__  ,
+    ROOT.TGraphErrors      .__getslice__  ,
+    ROOT.TGraphAsymmErrors .__getslice__  ,
+    #
+    ROOT.TGraph            .sorted        ,
+    ROOT.TGraphErrors      .sorted        ,
+    ROOT.TGraphAsymmErrors .sorted        ,
+    #
+    ROOT.TGraph            .filter        ,
+    ROOT.TGraphErrors      .filter        ,
+    ROOT.TGraphAsymmErrors .filter        ,
+    #
+    _color_   ,
+    _red_     ,
+    _blue_    ,
+    _magenta_ ,
+    _cyan_    ,
+    _green_   ,
+    _yellow_  ,
+    #
+    ROOT.TGraph  . xmin    ,
+    ROOT.TGraph  . xmax    ,
+    ROOT.TGraph  . xminmax ,
+    #
+    ROOT.TMultiGraph.color    ,
+    ROOT.TMultiGraph.red      ,
+    ROOT.TMultiGraph.blue     ,
+    ROOT.TMultiGraph.magenta  ,
+    ROOT.TMultiGraph.cyan     ,
+    ROOT.TMultiGraph.green    ,
+    ROOT.TMultiGraph.yellow   ,
+    #
+    ROOT.TH1D.lw_graph        , 
+    ROOT.TH1F.lw_graph        ,
+    )
+
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -346,6 +346,22 @@ ROOT.TH1D.cmp_prnt = _h1_cmp_prnt_
 ROOT.TH1F.cmp_prnt = _h1_cmp_prnt_ 
 
 # =============================================================================
+_decorated_classes_ = (
+    ROOT.TH1  , 
+    ROOT.TH1F , 
+    ROOT.TH1D ,
+    )
+_new_methods_       = (
+    _h1_constant_     ,
+    _h1_cmp_fit_      ,
+    _h1_cmp_chi2_     ,
+    _h1_chi2_cmp_     ,
+    _h1_cmp_costheta_ ,
+    _h1_cmp_dist_     ,
+    _h1_cmp_dist2_    ,
+    _h1_cmp_prnt_     ,
+    )
+# =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme

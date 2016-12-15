@@ -136,9 +136,9 @@ def _rd_setitem_ ( rdir , name , tobj ) :
 def _rd_rrshift_ ( rdir , tnamed ) :
     """Add named object into directory
     
-    rdir   = ...    ## some writable ROOT directory
-    tnamed = ...    ## some named object
-    tnamed >> rdir  ## write it
+    >>> rdir   = ...    ## some writable ROOT directory
+    >>> tnamed = ...    ## some named object
+    >>> tnamed >> rdir  ## write it
     """
     
     if   hasattr ( tnamed , 'GetName' ) : name = tnamed.GetName ()
@@ -160,9 +160,9 @@ def _rd_rrshift_ ( rdir , tnamed ) :
 def _tnamed_rshift_ ( tnamed , rdir ) :
     """Add named object into directory
     
-    rdir   = ...    ## some writable ROOT directory
-    tnamed = ...    ## some named object
-    tnamed >> rdir  ## write it
+    >>>  rdir   = ...    ## some writable ROOT directory
+    >>> tnamed = ...    ## some named object
+    >>> tnamed >> rdir  ## write it
     """
     return _rd_setitem_ ( rdir , tnamed.GetName() , tnamed )
 
@@ -209,8 +209,7 @@ def _rd_getitem_ ( rdir , name ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_getattr_ ( rdir , name ) :
-    """
-    Get the object from ROOT-file
+    """Get the object from ROOT-file
     >>> t = f.A.tup
     >>> h = f.myhisto
     """
@@ -469,8 +468,7 @@ def _rd_rm_ ( rdir , name , cycle=';*') :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_get_ ( rdir , name , default = None ) :
-    """
-    Get the object from ROOT-file
+    """Get the object from ROOT-file
     >>> h1 = rfile.get( 'MyHisto' , default_value ) 
     >>> h2 = rfile.get( 'MyDir/MyHisto')
     """
@@ -628,9 +626,10 @@ def _rf_new_open_ ( fname , mode = '' , *args ) :
 #  print ROOT.gROOT.CurrentDirectory()
 #  @endcode
 def _rf_new_close_ ( rfile , options = '' ) :
-    """Open/create ROOT-file without making it a current working directory
+    """Close ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile.Open('test_file.root','recreate')
+    >>> print ROOT.gROOT.CurrentDirectory()    
     >>> f.Close()
     >>> print ROOT.gROOT.CurrentDirectory()
     """
@@ -678,7 +677,39 @@ else :
 if not hasattr ( ROOT.TFile , 'close' ) :
     ROOT.TFile.close = ROOT.TFile._new_close_
 
-    
+
+
+# =============================================================================
+_decorated_classes_ = (
+    ROOT.TFile       ,
+    ROOT.TDirectory     
+    )
+
+_new_methods_   = (
+    #
+    ROOT.TFile.__init__          ,
+    ROOT.TFile.Open              ,
+    ROOT.TFile.__enter__         ,
+    ROOT.TFile.__exit__          ,
+    #
+    ROOT.TDirectory.__getitem__  , 
+    ROOT.TDirectory.__setitem__  , 
+    ROOT.TDirectory.__contains__ , 
+    ROOT.TDirectory.__getattr__  , 
+    ROOT.TDirectory.__delitem__  , 
+    ROOT.TDirectory.__iter__     , 
+    #
+    ROOT.TDirectory.get          , 
+    ROOT.TDirectory.keys         ,
+    ROOT.TDirectory.has_key      ,
+    ROOT.TDirectory.iteritems    ,
+    ROOT.TDirectory.iterkeys     ,
+    ROOT.TDirectory.itervalues   ,
+    #
+    ROOT.TDirectory.__rrshift__  , 
+    ROOT.TNamed    .__rshift__   , 
+    )
+
 # =============================================================================
 if '__main__' == __name__ :
     

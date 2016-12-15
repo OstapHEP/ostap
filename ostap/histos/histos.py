@@ -6168,11 +6168,535 @@ for t in  ( ROOT.TH1D             ,
             ROOT.TProfile         ) :
     for method in ( 'dump'       ,
                     'dumpHisto'  ,
+                    'dumpASCII'  ,
                     'dumpAsText' ) :
         if not hasattr ( t , method ) :
             setattr ( t , method , dumpHisto )
 
-# 
+ 
+# =============================================================================
+_decorated_classes_ = (
+    ROOT.TH1F  ,
+    ROOT.TH1D  ,
+    ROOT.TH2F  ,
+    ROOT.TH2D  ,
+    ROOT.TH3F  ,
+    ROOT.TH3D  ,
+    #
+    ROOT.TProfile ,
+    #
+    ROOT.TAxis , 
+    ROOT.TF1   , 
+    )
+
+_new_methods_   = (
+    #
+    ROOT.TH1F.__init__ , 
+    ROOT.TH1F.Clone    ,
+    ROOT.TH2F.__init__ , 
+    ROOT.TH2F.Clone    ,
+    ROOT.TH3F.__init__ , 
+    ROOT.TH3F.Clone    ,
+    #
+    ROOT.TAxis . __iter__     ,
+    ROOT.TAxis . __reversed__ ,
+    ROOT.TAxis . __contains__ ,
+    #
+    ROOT.TH1F. __setitem__    ,
+    ROOT.TH1D. __setitem__    ,
+    #
+    ROOT.TH2F. __setitem__    ,
+    ROOT.TH2D. __setitem__    ,
+    #
+    ROOT.TH3F. __setitem__    ,
+    ROOT.TH3D. __setitem__    ,
+    #
+    ROOT.TH1F  . __getitem__  ,
+    ROOT.TH1D  . __getitem__  ,
+    ROOT.TH2F  . __getitem__  ,
+    ROOT.TH2D  . __getitem__  ,
+    ROOT.TH3F  . __getitem__  ,
+    ROOT.TH3D  . __getitem__  ,
+    #
+    ROOT.TH1  . __iter__      ,
+    ROOT.TH1F . __iter__      ,
+    ROOT.TH1D . __iter__      ,
+    ROOT.TH1F . __reversed__  ,
+    ROOT.TH1D . __reversed__  ,
+    #
+    ROOT.TH2  . __iter__      , 
+    ROOT.TH2F . __iter__      ,
+    ROOT.TH2D . __iter__      ,
+    ROOT.TH2F . __reversed__  ,
+    ROOT.TH2D . __reversed__  ,
+    #
+    ROOT.TH3  . __iter__      ,
+    ROOT.TH3F . __iter__      ,
+    ROOT.TH3D . __iter__      ,
+    ROOT.TH3F . __reversed__  ,
+    ROOT.TH3D . __reversed__  ,
+    #
+    ROOT.TH1F  . __call__     ,
+    ROOT.TH1D  . __call__     ,
+    #
+    ROOT.TH1   . __len__      ,
+    ROOT.TH1   .   size       ,
+    ROOT.TH1   . __contains__ ,
+    #
+    ROOT.TH1F  . __contains__ ,
+    ROOT.TH1D  . __contains__ ,
+    #
+    ROOT.TH2   . __len__      ,
+    ROOT.TH2   .   size       ,
+    #
+    ROOT.TH3   . __len__      ,
+    ROOT.TH3   .   size       ,
+    #
+    ROOT.TH1D  . nbins        ,
+    ROOT.TH1F  . nbins        ,
+    ROOT.TH1D  .  bins        ,
+    ROOT.TH1F  .  bins        ,
+    #
+    ROOT.TH2D  . nbinsx       ,
+    ROOT.TH2D  . nbinsy       ,
+    ROOT.TH2F  . nbinsx       ,
+    ROOT.TH2F  . nbinsy       ,
+    ROOT.TH2D  .  binsx       ,
+    ROOT.TH2D  .  binsy       ,
+    ROOT.TH2F  .  binsx       ,
+    ROOT.TH2F  .  binsy       ,
+    #
+    ROOT.TH3D  . nbinsx       ,
+    ROOT.TH3D  . nbinsy       ,
+    ROOT.TH3D  . nbinsz       ,
+    ROOT.TH3F  . nbinsx       ,
+    ROOT.TH3F  . nbinsy       ,
+    ROOT.TH3F  . nbinsz       ,
+    ROOT.TH3D  .  binsx       ,
+    ROOT.TH3D  .  binsy       ,
+    ROOT.TH3D  .  binsz       ,
+    ROOT.TH3F  .  binsx       ,
+    ROOT.TH3F  .  binsy       ,
+    ROOT.TH3F  .  binsz       ,
+    #
+    ROOT.TH3   . __contains__ ,
+    ROOT.TH3F  . __contains__ ,
+    ROOT.TH3D  . __contains__ ,
+    #
+    ROOT.TH1 . numEmpty       ,
+    #
+    ROOT.TH1F . findBin       ,
+    ROOT.TH1D . findBin       ,
+    ROOT.TH2F . findBin       ,
+    ROOT.TH2D . findBin       ,
+    ROOT.TH3F . findBin       ,
+    ROOT.TH3D . findBin       ,
+    #
+    ROOT.TH2F . mean          , 
+    ROOT.TH2D . mean          ,
+    #
+    ROOT.TH2   . __call__     ,
+    ROOT.TH2F  . __getitem__  ,
+    ROOT.TH2D  . __getitem__  ,
+    #
+    ROOT.TH3   . __call__     ,
+    ROOT.TH3F  . __getitem__  ,
+    ROOT.TH3D  . __getitem__  ,
+    #
+    ROOT.TH1F  . iteritems    ,
+    ROOT.TH1D  . iteritems    ,
+    #
+    ROOT.TH2F  . iteritems    ,
+    ROOT.TH2D  . iteritems    ,
+    #
+    ROOT.TH3F  . iteritems    ,
+    ROOT.TH3D  . iteritems    ,
+    #
+    ROOT.TAxis . iteritems    ,
+    #
+    ROOT.TH1F.bin , 
+    ROOT.TH1D.bin ,
+    ROOT.TH2F.bin ,
+    ROOT.TH2D.bin ,
+    ROOT.TH3F.bin ,
+    ROOT.TH3D.bin ,
+    #
+    ROOT.TH2F.T         ,
+    ROOT.TH2D.T         ,
+    ROOT.TH2F.Transpose ,
+    ROOT.TH2D.Transpone ,
+    ROOT.TH2F.transpose ,
+    ROOT.TH2D.transpone ,
+    #
+    ROOT.TH2F . colz    ,
+    ROOT.TH2D . colz    ,
+    ROOT.TH2F . Colz    ,
+    ROOT.TH2D . Colz    ,
+    #
+    ROOT.TH2F . texte   ,
+    ROOT.TH2D . texte   ,
+    #
+    ROOT.TH1F.       binomEff  ,
+    ROOT.TH1D.       binomEff  ,
+    ROOT.TH1F.       wilsonEff ,
+    ROOT.TH1D.       wilsonEff ,
+    ROOT.TH1F. agrestiCoullEff ,
+    ROOT.TH1D. agrestiCoullEff ,
+    #
+    ROOT.TH1F.eff_wald                   ,
+    ROOT.TH1D.eff_wald                   , 
+    ROOT.TH1F.eff_wilson_score           , 
+    ROOT.TH1D.eff_wilson_score           , 
+    ROOT.TH1F.eff_wilson_score_continuity ,
+    ROOT.TH1D.eff_wilson_score_continuity ,
+    ROOT.TH1F.eff_arcsin                  ,
+    ROOT.TH1D.eff_arcsin                  ,
+    ROOT.TH1F.eff_agresti_coull           ,
+    ROOT.TH1D.eff_agresti_coull           ,
+    ROOT.TH1F.eff_jeffreys                ,
+    ROOT.TH1D.eff_jeffreys                ,
+    ROOT.TH1F.eff_clopper_pearson         ,
+    ROOT.TH1D.eff_clopper_pearson         ,
+    #
+    ROOT.TH2F.  binomEff    ,
+    ROOT.TH2D.  binomEff    ,
+    #
+    ROOT.TH3F.  binomEff    ,
+    ROOT.TH3D.  binomEff    ,
+    #
+    ROOT.TH1F . __floordiv__  ,
+    ROOT.TH1D . __floordiv__  ,
+    ROOT.TH2F . __floordiv__  ,
+    ROOT.TH2D . __floordiv__  ,
+    ROOT.TH3F . __floordiv__  ,
+    ROOT.TH3D . __floordiv__  ,
+    ##
+    ROOT.TH1F .  zechEff ,
+    ROOT.TH1D .  zechEff ,
+    ROOT.TH2F .  zechEff ,
+    ROOT.TH2D .  zechEff ,
+    ROOT.TH3F .  zechEff ,
+    ROOT.TH3D .  zechEff ,
+    ##
+    ROOT.TH1F . __mod__  ,
+    ROOT.TH1D . __mod__  ,
+    ROOT.TH2F . __mod__  ,
+    ROOT.TH2D . __mod__  ,
+    ROOT.TH3F . __mod__  ,
+    ROOT.TH3D . __mod__  ,
+    ##
+    _h1_oper_    ,
+    _h1_ioper_   ,
+    _h1_div_     ,
+    _h1_mul_     ,
+    _h1_add_     ,
+    _h1_sub_     ,
+    _h1_pow_     ,
+    _h1_idiv_    ,
+    _h1_imul_    ,
+    _h1_iadd_    ,
+    _h1_isub_    ,    
+    _h1_rdiv_    ,   
+    _h1_rmul_    ,
+    _h1_radd_    ,
+    _h1_rsub_    ,
+    _h1_rrshift_ , 
+    _h1_abs_     , 
+    _h1_frac_    , 
+    _h1_asym_    , 
+    _h1_diff_    , 
+    _h1_chi2_    , 
+    _h1_mean_    ,
+    #
+    ROOT.TH1F . find_X ,
+    ROOT.TH1D . find_X , 
+    #
+    ROOT.TH1F . cl_interval , 
+    ROOT.TH1D . cl_interval , 
+    #
+    ROOT.TH1 . minv    ,
+    ROOT.TH1 . maxv    ,
+    ROOT.TH1 . minmax  ,
+    #
+    ROOT.TH1D. xmin    ,
+    ROOT.TH1D. xmax    ,
+    ROOT.TH1D. ymin    ,
+    ROOT.TH1D. ymax    ,
+    #
+    ROOT.TH2 . xmin    ,
+    ROOT.TH2 . xmax    ,
+    ROOT.TH2 . ymin    ,
+    ROOT.TH2 . ymax    ,
+    ROOT.TH2 . zmin    ,
+    ROOT.TH2 . zmax    ,
+    #
+    ROOT.TH3 . xmin    ,
+    ROOT.TH3 . xmax    ,
+    ROOT.TH3 . ymin    ,
+    ROOT.TH3 . ymax    ,
+    ROOT.TH3 . zmin    ,
+    ROOT.TH3 . zmax    ,
+    #
+    ROOT.TH1D. xminmax ,
+    ROOT.TH1D. yminmax ,
+    ROOT.TH1F. xminmax ,
+    ROOT.TH1F. yminmax ,
+    #
+    ROOT.TH2 . xminmax ,
+    ROOT.TH2 . yminmax ,
+    ROOT.TH2 . zminmax ,
+    #
+    ROOT.TH3 . xminmax ,
+    ROOT.TH3 . yminmax ,
+    ROOT.TH3 . zminmax ,
+    #
+    ROOT.TH2F.random   ,
+    ROOT.TH2D.random   ,
+    #
+    ROOT.TH3F.random   ,
+    ROOT.TH3D.random   ,
+    #
+    ROOT.TH1F.random   ,
+    ROOT.TH1D.random   ,
+    #
+    _h2_oper_    ,
+    _h2_ioper_   ,
+    _h2_div_     ,
+    _h2_mul_     ,
+    _h2_add_     ,
+    _h2_sub_     ,
+    _h2_pow_     ,
+    _h2_idiv_    ,
+    _h2_imul_    ,
+    _h2_iadd_    ,
+    _h2_isub_    ,    
+    _h2_rdiv_    ,   
+    _h2_rmul_    ,
+    _h2_radd_    ,
+    _h2_rsub_    ,
+    _h2_abs_     , 
+    _h2_frac_    , 
+    _h2_asym_    , 
+    _h2_diff_    , 
+    _h2_chi2_    , 
+    _h2_mean_    ,
+    #    
+    _h2_box_     ,
+    _h2_lego_    , 
+    _h2_surf_    , 
+    _h2_surf2_   ,
+    #
+    _h3_oper_    ,
+    _h3_ioper_   ,
+    _h3_div_     ,
+    _h3_mul_     ,
+    _h3_add_     ,
+    _h3_sub_     ,
+    _h3_pow_     ,
+    _h3_idiv_    ,
+    _h3_imul_    ,
+    _h3_iadd_    ,
+    _h3_isub_    ,    
+    _h3_rdiv_    ,   
+    _h3_rmul_    ,
+    _h3_radd_    ,
+    _h3_rsub_    ,
+    _h3_abs_     , 
+    _h3_frac_    , 
+    _h3_asym_    , 
+    _h3_chi2_    , 
+    _h3_mean_    ,
+    #    
+    ROOT.TH1F.addFunctionIntegral ,
+    ROOT.TH1D.addFunctionIntegral ,
+    #
+    _h1_sumv_            , 
+    ROOT.TH1F.effic      , 
+    ROOT.TH1D.effic      ,
+    ROOT.TH1F.efficiency ,
+    ROOT.TH1D.efficiency ,
+    #
+    ROOT.TH1F. smear     ,
+    ROOT.TH1D. smear     , 
+    #
+    ROOT.TH1F. transform ,
+    ROOT.TH1D. transform , 
+    #
+    ROOT.TH2F. transform ,
+    ROOT.TH2D. transform , 
+    #
+    ROOT.TH1F. precision ,
+    ROOT.TH1D. precision ,
+    ROOT.TH2F. precision ,
+    ROOT.TH2D. precision ,
+    ROOT.TH1F. b2s       ,
+    ROOT.TH1D. b2s       ,
+    ROOT.TH2F. b2s       ,
+    ROOT.TH2D. b2s       ,
+    #
+    ROOT.TH1F. rescale_bins ,
+    ROOT.TH1D. rescale_bins ,
+    #
+    ROOT.TH2F. rescale_bins ,
+    ROOT.TH2D. rescale_bins ,
+    #
+    ROOT.TH1 . sample ,
+    #
+    ROOT.TH1D . fom_1 ,
+    ROOT.TH1D . fom_2 ,
+    ROOT.TH1F . fom_1 ,
+    ROOT.TH1F . fom_2 ,
+    #
+    ROOT.TH1D . FoM_1 ,
+    ROOT.TH1D . FoM_2 ,
+    ROOT.TH1F . FoM_1 ,
+    ROOT.TH1F . FoM_2 ,
+    #
+    ROOT.TH1F.rebinNumbers  , 
+    ROOT.TH1D.rebinNumbers  , 
+    ROOT.TH1F.rebinFunction , 
+    ROOT.TH1D.rebinFunction ,
+    ROOT.TH2F.rebinNumbers  , 
+    ROOT.TH2D.rebinNumbers  , 
+    ROOT.TH2F.rebinFunction , 
+    ROOT.TH2D.rebinFunction ,
+    #
+    ROOT.TH1D.null   ,
+    ROOT.TH1F.null   ,
+    ROOT.TH1D.level  ,
+    ROOT.TH1F.level  ,
+    #
+    ROOT.TAxis.edges ,
+    #
+    ROOT.TH1F  . __getslice__  ,
+    ROOT.TH1D  . __getslice__  ,
+    #
+    ROOT.TH1F.histoDiff ,
+    ROOT.TH1D.histoDiff ,
+    ROOT.TH2F.histoDiff ,
+    ROOT.TH2D.histoDiff ,
+    ROOT.TH3F.histoDiff ,
+    ROOT.TH3D.histoDiff ,
+    #
+    ROOT.TH1F .   shift     ,
+    ROOT.TH1D .   shift     ,
+    ROOT.TH1D . __rshift__  ,
+    ROOT.TH1F . __rshift__  ,
+    ROOT.TH1D . __lshift__  ,
+    ROOT.TH1F . __lshift__  ,
+    ROOT.TH1D . __ilshift__ ,
+    ROOT.TH1F . __ilshift__ ,
+    ROOT.TH1D . __irshift__ ,
+    ROOT.TH1F . __irshift__ ,
+    #
+    ROOT.TH1D.  accumulate  , 
+    ROOT.TH1D.  sum         , 
+    ROOT.TH1D.  integrate   , 
+    #
+    ROOT.TH2D.  accumulate  , 
+    ROOT.TH2D.  sum         , 
+    ROOT.TH2D.  integrate   , 
+    #
+    ROOT.TH3D.  accumulate  , 
+    ROOT.TH3D.  sum         , 
+    ROOT.TH3D.  integrate   , 
+    #
+    ROOT.TH1D.mean          ,
+    ROOT.TH1D.rms           ,
+    ROOT.TH1D.skewness      ,
+    ROOT.TH1D.kurtosis      ,
+    ROOT.TH1D.moment        ,
+    ROOT.TH1D.centralMoment ,
+    ROOT.TH1D.nEff          ,
+    # 
+    ROOT.TH1.stat           ,
+    ROOT.TH1.wstat          ,
+    #
+    ROOT.TH1F.xstat         ,
+    ROOT.TH2F.xstat         ,
+    ROOT.TH2F.ystat         ,
+    ROOT.TH3F.xstat         ,
+    ROOT.TH3F.ystat         ,
+    ROOT.TH3F.zstat         ,
+    #
+    ROOT.TH1F.add_fake_bin       ,
+    ROOT.TH1F.add_fake_bin_left  ,
+    ROOT.TH1F.add_fake_bin_right ,
+    #
+    ROOT.TH2F.add_fake_side      ,
+    ROOT.TH3F.add_fake_side      ,
+    #
+    ROOT.TH1F.solve              , 
+    ROOT.TH1F.equal_edges        ,
+    #
+    ROOT.TH2F.slice              , 
+    ROOT.TH2F.sliceX             , 
+    ROOT.TH2F.sliceY             ,
+    #
+    ROOT.TH2F.islice_X           , 
+    ROOT.TH2F.islice_Y           ,
+    #
+    ROOT.TH3F.slice              , 
+    ROOT.TH3F.sliceX             , 
+    ROOT.TH3F.sliceY             ,
+    ROOT.TH3F.sliceZ             ,
+    #
+    ROOT.TH3F.islice_X           , 
+    ROOT.TH3F.islice_Y           ,
+    ROOT.TH3F.islice_Z           ,
+    #
+    ROOT.TH2F . proj   ,
+    ROOT.TH2F . projX  ,
+    ROOT.TH2F . projY  ,
+    #
+    ROOT.TH2D . proj   ,
+    ROOT.TH2D . projX  ,
+    ROOT.TH2D . projY  ,
+    #
+    ROOT. TH3 . projX  ,
+    ROOT. TH3 . projY  ,
+    ROOT. TH3 . projZ  ,
+    ROOT. TH3 . projXY ,
+    ROOT. TH3 . projYX ,
+    ROOT. TH3 . projXZ ,
+    ROOT. TH3 . projZX ,
+    ROOT. TH3 . projYZ ,
+    ROOT. TH3 . projZY ,
+    #
+    ROOT.TProfile . asH1     ,
+    ROOT.TProfile . toH1     ,
+    ROOT.TProfile . asHisto  ,
+    #
+    ROOT.TF1 .  minv    ,
+    ROOT.TF1 .  maxv    ,
+    ROOT.TF1 .  minmax  ,
+    ROOT.TF1 . xminmax  ,
+    ROOT.TF1 . mean     ,
+    ROOT.TF1 . variance ,
+    ROOT.TF1 . rms      ,
+    ROOT.TF1 . median   ,
+    ROOT.TF1 . mode     ,
+    ROOT.TF1 . moment   ,
+    ROOT.TF1 . quantile ,
+    #
+    ROOT.TAxis. __getslice__ ,
+    #
+    ROOT.TH1F . histoGuess   ,
+    ROOT.TH1D . histoGuess   ,
+    ROOT.TH1  . useLL        ,
+    ROOT.TH1  . allInts      ,
+    ROOT.TH1  . natural      ,
+    #
+    ROOT.TH1.uniform_bins    ,
+    ROOT.TH1.uniform         ,
+    #
+    ROOT.TH1F.dump           ,
+    ROOT.TH1F.dumpHisto      ,
+    ROOT.TH1F.dumpASCII      ,
+    ROOT.TH1F.dumpAsText     ,
+    #
+    )
+
 # =============================================================================
 if '__main__' == __name__ :
     
