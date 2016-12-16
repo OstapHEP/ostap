@@ -33,16 +33,15 @@ logger.debug ( 'Tiny decoration for ROOT.TF objects')
 from ostap.core.core   import cpp, Ostap, VE, funID
 # =============================================================================
 
-
 # =============================================================================
-## Generate random tuple accordnig to TF2
+## Generate random tuple according to TF2
 #  @code
 #  f2 = ...          ## ROOT TF2
 #  x,y = f2.random() ## get random number 
 #  @endcode
 def _f2_random_ ( f2 ) :
     """Generate random tuple according to TF2
-    >>> f2  = ...          ## ROOT TF2
+    >>> f2  = ...         ## ROOT TF2
     >>> x,y = f2.random() ## get random number 
     """
     _x = ROOT.Double(0.0)
@@ -50,7 +49,11 @@ def _f2_random_ ( f2 ) :
     f2.GetRandom2( _x , _y )
     return float(_x) , float(_y)
 
-ROOT.TF2.random = _f2_random_
+ROOT.TF2.random = _f2_random_ 
+
+_new_methods_ = [
+    ROOT.TF2.random ,
+    ]
 
 # =============================================================================
 ## fit histo
@@ -75,6 +78,12 @@ ROOT.TF1 . fitHisto = _f_fit_
 ROOT.TF1 . fit      = _f_fit_ 
 ROOT.TH1 . fit      = ROOT.TH1.Fit
 
+_new_methods_ += [
+    ROOT.TF1 . Fit      ,
+    ROOT.TF1 . fitHisto ,
+    ROOT.TF1 . fit      ,
+    ROOT.TH1 . fit      ,
+    ]
 # =============================================================================
 ## check existence parameter for the function
 #  @code 
@@ -250,6 +259,26 @@ ROOT.TF2.integral     = ROOT.TF2.Integral
 ROOT.TF2.xminmax = lambda s : ( s.GetXmin() , s.GetXmax() )
 ROOT.TF2.yminmax = lambda s : ( s.GetYmin() , s.GetYmax() )
 
+
+_new_methods_ += [
+    ROOT.TF1.__contains__ ,
+    ROOT.TF1.__len__      ,
+    #
+    ROOT.TF1.par          ,
+    ROOT.TF1.param        ,
+    ROOT.TF1.parameter    ,
+    #
+    ROOT.TF1.setPar       ,
+    ROOT.TF1.__setitem__  ,
+    #
+    ROOT.TF1.fix          ,
+    ROOT.TF1.rel          ,
+    ROOT.TF1.release      ,
+    #
+    ROOT.TF1.__iter__     ,
+    ROOT.TF1.__getitem__  ,
+    ROOT.TF1.__getattr__  ,
+    ]
 # =============================================================================
 ## Integrate TF2 over range in Y
 #  \f$ f = \int_{y_{low}}^{y_{high}} f(x,y) dy \f$
@@ -261,8 +290,8 @@ ROOT.TF2.yminmax = lambda s : ( s.GetYmin() , s.GetYmax() )
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2016-05-03
 def _tf2_integrate_Y_ ( tf2 , x , ylow = None , yhigh = None ) :
-    """Integrate TF2 over range in Y
-    $ f = \int_{y_{low}}^{y_{high}} f(x,y) dy \f$
+    r"""Integrate TF2 over range in Y
+    f = \int_{y_{low}}^{y_{high}} f(x,y) dy
     
     >>> func = ROOT.TF2( ... )
     >>> a = func.integrate_Y ( x , ylow , yhigh )
@@ -279,7 +308,7 @@ def _tf2_integrate_Y_ ( tf2 , x , ylow = None , yhigh = None ) :
     ymax = min ( ymax , yhigh )
     ##
     func_y = lambda y : tf2 ( x , y )
-    from ostap.math.integral import intergal 
+    from ostap.math.integral import integral 
     return integral ( func_y , ymin , ymax )
 
 # =============================================================================
@@ -293,8 +322,8 @@ def _tf2_integrate_Y_ ( tf2 , x , ylow = None , yhigh = None ) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2016-05-03
 def _tf2_integrate_X_ ( tf2 , y , xlow = None , xhigh = None ) :
-    """Integrate TF2 over range in X
-    $ f = \int_{x_{low}}^{x_{high}} f(x,y) dx \f$
+    r"""Integrate TF2 over range in X
+    f = \int_{x_{low}}^{x_{high}} f(x,y) dx 
     
     >>> func = ROOT.TF2( ... )
     >>> a = func.integrate_X ( y , xlow , xhigh )
@@ -311,12 +340,25 @@ def _tf2_integrate_X_ ( tf2 , y , xlow = None , xhigh = None ) :
     xmax = min ( xmax , xhigh )
     ##
     func_x = lambda x : tf2 ( x , y )
-    from ostap.math.integral import intergal 
+    from ostap.math.integral import integral 
     return integral ( func_x , xmin , xmax )
 
     
 ROOT.TF2.integrate_X = _tf2_integrate_X_
 ROOT.TF2.integrate_Y = _tf2_integrate_Y_
+
+_new_methods_ += [
+    ROOT.TF2.integrate_X ,
+    ROOT.TF2.integrate_Y ,
+    ]
+
+# =============================================================================
+_decorated_classes_ = (
+    ROOT.TF1 ,
+    ROOT.TF2 ,
+    ROOT.TH1 ,
+    )
+_new_methods_ = tuple ( _new_methods_ )
 
 # =============================================================================
 if '__main__' == __name__ :

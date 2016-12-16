@@ -150,6 +150,8 @@ ROOT.RooArgSet . __repr__  = lambda s : str ( tuple ( _rs_list_ ( s ) ) )
 #  @date   2011-06-07
 def _rad_iter_ ( self ) :
     """Iterator for RooAbsData
+    >>> dataset = ...
+    >>> for i in dataset : ... 
     """
     _l = len ( self )
     for i in xrange ( 0 , _l ) :
@@ -160,7 +162,9 @@ def _rad_iter_ ( self ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
 def _rad_getitem_ ( self , i ) :
-    """Get the entry from RooDataSet 
+    """Get the entry from RooDataSet
+    >>> dataset = ...
+    >>> event = dataset[4]
     """
     if 0<= i < len ( self ) :
         return self.get ( i )
@@ -209,6 +213,23 @@ ROOT.RooAbsData . statVar       = _stat_var_
 ROOT.RooAbsData . sumVar        = _sum_var_ 
 ROOT.RooAbsData . sumVar_       = _sum_var_old_ 
 
+_new_methods_ = [
+   ROOT.RooAbsData . varlist       ,
+   ROOT.RooAbsData . varlst        ,
+   ROOT.RooAbsData . vlist         ,
+   ROOT.RooAbsData . vlst          ,
+   ROOT.RooAbsData . varset        ,
+   #
+   ROOT.RooAbsData . __len__       ,
+   ROOT.RooAbsData . __nonzero__   ,
+   ROOT.RooAbsData . __contains__  ,
+   ROOT.RooAbsData . __iter__      ,
+   ROOT.RooAbsData . __getitem__   ,
+   #
+   ROOT.RooAbsData . statVar       ,
+   ROOT.RooAbsData . sumVar        ,
+   ROOT.RooAbsData . sumVar_       ,
+   ]
 
 # =============================================================================
 ## ``easy'' print of RooFitResult
@@ -495,6 +516,34 @@ ROOT.RooFitResult . ratio       = _rfr_divide_
 ROOT.RooFitResult . fraction    = _rfr_fraction_
 ROOT.RooFitResult . results     = _rfr_results_
 
+_new_methods_ += [
+    ROOT.RooFitResult . __repr__    ,
+    ROOT.RooFitResult . __str__     ,
+    ROOT.RooFitResult . __call__    ,
+    ROOT.RooFitResult . __getattr__ ,
+    ROOT.RooFitResult . __iter__    ,
+    ROOT.RooFitResult . iteritems   ,
+    ROOT.RooFitResult . parameters  ,
+    ROOT.RooFitResult . params      ,
+    ROOT.RooFitResult . param       ,
+    ROOT.RooFitResult . parameter   ,
+    ROOT.RooFitResult . corr        ,
+    ROOT.RooFitResult . cor         ,
+    ROOT.RooFitResult . cov         ,
+    ROOT.RooFitResult . covariance  ,
+    ROOT.RooFitResult . parValue    ,
+    ROOT.RooFitResult . sum         ,
+    ROOT.RooFitResult . plus        ,
+    ROOT.RooFitResult . multiply    ,
+    ROOT.RooFitResult . product     ,
+    ROOT.RooFitResult . subtract    ,
+    ROOT.RooFitResult . minus       ,
+    ROOT.RooFitResult . divide      ,
+    ROOT.RooFitResult . ratio       ,
+    ROOT.RooFitResult . fraction    ,
+    ROOT.RooFitResult . results     ,
+    ]
+
 # =============================================================================
 ## fix parameter at some value
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -569,6 +618,29 @@ ROOT.RooFormulaVar  .as_VE    = lambda s : VE( s.getVal() , 0 )
 ROOT.RooConstVar    .asVE     = lambda s : VE( s.getVal() , 0 )
 ROOT.RooFormulaVar  .asVE     = lambda s : VE( s.getVal() , 0 )
 
+_new_methods_ += [
+    ROOT.RooRealVar   . as_VE     ,
+    ROOT.RooRealVar   . asVE      ,
+    ROOT.RooRealVar   . ve        ,
+    ROOT.RooRealVar   . fix       ,
+    ROOT.RooRealVar   . Fix       ,
+    ROOT.RooRealVar   . release   ,
+    ROOT.RooRealVar   . Release   ,
+    ## convert to float 
+    ROOT.RooRealVar   . __float__ ,
+    ## print it in more suitable form 
+    ROOT.RooRealVar   . __repr__  ,
+    #
+    ROOT.RooRealVar   . xmin      ,
+    ROOT.RooRealVar   . xmax      ,
+    ROOT.RooRealVar   . minmax    ,
+    #
+    ROOT.RooConstVar    .as_VE    ,
+    ROOT.RooFormulaVar  .as_VE    ,
+    ROOT.RooConstVar    .asVE     ,
+    ROOT.RooFormulaVar  .asVE     ,
+    #
+    ]
 # =============================================================================
 ## Prepare ``soft'' gaussian constraint for the given variable
 #  @code 
@@ -603,6 +675,9 @@ def _rar_make_constraint_ ( v , value ) :
 
 ROOT.RooAbsReal. constraint = _rar_make_constraint_
 
+_new_methods_ += [
+    ROOT.RooAbsReal. constraint 
+    ]
 # ============================================================================
 ## make a histogram for RooRealVar
 #  @see RooRealVar
@@ -624,6 +699,11 @@ ROOT.RooRealVar   . histo = _rrv_as_H1_
 ROOT.RooRealVar   . asH1  = _rrv_as_H1_
 
 _RRV_ = ROOT.RooRealVar
+
+_new_methods_ += [
+    ROOT.RooRealVar.histo , 
+    ROOT.RooRealVar.asH1  
+    ]
 
 # ============================================================================
 ## Addition of RooRealVar and ``number''
@@ -806,6 +886,20 @@ ROOT.RooRealVar . __rdiv__  = _rrv_rdiv_
 ROOT.RooRealVar . __rmul__  = _rrv_rmul_
 ROOT.RooRealVar . __rpow__  = _rrv_rpow_
 
+
+_new_methods_ += [
+    ROOT.RooRealVar.__add__  , 
+    ROOT.RooRealVar.__sub__  , 
+    ROOT.RooRealVar.__div__  , 
+    ROOT.RooRealVar.__mul__  , 
+    ROOT.RooRealVar.__pow__  , 
+    ROOT.RooRealVar.__radd__ , 
+    ROOT.RooRealVar.__rsub__ , 
+    ROOT.RooRealVar.__rdiv__ , 
+    ROOT.RooRealVar.__rmul__ , 
+    ROOT.RooRealVar.__rpow__ , 
+    ]
+
 # =============================================================================
 ## (compare RooRealVar and "number"
 def _rrv_le_ ( s , o ) :
@@ -856,6 +950,13 @@ ROOT.RooRealVar . __gt__   = _rrv_gt_
 ROOT.RooRealVar . __le__   = _rrv_le_
 ROOT.RooRealVar . __ge__   = _rrv_ge_
 
+_new_methods_ += [
+    ROOT.RooRealVar.__lt__  ,
+    ROOT.RooRealVar.__gt__  ,
+    ROOT.RooRealVar.__le__  ,
+    ROOT.RooRealVar.__ge__  ,
+    ]
+
 # =============================================================================
 ## get min/max in one go 
 #  @see RooRealVar
@@ -870,6 +971,10 @@ def _rrv_minmax_ ( s ) :
     return s.getMin(),s.getMax()
 
 ROOT.RooRealVar   . minmax  = _rrv_minmax_
+
+_new_methods_ += [
+    ROOT.RooRealVar.minmax  ,
+    ]
 
 ## # ==========================================
 ## _is_equal_ = cpp.LHCb.Math.equal_to_double 
@@ -918,6 +1023,11 @@ def _pdf_mul_ ( pdf1 , pdf2 ) :
 # ============================================================================
 ROOT.RooAbsPdf . __mul__  = _pdf_mul_ 
 
+
+_new_methods_ += [
+    ROOT.RooAbsPdf.__mul__  , 
+    ]
+
 # ============================================================================
 ## "convert" name/expression into variable/formula
 def var_from_name ( w , varset ) :
@@ -925,22 +1035,22 @@ def var_from_name ( w , varset ) :
     """
     w = w.strip() 
     if    0 < w.find('(') < what.find(')') :
-        print ' function ' , w 
+        #print ' function ' , w 
         pass
     elif  0 < w.find('*')                  :
-        print ' multiply ' , w 
+        #print ' multiply ' , w 
         pass
     elif  0 < w.find('/')                  :
-        print ' divide ' , w 
+        #print ' divide ' , w 
         pass
     elif  0 < w.find('+')                  :
-        print ' add  ' , w 
+        #print ' add  ' , w 
         pass
     elif  0 < w.find('-')                  :
-        print ' minus  ' , w 
+        #print ' minus  ' , w 
         pass
     else :
-        print ' primitive ' , w 
+        #print ' primitive ' , w 
         v = varset[w]
         return v
     ##
@@ -948,9 +1058,7 @@ def var_from_name ( w , varset ) :
     vlst = ROOT.RooArgList()
     for s in varset : vlst.add ( s )
     #
-    print ' LIST: %s ' % vlst
     f = ROOT.RooFormulaVar( w , w , vlst )
-    print ' FORMULA %s ' % f
     return f 
 
 
@@ -1192,6 +1300,9 @@ def _ds_var_minmax_ ( dataset , var , cuts = '' , delta = 0.0 )  :
 
 ROOT.RooDataSet .vminmax  = _ds_var_minmax_ 
 
+_new_methods_ += [
+    ROOT.RooDataSet .vminmax ,
+    ]
 # =============================================================================
 ## print method for RooDataSet
 #  @code
@@ -1219,6 +1330,16 @@ ROOT.RooDataSet.__getattr__ = _ds_getattr_
 ROOT.RooDataHist.__repr__   = _ds_print_
 ROOT.RooDataHist.__len__    = lambda s : s.numEntries() 
 
+
+_new_methods_ += [
+    ROOT.RooDataSet .draw         ,
+    ROOT.RooDataSet .project      ,
+    ROOT.RooDataSet .__repr__     ,
+    ROOT.RooDataSet .__getattr__  ,
+    ROOT.RooDataHist.__repr__     ,
+    ROOT.RooDataHist.__len__      ,
+    ]
+
 # =============================================================================
 ## add variable to dataset 
 def _rds_addVar_ ( dataset , vname , formula ) : 
@@ -1237,6 +1358,10 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 
 # =============================================================================
 ROOT.RooDataSet.addVar = _rds_addVar_
+
+_new_methods_ += [
+    ROOT.RooDataSet .addVar       ,
+    ]
 
 # =============================================================================
 ## make weighted data set from unweighted dataset
@@ -1288,6 +1413,10 @@ def _rds_makeWeighted_ ( dataset , wvarname , varset = None , cuts = '' , vname 
 # =============================================================================
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
 
+_new_methods_ += [
+    ROOT.RooDataSet .makeWeighted ,
+    ]
+
 RAD = ROOT.RooAbsData
 # =============================================================================
 ## change the default storage for RooDataSet 
@@ -1316,9 +1445,15 @@ def _rp_print_ ( o , opts = '' ) :
     """
     return Ostap.Utils.print_printable ( o , opts )
 
-cpp.RooPrintable.print_printable = _rp_print_ 
-cpp.RooPrintable.__str__         = _rp_print_
-cpp.RooPrintable.__repr__        = _rp_print_
+ROOT.RooPrintable.print_printable = _rp_print_ 
+ROOT.RooPrintable.__str__         = _rp_print_
+ROOT.RooPrintable.__repr__        = _rp_print_
+
+_new_methods_ += [
+    ROOT.RooPrintable.print_printable ,
+    ROOT.RooPrintable.__str__         ,
+    ROOT.RooPrintable.__repr__        ,
+    ]
 
 # =============================================================================
 ## @class SETVAR
@@ -1428,6 +1563,19 @@ class PDF_fun(object):
             self.xvar.setVal ( x )
             return self.pdf.getVal()
     
+# =============================================================================
+_decorated_classes_ = (
+    ROOT.RooAbsData    ,
+    ROOT.RooFitResult  ,
+    ROOT.RooRealVar    ,
+    ROOT.RooConstVar   ,
+    ROOT.RooFormulaVar ,
+    ROOT.RooAbsReal    ,
+    ROOT.RooDataSet    ,
+    ROOT.RooDataHist   ,
+    ROOT.RooPrintable  ,
+    )
+_new_methods_ = tuple ( _new_methods_ ) 
 # =============================================================================
 if '__main__' == __name__ :
     

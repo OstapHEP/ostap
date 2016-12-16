@@ -204,8 +204,7 @@ class H2Func(object) :
         return self._func ( self._histo ( x0 , y0 , interpolate = self._interp ) )
 
 
-
-
+# ==============================================================================
 ## create function object 
 def  _funobj0_ ( self ) :
     """Create function object 
@@ -214,6 +213,7 @@ def  _funobj0_ ( self ) :
     self._bfit = H_fit( self )
     return self._bfit
 
+# ==============================================================================
 ## create function object 
 def  _funobjN_ ( self ) :
     """Create function object 
@@ -222,9 +222,12 @@ def  _funobjN_ ( self ) :
     self._bfit = H_Nfit( self )
     return self._bfit
 
+# ==============================================================================
 ## draw spline object
 def _sp_draw_   ( self , opts = '' ) :
-    """Draw spline object 
+    """Draw spline object
+    >>> spline = ...
+    >>> spline.draw() 
     """
     bf = self.funobj () 
     return bf.fun.Draw( opts ) 
@@ -255,6 +258,8 @@ for t in (  Ostap.Math.Positive         ,
 #  @date   2011-06-07
 def _h1_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
     """Construct the function from the histogram
+    >>> histo = ...
+    >>> fun   = histo.asFunc() 
     """
     return H1Func ( self , func , *args , **kwargs )
 
@@ -264,6 +269,8 @@ def _h1_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
 #  @date   2011-06-07
 def _h2_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
     """Construct the helper function object from the histogram
+    >>> histo = ...
+    >>> fun   = histo.asFunc() 
     """
     return H2Func ( self , func , *args , **kwargs )
 # =============================================================================
@@ -272,7 +279,7 @@ def _h2_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
 #  @date   2011-06-07
 def _h1_as_tf1_ ( self                           ,
                   func   = lambda s : s.value () , *args , **kwargs ) :
-    """Construct the function from the 1D-histogram
+    """Construct the TF1-function from the 1D-histogram
     >>> histo = ...
     >>> fun1  = histo.asTF1 ()
     """
@@ -286,7 +293,6 @@ def _h1_as_tf1_ ( self                           ,
         f1.SetNpx ( max ( 100 , 10 * nb ) ) 
     
     return f1 
-
 
 # =============================================================================
 ## calculate the integral of TH1
@@ -381,6 +387,52 @@ ROOT.TH2F . integral = _h2_integral_
 ROOT.TH2D . integral = _h2_integral_
 
 
+# =============================================================================
+_decorated_classes_ = (
+    Ostap.Math.Bernstein        ,
+    Ostap.Math.BernsteinEven    ,
+    Ostap.Math.ChebyshevSum     ,
+    Ostap.Math.LegendreSum      ,
+    Ostap.Math.FourierSum       ,
+    Ostap.Math.CosineSum        ,
+    Ostap.Math.Polynomial       ,
+    Ostap.Math.BSpline          ,
+    #
+    Ostap.Math.Positive         ,
+    Ostap.Math.PositiveEven     , 
+    Ostap.Math.Monothonic       ,
+    Ostap.Math.Convex           ,
+    Ostap.Math.ConvexOnly       ,            
+    Ostap.Math.PositiveSpline   ,
+    Ostap.Math.MonothonicSpline ,
+    Ostap.Math.ConvexSpline     , 
+    Ostap.Math.ConvexOnlySpline ,
+    #
+    ROOT.TH1F ,
+    ROOT.TH1D ,
+    ROOT.TH2F ,
+    ROOT.TH2D ,
+    )
+
+_new_methods_ = ( 
+    ROOT.TH1F . asTF     ,
+    ROOT.TH1D . asTF     ,
+    ROOT.TH2F . asTF     ,
+    ROOT.TH2D . asTF     ,
+    ROOT.TH1F . asTF1    ,
+    ROOT.TH1D . asTF1    ,
+    ROOT.TH2F . asTF2    ,
+    ROOT.TH2D . asTF2    ,
+    ROOT.TH1F . asFunc   ,
+    ROOT.TH1D . asFunc   ,
+    ROOT.TH2F . asFunc   ,
+    ROOT.TH2D . asFunc   ,
+    #
+    ROOT.TH1F . integral ,
+    ROOT.TH1D . integral ,
+    ROOT.TH2F . integral ,
+    ROOT.TH2D . integral ,
+    )
 # =============================================================================
 if '__main__' == __name__ :
     
