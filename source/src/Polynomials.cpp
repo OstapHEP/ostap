@@ -2194,6 +2194,58 @@ double Ostap::Math::integrate
   return result * ( xmax - xmin ) * _fac / 2 ;
 }
 // ============================================================================
+/*  construct chebyshev approximation for arbitrary function 
+ *  @param func the function
+ *  @param N    degree of polynomial 
+ *  @param x_min low edge
+ *  @param x_max high edge 
+ *  @return Chebyshev approximation 
+ *  @see ChebyshevSum 
+ *  @code 
+ *  FUNC func = ...
+ *  ChebyshevSum a = chebyshev_sum ( func , 10 ,  xmin , xmax ) ;
+ *  @endcode 
+ */
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::chebyshev_sum
+( std::function<double(double)> func  , 
+  const unsigned short          N     , 
+  const double                  x_min , 
+  const double                  x_max ) 
+{ 
+  // array of precomputed function values 
+  std::vector<double> fv ( N ) ;
+  // 
+  const double xmin = std::min ( x_min , x_max ) ;
+  const double xmax = std::max ( x_min , x_max ) ;
+  //
+  const double      xhs  = 0.5 * ( xmin + xmax ) ;
+  const double      xhd  = 0.5 * ( xmax - xmin ) ;
+  const long double pi_N = M_PIl / N ;
+  auto _xi_ = [xhs,xhd,pi_N] ( const unsigned short k ) 
+    { return std::cos ( pi_N * ( k + 0.5 ) ) * xhd + xhs ; } ;
+  //
+  for ( unsigned short i = 0 ; i < N ; ++i ) { fv[i] = func ( _xi_ ( i ) ) ; }
+  //
+  Ostap::Math::ChebyshevSum cs ( N , xmin , xmax ) ;
+  for ( unsigned short i = 0 ; i < N + 1 ; ++i ) 
+  {
+    double c_i = 0 ;
+    if ( 0 == i ) { for ( unsigned short k = 0 ; k < N ; ++k ) { c_i += fv[k] ; } }
+    else 
+    {
+      for ( unsigned short k = 0 ; k < N ; ++k ) 
+      { c_i += fv[k] * std::cos ( pi_N * i * ( k + 0.5 ) ) ; }
+    }
+    c_i *= 2.0 / N ;
+    if ( 0 == i ) { c_i *= 0.5 ;}
+    cs.setPar ( i, c_i ) ;
+  }
+  return cs ;
+}
+// ============================================================================
+
 
 
 // ============================================================================

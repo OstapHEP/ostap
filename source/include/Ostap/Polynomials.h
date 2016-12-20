@@ -1185,9 +1185,9 @@ namespace Ostap
      */
     template <unsigned short N, class FUNCTION>
     inline ChebyshevSum 
-    chebyshev_sum ( FUNCTION     func        , 
-                    const double x_min  = -1 , 
-                    const double x_max  =  1 ) 
+    chebyshev_sum ( FUNCTION     func  , 
+                    const double x_min , 
+                    const double x_max ) 
     { 
       // array of precomputed function values 
       std::array<double,N>   fv ;
@@ -1219,6 +1219,24 @@ namespace Ostap
       }
       return cs ;
     }              
+    // ========================================================================
+    /*  construct chebyshev approximation for arbitrary function 
+     *  @param func the function
+     *  @param N    degree of polynomial 
+     *  @param x_min low edge
+     *  @param x_max high edge 
+     *  @return Chebyshev approximation 
+     *  @see ChebyshevSum 
+     *  @code 
+     *  FUNC func = ...
+     *  ChebyshevSum a = chebyshev_sum ( func , 10 ,  xmin , xmax ) ;
+     *  @endcode 
+     */
+    ChebyshevSum 
+    chebyshev_sum ( std::function<double(double)> func  , 
+                    const unsigned short          N     , 
+                    const double                  x_min , 
+                    const double                  x_max ) ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================
