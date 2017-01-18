@@ -381,18 +381,10 @@ def  fillDataSet ( chain , variables , selection , ppservers = () ) :
 # =============================================================================
 if '__main__' == __name__ :
     
-    from ostap import banner
-    logger.info ( __file__ + '\n' + banner )
-    logger.info ( 80*'*' )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
     
-    if not 2**32 - 1 <= n_large <= ROOT.TVirtualTreePlayer.kMaxEntries :
+    if not ( 2**32 - 1 ) <= n_large <= ROOT.TVirtualTreePlayer.kMaxEntries :
         logger.error ( "Invalid setting of ``n_large''(%d) parameter (>%d)" % ( n_large , ROOT.TVirtualTreePlayer.kMaxEntries ) )
         
 # =============================================================================
