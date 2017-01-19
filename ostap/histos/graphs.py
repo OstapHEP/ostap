@@ -24,6 +24,7 @@ __all__     = (
     'hToGraph2'   , ## convert histogram to graph 
     'hToGraph3'   , ## convert histogram to graph
     'lw_graph'    , ## make Laffery-Wyatt's graph
+    'fill_area'   , ## create a graph for the area between two curves/functions
     ##
     ) 
 # =============================================================================
@@ -655,12 +656,12 @@ ROOT.TH1D.toGraph3 = hToGraph3
 #  @see TGraph::Eval
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _gr_call_ ( graph , x , spline = None , opts = 'S' ) :
+def _gr_call_ ( graph , x , spline = None , opts = '' ) :
     """ Use graph as function
     >>> graph = ...
     >>> y     = graph ( 0.2 ) 
     """
-    if not spline : spline = ROOT.MakeNullPointer(ROOT.TSpline)
+    ## if not spline : spline = ROOT.MakeNullPointer(ROOT.TSpline)
     return graph.Eval ( float( x ) , spline , opts )
 
 # =============================================================================
@@ -706,6 +707,7 @@ def _gr_getitem_ ( graph , ipoint )  :
     >>> graph = ...
     >>> x,y   = graph[3]
     """
+    if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
     
@@ -770,6 +772,7 @@ def _gre_getitem_ ( graph , ipoint )  :
     >>> graph = ...
     >>> x,y = graph[3]
     """
+    if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
     
@@ -849,6 +852,7 @@ def _grae_getitem_ ( graph , ipoint ) :
     >>> grae = ...
     >>> x,xl,xh,y,yl,yh = grae[ 1 ]
     """
+    if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
     
@@ -1794,6 +1798,126 @@ def lw_graph ( histo , func ) :
     >>> graph.Draw('e1p same')    
     """
     return _lw_graph_ ( histo , func ) 
+
+
+pos_infinity = float('+inf')
+neg_infinity = float('-inf')
+# =============================================================================
+## Create a graph, that represents the area between two curves/functions:
+#  @code
+#  import math 
+#  graph = fill_area ( math.sin , math.cos , xmin = 0 , xmax = 5 )
+#  graph.Draw('f')
+#  @endcode
+#  ``Functions'' could be
+#  - plain functions
+#  - function objects 
+#  - histograms
+#  - graphs
+#  - ...
+#  Inspired by Rene Brun's example
+#  @see https://root.cern.ch/phpBB3/viewtopic.php?t=6346
+def fill_area ( fun1                     ,
+                fun2                     ,
+                n         = 100          ,
+                xmin      = neg_infinity ,
+                xmax      = pos_infinity ,  
+                log_scale = False        ) :
+    """Create a graph, that represents the area between
+    two curves/functions:
+    >>> import math 
+    >>> graph = fill_area ( math.sin , math.cos , xmin = 0 , xmax = 5 )
+    >>> graph.Draw('f')
+    ``Functions'' could be
+    - plain functions
+    - function objects 
+    - histograms
+    - graphs
+    - ...
+    Inspired by Rene Brun's example
+    - see https://root.cern.ch/phpBB3/viewtopic.php?t=6346
+    """
+
+    #
+    ## try to define proper x-range for graph..
+    #  - from input arguments
+    #  - from fun1 and fun2. 
+
+    x1mn , x1mx = neg_infinity , pos_infinity 
+
+    if hasattr   ( fun1 , 'xminmax' ) :
+        x1mn,x1mx = fun1.xminmax()
+    elif hasattr ( fun1 , 'xmin'    )    and hasattr ( fun1 , 'xmax' ) :
+        x1mn,x1mx = fun1.xmin(), fun1.xmax()
+    elif hasattr ( fun1 , 'GetXmin'    ) and hasattr ( fun1 , 'GetXmax' ) :
+        x1mn,x1mx = fun1.GetXmin(), fun1.GetXmax()
+    elif hasattr ( fun1 , 'GetXaxis' ) :
+        axis = fun1.GetXaxis() 
+        x1mn,x1mx = axis.GetXmin(), axis.GetXmax()
+
+    x1mn = max ( x1mn , xmin )
+    x1mx = min ( x1mx , xmax )        
+
+
+    x2mn , x2mx = neg_infinity , pos_infinity 
+    if hasattr   ( fun2 , 'xminmax' ) :
+        x2mn,x2mx = fun2.xminmax()
+    elif hasattr ( fun2 , 'xmin'    )    and hasattr ( fun2 , 'xmax' ) :
+        x2mn,x2mx = fun2.xmin(), fun2.xmax()
+    elif hasattr ( fun2 , 'GetXmin'    ) and hasattr ( fun2 , 'GetXmax' ) :
+        x2mn,x2mx = fun2.GetXmin(), fun2.GetXmax()
+    elif hasattr ( fun2 , 'GetXaxis' ) :
+        axis = fun2.GetXaxis() 
+        x2mn,x2mx = axis.GetXmin(), axis.GetXmax()
+
+    x2mn = max ( x2mn , xmin )
+    x2mx = min ( x2mx , xmax )        
+
+    ## to be replaced with numpy.isfinite 
+    if x1mn == neg_infinity and x2mn != neg_infinity : x1mn = x2mn 
+    if x1mn != neg_infinity and x2mn == neg_infinity : x2mn = x1mn 
+    if x1mx == pos_infinity and x2mn != pos_infinity : x1mx = x2mx 
+    if x1mx != pos_infinity and x2mn == pos_infinity : x2mx = x1mx 
+
+    if x1mn == neg_infinity or x2mn == neg_infinity or \
+           x1mx == pos_infinity or x2mn == pos_infinity :
+        raise ArrtibuteError("Can't define proper xmin/xmax")
+            
+    ## create the graph 
+    graph = ROOT.TGraph ( 2 * n + 3 )
+
+    if log_scale and 0 < x1mn < x1mx and 0 < x2mn < x2mx :
+
+        dx1 = (x1mx/x1mn)**(1.0/n)
+        dx2 = (x2mx/x2mn)**(1.0/n)
+        
+        x1f =  lambda i : x1mn*(dx1**i)
+        x2f =  lambda i : x2mx/(dx2**i)
+
+    else :
+        
+        dx1 = float(x1mx-x1mn)/n
+        dx2 = float(x2mx-x2mn)/n
+        
+        x1f =  lambda i : x1mn + i * dx1 
+        x2f =  lambda i : x2mx - i * dx2
+        
+    
+    for i in xrange ( n + 1 ) :
+        xi           = x1f  ( i ) 
+        yi           = float( fun1( xi ) ) 
+        graph[i]     = xi , yi 
+        
+    for i in xrange ( n + 1 ) :
+        xi           = x2f  ( i ) 
+        yi           = float( fun2 ( xi ) ) 
+        graph[i+n+1] = xi , yi 
+
+    ## the last point is the same as the first one 
+    graph[-1] = graph[0] 
+        
+    graph.SetFillStyle(3013) 
+    return graph 
 
 
 # =============================================================================
