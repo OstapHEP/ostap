@@ -289,7 +289,8 @@ def colored_string ( what               ,
     >>> print colored_string ( 'Hello' , foreground = RED , background = YELLOW , boold = True )
     """
     ## nothing to colorize or no coloring is activated
-    if not what or not with_colors() : return what
+    from ostap.utils.basic import isatty
+    if not what or not with_colors() or not isatty() : return what
     
     RESET_SEQ = "\033[0m"
     COLOR_SEQ = "\033[1;%dm"
