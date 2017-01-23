@@ -30,7 +30,8 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweigh' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
 logger.info ( 'Set of utitilities for re-weigthing')
-from   ostap.core.pyrouts import VE, SE, iszero 
+from   ostap.core.pyrouts import VE, SE
+from   ostap.math.base    import iszero
 import ostap.io.zipshelve as     DBASE ## needed to store the weights&histos 
 # =============================================================================
 ## @class Weight

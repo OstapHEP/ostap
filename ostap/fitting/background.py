@@ -37,7 +37,8 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core     import cpp, Ostap, iszero  
+from   ostap.core.core     import cpp, Ostap
+from   ostap.math.base     import iszero
 from   ostap.fitting.basic import makeVar, PDF 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
