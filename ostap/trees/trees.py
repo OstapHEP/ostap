@@ -184,12 +184,26 @@ ROOT.TChain.__call__  = _tc_call_
 #    
 #    >>> h1   = ROOT.TH1D(... )
 #    >>> tree.project ( h1           , 'm', 'chi2<10' ) ## use histo
+# 
+#    ## make invididual projections of 'm1' and 'm2' and make a sum of distributions
+#    >>> h1   = ROOT.TH1D(... )
+#    >>> tree.project ( h1           , ['m1','m2'] , 'chi2<10' ) ## use histo
+#
+#    ## make invididual projections of 'm1' and 'm2' and make a sum of distributions
+#    >>> h1   = ROOT.TH1D(... )
+#    >>> tree.project ( h1           , "m1,m2"     , 'chi2<10' )
+#    >>> tree.project ( h1           , "m1;m2"     , 'chi2<10' )
 #  @endcode
 #
+#  @param tree   the tree
+#  @param histo  the histogram or histogram name 
+#  @param what variable/expression to be projected.
+#              It could be a list/tuple of variables/expressions or just a comma-separated expression
+#  @param cuts expression for cuts/weights
 #  @see TTree::Project
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def _tt_project_ ( tree , histo , what , *args ) :
+def _tt_project_ ( tree , histo , what , cuts = '' , *args ) :
     """Helper project method
     
     >>> tree = ...
@@ -201,32 +215,89 @@ def _tt_project_ ( tree , histo , what , *args ) :
     >>> tree.project ( h1.GetName() , 'm', 'chi2<10' ) ## ditto 
     
     >>> h1   = ROOT.TH1D(... )
-    >>> tree.project ( h1           , 'm', 'chi2<10' ) ## use histo 
+    >>> tree.project ( h1           ,  'm', 'chi2<10' ) ## use histo
+
+    ## make invididual projections of m1 and m2 and make a sum of distributions
+    >>> h1   = ROOT.TH1D(... )
+    >>> tree.project ( h1           , ('m1','m2') , 'chi2<10' ) ## two variables 
+    >>> tree.project ( h1           , 'm1,m2'     , 'chi2<10' ) ## ditto
+    >>> tree.project ( h1           , 'm1;m2'     , 'chi2<10' ) ## ditto
     
+    - tree  : the tree
+    - histo : the histogram (or histogram name)
+    - what  : variable/expression to project. It can be expression or list/tuple of expression or comma (or semicolumn) separated expression
+    - cuts  : selection criteria/weights 
     """
-    #
+      #
     hname = histo 
-    if hasattr (  histo , 'GetName' ) : hname = histo.GetName()
+    if   hasattr    ( histo , 'GetName' ) : hname = histo.GetName()
+    ## elif isinstance ( histo , str       ) : 
+    ##    h = ROOT.gROOT.FindObject ( hname )
+    ##    if h : histo = h
+
+    ## reset it!
+    if histo and isinstance ( histo , ROOT.TH1  ) : histo.Reset()
     #
-    if args and isinstance ( args[0] , ROOT.TCut ) :
-        _args     = list  ( args     )
-        _args [0] = str   ( _args[0] )  
-        args      = tuple ( _args    )
+    if isinstance ( cuts  , ROOT.TCut ) : cuts = str(cuts) 
+    if not what : return 0, histo
     #
+    ## trivial 1-item list
+    if hasattr ( what , '__len__' ) and 1 == len ( what ) and not isinstance ( what , (str, ROOT.TCut) ): 
+        what = what[0]
+
+    ## check for comma-separated list of expressions:
+    if isinstance ( what , str ) :
+        what = what.split(',')
+        if 1 == len(what) : what = what[0]
+
+    ## check for semicolumn-separated list of expressions:
+    if isinstance ( what , str ) :
+        what = what.split(';')
+        if 1 == len(what) : what = what[0]
+
+    #
+    if   isinstance ( what  , str       ) : what =     what 
+    elif isinstance ( what  , ROOT.TCut ) : what = str(what)  
+    elif isinstance ( histo , ROOT.TH1  ) : 
+        rr = 0 
+        hh = histo.clone()
+        for v in what :
+            r , h  = _tt_project_ ( tree , hh , v , cuts , *args )
+            rr    += r
+            histo += h
+        hh.Delete()
+        del hh 
+        return rr , histo
+    elif isinstance ( histo , str ) :
+        ## process the head of the list: the first call creates the histo... 
+        rr, hh =  _tt_project_ ( tree , histo , what[0] , cuts , *args )
+        histo  = hh
+        if 1 == len ( what )   : return rr , histo
+        # normal processing of the tail of the list using created historgam 
+        hh      = histo.clone()
+        r1 , h1 = _tt_project_ ( tree , hh , what[1:] , cuts , *args )
+        rr     += r1
+        histo  += h1
+        hh.Delete()
+        del hh, h1 
+        return rr , histo
+
+    ## the basic case 
     from ostap.core.core import ROOTCWD
     with ROOTCWD() :
-        ROOT.gROOT.cd () 
+        ROOT.gROOT.cd ()
         ## make projection 
-        result = tree.Project ( hname , what , *args )
+        result = tree.Project ( hname , what , cuts , *args )
         if   isinstance ( histo , ROOT.TH1 ) : return result, histo
         elif isinstance ( histo , str      ) :
             h = ROOT.gROOT.FindObject ( hname )
             if h : return result, h
             
-    return result, hname
+    return result, histo
 
 ROOT.TTree .project = _tt_project_
 ROOT.TChain.project = _tt_project_
+
 
 # =============================================================================
 ## get the statistic for certain expression in Tree/Dataset

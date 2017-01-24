@@ -50,12 +50,12 @@ class ProjectTask(Parallel.Task) :
     """ The simple task  object for efficient parallel
     projection of looooooong TChains/TTrees into histograms  
     """
-    ## constructor: chain name, historgam , variable , cuts 
-    def __init__ ( self , tree , histo , what , cuts = '' ) :
-        """Constructor: chain/tree name, historgam , variable , cuts
+    ## constructor: histogram 
+    def __init__ ( self , histo ) :
+        """Constructor: the histogram 
         
         >>> histo = ...
-        >>> task  = ProjectTask ( 'MyTuple' , histo , 'mass' , 'pt>10' ) 
+        >>> task  = ProjectTask ( histo ) 
         """        
         self.histo = histo
         self.histo.Reset()
@@ -64,55 +64,61 @@ class ProjectTask(Parallel.Task) :
         if   isinstance ( tree , ROOT.TTree ) : self.tree = tree.GetName()
         elif isinstance ( tree , str        ) : self.tree = tree 
         
-        self.what = what
-        self.cuts = cuts
-
     ## local initialization (executed once in parent process)
     def initializeLocal   ( self ) :
         """Local initialization (executed once in parent process)
         """
-        import ROOT,Ostap.PyRoUts
-        self.output = 0, self.histo.Clone() 
+        import ROOT,ostap.pyrouts
+        self.output = 0, self.histo.clone() 
         
     ## remote initialization (executed for each sub-processs)
     def initializeRemote  ( self ) : pass 
     
     ## the actual processing
-    #   ``params'' is assumed to be a tuple :
+    #   ``params'' is assumed to be a tuple/list :
     #  - the file name
+    #  - the tree name in the file
+    #  - the variable/expression/expression list of quantities to project
+    #  - the selection/weighting criteria 
     #  - the first entry in tree to process
     #  - number of entries to process
     def process ( self , params ) :
         """The actual processing
         ``params'' is assumed to be a tuple-like entity:
-        0 - the file name
-        1 - the first entry in tree to process 
-        2 - number of entries to process        
+        - the file name
+        - the tree name in the file
+        - the variable/expression/expression list of quantities to project
+        - the selection/weighting criteria 
+        - the first entry in tree to process
+        - number of entries to process
         """
 
         import ROOT
-        import Ostap.PyRoUts 
+        import ostap.core.pyrouts 
 
         if   isinstance ( params , str ) : params = ( param , 0 , n_large  )
         elif isinstance ( params , ROOT.TChainElement ) :
             params = ( params.GetTitle()  , 0 , n_large  )
 
-        fname    = params[0]
-        first    = params[1] if 1 < len(params) else 0 
-        nentries = params[2] if 2 < len(params) else n_large 
+        fname    = params[0] ## file name 
+        tname    = params[1] ## tree name 
+        what     = params[2] ## variable/expression to project 
+        cuts     = params[3] if 3 < len ( params ) else ''       ## cuts    
+        first    = params[4] if 4 < len ( params ) else 0        ## the first event
+        nentries = params[5] if 5 < len ( params ) else n_large  ## number of events 
         
         if isinstance ( fname , ROOT.TChainElement ) : fname = fname.GetTitle() 
         
-        chain = ROOT.TChain ( self.tree )
+        chain = ROOT.TChain ( tname )
         chain.Add ( fname )
         
         ## Create the output histogram   NB! (why here???) 
         self.output = 0 , self.histo.Clone()
         
         ## use the regular projection  
-        from Ostap.TreeDeco import _tt_project_ 
+        from ostap.trees.trees import _tt_project_ 
         self.output = _tt_project_ ( chain      , self.output[1] ,
-                                     self.what  , self.cuts      ,
+                                     what       , cuts           ,
                                      ''         ,
                                      nentries   , first          )
         del chain 
@@ -127,6 +133,7 @@ class ProjectTask(Parallel.Task) :
         self.output[1].Add ( result[1] )
         self.output = filtered, self.output[1]
         result[1].Delete () 
+ 
    
 # =============================================================================  
 ## make a projection of the loooooooong chain into histogram using
@@ -151,27 +158,36 @@ def  cproject ( chain , histo , what , cuts ) :
     For 12-core machine, clear speedup factor of about 8 is achieved     
     """
     #
-    
-    if not tree  :
+    if not chain :
         return 0 , histo
     if not histo :
         logger.error ('cproject: invalid histogram')
         return 0 , histo
     
-    import ROOT 
+    import ROOT
     histo.Reset()    
 
-    if not isinstance ( ROOT , TChain ) :
+    if not isinstance ( chain , ROOT.TChain ) :
         logger.warning ('cproject method is TChain-specific, skip parallelization') 
-        from Ostap.TreeDeco import _tt_project_
+        from ostap.trees.trees import _tt_project_
         return _tt_project_ ( chain , histo , what , cuts ) 
 
-    import Ostap.TreeDeco 
-    files = chain.files()
+    if isinstance ( cuts , ROOT.TCut ) : cuts = str( cuts )
+    ##
+    if isinstance ( what  , str ) : what = what.split(',')
+    if isinstance ( what  , str ) : what = what.split(';')
+    if isinstance ( what  , str ) : what = [ what ] 
     
-    task  = ProjectTask          ( chain , histo , what , cuts )
+    import ostap.trees.trees
+    files = chain.files()
+
+    cname = chain.GetName() 
+    
+    params = [ ( f , cname , str(w) , cuts ) for f in files for w in what ] 
+
+    task  = ProjectTask          ( histo )
     wmgr  = Parallel.WorkManager ()
-    wmgr.process( task, files )
+    wmgr.process( task, params )
 
     filtered   = task.output[0] 
     histo     += task.output[1]
@@ -186,27 +202,46 @@ ROOT.TChain.pproject = cproject
 ## make a projection of the loooooooong tree into histogram using
 #  multiprocessing functionality for per-file parallelisation
 #  @code
+#
 #  >>> tree  = ... ## large tree 
 #  >>> histo = ... ## histogram template 
 #  >>> tproject ( tree , histo , 'mass' , 'pt>10' , maxentries = 1000000 )
 #  >>> tree.pproject ( histo , 'mass' , 'pt>10' ) ## ditto 
-#  >>> tree.tproject ( histo , 'mass' , 'pt>10' ) ## ditto 
 #  @endcode
 #  - significant gain can be achieved for very large ttrees with complicated expressions and cuts
 #  - <code>maxentries</code> parameter should be rather large
+#  @param tree       the tree
+#  @param histo      the histogram
+#  @param what       variable/expression/varlist to be projected
+#  @param cuts       selection/weighting criteria 
+#  @param nentries   number of entries to process  (>0: all entries in th tree)
+#  @param first      the first entry to process
+#  @param maxentries chunk size for parallel processing 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
-def  tproject ( tree , histo , what , cuts , nentries = -1 , first = 0 , maxentries = 1000000 ) :
+def  tproject ( tree                 ,   ## the tree 
+                histo                ,   ## histogram 
+                what                 ,   ## variable/expression/list to be projected 
+                cuts       = ''      ,   ## selection/weighting criteria 
+                nentries   = -1      ,   ## number of entries 
+                first      =  0      ,   ## the first entry 
+                maxentries = 1000000 ) : ## chunk size 
     """Make a projection of the loooong tree into histogram
     >>> tree  = ... ## large chain
     >>> histo = ... ## histogram template 
     >>> tproject ( tree , histo , 'mass' , 'pt>10' )    
     >>> tree.pproject ( histo , 'mass' , 'pt>10' )    ## ditto 
-    >>> tree.tproject ( histo , 'mass' , 'pt>10' )    ## ditto 
     - significant gain can be achieved for very large ttrees with complicated expressions and cuts
     - maxentries parameter should be rather large
+    Arguments:
+    - tree       the tree
+    - histo      the histogram
+    - what       variable/expression/varlist to be projected
+    - cuts       selection/weighting criteria 
+    - nentries   number of entries to process  (>0: all entries in th tree)
+    - first      the first entry to process
+    - maxentries chunk size for parallel processing 
     """
-    #
     if not tree  :
         return 0 , histo
     if not histo :
@@ -219,50 +254,69 @@ def  tproject ( tree , histo , what , cuts , nentries = -1 , first = 0 , maxentr
     num = len( tree )
     if num <= first :
         return 0, histo
-    
-    if 0 >  nentries : nentries   = n_large 
+
+    if 0 >  nentries   : nentries   = n_large 
 
     maxentries = long(maxentries)
     if 0 >= maxentries : maxentries = n_large 
     
-    if 0 > first    : first     = 0
+    if 0 > first       : first      = 0
     
     ## use the regular projection  
-    from Ostap.TreeDeco import _tt_project_ 
+    from ostap.trees.trees import _tt_project_ 
 
     if isinstance ( tree , ROOT.TChain ) :
         logger.warning ('``tproject'' method is TTree-specific, skip parallelization')
         return _tt_project_ ( tree , histo , what , cuts , '' , total , first ) 
-        
-    ## total number of events to process :
-    total = min ( num - first , nentries ) 
 
-    ## the event range is rather short, no need  in parallel processing
-    if total < maxentries : 
-        return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
-    
+    ##
     ## check if tree is file-resident:
     tdir = tree.GetDirectory()
     if tdir and isinstance ( tdir , ROOT.TFile ) : pass
     else :
+        logger.debug ('TTree is not file resident, skip parallelization') 
         return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
+    # 
+    # 
+    if isinstance ( cuts , ROOT.TCut ) : cuts = str( cuts )
+    if isinstance ( what , ROOT.TCut ) : what = str( what )
+    ##
+    if isinstance ( what , str ) : what = what.split(',')
+    if isinstance ( what , str ) : what = what.split(',')
+    if isinstance ( what , str ) : what = what.split(';')
+    if isinstance ( what , str ) : what = [ what ] 
 
-    fname = tdir.GetName()
-    
-    ## number of jobs & reminder 
-    njobs, rest = divmod ( total , maxentries )
-    csize       = int ( total / njobs ) ## chunk size 
-
-    ## final list of parameters [ (file_name, first_event , num_events ) , ... ] 
-    params = []
-    for i in range(njobs) : 
-        params.append ( ( fname , first +     i * csize , csize ) )
+    ## nothing to project 
+    if not what :
+        return 0 , histo
         
-    if rest :
-        params.append ( ( fname , first + njobs * csize , rest  ) )
-        njobs +=  1
+    ## total number of events to process :
+    total = min ( num - first , nentries ) 
 
-    task  = ProjectTask          ( tree , histo , what , cuts )
+    ## the event range is rather short, no real need  in parallel processing
+    if total * len ( what ) < maxentries and len ( what ) < 4 : 
+        return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
+    
+    fname = tdir.GetName()
+    tname = tree.GetName()
+
+    ## number of chunks & reminder 
+    nchunks , rest = divmod ( total , maxentries )
+    csize          = int ( total / nchunks ) ## chunk size 
+
+    ## final list of parameters [ (file_name, what , cuts , first_event , num_events ) , ... ] 
+    params = []
+
+    for i in range(nchunks) :
+        for w in what : 
+            params.append ( ( fname , tname , str(w) , cuts , first +       i * csize , csize ) )
+            
+    if rest :
+        nchunks +=  1
+        for w in what : 
+            params.append ( ( fname , tname , str(w) , cuts , first + nchunks * csize , rest  ) )
+
+    task  = ProjectTask          ( histo )
     wmgr  = Parallel.WorkManager ()
     wmgr.process( task, params )
 
@@ -275,6 +329,7 @@ import ROOT
 ROOT.TTree.tproject = tproject
 ROOT.TTree.pproject = tproject
 
+ 
 # =============================================================================
 ## The simple task object for more efficient fill of RooDataSet from TChain 
 #  @see GaudiMP.Parallel
@@ -284,8 +339,7 @@ ROOT.TTree.pproject = tproject
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23 
 class  FillTask(Parallel.Task) :
-    """
-    The single task object for more efficient fill of RooDataSet from TChain 
+    """The single task object for more efficient fill of RooDataSet from TChain 
     - for 12-core machine, clear speed-up factor of about 8 is achieved 
     """
     ## 
