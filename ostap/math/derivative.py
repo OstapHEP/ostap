@@ -35,10 +35,14 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-06"
 __all__     = (
     ##
-    "derivative"    , ## numerical differentiation (as function)
-    "Derivative"    , ## numerical differentiation (as object) 
+    "derivative" , ## numerical differentiation (as function)
+    "Derivative" , ## numerical differentiation (as object)
+    ## 
+    "partial"    , ## numerical partial derivatives (as function)
+    "Partial"    , ## numerical partial derivatives (as object) 
     ##
-    'EvalVE'        , ## evaluate the function taking argument's unicertainty 
+    'EvalVE'     , ## evaluate the function taking argument's unicertainty 
+    'Eval2VE'    , ## evaluate 2-argument function with argument's unicertainties
     ) 
 # =============================================================================
 import ROOT
@@ -359,6 +363,7 @@ _numbers_ = (
     (  51480 , 8.4108e-17 , 1.4656e-1 , 9.0454e-1 ) , ## I=7, J=15 15-point rule 
     ( 218790 , 8.6047e-17 , 1.9873e-1 , 1.2000e-1 ) , ## I=8, J=17 17-point rule 
     )
+
 # =============================================================================
 ## Calculate the first derivative for the function
 #  R. De Levie, "An improved numerical approximation for the first derivative"
@@ -422,32 +427,52 @@ def derivative ( fun , x , h = 0  , I = 2 , err = False ) :
 #  Calculate the first derivative for the function
 #  R. De Levie, "An improved numerical approximation for the first derivative"
 #  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+#  @code
+#  func  = math.sin
+#  deriv = Derivative ( func )    
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Derivative(object) :
     """Calculate the first derivative for the function
     R. De Levie, ``An improved numerical approximation for the first derivative''
     see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+    >>> func = math.sin
+    >>> deri = Derivative ( func )        
     """
-    def __init__ ( self , func , h = 0 , I = 2 , err = False ) :
-        """
-        Calculate the first derivative for the function
+    # =========================================================================
+    ## constructor 
+    #  @param func   the function
+    #  @param step   proposed initial step for evaluation of derivatives
+    #  @param order  derivative is calcualated using 2*I(+1) point
+    #  @param err    evaluate numerical uncertainties?
+    def __init__ ( self , func , step = 0 , order = 2 , err = False ) :
+        """Calculate the first derivative for the function
         R. De Levie, ``An improved numerical approximation for the first derivative''
         see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
-        
+        - func:   the function
+        - step:   proposed initial step for evaluation of derivatives
+        - order  derivative is calcuakted using 2*I+1 point
+        - err    evaluate numerical uncertainties?
         >>> func = math.sin
-        >>> deri = Derivative ( func )
-        
+        >>> deri = Derivative ( func )        
         """
-        self._func = func
-        self._h    = h    
-        self._I    = I
-        self._err  = err
+        self._func  = func
+        self._step  = float( step  ) 
+        self._order = int  ( order )
+        self._err   = True if err else False 
+        if self._order < 0 :
+            raise AttributeError("Invalid ``order''-parameter!")
 
-    ## evaluate the derivative 
+    # =========================================================================
+    ## evaluate the derivative
+    #  @code 
+    #  func  = math.sin
+    #  deriv = Derivative ( func )
+    #  print deriv(0.1)
+    #  @endcode 
     def __call__ ( self , x ) :
-        """
-        Calculate the first derivative for the function
+        """Calculate the first derivative for the function
         R. De Levie, ``An improved numerical approximation for the first derivative''
         see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
         
@@ -456,12 +481,149 @@ class Derivative(object) :
         
         >>> print deriv(0.1) 
         """
-        return derivative ( self._func ,
-                            x          ,
-                            self._h    ,
-                            self._I    ,
-                            self._err  )
+        return derivative ( self._func  ,
+                            x           ,
+                            self._step  ,
+                            self._order ,
+                            self._err   )
 
+# =============================================================================
+## Calculate the partial derivative for the function
+#  @see derivative
+#  R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+#  @code
+#  >>> fun2 =  lambda x,y : x*x+y*y
+#  >>> print partial ( 0 , fun , (1.0,2.0) ) ) 
+#  @endcode
+#  @param index  (INPUT) indx of the variable 
+#  @param func   (INPUT) the function itself
+#  @param x      (INPUT) the argument
+#  @param h      (INPUT) the guess for the step used in numeric differentiation
+#  @param I      (INPUT) the rule to be used ("N-point rule" = 2*I+1)
+#  @param err    (INPUT) calcualte the uncertainty?
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+def partial ( index , func , x , h = 0  , I = 2 , err = False ) : 
+    """Calculate the partial derivative for the function
+    - index  (INPUT) indx of the variable 
+    - func   (INPUT) the function itself
+    - x      (INPUT) the argument
+    - h      (INPUT) the guess for the step used in numeric differentiation
+    - I      (INPUT) the rule to be used ("N-point rule" = 2*I+1)
+    - err    (INPUT) calcualte the uncertainty?
+    
+    Algorithm used:
+    R. De Levie, ``An improved numerical approximation for the first derivative''
+    - see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+    >>> fun2 =  lambda x,y : x*x+y*y
+    >>> print partial ( 0 , fun , (1.0,2.0) ) )     
+    - see derivative
+    """
+    
+    if len(x) <= index :
+        raise AttributeError("Invalid argument length/index %d/%d" %  ( len(x) , index ) )
+    
+    _x =   [ float(a) for a in x ]
+    
+    ## create wrapper function 
+    def _wrap ( z ) :
+        _z              = _x[index] 
+        _x[index] =  z
+        _r = func ( *_x )
+        _x[index] = _z
+        return _r
+    
+    xi = _x[ index ]
+    return derivative ( _wrap , xi , h , I , err )
+
+# =============================================================================
+## calcuate the partial derivative for the function
+#  @code
+#  func = lambda x, y: x * x + y * y  
+#  dFdX = Partial ( 0 , func )
+#  dFdY = Partial ( 1 , func )
+#  x = 1
+#  y = 2
+#  print ' f(%f,%f)=%f    ' % ( x , y , func( x, y ) ) 
+#  print ' dFdX=%f dFdY=%f' % ( dFdX(x,y), dFdY ( x, y ) ) 
+#  @endcode 
+#  @see Derivative
+#  @see partial 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2017-01-25
+class Partial(Derivative) :
+    """Calcuate the partial derivative for the function
+    >>> func = lambda x, y: x * x + y * y  
+    >>> dFdX = Partial( 0 , func )
+    >>> dFdY = Partial( 1 , func )
+    >>> x = 1
+    >>> y = 2
+    >>> print ' f(%f,%f)=%f    ' % ( x , y , func( x, y ) ) 
+    >>> print ' dFdX=%f dFdY=%f' % ( dFdX(x,y), dFdY ( x, y ) ) 
+    """
+    # =========================================================================
+    ## constructor
+    #  @param index index of the variable  (>=0)
+    #  @param func  the function
+    #  @param step  proposed initial step for derivatives 
+    #  @param order derivative is evaluated using 2*I(+1) point  (>=0) 
+    #  @param err   estimate the numerical uncertainty?
+    def __init__ ( self        ,
+                   index       ,   ## index of the variabale 
+                   func        ,   ## the function 
+                   step  = 0   ,   ## proposed initial step for derivatives
+                   order = 2   ,   ## J=2*I(+1) is a number of points used for evaluation of derivative
+                   err = False ) : ## estimate the uncertainty?
+        """Calculate the partial derivative for the function
+        - index  (INPUT) indx of the variable 
+        - func   (INPUT) the function itself
+        - step   (INPUT) the guess for the step used in numeric differentiation
+        - order  (INPUT) the rule to be used ("N-point rule" = 2*I+1)
+        - err    (INPUT) calcualte the uncertainty?
+        >>> func = lambda x, y: x * x + y * y  
+        >>> dFdX = Partial( 0 , func )
+        >>> dFdY = Partial( 1 , func )
+        >>> x = 1
+        >>> y = 2
+        >>> print ' f(%f,%f)=%f    ' % ( x , y , func( x, y ) ) 
+        >>> print ' dFdX=%f dFdY=%f' % ( dFdX(x,y), dFdY ( x, y ) ) 
+        """
+        if isinstance ( index , (int,long) ) and 0 <= index :
+            self._index = index
+        else :
+            raise AttributeError("Invalid variable index %s" % index)
+
+        ## keep the function 
+        self._func2 = func
+        
+        ## initialize the base 
+        Derivative.__init__ ( self , func , step , order , err )
+        
+    # =========================================================================
+    ## evaluate the derivative
+    #  @code 
+    #  func  = math.sin
+    #  deriv = Derivative ( func )
+    #  print deriv(0.1)
+    #  @endcode 
+    def __call__ ( self , *x ) :
+        """Calcuate the partial derivative for the function
+        >>> func = lambda x, y: x * x + y * y  
+        >>> dFdX = Partial( 0 , func )
+        >>> dFdY = Partial( 1 , func )
+        >>> x = 1
+        >>> y = 2
+        >>> print ' f(%f,%f)=%f    ' % ( x , y , func( x, y ) ) 
+        >>> print ' dFdX=%f dFdY=%f' % ( dFdX(x,y), dFdY ( x, y ) )
+        """
+        return partial ( self._index  ,
+                         self._func2  ,
+                         x            ,
+                         self._step   ,
+                         self._order  ,
+                         self._err    )
+        
 # =============================================================================
 ## @class EvalVE
 #  Evaluate the function taking into account the uncertainty in the argument
@@ -507,17 +669,39 @@ class EvalVE(object) :
             ## use numerical differentiation
             self._deriv = Derivative(func)
             
-        if   name                          : self.__name__ =  name 
-        elif hasattr ( func , '__name__' ) : self.__name__ = func.__name__
-        else                               : self.__name__ = 'EvalVE'
-            
+        if   name                          : self.name =  name 
+        elif hasattr ( func , '__name__' ) and '<lambda>' != func.__name__ :
+            self.name = func.__name__
+        else                               : self.name = 'Eval2VE'
+
+    ## printout 
+    def __str__ ( self ) : return str ( self.name )
+    __repr__ = __str__
+    
     ## get a value 
     def _value_ ( self , x , *args ) :
         """Evaluate a function"""
         return self._func( float( x ) , *args )
-    
-    ## evaluate the function 
+
+    # =========================================================================
+    ## Evaluate the function taking into account uncertainty in the argument
+    #  @code
+    #  import math 
+    #  x    = VE(1,0.1**2)
+    #  sin1 = EvalVE( math.sin , lambda s : math.cos(s) )
+    #  print 'sin1(x) = %s ' % sin1(x) 
+    #  sin2 = EvalVE( math.sin )
+    #  print 'sin2(x) = %s ' % sin2(x)
+    #  @endcode
     def __call__ ( self , x , *args ) :
+        """Evaluate the function taking into account uncertainty in the argument        
+        >>> import math 
+        >>> x    = VE(1,0.1**2)
+        >>> sin1 = EvalVE( math.sin , lambda s : math.cos(s) )
+        >>> print 'sin1(x) = %s ' % sin1(x) 
+        >>> sin2 = EvalVE( math.sin )
+        >>> print 'sin2(x) = %s ' % sin2(x)
+        """
         #
         ## evaluate the function 
         val  = self._value_ ( x , *args )
@@ -533,10 +717,168 @@ class EvalVE(object) :
         ## get a final result 
         return VE ( val , cov2 )
     
-    def __str__ ( self ) : return self.__name__
+# ===================================================================================
+## @class Eval2VE
+#  Evaluate the 2-argument function taking into account the uncertaintines
+#  @code
+#  func2 = lambda x,y : x*x + y*y
+#  eval2 = Eval2VE ( func2 )
+#  x = VE(1,0.1**2)
+#  y = VE(2,0.1**2)
+#  print eval2(x,y)    ## treat x,y as uncorrelated 
+#  print eval2(x,y, 0) ## ditto 
+#  print eval2(x,y,+1) ## treat x,y as 100% correlated 
+#  print eval2(x,y,-1) ## treat x,y as 100% anti-correlated
+#  @endcode
+#  Partial derivatives can be provided explictely:
+#  @code
+#  func2 = lambda x,y : x*x + y*y
+#  eval2 = Eval2VE ( func2 , dFdX = lambda x,y : 2*x , dFdY = lambda x,y : 2*y ) 
+#  @endcode
+#  If derivatves are not provided, numerical differentiation will be used 
+#  @see EvalVE
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2016-02-23
+class Eval2VE(object) :
+    """ Evaluate the 2-argument function taking into account the uncertaintines
+    >>> func2 = lambda x,y : x*x + y*y
+    >>> eval2 = Eval2VE ( func2 )
+    >>> x = VE(1,0.1**2)
+    >>> y = VE(2,0.1**2)
+    >>> print eval2(x,y)    ## treat x,y as uncorrelated 
+    >>> print eval2(x,y, 0) ## ditto 
+    >>> print eval2(x,y,+1) ## treat x,y as 100% correlated 
+    >>> print eval2(x,y,-1) ## treat x,y as 100% anti-correlated
+    Partial derivatives can be provided explictely:
+    >>> func2 = lambda x,y : x*x + y*y
+    >>> eval2 = Eval2VE ( func2 , dFdX = lambda x,y : 2*x , dFdY = lambda x,y : 2*y )
+    If derivatves are not provided, numerical differentiation will be used 
+    """
+    ## constructor
+    #  @param func  the 2-argument function
+    #  @param dFdX  (optional) the partial derivative d(dunc)/dX
+    #  @param dFdY  (optional) the partial derivative d(dunc)/dY
+    #  @param name  (optional) the function name 
+    def __init__ ( self , func , dFdX = None , dFdY = None , name = '' ) :
+        """ Constructor from the function, optional partial derivative and name
+        >>> func2 = lambda x,y : x*x + y*y
+        >>> eval2 = Eval2VE ( func2 )
+        >>> x = VE(1,0.1**2)
+        >>> y = VE(2,0.1**2)
+        >>> print eval2(x,y)    ## treat x,y as uncorrelated 
+        >>> print eval2(x,y, 0) ## ditto 
+        >>> print eval2(x,y,+1) ## treat x,y as 100% correlated 
+        >>> print eval2(x,y,-1) ## treat x,y as 100% anti-correlated
+        Partial derivatives can be provided explictely:
+        >>> func2 = lambda x,y : x*x + y*y
+        >>> eval2 = Eval2VE ( func2 , dFdX = lambda x,y : 2*x , dFdY = lambda x,y : 2*y )
+        If derivatves are not provided, numerical differentiation will be used 
+        """
+        self._func  = func
+        
+        self._dFdX = dFdX if dFdX else Partial ( 0 , func )
+        self._dFdY = dFdY if dFdY else Partial ( 1 , func )
+
+        if not hasattr ( self._dFdX , '_step' ) : self._dFdX._step = 0 
+        if not hasattr ( self._dFdY , '_step' ) : self._dFdY._step = 0 
+            
+        if   name                          : self.name =  name 
+        elif hasattr ( func , '__name__' ) and '<lambda>' != func.__name__ :
+            self.name = func.__name__
+        else                               : self.name = 'Eval2VE'
+
+    ## printout 
+    def __str__ ( self ) : return str ( self.name )
+    __repr__ = __str__
     
+    # =========================================================================
+    ## get a value 
+    def _value_ ( self , x , y ) :
+        """Evaluate a function"""
+        return self._func( float ( x ) , float(y) )
+    
+    # =========================================================================
+    ## get a partial derivatives,
+    #  adjust the step for numerical differentiation: use the initial value of 0.1*error
+    def _partial_ ( self , f , x , y , step2 ) :
+        """ get a partial derivatives,
+        adjust the step for numerical differentiation:
+        - use the initial value of 0.1*error
+        """
+        
+        old_step   = f._step
+        ## magic number choice: 1.e-8 <= ( step ~ 0.1 * error ) 
+        if 1.e-14 <= step2 :
+            from math import sqrt as _sqrt_ 
+            f._step = 0.1 * _sqrt_( step2 ) 
+        _r = f ( x , y )
+        f._step = old_step
+        return _r 
+    
+    ## get a partial derivatives d(func)/d(x)
+    def dFdX  ( self , x , y ) :
+        """Get a partial derivatives d(func)/d(X)"""
+        x = VE ( x )
+        return self._partial_ ( self._dFdX , x.value() , y          , x.cov2() )
+    
+    ## get a partial derivatives d(func)/d(y)
+    def dFdY  ( self , x , y ) :
+        """Get a partial derivatives d(func)/d(Y)"""
+        y = VE ( y )
+        return self._partial_ ( self._dFdY , x         , y.value()  , y.cov2() )
 
+    # =========================================================================
+    ## evaluate the function 
+    #  @code
+    #  func2 = lambda x,y : x*x + y*y
+    #  eval2 = Eval2VE ( func2 )
+    #  x = VE(1,0.1**2)
+    #  y = VE(2,0.1**2)
+    #  print eval2(x,y)    ## treat x,y as uncorrelated 
+    #  print eval2(x,y, 0) ## ditto 
+    #  print eval2(x,y,+1) ## treat x,y as 100% correlated 
+    #  print eval2(x,y,-1) ## treat x,y as 100% anti-correlated
+    #  @endcode
+    def __call__ ( self , x , y , cxy = 0 ) :
+        """Evaluate the function 
+        >>> func2 = lambda x,y : x*x + y*y
+        >>> eval2 = Eval2VE ( func2 )
+        >>> x = VE(1,0.1**2)
+        >>> y = VE(2,0.1**2)
+        >>> print eval2(x,y)    ## treat x,y as uncorrelated 
+        >>> print eval2(x,y, 0) ## ditto 
+        >>> print eval2(x,y,+1) ## treat x,y as 100% correlated 
+        >>> print eval2(x,y,-1) ## treat x,y as 100% anti-correlated
+        """
+        ## evaluate the function 
+        val = self._value_ ( x , y )
+        #
+        x   =  VE ( x )
+        y   =  VE ( y )
+        #
+        x_plain = x.cov2() <= 0 or iszero ( x.cov2() )
+        y_plain = y.cov2() <= 0 or iszero ( y.cov2() ) 
+        #
+        if x_plain and y_plain : return VE ( val , 0 )
+        #
+        ## here we need to calculate the uncertainties
+        # 
+        cov2 = 0.0
+        #
+        fx   = self.dFdX ( x         , y.value() ) if not x_plain else 0 
+        fy   = self.dFdY ( x.value() , y         ) if not y_plain else 0 
+        #
+        if not x_plain : cov2 += fx * fx * x.cov2()            
+        if not y_plain : cov2 += fy * fy * y.cov2()
+        # 
+        if not x_plain and not y_plain : 
+            ## adjust the correlation coefficient:
+            cxy   = min ( max ( -1 , cxy ) , 1 )
+            if not iszero ( cxy ) :
+                cov2 += 2 * cxy * fx * fy * x.error() * y.error() 
 
+        return VE ( val , cov2 )
+ 
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -604,6 +946,30 @@ if '__main__' == __name__ :
         
     logger.info ( 80*'*' ) 
 
+    ## the function
+    func2 = lambda x,y : x*x + y*y
+    
+    ## use explicit   partial derivatives 
+    eval2_1 = Eval2VE( func2 , dFdX = lambda x,y : 2*x , dFdY = lambda x,y : 2*y )
+    
+    ## use numerical  partial derivatives 
+    eval2_2 = Eval2VE( func2 )
+
+    for x,y in [ (0,0) , (1,1) , (1,2) , (2,2) ] :
+
+        x = VE(x,0.1**2)
+        y = VE(x,0.1**2)
+        
+        logger.info ( 'x=%-17s, y=%-17s' % ( x , y ) )
+        
+        logger.info ( '  eval2_1(x,y)=   %-17s eval2_3(x,y)=   %-17s ' % ( eval2_1 ( x, y ) ,
+                                                                           eval2_2 ( x, y ) ) )
+        ## use correlation coefficient:
+        for c in (0,-1,1) :
+            logger.info ( '  eval2_1(x,y,%+2d)=%-17s eval2_3(x,y,%+2d)=%-17s ' % ( c , eval2_1 ( x, y ) ,
+                                                                                   c , eval2_2 ( x, y ) ) ) 
+    logger.info ( 80*'*' ) 
+    
 # =============================================================================
 # The END 
 # =============================================================================
