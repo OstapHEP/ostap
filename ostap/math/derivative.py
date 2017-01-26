@@ -669,13 +669,13 @@ class EvalVE(object) :
             ## use numerical differentiation
             self._deriv = Derivative(func)
             
-        if   name                          : self.name =  name 
+        if   name                          : self.__name__ =  name 
         elif hasattr ( func , '__name__' ) and '<lambda>' != func.__name__ :
-            self.name = func.__name__
-        else                               : self.name = 'Eval2VE'
+            self.__name__ = func.__name__
+        else                               : self.__name__ = 'Eval2VE'
 
     ## printout 
-    def __str__ ( self ) : return str ( self.name )
+    def __str__ ( self ) : return str ( self.__name__ )
     __repr__ = __str__
     
     ## get a value 
@@ -782,13 +782,13 @@ class Eval2VE(object) :
         if not hasattr ( self._dFdX , '_step' ) : self._dFdX._step = 0 
         if not hasattr ( self._dFdY , '_step' ) : self._dFdY._step = 0 
             
-        if   name                          : self.name =  name 
+        if   name                          : self.__name__ =  name 
         elif hasattr ( func , '__name__' ) and '<lambda>' != func.__name__ :
-            self.name = func.__name__
-        else                               : self.name = 'Eval2VE'
+            self.__name__ = func.__name__
+        else                               : self.__name__ = 'Eval2VE'
 
     ## printout 
-    def __str__ ( self ) : return str ( self.name )
+    def __str__ ( self ) : return str ( self.__name__ )
     __repr__ = __str__
     
     # =========================================================================
