@@ -928,9 +928,9 @@ if '__main__' == __name__ :
     ## analysitical derivative 
     deriv_a = math.cos
     ## numerical first derivative     
-    deriv_1 = Derivative ( func    , I = 5 )  
+    deriv_1 = Derivative ( func    , order = 5 )  
     ## numerical second derivative     
-    deriv_2 = Derivative ( deriv_1 , I = 5 )  
+    deriv_2 = Derivative ( deriv_1 , order = 5 )  
 
     import random
 
