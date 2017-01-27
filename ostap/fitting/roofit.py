@@ -1438,12 +1438,12 @@ def setStorage ( new_type = RAD.Tree ) :
 
 # =============================================================================
 ## make easy print for RooPrintable 
-def _rp_print_ ( o , opts = '' ) :
+def _rp_print_ ( o , opts = 'v' ) :
     """Make easy print for RooPrintable
     >>> o = ...
     >>> print o 
     """
-    return Ostap.Utils.print_printable ( o , opts )
+    return cpp.Ostap.Utils.print_printable ( o , opts )
 
 ROOT.RooPrintable.print_printable = _rp_print_ 
 ROOT.RooPrintable.__str__         = _rp_print_

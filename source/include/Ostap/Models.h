@@ -356,7 +356,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the integration workspace
-      void* workspace () const ;               // get the integrtaion workspace
+      void* workspace () const ;               // get the integration workspace
       // ======================================================================
     public:
       // ======================================================================
@@ -366,7 +366,9 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual GSL-workspace
-      mutable void*  m_workspace ;  /// the actual GSL-workspace
+      // mutable char*  m_workspace ;  /// the actual GSL-workspace
+      // char* here to please dictionary generator...
+      mutable char*  m_workspace ;  /// the actual GSL-workspace
       // ======================================================================
     } ;
     // ========================================================================

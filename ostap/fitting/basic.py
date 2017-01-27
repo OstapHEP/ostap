@@ -340,7 +340,7 @@ class PDF (object) :
             result =  self.pdf.fitTo ( dataset , ROOT.RooFit.Save () , *opts ) 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
-        st = result.status()
+        st = result.status() if result else 9999
         if 0 != st and silent :
             logger.warning ( 'PDF(%s).fitTo: status is %s. Refit in non-silent regime ' % ( self.name , st  ) )    
             return self.fitTo ( dataset , draw , nbins , False , refit , *args , **kwargs )

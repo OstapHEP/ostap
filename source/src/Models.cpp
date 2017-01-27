@@ -1722,23 +1722,23 @@ double Ostap::Math::GenGaussV2::kurtosis () const
 // ============================================================================
 // constructor
 // ============================================================================
-Ostap::Math::WorkSpace::WorkSpace () : m_workspace ( 0 ){}
+Ostap::Math::WorkSpace::WorkSpace () : m_workspace ( nullptr ){}
 // ============================================================================
 // (fictive) copy constructor
 // ============================================================================
 Ostap::Math::WorkSpace::WorkSpace
 ( const Ostap::Math::WorkSpace& /* right */ )
-  : m_workspace ( 0 )
+  : m_workspace ( nullptr )
 {}
 // ============================================================================
 // destructor
 // ============================================================================
 Ostap::Math::WorkSpace::~WorkSpace ()
 {
-  if ( 0 != m_workspace )
+  if ( nullptr != m_workspace )
   {
     gsl_integration_workspace * _ws = (gsl_integration_workspace*) m_workspace ;
-    m_workspace = 0 ;
+    m_workspace = nullptr ;
     gsl_integration_workspace_free ( _ws );
   }
 }
@@ -1747,8 +1747,8 @@ Ostap::Math::WorkSpace::~WorkSpace ()
 // ============================================================================
 void* Ostap::Math::WorkSpace::workspace () const
 {
-  if ( 0 == m_workspace ) 
-  { m_workspace = gsl_integration_workspace_alloc ( s_SIZE ) ; }
+  if ( nullptr == m_workspace ) 
+  { m_workspace = (char*) gsl_integration_workspace_alloc ( s_SIZE ) ; }
   //
   return m_workspace ;
 }
