@@ -1,10 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ============================================================================= 
+# =============================================================================
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
+# @file test_models.py
+# Test module for ostap/fitting/models.py
+# - It tests various ``signal-like''/``peak-like'' shapes
+# ============================================================================= 
 """ Test module for ostap/fitting/models.py
+- It tests various ``signal-like''/``peak-like'' shapes 
 """
+# ============================================================================= 
+__author__ = "Ostap developers"
+__all__    = () ## nothinug to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
@@ -113,7 +121,7 @@ def test_crystalball () :
     else : 
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Alpha  & n          are: %-28s & %-28s ' % ( result ( model_cb.signal.alpha.GetName() ) [ 0 ] , result ( model_cb.signal.    n.GetName() ) [ 0 ] ) )
+        logger.info ( 'Alpha  & n          are: %-28s & %-28s ' % ( result ( model_cb.signal.alpha ) [ 0 ] , result ( model_cb.signal.n ) [ 0 ] ) )
         
     models.add ( model_cb )
                       
@@ -520,11 +528,11 @@ def test_bifstudentT():
         print result 
     else :     
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  .GetName() )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma .GetName() )[0] )
-        logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  .GetName() )[0] )
-        logger.info ( 'n(L)                 is: %-28s ' %  result ( signal.nL    .GetName() )[0] )
-        logger.info ( 'n(R)                 is: %-28s ' %  result ( signal.nR    .GetName() )[0] )
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
+        logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  )[0] )
+        logger.info ( 'n(L)                 is: %-28s ' %  result ( signal.nL    )[0] )
+        logger.info ( 'n(R)                 is: %-28s ' %  result ( signal.nR    )[0] )
         
     models.add ( model )
 
@@ -563,10 +571,10 @@ def test_sinhasinh() :
         print result
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mu                   is: %-28s ' %  result ( signal.mu     .GetName() )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma  .GetName() )[0] )
-        logger.info ( 'Epsilon              is: %-28s ' %  result ( signal.epsilon.GetName() )[0] )
-        logger.info ( 'delta                is: %-28s ' %  result ( signal.delta  .GetName() )[0] )
+        logger.info ( 'Mu                   is: %-28s ' %  result ( signal.mu      )[0] )
+        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma   )[0] )
+        logger.info ( 'Epsilon              is: %-28s ' %  result ( signal.epsilon )[0] )
+        logger.info ( 'delta                is: %-28s ' %  result ( signal.delta   )[0] )
 
     models.add ( model )
 
@@ -600,10 +608,10 @@ def test_johnsonSU () :
         print result
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Xi                   is: %-28s ' %  result ( signal.xi     .GetName() )[0] )
-        logger.info ( 'Lambda               is: %-28s ' %  result ( signal.lam    .GetName() )[0] )
-        logger.info ( 'Delta                is: %-28s ' %  result ( signal.delta  .GetName() )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  .GetName() )[0] )
+        logger.info ( 'Xi                   is: %-28s ' %  result ( signal.xi     )[0] )
+        logger.info ( 'Lambda               is: %-28s ' %  result ( signal.lam    )[0] )
+        logger.info ( 'Delta                is: %-28s ' %  result ( signal.delta  )[0] )
+        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  )[0] )
 
     models.add ( model )
 
@@ -635,8 +643,8 @@ def test_atlas () :
         print result
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean   .GetName() )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma  .GetName() )[0] )
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
 
     models.add ( model )
 
@@ -668,8 +676,8 @@ def test_sech() :
         print result
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean   .GetName() )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma  .GetName() )[0] )
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
 
     models.add ( model )
 
@@ -701,8 +709,8 @@ def test_logistic () :
         print result
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean   .GetName() )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma  .GetName() )[0] )
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
 
     models.add ( model )
 # =============================================================================
@@ -738,9 +746,9 @@ def test_voigt () :
         print result
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean   .GetName() )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma  .GetName() )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  .GetName() )[0] )
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
+        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
 
     models.add ( model )
 
@@ -778,9 +786,9 @@ def test_pvoigt () :
         print result
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean   .GetName() )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma  .GetName() )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  .GetName() )[0] )
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
+        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
 
     models.add ( model )
 
@@ -828,8 +836,8 @@ def test_bw () :
         print result
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean   .GetName() )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  .GetName() )[0] )
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
 
     models.add ( model )
 

@@ -41,7 +41,7 @@ else                       : logger = getLogger ( __name__              )
 try :
     from scipy import integrate
 except ImportError :
-    logger.warning ('scipy.integrate is not availabe')
+    logger.warning ('scipy.integrate is not available')
 
 # =============================================================================
 ## Calculate the integral (from x0 to x) for the 1D-function 
