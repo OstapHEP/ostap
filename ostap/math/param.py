@@ -88,7 +88,8 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some parameterization utilities')
 # =============================================================================
-from ostap.core.core import cpp, Ostap  
+from   ostap.core.core   import cpp, Ostap
+import ostap.math.models
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
@@ -166,9 +167,7 @@ def legendre_sum ( func , N , xmin , xmax , **kwargs ) :
 
     idx   = 1.0 / ( xmax - xmin ) ## scale factor 
 
-
-    from scipy import integrate
-    import warnings
+    from ostap.math.integral import integral as _integral 
     
     args  = {}
     for n in range ( N + 1 ) :
@@ -177,9 +176,7 @@ def legendre_sum ( func , N , xmin , xmax , **kwargs ) :
         fun_n  = lambda x : func ( x ) * li ( tx ( x ) )
         if kwargs : args = deepcopy ( kwargs )
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            c_n    = integrate.quad ( fun_n , xmin , xmax , **args )[0] * ( 2 * n + 1 ) * idx
+        c_n    = _integral ( fun_n , xmin , xmax , **args ) * ( 2 * n + 1 ) * idx
             
         lsum.setPar ( n , c_n ) 
         
@@ -391,8 +388,8 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
     ## result 
     bsum = Ostap.Math.Bernstein ( N , xmin , xmax )
  
-    from scipy import integrate
-    import warnings
+    ## from scipy import integrate
+    from ostap.math.integral import integral as _integral 
 
     args = {} 
     for i in  range ( 0 , N + 1 ) :
@@ -412,10 +409,8 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
         fun_i = lambda x : float ( func ( x ) ) * dual ( bsum.t( x ) )
 
         ## use scipy for integration 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            if kwargs : args = deepcopy ( kwargs )
-            c_i = integrate.quad ( fun_i , xmin , xmax , **args )[0] / ( xmax - xmin )
+        if kwargs : args = deepcopy ( kwargs )
+        c_i = _integral ( fun_i , xmin , xmax , **args ) / ( xmax - xmin )
             
         bsum.setPar( i , c_i )
         
@@ -474,8 +469,7 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
         y2 = float ( func ( x2 ) )
         return 0.5 * ( y1 + y2 ) 
     
-    from scipy import integrate
-    import warnings
+    from ostap.math.integral import integral as _integral 
     
     args = {} 
     for i in  range ( len ( b_i ) )  : 
@@ -495,10 +489,8 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
         fun_i = lambda x : _sym_func_ ( x ) * dual ( bsum.t( x ) )
 
         ## use scipy for integration 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            if kwargs : args = deepcopy ( kwargs )
-            c_i = integrate.quad ( fun_i , xmin , xmax , **args )[0] / ( xmax - xmin )
+        if kwargs : args = deepcopy ( kwargs )
+        c_i = _integral ( fun_i , xmin , xmax , **args ) / ( xmax - xmin )
             
         b_i[i] = c_i 
         

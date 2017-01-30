@@ -67,8 +67,7 @@ else                       : logger = getLogger ( __name__              )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Moment(object) :
-    """
-    Calculate the N-th moment for the distribution
+    """Calculate the N-th moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
     >>> mean  = Moment(1,xmin,xmax)  ## specify min/max
@@ -99,15 +98,13 @@ class Moment(object) :
     
     ## calculate un-normalized 0-moment  
     def _moment0_ ( self , func , *args ) :
-        """
-        Calculate un-normalized 0-moment
+        """Calculate un-normalized 0-moment
         """
         return self._integral_ ( func , self._xmin , self._xmax , *args )
     
     ## calculate un-normalized k-moment  
     def _momentK_ ( self , k , func , mu = None , *args ) :
-        """
-        Calculate unnormalized k-moment
+        """Calculate unnormalized k-moment
         """
         x0     = self._x0 if mu is None else mu 
         func_N = lambda x,*a : func( x , *a ) * ( ( x - x0 ) ** k  )
@@ -143,8 +140,7 @@ class Moment(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class CentralMoment(Moment) :
-    """
-    Calculate the N-th central moment for the distribution
+    """Calculate the N-th central moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
     >>> mc        = CentralMoment(1,xmin,xmax)  ## specify min/max
@@ -153,8 +149,7 @@ class CentralMoment(Moment) :
     """
     ## constructor
     def __init__ ( self , N , xmin , xmax , err = False, *args ) :
-        """
-        Contructor 
+        """Contructor 
         """
         Moment.__init__ ( self , N , xmin , xmax , err , 0.0 , *args ) 
 
@@ -190,8 +185,7 @@ class CentralMoment(Moment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Mean(Moment) :
-    """
-    Calculate the N-th moment for the distribution or function 
+    """Calculate the N-th moment for the distribution or function 
     
     >>> xmin,xmax = 0,math.pi 
     >>> mean  = Mean ( xmin , xmax )  ## specify min/max
@@ -217,8 +211,7 @@ class Mean(Moment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Variance(Mean) :
-    """
-    Calculate the variance for the distribution or function  
+    """Calculate the variance for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> variance  = Variance ( xmin,xmax )  ## specify min/max
     >>> value     = variance ( math.sin  )
@@ -255,8 +248,7 @@ class Variance(Mean) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class RMS(Variance) :
-    """
-    Calculate the RMS for the distribution or function  
+    """Calculate the RMS for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> rms       = RMS ( xmin,xmax )  ## specify min/max
     >>> value     = rms ( math.sin  )
@@ -266,8 +258,7 @@ class RMS(Variance) :
         
     ## calculate the variance 
     def __call__ ( self , func , *args ) :
-        """
-        Calculate the RMS for the distribution or function          
+        """Calculate the RMS for the distribution or function          
         """
         ##
         args   = args if args else self._args
@@ -336,8 +327,7 @@ class Skewness(Variance) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-09
 class Kurtosis(Skewness) :
-    """
-    Calculate the variance for the distribution or function  
+    """Calculate the variance for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> kurt      = Kurtosis ( xmin,xmax )  ## specify min/max
     >>> value     = kurt     ( math.sin  )
@@ -380,8 +370,7 @@ class Kurtosis(Skewness) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Median(RMS) :
-    """
-    Calculate median for the distribution or function  
+    """Calculate median for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> median    = Median ( xmin,xmax )  ## specify min/max
     >>> value     = median ( math.sin  )
@@ -435,8 +424,7 @@ class Median(RMS) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Quantile(Median) :
-    """
-    Calculate quantiles for the distribution or function  
+    """Calculate quantiles for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> quantile  = Quantile ( 0.1 , xmin,xmax )  ## specify min/max
     >>> value     = quantile ( math.sin  )
@@ -506,8 +494,7 @@ class Quantile(Median) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Mode(Median) :
-    """
-    Calculate the mode for the distribution or function  
+    """Calculate the mode for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> mode      = Mode ( xmin,xmax )  ## specify min/max
     >>> value     = mode ( math.sin  )
@@ -555,8 +542,7 @@ class Mode(Median) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Width(Mode) :
-    """
-    Calculate the mode for the distribution or function  
+    """Calculate the mode for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> width     = Width ( xmin,xmax )  ## specify min/max
     >>> x1,x2     = width ( math.sin )
@@ -605,8 +591,7 @@ class Width(Mode) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 class CL_symm(object) :
-    """
-    Calculate symmetic confidence interval around x0
+    """Calculate symmetic confidence interval around x0
     for the given function on (xmin,xmax) interval
     function is assumed to be zero outside the interval
     >>> fun = lambda x : exp( -0.5*x*x)
@@ -704,8 +689,7 @@ class CL_symm(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 class CL_asymm(object) :
-    """
-    Calculate asymmetic confidence interval around x0
+    """Calculate asymmetic confidence interval around x0
     for the given function on (xmin,xmax) interval
     function is assumed to be zero outside the interval
     >>> fun = lambda x : exp( -0.5*x*x)
@@ -818,8 +802,7 @@ class CL_asymm(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def sp_action ( func , actor , xmin = None , xmax = None ) :
-    """
-    Calculate some statistical quantities of variable, considering function to be PDF 
+    """Calculate some statistical quantities of variable, considering function to be PDF 
     """
     ##
     import numpy
