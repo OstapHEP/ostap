@@ -1,16 +1,72 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file  moments.py 
-#  Utilities to get momentu for varuosy functions/distributions/pdfs
+#  Utilities to get moments for various functions/distributions/pdfs
+#  - Moment
+#  - CentralMoment
+#  - Mean
+#  - Variance 
+#  - RMS 
+#  - Skewness
+#  - Kurtosis
+#  For these quantities scipy.integrate is used integration engine, in case scipy
+#  is not available, a hand-made replacement is used
 #
+#  With help of scipy.optimize.brent additional quantities can be calculated
+#  - Median
+#  - Quantile 
+#  - Mode
+#  - Width
+#  - symmetric and asymmetric "confidence intervals"
+#
+#  All objects exists as classes/functors and as standalone simple functions
+#  - moment
+#  - centralMoment
+#  - mean
+#  - variance 
+#  - rms 
+#  - skewness
+#  - kurtosis
+#  - median
+#  - quantile 
+#  - mode
+#  - width
+#  - cl_symm and sl_asymm 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-06-06
-#  
+#  @date   2014-06-06  
 # =============================================================================
-"""Utilities to get momentu for varuosy functions/distributions/pdfs
+"""Utilities to get moments for various functions/distributions/pdfs
+- Moment
+- CentralMoment
+- Mean
+- Variance 
+- RMS 
+- Skewness
+- Kurtosis
+For these quantities scipy.integrate is used integration engine, in case scipy
+is not available, a hand-made replacement is used
+
+Also it calculates with help of scipy.optimize.brent following quantities
+- Median
+- Quantile 
+- Mode
+- Width
+- symmetric and asymmetric ``confidence intervals''
+
+All objects exists as classes/functors and as standalone simlpe functions
+- moment
+- centralMoment
+- mean
+- variance 
+- rms 
+- skewness
+- kurtosis
+- median
+- quantile 
+- mode
+- width
+- cl_symm and sl_asymm 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -18,34 +74,35 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-06"
 __all__     = (
     ##
-    ## stat-quantities   (based on generic SciPy-actions)
-    "Moment"        , ## calculate N-th moment of functions/distribitions, etc (scipy)
+    ## stat-quantities 
+    "Moment"        , ## calculate N-th moment of functions/distribitions, etc 
     "CentralMoment" , ## calculate N-th central moment of functions/distribitions
-    "Mean"          , ## calculate "mean"     for functions/distribitions, etc (scipy)
-    "Variance"      , ## calculate "variance" for functions/distribitions, etc (scipy)
-    "RMS"           , ## calculate "RMS"      for functions/distribitions, etc (scipy)
-    "Skewness"      , ## calculate "skewness" for functions/distribitions, etc (scipy)
-    "Median"        , ## calculate "median"   for functions/distribitions, etc (scipy)
-    "Quantile"      , ## calculate "quantile" for functions/distribitions, etc (scipy)
-    "Mode"          , ## calculate "mode"     for functions/distribitions, etc (scipy)
-    "Width"         , ## calculate "width"    for functions/distribitions, etc (scipy)
-    "CL_symm"       , ## calcualte symmetrical confidence intervals            (scipy)
-    "CL_asymm"      , ## calcualte asymmetrical confidence intervals           (scipy)
+    "Mean"          , ## calculate "mean"     for functions/distribitions, etc 
+    "Variance"      , ## calculate "variance" for functions/distribitions, etc 
+    "RMS"           , ## calculate "RMS"      for functions/distribitions, etc 
+    "Skewness"      , ## calculate "skewness" for functions/distribitions, etc 
+    "Kurtosis"      , ## calculate "kurtosis" for functions/distribitions, etc 
+    "Median"        , ## calculate "median"   for functions/distribitions, etc (brentq)
+    "Quantile"      , ## calculate "quantile" for functions/distribitions, etc (brentq)
+    "Mode"          , ## calculate "mode"     for functions/distribitions, etc (brentq)
+    "Width"         , ## calculate "width"    for functions/distribitions, etc (brentq)
+    "CL_symm"       , ## calcualte symmetrical confidence intervals            (brentq)
+    "CL_asymm"      , ## calcualte asymmetrical confidence intervals           (brentq)
     ##
-    ## stat-quantities   (based on generic SciPy-actions)
-    "moment"        , ## calculate N-th moment of functions/distribitions, etc (scipy)
-    "central_moment", ## calculate N-th moment of functions/distribitions, etc (scipy)
-    "mean"          , ## calculate "mean"     for functions/distribitions, etc (scipy)
-    "variance"      , ## calculate "variance" for functions/distribitions, etc (scipy)
-    "rms"           , ## calculate "RMS"      for functions/distribitions, etc (scipy)
-    "skewness"      , ## calculate "skeness"  for functions/distribitions, etc (scipy)
-    "kurtosis"      , ## calculate "kurtosis" for functions/distribitions, etc (scipy)
-    "median"        , ## calculate "median"   for functions/distribitions, etc (scipy)
-    "quantile"      , ## calculate "quantile" for functions/distribitions, etc (scipy)
-    "mode"          , ## calculate "mode"     for functions/distribitions, etc (scipy)
-    "width"         , ## calculate "width"    for functions/distribitions, etc (scipy)
-    "cl_symm"       , ## calculate symmetrical confidence intervals            (scipy)
-    "cl_asymm"      , ## calculate asymmetrical confidence intervals           (scipy)
+    ## stat-quantities   
+    "moment"        , ## calculate N-th moment of functions/distribitions, etc 
+    "central_moment", ## calculate N-th moment of functions/distribitions, etc 
+    "mean"          , ## calculate "mean"     for functions/distribitions, etc 
+    "variance"      , ## calculate "variance" for functions/distribitions, etc 
+    "rms"           , ## calculate "RMS"      for functions/distribitions, etc 
+    "skewness"      , ## calculate "skeness"  for functions/distribitions, etc 
+    "kurtosis"      , ## calculate "kurtosis" for functions/distribitions, etc 
+    "median"        , ## calculate "median"   for functions/distribitions, etc (brentq)
+    "quantile"      , ## calculate "quantile" for functions/distribitions, etc (brentq)
+    "mode"          , ## calculate "mode"     for functions/distribitions, etc (brentq)
+    "width"         , ## calculate "width"    for functions/distribitions, etc (brentq
+    "cl_symm"       , ## calculate symmetrical confidence intervals            (brentq)
+    "cl_asymm"      , ## calculate asymmetrical confidence intervals           (brentq)
     ##
     ) 
 # =============================================================================
@@ -72,12 +129,10 @@ class Moment(object) :
     >>> xmin,xmax = 0,math.pi 
     >>> mean  = Moment(1,xmin,xmax)  ## specify min/max
     >>> value = mean  ( math.sin )
-    
     """
     ## constructor
     def __init__ ( self , N , xmin , xmax , err = False , x0 = 0 , *args ) :
-        """
-        Contructor 
+        """Contructor 
         """
         if not isinstance ( N , ( int , long ) ) or 0 > N  :
             raise TypeError('Moment: illegal order')
@@ -92,7 +147,7 @@ class Moment(object) :
 
     ## make an integral 
     def _integral_ ( self , func , xmn , xmx , *args ) :
-        from ostap.math.deriv import Integral
+        from ostap.math.integral import Integral
         integrator = Integral ( func , xmn , err = self._err )
         return integrator ( xmx , *args )
     
@@ -144,8 +199,7 @@ class CentralMoment(Moment) :
     
     >>> xmin,xmax = 0,math.pi 
     >>> mc        = CentralMoment(1,xmin,xmax)  ## specify min/max
-    >>> value     = mc  ( math.sin )
-    
+    >>> value     = mc  ( math.sin )    
     """
     ## constructor
     def __init__ ( self , N , xmin , xmax , err = False, *args ) :
@@ -264,7 +318,7 @@ class RMS(Variance) :
         args   = args if args else self._args
         ##
         var2 = Variance.__call__ ( self , func , *args )
-        import LHCbMath.math_ve as ME 
+        import ostap.math.math_ve as ME 
         return ME.sqrt ( var2 ) 
 
     def __str__ ( self ) :
@@ -368,12 +422,15 @@ class Kurtosis(Skewness) :
 #  @endcode 
 #  @see https://en.wikipedia.org/wiki/Median#Inequality_relating_means_and_medians
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @attention <code>scipy.optimize.brentq</code> is needed!
+#  @see scipy.optimize.brentq 
 #  @date   2015-07-12
 class Median(RMS) :
     """Calculate median for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> median    = Median ( xmin,xmax )  ## specify min/max
     >>> value     = median ( math.sin  )
+    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , xmin , xmax ) :
         RMS.__init__ ( self , xmin , xmax , err = False )
@@ -381,7 +438,7 @@ class Median(RMS) :
     ## calculate he median
     def _median_ ( self , func , xmin , xmax , *args ) :
         ## need to know the integral
-        from ostap.math.deriv import IntegralCache
+        from ostap.math.integral import IntegralCache
         iint   = IntegralCache ( func ,  xmin , False , *args )
         half   = 2.0 / iint    ( xmax ) 
         
@@ -422,12 +479,14 @@ class Median(RMS) :
 #  value     = quantile ( math.sin  )
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @attention scipy.optmize.brentq is used 
 #  @date   2015-07-12
 class Quantile(Median) :
     """Calculate quantiles for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> quantile  = Quantile ( 0.1 , xmin,xmax )  ## specify min/max
     >>> value     = quantile ( math.sin  )
+    - scipy.optmize.brentq is used 
     """
     def __init__ ( self , Q , xmin , xmax ) :
         Median.__init__ ( self , xmin , xmax )
@@ -448,7 +507,7 @@ class Quantile(Median) :
         elif  1.0 == self._Q : return self._xmax
 
         ## need to know the integral
-        from ostap.math.deriv import IntegralCache
+        from ostap.math.integral import IntegralCache
         iint = IntegralCache ( func, self._xmin, False , *args )
         quan = 1.0 / iint    (  self._xmax ) / self._Q 
         
@@ -491,6 +550,7 @@ class Quantile(Median) :
 #  mode      = Mode ( xmin,xmax )  ## specify min/max
 #  value     = mode ( math.sin  )
 #  @endcode 
+#  @attention scipy.optimize.brentq is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Mode(Median) :
@@ -498,6 +558,7 @@ class Mode(Median) :
     >>> xmin,xmax = 0,math.pi 
     >>> mode      = Mode ( xmin,xmax )  ## specify min/max
     >>> value     = mode ( math.sin  )
+    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , xmin , xmax ) :
         Median.__init__ ( self , xmin , xmax )
@@ -539,6 +600,7 @@ class Mode(Median) :
 #  x1,x2     = width ( math.sin  )
 #  fwhm      = x2-x1
 #  @endcode 
+#  @attention scipy.optimize.brentq is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Width(Mode) :
@@ -547,6 +609,7 @@ class Width(Mode) :
     >>> width     = Width ( xmin,xmax )  ## specify min/max
     >>> x1,x2     = width ( math.sin )
     >>> fwhm      = x2-x1
+    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , xmin , xmax , height_factor = 0.5 ) :
         Mode.__init__ ( self , xmin , xmax )
@@ -588,6 +651,7 @@ class Width(Mode) :
 #  reg = CL_symm ( 0.68 , -10 , 10 )
 #  print reg ( fun )
 #  @endcode
+#  @attention scipy.optimize.brentq is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 class CL_symm(object) :
@@ -597,6 +661,7 @@ class CL_symm(object) :
     >>> fun = lambda x : exp( -0.5*x*x)
     >>> reg = CL_symm ( 0.68 , -10 , 10 )
     >>> print reg ( fun )
+    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , prob ,  xmin , xmax , x0 = None , *args ) :
         
@@ -624,6 +689,7 @@ class CL_symm(object) :
         if hasattr ( func , 'integral' ) :
             _integral_ = lambda f , low , high : f.integral (      low , high , *args )
         else                             :
+            from ostap.math.integral import integral 
             _integral_ = lambda f , low , high :   integral ( f  , low , high , False , *args )
 
         #
@@ -665,7 +731,8 @@ class CL_symm(object) :
         ## use scipy to find solution 
         from scipy import optimize        
         s = optimize.brentq (  ifun , 0 , max ( xmax - x0 , x0 - xmin ) )
-        
+
+        from ostap.math.ve import VE 
         return VE ( x0 , s * s )
 
 
@@ -686,6 +753,7 @@ class CL_symm(object) :
 #  reg   = CL_asymm ( 0.68 , -10 , 10 )
 #  print reg ( fun )
 #  @endcode 
+#  @attention scipy.optimize.brentq is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 class CL_asymm(object) :
@@ -695,6 +763,7 @@ class CL_asymm(object) :
     >>> fun = lambda x : exp( -0.5*x*x)
     >>> reg = CL_asymm ( 0.68 , -10 , 10 )
     >>> print reg ( fun )
+    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , prob ,  xmin , xmax , *args ) :
         
@@ -730,6 +799,7 @@ class CL_asymm(object) :
         if hasattr ( func , 'integral' ) :
             _integral_ = lambda f , low , high : f.integral (      low , high , *args )
         else                             :
+            from ostap.math.integral import integral
             _integral_ = lambda f , low , high :   integral ( f  , low , high , False , *args )
 
         #
@@ -757,17 +827,19 @@ class CL_asymm(object) :
         normL = _integral_ ( func , xmin  , xmode )
         normR = _integral_ ( func , xmode , xmax  )
 
+        from ostap.math.base import isequal, iszero
+        
         ## solve equation f(x)=a 
         def _solve_  ( func , fval , xmn , xmx , *args ) :
             ##
-            if is_equal (  xmn , xmx   )  : return xmn
+            if isequal (  xmn , xmx   )  : return xmn
             ## 
             ifun = lambda x,*a : func(x,*a) - fval
             ## 
             fmn = ifun  ( xmn )
-            if is_zero  ( ifun ( xmn ) )  : return xmn
+            if iszero  ( ifun ( xmn ) )  : return xmn
             fmx = ifun  ( xmx )
-            if is_zero  ( ifun ( xmx ) )  : return xmx 
+            if iszero  ( ifun ( xmx ) )  : return xmx 
             ##
             if 0 < fmx * fmn : ## more or less arbitrary choice 
                 return xmx if abs ( fmx ) <= abs ( fmn ) else xmn 
@@ -780,8 +852,8 @@ class CL_asymm(object) :
         fm   = func ( xmode ) 
         def iifun ( f ) :
 
-            if   is_zero  ( f      ) : x1 , x2 = xmin,xmax
-            elif is_equal ( f , fm ) : return -yval 
+            if   iszero  ( f      ) : x1 , x2 = xmin,xmax
+            elif isequal ( f , fm ) : return -yval 
             else : 
                 x1 = _solve_ ( func ,  f , xmin  , xmode )
                 x2 = _solve_ ( func ,  f , xmode , xmax  )
@@ -838,7 +910,7 @@ def moment ( func , N , xmin = None , xmax = None , err = False , x0 = 0 ) :
     >>> fun  = ...
     >>> mom5 = moment ( fun , 5 , xmin = 10 , xmax = 50 )
     """
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Moment ( N , x1 , x2 , err , x0 ) 
     return sp_action ( func , actor , xmin , xmax )
 
@@ -855,7 +927,7 @@ def central_moment ( func , N , xmin = None , xmax = None , err = False ) :
     >>> fun  = ...
     >>> mom5 = central_moment ( fun , 5 , xmin = 10 , xmax = 50 )
     """
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : CentralMoment ( N , x1 , x2 , err ) 
     return sp_action ( func , actor , xmin , xmax )
 
@@ -872,7 +944,7 @@ def mean ( func , xmin = None , xmax = None , err = False ) :
     >>> fun = ...
     >>> m   = mean( fun , xmin = 10 , xmax = 50 )
     """
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Mean ( x1 , x2 , err ) 
     ## use it! 
     return sp_action ( func , actor , xmin , xmax )
@@ -891,7 +963,7 @@ def variance ( func , xmin = None , xmax = None , err = False ) :
     >>> v   = variance( fun , xmin = 10 , xmax = 50 )
     """
     ##
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Variance ( x1 , x2 , err ) 
     ## use it! 
     return sp_action ( func , actor  , xmin , xmax )
@@ -910,7 +982,7 @@ def rms ( func , xmin = None , xmax = None , err = False ) :
     >>> v   = rms( fun , xmin = 10 , xmax = 50 )
     """
     ##
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : RMS ( x1 , x2 , err ) 
     ## use it! 
     return sp_action ( func , actor  , xmin , xmax )
@@ -929,7 +1001,7 @@ def skewness ( func , xmin = None , xmax = None , err = False ) :
     >>> v   = skewness ( fun , xmin = -10 , xmax = 10 )
     """
     ##
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Skewness ( x1 , x2 , err ) 
     ## use it! 
     return sp_action ( func , actor  , xmin , xmax )
@@ -950,7 +1022,7 @@ def kurtosis ( func , xmin = None , xmax = None , err = False ) :
     >>> kurt = kurtosis ( fun , xmin = 10 , xmax = 50 )
     """
     ##
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Kurtosis ( x1 , x2 , err ) 
     ## use it! 
     return sp_action ( func , actor  , xmin , xmax )
@@ -968,7 +1040,7 @@ def median ( func , xmin = None , xmax = None ) :
     >>> fun = ...
     >>> v   = median( fun , xmin = 10 , xmax = 50 )
     """
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Median ( x1 , x2 ) 
     ##
     return sp_action ( func , actor , xmin , xmax )
@@ -986,7 +1058,7 @@ def quantile ( func , Q , xmin = None , xmax = None , err = False , x0 = 0 ) :
     >>> fun  = ...
     >>> quan = quantile ( fun , 0.1 , xmin = 10 , xmax = 50 )
     """
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Quantile ( Q , x1 , x2 ) 
     return sp_action ( func , actor , xmin , xmax )
 
@@ -1003,9 +1075,9 @@ def mode ( func , xmin = None , xmax = None ) :
     >>> fun = ...
     >>> v   = mode( fun ,  xmin = 10 , xmax = 50 )
     """
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     ## use it! 
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Mode  ( x1 , x2 ) 
     return sp_action ( func , actor , xmin , xmax )
 
@@ -1024,9 +1096,9 @@ def width ( func , xmin = None , xmax = None , height_factor = 0.5 ) :
     >>> x1,x2 = width ( fun ,  xmin = 10 , xmax = 50 )
     >>> fwhm  = x2-x1   
     """
-    ## get the functions from LHCbMath.deriv 
+    ## get the functions from ostap.stats.moments 
     ## use it! 
-    ## get the functions from LHCbMath.deriv
+    ## get the functions from ostap.stats.moments
     actor = lambda x1,x2 : Width  ( x1 , x2 , height_factor ) 
     return sp_action ( func , actor , xmin , xmax )
 
