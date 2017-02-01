@@ -26,6 +26,8 @@ else                       : logger = getLogger( __name__                  )
 # =============================================================================
 logger.debug ( 'Tiny decoration for ROOT.FitResult object')
 # =============================================================================
+from ostap.math.ve import VE 
+# =============================================================================
 ## representation of TFitResult object 
 #  @code 
 #  fit_result = hiisto.Fit( func , 'S' , ... )

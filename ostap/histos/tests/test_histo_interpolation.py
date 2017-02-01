@@ -20,7 +20,7 @@ import ROOT, random
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'ostap/histos/tests/test_histo_interpolation' )
+    logger = getLogger ( 'test_histo_interpolation' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================

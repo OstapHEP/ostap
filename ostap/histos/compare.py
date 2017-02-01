@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
+## Copyright (c) Ostap developpers.
+# =============================================================================  
 ## @file
 #  Module with utilities for specific comparison of histograms/functions/shapes 
-#
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
-#  
 # =============================================================================
 """Module with utilities for specific comparison of histograms/functions/shapes
 """
@@ -32,11 +29,23 @@ from   ostap.core.core     import hID,VE
 import ostap.histos.histos 
 import ostap.histos.param
 # =============================================================================
-## Can 1D-histogram can be considered as ``constant'' ?  
-def _h1_constant_ ( h1 , prob = 0.50 , opts = '0Q' ) :
-    """Can  1D-histogram be considered as constant ? 
+## Can 1D-histogram can be considered as ``constant'' ?
+#  @code
+#  histo = ...
+#  print 'Is constant? %s ' % histo.is_constant( prob = 0.01 )
+#  @endcode 
+def _h1_constant_ ( h1 , prob = 0.10 , opts = '0Q' , rescale = False ) :
+    """Can  1D-histogram be considered as constant ?
+    >>> histo = ...
+    >>> print 'Is constant? %s ' % histo.is_constant( prob = 0.01 ) 
     """
-    # 
+    #
+    if rescale :
+        h1_ = h1.rescale_bins(1)
+        res = _h1_constant_ ( h1_ , prob , opts , rescale = False )
+        del h1_
+        return res
+    
     if not isinstance ( h1 , ( ROOT.TH1D , ROOT.TH1F ) ) : return False 
     #
     r  = h1.Fit ( 'pol0', 'S' + opts )
@@ -55,7 +64,7 @@ ROOT.TH1F.is_constant = _h1_constant_
 def _h1_cmp_fit_ ( h1              ,
                    h2              ,
                    rescale = False ,  
-                   opts    = ''    ) :
+                   opts    = '0Q'  ) :
     """Compare histograms by refit of the first with functions,
     extracted from the second one
 
@@ -65,24 +74,27 @@ def _h1_cmp_fit_ ( h1              ,
     >>> if r : print r.Prob()    
     """    
     if rescale :
-        h1 = h1.rescale_bins ( 1.0 ) 
-        h2 = h2.rescale_bins ( 1.0 )
-
+        h1_ = h1.rescale_bins   ( 1.0 )
+        h2_ = h2.rescale_bins   ( 1.0 )
+        res = _h1_cmp_fit_ ( h1_ , h2_ ,  rescale = False , opts = opts )
+        del h1_, h2_
+        return res 
+    
     f2 = h2.asTF () 
     f2.ReleaseParameter ( 0 ) 
 
-    rf = h1.Fit ( f2 , 'S0Q' + opts ) 
+    rf = h1.Fit ( f2 , 'S' + opts ) 
     if 0 != rf.Status() :
         logger.warning("Can't fit with function " % rf.Status() )
         return None
-            
+
     return rf
 
 ROOT.TH1D.cmp_fit = _h1_cmp_fit_
 ROOT.TH1F.cmp_fit = _h1_cmp_fit_ 
 
 # =============================================================================
-## compare the 1D-historgams by chi2 
+## compare the 1D-histograms by chi2 
 def _h1_cmp_chi2_ ( h1              ,
                     h2              ,
                     rescale = False ) :
@@ -92,13 +104,14 @@ def _h1_cmp_chi2_ ( h1              ,
     >>> chi2ndf,prob  = h1.cmp_chi2 ( h2 )    
     """
     if rescale :
-        h1 = h1.rescale_bins ( 1.0 )
-        h2 = h2.rescale_bins ( 1.0 )
-        
-        hmean  = h1.mean()             ## normalization point
-        
-        h1    /= h1( hmean )
-        h2    /= h2( hmean )
+        h1_    = h1.rescale_bins   ( 1.0 )
+        h2_    = h2.rescale_bins   ( 1.0 )
+        hmean  = h1_.mean()             ## normalization point        
+        h1    /= h1_( hmean )
+        h2    /= h2_( hmean )
+        res = _h1_cmp_chi2_ ( h1_ , h2_ ,  rescale = False )
+        del h1_, h2_
+        return res 
 
     c2  = 0
     ndf = 0  
@@ -140,7 +153,7 @@ def _h1_chi2_cmp_ ( h1                                    ,
         _func_  = lambda x,xl,xr : func.Integral(xl,xr)/(xr-xl) 
     elif integral :
         ## use numerical integration from scipy
-        from LHCbMath.deriv import integral as _integral_
+        from ostap.math.intergal import integral as _integral_
         _func_  = lambda x,xl,xr : _integral_ ( func , xl , xr )/(xr-xl)
         
     for entry in h1.iteritems() :
@@ -170,7 +183,6 @@ ROOT.TH1F.chi2_cmp = _h1_chi2_cmp_
 ## compare the 1D-historgams (as functions)
 #  calculate
 # \f$cos \theta = \frac{ f_1 \cdot f_2 } { \left|f_1\right|\left|f_2\right| }\f$
-#  
 def _h1_cmp_costheta_ ( h1              ,
                         h2              ,
                         rescale = False ) :  
@@ -183,30 +195,22 @@ def _h1_cmp_costheta_ ( h1              ,
     
     """
     if rescale :
-        h1 = h1.rescale_bins ( 1.0 )
-        h2 = h2.rescale_bins ( 1.0 )
-
+        h1_ = h1.rescale_bins   ( 1.0 )
+        h2_ = h2.rescale_bins   ( 1.0 )
+        res = _h1_cmp_costheta_ ( h1_ , h2_ , rescale = False )
+        del h1_, h2_
+        return res 
+        
     f1 = h1.asFunc   ()
     f2 = h2.asFunc   ()
 
-    import warnings 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        
-        from scipy.integrate import quad
-        
-        lims = h1.xminmax()
-        
-        r1   = quad ( lambda x : f1( x )**2    , lims[0] , lims[1] , limit = 200 )
-        r2   = quad ( lambda x : f2( x )**2    , lims[0] , lims[1] , limit = 200 )
-        r12  = quad ( lambda x : f1( x )*f2(x) , lims[0] , lims[1] , limit = 200 )
-        
-        from math import sqrt
-        
-        vr1   = VE ( r1 [0] , r1 [1]**2 )
-        vr2   = VE ( r2 [0] , r2 [1]**2 )
-        vr12  = VE ( r12[0] , r12[1]**2 )
-        
+    lims = h1.xminmax()
+    
+    from ostap.math.integral import integral as _integral_
+    vr1   = _integral_ ( lambda x : f1( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
+    vr2   = _integral_ ( lambda x : f2( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
+    vr12  = _integral_ ( lambda x : f1( x )*f2(x) , lims[0] , lims[1] , limit = 200 , err = True )
+
     return vr12 / ( vr1 * vr2 ) ** 0.5 
 
 ROOT.TH1D.cmp_cos = _h1_cmp_costheta_
@@ -228,32 +232,29 @@ def _h1_cmp_dist_ ( h1              ,
     
     """
     if rescale :
-        h1 = h1.rescale_bins ( 1.0 )
-        h2 = h2.rescale_bins ( 1.0 )
-
+        h1_ = h1.rescale_bins   ( 1.0 )
+        h2_ = h2.rescale_bins   ( 1.0 )
+        res = _h1_cmp_dist_ ( h1_ , h2_ , rescale = False )
+        del h1_, h2_
+        return res 
+    
     f1 = h1.asFunc   ()
     f2 = h2.asFunc   ()
 
-    import warnings 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        
-        from scipy.integrate import quad
-        
-        lims = h1.xminmax()
-        
-        r1   = quad ( lambda x : f1 ( x )**2    , lims[0] , lims[1] , limit = 200 )
-        r2   = quad ( lambda x : f2 ( x )**2    , lims[0] , lims[1] , limit = 200 )
-        
-        import math 
-        
-        sf1 = 1.0 / math.sqrt ( r1 [0] ) 
-        sf2 = 1.0 / math.sqrt ( r2 [0] ) 
-        
-        d12  = quad ( lambda x : (sf1*f1(x)-sf2*f2(x))**2 , lims[0] , lims[1] , limit = 200 )
-        
-    return VE( d12[0] , d12[1]**2)
+    lims = h1.xminmax()
+    
+    from ostap.math.integral import integral as _integral_
+    r1   = _integral_ ( lambda x : f1 ( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
+    r2   = _integral_ ( lambda x : f2 ( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
+    
+    import math 
+    
+    sf1  = 1.0 / math.sqrt ( r1.value() ) 
+    sf2  = 1.0 / math.sqrt ( r2.value() ) 
+    
+    d12  = _integral_ ( lambda x : (sf1*f1(x)-sf2*f2(x))**2 , lims[0] , lims[1] , limit = 200 , err = True )
 
+    return d12 
 
 ROOT.TH1D.cmp_dist = _h1_cmp_dist_
 ROOT.TH1F.cmp_dist = _h1_cmp_dist_ 
@@ -274,51 +275,62 @@ def _h1_cmp_dist2_ ( h1              ,
     
     """
     if rescale :
-        h1 = h1.rescale_bins ( 1.0 )
-        h2 = h2.rescale_bins ( 1.0 )
-
+        h1_ = h1.rescale_bins   ( 1.0 )
+        h2_ = h2.rescale_bins   ( 1.0 )
+        res = _h1_cmp_dist2_ ( h1_ , h2_ , rescale = False )
+        del h1_, h2_
+        return res 
 
     f1 = h1.asFunc   ()
     f2 = h2.asFunc   ()
 
-    import warnings 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        
-        from scipy.integrate import quad
-        
-        lims = h1.xminmax()
-        
-        r1   = quad ( lambda x : f1 ( x )**2    , lims[0] , lims[1] , limit = 200 )
-        r2   = quad ( lambda x : f2 ( x )**2    , lims[0] , lims[1] , limit = 200 )
-        
-        import math 
-        
-        sf1 = 1.0 / math.sqrt ( r1 [0] ) 
-        sf2 = 1.0 / math.sqrt ( r2 [0] ) 
-        
-        def  _func_   ( x ) :
-            v1 =  sf1 * f1 ( x )
-            v2 =  sf2 * f2 ( x )
-            v  = (v1-v2)*(v1-v2)/abs(v1*v2)
-            return v*v 
-        
-        d12  = quad ( _func_ , lims[0] , lims[1] , limit = 200 )
-        
-    return VE( d12[0] , d12[1]**2)
+    lims = h1.xminmax()
+         
+    from ostap.math.integral import integral as _integral_
+    r1   = _integral_( lambda x : f1 ( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
+    r2   = _integral_( lambda x : f2 ( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
+    
+    import math 
+    
+    sf1 = 1.0 / math.sqrt ( r1.value() ) 
+    sf2 = 1.0 / math.sqrt ( r2.value() ) 
+    
+    def  _func_   ( x ) :
+        v1 =  sf1 * f1 ( x )
+        v2 =  sf2 * f2 ( x )
+        v  = (v1-v2)*(v1-v2)/abs(v1*v2)
+        return v*v 
+    
+    d12  = _integral_ ( _func_ , lims[0] , lims[1] , limit = 200 , err = True )
+
+    return d12 
 
 ROOT.TH1D.cmp_dist2 = _h1_cmp_dist2_
 ROOT.TH1F.cmp_dist2 = _h1_cmp_dist2_ 
 
 # =============================================================================
-## calculate and print some statistic for comparison  
+## calculate and print some statistic for comparison
+#  @code
+#  h1 , h2 = ...
+#  h1.cmp_prnt ( h2 )
+#  @endcode 
 def _h1_cmp_prnt_ ( h1              ,
                     h2              ,
                     head1   = ''    ,
                     head2   = ''    ,
-                    title   = ''    ) : 
-    """ Calculate and print some statistic information for two histos 
+                    title   = ''    ,
+                    rescale = False ) : 
+    """ Calculate and print some statistic information for two histos
+    >>> h1 , h2 = ...
+    >>> h1.cmp_prnt ( h2 ) 
     """
+    if rescale :
+        h1_ = h1.rescale_bins   ( 1.0 )
+        h2_ = h2.rescale_bins   ( 1.0 )
+        res = _h1_cmp_prnt_ ( h1_ , h2_ , head1 , head2 , title , rescale = False )
+        del h1_, h2_
+        return res 
+    
     if not head1 : head1 = h1.GetName() 
     if not head2 : head2 = h1.GetName()
     
