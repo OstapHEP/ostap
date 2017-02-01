@@ -46,7 +46,51 @@ _nemax = 20000  ## number of events per CPU-core
 _ncmax =     6  ## maximal number of CPUs: there are some problems with >= 7
                 ## @see https://sft.its.cern.ch/jira/browse/ROOT-4897
 _ncpus = []
-#
+# =============================================================================
+## MINUIT covarinace matrix status:
+# - status = -1 :  not available (inversion failed or Hesse failed)
+# - status =  0 : available but not positive defined
+# - status =  1 : covariance only approximate
+# - status =  2 : full matrix but forced pos def
+# - status =  3 : full accurate matrix
+_cov_qual_ = {
+    -1 :  '-1/not available (inversion failed or Hesse failed)' ,
+    0  :  ' 0/available but not positive defined',
+    1  :  ' 1/covariance only approximate',
+    2  :  ' 2/full matrix but forced pos def',
+    3  :  ' 3/full accurate matrix',
+    }
+# =============================================================================
+## MINUIT covarinace matrix status:
+# - status = -1 :  not available (inversion failed or Hesse failed)
+# - status =  0 : available but not positive defined
+# - status =  1 : covariance only approximate
+# - status =  2 : full matrix but forced pos def
+# - status =  3 : full accurate matrix
+def cov_qual ( status ) : return _cov_qual_.get( status , "%s" % status )
+# =============================================================================
+## Miniut::minimize status code
+# - status = 1    : Covariance was made pos defined
+# - status = 2    : Hesse is invalid
+# - status = 3    : Edm is above max
+# - status = 4    : Reached call limit
+# - status = 5    : Any other failure
+_fit_status_ = {
+    1    : ' 1/Covariance was made pos defined',
+    2    : ' 2/Hesse is invalid',
+    3    : ' 3/Edm is above max',
+    4    : ' 4/Reached call limit',
+    5    : ' 5/Any other failure',
+       }
+# =============================================================================
+## Miniut::minimize status code
+# - status = 1    : Covariance was made pos defined
+# - status = 2    : Hesse is invalid
+# - status = 3    : Edm is above max
+# - status = 4    : Reached call limit
+# - status = 5    : Any other failure
+def fit_status ( status ) : return _fit_status_.get( status ,"%s" % status )
+
 # =============================================================================
 ## prepare "NumCPU" argument with reasonable choice of #cpu, depending on
 #  number of events in dataset 
@@ -113,11 +157,11 @@ def makeVar ( var , name , comment , fix = None , *args ) :
     ## fix it, if needed 
     if isinstance ( fix , ( float , int , long ) ) :
         
-        if fix < var.getMin() :
+        if hasattr ( var , 'getMin' ) and fix < var.getMin() :
             logger.warning("Min-value for %s is redefined to be %s " % ( var.GetName() , fix ) )
             var.setMin ( fix )
             
-        if fix > var.getMax() :
+        if hasattr ( var , 'getMax' ) and fix > var.getMax() :
             logger.warning("Max-value for %s is redefined to be %s " % ( var.GetName() , fix ) )
             var.setMax ( fix )
             
@@ -266,14 +310,35 @@ class PDF (object) :
         self._components  = ROOT.RooArgList ()
         ## take care about sPlots 
         self._splots      = []
-        
+
     ## get all declared components 
     def components  ( self ) : return self._components
     ## get all declared signals 
     def signals     ( self ) : return self._signals
     ## get all declared backgrounds 
     def backgrounds ( self ) : return self._backgrounds 
+    ## can be useful 
+    def setPars     ( self ) :
 
+        ## check own PDF 
+        if hasattr ( self , 'pdf' ) :
+            c = self.pdf
+            if hasattr ( c , 'setPars' ) : c.setaPars()
+            
+        ## check other PDFs 
+        cs = set() 
+        for att in ( '_signals'     , '_backgrounds'     , '_components'     ,
+                     'all_signals'  , 'all_backgrounds'  , 'all_components'  ,
+                     'more_signals' , 'more_backgrounds' , 'more_components' ,
+                     '_sigs'        , '_bkgs'            , '_cmps'           ) :
+            if hasattr ( self , att ) :
+                for a in getattr ( self , att ) : 
+                    if hasattr ( a , 'setPars' ) and not a in cs :  
+                        a.setPars()
+                        cs.add ( a )
+        del cs
+
+            
     ## adjust PDF a little bit to avoid zeroes 
     def adjust ( self , value ) :
         """Adjust PDF a little bit to avoid zeroes 
@@ -305,7 +370,8 @@ class PDF (object) :
                               None , 0 ,  -0.75 * pi  , 1.25 * pi  )
             self.phis.append  ( phi_i ) 
             self.phi_list.add ( phi_i )
-            
+
+    # =========================================================================
     ## make the actual fit (and optionally draw it!)
     #  @code
     #  r,f = model.fitTo ( dataset )
@@ -339,22 +405,22 @@ class PDF (object) :
         with roo_silent ( silent ) :
             result =  self.pdf.fitTo ( dataset , ROOT.RooFit.Save () , *opts ) 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
-
-        st = result.status() if result else 9999
-        if 0 != st and silent :
-            logger.warning ( 'PDF(%s).fitTo: status is %s. Refit in non-silent regime ' % ( self.name , st  ) )    
+                         
+        st = result.status() if result else 9999    
+        if 0 != st and silent and refit : 
+            logger.warning ( 'PDF(%s).fitTo: status is %s. Refit in non-silent regime ' % ( self.name , fit_status ( st ) ) )
             return self.fitTo ( dataset , draw , nbins , False , refit , *args , **kwargs )
         
         for_refit = False
         if 0 != st   :
             for_refit = 'status' 
-            logger.warning ( 'PDF(%s).fitTo: Fit status is %s ' % ( self.name , st   ) )
-        #
-        qual = result.covQual()
+            logger.warning ( 'PDF(%s).fitTo: Fit status is %s ' % ( self.name , fit_status ( st ) ) )
+        
+        qual = result.covQual() if result else 9999 
         if   -1 == qual and dataset.isWeighted() : pass
         elif  3 != qual :
             for_refit = 'covariance' 
-            logger.warning ( 'PDF(%s).fitTo: covQual    is %s ' % ( self.name , qual ) ) 
+            logger.warning ( 'PDF(%s).fitTo: covQual    is %s ' % ( self.name , cov_qual ( qual ) ) ) 
 
         #
         ## check the integrals (when possible)
@@ -364,16 +430,17 @@ class PDF (object) :
             nsum = VE()            
             for i in self.nums :
                 nsum += i.as_VE() 
-                if hasattr ( i , 'getMax' ) and i.getVal() > 0.95 * i.getMax() :
-                    logger.warning ( 'PDF(%s).fitTo Variable %s == %s [close to maximum %s]'
+                if hasattr ( i , 'getMax' ) and i.getVal() > i.getMax() - 0.05 * ( i.getMax() - i.getMin() ) :
+                    logger.warning ( 'PDF(%s).fitTo: Variable %s == %s [too close to maximum %s]'
                                      % ( self.name , i.GetName() , i.getVal () , i.getMax () ) )
                     
-            if not dataset.isWeighted() : 
-                nl = nsum.value() - 0.10 * nsum.error()
-                nr = nsum.value() + 0.10 * nsum.error()
-                if not nl <= len ( dataset ) <= nr :
-                    logger.error ( 'PDF(%s).fitTo is problematic:  sum %s != %s ' % ( self.name , nsum , len( dataset ) ) )
-                    for_refit = 'integral'
+            if not dataset.isWeighted() :
+                if 0 < nsum.cov2() : 
+                    nl = nsum.value() - 0.80 * nsum.error()
+                    nr = nsum.value() + 0.80 * nsum.error()
+                    if not nl <= len ( dataset ) <= nr :
+                        logger.warning ( 'PDF(%s).fitTo: is problematic:  sum %s != %s ' % ( self.name , nsum , len( dataset ) ) )
+                        for_refit = 'integral'
 
         #
         ## call for refit if needed
@@ -405,7 +472,21 @@ class PDF (object) :
         ## 
         return result, frame 
 
-    
+    # =========================================================================
+    ## ROOT-like function for fitting
+    #  @code
+    #  dataset = ...
+    #  model   = ...
+    #  model.Fit ( dataset , ... ) 
+    #  @endcode 
+    def Fit ( self , dataset , *args , **kwargs ) :
+        """ROOT-like function for fitting
+        >>> dataset = ...
+        >>> model   = ...
+        >>> model.Fit ( dataset , ... ) 
+        """
+        return self.fitTo ( dataset , *args , **kwargs ) 
+        
     ## helper method to draw set of components 
     def _draw ( self , what , frame , options , base_color ) :
         """ Helper method to draw set of components """
@@ -1190,7 +1271,6 @@ class H2D_pdf(H2D_dset,PDF2) :
                 self.dset  )
 
 # =============================================================================
-# =============================================================================
 ## @class Fit1D
 #  The actual model for 1D ``mass-like'' fits
 #  @code
@@ -1337,14 +1417,14 @@ class Fit1D (PDF) :
             sig , fracs , sigs = addPdf ( self.signals()        ,
                                           'signal_'    + suffix ,
                                           'signal(%s)' % suffix ,
-                                          'fS%s_%%d'   % suffix ,
+                                          'fS_%%d%s'   % suffix ,
                                           'fS(%%d)%s'  % suffix , recursive = True , model = self )
             ## new signal
             self.signal      = Generic1D_pdf   ( sig , self.mass , 'SIGNAL_' + suffix )
             self.all_signals = ROOT.RooArgList ( sig )
             self._sigs       = sigs 
             self.signals_fractions = fracs 
-            for fi in fracs : setattr ( self , fi.GetName() , fi ) 
+            for fi in fracs : setattr ( self , fi.GetName() , fi )
             logger.verbose('Fit1D(%s): %2d signals     are combined into single SIGNAL'     % ( self.name , len ( sigs ) ) ) 
             
         ## combine background components into single backhround (if needed ) 
@@ -1353,7 +1433,7 @@ class Fit1D (PDF) :
             bkg , fracs , bkgs = addPdf ( self.backgrounds()        ,
                                           'background_'    + suffix ,
                                           'background(%s)' % suffix ,
-                                          'fB%s_%%d'       % suffix ,
+                                          'fB_%%d%s'       % suffix ,
                                           'fB(%%d)%s'      % suffix , recursive = True , model = self )
             ## new background
             self.background      = Generic1D_pdf   ( bkg , self.mass , 'BACKGROUND_' + suffix )
@@ -1369,7 +1449,7 @@ class Fit1D (PDF) :
             cmp , fracs , cmps = addPdf ( self.components()    ,
                                           'other_'    + suffix ,
                                           'other(%s)' % suffix ,
-                                          'fC%s_%%d'  % suffix ,
+                                          'fC_%%d%s'  % suffix ,
                                           'fC(%%d)%s' % suffix , recursive = True , model = self )
             ## save old background
             self.other          = Generic1D_pdf   ( cmp , self.mass , 'COMPONENT_' + suffix )
@@ -1394,7 +1474,7 @@ class Fit1D (PDF) :
                 self.S_name = self.s.GetName()
                 self.nums.append ( self.s ) 
             elif 2 <= ns : 
-                fis = makeFracs ( ns , 'S%s_%%d' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False , model = self )
+                fis = makeFracs ( ns , 'S_%%d%s' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False , model = self )
                 for s in self.all_signals : self.alist1.add ( s )
                 for f in fis :
                     self.alist2.add  ( f )
@@ -1410,7 +1490,7 @@ class Fit1D (PDF) :
                 self.B_name = self.b.GetName()
                 self.nums.append ( self.b ) 
             elif 2 <= nb :
-                fib = makeFracs ( nb , 'B%s_%%d' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False , model = self )
+                fib = makeFracs ( nb , 'B_%%d%s' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False , model = self )
                 for b in self.all_backgrounds : self.alist1.add ( b )
                 for f in fib :
                     self.alist2.add  ( f )
@@ -1419,14 +1499,14 @@ class Fit1D (PDF) :
             nc = len ( self.all_components )
             if 1 == nc :
                 cf = makeVar ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+6 )
-                self.alist1.add  ( self.new_components[0]  )
+                self.alist1.add  ( self.all_components[0]  )
                 self.alist2.add  ( cf ) 
                 self.c = cf
                 self.C = cf
                 self.C_name = self.c.GetName()
                 self.nums.append ( self.c ) 
             elif 2 <= nc : 
-                fic = makeFracs ( nc , 'C%s_%%d' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False , model = self )
+                fic = makeFracs ( nc , 'C_%%d%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False , model = self )
                 for c in self.all_components : self.alist1.add ( c )
                 for f in fic :
                     self.alist2.add  ( f )
@@ -1442,7 +1522,7 @@ class Fit1D (PDF) :
             for b in self.all_backgrounds : self.alist1.add ( b )
             for c in self.all_components  : self.alist1.add ( c )
             
-            fic = makeFracs ( ns + nb + nc , 'f%s_%%d' % suffix ,  'f(%%d)%s'  % suffix , fractions  = True , model = self )
+            fic = makeFracs ( ns + nb + nc , 'f_%%d%s' % suffix ,  'f(%%d)%s'  % suffix , fractions  = True , model = self )
             for f in fic :
                 self.alist2.add ( f )
                 setattr ( self , f.GetName() , f ) 

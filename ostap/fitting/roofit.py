@@ -490,8 +490,8 @@ def _rfr_results_( self , *vars ) :
         
 # =============================================================================
 ## some decoration over RooFitResult
-ROOT.RooFitResult . __repr__    = _rfr_print_
-ROOT.RooFitResult . __str__     = _rfr_print_
+## ROOT.RooFitResult . __repr__    = _rfr_print_
+## ROOT.RooFitResult . __str__     = _rfr_print_
 ROOT.RooFitResult . __call__    = _rfr_param_
 ROOT.RooFitResult . __getattr__ = _rfr_getattr_ 
 ROOT.RooFitResult . __iter__    = _rfr_iter_
@@ -595,28 +595,45 @@ def _rrv_ve_ ( var ) :
     #
     return VE ( v , e2 )
 
+# ==============================================================================
+## check if the given value is in the range of RooRealVar
+#  @code 
+#  mass_range = ...
+#  if v in mass_range : ...
+#  @endcode 
+def _rrv_contains_ ( var , value ) :
+    """check if the given value is in the range of RooRealVar
+    >>> mass_range = ...
+    >>> if v in mass_range : ... 
+    """
+    if var.hasMin() and value < var.getMin() : return False 
+    if var.hasMax() and value > var.getMax() : return False
+    return True 
+    
 # =============================================================================
 ## decorate RooRealVar:
-ROOT.RooRealVar   . as_VE     = _rrv_ve_ 
-ROOT.RooRealVar   . asVE      = _rrv_ve_ 
-ROOT.RooRealVar   . ve        = _rrv_ve_
-ROOT.RooRealVar   . fix       = _fix_par_
-ROOT.RooRealVar   . Fix       = _fix_par_
-ROOT.RooRealVar   . release   = _rel_par_
-ROOT.RooRealVar   . Release   = _rel_par_
+ROOT.RooRealVar     . as_VE           = _rrv_ve_ 
+ROOT.RooRealVar     . asVE            = _rrv_ve_ 
+ROOT.RooRealVar     . ve              = _rrv_ve_
+ROOT.RooRealVar     . fix             = _fix_par_
+ROOT.RooRealVar     . Fix             = _fix_par_
+ROOT.RooRealVar     . release         = _rel_par_
+ROOT.RooRealVar     . Release         = _rel_par_
 ## convert to float 
-ROOT.RooRealVar   . __float__ = lambda s : s.getVal()
+ROOT.RooRealVar     . __float__       = lambda s : s.getVal()
 ## print it in more suitable form 
-ROOT.RooRealVar   . __repr__  = lambda s : "'%s' : %s " % ( s.GetName() , s.ve() )
+ROOT.RooRealVar     . __repr__        = lambda s : "'%s' : %s " % ( s.GetName() , s.ve() )
 
-ROOT.RooRealVar   . xmin      = lambda s : s.getMin()
-ROOT.RooRealVar   . xmax      = lambda s : s.getMax()
-ROOT.RooRealVar   . minmax    = lambda s : (s.xmin(),s.xmax()) 
+ROOT.RooRealVar     . xmin            = lambda s : s.getMin()
+ROOT.RooRealVar     . xmax            = lambda s : s.getMax()
+ROOT.RooRealVar     . minmax          = lambda s : (s.xmin(),s.xmax()) 
 
-ROOT.RooConstVar    .as_VE    = lambda s : VE( s.getVal() , 0 )
-ROOT.RooFormulaVar  .as_VE    = lambda s : VE( s.getVal() , 0 )
-ROOT.RooConstVar    .asVE     = lambda s : VE( s.getVal() , 0 )
-ROOT.RooFormulaVar  .asVE     = lambda s : VE( s.getVal() , 0 )
+ROOT.RooConstVar    . as_VE          = lambda s : VE( s.getVal() , 0 )
+ROOT.RooFormulaVar  . as_VE          = lambda s : VE( s.getVal() , 0 )
+ROOT.RooConstVar    . asVE           = lambda s : VE( s.getVal() , 0 )
+ROOT.RooFormulaVar  . asVE           = lambda s : VE( s.getVal() , 0 )
+
+ROOT.RooAbsRealLValue .__contains__ = _rrv_contains_ 
 
 _new_methods_ += [
     ROOT.RooRealVar   . as_VE     ,
@@ -631,6 +648,7 @@ _new_methods_ += [
     ## print it in more suitable form 
     ROOT.RooRealVar   . __repr__  ,
     #
+    ROOT.RooAbsRealLValue .__contains__ , 
     ROOT.RooRealVar   . xmin      ,
     ROOT.RooRealVar   . xmax      ,
     ROOT.RooRealVar   . minmax    ,
@@ -1034,23 +1052,13 @@ def var_from_name ( w , varset ) :
     """ Convert name/expression into variable/formula
     """
     w = w.strip() 
-    if    0 < w.find('(') < what.find(')') :
-        #print ' function ' , w 
-        pass
-    elif  0 < w.find('*')                  :
-        #print ' multiply ' , w 
-        pass
-    elif  0 < w.find('/')                  :
-        #print ' divide ' , w 
-        pass
-    elif  0 < w.find('+')                  :
-        #print ' add  ' , w 
-        pass
-    elif  0 < w.find('-')                  :
-        #print ' minus  ' , w 
-        pass
+    if    0 <= w.find('(') < what.find(')') : pass
+    elif  0 <  w.find('*')                  : pass
+    elif  0 <  w.find('/')                  : pass
+    elif  0 <  w.find('%')                  : pass 
+    elif  0 <  w.find('+')                  : pass
+    elif  0 <  w.find('-')                  : pass
     else :
-        #print ' primitive ' , w 
         v = varset[w]
         return v
     ##
@@ -1303,40 +1311,19 @@ ROOT.RooDataSet .vminmax  = _ds_var_minmax_
 _new_methods_ += [
     ROOT.RooDataSet .vminmax ,
     ]
-# =============================================================================
-## print method for RooDataSet
-#  @code
-#
-#   >>> print dataset
-#
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-06
-def _ds_print_ ( dataset , opts = 'v' ) :
-    """Helper print method:    
-    >>> print dataset 
-    """
-    #
-    dataset.Print( opts )
-    #
-    return dataset.GetName() 
 
 # =============================================================================
 ROOT.RooDataSet.draw        = _ds_draw_
 ROOT.RooDataSet.project     = _ds_project_
-ROOT.RooDataSet.__repr__    = _ds_print_
 ROOT.RooDataSet.__getattr__ = _ds_getattr_
 
-ROOT.RooDataHist.__repr__   = _ds_print_
 ROOT.RooDataHist.__len__    = lambda s : s.numEntries() 
 
 
 _new_methods_ += [
     ROOT.RooDataSet .draw         ,
     ROOT.RooDataSet .project      ,
-    ROOT.RooDataSet .__repr__     ,
     ROOT.RooDataSet .__getattr__  ,
-    ROOT.RooDataHist.__repr__     ,
     ROOT.RooDataHist.__len__      ,
     ]
 
@@ -1436,14 +1423,40 @@ def setStorage ( new_type = RAD.Tree ) :
     elif RAD.Vector == the_type : logger.debug ( 'RooAbsData: Default storage type is Vector' )
     else : logger.debug ( 'RooAbsData: Default storage type is %s' % the_type  )
 
+
+# =============================================================================
+## fitting
+#  @code
+#  model = ...
+#  data  = ...
+#  data.fitTo ( model , ... )
+#  data.Fit   ( model , ... ) ## ditto
+#  @endcode
+def _rad_fit_ ( data , model , *args , **kwargs ) :
+    """ fitting
+    >>> model = ...
+    >>> data  = ...
+    >>> data.fitTo ( model , ... )
+    >>> data.Fit   ( model , ... ) ## ditto 
+    """
+    return model.fitTo ( data , *args , **kwargs )
+
+RAD.Fit   = _rad_fit_
+RAD.fitTo = _rad_fit_
+
+_new_methods_ += [
+    RAD.Fit ,
+    RAD.fitTo
+    ]
+    
 # =============================================================================
 ## make easy print for RooPrintable 
-def _rp_print_ ( o , opts = 'v' ) :
+def _rp_print_ ( o , opts = 'vv' , *style ) :
     """Make easy print for RooPrintable
     >>> o = ...
     >>> print o 
     """
-    return cpp.Ostap.Utils.print_printable ( o , opts )
+    return cpp.Ostap.Utils.print_printable ( o , opts , *style )
 
 ROOT.RooPrintable.print_printable = _rp_print_ 
 ROOT.RooPrintable.__str__         = _rp_print_
@@ -1506,7 +1519,7 @@ class PDF_fun(object):
     >>> pdf,var = ....
     >>> fun     = PDF( pdf , var , xmin=0 , xmax=1 )
     >>> print fun(0.1),fun(0.5) 
-    >>> from LHCbMath.deriv import mean, mode, median  
+    >>> from ostap.stats.moments import mean, mode, median  
     >>> print 'MEAN    : %s' % mean    ( fun , 0 , 1 )
     >>> print 'MODE    : %s' % mode    ( fun , 0 , 1 )
     >>> print 'MEDIAN  : %s' % median  ( fun , 0 , 1 )

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Copyright (c) Ostap developpers.
+# Copyright (c) Ostap developers.
 # ============================================================================= 
 # @file test_models.py
 # Test module for ostap/fitting/models.py
@@ -12,7 +12,7 @@
 """
 # ============================================================================= 
 __author__ = "Ostap developers"
-__all__    = () ## nothinug to import
+__all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
@@ -24,7 +24,7 @@ from   ostap.logger.utils   import rooSilent
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'ostap/fitting/tests/test_models' )
+    logger = getLogger ( 'test_models' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================

@@ -31,8 +31,8 @@ if '__main__' ==  __name__ : logger = getLogger ( 'test_moments' )
 else                       : logger = getLogger ( __name__        )
 # ============================================================================= 
 
+# ============================================================================= 
 def test_moments1() :
-    ## test mean/vars
     #
     import math
     mean_ = Mean     (0, math.pi)
@@ -76,8 +76,8 @@ def test_moments1() :
     logger.info ( 80*'*' ) 
 
 
+# =============================================================================
 def test_moments2 () :
-    ## test mean/vars
     #
     import math
 
