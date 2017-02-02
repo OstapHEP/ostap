@@ -73,7 +73,7 @@ class PolyPos2D_pdf(PDF2) :
         #
         ## finally build PDF 
         #
-        self.pdf = cpp.Analysis.Models.Poly2DPositive (
+        self.pdf = cpp.Ostap.Models.Poly2DPositive (
             'p2Dp_%s'            % name ,
             'Poly2DPositive(%s)' % name ,
             self.x        ,
