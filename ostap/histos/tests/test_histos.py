@@ -28,7 +28,7 @@ logger.info ( 'Test for basic operations with histograms')
 # =============================================================================
 from   ostap.math.ve        import VE 
 from   ostap.core.core      import hID 
-from   ostap.histos.histos  import h1_axis 
+from   ostap.histos.histos  import h1_axis, h2_axes 
 #
 
 
@@ -147,6 +147,25 @@ def test_basic_1D() :
     ## shift
     hs = h1.shift ( -0.3 )
 
+    ## other operations
+    
+    h2 = h1**2
+
+    h2 = h1*h1
+
+    h2 = h1*2
+
+    h2 = h1/2
+
+    h2 = 2*h1
+    
+    h2 = abs(h1) 
+        
+    from ostap.math.math_ve import sin, exp 
+    h2 = sin ( h1 )
+    h2 = exp ( h1 )
+
+    
     ## shift for bins
     hs = h1 >> 4 
     hs = h1 << 5 
@@ -172,10 +191,52 @@ def test_basic_1D() :
     logger.info (     " WStat: %s" % h1.wstat() )
     logger.info (     " XStat: %s" % h1.xstat() )
         
-    
+    logger.info ( '  minmax  %20s' % str( h1. minmax() ) )
+    logger.info ( 'x-minmax  %20s' % str( h1.xminmax() ) )
+    logger.info ( 'y-minmax  %20s' % str( h1.yminmax() ) )
+                  
 
-        
+
+# =============================================================================
+## Test for very basic operations with 2D-histograms
+def test_basic_2D   () :
     
+    logger.info ( 'Test for very basic operations with 2D-histograms')
+
+    h2 = h2_axes ( [1,2,3,4,5,6,7] , [1,2,3,4,5] )
+
+    h2 += lambda x,y: VE(1,1)+VE(x*x+2*y*y,x*x+2*y*y)
+
+    ## access the content
+    logger.info ( "h[%1d, %1d]=%s"  % ( 2    , 3 , h2[2,3]  ) )
+    logger.info ( "h[%1d][%1d]=%s"  % ( 2    , 3 , h2[2][3] ) )
+    logger.info ( "h[%1d](%.2f)=%s" % ( 2    , 3.01 , h2[2](3.01   ) ) )
+    logger.info ( "h(%.2f,%.2f)=%s" % ( 2.01 , 3.01 , h2(2.01,3.01 ) ) )    
+
+    ## get the 1st X-slice 
+    hx = h2.sliceX ( 1 )
+
+    ## get the slice in 1,4,5 X-bins 
+    hx = h2.sliceX ( [1,4,5] )
+    
+    ## get the 2nd Y-slice 
+    hy = h2.sliceY ( 2 )
+    
+    ## get the slice in 1,3,5 Y-bins 
+    hy = h2.sliceY ( [1,3,4] )
+
+    ## projection in X 
+    hx = h2.projX() 
+
+    ## projection in Y
+    hy = h2.projY() 
+
+    logger.info ( '  minmax  %20s' % str( h2. minmax() ) )
+    logger.info ( 'x-minmax  %20s' % str( h2.xminmax() ) )
+    logger.info ( 'y-minmax  %20s' % str( h2.yminmax() ) )
+    logger.info ( 'z-minmax  %20s' % str( h2.zminmax() ) )
+                  
+
 # =============================================================================
 ## Test for "efficiencies
 def test_efficiency() :
@@ -262,6 +323,8 @@ def test_efficiency() :
 if '__main__' == __name__ :
 
     test_basic_1D   ()
+    
+    test_basic_2D   ()
     
     test_efficiency () 
     
