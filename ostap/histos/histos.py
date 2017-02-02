@@ -61,7 +61,7 @@ def _h_new_init_ ( self , *args ) :
     """
     with ROOTCWD() :
         ROOT.gROOT.cd() 
-        self._old_init_   ( *args      )
+        self._old_init_   ( *args )
         self.SetDirectory ( ROOT.gROOT )  ## NB! 
         ## optionally:
         if not self.GetSumw2() : self.Sumw2()
@@ -147,8 +147,6 @@ def _axis_iter_reversed_ ( a ) :
 ROOT.TAxis . __iter__     = _axis_iter_1_
 ROOT.TAxis . __reversed__ = _axis_iter_reversed_
 ROOT.TAxis . __contains__ = lambda s , i : 1 <= abs(i) <= s.GetNbins()
-
-
         
 # =============================================================================
 ## get item for the 1-D histogram 
@@ -917,6 +915,8 @@ ROOT.TH2D . mean = _h2_mean_
 
 # ============================================================================
 ## find the first X-value for the certain Y-value
+#  Actually solve the equation
+#  \f$ y = f(x) \f$ using linear interpolation 
 #  @code
 #  histo = ...
 #  x = histo.find_X( 100 ) 
@@ -929,11 +929,12 @@ def _h1_find_X ( self             ,
     """ Find the first x-value for certain Y-value
     >>> histo = ...
     >>> x = histo.find_X( 100 ) 
+    Actually it solves the equation: \f$ y = f(x) \f$ using linear interpolation 
     """
     ##
     v = float ( v ) 
     ##
-    mn , mx  = self.xminmax()
+    mn , mx  = self.minmax()
     ##
     if v < mn.value() :
         return hist.xmin() if forward else hist.xmax ()  
@@ -1445,15 +1446,19 @@ def binomEff_h1 ( h1 , h2 , func = binomEff ) :
 
 ROOT.TH1F.       binomEff  = binomEff_h1 
 ROOT.TH1D.       binomEff  = binomEff_h1 
-ROOT.TH1F.       wilsonEff = lambda haccepted,htotal : binomEff_h1 ( h_accepted , h_total, func =       wilsonEff )
-ROOT.TH1D.       wilsonEff = lambda haccepted,htotal : binomEff_h1 ( h_accepted , h_total, func =       wilsonEff )
-ROOT.TH1F. agrestiCoullEff = lambda haccepted,htotal : binomEff_h1 ( h_accepted , h_total, func = agrestiCoullEff )
-ROOT.TH1D. agrestiCoullEff = lambda haccepted,htotal : binomEff_h1 ( h_accepted , h_total, func = agrestiCoullEff ) 
+ROOT.TH1F.       wilsonEff = lambda haccepted,htotal : binomEff_h1 ( haccepted , htotal, func =       wilsonEff )
+ROOT.TH1D.       wilsonEff = lambda haccepted,htotal : binomEff_h1 ( haccepted , htotal, func =       wilsonEff )
+ROOT.TH1F. agrestiCoullEff = lambda haccepted,htotal : binomEff_h1 ( haccepted , htotal, func = agrestiCoullEff )
+ROOT.TH1D. agrestiCoullEff = lambda haccepted,htotal : binomEff_h1 ( haccepted , htotal, func = agrestiCoullEff ) 
 
 # =============================================================================
 ## @var one_sigma
 #  the width of the +-1 sigma confidence interval 
-one_sigma = 0.682689492137086
+one_sigma   = 0.682689492137086  ## the width of the +-1 sigma confidence interval 
+#  the width of the +-2 sigma confidence interval 
+two_sigma   = 0.9544997361036415 ## the width of the +-2 sigma confidence interval 
+#  the width of the +-3 sigma confidence interval 
+three_sigma = 0.9973002039367398 ## the width of the +-3 sigma confidence interval 
 # =============================================================================
 ## calculate the efficiency graph using the binomial intervals 
 #  @code 
@@ -1543,6 +1548,7 @@ def binom_interval_h1 ( accepted , rejected , func , interval = one_sigma ) :
 
         points.append ( ( xv , xe , xe , center , abs(center - minv) , abs(maxv - center ) ) ) 
 
+    import ostap.histos.graphs 
     graph = ROOT.TGraphAsymmErrors ( len ( points ) )
     for p in range( len ( points ) ) : graph[p] = points[p]
     return graph 
@@ -1619,8 +1625,6 @@ def binomEff_h2 ( h1 , h2 , func = binomEff ) :
 
 ROOT.TH2F.  binomEff    = binomEff_h2 
 ROOT.TH2D.  binomEff    = binomEff_h2 
-
-
 
 
 # =============================================================================
@@ -4326,14 +4330,14 @@ def _h1_accumulate_ ( h                        ,
 ## get the sum of entries 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_sum_ ( h    ,
-               low  ,
-               high ) :
-    """Get the histogram integral  over the specified range low<x<high    
+def _h1_sum_ ( h     ,
+               xmin  ,
+               xmax  ) :
+    """Get the histogram integral  over the specified range xmin<x<xmax
     >>> h = ....
     >>> h.sum ( 1.0 , 20.0 )    
     """
-    return _h1_accumulate_ ( h , cut = lambda s : low<=s[1].value()<=high ) 
+    return _h1_accumulate_ ( h , cut = lambda s : xmin<=s[1].value()<=xmax ) 
 
 # =============================================================================
 ## simple scaling
@@ -4379,14 +4383,14 @@ def _h1_shift_ ( h , bias ) :
     """
     #
     if not h     .GetSumw2()  : h    .Sumw2()
-    result = h.Clone( hID() ) ;
+    result = h.clone() ;
     result.Reset() ;
-    if not result.GetSumw2() : result.Sumw2()
+    if not result.GetSumw2()  : result.Sumw2()
     #
     for i,x,y in result.iteritems() :
         
-        y         += bias
-        result[i]  = h ( y )
+        x         += bias
+        result[i]  = h ( x )
         
     return result
 
@@ -4479,7 +4483,7 @@ def _h1_rshift_ ( h , ibias ) :
     ##
     if not isinstance ( ibias , ( int , long ) ) : return NotImplemented 
     ##
-    return _h1_lshift_ ( h1 , -1 * ibias )
+    return _h1_lshift_ ( h , -1 * ibias )
 
 
 # =============================================================================
