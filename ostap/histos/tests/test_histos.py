@@ -102,10 +102,10 @@ def test_basic_1D() :
 
     ## smear the histogram
     h0    = ROOT.TH1F( hID() , '', 400 , -1 , 1 )
-    for i in xrange( 1000 ) : h0.Fill( random.gauss(0,0.05 ) )
+    for i in xrange( 1000 ) : h0.Fill( random.gauss(0,0.10 ) )
     hs    = h0.smear ( sigma = 0.10 )
 
-
+    logger.info ( 'Original RMS %20s , smeared(0.10) %-20s' % ( h0.rms() , hs.rms() ) )  
     ## specific transformation:
 
     ## "precision"
