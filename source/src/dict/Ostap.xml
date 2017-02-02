@@ -15,6 +15,7 @@
   <function pattern = "Ostap::Utils::Histos::*"  />
 
   <class name = "std::unary_function&lt;double,double&gt;" />
+  <class name = "std::binary_function&lt;double,double,double&gt;" />
 
   <class name   = "Ostap::Math::WorkSpace">
     <field name = "m_workspace" transient="true"/>      

@@ -18,6 +18,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     'cpp'              ,  ## global C++ namespace
+    'std'              ,  ## C++ namespace std
     'Ostap'            ,  ## C++ namespace Ostap
     'ROOTCWD'          ,  ## context manager to keep/preserve ROOT current directory
     'rootID'           ,  ## global identifier for ROOT objects
@@ -53,7 +54,8 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, cppyy, math, sys
-cpp = cppyy.gbl 
+cpp = cppyy.gbl
+std = cpp.std 
 # =============================================================================
 # logging 
 # =============================================================================

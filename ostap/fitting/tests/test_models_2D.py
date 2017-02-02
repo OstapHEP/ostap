@@ -285,20 +285,38 @@ def test_splinesym2D() :
         print result 
        
     models.add ( model )
+
+
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+    logger.info('Saving all objects into DBASE')
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+        db['m_x'     ] = m_x
+        db['m_y'     ] = m_y
+        db['vars'    ] = varset
+        db['dataset' ] = dataset
+        db['models'  ] = models
+        db.ls() 
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    #test_polypos2D    () 
-    #test_polypossym2D () 
-    #test_pspol2D      () 
-    #test_pspolsym2D   () 
-    #test_expopspol2D  () 
-    #test_expopol2D    () 
+    test_polypos2D    () 
+    test_polypossym2D () 
+    test_pspol2D      () 
+    test_pspolsym2D   () 
+    test_expopspol2D  () 
+    test_expopol2D    () 
     test_expopolsym2D () 
     test_spline2D     () 
     test_splinesym2D  () 
     
+    ## check finally that everything is serializeable:
+    test_db ()          
     
 # =============================================================================
 # The END 
