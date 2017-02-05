@@ -232,6 +232,26 @@ _new_methods_ = [
    ]
 
 # =============================================================================
+## make easy print for RooPrintable 
+def _rp_print_ ( obj , opts = 'vv' , *style ) :
+    """Make easy print for RooPrintable
+    >>> o = ...
+    >>> print o 
+    """
+    return cpp.Ostap.Utils.print_printable ( obj , opts , *style )
+
+ROOT.RooPrintable.print_printable = _rp_print_ 
+ROOT.RooPrintable.__str__         = _rp_print_
+ROOT.RooPrintable.__repr__        = _rp_print_
+
+_new_methods_ += [
+    ROOT.RooPrintable.print_printable ,
+    ROOT.RooPrintable.__str__         ,
+    ROOT.RooPrintable.__repr__        ,
+    ]
+
+
+# =============================================================================
 ## ``easy'' print of RooFitResult
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -240,8 +260,8 @@ def _rfr_print_ ( self , opts = 'v' ) :
     >>> result = ...
     >>> print result    
     """
-    self.Print( opts )
-    return 'RooFitResult'
+    if self : return _rp_print_( self )
+    return 'Invalid RooFitResult'
 
 # =============================================================================
 ## get parameters from RooFitResult
@@ -490,8 +510,8 @@ def _rfr_results_( self , *vars ) :
         
 # =============================================================================
 ## some decoration over RooFitResult
-## ROOT.RooFitResult . __repr__    = _rfr_print_
-## ROOT.RooFitResult . __str__     = _rfr_print_
+ROOT.RooFitResult . __repr__    = _rfr_print_
+ROOT.RooFitResult . __str__     = _rfr_print_
 ROOT.RooFitResult . __call__    = _rfr_param_
 ROOT.RooFitResult . __getattr__ = _rfr_getattr_ 
 ROOT.RooFitResult . __iter__    = _rfr_iter_
@@ -1449,25 +1469,6 @@ _new_methods_ += [
     RAD.fitTo
     ]
     
-# =============================================================================
-## make easy print for RooPrintable 
-def _rp_print_ ( o , opts = 'vv' , *style ) :
-    """Make easy print for RooPrintable
-    >>> o = ...
-    >>> print o 
-    """
-    return cpp.Ostap.Utils.print_printable ( o , opts , *style )
-
-ROOT.RooPrintable.print_printable = _rp_print_ 
-ROOT.RooPrintable.__str__         = _rp_print_
-ROOT.RooPrintable.__repr__        = _rp_print_
-
-_new_methods_ += [
-    ROOT.RooPrintable.print_printable ,
-    ROOT.RooPrintable.__str__         ,
-    ROOT.RooPrintable.__repr__        ,
-    ]
-
 # =============================================================================
 ## @class SETVAR
 #  Simple context manager to preserve current value for RooAbsVar

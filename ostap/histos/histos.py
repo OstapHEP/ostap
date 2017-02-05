@@ -6087,7 +6087,7 @@ ROOT.TH1.natural = allInts
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_allInts ( h1            ,
+def _h1_allInts ( histo         ,
                   diff  = 1.e-4 ) :
     """Natural histogram with all integer entries ?
     >>> h1 = ...
