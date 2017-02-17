@@ -6093,8 +6093,8 @@ def _h1_allInts ( histo         ,
     >>> h1 = ...
     >>> if h1.natural() : print 'OK!'
     """    
-    for i,v in histo.iteritems() :  
-        if not natural_entry ( v ) : return False   ## RETURN 
+    for i in histo :  
+        if not natural_entry ( histo[i] ) : return False   ## RETURN 
         
     return True
 

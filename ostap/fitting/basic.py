@@ -693,7 +693,7 @@ class PDF (object) :
             m.hesse    ()
             result = m.save ()
             
-        from ostap.potting.fit_draw import draw_options
+        from ostap.plotting.fit_draw import draw_options
         draw_opts = draw_options ( **kwargs )
         if draw_opts and not draw : draw = draw_opts 
         if isinstance ( draw , dict ) : draw_opts.update( draw )
