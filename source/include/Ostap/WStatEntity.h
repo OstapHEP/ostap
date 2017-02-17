@@ -23,6 +23,8 @@ namespace Ostap
     // ======================================================================
     /// empty constructor 
     WStatEntity () ;
+    /// copy constructor 
+    WStatEntity ( const WStatEntity& ) ;
     /// constructor from StatEntity of values 
     WStatEntity ( const StatEntity& values ) ;
     // ======================================================================

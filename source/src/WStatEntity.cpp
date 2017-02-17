@@ -39,6 +39,15 @@ Ostap::WStatEntity::WStatEntity()
   , m_weights (   )
 {}
 // ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::WStatEntity::WStatEntity ( const Ostap::WStatEntity& right ) 
+  : m_sum     ( right.m_sum     ) 
+  , m_sum2    ( right.m_sum2    ) 
+  , m_values  ( right.m_values  ) 
+  , m_weights ( right.m_weights )  
+{}
+// ============================================================================
 // constructor from StatEntity of values 
 // ============================================================================
 Ostap::WStatEntity::WStatEntity ( const Ostap::StatEntity& values ) 

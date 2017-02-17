@@ -82,6 +82,8 @@ namespace Ostap
                  const double        flag2   ,
                  const double        minFlag ,
                  const double        maxFlag ) ;
+    /// copy 
+    StatEntity  ( const StatEntity& ) = default ;    
     /// destructor
     ~StatEntity () = default;
     // ======================================================================
@@ -302,26 +304,6 @@ namespace Ostap
      *  @endcode
      */
     StatEntity& operator-- (int) { return --(*this) ; }
-    // ======================================================================
-    /** Assignment from the flag
-     *  The action: reset and the general increment
-     *  Such case could be useful for statistical monitoring
-     *
-     *  @code
-     *
-     *  const long numberOfHits = ... ;
-     *
-     *  StatEntity& stat = ... ;
-     *
-     *  stat = numberOfHits ;
-     *
-     *  @endcode
-     *
-     *  @param f new value of the counter
-     *  @return self-reference
-     */
-    StatEntity& operator= ( const double   f )
-    { reset() ;  add ( f )  ; return *this ; }
     // ======================================================================
     /** increment with other counter (useful for Monitoring/Adder )
      *

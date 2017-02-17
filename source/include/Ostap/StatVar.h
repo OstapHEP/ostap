@@ -24,16 +24,12 @@ class RooAbsData ; // RooFit
 namespace Ostap
 {
   // ==========================================================================
-  /** @class StatVar Analysis/StatVar.h
+  /** @class StatVar Ostap/StatVar.h
    *  Helper class to get statistical 
    *  infomation  about the variable/expression 
    *
    *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
    *  @date   2013-10-13
-   * 
-   *                    $Revision$
-   *  Last modification $Date$
-   *                 by $Author$
    */
   class StatVar 
   {
@@ -172,7 +168,7 @@ namespace Ostap
         const unsigned long  first   = 0                                           ,
         const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
-  public:
+  public: // the same but with RooFit 
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data (INPUT) the data 
@@ -278,6 +274,101 @@ namespace Ostap
         Ostap::SymMatrix2x2& cov2   , 
         const unsigned long  first   = 0 ,
         const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+  public: // generic cases, require some decoration/postprocessing  in python
+    // ========================================================================
+    /** calculate the covariances for generic case 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param vars  (INPUT)  the list of variables 
+     *  @param cuts  (INPUT)  the selection criteria/weights 
+     *  @param stats (UPDATE) list of statistics 
+     *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2017-02-17
+     */
+    static unsigned long _statCov 
+    ( TTree*               tree   , 
+      const std::vector<std::string>& vars      , 
+      const std::string&              cuts      ,
+      std::vector<Statistic>&         stats     ,  
+      std::vector<double>&            covs      ,
+      const unsigned long  first   = 0          ,
+      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================    
+    /** calculate the covariances for generic case 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param vars  (INPUT)  the list of variables 
+     *  @param cuts  (INPUT)  the selection criteria/weights 
+     *  @param stats (UPDATE) list of statistics 
+     *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2017-02-17
+     */
+    static unsigned long _statCov 
+    ( TTree*               tree   , 
+      const std::vector<std::string>& vars      , 
+      const TCut&                     cuts      ,
+      std::vector<Statistic>&         stats     ,  
+      std::vector<double>&            covs      ,
+      const unsigned long  first   = 0          ,
+      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** calculate the covariances for generic case 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param vars  (INPUT)  the list of variables 
+     *  @param stats (UPDATE) list of statistics 
+     *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2017-02-17
+     */
+    static unsigned long _statCov 
+    ( TTree*               tree   , 
+      const std::vector<std::string>& vars      , 
+      std::vector<Statistic>&         stats     ,  
+      std::vector<double>&            covs      ,
+      const unsigned long  first   = 0          ,
+      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+  public: // the same but with RooFit 
+    // ========================================================================
+    /** calculate the covariances for generic case 
+     *  @param data  (INPUT)  the inpout dataset 
+     *  @param vars  (INPUT)  the list of variables 
+     *  @param cuts  (INPUT)  the selection criteria/weights 
+     *  @param stats (UPDATE) list of statistics 
+     *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2017-02-17
+     */
+    static unsigned long _statCov 
+    ( const RooAbsData*               data      , 
+      const std::vector<std::string>& vars      , 
+      const std::string&              cuts      ,
+      std::vector<Statistic>&         stats     ,  
+      std::vector<double>&            covs      ,
+      const unsigned long  first   = 0          ,
+      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================    
+    /** calculate the covariances for generic case 
+     *  @param data  (INPUT)  the inpout dataset 
+     *  @param vars  (INPUT)  the list of variables 
+     *  @param stats (UPDATE) list of statistics 
+     *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2017-02-17
+     */
+    static unsigned long _statCov 
+    ( const RooAbsData*               data      , 
+      const std::vector<std::string>& vars      , 
+      std::vector<Statistic>&         stats     ,  
+      std::vector<double>&            covs      ,
+      const unsigned long  first   = 0          ,
+      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
   };
   // ==========================================================================

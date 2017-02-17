@@ -121,6 +121,37 @@ def _v_iteritems_ ( self ) :
         yield i,self(i)
 
 # =============================================================================
+## convert vector to numpy array:
+#  @code
+#  vct = ...
+#  na = vct.to_numpy() 
+#  @endcode
+def _v_to_numpy_ ( self ) :
+    """Convert vector to numpy array:
+    >>> vct = ...
+    >>> na = vct.to_numpy() 
+    """
+    import numpy
+    s  = self.kSize
+    na = numpy.empty( s )
+    for i in range(s) : na[i] = self[i] 
+    return na
+
+# =============================================================================
+## convert vector to plain array:
+#  @code
+#  vct = ...
+#  aa  = vct.to_array() 
+#  @endcode
+def _v_to_array_ ( self ) :
+    """Convert vector to plain array:
+    >>> vct = ...
+    >>> na  = vct.to_array() 
+    """
+    import array
+    return array.array('f', self)
+
+# =============================================================================
 ## the multiplication operators 
 _mult_ops_ = {}
 ## get the proper multiplication operator 
@@ -367,6 +398,9 @@ def deco_vector ( t ) :
 
         t. __iter__     = _v_iter_        
         t. iteritems    = _v_iteritems_
+
+        t.to_numpy      = _v_to_numpy_
+        t.to_array      = _v_to_array_
         
         t. _decorated = True
         
@@ -433,7 +467,7 @@ def _ms_str_ ( self , fmt = ' %+11.4g' , width = 12 ) :
 
 # =============================================================================
 ## get the correlation matrix
-def _m_corr_ ( self ) :
+def _ms_corr_ ( self ) :
     """Get the correlation matrix
     >>> mtrx = ...
     >>> corr = mtrx.correlations()
@@ -538,7 +572,25 @@ def _m_iteritems_ ( self ) :
         for j in range(self.kCols) :
             yield i,j,self(i,j)
 
-        
+# =============================================================================
+## convert matrix into numpy.matrix
+#  @code
+#  mtrx = ...
+#  m    = mtrx.to_numpy() 
+#  @endcode 
+def _m_to_numpy_ ( self ) :
+    """Convert matrix into numpy.matrix
+    >>> mtrx = ...
+    >>> m    = mtrx.to_numpy() 
+    """
+    import numpy
+    n = numpy.empty( [ self.kRows, self.kCols ] )
+    m = numpy.matrix ( n )
+    for i in range(self.kRows) :
+        for j in range(self.kCols) :
+            m [i,j] = self(i,j)
+    return m
+
 # =============================================================================
 ## construct ``similarity'' with ``vector-like'' object
 #  @code
@@ -643,7 +695,8 @@ def deco_matrix ( m  ) :
         m.__iter__     = _m_iter_
         m.iteritems    = _m_iteritems_
         m.__contains__ = lambda s,ij : 0<=ij[0]<s.kRows and 0<=ij[1]<s.kCols
-        
+
+        m.to_numpy     = _m_to_numpy_ 
         m._decorated   = True
         
     return m
@@ -658,7 +711,7 @@ def deco_symmatrix ( m ) :
         m. _old_str_   = m . __str__
         m. _old_repr_  = m . __repr__
 
-        m.correlations = _m_corr_
+        m.correlations = _ms_corr_
         m. _new_str_   = _ms_str_
         m. __repr__    = _ms_str_
         m. __str__     = _ms_str_
@@ -702,6 +755,7 @@ def deco_symmatrix ( m ) :
             m.eigenValues  = _eigen_1_
             m.eigenVectors = _eigen_2_
         
+        m.to_numpy     = _m_to_numpy_
         m._decorated   = True
         
     return m

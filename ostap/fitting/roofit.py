@@ -208,10 +208,12 @@ ROOT.RooAbsData . __contains__  = _rad_contains_
 ROOT.RooAbsData . __iter__      = _rad_iter_ 
 ROOT.RooAbsData . __getitem__   = _rad_getitem_ 
 
-from ostap.trees.trees import _stat_var_, _stat_cov_ , _sum_var_, _sum_var_old_
-ROOT.RooAbsData . statVar       = _stat_var_ 
+from ostap.trees.trees import _stat_var_, _stat_cov_ , _stat_covs_ , _sum_var_, _sum_var_old_
 ROOT.RooAbsData . sumVar        = _sum_var_ 
 ROOT.RooAbsData . sumVar_       = _sum_var_old_ 
+ROOT.RooAbsData . statVar       = _stat_var_ 
+ROOT.RooAbsData . statCov       = _stat_cov_ 
+ROOT.RooAbsData . statCovs      = _stat_covs_ 
 
 _new_methods_ = [
    ROOT.RooAbsData . varlist       ,
@@ -229,6 +231,9 @@ _new_methods_ = [
    ROOT.RooAbsData . statVar       ,
    ROOT.RooAbsData . sumVar        ,
    ROOT.RooAbsData . sumVar_       ,
+   #
+   ROOT.RooAbsData . statCov       ,
+   ROOT.RooAbsData . statCovs      ,
    ]
 
 # =============================================================================

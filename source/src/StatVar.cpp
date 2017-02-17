@@ -2,6 +2,10 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <vector>
+// ============================================================================
 // ROOT 
 // ============================================================================
 #include "TTree.h"
@@ -29,7 +33,7 @@ namespace
 {
   // ==========================================================================
   static_assert (std::numeric_limits<unsigned long>::is_specialized   , 
-                 "Numeric_limist<unsigned long> are not specialized!" ) ;
+                 "Numeric_limits<unsigned long> are not specialized!" ) ;
   // ==========================================================================
   /** @class Notifier
    *  Local helper class to keep the proper notifications for TTree
@@ -38,9 +42,9 @@ namespace
    */
   class Notifier : public TObject 
   {
-    //
-  public:
-    //
+    // ======================================================================== 
+ public:
+    // ========================================================================
     Notifier 
     ( TTree*   tree     , 
       TObject* obj0     , 
@@ -53,19 +57,29 @@ namespace
       TObject* obj7 = 0 , 
       TObject* obj8 = 0 , 
       TObject* obj9 = 0 ) ;
+    // templated constructor 
+    template <class ITERATOR>
+    Notifier ( ITERATOR  begin ,
+               ITERATOR  end   , 
+               TTree*    tree  ) ;
     /// virtual destructor 
-    virtual        ~Notifier () ;  // virtual destructor 
+    virtual        ~Notifier () ; // virtual destructor 
+    /// the main method 
     virtual Bool_t  Notify   () ;
-    //
+    // ========================================================================
   private:
+    // ========================================================================
     Notifier () ;
     Notifier ( const Notifier & ) ;
+    // ========================================================================
   private:
+    // ========================================================================
     TTree*   m_tree ;
-    TObject* m_old  ; // old notofier  
+    TObject* m_old  ; // old notifier  
     // list of fobject to be notified 
     std::vector<TObject*> m_objects ;
-  } ;
+    // ========================================================================
+  } ;  
   // ==========================================================================
   Notifier::Notifier 
   ( TTree*   tree , 
@@ -80,46 +94,58 @@ namespace
     TObject* obj8 , 
     TObject* obj9 ) 
     : TObject   () 
-    , m_tree    ( tree ) 
-    , m_old     ( 0    )
+    , m_tree    ( tree    ) 
+    , m_old     ( nullptr )
     , m_objects () 
   {
     //
-    if ( 0 != m_tree ) { m_old = m_tree->GetNotify ()  ; }
+    if ( nullptr != m_tree ) { m_old = m_tree->GetNotify ()  ; }
     //
-    if ( 0 != m_old  ) { m_objects.push_back ( m_old ) ; } // prepend it! 
+    if ( nullptr != m_old  ) { m_objects.push_back ( m_old ) ; } // prepend it! 
     //
-    if ( 0 != obj0   ) { m_objects.push_back ( obj0  ) ; }
-    if ( 0 != obj1   ) { m_objects.push_back ( obj1  ) ; }
-    if ( 0 != obj2   ) { m_objects.push_back ( obj2  ) ; }
-    if ( 0 != obj3   ) { m_objects.push_back ( obj3  ) ; }
-    if ( 0 != obj4   ) { m_objects.push_back ( obj4  ) ; }
-    if ( 0 != obj5   ) { m_objects.push_back ( obj5  ) ; }
-    if ( 0 != obj6   ) { m_objects.push_back ( obj6  ) ; }
-    if ( 0 != obj7   ) { m_objects.push_back ( obj7  ) ; }
-    if ( 0 != obj8   ) { m_objects.push_back ( obj8  ) ; }
-    if ( 0 != obj9   ) { m_objects.push_back ( obj9  ) ; }
+    if ( nullptr != obj0   ) { m_objects.push_back ( obj0  ) ; }
+    if ( nullptr != obj1   ) { m_objects.push_back ( obj1  ) ; }
+    if ( nullptr != obj2   ) { m_objects.push_back ( obj2  ) ; }
+    if ( nullptr != obj3   ) { m_objects.push_back ( obj3  ) ; }
+    if ( nullptr != obj4   ) { m_objects.push_back ( obj4  ) ; }
+    if ( nullptr != obj5   ) { m_objects.push_back ( obj5  ) ; }
+    if ( nullptr != obj6   ) { m_objects.push_back ( obj6  ) ; }
+    if ( nullptr != obj7   ) { m_objects.push_back ( obj7  ) ; }
+    if ( nullptr != obj8   ) { m_objects.push_back ( obj8  ) ; }
+    if ( nullptr != obj9   ) { m_objects.push_back ( obj9  ) ; }
     //
-    if ( 0 != m_tree ) { m_tree->SetNotify   ( this  ) ; }
+    if ( nullptr != m_tree ) { m_tree->SetNotify   ( this  ) ; }
     //
+  }    
+  // ==========================================================================
+  template <class ITERATOR>
+  Notifier::Notifier ( ITERATOR  begin ,
+                       ITERATOR  end   , 
+                       TTree*    tree  ) 
+    : TObject   () 
+    , m_tree    ( tree    ) 
+    , m_old     ( nullptr )
+    , m_objects () 
+  {
+    if ( nullptr != m_tree ) { m_old = m_tree->GetNotify ()  ; }
+    if ( nullptr != m_old  ) { m_objects.push_back ( m_old ) ; } // prepend it! 
+    for ( ; begin != end ; ++begin ) 
+    {
+      TObject* o = *begin ;
+      if ( nullptr != o ) { m_objects.push_back ( o ) ; }
+    }
+    if ( nullptr != m_tree ) { m_tree->SetNotify   ( this  ) ; }
   }
   // ==========================================================================
-  Notifier::~Notifier() { if ( 0 != m_tree ) { m_tree->SetNotify ( m_old ) ; } }
+  Notifier::~Notifier () { if ( nullptr != m_tree ) { m_tree->SetNotify ( m_old ) ; } }
   // ==========================================================================
-  Bool_t Notifier::Notify() 
+  Bool_t  Notifier::Notify   () 
   {
-    //
-    for (  std::vector<TObject*>::iterator it = m_objects.begin() ;
-           m_objects.end() != it ; ++it ) 
-    {
-      TObject* o = *it ;
-      if ( 0 != o ) { o->Notify() ; }
-    }
-    //
+    for ( TObject* o : m_objects ) { if ( nullptr != o ) { o->Notify() ; } }    
     return kTRUE ;
   }
-  // ========================================================================== 
-} //                                                 end of anonymous namespace 
+  // ==========================================================================
+} //                                                 end of anonymous namespace
 // ============================================================================
 /*  build statistic for the <code>expression</code>
  *  @param tree (INPUT) the tree 
@@ -715,6 +741,408 @@ Ostap::StatVar::statCov
   //
   return stat1.nEntries() ;
 }
+// ============================================================================
+/*  calculate the covariances for generic case 
+ *  @param tree  (INPUT)  the input T-tree 
+ *  @param vars  (INPUT)  the list of variables 
+ *  @param cuts  (INPUT)  the selection criteria/weights 
+ *  @param stats (UPDATE) list of statistics 
+ *  @param covs  (UPDATE) elements of "covariance matrix" 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2017-02-17
+ */
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  inline unsigned short index 
+  ( const unsigned short i , 
+    const unsigned short j ) { return i * ( i + 1 ) / 2 + j ; } 
+  // ==========================================================================
+}  
+// ============================================================================
+unsigned long Ostap::StatVar::_statCov
+( TTree*                                  tree  ,  
+  const std::vector<std::string>&         vars  ,
+  const std::string&                      cuts  ,
+  std::vector<Ostap::StatVar::Statistic>& stats , 
+  std::vector<double>&                    covs  , 
+  const unsigned long                     first ,
+  const unsigned long                     last  )
+{
+  //
+  //
+  if ( 0 == tree || last <= first ) { return 0 ; }              // RETURN 
+  //
+  std::vector<std::unique_ptr<Ostap::Formula> > _vars ;
+  for ( const std::string& v : vars ) 
+  {
+    auto f = std::make_unique<Ostap::Formula>( "" , v , tree ) ;
+    if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
+  }
+  //
+  const unsigned short l = _vars.size() ;
+  //
+  stats.resize( l         ) ;
+  covs.resize ( l*(l+1)/2 ) ;
+  if ( 0 == l          ) { return 0 ; }  // RETURN
+  //
+  std::vector<double> vals  ( l , 0.0 ) ;
+  //
+  Ostap::Formula selection ( "" , cuts      , tree ) ;
+  if ( !selection.ok () ) { return 0 ; }                        // RETURN
+  //
+  std::vector<TObject*> tobjs ;
+  for ( auto& _v : _vars ) { tobjs.push_back ( _v.get() ) ; }
+  tobjs.push_back( &selection ) ;
+  //
+  Notifier notifier ( tobjs.begin() , tobjs.end() , tree ) ;
+  //
+  const unsigned long nEntries = 
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
+  {
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { break ; }                              // RETURN
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { break ; }                              // RETURN
+    
+    //
+    const double w = selection.evaluate() ;
+    //
+    // fill satisticst and covarinaces:
+    for ( unsigned short i = 0 ; i < l ; ++i ) 
+    {
+      const double vi = !w ? 0.0 : _vars[i]->evaluate() ;
+      vals [i] = vi ;
+      stats[i].add ( vi , w ) ;  
+      for ( unsigned short j = 0 ; j <= i ; ++j ) 
+      {
+        const double vj = vals[j] ;
+        covs [ index ( i , j ) ] += w*vi*vj ;
+      } 
+    } 
+  } //                                    the end of loop over entries in Ttree
+  //
+  if ( stats.empty() || 0 == stats[0].nEntries() || 0 == stats[0].nEff () ) { return 0 ; }
+  const double sumw = stats[0].weights().sum() ; 
+  //
+  for ( unsigned short i = 0 ; i < l ; ++i ) 
+  {
+    const double vi_mean = stats[i].mean() ;
+    for ( unsigned short j = 0 ; j <= i ; ++j ) 
+    {
+      const double          vj_mean = stats[j].mean() ;
+      const unsigned short  ij      = index ( i , j ) ; 
+      covs [ ij ] /= sumw ;
+      covs [ ij ] -= vi_mean * vj_mean ;
+    }
+  }
+  //
+  return stats[0].nEntries() ;
+}
+// ============================================================================
+/** calculate the covariances for generic case 
+ *  @param tree  (INPUT)  the input T-tree 
+ *  @param vars  (INPUT)  the list of variables 
+ *  @param stats (UPDATE) list of statistics 
+ *  @param covs  (UPDATE) elements of "covariance matrix" 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2017-02-17
+ */
+// ============================================================================
+unsigned long Ostap::StatVar::_statCov
+( TTree*                                  tree  ,  
+  const std::vector<std::string>&         vars  ,
+  std::vector<Ostap::StatVar::Statistic>& stats , 
+  std::vector<double>&                    covs  , 
+  const unsigned long                     first ,
+  const unsigned long                     last  )
+{
+  //
+  if ( 0 == tree || last <= first ) { return 0 ; }              // RETURN 
+  //
+  std::vector<std::unique_ptr<Ostap::Formula> > _vars ;
+  for ( const std::string& v : vars ) 
+  {
+    auto f = std::make_unique<Ostap::Formula>( "" , v , tree ) ;
+    if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
+    _vars.push_back ( std::move ( f ) ) ;
+  }
+  //
+  const unsigned short l = _vars.size() ;
+  //
+  stats.resize( l         ) ;
+  covs.resize ( l*(l+1)/2 ) ;
+  if ( 0 == l          ) { return 0 ; }  // RETURN
+  //
+  std::vector<double> vals ( l , 0.0 ) ;
+  //
+  std::vector<TObject*> tobjs ;
+  for ( auto& _v : _vars ) { tobjs.push_back ( _v.get() ) ; }
+  //
+  Notifier notifier ( tobjs.begin() , tobjs.end() , tree ) ;
+  //
+  const unsigned long nEntries = 
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
+  {
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { break ; }                              // RETURN
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { break ; }                              // RETURN
+    //
+    const double w = 1 ;
+    // fill satistics and covarinaces:
+    for ( unsigned short i = 0 ; i < l ; ++i ) 
+    {
+      const double vi = _vars[i]->evaluate() ;
+      vals [i] = vi ;
+      stats[i].add ( vi , w ) ;  
+      for ( unsigned short j = 0 ; j <= i ; ++j ) 
+      {
+        const double vj = vals[j] ;
+        covs [ index ( i , j ) ] +=  w * vi * vj ;
+      } 
+    } 
+  } //                                    the end of loop over entries in Ttree
+  //
+  if ( stats.empty() || 0 == stats[0].nEntries() || 0 == stats[0].nEff () ) { return 0 ; }
+  const double sumw = stats[0].weights().sum() ; 
+  //
+  for ( unsigned short i = 0 ; i < l ; ++i ) 
+  {
+    const double vi_mean = stats[i].mean() ;
+    for ( unsigned short j = 0 ; j <= i ; ++j ) 
+    {
+      const double          vj_mean = stats[j].mean() ;
+      const unsigned short  ij      = index ( i , j ) ; 
+      covs [ ij ] /= sumw ;
+      covs [ ij ] -= vi_mean * vj_mean ;
+    }
+  }
+  //
+  return stats[0].nEntries() ;
+}
+// ============================================================================
+/* calculate the covariances for generic case 
+ *  @param tree  (INPUT)  the input tree 
+ *  @param vars  (INPUT)  the list of variables 
+ *  @param cuts  (INPUT)  the selection criteria/weights 
+ *  @param stats (UPDATE) list of statistics 
+ *  @param covs  (UPDATE) elements of "covariance matrix" 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2017-02-17
+ */
+// ============================================================================
+unsigned long Ostap::StatVar::_statCov
+( TTree*               tree   , 
+  const std::vector<std::string>&         vars  , 
+  const TCut&                             cuts  ,
+  std::vector<Ostap::StatVar::Statistic>& stats ,  
+  std::vector<double>&                    covs  ,
+  const unsigned long                     first ,
+  const unsigned long                     last  ) 
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return _statCov ( tree , vars , _cuts , stats , covs , first , last ) ;
+}
+// ========================================================================
+/*  calculate the covariances for generic case 
+ *  @param data  (INPUT)  the inpout dataset 
+ *  @param vars  (INPUT)  the list of variables 
+ *  @param cuts  (INPUT)  the selection criteria/weights 
+ *  @param stats (UPDATE) list of statistics 
+ *  @param covs  (UPDATE) elements of "covariance matrix" 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2017-02-17
+ */
+// ========================================================================    
+unsigned long Ostap::StatVar::_statCov 
+( const RooAbsData*               data  , 
+  const std::vector<std::string>& vars  , 
+  const std::string&              cuts  ,
+  std::vector<Statistic>&         stats ,  
+  std::vector<double>&            covs  ,
+  const unsigned long             first ,
+  const unsigned long             last  ) 
+{
+  //
+  if ( 0 == data || last <= first ) { return 0 ; }               // RETURN 
+  //
+  RooArgList        alst ;
+  const RooArgSet*  aset = data->get() ;
+  if ( 0 == aset       ) { return  0 ; }                          // RETURN
+  Ostap::Utils::Iterator iter ( *aset );
+  //
+  RooAbsArg*   coef = 0 ;
+  while ( ( coef = (RooAbsArg*) iter.next() ) ) 
+  { alst.add ( *coef ); }
+  // variables?
+  std::vector<std::unique_ptr<RooFormulaVar> > _vars ;
+  for ( const std::string& v : vars ) 
+  {
+    auto f = std::make_unique<RooFormulaVar>( "" , v.c_str() , alst ) ;
+    if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
+  }
+  // cuts ? 
+  RooFormulaVar selection ( "" ,  cuts.c_str() , alst ) ;
+  if ( !selection.ok()  ) { return 0 ; }                          // RETURN
+  //
+  const unsigned short l = _vars.size() ;
+  //
+  stats.resize( l         ) ;
+  covs.resize ( l*(l+1)/2 ) ;
+  if ( 0 == l          ) { return 0 ; }  // RETURN
+  //
+  std::vector<double> vals ( l , 0.0 ) ;
+  //
+  const bool weighted = data->isWeighted() ;
+  //
+  const unsigned long nEntries = 
+    std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
+  {
+    //
+    if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
+    //    
+    const double w = 
+      weighted ? 
+      selection.getVal () * data->weight() :
+      selection.getVal ()                  ;
+    //
+    // fill satisticst and covarinaces:
+    for ( unsigned short i = 0 ; i < l ; ++i ) 
+    {
+      const double vi = !w ? 0.0 : _vars[i]->getVal() ;
+      vals [i] = vi ;
+      stats[i].add ( vi , w ) ;  
+      for ( unsigned short j = 0 ; j <= i ; ++j ) 
+      {
+        const double vj = vals[j] ;
+        covs [ index ( i , j ) ] += w*vi*vj ;
+      } 
+    }
+  }
+  //
+  if ( stats.empty() || 0 == stats[0].nEntries() || 0 == stats[0].nEff () ) { return 0 ; }
+  const double sumw = stats[0].weights().sum() ; 
+  //
+  for ( unsigned short i = 0 ; i < l ; ++i ) 
+  {
+    const double vi_mean = stats[i].mean() ;
+    for ( unsigned short j = 0 ; j <= i ; ++j ) 
+    {
+      const double          vj_mean = stats[j].mean() ;
+      const unsigned short  ij      = index ( i , j ) ; 
+      covs [ ij ] /= sumw ;
+      covs [ ij ] -= vi_mean * vj_mean ;
+    }
+  }
+  //
+  return stats[0].nEntries() ;
+}
+// ========================================================================
+/*  calculate the covariances for generic case 
+ *  @param data  (INPUT)  the inpout dataset 
+ *  @param vars  (INPUT)  the list of variables 
+ *  @param stats (UPDATE) list of statistics 
+ *  @param covs  (UPDATE) elements of "covariance matrix" 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2017-02-17
+ */
+// ========================================================================    
+unsigned long Ostap::StatVar::_statCov 
+( const RooAbsData*               data  , 
+  const std::vector<std::string>& vars  , 
+  std::vector<Statistic>&         stats ,  
+  std::vector<double>&            covs  ,
+  const unsigned long             first ,
+  const unsigned long             last  ) 
+{
+  //
+  if ( 0 == data || last <= first ) { return 0 ; }               // RETURN 
+  //
+  RooArgList        alst ;
+  const RooArgSet*  aset = data->get() ;
+  if ( 0 == aset       ) { return  0 ; }                          // RETURN
+  Ostap::Utils::Iterator iter ( *aset );
+  //
+  RooAbsArg*   coef = 0 ;
+  while ( ( coef = (RooAbsArg*) iter.next() ) ) 
+  { alst.add ( *coef ); }
+  // variables?
+  std::vector<std::unique_ptr<RooFormulaVar> > _vars ;
+  for ( const std::string& v : vars ) 
+  {
+    auto f = std::make_unique<RooFormulaVar>( "" , v.c_str() , alst ) ;
+    if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
+  }
+  //
+  const unsigned short l = _vars.size() ;
+  //
+  stats.resize( l         ) ;
+  covs.resize ( l*(l+1)/2 ) ;
+  if ( 0 == l          ) { return 0 ; }  // RETURN
+  //
+  std::vector<double> vals ( l , 0.0 ) ;
+  //
+  const bool weighted = data->isWeighted() ;
+  //
+  const unsigned long nEntries = 
+    std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
+  {
+    //
+    if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
+    //    
+    const double w = weighted ? data->weight() : 1.0 ;
+    //
+    // fill satisticst and covarinaces:
+    for ( unsigned short i = 0 ; i < l ; ++i ) 
+    {
+      const double vi = !w ? 0.0 : _vars[i]->getVal() ;
+      vals [i] = vi ;
+      stats[i].add ( vi , w ) ;  
+      for ( unsigned short j = 0 ; j <= i ; ++j ) 
+      {
+        const double vj = vals[j] ;
+        covs [ index ( i , j ) ] += w*vi*vj ;
+      } 
+    }
+  }
+  //
+  if ( stats.empty() || 0 == stats[0].nEntries() || 0 == stats[0].nEff () ) { return 0 ; }
+  const double sumw = stats[0].weights().sum() ; 
+  //
+  for ( unsigned short i = 0 ; i < l ; ++i ) 
+  {
+    const double vi_mean = stats[i].mean() ;
+    for ( unsigned short j = 0 ; j <= i ; ++j ) 
+    {
+      const double          vj_mean = stats[j].mean() ;
+      const unsigned short  ij      = index ( i , j ) ; 
+      covs [ ij ] /= sumw ;
+      covs [ ij ] -= vi_mean * vj_mean ;
+    }
+  }
+  //
+  return stats[0].nEntries() ;
+}
+// ========================================================================    
+ 
+
 // ============================================================================
 // The END 
 // ============================================================================

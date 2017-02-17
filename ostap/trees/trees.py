@@ -348,6 +348,7 @@ def _stat_cov_ ( tree        ,
     Use only subset of events
     >>> stat1 , stat2 , cov2 , len = tree.statCov( 'x' , 'y' , 'z>0' , 100 , 10000 )
     """
+    import ostap.math.linalg 
     stat1  = cpp.Ostap.WStatEntity       ()
     stat2  = cpp.Ostap.WStatEntity       ()
     cov2   = cpp.Ostap.Math.SymMatrix2x2 ()
@@ -374,6 +375,87 @@ def _stat_cov_ ( tree        ,
 
 ROOT.TTree     . statCov = _stat_cov_
 ROOT.TChain    . statCov = _stat_cov_
+
+# =============================================================================
+## get the statistic for the list of expressions 
+#  @code
+#  tree  = ...
+#  stats , cov2 , len = tree.statCovs( ['x' , 'y'] )
+#  # apply some cuts 
+#  stats , cov2 , len = tree.statCovs( [ 'x' , 'y' , 'z'] , 'z>0' )
+#  # use only subset of events
+#  stats , cov2 , len = tree.statCovs( [ 'x' , 'y' , 'z' ], 'z>0' , 100 , 10000 )
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2017-02-19
+def _stat_covs_ ( tree        ,
+                  expressions ,
+                  cuts = ''   , *args  ) :
+    """Get the statistic for the list of expressions 
+    >>> tree  = ...
+    >>> stats , cov2 , len = tree.statCovs( ['x' , 'y'] )
+    Apply some cuts 
+    >>> stats , cov2 , len = tree.statCovs( [ 'x' , 'y' , 'z'] , 'z>0' )
+    Use only subset of events
+    >>> stats , cov2 , len = tree.statCovs( [ 'x' , 'y' , 'z' ], 'z>0' , 100 , 10000 )
+    """
+    ##
+    if isinstance ( expressions , str ) : expressions = [ expressions ]
+    ##
+    
+    import ostap.math.linalg 
+    
+    _SV    = cpp.std.vector('std::string')
+    _vars  = _SV()
+    vars   = expressions
+    for e in vars : _vars.push_back( e )
+    
+    WSE    = cpp.Ostap.WStatEntity
+    _WV    = cpp.std.vector( WSE )
+    _stats = _WV()
+    _DV    = cpp.std.vector('double')
+    _cov2  = _DV()
+
+    if cuts : 
+        length = cpp.Ostap.StatVar._statCov ( tree   ,
+                                              _vars  ,
+                                              cuts   ,
+                                              _stats ,
+                                              _cov2  ,
+                                              *args  ) 
+    else :
+        length = cpp.Ostap.StatVar._statCov ( tree   ,
+                                              _vars  ,
+                                              _stats ,
+                                              _cov2  ,
+                                              *args  )
+
+    l = len(_vars)
+    if 0 == length : 
+        return None , None , 0 
+    elif l != len ( _stats ) or l*(l+1)/2 != len( _cov2 ):
+        logger.error("statCovs: unexpected output %d/%s/%s" % ( l           ,
+                                                                len(_stats) ,
+                                                                len(_cov2 ) ) )
+        return None, None, length
+
+
+    ## get the statistics of variables
+    stats = tuple ( [ WSE(s) for s in _stats ] ) 
+    
+    import ostap.math.linalg
+    COV2 = cpp.Ostap.Math.SymMatrix ( l )
+    cov2 = COV2 () 
+
+    for i in range( l ) :
+        for j in range ( i + 1 ) :
+            ij = i * ( i + 1 ) / 2 + j
+            cov2[i,j] = _cov2[ ij ]
+            
+    return stats, cov2 , length
+
+ROOT.TTree     . statCovs = _stat_covs_
+ROOT.TChain    . statCovs = _stat_covs_
 
 # =============================================================================
 ## Get min/max for the certain variable in chain/tree
@@ -738,6 +820,8 @@ _new_methods_       = (
     ROOT.TChain.statVar   ,
     ROOT.TTree .statCov   ,
     ROOT.TChain.statCov   ,
+    ROOT.TTree .statCovs  ,
+    ROOT.TChain.statCovs  ,
     #
     ROOT.TTree .vminmax   ,
     ROOT.TChain.vminmax   ,
