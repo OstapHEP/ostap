@@ -780,6 +780,7 @@ unsigned long Ostap::StatVar::_statCov
   {
     auto f = std::make_unique<Ostap::Formula>( "" , v , tree ) ;
     if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
+    _vars.push_back ( std::move ( f ) ) ;
   }
   //
   const unsigned short l = _vars.size() ;
@@ -992,6 +993,7 @@ unsigned long Ostap::StatVar::_statCov
   {
     auto f = std::make_unique<RooFormulaVar>( "" , v.c_str() , alst ) ;
     if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
+    _vars.push_back ( std::move ( f ) ) ;
   }
   // cuts ? 
   RooFormulaVar selection ( "" ,  cuts.c_str() , alst ) ;
@@ -1087,6 +1089,7 @@ unsigned long Ostap::StatVar::_statCov
   {
     auto f = std::make_unique<RooFormulaVar>( "" , v.c_str() , alst ) ;
     if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
+    _vars.push_back ( std::move ( f ) ) ;
   }
   //
   const unsigned short l = _vars.size() ;
