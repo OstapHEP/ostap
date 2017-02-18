@@ -245,7 +245,6 @@ def test_compare_uniform_vs_exponent () :
             logger.info( 'Compare uniform   (%d) and exponent    (%d)' % ( _iu , _ie ) )
             compare ( iu , ie )
             
-            
 # =============================================================================
 if '__main__' == __name__ :
     

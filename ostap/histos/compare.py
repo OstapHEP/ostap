@@ -125,23 +125,19 @@ def _h1_cmp_pdf_ ( h1               ,
     from ostap.fitting.basic      import H1D_pdf, Fit1D
     from ostap.fitting.background import Bkg_pdf 
 
-    pdf1   = H1D_pdf    ( '_H1', h1 , density    = True )
-    model1 = Fit1D ( signal = pdf1 , background = Bkg_pdf( '_B1' , mass = pdf1.mass , power = 0 , tau = 0 ) ) 
-    model1.b.fix(0)
-    ##r1, f1 = model1.fitTo ( h2  , silent = silent , draw = draw , density = True , sumw2 = True ) 
-    r1, f1 = model1.chi2fitTo ( h2  , silent = silent , draw = draw , density = True , sumw2 = True ) 
-    
-    pdf2   = H1D_pdf    ( '_H1', h2 , density    = True )
+
+    pdf2   = H1D_pdf    ( '_H1', h2 , density   = True , silent = True )
     model2 = Fit1D ( signal = pdf2 , background = Bkg_pdf( '_B2' , mass = pdf2.mass , power = 0 , tau = 0 ) ) 
-    model2.b.fix(0)    
-    ## r2, f2 = model2.fitTo ( h1  , silent = silent , draw = draw , density = True , sumw2 = True ) 
-    r2, f2 = model2.chi2fitTo ( h1  , silent = silent , draw = draw , density = True , sumw2 = True ) 
-    
-    return r1,f1, r2,f2 
+    model2.b.fix(0)
+
+    from ostap.utils.utils import invisibleCanvas 
+    with invisibleCanvas() : 
+        r2 , f2 = model2.chi2fitTo ( h1  , silent = silent , draw = draw , density = False , sumw2 = True )
+
+    return r2 , f2.chiSquare()
 
 ROOT.TH1D.cmp_pdf = _h1_cmp_pdf_
 ROOT.TH1F.cmp_pdf = _h1_cmp_pdf_ 
-
 
 # =============================================================================
 ## compare the 1D-histograms by chi2 

@@ -41,7 +41,19 @@ __all__     = (
     ##
     'takeIt'             , ## take and later delete ...
     'isatty'             , ## is the stream ``isatty'' ?
-    'with_ipython'       , ## do we run IPython? 
+    'with_ipython'       , ## do we run IPython?
+    ##
+    'batch'              , ## contex manager to keep  ROOT ``batch''-mode
+    'useBatch'           , ## contex manager to force ROOT ``batch''-mode
+    ##
+    'keepCanvas'         , ## context manager to keep the current ROOT canvas
+    'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas    
+    ##
+    'Batch'              , ## contex manager to keep  ROOT ``batch''-mode
+    'UseBatch'           , ## contex manager to force ROOT ``batch''-mode
+    ##
+    'KeepCanvas'         , ## context manager to keep the current ROOT canvas
+    'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
@@ -253,7 +265,6 @@ class RootError2Exception (object) :
     ... do something here 
     """
     def __init__ ( self ) :
-        print 'will be import ROOT'
         import ROOT,cppyy 
         Ostap = cppyy.gbl.Ostap
         self.e_handler  = Ostap.Utils.useErrorHandler 
@@ -291,13 +302,159 @@ def rootException () :
 
 
 # =============================================================================
+## context manager to keep ROOT ``batch'' state
+#  @code
+#  with Batch() :
+#  ... do something here 
+#  @endcode 
+class Batch(object) :
+    """Context manager to keep ROOT ``batch'' state
+    >>> with Batch() :
+    ... do something here 
+    """
+    ## contex manahger: ENTER
+    def __enter__ ( self ) :
+        import ROOT
+        self.old_state = ROOT.gROOT.IsBatch()
+        return self
+    ## contex manager: EXIT
+    def __exit__  ( self , *_ ) :
+        import ROOT
+        ROOT.gROOT.SetBatch( self.old_state ) 
+
+# =============================================================================
+## context manager to keep ROOT ``batch'' state
+#  @code
+#  with batch() :
+#  ... do something here 
+#  @endcode 
+def batch() :
+    """Context manager to keep ROOT ``batch'' state
+    >>> with batch() :
+    ... do something here 
+    """
+    return Batch()
+
+# =============================================================================
+## context manager to tempoariliy force certain ROOT ``batch'' state
+#  @code
+#  with UseBatch( True ) :
+#  ... do something here 
+#  @endcode 
+class UseBatch(Batch) :
+    """Context manager to tempoariliy force certain ROOT ``batch'' state
+    >>> with UseBatch( True ) :
+    ... do something here 
+    """
+    def __init__  ( self , batch = True ) :
+        self.new_state = batch
+        Batch.__init__ ( self )
+        
+    ## context manager: ENTER
+    def __enter__ ( self ) :
+        Batch.__enter__ ( self ) 
+        import ROOT
+        ROOT.gROOT.SetBatch( self.new_state ) 
+        return self
+
+# =============================================================================
+## context manager to keep ROOT ``batch'' state
+#  @code
+#  with useBatch( True ) :
+#  ... do something here 
+#  @endcode 
+def useBatch( batch = True ) :
+    """Context manager to keep ROOT ``batch'' state
+    >>> with batch() :
+    ... do something here 
+    """
+    return UseBatch( batch )
+
+# =============================================================================
+## @class KeepCanvas
+#  helper class to keep the current canvas
+#  @code
+#  with KeepCanvas() :
+#  ... do something here 
+#  @endcode 
+class KeepCanvas(object) :
+    """Helper class to keep the current canvas
+    >>> with KeepCanvas() :
+    ... do something here 
+    """
+    def __enter__ ( self ) :
+        import ROOT 
+        self.canvas = ROOT.gPad.func()
+    def __exit__  ( self , *_ ) :
+        if self.canvas:
+            self.canvas.cd()
+
+# =============================================================================
+#  Keep the current canvas
+#  @code
+#  with keepCanvas() :
+#  ... do something here 
+#  @endcode
+def keepCanvas() :
+    """Keep the current canvas
+    >>> with keepCanvas() :
+    ... do something here
+    """
+    return KeepCanvas()
+
+
+# =============================================================================
+## @class InvisibleCanvas
+#  Use context ``invisible canvas''
+#  @code
+#  with InvisibleCanvas() :
+#  ... do somehing here 
+#  @endcode
+class InvisibleCanvas(KeepCanvas) :
+    """Use context ``invisible canvas''
+    >>> with InvisibleCanvas() :
+    ... do something here 
+    """
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
+        ## start from keeping the current canvas 
+        KeepCanvas.__enter__ ( self )
+        ## create new canvas in batch mode 
+        with UseBatch( True ) : 
+            import ROOT 
+            self.batch_canvas = ROOT.TCanvas()
+            self.batch_canvas.cd ()
+            return self.canvas
+
+    ## context manager: EXIT
+    def __exit__ ( self , *_ ) :
+        if self.batch_canvas :
+            self.batch_canvas.Close() 
+            del self.batch_canvas             
+        KeepCanvas.__exit__ ( self , *_ )
+
+# =============================================================================
+## Use context ``invisible canvas''
+#  @code
+#  with invisibleCanvas() :
+#  ... do something here 
+#  @endcode
+def invisibleCanvas() :
+    """ Use context ``invisible canvas''
+    >>> with invisibleCanvas() :
+    ... do something here 
+    """
+    return InvisibleCanvas() 
+    
+# =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
     logger.info ( 80*'*' ) 
-    
+
+            
 # =============================================================================
 # The END 
 # =============================================================================
