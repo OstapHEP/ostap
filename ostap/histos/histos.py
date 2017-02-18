@@ -6148,6 +6148,99 @@ ROOT.TH1.uniform_bins = _uniform_bins_
 ROOT.TH1.uniform      = _uniform_bins_
 
 
+# =============================================================================
+## transfrom the x-axis for the 1D-historgam
+def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
+    """Transfrom the x-axis for the 1D-historgam
+    """
+    ax =  h1.GetXaxis()
+    e  =  ax.edges()
+
+    _fun = lambda x : float ( fun ( float(x) ) ) 
+    
+    ## new histogram 
+    nh =  h1_axis ( ( _fun ( x ) for x in e  ) , title  = h1.GetTitle() , double = type(h1) )  
+
+    if numbers :
+        deriv = lambda x,h : 1
+    elif deriv :
+        deriv = lambda x,h : deriv ( x ) 
+    else :
+        from ostap.math.derivative import derivative as _deriv_
+        deriv = lambda x,h : _deriv_ ( _fun , x , h )
+
+    ## loop over the content of original histogram 
+    for i,x,y in h1.iteritems() :
+
+        ## center bin 
+        xc     = x.value()
+        nc     = _fun ( xc )
+        
+        ## value
+        dd     = deriv ( xc , 0.2 * x.error() )
+        if iszero ( dd ) :
+            logger.warning('derivative is zero, skip this bin')
+            continue
+        
+        value  = VE(y) / dd 
+        if value.isinf() or value.isnan() : continue
+        
+        ib = nh.findBin( nc )        
+        if ib in nh : nh[ib] += value
+        
+    return nh 
+
+    
+# =============================================================================
+## make a historgam transfromation:
+#  H(x)  ->  H'(y(x))
+#  where transformation is defined  y=fun(x)
+#  @code
+#  h  = ...
+#  from math import tanh 
+#  ht = h.transform_X_numbers ( lambda x : tanh(x) ) 
+#  @endcode
+#  Histogram is transformed as raw histigram (no Jacobian correction is applied)
+def _h1_transform_x_numbers_ ( h1 , fun ) :
+    """Make a historgam transfromation:
+    H(x)  ->  H'(y(x))
+    where transformation is defined  y=fun(x)
+    >>> h  = ...
+    >>> from math import tanh 
+    >>>ht = h.transform_X_numbers ( lambda x : tanh(x) ) 
+    Histogram is transformed as raw histigram (no Jacobian correction is applied)
+    """
+    return _h1_transform_x_ ( h1 , fun , numbers = True )
+
+# =============================================================================
+## make a histogram transformation:
+#  H(x)  ->  H'(y(x)) / (dy/dx)
+#  where transformation is defined  y=fun(x)
+#  @code
+#  h  = ...
+#  from math import tanh 
+#  ht = h.transform_X_function ( lambda x : tanh(x) ) 
+#  @endcode    
+#  - Histogram is transformed as function (Jacobian correction is applied)
+#  - Derivative for Jacobian calculation can be explicitely specified, otherwise
+#  they are calculated numerically 
+def _h1_transform_x_function_ ( h1 , fun , deriv = None ) :
+    """make a histogram transformation:
+    H(x)  ->  H'(y(x)) / (dy/dx)
+    where transformation is defined  y=fun(x)
+    >>> h  = ...
+    >>> from math import tanh 
+    >>> ht = h.transform_X_function ( lambda x : tanh(x) ) 
+    - Histogram is transformed as function (Jacobian correction is applied)
+    - Derivative for Jacobian calculation can be explicitely specified, otherwise
+    they are calculated numerically 
+    """    
+    return _h1_transform_x_ ( h1 , fun , numbers = False , deriv = deriv )
+    
+
+for t in ( ROOT.TH1F , ROOT.TH1D ) :
+    t.transform_X_numbers  =  _h1_transform_x_numbers_
+    t.transform_X_function =  _h1_transform_x_function_
 
 
 # =============================================================================
@@ -6699,6 +6792,8 @@ _new_methods_   = (
     ROOT.TH1F.dumpASCII      ,
     ROOT.TH1F.dumpAsText     ,
     #
+    ROOT.TH1F.transform_X_numbers  ,
+    ROOT.TH1F.transform_X_function 
     )
 
 # =============================================================================
