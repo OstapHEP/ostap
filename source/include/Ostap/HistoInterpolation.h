@@ -185,7 +185,7 @@ namespace Ostap
       /** interpolate 1D histogram 
        *  @param h1          (INPUT) input histogram 
        *  @param x           (INPUT) the x-value 
-       *  @param type        (INPUT) interpolation type 
+       *  @param t           (INPUT) interpolation type 
        *  @param edges       (INPUT) use the special treatment of edges ? 
        *  @param extrapolate (INPUT) use extrapolation ? 
        *  @param density     (INPUT) rescale to density? 

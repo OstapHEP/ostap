@@ -107,7 +107,7 @@ namespace Ostap
        *  @param x    vector of abscissas
        *  @param y    vector of function values
        *  @param xmin low  edge for Bernstein polynomial
-       *  @param xmin high edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial
        *  - if vector of y is longer  than vector x, extra values are ignored
        *  - if vector of y is shorter than vector x, missing entries are assumed to be zero
        *  It relies on Newton-Bernstein algorithm
@@ -123,10 +123,12 @@ namespace Ostap
                   const double               xmax  = 1 ) ;
       // ======================================================================
       /** construct Bernstein interpolant
-       *  @param x    vector of abscissas
-       *  @param y    vector of function values
+       *  @param xbegin    vector of abscissas
+       *  @param xend      vector of abscissas
+       *  @param ybegin    vector of function values
+       *  @param yend      vector of function values
        *  @param xmin low  edge for Bernstein polynomial
-       *  @param xmin high edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial
        *  - if vector of y is longer  than vector x, extra values are ignored
        *  - if vector of y is shorter than vector x, missing entries are assumed to be zero
        *  It relies on Newton-Bernstein algorithm
@@ -271,7 +273,7 @@ namespace Ostap
        *  Since the maximum value for each term of
        *  \f$ c_k C^n_k \frac{ k^k (n-k)^{n-k}{ n^n}}\f$
        *  @param epsilon  parameter to define "smalness" of terms
-       *  @returm number of nullified terms
+       *  @return number of nullified terms
        */
       unsigned short remove_noise ( const double epsilon = 0 ) ;
       // ======================================================================
@@ -596,6 +598,7 @@ namespace Ostap
                       const double         xmin  = 0 ,
                       const double         xmax  = 1 ) ;
       /** constructor from list of coefficients
+       *  @param pars vector of parameters 
        *  @param xmin low edge
        *  @param xmax high edge
        */
@@ -1338,24 +1341,28 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ) const ;
+      double integral   ( const double xlow  , 
+                          const double xhigh ,
+                          const double ylow  , 
+                          const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
+       *  @param y     variable
+       *  @param xlow  low  edge in y
+       *  @param xhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double xlow , const double xhigh ) const ;
+      double integrateX ( const double y     ,
+                          const double xlow  , 
+                          const double xhigh ) const ;
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
+       *  @param x     variable
+       *  @param ylow  low  edge in x
+       *  @param yhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double ylow , const double yhigh ) const ;
+      double integrateY ( const double x     ,
+                          const double ylow  , 
+                          const double yhigh ) const ;
       // ======================================================================
     public: // special cases
       // ======================================================================
@@ -1365,12 +1372,12 @@ namespace Ostap
       double integral   () const ;
       /** integral over x-dimension
        *  \f[ \int_{x_{min}}^{x_{max}} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
+       *  @param y     variable
        */
       double integrateX ( const double y    ) const ;
       /** integral over y-dimension
        *  \f[ \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param y     variable
+       *  @param x     variable
        */
       double integrateY ( const double x    ) const ;
       // ======================================================================
@@ -1638,24 +1645,28 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ) const ;
+      double integral   ( const double xlow  , 
+                          const double xhigh ,
+                          const double ylow  , 
+                          const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       */
-      double integrateX ( const double y    ,
-                          const double xlow , const double xhigh ) const ;
-      /** integral over y-dimension
-       *  \f[ \int_{y_{low}}^{x_{high}} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double ylow , const double yhigh ) const ;
+      double integrateX ( const double y     ,
+                          const double xlow  , 
+                          const double xhigh ) const ;
+      /** integral over y-dimension
+       *  \f[ \int_{y_{low}}^{x_{high}} \mathcal{B}(x,y) \mathrm{d}y\f]
+       *  @param x     variable
+       *  @param ylow  low  edge in x
+       *  @param yhigh high edge in x
+       */
+      double integrateY ( const double x     ,
+                          const double ylow  ,
+                          const double yhigh ) const ;
       // ======================================================================
     public: // specific integrals
       // ======================================================================
@@ -1666,12 +1677,12 @@ namespace Ostap
       double integral   () const ;
       /** integral over x-dimension
        *  \f[ \int_{x_{min}}^{x_{max}} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
+       *  @param y     variable
        */
       double integrateX ( const double y ) const ;
       /** integral over y-dimension
        *  \f[ \int_{y_{min}}^{x_{max}} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param y     variable
+       *  @param x     variable
        */
       double integrateY ( const double x ) const ;
       // ======================================================================

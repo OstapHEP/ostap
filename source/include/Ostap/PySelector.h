@@ -107,7 +107,7 @@ namespace Ostap
     // ========================================================================
     /** helper function to use TChain::Process in python 
      * 
-     *  @param tree      root-tree 
+     *  @param chain     root-tree/chain
      *  @param selector  the selector 
      *  
      *  @see TTree 
@@ -124,7 +124,7 @@ namespace Ostap
     // ========================================================================
     /** helper function to use TChain::Process in python 
      * 
-     *  @param tree      root-tree 
+     *  @param chain     root-tree/chain
      *  @param selector  the selector 
      *  @param events    events to be processed 
      *  

@@ -446,6 +446,7 @@ namespace Ostap
        *  vector of parameters will be calculated automatically
        *  @param points non-empty vector of poinst/knots
        *  @param order  the order of splines
+       *  @param convex flag 
        *  - vector of points is not requires to be ordered
        *  - duplicated knots will be ignored
        *  - min/max value will be used as interval boundaries
@@ -459,6 +460,7 @@ namespace Ostap
        *  The spline order will be calculated automatically
        *  @param points non-empty vector of poinst/knots
        *  @param pars   non-empty vector of parameters
+       *  @param convex flag 
        *  - vector of points is not requires to be ordered
        *  - duplicated knots will be ignored
        *  - min/max value will be used as interval boundaries
@@ -466,13 +468,14 @@ namespace Ostap
       ConvexOnlySpline
         ( const std::vector<double>& points         ,
           const std::vector<double>& pars           ,
-          const bool                 Connvex = true ) ;
+          const bool                 convex = true  ) ;
       // ======================================================================
       /** Constructor for uniform binning
        *  @param xmin   low  edge of spline interval
        *  @param xmax   high edge of spline interval
        *  @param inner  number of inner points in   (xmin,xmax) interval
        *  @param order  the degree of splline
+       *  @param convex flag 
        */
       ConvexOnlySpline
         ( const double         xmin       = 0    ,
@@ -606,6 +609,8 @@ namespace Ostap
        *  vector of parameters will be calculated automatically
        *  @param points non-empty vector of poinst/knots
        *  @param order  the order of splines
+       *  @param increasing flag
+       *  @param convex flag
        *  - vector of points is not requires to be ordered
        *  - duplicated knots will be ignored
        *  - min/max value will be used as interval boundaries
@@ -619,6 +624,8 @@ namespace Ostap
        *  The spline order will be calculated automatically
        *  @param points non-empty vector of poinst/knots
        *  @param pars   non-empty vector of parameters
+       *  @param increasing flag
+       *  @param convex flag
        *  - vector of points is not requires to be ordered
        *  - duplicated knots will be ignored
        *  - min/max value will be used as interval boundaries
@@ -633,6 +640,8 @@ namespace Ostap
        *  @param xmax   high edge of spline interval
        *  @param inner  number of inner points in   (xmin,xmax) interval
        *  @param order  the degree of splline
+       *  @param increasing flag
+       *  @param convex flag
        */
       ConvexSpline
         ( const double            xmin       = 0    ,

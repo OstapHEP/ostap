@@ -2110,7 +2110,7 @@ double Ostap::Math::integrate
   return _integrate_ ( poly , tau , low , high );
 }
 // ========================================================================    
-/** get the integral between low and high for a product of
+/* get the integral between low and high for a product of
  *  Legendre polynom and the exponential function with the exponent tau
  *  \f[  \int_{a}^{b} \mathcal{L} e^{\tau x } \mathrm{d}x \f] 
  *  @param poly  Legendre polynomial

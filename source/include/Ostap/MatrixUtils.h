@@ -1304,7 +1304,7 @@ namespace Ostap
      *  @param result (UPDATE) th einverse matrix 
      *  @return problem flag     
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @thanks Manuel Schiller 
+     *  - thanks to Manuel Schiller 
      *  @date 2015-02-11
      */
     template <class T, unsigned int D>

@@ -1419,7 +1419,7 @@ namespace Ostap
     /** @class Needham
      *  The special parametrization by Matthew NEEDHAM of 
      *  ``Crystal Ball-function'' nicely suitable for \f$J/\psi\f$-peak
-     *  @thank Matthew Needham 
+     *  - thanks to Matthew Needham 
      *  @see Ostap::Math::Needham
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-05-13

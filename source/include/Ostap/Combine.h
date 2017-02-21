@@ -170,9 +170,9 @@ namespace Ostap
     // ========================================================================
     /** combine two measurements <code>x</code> and <code>y</code>
      *  with covarinace matrix <code>cov</code>
-     *  @param x (INPUT) the first  measurement 
-     *  @param y (INPUT) the second measurement 
-     *  @param cov2 (INPUT) covariance matrix 
+     *  @param x   (INPUT) the first  measurement 
+     *  @param y   (INPUT) the second measurement 
+     *  @param cov (INPUT) covariance matrix 
      *  @return combined result
      *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-09-28

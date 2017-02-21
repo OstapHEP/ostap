@@ -935,7 +935,7 @@ Ostap::Math::binomEff2
  *  \f[ R = \frac{N_w}{N}  = \frac{ \sum_1^{N} w_i }{N} \f] 
  *  using jackknife method:
  *  \f[ \sigma^2(R) = \left( \sum_1^N w_i^2 - NR^2 \right) / (N-1)^2 \f] 
- *  @thanks Wouter Hulsbergen 
+ *  - thanks to Wouter Hulsbergen 
  *  @see http://en.wikipedia.org/wiki/Jackknife_%28statistics%29
  *  The result has proper behaviour : 
  *  uncertainty in R goes to zero if 

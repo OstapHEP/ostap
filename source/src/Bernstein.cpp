@@ -1604,7 +1604,7 @@ namespace
   // ==========================================================================
 }
 // ============================================================================ 
-/** get the integral between xmin and xmax Bernstein
+/* get the integral between xmin and xmax Bernstein
  *  polynom and monomial or degree m 
  *  \f[  \int_{low}^{high} \mathcal{B} \frac{(x-x_min)^m}{m!} \mathrm{d}x \f] 
  *  @param b     basic bernstein polynomial
@@ -2740,7 +2740,7 @@ double Ostap::Math::Bernstein2D::integrateX
   return result * ( scalex * scaley ) ;
 }
 // ============================================================================
-/** integral over x-dimension 
+/*  integral over x-dimension 
  *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f] 
  *  @param y     variable 
  *  @param xlow  low  edge in x 
@@ -2813,7 +2813,7 @@ double Ostap::Math::Bernstein2D::integrateX ( const double y ) const
   return result * scaley  ;
 }
 // ============================================================================
-/** integral over x-dimension 
+/*  integral over x-dimension 
  *  \f[ \int_{x_{min}}^{x_{max}} \mathcal{B}(x,y) \mathrm{d}x\f] 
  *  @param y     variable 
  */

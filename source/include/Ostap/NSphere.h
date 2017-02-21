@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_NSPHERE_H 
 #define OSTAP_NSPHERE_H 1
@@ -15,9 +14,9 @@ namespace Ostap
   namespace Math 
   {
     // ==========================================================================
-    /** @class NSphere NSphere.h LHCbMath/NSphere.h
+    /** @class NSphere 
      *  "N-sphere" of parameters 
-     *  @author Vanya Belyaev  Ivan.Belyaev@itep.ru
+     *  @author Vanya Belyaev
      *  @date   2014-01-21
      */
     class NSphere 

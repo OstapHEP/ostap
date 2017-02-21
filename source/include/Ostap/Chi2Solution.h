@@ -93,7 +93,7 @@ namespace Ostap
       /** make N-dimensional chi2-solution with R-constraints
        *  @param data (UPDATE) input approximation for the data vector 
        *  @param cov2 (UPDATE) the covariance matrix for input data 
-       *  @param D    (UPDATE) the matrix   of constraints
+       *  @param D2   (UPDATE) the matrix   of constraints
        *  @param d    (UPDATE) the offsets for constraints
        *  @param chi2 (UPDATE) the chi2 
        *  @return status code 

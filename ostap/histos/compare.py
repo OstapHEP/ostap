@@ -264,8 +264,8 @@ ROOT.TH1F.cmp_cos = _h1_cmp_costheta_
 
 # =============================================================================
 ## calculate the norm of difference of scaled histograms/functions 
-#  \f$ d = \lef| f_1^{*} - f_2^{*}\right| \f$,
-#  where \f$ f^* \f$-are scaled functions, such \f$ |left| f^*\right| = 1 \f$ 
+#  \f$ d = \left| f_1^{*} - f_2^{*}\right| \f$,
+#  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
 def _h1_cmp_dist_ ( h1              ,
                     h2              ,
                     rescale = False ) : 
@@ -307,8 +307,8 @@ ROOT.TH1F.cmp_dist = _h1_cmp_dist_
 
 # =============================================================================
 ## calculate the norm of difference of scaled histograms/functions 
-#  \f$ d = \lef| (f_1^{*}-f_2^{*})^2/(f_1^{*}f_2^*(x))\right| \f$,
-#  where \f$ f^* \f$-are scaled functions, such \f$ |left| f^*\right| = 1 \f$ 
+#  \f$ d = \left| (f_1^{*}-f_2^{*})^2/(f_1^{*}f_2^*(x))\right| \f$,
+#  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
 def _h1_cmp_dist2_ ( h1              ,
                      h2              ,
                      rescale = False ) :   

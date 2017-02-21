@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 // Include files 
 // ============================================================================
@@ -15,12 +14,8 @@
 /** @file 
  *  Implementation of class Ostap::Math::NSphere 
  *  @see Ostap::Math::NSPhere 
- *  @author Vanya BELYAEV Ivan/Belyaev@itep.ru
+ *  @author Vanya BELYAEV Ivan,Belyaev@itep.ru
  *  @date 2014-01-21 
- *  
- *  Version           $Revision$
- *  Last modification $Date$
- *                 by $Author$
  */
 // ============================================================================
 namespace 

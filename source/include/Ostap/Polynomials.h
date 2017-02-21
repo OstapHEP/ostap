@@ -366,7 +366,7 @@ namespace Ostap
     /** affine transformation of polynomial
      *  \f$ x ^{\prime} = \alpha x + \beta \f$
      *  @param input  (INPUT)  input polynomial coefficients 
-     *  @param output (UPDATE) coefficients of transformed polynomial 
+     *  @param result (UPDATE) coefficients of transformed polynomial 
      *  @param alpha  (INPUT)  alpha
      *  @param beta   (INPUT)  beta
      *  @return true for valid transformations
@@ -1114,7 +1114,7 @@ namespace Ostap
     // ========================================================================    
     /** get the integral between low and high for a product of
      *  polynom and the exponential function with the exponent tau
-     *  \f[  \int_{a}^{b} \mathcal{P} e^{\tau x } \mathrm{d}x \f] 
+     *  \f[ r = \int_{a}^{b} \mathcal{P} e^{\tau x } \mathrm{d}x \f] 
      *  @param poly  polynomial
      *  @param tau   slope parameter for exponential 
      *  @param a     low  integration range 
@@ -1128,7 +1128,7 @@ namespace Ostap
     // ========================================================================    
     /** get the integral between low and high for a product of
      *  Chebyshev polynom and the exponential function with the exponent tau
-     *  \f[  \int_{a}^{b} \mathcal{T} e^{\tau x } \mathrm{d}x \f] 
+     *  \f[ r = \int_{a}^{b} \mathcal{T} e^{\tau x } \mathrm{d}x \f] 
      *  @param poly  chebyshev polynomial
      *  @param tau   slope parameter for exponential 
      *  @param a     low  integration range 
@@ -1142,7 +1142,7 @@ namespace Ostap
     // ========================================================================    
     /** get the integral between low and high for a product of
      *  Legendre polynom and the exponential function with the exponent tau
-     *  \f[  \int_{a}^{b} \mathcal{L} e^{\tau x } \mathrm{d}x \f] 
+     *  \f[ r = \int_{a}^{b} \mathcal{L} e^{\tau x } \mathrm{d}x \f] 
      *  @param poly  Legendre polynomial
      *  @param tau   slope parameter for exponential 
      *  @param a     low  integration range 
@@ -1162,7 +1162,7 @@ namespace Ostap
     // ========================================================================    
     /** get the integral between low and high for a product of
      *  polynom and the exponential function with the exponent tau
-     *  \f[  \int_{a}^{b} \mathcal{P} e^{\tau x } \mathrm{d}x \f] 
+     *  \f[  r = \int_{a}^{b} \mathcal{P} e^{\tau x } \mathrm{d}x \f] 
      *  @param poly  polynomial
      *  @param tau   slope parameter for exponential 
      */

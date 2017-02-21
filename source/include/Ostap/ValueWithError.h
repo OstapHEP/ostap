@@ -24,9 +24,6 @@
  *  @author Vanya BELYAEV Ivane.Belyaev@itep.ru
  *  @date 2009-06-03
  *
- *  Version           $Revision$
- *  Last modification $Date$
- *                 by $Author$
  */
 namespace Ostap
 {
@@ -500,7 +497,7 @@ namespace Ostap
      *  \f[ R = \frac{N_w}{N}  = \frac{ \sum_1^{N} w_i }{N} \f] 
      *  using jackknife method:
      *  \f[ \sigma^2(R) = \left( \sum_1^N w_i^2 - NR^2 \right) / (N-1)^2 \f] 
-     *  @thanks Wouter Hulsbergen 
+     *  - thanks to Wouter Hulsbergen 
      *  @see http://en.wikipedia.org/wiki/Jackknife_%28statistics%29
      *  The result has proper behaviour : 
      *  uncertainty in R goes to zero if 
@@ -518,7 +515,7 @@ namespace Ostap
     /** evaluate pow(a,b)
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
-     *  @return the <c>a</c> raised to power <c>b</b> 
+     *  @return the <c>a</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError pow 
@@ -528,7 +525,7 @@ namespace Ostap
     /** evaluate pow(a,b)
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
-     *  @return the <c>a</c> raised to power <c>b</b> 
+     *  @return the <c>a</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError pow 
@@ -538,7 +535,7 @@ namespace Ostap
     /** evaluate pow(a,b)
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
-     *  @return the <c>a</c> raised to power <c>b</b> 
+     *  @return the <c>a</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError pow 
@@ -548,7 +545,7 @@ namespace Ostap
     /** evaluate pow(a,b)
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
-     *  @return the <c>a</c> raised to power <c>b</b> 
+     *  @return the <c>a</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError pow 
@@ -558,7 +555,7 @@ namespace Ostap
     /** evaluate pow(a,b)
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
-     *  @return the <c>a</c> raised to power <c>b</b> 
+     *  @return the <c>a</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError pow 
@@ -567,7 +564,7 @@ namespace Ostap
     // ========================================================================    
     /** evaluate exp(b)
      *  @param b (INPUT) the exponent 
-     *  @return the <c>e</c> raised to power <c>b</b> 
+     *  @return the <c>e</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError exp
@@ -575,7 +572,7 @@ namespace Ostap
     // ========================================================================    
     /** evaluate exp2(b)
      *  @param b (INPUT) the exponent 
-     *  @return the <c>2</c> raised to power <c>b</b> 
+     *  @return the <c>2</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError exp2
@@ -954,7 +951,7 @@ namespace Ostap
       const ValueWithError& b     , 
       const double          c = 0 ) ;
     // ========================================================================
-    /** calculate "fraction" of two elements $\frac{a}{a+b}$
+    /** calculate "fraction" of two elements \f$ \alpha = \frac{a}{a+b} \f$ 
      *  taking into account the correlation coefficient  
      *  @param a  (input) the first value 
      *  @param b  (input) the second value 
@@ -968,7 +965,7 @@ namespace Ostap
       const ValueWithError& b     , 
       const double          c = 0 ) ;
     // ========================================================================
-    /** calculate "asymmetry" of two elements $\frac{a-b}{a+b}$
+    /** calculate "asymmetry" of two elements  \f$ \kappa = \frac{a-b}{a+b}\f$ 
      *  taking into account the correlation coefficient  
      *  @param a  (input) the first value 
      *  @param b  (input) the second value 
@@ -1025,8 +1022,8 @@ namespace Ostap
     /** simple interpolation 
      *  - if vector of y is larger  than vector of x, extra values are ignored 
      *  - if vector of y is shorter than vector of x, missing entries assumed to be zero 
-     *  @param values     INPUT  vector of yi 
-     *  @param abscissas  INPUT  vector of xi
+     *  @param y_i        INPUT  vector of yi 
+     *  @param x_i        INPUT  vector of xi
      *  @param x          INPUT  the point where the function to be evaluated 
      *  @param correlated INPUT  correlated uncertaties in yi?
      */
@@ -1039,8 +1036,8 @@ namespace Ostap
     /** simple interpolation 
      *  - if vector of y is larger  than vector of x, extra values are ignored 
      *  - if vector of y is shorter than vector of x, missing entries assumed to be zero 
-     *  @param values     INPUT  vector of yi 
-     *  @param abscissas  INPUT  vector of xi
+     *  @param y_i        INPUT  vector of yi 
+     *  @param x_i        INPUT  vector of xi
      *  @param x          INPUT  the point where the function to be evaluated 
      */
     ValueWithError interpolate 
@@ -1051,8 +1048,8 @@ namespace Ostap
     /** simple interpolation 
      *  - if vector of y is larger  than vector of x, extra values are ignored 
      *  - if vector of y is shorter than vector of x, missing entries assumed to be zero 
-     *  @param values     INPUT  vector of yi 
-     *  @param abscissas  INPUT  vector of xi
+     *  @param y_i        INPUT  vector of yi 
+     *  @param x_i        INPUT  vector of xi
      *  @param x          INPUT  the point where the function to be evaluated 
      *  @param correlated INPUT  correlated uncertaties in yi?
      */
@@ -1063,7 +1060,7 @@ namespace Ostap
       const bool                         correlated = false ) ;
     // ========================================================================
     /** get the sum of the vector 
-     *  @param vct the vecor
+     *  @param vct the vector
      *  @param ini the intial value 
      *  @return the sum over the vector 
      */
@@ -1072,7 +1069,7 @@ namespace Ostap
       ValueWithError                     ini = ValueWithError() ) ;
     // ========================================================================    
     /** get the sum of the vector 
-     *  @param vct the vecor
+     *  @param vct the vector
      *  @param ini the intial value 
      *  @return the sum over the vector 
      */
@@ -1081,15 +1078,13 @@ namespace Ostap
       ValueWithError                     ini = ValueWithError() ) ;
     // ========================================================================    
     /** get the sum of the absolute values
-     *  @param vct the vecor
-     *  @param ini the intial value 
+     *  @param vct the vector
      *  @return the sum over the vector 
      */
     ValueWithError abssum ( const std::vector<ValueWithError>& vct ) ;
     // ========================================================================    
     /** get the sum of the absolute values
-     *  @param vct the vecor
-     *  @param ini the intial value 
+     *  @param vct the vector
      *  @return the sum over the vector 
      */
     inline 

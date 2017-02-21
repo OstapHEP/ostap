@@ -89,9 +89,7 @@ namespace Ostap
     // ======================================================================
   public:
     // ======================================================================
-    /** printout  to std::ostream
-     *  @param s the reference to the output stream
-     */
+    /// printout  to std::ostream
     std::ostream& fillStream ( std::ostream& o ) const ;
     // =====================================================================
     /// conversion to string

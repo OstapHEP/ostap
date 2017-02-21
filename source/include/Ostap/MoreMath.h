@@ -26,7 +26,7 @@ namespace Ostap
     // some special functions 
     // ========================================================================
     /** sum of N-terms in the exponential expansion 
-     *  \f$ f (x) = \sum_{n=0}^{N} \frac{x^k}{k!}\f$
+     *  \f[ f (x) = \sum_{n=0}^{N} \frac{x^k}{k!}\f]
      *  Abramowitz & Stegun, 6.5.11
      *  @param x  INPUT the argument 
      *  @param N  INPUT N-terms to be used 
@@ -37,9 +37,9 @@ namespace Ostap
     double exp_N ( const double x , const unsigned short N ) ;
     // ========================================================================
     /** "relative or reduced exponent"
-     *  \f$f(x) = N! ( e^{x} - \sum_{k=0}^{N-1} \frac{x^k}{k!})/x^{N} \f$ 
+     *  \f[ f(x) = N! ( e^{x} - \sum_{k=0}^{N-1} \frac{x^k}{k!})/x^{N} \f] 
      *  it also can be written as :
-     *  \f$ f(x) =  =  \frac{e^x n!}{x^n} (1 - \Gamma(n,x)/\Gamma(n)) \f$ 
+     *  \f[ f(x) =  =  \frac{e^x n!}{x^n} (1 - \Gamma(n,x)/\Gamma(n)) \f] 
      *  Abramowitz & Stegun, 4.2.41
      *  @param x  INPUT the argument 
      *  @param N  INPUT N-terms to be used 
@@ -50,8 +50,8 @@ namespace Ostap
     double exp_rel_N  ( const double x , const unsigned short N ) ;
     // ========================================================================
     /** regularized incomplete gamma function 
-     *  \f$ \gamma^{\ast}(a,x) = \frac{x^{-a}\gamma(a,x) {\Gamma(a)}\f$, 
-     *  where \f$ \gamma(a,x) = \int_0^x e^{-t}t^{a-1}dt\f$, 
+     *  \f[ \gamma^{\ast}(a,x) = \frac{x^{-a}\gamma(a,x) {\Gamma(a)}\f], 
+     *  where \f[\gamma(a,x) = \int_0^x e^{-t}t^{a-1}dt\f], 
      *  Abramowitz & Stegun, 6.5.4
      *  @param a INPUT a-parameter 
      *  @param x INPUT x-argument 
@@ -62,9 +62,9 @@ namespace Ostap
     double gamma_star ( const double a , const double x ) ;
     // ========================================================================
     /** regularized incomplete gamma function 
-     *  \f$ \gamma^{\ast}(n,x) = \frac{x^{-n}}{\Gamma(n)\gamma(n,x) }\f$, 
+     *  \f[ \gamma^{\ast}(n,x) = \frac{x^{-n}}{\Gamma(n)\gamma(n,x) }\f], 
      *  where 
-     *  \f$ \gamma(n,x) = \Gamma(n) - \Gamma(n,x) = \int_0^x e^{-t}t^{n-1}dt\f$, 
+     *  \f[ \gamma(n,x) = \Gamma(n) - \Gamma(n,x) = \int_0^x e^{-t}t^{n-1}dt\f], 
      *  Abramowitz & Stegun, 6.5.4
      *  @param n INPUT n-parameter 
      *  @param x INPUT x-argument 
@@ -75,7 +75,7 @@ namespace Ostap
     double gamma_star ( const int n , const double x ) ;
     // ========================================================================
     /** alpha_n 
-     *  \f$\alpha_n(x) = \int_1^\inf t^n e^{-tx}dt \f$ for $x>0$
+     *  \f[\alpha_n(x) = \int_1^\inf t^n e^{-tx}dt\f] for \f$x>0\f$
      *  Abramowitz & Stegun, 5.1.5
      *  @param n INPUT n-parameter 
      *  @param x INPUT x-argument 
@@ -86,7 +86,7 @@ namespace Ostap
     double alpha_N ( const unsigned short n , const double x ) ;
     // ========================================================================
     /** complementary function to alpha_n 
-     *  \f$\alpha^{\prime}_n(x) = \int_0^1 t^n e^{-tx}dt \f$
+     *  \f[\alpha^{\prime}_n(x) = \int_0^1 t^n e^{-tx}dt \f]
      *  @param n INPUT n-parameter 
      *  @param x INPUT x-argument 
      *  @return the function value 
@@ -96,7 +96,7 @@ namespace Ostap
     double alpha_prime_N ( const unsigned short n , const double x ) ;
     // ========================================================================
     /** beta_n 
-     *  \f$\beta_n(x) = \int_{-1}^{+1} t^n e^{-tx}dt \f$
+     *  \f[\beta_n(x) = \int_{-1}^{+1} t^n e^{-tx}dt \f]
      *  Abramowitz & Stegun, 5.1.6
      *  @param n INPUT n-parameter 
      *  @param x INPUT x-argument 
@@ -107,7 +107,7 @@ namespace Ostap
     double beta_N ( const unsigned short n , const double x ) ;
     // ========================================================================
     /** confluent hypergeometrical function  1F1 aka Kummer's function
-     *  \f$ f(a,b,x) = \sum_i  \frac{(a,i)}{((b,i)}\frac{x^i}{i!}\$f 
+     *  \f[ f(a,b,x) = \sum_i  \frac{(a,i)}{((b,i)}\frac{x^i}{i!}\$] 
      *  @param a INPUT a-parameter 
      *  @param b INPUT b-argument  (b>0)
      *  @param x argument
@@ -119,8 +119,8 @@ namespace Ostap
       const double         x ) ;
     // ========================================================================
     /** get quantile function for standard normal distribution
-     *  @see http://en.wikipedia.org./wiki/Probit
-     *  @param alpha argument    \f$  0<\alpha<1 \f$  
+     *  @param alpha argument    \f$ 0<\alpha<1 \f$  
+     *  @see http://en.wikipedia.org/wiki/Probit
      *  @return quantile value 
      */
     double  probit ( const double alpha  ) ;
@@ -162,7 +162,7 @@ namespace Ostap
     std::complex<double> erfc  ( const std::complex<double>& x ) ;
     // ========================================================================
     /** scaled complementary error function for complex argument 
-     *  \f$ 1 -  erf (x) = e^{-x^2} erfcx(x)  \f$ 
+     *  \f[1 -  erf (x) = e^{-x^2} erfcx(x)  \f] 
      *  @param x  the argument 
      *  @return the value of the scaled complementary error function 
      *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
@@ -173,7 +173,7 @@ namespace Ostap
     std::complex<double> erfcx ( const std::complex<double>& x ) ;
     // ========================================================================
     /** imaginary error function 
-     *  \f$ erfi(x) = -i \mathrm{erf}(ix) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt\f$ 
+     *  \f[\mathrm{erfi}(x) = -i \mathrm{erf}(ix) =\frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt \f] 
      *  @param x the argument
      *  @return the value of the imaginary error function 
      *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
@@ -183,7 +183,7 @@ namespace Ostap
     double               erfi ( const double x ) ;
     // ========================================================================
     /** imaginary error function 
-     *  \f$ erfi(x) = -i \mathrm{erf}(ix) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt\f$ 
+     *  \f[\mathrm{erfi}(x) = -i \mathrm{erf}(ix) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt\f] 
      *  @param x the argument
      *  @return the value of the imaginary error function 
      *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
@@ -203,7 +203,7 @@ namespace Ostap
     std::complex<double> faddeeva_w ( const std::complex<double>& x ) ;
     // ========================================================================
     /** Dowson function 
-     *  \f$ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f$ 
+     *  \f[ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f] 
      *  @return the value of Dawson function 
      *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
      *  @see http://ab-initio.mit.edu/Faddeeva
@@ -213,7 +213,7 @@ namespace Ostap
     double               dowson     ( const double                x ) ;
     // ========================================================================
     /** Dowson function 
-     *  \f$ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f$ 
+     *  \f[ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f] 
      *  @return the value of Dawson function 
      *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
      *  @see http://ab-initio.mit.edu/Faddeeva
@@ -223,25 +223,25 @@ namespace Ostap
     std::complex<double> dowson     ( const std::complex<double>& x ) ;
     // ========================================================================
     /** compute sech function 
-     *  \$f f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f$
+     *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]
      *  @return the value of sech function 
      */
     double sech ( const double x ) ;
     // ========================================================================
     /** compute sech function 
-     *  \$f f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f$
+     *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]
      *  @return the value of sech function 
      */
     std::complex<double> sech ( const std::complex<double>& x ) ;
     // ========================================================================
     /** compute inverse Gamma function 
-     *  \$f f(x) = \frac{1}{\Gamma(x)}\f$
+     *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
      *  @return the value of inverse Gamma functions 
      */
     double igamma ( const double x ) ;    
     // ========================================================================
     /** compute psi function 
-     *  \$f f(x) = \frac{d}{dx}\ln \Gamma(x)\f$
+     *  \f[ f(x) = \frac{d}{dx}\ln \Gamma(x)\f]
      *  @return the value of psi function 
      */
     double psi ( const double x ) ;    

@@ -43,6 +43,8 @@ namespace Ostap
     /** build statistic for the <code>expression</code>
      *  @param tree (INPUT) the tree 
      *  @param expression (INPUT) the expression
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  tree = ... 
@@ -62,6 +64,8 @@ namespace Ostap
      *  @param tree       (INPUT) the tree 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection criteria 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  tree = ... 
@@ -82,6 +86,8 @@ namespace Ostap
      *  @param tree       (INPUT) the tree 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection criteria 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  tree = ... 
@@ -96,7 +102,7 @@ namespace Ostap
         const std::string&  expression  , 
         const TCut&         cuts        ,
         const unsigned long first      = 0                                         ,
-        const unsigned long entries    = std::numeric_limits<unsigned long>::max() ) ;
+        const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the inpout tree 
@@ -105,6 +111,8 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -128,6 +136,8 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -152,6 +162,8 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -173,6 +185,8 @@ namespace Ostap
     /** build statistic for the <code>expression</code>
      *  @param data (INPUT) the data 
      *  @param expression (INPUT) the expression
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  data = ... 
@@ -192,6 +206,8 @@ namespace Ostap
      *  @param data       (INPUT) the data 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  data = ... 
@@ -212,6 +228,8 @@ namespace Ostap
      *  @param data       (INPUT) the data 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  data = ... 
@@ -236,6 +254,8 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -259,6 +279,8 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -283,6 +305,8 @@ namespace Ostap
      *  @param cuts  (INPUT)  the selection criteria/weights 
      *  @param stats (UPDATE) list of statistics 
      *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2017-02-17
@@ -302,6 +326,8 @@ namespace Ostap
      *  @param cuts  (INPUT)  the selection criteria/weights 
      *  @param stats (UPDATE) list of statistics 
      *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2017-02-17
@@ -320,6 +346,8 @@ namespace Ostap
      *  @param vars  (INPUT)  the list of variables 
      *  @param stats (UPDATE) list of statistics 
      *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2017-02-17
@@ -340,6 +368,8 @@ namespace Ostap
      *  @param cuts  (INPUT)  the selection criteria/weights 
      *  @param stats (UPDATE) list of statistics 
      *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2017-02-17
@@ -358,6 +388,8 @@ namespace Ostap
      *  @param vars  (INPUT)  the list of variables 
      *  @param stats (UPDATE) list of statistics 
      *  @param covs  (UPDATE) elements of "covariance matrix" 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2017-02-17

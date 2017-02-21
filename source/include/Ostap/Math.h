@@ -556,7 +556,7 @@ namespace Ostap
     struct GreaterOrEqual : public std::binary_function<TYPE,TYPE,bool>
     {
       // ====================================================================== 
-      /// the only one method:  o1 >= o2 or o1 \approx = o2 
+      /// the only one method:  \f$ o_1 \ge o_2 \f$  or  \f$ o_1 \approx = o_2 \f$  
       inline bool operator () ( const TYPE& o1 , const TYPE& o2 ) const 
       { return m_geq ( o1 , o2 ) || m_equal ( o1 , o2 ) ; }
       // ======================================================================
@@ -773,8 +773,8 @@ namespace Ostap
     // ========================================================================
     /** make dot-multiplication of two sequences using std::fma 
      *  \f$ r = \sum_i  x_i y_i \f$
-     *  @param x     (INPUT) the first sequence 
-     *  @param begin (INPUT) start iterator of the second sequence
+     *  @param x (INPUT) the first sequence 
+     *  @param y (INPUT) the second sequence
      *  @return   "dot" product of two sequences 
      */
     template <unsigned int N, class TYPE1, class TYPE2>
@@ -783,7 +783,6 @@ namespace Ostap
       const std::array<TYPE2,N>& y )  
     { return dot_fma ( x.begin() , x.end() , y.begin() ) ; }
     // ========================================================================
-    
     
     // ========================================================================
     /// simple scaling of elements of non-constant sequence        

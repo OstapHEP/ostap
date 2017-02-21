@@ -650,8 +650,8 @@ namespace Ostap
     // ========================================================================
     /** @class Needham
      *  The special parametrization by Matthew NEEDHAM of
-     *  ``Crystal Ball-function'' suitable for \f$J/\psi/\Upsilon\f$-peaks
-     *  @thank Matthew Needham
+     *  ``Crystal Ball-function'' suitable for \f$J/\psi/\Upsilon\f$-peaks     
+     *  - thanks to Matthew Needham
      *
      *  Recommended constants for \f$J/psi\f$-peak:
      *    -  \f$a_0 =  1.975   \f$
@@ -1021,7 +1021,7 @@ namespace Ostap
       /** constructor from all parameters
        *  @param m0      m0        parameter
        *  @param sigmaL  sigmaL    parameter
-       *  @param sigmaR  sigmaR    parameter
+       *  @param alphaR  alphaR    parameter
        *  @param beta    beta      parameter
        */
       Apolonios2
@@ -1966,7 +1966,7 @@ namespace Ostap
        *  \f$ f \rigtharrow A_1 + A_2\f$
        *  @param m0    the mass
        *  @param m0g1  parameter \f$ m_0\times g_1\f$
-       *  @param g2og2 parameter \f$ g2/g_1       \f$
+       *  @param g2og1 parameter \f$ g2/g_1       \f$
        *  @param mA1   mass of A1
        *  @param mA2   mass of A2
        *  @param mB1   mass of B1
@@ -2075,7 +2075,7 @@ namespace Ostap
        *  \f$ f \rigtharrow B_1 + B_2\f$
        *  @param m0    the mass
        *  @param m0g1  parameter \f$ m_0\times g_1\f$
-       *  @param g2og2 parameter \f$ g2/g_1       \f$
+       *  @param g2og1 parameter \f$ g2/g_1       \f$
        *  @param mA1   mass of A1
        *  @param mA2   mass of A2
        *  @param mB1   mass of B1
@@ -2280,8 +2280,7 @@ namespace Ostap
        *  @see Ostap::Math::BreitWigner::rho_fun
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
-       */
-      
+       */      
       double jackson_0 ( double /* m  */ ,
                          double /* m0 */ ,
                          double /* m1 */ ,
@@ -2295,8 +2294,7 @@ namespace Ostap
        *  @return the value of rho-function
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
-       */
-      
+       */      
       double jackson_A2 ( double    m     ,
                           double /* m0 */ ,
                           double /* m1 */ ,
@@ -2311,7 +2309,6 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */
-      
       double jackson_A3 ( double    m     ,
                           double /* m0 */ ,
                           double /* m1 */ ,
@@ -2319,7 +2316,7 @@ namespace Ostap
       // ======================================================================
       /** the simple function for
        *  \f$ \frac{3}{2}^+ \rightarrow \frac{1}{2}^+ 0^- \f$, l = 1
-       *  $\rho(\omega)= \frac{ ( \omega + M )^2 - m^2 }{ \omega^2} \f$
+       *  \f$\rho(\omega)= \frac{ ( \omega + M )^2 - m^2 }{ \omega^2} \f$
        *  @see Ostap::Math::BreitWigner
        *  @see Ostap::Math::BreitWigner::rho_fun
        *  @param m the invariant mass
@@ -2329,7 +2326,6 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */
-      
       double jackson_A4 ( double    m     ,
                           double /* m0 */ ,
                           double    m1    ,
@@ -2337,7 +2333,7 @@ namespace Ostap
       // ======================================================================
       /** the simple function for
        *  \f$ \frac{3}{2}^- \rightarrow \frac{1}{2}^+ 0^- \f$, l = 2
-       *  $\rho(\omega)= \left[ ( \omega + M )^2 - m^2 \right]^{-1} \f$
+       *  \f$\rho(\omega)= \left[ ( \omega + M )^2 - m^2 \right]^{-1} \f$
        *  @see Ostap::Math::BreitWigner
        *  @see Ostap::Math::BreitWigner::rho_fun
        *  @param m the invariant mass
@@ -2346,8 +2342,7 @@ namespace Ostap
        *  @return the value of rho-function
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
-       */
-      
+       */      
       double jackson_A5 ( double    m     ,
                           double /* m0 */ ,
                           double    m1    ,
@@ -2355,7 +2350,7 @@ namespace Ostap
       // ======================================================================
       /** the simple function for \f$\rho^- \rightarrow \pi^+ \pi^-\f$
        *  \f$ 1- \rightarrow 0^- 0^- \f$, l = 1
-       *  $\rho(\omega)= \left[ q_0^2 + q^2 \right]^{-1}f$
+       *  \f$\rho(\omega)= \left[ q_0^2 + q^2 \right]^{-1}f$
        *  @see Ostap::Math::BreitWigner
        *  @see Ostap::Math::BreitWigner::rho_fun
        *  @param m the invariant mass
@@ -2364,7 +2359,6 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */
-      
       double jackson_A7 ( double    m     ,
                           double    m0    ,
                           double    m1    ,
@@ -2595,6 +2589,8 @@ namespace Ostap
       /** constructor from all masses and angular momenta
        *  @param m1 the mass of the first  particle
        *  @param m2 the mass of the second particle
+       *  @param m0 the mass of K* 
+       *  @param g0 the width of  K*
        *  @param a  the LASS parameter
        *  @param r  the LASS parameter
        *  @param e  the LASS parameter
@@ -2688,9 +2684,12 @@ namespace Ostap
        *  @param m2 the mass of the second particle
        *  @param m3 the mass of the third  particle
        *  @param m  the mass of the mother particle (m>m1+m2+m3)
+       *  @param m0 the mass of K*
+       *  @param g0 the width of K* 
        *  @param L  the angular momentum between the first pair and the third
        *  @param a  the LASS parameter
        *  @param r  the LASS parameter
+       *  @param e  the LASS parameter
        */
       LASS23L ( const double         m1 =  493.7  ,
                 const double         m2 =  139.6  ,
@@ -2789,13 +2788,10 @@ namespace Ostap
        *  @param g2 width parameter g2 (4pi width)
        *  @param b1 width parameter b1  (2pi coupling)
        *  @param b2 width parameter b2  (2pi coupling)
+       *  @param a  parameter a (the exponential cut-off)
        *  @param s1 width parameter s1  (cut-off for 4pi coupling)
        *  @param s2 width parameter s2  (cut-off for 4pi coupling)
-       *  @param a  parameter a (the exponential cut-off)
        *  @param m1 the mass of the first  particle
-       *  @param m3 the mass of the third  particle
-       *  @param m  the mass of the mother particle (m>m1+m2+m3)
-       *  @param L  the angular momentum between the first pair and the third
        */
       Bugg    ( const double         M  = 0.9264        ,  // GeV
                 const double         g2 = 0.0024        ,  // GeV
@@ -2939,9 +2935,9 @@ namespace Ostap
        *  @param g2 width parameter g2 (4pi width)
        *  @param b1 width parameter b1  (2pi coupling)
        *  @param b2 width parameter b2  (2pi coupling)
+       *  @param a  parameter a (the exponential cut-off)
        *  @param s1 width parameter s1  (cut-off for 4pi coupling)
        *  @param s2 width parameter s2  (cut-off for 4pi coupling)
-       *  @param a  parameter a (the exponential cut-off)
        *  @param m1 the mass of the first  particle
        *  @param m3 the mass of the third  particle
        *  @param m  the mass of the mother particle (m>m1+m2+m3)
@@ -2959,6 +2955,7 @@ namespace Ostap
                 const double         m  = 5278.0 / 1000 ,  // MeV
                 const unsigned short L  =    1          ) ;
       /** constructor from bugg & phase space parameters
+       *  @param bugg precofoigured bugg-function
        *  @param m3 the mass of the third  particle
        *  @param m  the mass of the mother particle (m>m1+m2+m3)
        *  @param L  the angular momentum between the first pair and the third
@@ -3175,9 +3172,9 @@ namespace Ostap
       /** constructor  from all parameters
        *  @param m0    the mass
        *  @param m0g1  parameter \f$ m_0\times g_1\f$
-       *  @param g2og2 parameter \f$ g2/g_1       \f$
-       *  @param mA    A mass
-       *  @param mB    B mass
+       *  @param g2og1 parameter \f$ g2/g_1       \f$
+       *  @param mK    A mass
+       *  @param mPi    B mass
        *  @param m3    the mass of the third particle
        *  @param m     the mass of mother particle
        *  @param L     the orbital momentum between the pair and the third particle
@@ -3192,6 +3189,7 @@ namespace Ostap
                    const unsigned short L     = 1        ) ;
       // ======================================================================
       /** constructor  from flatte function
+       *  @param fun preconfigured flatte function 
        *  @param m3    the mass of the third particle
        *  @param m     the mass of mother particle
        *  @param L     the orbital momentum between the pair and the third particle
@@ -3477,9 +3475,11 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor from mass, resolution and "n"-parameter
-       *  @param M     mass
-       *  @param sigma width parameter
-       *  @param N     n-parameter  ( actually  n=1+|N| )
+       *  @param mass   mass
+       *  @param sigmaL left width parameter
+       *  @param sigmaR right width parameter
+       *  @param nL     left n-parameter  ( actually  n=1+|N| )
+       *  @param nR     right n-parameter  ( actually  n=1+|N| )
        */
       BifurcatedStudentT ( const double mass   = 0 ,
                            const double sigmaL = 1 ,
@@ -4028,8 +4028,8 @@ namespace Ostap
       /** constructor with all parameters
        *  @param alpha \f$\alpha\f$-parameter
        *  @param beta  \f$\beta\f$-parameter
-       *  @param scale scale-parameter
-       *  @param low   shift-parameter
+       *  @param scale  scale-parameter
+       *  @param shift  shift-parameter
        */
       BetaPrime ( const double alpha = 3 ,
                   const double beta  = 3 ,
@@ -4095,16 +4095,13 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-05-11
      */
-    class  Landau
-      : public std::unary_function<double,double>
+    class  Landau : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
       /** constructor with all parameters
-       *  @param alpha \f$\alpha\f$-parameter
-       *  @param beta  \f$\beta\f$-parameter
        *  @param scale scale-parameter
-       *  @param low   shift-parameter
+       *  @param shift shift-parameter
        */
       Landau ( const double scale = 1 ,
                const double shift = 0 ) ;
@@ -4553,10 +4550,9 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor with all parameters
-       *  @param alpha \f$\alpha\f$-parameter
-       *  @param beta  \f$\beta\f$-parameter
-       *  @param scale scale-parameter
-       *  @param low   shift-parameter
+       *  @param shape shape parameter 
+       *  @param high  high parameter 
+       *  @param low   low parameter 
        */
       Argus  ( const double shape  = 1   ,
                const double high   = 1   ,
@@ -4952,17 +4948,17 @@ namespace Ostap
                         const double ylow , const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
+       *  @param y     variable
+       *  @param xlow  low  edge in y
+       *  @param xhigh high edge in y
        */
       double integrateX ( const double y    ,
                           const double xlow , const double xhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
+       *  @param x     variable
+       *  @param ylow  low  edge in x
+       *  @param yhigh high edge in x
        */
       double integrateY ( const double x    ,
                           const double ylow , const double yhigh ) const ;
@@ -5051,24 +5047,28 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow , const double xhigh ,
-                        const double ylow , const double yhigh ) const ;
+      double integral ( const double xlow  ,
+                        const double xhigh ,
+                        const double ylow  , 
+                        const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
+       *  @param y     variable
+       *  @param xlow  low  edge in y
+       *  @param xhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double xlow , const double xhigh ) const ;
+      double integrateX ( const double y     ,
+                          const double xlow  ,
+                          const double xhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
+       *  @param x     variable
+       *  @param ylow  low  edge in x
+       *  @param yhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double ylow , const double yhigh ) const ;
+      double integrateY ( const double x     ,
+                          const double ylow  , 
+                          const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5146,17 +5146,17 @@ namespace Ostap
                         const double ylow , const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
+       *  @param y     variable
+       *  @param xlow  low  edge in y
+       *  @param xhigh high edge in y
        */
       double integrateX ( const double y    ,
                           const double xlow , const double xhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
+       *  @param x     variable
+       *  @param ylow  low  edge in x
+       *  @param yhigh high edge in x
        */
       double integrateY ( const double x    ,
                           const double ylow , const double yhigh ) const ;

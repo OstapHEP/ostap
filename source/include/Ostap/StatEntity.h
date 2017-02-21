@@ -344,9 +344,7 @@ namespace Ostap
     void reset () ;
     /// representation as string
     std::string   toString () const;
-    /** printout  to std::ostream
-     *  @param s the reference to the output stream
-     */
+    /// printout  to std::ostream
     std::ostream& fillStream ( std::ostream& o ) const ;
     // ======================================================================
   private:

@@ -40,6 +40,8 @@ namespace Ostap
      *  @param histo (UPDATE) histogram 
      *  @param expression (INPUT) expression
      *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last event to process 
      */
     static Ostap::StatusCode project
     ( const RooAbsData*   data            , 
@@ -55,6 +57,8 @@ namespace Ostap
      *  @param xexpression (INPUT) expression for x-axis 
      *  @param yexpression (INPUT) expression for y-axis 
      *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last event to process 
      */
     static Ostap::StatusCode project2
     ( const RooAbsData*   data            , 
@@ -72,6 +76,8 @@ namespace Ostap
      *  @param yexpression (INPUT) expression for y-axis 
      *  @param zexpression (INPUT) expression for z-axis 
      *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last event to process 
      */
     static Ostap::StatusCode project3
     ( const RooAbsData*   data            , 
@@ -90,6 +96,8 @@ namespace Ostap
      *  @param histo (UPDATE) histogram 
      *  @param expression (INPUT) expression
      *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last event to process 
      */
     static Ostap::StatusCode project
     ( const RooAbsData*   data            , 
@@ -105,6 +113,8 @@ namespace Ostap
      *  @param xexpression (INPUT) expression for x-axis 
      *  @param yexpression (INPUT) expression for y-axis 
      *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last event to process 
      */
     static Ostap::StatusCode project2
     ( const RooAbsData*   data            , 
@@ -122,6 +132,8 @@ namespace Ostap
      *  @param yexpression (INPUT) expression for y-axis 
      *  @param zexpression (INPUT) expression for z-axis 
      *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first (INPUT) the first event to process 
+     *  @param last  (INPUT) the last event to process 
      */
     static Ostap::StatusCode project3
     ( const RooAbsData*   data            , 

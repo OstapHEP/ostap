@@ -1806,7 +1806,7 @@ models.append ( BW23L_pdf )
 #  S.M.Flatte, "Coupled-channel analysis of the \f$\pi\eta\f$ 
 #    and \f$K\bar{K}\f$ systems near \f$K\bar{K}\f$ threshold  
 #    Phys. Lett. B63, 224 (1976)
-#  Well suitable for \f$\f_0(980)\rightarrow \pi^+ \pi^-\f$
+#  Well suitable for \f$f_0(980)\rightarrow \pi^+ \pi^-\f$
 #  @see http://www.sciencedirect.com/science/article/pii/0370269376906547
 #  @see Ostap::Models::Flatte
 #  @see Ostap::Math::Flatte
@@ -1886,7 +1886,7 @@ models.append ( Flatte_pdf )
 #    "Coupled-channel analysis of the \f$\pi\eta\f$ 
 #    and \f$K\bar{K}\f$ systems near \f$K\bar{K}\f$ threshold  
 #    Phys. Lett. B63, 224 (1976)
-#  Well suitable for \f$\f_0(980)\rightarrow K^+ K^-\f$
+#  Well suitable for \f$f_0(980)\rightarrow K^+ K^-\f$
 #  @see http://www.sciencedirect.com/science/article/pii/0370269376906547
 #  @see Ostap::Models::Flatte2
 #  @see Ostap::Math::Flatte2
