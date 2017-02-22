@@ -69,7 +69,7 @@ namespace Ostap
      *  const float a = ... ;
      *  const float b = ... ;
      *
-     *  const bool equal = Gaudi::Math::lomont_compare_float ( a , b ) ;
+     *  const bool equal = Ostap::Math::lomont_compare_float ( a , b ) ;
      *  
      *  @endcode 
      * 
@@ -109,7 +109,7 @@ namespace Ostap
      *  const double a = ... ;
      *  const double b = ... ;
      *
-     *  const bool equal = Gaudi::Math::lomont_compare_double ( a , b ) ;
+     *  const bool equal = Ostap::Math::lomont_compare_double ( a , b ) ;
      *  
      *  @endcode 
      * 
@@ -129,7 +129,7 @@ namespace Ostap
      *
      *  @code
      *
-     *  Gaudi::Math::Lomont<float> compare ( 100 ) ;
+     *  Ostap::Math::Lomont<float> compare ( 100 ) ;
      * 
      *  const float a = ... ;
      *  const float b = ... ;
@@ -138,9 +138,9 @@ namespace Ostap
      *  
      *  @endcode 
      * 
-     *  @see class Gaudi::Math::Lomont 
+     *  @see class Ostap::Math::Lomont 
      *  @attention The default precision is not specified!
-     *  @see Gaudi::Math::lomont_compare_float 
+     *  @see Ostap::Math::lomont_compare_float 
      *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
      *  @date 2009-10-22
      */
@@ -172,13 +172,13 @@ namespace Ostap
     };
     // ========================================================================
     /** the specialization for double numbers 
-     *  @see class Gaudi::Math::Lomont 
+     *  @see class Ostap::Math::Lomont 
      *  @attention The default precision is not specified!
-     *  @see Gaudi::Math::lomont_compare_float 
+     *  @see Ostap::Math::lomont_compare_float 
      *
      *  @code
      *
-     *  Gaudi::Math::Lomont<double> compare ( 500 ) ;
+     *  Ostap::Math::Lomont<double> compare ( 500 ) ;
      * 
      *  const double a = ... ;
      *  const double b = ... ;
@@ -224,9 +224,9 @@ namespace Ostap
      *  previous one.
      *
      *  This routine is very convenient to test the parameter maxULPS for
-     *  the routine Gaudi::Math::lomont_compare_float 
+     *  the routine Ostap::Math::lomont_compare_float 
      *
-     *  @see Gaudi:Math::lomont_compare_float
+     *  @see Ostap:Math::lomont_compare_float
      *  @param af the reference number 
      *  @param ulps the bias 
      *  @return the biased float number (on distance "ulps")
@@ -242,9 +242,9 @@ namespace Ostap
      *  previous one.
      *
      *  This routine is very convenient to test the parameter maxULPS for
-     *  the routine Gaudi::Math::lomont_compare_double
+     *  the routine Ostap::Math::lomont_compare_double
      *
-     *  @see Gaudi::Math::lomont_compare_double
+     *  @see Ostap::Math::lomont_compare_double
      *  @param af the reference number 
      *  @param ulps the bias 
      *  @return the biased float number (on distance "ulps")

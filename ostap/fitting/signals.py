@@ -203,18 +203,15 @@ class CrystalBall_pdf(MASS) :
         #
         MASS.__init__ ( self    , name     ,
                         mn      , mx       , mass    ,
-                        mean    , sigma    )
-        
+                        mean    , sigma    )        
         self.alpha = makeVar ( alpha ,
                                'alpha_%s'        % name ,
                                '#alpha_{CB}(%s)' % name ,  alpha  ,
-                               2.0 , 0  , 10 )
-        
+                               2.0 , 0  , 10 )        
         self.n     = makeVar ( n   ,
                                'n_%s'            % name ,
                                'n_{CB}(%s)'      % name , n       ,
-                               1.0 , 0  , 20 )
-        
+                               1.0 , 0  , 20 )        
         #
         ## finally build PDF 
         #
@@ -252,18 +249,15 @@ class CrystalBallRS_pdf(MASS) :
         
         MASS.__init__ ( self    , name     ,
                         mn      , mx       , mass    ,
-                        mean    , sigma    ) 
-        
+                        mean    , sigma    )         
         self.alpha = makeVar ( alpha ,
                                'alpha_%s'          % name ,
                                '#alpha_{CBRS}(%s)' % name , alpha , 
-                               2.0 , 0  , 10      )
-        
+                               2.0 , 0  , 10      )        
         self.n     = makeVar ( n     ,
                                'n_%s'              % name ,
                                'n_{CBRS}(%s)'      % name ,  n , 
-                               1   ,  0 , 20      )
-        
+                               1   ,  0 , 20      )        
         #
         ## finally build PDF 
         #
@@ -348,14 +342,14 @@ models.append ( CB2_pdf )
 ## @class Needham_pdf
 #  Needham function: specific parameterisation of Crystal Ball function with
 #   - \f$ n = 1 \f$  
-#   - \f$ \alpha(\sigma) = a_0 + \sigma\times (a_1+\sigma \times a_2)
+#   - \f$ \alpha(\sigma) = a_0 + \sigma\times (a_1+\sigma \times a_2) \f$ 
 #  The function is very well sutable to fit
 #  \f$J/\psi \rightarrow \mu^+\mu^-\f$,
 #  \f$\psi^{\prime} \rightarrow \mu^+\mu^-\f$ and
 #  \f$\Upsilon \rightarrow \mu^+\mu^-\f$ signals and
 #  is has been used with great success for all LCHb papers
 #  on quarkonia production in dimuon final states
-#  @thank Matthew Needham
+#  -thanks to  Matthew Needham
 #  @see CrystalBall_pdf 
 #  @see Ostap::Models::Needham 
 #  @see Ostap::Math::Needham 
@@ -510,7 +504,7 @@ models.append ( Apolonios_pdf )
 #   where 
 #  \f[ \delta x  = \left\{ \begin{array}{ccc}
 #          \frac{x-\mu}{\sigma_l} & \text{for} & x \le \mu \\
-#          \frac{x-\mu}{\sigma_r} & \text{for} & x \gt \mu \\
+#          \frac{x-\mu}{\sigma_r} & \text{for} & x \ge \mu \\
 #          \end{array}
 #          \right.\f]
 #  Large betas corresponds to gaussian 
@@ -834,65 +828,6 @@ class GenGaussV2_pdf(MASS) :
             self.kappa  )
 
 models.append ( GenGaussV2_pdf )    
-## # =============================================================================
-## ## @class SkewGauss_pdf
-## #  Simple class that implements the skew normal distribution
-## #  @see http://en.wikipedia.org/wiki/Skew_normal_distribution
-## #  @see Ostap::Models::SkewGauss 
-## #  @see Ostap::Math::SkewGauss 
-## #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-## #  @date 2011-07-25
-## class SkewGauss_pdf(MASS) :
-##     """Skew normal distribution
-##     see http://en.wikipedia.org/wiki/Skew_normal_distribution
-    
-##     The skew normal distribution is a continuous probability distribution that
-##     generalises the normal distribution to allow for non-zero skewness.
-
-##     Parameters:
-##     - location
-##     - omega>0   : scale
-##     - alpha     : shape   (alpha=0 corresponds to gaussian distribuition)
-##     """
-##     def __init__ ( self             ,
-##                    name             ,
-##                    mn        = None ,
-##                    mx        = None ,
-##                    mass      = None ,
-##                    mean      = None ,
-##                    omega     = None ,
-##                    alpha     = 0    ) : ## alpha=0 correspond to gaussian 
-##         #
-##         ## initialize the base
-##         # 
-##         MASS.__init__  ( self    , name  ,
-##                          mn      , mx    , mass    ,
-##                          mean    , omega ) 
-        
-##         self.omega = self.sigma
-##         sname  = self.omega.GetName  ()
-##         stitle = self.omega.GetTitle ()
-##         gname  = sname .replace ( 'sigma' , 'omega' )
-##         gtitle = stitle.replace ( 'sigma' , 'omega' )
-##         self.omega.SetName  ( gname  ) 
-##         self.omega.SetTitle ( gtitle )
-
-##         self.alpha = makeVar ( alpha                      ,
-##                                'alpha_%s'          % name ,
-##                                '#alpha_{Skew}(%s)' % name , alpha , 
-##                                0 , -100 , 100  ) 
-##         #
-##         ## finally build pdf
-##         # 
-##         self.pdf = Ostap.Models.SkewGauss (
-##             "skewg_"         + name ,
-##             "SkewGauss(%s)" % name ,
-##             self.mass   ,
-##             self.mean   ,
-##             self.omega  ,
-##             self.alpha  )
-
-## models.append ( SkewGauss_pdf )      
 # =============================================================================
 ## @class Bukin_pdf
 #  Bukin function, aka ``modified Novosibirsk function''
@@ -945,8 +880,8 @@ class Bukin_pdf(MASS) :
     """
     def __init__ ( self            ,
                    name            ,
-                   mn       = None , ## low-edge   (not used if 'mass' is specified)
-                   mx       = None , ## high-edge  (not used if 'mass' is specified) 
+                   mn       = None , # low-edge   (not used if 'mass' is specified)
+                   mx       = None , # high-edge  (not used if 'mass' is specified) 
                    mass     = None , 
                    mean     = None ,
                    sigma    = None ,
@@ -963,15 +898,13 @@ class Bukin_pdf(MASS) :
         #
         ## treat the specific parameters
         #
-        ## asymmetry 
+        # asymmetry 
         self.xi    = makeVar ( xi                    ,
                                "xi_%s"        % name ,
-                               "#xi(%s)"      % name , xi      , 0  , -1 , 1    )
-        
+                               "#xi(%s)"      % name , xi      , 0  , -1 , 1    )        
         self.rhol  = makeVar ( rhol                  ,
                                "rhol_%s"      % name ,
-                               "#rho_{L}(%s)" % name , rhol    , 0  ,  -10 , 10 )
-        
+                               "#rho_{L}(%s)" % name , rhol    , 0  ,  -10 , 10 )        
         self.rhor  = makeVar ( rhor                  ,
                                "rhor_%s"      % name ,
                                "#rho_{R}(%s)" % name , rhor    , 0  ,  -10 , 10 )
@@ -1342,7 +1275,7 @@ models.append ( JohnsonSU_pdf )
 # =============================================================================
 ## @class Atlas_pdf
 #  Modified gaussian with exponential tails
-#  \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\deltax/2}}}{2})\f$,
+#  \f[ f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\delta x/2}}}{2})\f],
 #  where \f$\delta x = \left| x - \mu \right|/\sigma\f$
 #  Function is taken from http://arxiv.org/abs/arXiv:1507.07099
 # 
@@ -1356,7 +1289,7 @@ models.append ( JohnsonSU_pdf )
 #  @date   2015-08-024
 class Atlas_pdf(MASS) :
     r"""Modified gaussian with exponential tails
-    \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\deltax/2}}}{2})\f$,
+    \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\delta x/2}}}{2})\f$,
     where \f$\delta x = \left| x - \mu \right|/\sigma\f$
     Function is taken from http://arxiv.org/abs/arXiv:1507.07099    
     """
@@ -1402,7 +1335,7 @@ models.append ( Atlas_pdf )
 #  that is, it has a more acute peak near its mean, and heavier tails, 
 #  compared with the standard normal distribution.
 #
-#  \f$ f(x,\mu,\sigma) \propto \frac{1}{2} \sech ( \frac{\pi}{2}\frac{x-\mu}{\sigma} )\f$ 
+#  \f[ f(x,\mu,\sigma) \propto \frac{1}{2} \mathrm{sech} ( \frac{\pi}{2}\frac{x-\mu}{\sigma} )\f] 
 #   @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
 #
 #  @see Ostap::Math::Sech

@@ -408,9 +408,9 @@ namespace Ostap
     ( const SVectorWithError<N,SCALAR>& v1 , 
       const SVectorWithError<N,SCALAR>& v2 ) { return v1.mean ( v2 ) ; }
     // ========================================================================
-  } //                                             end of namespace Gaudi::Math
+  } //                                             end of namespace Ostap::Math
   // ==========================================================================
-} //                                                     end of namespace Gaudi 
+} //                                                     end of namespace Ostap 
 // ============================================================================
 #include "SVectorWithError.icpp"
 // ============================================================================

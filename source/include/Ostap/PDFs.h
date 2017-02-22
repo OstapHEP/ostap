@@ -24,7 +24,7 @@ class RooPrintable ;  // RooFit
 namespace Ostap
 {
   // ==========================================================================
-  /** @namespace  Models Models.h Analysis/Models.h
+  /** @namespace Ostap::Models 
    *  
    *  Naturally "wide" models:
    *
@@ -80,11 +80,11 @@ namespace Ostap
    *  - generic   positive non-factorizable polynomial in 2D    
    *   \f$ P^+(x,y) = \sum_i \sum_j \alpha^2_{i,j} B^n_i(x) B^k_j(y) \f$ 
    *  - symmetric positive non-factorizable polynomial in 2D \f$ P^+_{sym}(x,y) \f$ 
-   *  - \f$ f(x,y)       = \Phi_1(x)\times\Phi_2(y)\timesP^+(x,y)       \f$
-   *  - \f$ f_{sym}(x,y) = \Phi  (x)\times\Phi  (y)\timesP^+_{sym}(x,y) \f$
-   *  - \f$ f(x,y)       = exp   (x)\times\Phi  (y)\timesP^+(x,y)       \f$
-   *  - \f$ f(x,y)       = exp   (x)\times exp  (y)\timesP^+(x,y)       \f$
-   *  - \f$ f_{sym}(x,y) = exp   (x)\times exp  (y)\timesP^+_{sym}(x,y) \f$
+   *  - \f$ f(x,y)       = \Phi_1(x)\times\Phi_2(y)\times P^+(x,y)       \f$
+   *  - \f$ f_{sym}(x,y) = \Phi  (x)\times\Phi  (y)\times P^+_{sym}(x,y) \f$
+   *  - \f$ f(x,y)       = exp   (x)\times\Phi  (y)\times P^+(x,y)       \f$
+   *  - \f$ f(x,y)       = exp   (x)\times\mathrm{exp}(y)\times P^+(x,y)       \f$
+   *  - \f$ f_{sym}(x,y) = exp   (x)\times\mathrm{exp}(y)\times P^+_{sym}(x,y) \f$
    *
    *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
    *  @date   2011-11-30
@@ -2706,7 +2706,7 @@ namespace Ostap
      *    and \f$L\f$ is the orbital momentum between the pair and 
      *    the third particle. 
      *   E.g. taking \f$\ell=0, L=1\f$, one can get the S-wave contribution for 
-     *   \f$\pi^+\pi^-\f$-mass from \f$B^0\rightarrowJ/\psi\pi^+\pi^-\f$ decay.
+     *   \f$\pi^+\pi^-\f$-mass from \f$B^0\rightarrow J/\psi\pi^+\pi^-\f$ decay.
      * 
      *  @see Ostap::Math::PhaseSpace23L 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2721,6 +2721,9 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor from all parameters 
+       *  @param name the name 
+       *  @param title the title 
+       *  @param x the variable 
        *  @param m1 the mass of the first  particle 
        *  @param m2 the mass of the second particle 
        *  @param m3 the mass of the third  particle 
@@ -4127,7 +4130,7 @@ namespace Ostap
      *
      *  Note:
      *  Symmetric case of JonhsonSU distribution is 
-     *  recovere by \f$\delta\rightarrow0\f$ for 
+     *  recovere by \f$ \delta \rightarrow 0\f$ for 
      *  "sinh-asinh" distribution, see 
      *  Jones, M. C.; Pewsey, A. (2009). 
      *  "Sinh-arcsinh distributions". Biometrika 96 (4): 761. 
@@ -4212,7 +4215,7 @@ namespace Ostap
     // ========================================================================
     /** @class Atlas 
      *  Modified gaussian function 
-     *  \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\deltax/2}}}{2})\f$,
+     *  \f[ f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\delta x/2}}}{2})\f],
      *  where \f$\delta x = \left| x - \mu \right|/\sigma\f$
      *  Fuction is taken from http://arxiv.org/abs/arXiv:1507.07099
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4299,8 +4302,8 @@ namespace Ostap
      *  However, the hyperbolic secant distribution is leptokurtic; 
      *  that is, it has a more acute peak near its mean, and heavier tails, 
      *  compared with the standard normal distribution.
-     *
-     *  \f$ f(x,\mu,\sigma) \propto \frac{1}{2} \sech ( \frac{\pi}{2}\frac{x-\mu}{\sigma} )\f$ 
+     *  \f[ f(x,\mu,\sigma) \propto \frac{1}{2} 
+     *    \mathrm{sech}(\frac{\pi}{2}\frac{x-\mu}{\sigma} )\f] 
      *  @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-04-25
@@ -4810,7 +4813,7 @@ namespace Ostap
        *  @param name  the name 
        *  @param title the  title
        *  @param x     the  variable 
-       *  @param spine the spline  
+       *  @param spline the spline  
        *  @param phis  vector of parameters 
        */
       PositiveSpline 
@@ -4891,7 +4894,7 @@ namespace Ostap
        *  @param name  the name 
        *  @param title the  title
        *  @param x     the  variable 
-       *  @param spine the spline  
+       *  @param spline the spline  
        *  @param phis  vector of parameters 
        */
       MonothonicSpline 
@@ -4970,7 +4973,7 @@ namespace Ostap
        *  @param name  the name 
        *  @param title the  title
        *  @param x     the  variable 
-       *  @param spine the spline  
+       *  @param spline the spline  
        *  @param phis  vector of parameters 
        */
       ConvexOnlySpline 
@@ -5051,7 +5054,7 @@ namespace Ostap
        *  @param name  the name 
        *  @param title the  title
        *  @param x     the  variable 
-       *  @param spine the spline  
+       *  @param spline the spline  
        *  @param phis  vector of parameters 
        */
       ConvexSpline 

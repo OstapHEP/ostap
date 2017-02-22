@@ -44,7 +44,6 @@ namespace Ostap
       /** evaluate the uncertanty for 'bin-by-bin'-moment
        *  @param histo histogram
        *  @param order the moment parameter
-       *  @param value central value
        *  @return the evaluated uncertanty in the moment
        */
       static double momentErr
@@ -54,7 +53,6 @@ namespace Ostap
       /** evaluate the 'bin-by-bin'-central moment (around the mean value)
        *  @param histo histogram
        *  @param order the moment parameter
-       *  @param value central value
        *  @return the evaluated central moment
        */
       static double centralMoment
@@ -66,7 +64,6 @@ namespace Ostap
        *  ( the uncertanty is calculated with O(1/n2) precision)
        *  @param histo histogram
        *  @param order the moment parameter
-       *  @param value central value
        *  @return the evaluated uncertanty in the central moment
        */
       static double centralMomentErr
@@ -104,7 +101,7 @@ namespace Ostap
     // ========================================================================
   } // end of namespace Ostap::Utils
   // ==========================================================================
-} // end of namespace Gaudi
+} // end of namespace Ostap
 // ============================================================================
 // The END
 // ============================================================================

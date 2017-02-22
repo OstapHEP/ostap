@@ -6,7 +6,7 @@
 #  Python interface to basic TMVA functionality: Trainer and Reader 
 #
 #  Actually for the Trainer, it is a bit simplified version of Albert's code 
-#  @thanks Albert PUIG
+#   - thanks to Albert PUIG
 #  Inspired from
 #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py
 #
@@ -27,7 +27,7 @@
 #
 #  @date   2013-10-02
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
-#  @thanks Albert PUIG
+#  - thanks to Albert PUIG
 #
 # =============================================================================
 """ Python interface to two major TMVA classes
@@ -103,7 +103,7 @@ else                       : logger = getLogger( __name__ )
 # 
 #  @date   2013-10-02
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
-#  @thanks Albert PUIG
+#  - thanks to Albert PUIG
 class Trainer(object):
     """Helper class to train TMVA:  
     #
@@ -321,7 +321,7 @@ class Trainer(object):
 #  @see TMVA::Reader
 #  @date   2013-10-02
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
-#  @thanks Alexander BARANOV
+#  - thanks to Alexander BARANOV
 class Reader(object)  :
     """ Rather generic python interface to TMVA-reader
     #

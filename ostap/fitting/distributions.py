@@ -602,17 +602,16 @@ models.append ( Argus_pdf )
 # =============================================================================
 ## @class TwoExpos_pdf
 #  simple difference of two exponents
-#  \f$ f \propto 
-#        \mathrm{e}^{-a_1    x}       -\mathrm{e}^{-a_2 x} = 
-#        \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f$
+#  \f[ f \propto \mathrm{e}^{-a_1 x} -\mathrm{e}^{-a_2 x} = 
+#        \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f]
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @see Ostap::Models::TwoExpos
 #  @see Ostap::Math::TwoExpos
 class TwoExpos_pdf(PDF) :
     r"""Simple difference of two exponents
-    # \f$ f  \propto 
-    #        \mathrm{e}^{-a_1    x}       -\mathrm{e}^{-a_2 x} = 
-    #        \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f$
+    \f$ f  \propto 
+    \mathrm{e}^{-a_1    x}       -\mathrm{e}^{-a_2 x} = 
+    \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f$
     """
     ## constructor
     def __init__ ( self             ,
@@ -684,19 +683,18 @@ models.append ( TwoExpos_pdf )
 #  @date 2011-07-25
 class Tsallis_pdf(PDF) :
     r"""Useful function to describe pT-spectra of particles 
-    #
-    #  - C. Tsallis, 
-    #  Possible generalization of Boltzmann-Gibbs statistics,
-    #  J. Statist. Phys. 52 (1988) 479.
-    #  - C. Tsallis, 
-    #  Nonextensive statistics: theoretical, experimental and computational 
-    #  evidences and connections, Braz. J. Phys. 29 (1999) 1.
-    # 
-    #  \f[ \frac{d\sigma}{dp_T} \propto  
-    #    p_T\times \left( 1 + \frac{E_{kin}}{Tn}\right)^{-n}\f],
-    #  where \f$E_{kin} = \sqrt{p_T^2-M^2}-M\f$ 
-    #  is transverse kinetic energy 
-    #     
+    
+    - C. Tsallis, 
+    Possible generalization of Boltzmann-Gibbs statistics,
+    J. Statist. Phys. 52 (1988) 479.
+    - C. Tsallis, 
+    Nonextensive statistics: theoretical, experimental and computational 
+    evidences and connections, Braz. J. Phys. 29 (1999) 1.
+    
+    \f[ \frac{d\sigma}{dp_T} \propto  
+    p_T\times \left( 1 + \frac{E_{kin}}{Tn}\right)^{-n}\f],
+    where \f$E_{kin} = \sqrt{p_T^2-M^2}-M\f$ 
+    is transverse kinetic energy 
     """
     def __init__ ( self                   ,
                    pt                     ,   ## pT-variable (for fitting) 
@@ -747,28 +745,23 @@ models.append ( Tsallis_pdf )
 #  "Transverse momentum distributions of baryons at LHC energies",
 #  arXiv:1501.07706.
 #
-#  \f[ \frac{d\sigma}{dp_T} \propto 
-#  p_T \times \mathrm{e}^{ -b_0 (m_T-m)} \f], 
+#  \f[ \frac{d\sigma}{dp_T} \propto p_T \times \mathrm{e}^{ -b_0 (m_T-m)} \f], 
 #  where transverse mass is defined as \f$m_T = \sqrt{p_T^2+m^2}\f$
-# 
+#
 #  @see Ostap::Models::QGSM
 #  @see Ostap::Math::QGSM
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class QGSM_pdf(PDF) :
-    r""" Useful function to describe pT-spectra of particles 
-    #
-    # - A. B. Kaidalov and O. I. Piskunova, Z. Phys. C 30 (1986) 145.
-    # - O. I. Piskounova, arXiv:1301.6539 [hep-ph]; 
-    # - O. I. Piskounova, arXiv:1405.4398 [hep-ph].
-    # - A. A. Bylinkin and O. I. Piskounova, 
-    #  'Transverse momentum distributions of baryons at LHC energies',
-    #  arXiv:1501.07706.
-    #
-    #  \f[ \frac{d\sigma}{dp_T} \propto 
-    #  p_T \times \mathrm{e}^{ -b_0 (m_T-m)} \f], 
-    #  where transverse mass is defined as \f$m_T = \sqrt{p_T^2+m^2}\f$
-    # 
+    r""" Useful function to describe pT-spectra of particles     
+    - A. B. Kaidalov and O. I. Piskunova, Z. Phys. C 30 (1986) 145.
+    - O. I. Piskounova, arXiv:1301.6539 [hep-ph]; 
+    - O. I. Piskounova, arXiv:1405.4398 [hep-ph].
+    - A. A. Bylinkin and O. I. Piskounova, 
+    'Transverse momentum distributions of baryons at LHC energies',
+    arXiv:1501.07706.
+    \f[ \frac{d\sigma}{dp_T} \propto p_T \times \mathrm{e}^{ -b_0 (m_T-m)} \f], 
+    where transverse mass is defined as \f$m_T = \sqrt{p_T^2+m^2}\f$
     """
     def __init__ ( self             ,
                    pt               ,   ## pT-variable (for fitting) 

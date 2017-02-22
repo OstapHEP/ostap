@@ -303,7 +303,8 @@ namespace Ostap
     }
     // ========================================================================
     /** the helper function to print the tuple
-     *  @param tulpe (INPUT)  tuple
+     *  @param tuple (INPUT) the tuple
+     *  @param s     (UPDATE) the stream 
      *  @return the stream
      *  @author Aleander Mazurov alexander.mazurov@cern.ch
      *  @date 2015-03-21
@@ -330,9 +331,9 @@ namespace Ostap
       return s.str();
     }
     // ========================================================================
-  } //                                            end of namespace Gaudi::Utils
+  } //                                            end of namespace Ostap::Utils
   // ==========================================================================
-} //                                                     end of namespace Gaudi
+} //                                                     end of namespace Ostap
 // ============================================================================
 // The END
 // ============================================================================

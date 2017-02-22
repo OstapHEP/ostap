@@ -95,7 +95,7 @@ double Ostap::Math::Jackson::jackson_A3
   double /* m2 */ ) { return m ; }
 // ============================================================================
 /*  the simple function for
- *  \f$ \frac{3}{2}^+ \rightarrow \frac{1}{2}^+ 0^- \f$, l = 1
+ *  \f[ \frac{3}{2}^+ \rightarrow \frac{1}{2}^+ 0^- \f], l = 1
  *  $\rho(\omega)= \frac{ ( \omega + M )^2 - m^2 }{ \omega^2} \f$
  *  @see Ostap::Math::BreitWigner
  *  @see Ostap::Math::BreitWigner::rho_fun
@@ -357,7 +357,7 @@ namespace
   // ==========================================================================
   /** @var s_Bukin
    *  useful constant for Bukin's function
-   *  \f$ \sqrt{ 2 \log { 2 } } \f$
+   *  \f$ \sqrt{ 2 \log 2 } \f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
@@ -365,7 +365,7 @@ namespace
   // ==========================================================================
   /** @var s_ln2
    *  useful constant for Bukin's function
-   *  \f$ \log { 2 } \f$
+   *  \f$ \log 2 \f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
@@ -434,7 +434,7 @@ namespace
     return (*atlas)(x) ;
   }
   // ==========================================================================
-  /** evaluate the helper function  \f[ f = \frac{\log{1+x}}{x} \f]
+  /** evaluate the helper function  \f[ f = \frac{\log(1+x)}{x} \f]
    *  it allows to calculate Bukin' function in efficient and regular way
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
@@ -453,7 +453,7 @@ namespace
     return std::log ( 1.0 + x ) / x ;
   }
   // ==========================================================================
-  /** evaluate the helper function \f[ f = \frac{\sinh {x}{x} \f]
+  /** evaluate the helper function \f[ f = \frac{\sinh (x) }{x} \f]
    *  it allows to calculate Novosibirsk's function in efficient and regular way
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
@@ -612,7 +612,7 @@ namespace
   }
   // ==========================================================================
   /** helper function for itegration
-   *  \f[ f =  \exp { \kappa x^2 + \xi x }  \f]
+   *  \f[ f =  \mathrm{e}^{ \kappa x^2 + \xi x }  \f]
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
@@ -629,7 +629,7 @@ namespace
   }
   // ==========================================================================
   /** get the gaussian integral numerically
-   *  \f[ f = \int_a^b \exp { -\alpha x^2 + \beta x } \mathrm{d}x \f]
+   *  \f[ f = \int_a^b \mathrm{e}^ {-\alpha x^2 + \beta x } \mathrm{d}x \f]
    *  @param alpha the alpha parameter
    *  @param beta  the beta  parameter
    *  @param a     the low  integration limit
@@ -3468,7 +3468,7 @@ double Ostap::Math::PhaseSpace2::q
   return 0 < lam ? 0.5  * std::sqrt (  lam ) / m : 0 ;
 }
 // ============================================================================
-/** calculate the particle momentum in rest frame
+/*  calculate the particle momentum in rest frame
  *  @param m the mass
  *  @param m1 the mass of the first particle
  *  @param m2 the mass of the second particle
@@ -6496,7 +6496,7 @@ Ostap::Math::Bugg23L::Bugg23L
   , m_workspace ()
 {}
 // ============================================================================
-/** constructor from bugg & phase space parameters 
+/*  constructor from bugg & phase space parameters 
  *  @param m3 the mass of the third  particle
  *  @param m  the mass of the mother particle (m>m1+m2+m3)
  *  @param L  the angular momentum between the first pair and the third
@@ -11441,7 +11441,7 @@ Ostap::Math::CosineSum::sum ( const Ostap::Math::CosineSum& other ) const
 
 
 // ============================================================================
-/** get the gaussian integral
+/*  get the gaussian integral
  *  \f[ f = \int_a^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
  *  @param alpha the alpha parameter
  *  @param beta  the beta  parameter
@@ -11461,7 +11461,7 @@ double Ostap::Math::gaussian_integral
   return gaussian_int ( alpha * alpha , beta , low , high ) ;
 }
 // ============================================================================
-/** get the gaussian integral
+/*  get the gaussian integral
  *  \f[ f = \int_{a}^{_\inf} \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
  *  @param alpha the alpha parameter
  *  @param beta  the beta  parameter
@@ -11479,7 +11479,7 @@ double Ostap::Math::gaussian_integral_right
   return gaussian_int_R ( alpha * alpha , beta , low ) ;
 }
 // ============================================================================
-/** get the gaussian integral
+/*  get the gaussian integral
  *  \f[ f = \int_{-\inf}^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
  *  @param alpha the alpha parameter
  *  @param beta  the beta  parameter

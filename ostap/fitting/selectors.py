@@ -52,7 +52,8 @@
 # @date   2010-04-30
 # 
 # =============================================================================
-"""Helper module to fix a problems in communication of TTree/TChain::Process and TPySelector.
+"""Helper module to fix a problems in communication of
+TTree/TChain.Process and TPySelector.
 
 In PyROOT some of original C++ methods are disable.
 The module provides the 'recovery' for missing methods
@@ -363,7 +364,7 @@ class VEntry(object) :
 #
 #  @date   2014-03-02
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @thanks Alexander BARANOV 
+#  - thanks to  Alexander BARANOV 
 class SelectorWithVars(SelectorWithCuts) :
     """ Create and fill the basic dataset for RooFit
     # 
@@ -655,7 +656,6 @@ from   ostap.io.zipshelve import ZipShelf
 #
 #  @date   2014-07-02
 #  @author Sasha Baranov a.baranov@cern.ch
-#  @thanks Vanya BELYAEV
 class SelectorWithVarsCached(SelectorWithVars) :
     """Create and fill the basic dataset for RooFit. Or just load it from cache.
     """

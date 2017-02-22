@@ -92,21 +92,21 @@ _fit_status_ = {
 def fit_status ( status ) : return _fit_status_.get( status ,"%s" % status )
 
 # =============================================================================
-## prepare "NumCPU" argument with reasonable choice of #cpu, depending on
+## prepare "NumCPU" argument with reasonable choice of number of cpus, depending on
 #  number of events in dataset 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-03-31
 def ncpu (  events ) :
-    """ Prepare 'NumCPU' argument with reasonable choice of #cpu, depending on
+    """Prepare 'NumCPU' argument with reasonable choice of N-cpu, depending on
     the number of events in dataset 
     """
     #
     n  = events // _nemax
-    if n       <= 1 : return ROOT.RooFit.Save () ## fake!!! 
+    if n       <= 1 : return ROOT.RooFit.Save () # fake!!! 
     # 
     import multiprocessing
     n_cores = multiprocessing.cpu_count()
-    if n_cores <= 1 : return ROOT.RooFit.Save () ## fake!!! 
+    if n_cores <= 1 : return ROOT.RooFit.Save () # fake!!! 
     #
     num = min ( n , n_cores , _ncmax )
     if not _ncpus : _ncpus.append ( num )   

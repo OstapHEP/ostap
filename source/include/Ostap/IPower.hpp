@@ -14,7 +14,7 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
-    /** @struct Gaudi::Math::IPower 
+    /** @struct Ostap::Math::IPower 
      *  Template metafunction for compile-time calculation of even, positive
      *  powers of integer numbers.
      *

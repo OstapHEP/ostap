@@ -35,7 +35,7 @@ namespace Ostap
      *
      *  @code 
      *   
-     *   const double result = Gaudi::Math::pow ( value , 10 ) ;
+     *   const double result = Ostap::Math::pow ( value , 10 ) ;
      *
      *  @endcode 
      *

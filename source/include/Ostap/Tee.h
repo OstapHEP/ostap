@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 #ifndef OSTAP_TEE_H 
 #define OSTAP_TEE_H 1
@@ -17,9 +16,9 @@ namespace Ostap
   namespace Utils 
   {
     // ========================================================================
-    /** @class Tee Tee.h Analysis/Tee.h
+    /** @class Tee
      *  Helper utility for "tee"
-     *  @see Gaudi::Utils::Mute 
+     *  @see Ostap::Utils::Mute 
      *  @author Vanya Belyaev
      *  @date   2013-07-07
      */
@@ -63,7 +62,7 @@ namespace Ostap
     // ========================================================================
   } //                                            end of namespace Ostap::Utils 
   // ==========================================================================
-} //                                                     end of namespace Gaudi 
+} //                                                     end of namespace Ostap 
 // ============================================================================
 //                                                                      The END
 // ============================================================================

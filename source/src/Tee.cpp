@@ -28,7 +28,7 @@ namespace std
   // ==========================================================================
   /** @class basic_teebuf 
    *  implementation of "tee"-functionality 
-   *  the actualcode is copied from 
+   *  the actual code is copied from 
    *  http://wordaligned.org/articles/cpp-streambufs
    */  
   template <typename CHAR_TYPE, typename TRAITS = std::char_traits<CHAR_TYPE> >
@@ -85,7 +85,7 @@ namespace std
   // ==========================================================================  
   /** @class basic_teestream 
    *  implementation of "tee"-functionality 
-   *  the actualcode is copied from 
+   *  the actual code is copied from 
    *  http://wordaligned.org/articles/cpp-streambufs
    */  
   template < typename CHAR_TYPE, typename TRAITS = std::char_traits<CHAR_TYPE> >
@@ -120,9 +120,9 @@ namespace std
 // ============================================================================
 Ostap::Utils::Tee::Tee  ( const std::string&  filename   )
   : m_file   ( new std::ofstream ( filename.c_str() ) ) 
-  , m_own    ( true ) 
-  , m_buffer (      ) 
-  , m_keep   ( 0    ) 
+  , m_own    ( true    ) 
+  , m_buffer (         ) 
+  , m_keep   ( nullptr ) 
 {
   m_keep   = std::cout.rdbuf() ;
   m_buffer.reset ( new std::teebuf ( m_keep , m_file->rdbuf() ) ) ;
@@ -135,7 +135,7 @@ Ostap::Utils::Tee::Tee  ( std::ostream&  filestream   )
   : m_file   ( &filestream ) 
   , m_own    ( false       ) 
   , m_buffer (   ) 
-  , m_keep   ( 0 ) 
+  , m_keep   ( nullptr     ) 
 {
   m_keep   = std::cout.rdbuf() ;
   m_buffer.reset ( new std::teebuf ( m_keep , m_file->rdbuf() ) ) ;
@@ -157,7 +157,7 @@ void Ostap::Utils::Tee::enter (){}
 void Ostap::Utils::Tee::exit  ()  
 {
   // avoid double exit 
-  if ( 0 == m_keep ) { return ; }
+  if ( nullptr == m_keep ) { return ; }
   //
   // 1. restore std::cout 
   std::cout.rdbuf ( m_keep ) ;
@@ -165,7 +165,7 @@ void Ostap::Utils::Tee::exit  ()
   if ( m_own ) { m_file.reset   () ; }
   else         { m_file.release () ; }
   //
-  m_keep = 0 ;
+  m_keep = nullptr ;
 }
 // ============================================================================
 //  The END 

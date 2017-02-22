@@ -36,7 +36,7 @@ namespace Ostap
      *  It corresponds to relative ("Knuth/GLS") tolerance of about ~6*10^-6
      *  for values in excess of 10^-37.
      *
-     *  @see Gaudi::Math::lomont_compare_float 
+     *  @see Ostap::Math::lomont_compare_float 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-01-02
      */
@@ -537,7 +537,7 @@ namespace Ostap
     struct LessOrEqual : public std::binary_function<TYPE,TYPE,bool>
     {
       // ====================================================================== 
-      /// the only one method:  o1 <= o2 or o1 \approx p2 
+      /// the only one method:  \f$ o_1 \le  o_2\f$  or \f$ o_1 \approx o_2\f$ 
       inline bool operator () ( const TYPE& o1 , const TYPE& o2 ) const 
       { return m_leq ( o1 , o2 ) || m_equal ( o1 , o2 ) ; }
       // ======================================================================

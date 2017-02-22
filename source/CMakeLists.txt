@@ -3,11 +3,6 @@
 find_package(ROOT  REQUIRED COMPONENTS Smatrix Core MathCore MathMore GenVector Hist Matrix RIO Tree Thread TreePlayer RooFit RooFitCore PyROOT)
 find_package(GSL   REQUIRED)
 
-## set(BOOSTROOT1 /afs/cern.ch/sw/lcg/releases/LCG_86/Boost/1.62.0/x86_64-slc6-gcc49-opt)
-## set(Boost_NO_SYSTEM_PATHS ON)
-## set(BOOST_INCLUDEDIR ${BOOSTROOT1}/include/boost-1_62)
-## set(BOOST_LIBRARYDIR ${BOOSTROOT1}/lib)
-## find_package(Boost REQUIRED)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
@@ -21,7 +16,6 @@ function( MAKE_DICT name header selection )
    #set_target_properties( ${name} PROPERTIES COMPILE_FLAGS ${ROOT_CXX_FLAGS} )
    target_link_libraries( ${name}Dict ostap ${ROOT_LIBRARIES})
 endfunction( MAKE_DICT )
-
 
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})

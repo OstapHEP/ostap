@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_EIGENSYSTEM_H 
 #define OSTAP_EIGENSYSTEM_H 1
@@ -70,15 +69,13 @@ namespace Ostap
          *  // create the evaluator 
          *  EigenSystem eval ;
          *
-         *  const Gaudi::SymMatrix3x3 matrix = ... ;
+         *  const Ostap::SymMatrix3x3 matrix = ... ;
          * 
          *  // get the sorted vector of eigenvalues:
-         *  const Gaudi::Vector2 result = eval.eigenValues ( matrix ) ;
+         *  const Ostap::Vector2 result = eval.eigenValues ( matrix ) ;
          * 
          *  @endcode 
-         *
-         *  @exception GaudiException is thrown in the case of errors 
-         *
+         *  @exception Ostap::Exception is thrown in the case of errors 
          *  @param mtrx   (input) the matrix itself 
          *  @param sorted (input) flag to be use for sorting 
          *  @return vector of eigenvalues 
@@ -96,7 +93,7 @@ namespace Ostap
          *  // create the evaluator 
          *  EigenSystem eval ;
          *
-         *  const Gaudi::SymMatrix3x3 matrix = ... ;
+         *  const Ostap::SymMatrix3x3 matrix = ... ;
          *  Ostap::Vector3 resutl 
          * 
          *  // find the eigenvalues:
@@ -272,7 +269,7 @@ namespace Ostap
     // ========================================================================
   } //                                                    end of namespace Math 
   // ==========================================================================
-} //                                                     end of namespace Gaudi
+} //                                                     end of namespace Ostap
 // ============================================================================
 #endif // LHCBMATH_EIGENSYSTEM_H
 // ============================================================================

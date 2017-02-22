@@ -572,7 +572,7 @@ namespace Ostap
      *
      * where
      *
-     * \f[ C = \frac{n+1}{\left|\alpha\right|\times \frac{1}{n} \times \mathrm{e}^{-\frac{\alpha^2}{2}}  \f]
+     * \f[ C = \frac{n+1}{\left|\alpha\right|\times \frac{1}{n} \times \mathrm{e}^{-\frac{\alpha^2}{2}}}  \f]
      * \f[ B = \sqrt{\frac{\pi}{2}}\left(1+\mathrm{erf}\left(-\frac{\alpha}{\sqrt{2}}\right)\right) \f]
      *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1004,8 +1004,8 @@ namespace Ostap
      * where
      *
      * \f[ \delta x  = \left\{ \begin{array}{ccc}
-     *     \frac{x-\mu}{\sigma_l} & \text{for} & x \le \mu \\
-     *     \frac{x-\mu}{\sigma_r} & \text{for} & x \gt \mu \\
+     *     \frac{x-\mu}{\sigma_l} &  for  & x \le \mu \\
+     *     \frac{x-\mu}{\sigma_r} &  for  & x \ge \mu \\
      *     \end{array}
      *     \right.\f]
      *
@@ -1250,6 +1250,7 @@ namespace Ostap
        *  @param m the mass
        *  @param m1 the mass of the first particle
        *  @param m2 the mass of the second particle
+       *  @param L  the orbital momentum 
        *  @return two-body phase space
        */
       static double phasespace
@@ -1434,8 +1435,8 @@ namespace Ostap
       /** constructor from thresholds and number of particles
        *  @param threshold_L the low-mass  threshold
        *  @param threshold_H the high-mass threshold
-       *  @param L           how many particles we consider
-       *  @param N           total number of particles ( N>L!)
+       *  @param l           how many particles we consider
+       *  @param n           total number of particles ( N>L!)
        */
       PhaseSpaceNL ( const double         threshold_L =  0 ,
                      const double         threshold_H = 10 ,
@@ -1526,6 +1527,8 @@ namespace Ostap
       /** constructor from phase space and polynomial degree
        *  @param ps          phase space factor
        *  @param N           degree of polynomial
+       *  @param xlow        low egde 
+       *  @param xhigh       high egde 
        */
       PhaseSpacePol ( const PhaseSpaceNL&  ps      ,
                       const unsigned short N       ,
@@ -1591,7 +1594,7 @@ namespace Ostap
      *    and \f$L\f$ is the orbital momentum between the pair and
      *    the third particle.
      *   E.g. taking \f$\ell=0, L=1\f$, one can get the S-wave contribution for
-     *   \f$\pi^+\pi^-\f$-mass from \f$B^0\rightarrowJ/\psi\pi^+\pi^-\f$ decay.
+     *   \f$\pi^+\pi^-\f$-mass from \f$B^0\rightarrow J/\psi\pi^+\pi^-\f$ decay.
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2012-04-01
      */
@@ -1760,7 +1763,7 @@ namespace Ostap
       // ======================================================================
       /** calculate the Breit-Wigner shape
        *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}
-       *   { (\omega_0^2-\omega^2)^2-\omega_0^2\Gammma^2(\omega)-}\f$
+       *   { (\omega_0^2-\omega^2)^2-\omega_0^2\Gamma^2(\omega)-}\f$
        */
       virtual double operator() ( const double x ) const ;
       // ======================================================================
@@ -1963,7 +1966,7 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor  from all parameters
-       *  \f$ f \rigtharrow A_1 + A_2\f$
+       *  \f$ f \rightarrow A_1 + A_2\f$
        *  @param m0    the mass
        *  @param m0g1  parameter \f$ m_0\times g_1\f$
        *  @param g2og1 parameter \f$ g2/g_1       \f$
@@ -2072,7 +2075,7 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor  from all parameters
-       *  \f$ f \rigtharrow B_1 + B_2\f$
+       *  \f$ f \rightarrow B_1 + B_2\f$
        *  @param m0    the mass
        *  @param m0g1  parameter \f$ m_0\times g_1\f$
        *  @param g2og1 parameter \f$ g2/g_1       \f$
@@ -3391,9 +3394,9 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor from mass, resolution and "n"-parameter
-       *  @param M     mass
+       *  @param mass  mass
        *  @param sigma width parameter
-       *  @param N     n-parameter  ( actually  n=1+|N| )
+       *  @param n     n-parameter  ( actually  n=1+|N| )
        */
       StudentT ( const double mass  = 0 ,
                  const double sigma = 1 ,
@@ -4164,10 +4167,10 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor with all parameters
-       *  @param location \f$\mu\f$-parameter       \f$-\inf<\mu<+\inf\f$
+       *  @param location \f$\mu\f$-parameter       \f$-\infty<\mu<+\infty\f$
        *  @param scale    \f$\sigma\f$-parameter    \f$0<\sigma\f$
-       *  @param epsilon  \f$\epsilon\f$-parameter  \f$-\inf<\epsilon<+\inf\f$
-       *  @param delta    \f$\delta\f$-parameter    \f$0<\epsilon<+\inf\f$
+       *  @param epsilon  \f$\epsilon\f$-parameter  \f$-\infty<\epsilon<+\infty\f$
+       *  @param delta    \f$\delta\f$-parameter    \f$0<\epsilon<+\infty\f$
        */
       SinhAsinh  ( const double location  = 1   ,
                    const double scale     = 1   ,
@@ -4247,10 +4250,10 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor with all parameters
-       *  @param xi     \f$\xi\f$-parameter       \f$-\inf<\xi<+\inf\f$
-       *  @param lambda \f$\lambda\f$-parameter   \f$   0<\lambda<+\inf\f$
-       *  @param delta  \f$\delta\f$-parameter    \f$   0<\delta<+\inf\f$
-       *  @param gamma  \f$\gamma\f$-parameter    \f$-\inf<\epsilon<+\inf\f$
+       *  @param xi     \f$\xi\f$-parameter       \f$-\infty<\xi<+\infty\f$
+       *  @param lambda \f$\lambda\f$-parameter   \f$   0<\lambda<+\infty\f$
+       *  @param delta  \f$\delta\f$-parameter    \f$   0<\delta<+\infty\f$
+       *  @param gamma  \f$\gamma\f$-parameter    \f$-\infty<\epsilon<+\infty\f$
        */
       JohnsonSU  ( const double xi      = 0 ,   // related to location
                    const double lambda  = 1 ,   // related to variance
@@ -4305,7 +4308,7 @@ namespace Ostap
     // ========================================================================
     /** @class Atlas
      *  Modified gaussian function
-     *  \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\deltax/2}}}{2})\f$,
+     *  \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\delta x/2}}}{2})\f$,
      *  where \f$\delta x = \left| x - \mu \right|/\sigma\f$
      *  Function is taken from http://arxiv.org/abs/arXiv:1507.07099
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4385,7 +4388,7 @@ namespace Ostap
      *  that is, it has a more acute peak near its mean, and heavier tails,
      *  compared with the standard normal distribution.
      *
-     *  \f$ f(x,\mu,\sigma) \propto \frac{1}{2} \sech ( \frac{\pi}{2}\frac{x-\mu}{\sigma} )\f$
+     *  \f$ f(x,\mu,\sigma) \propto \frac{1}{2} \mathrm{sech} ( \frac{\pi}{2}\frac{x-\mu}{\sigma} )\f$
      *  @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-04-25
@@ -4741,24 +4744,28 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow , const double xhigh ,
-                        const double ylow , const double yhigh ) const ;
+      double integral ( const double xlow  ,
+                        const double xhigh ,
+                        const double ylow  , 
+                        const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
+       *  @param y     variable
+       *  @param xlow  low  edge in y
+       *  @param xhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double xlow , const double xhigh ) const ;
+      double integrateX ( const double y     ,
+                          const double xlow  , 
+                          const double xhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
+       *  @param x     variable
+       *  @param ylow  low  edge in x
+       *  @param yhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double ylow , const double yhigh ) const ;
+      double integrateY ( const double x     ,
+                          const double ylow  ,
+                          const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -4835,24 +4842,28 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow , const double xhigh ,
-                        const double ylow , const double yhigh ) const ;
+      double integral ( const double xlow  , 
+                        const double xhigh ,
+                        const double ylow  , 
+                        const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
+       *  @param y     variable
+       *  @param xlow  low  edge in y
+       *  @param xhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double xlow , const double xhigh ) const ;
+      double integrateX ( const double y     ,
+                          const double xlow  , 
+                          const double xhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
+       *  @param x     variable
+       *  @param ylow  low  edge in x
+       *  @param yhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double ylow , const double yhigh ) const ;
+      double integrateY ( const double x     ,
+                          const double ylow  ,
+                          const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -4944,24 +4955,28 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow , const double xhigh ,
-                        const double ylow , const double yhigh ) const ;
+      double integral ( const double xlow  ,
+                        const double xhigh ,
+                        const double ylow  , 
+                        const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double xlow , const double xhigh ) const ;
+      double integrateX ( const double y     ,
+                          const double xlow  ,
+                          const double xhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double ylow , const double yhigh ) const ;
+      double integrateY ( const double x     ,
+                          const double ylow  ,
+                          const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================

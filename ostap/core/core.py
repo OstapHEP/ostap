@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file core.py
-#  Core objects for Ostap 
-#
+## @file 
+#  Core objects for ostap 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Core objects for Ostap 
+"""Core objects for ostap 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -113,8 +112,8 @@ class ROOTCWD(object) :
             if   not hasattr ( self._dir , 'IsOpen' ) : self._dir.cd() 
             elif     self._dir.IsOpen()               : self._dir.cd()
             
-## =============================================================================
-#  global identifier for ROOT objects 
+# =============================================================================
+## global identifier for ROOT objects 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def rootID ( prefix = 'o_' ) :
@@ -177,8 +176,6 @@ def pwd() :
     """
     return ROOT.gROOT.CurrentDirectory().GetPath() 
 
-# =============================================================================
-## colors 
 # =============================================================================
 _FAILURE = Ostap.StatusCode.FAILURE 
 ## printout of status code

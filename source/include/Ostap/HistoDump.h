@@ -26,7 +26,6 @@ namespace Ostap
        *  @param stream (OUTUT) the stream  
        *  @param width  (INPUT) the maximal column width 
        *  @param height (INPUT) the proposed coulmn height 
-       *  @param spread (INPUT) print/plot rms versus erorr 
        *  @return the stream 
        *  @author Vanya BELYAEV  Ivan.BElyaev@nikhef.nl
        *  @date 2009-09-19
@@ -41,7 +40,6 @@ namespace Ostap
        *  @param histo  (INPUT) the histogram 
        *  @param width  (INPUT) the maximal column width 
        *  @param height (INPUT) the propsoed coulmn height 
-       *  @param erorrs (INPUT) print/plot errors
        *  @return string representation of the histogram       
        *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
        *  @date 2009-09-19
@@ -72,7 +70,7 @@ namespace Ostap
        *  @param histo  (INPUT) the histogram 
        *  @param width  (INPUT) the maximal column width 
        *  @param height (INPUT) the propsoed coulmn height 
-       *  @param erorrs (INPUT) print/plot errors
+       *  @param errors (INPUT) print/plot errors
        *  @return string representation of the histogram       
        *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
        *  @date 2009-09-19

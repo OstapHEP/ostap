@@ -30,21 +30,20 @@ namespace Ostap
       // =======================================================================
       /** Standard constructor
        *  @param nPhases  dimensionality of N-sphere 
-       *  @param rotate   rotate it 
+       *  @param rotated  rotate it?
        */
       NSphere ( const unsigned short       nPhases     ,
                 const unsigned short       rotated     ) ;
       // =======================================================================
       /** Standard constructor
-       *  @param nPhases  dimensionality of N-sphere 
-       *  @param bias     use the rotated sphere? 
+       *  @param phases  vector of phases 
+       *  @param rotated  rotate it?
        */
       NSphere ( const std::vector<double>& phases      ,
                 const unsigned short       rotated     ) ;
       // =======================================================================
       /** Standard constructor
-       *  @param nPhases  dimensionality of N-sphere 
-       *  @param bias     use the rotated sphere? 
+       *  @param phases  vector of phases 
        */
       NSphere ( const std::vector<double>& phases      ) ;
       // =======================================================================
@@ -98,7 +97,7 @@ namespace Ostap
       // ======================================================================
       /** set new value for phi(i)      
        *  @param index (input) the index (0 <= index < nPhi)
-       *  @param valeu new value to be set 
+       *  @param value new value to be set 
        *  @return true is new value is really set 
        */
       bool setPhase   ( const unsigned short index , 
@@ -112,7 +111,7 @@ namespace Ostap
       const std::vector<double>& pars    () const { return phases()  ; }
       /** set new value for phi(i)      
        *  @param index (input) the index (0 <= index < nPhi)
-       *  @param valeu new value to be set 
+       *  @param value new value to be set 
        *  @return true is new value is really set 
        */
       bool setPar     ( const unsigned short index , 
@@ -162,9 +161,9 @@ namespace Ostap
     /// swap two speheres 
     inline void swap ( NSphere& a , NSphere& b ) { a.swap ( b ) ; }
     // ========================================================================
-  } //                                         The end of namespace Gaudi::Math
+  } //                                         The end of namespace Ostap::Math
   // ==========================================================================
-} //                                                 The end of namespace Gaudi
+} //                                                 The end of namespace Ostap
 // ============================================================================
 // get x_i coefficient:               0 <= i < nX  
 // ============================================================================

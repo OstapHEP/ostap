@@ -217,7 +217,7 @@ namespace Ostap
        *  @return value of interpolated function/density
        */
       static Ostap::Math::ValueWithError interpolate_2D 
-        ( const TH2&   h1                   , 
+        ( const TH2&   h2                   , 
           const double x                    ,
           const double y                    ,
           const Type   tx          = Linear , 

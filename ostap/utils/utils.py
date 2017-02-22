@@ -170,7 +170,7 @@ class NoContext(object) :
 
 
 # =============================================================================
-## @class TakeIt#
+## @class TakeIt
 #  Take some object, keep it and delete at the exit
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  date 2014-08-03    

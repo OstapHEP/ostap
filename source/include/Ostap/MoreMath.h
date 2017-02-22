@@ -50,7 +50,7 @@ namespace Ostap
     double exp_rel_N  ( const double x , const unsigned short N ) ;
     // ========================================================================
     /** regularized incomplete gamma function 
-     *  \f[ \gamma^{\ast}(a,x) = \frac{x^{-a}\gamma(a,x) {\Gamma(a)}\f], 
+     *  \f[ \gamma^{\ast}(a,x) = \frac{x^{-a}}{\Gamma(a)} \gamma(a,x) \f], 
      *  where \f[\gamma(a,x) = \int_0^x e^{-t}t^{a-1}dt\f], 
      *  Abramowitz & Stegun, 6.5.4
      *  @param a INPUT a-parameter 
@@ -62,7 +62,7 @@ namespace Ostap
     double gamma_star ( const double a , const double x ) ;
     // ========================================================================
     /** regularized incomplete gamma function 
-     *  \f[ \gamma^{\ast}(n,x) = \frac{x^{-n}}{\Gamma(n)\gamma(n,x) }\f], 
+     *  \f[ \gamma^{\ast}(n,x) = \frac{x^{-n}}{\Gamma(n)} \gamma(n,x) \f], 
      *  where 
      *  \f[ \gamma(n,x) = \Gamma(n) - \Gamma(n,x) = \int_0^x e^{-t}t^{n-1}dt\f], 
      *  Abramowitz & Stegun, 6.5.4
@@ -75,7 +75,7 @@ namespace Ostap
     double gamma_star ( const int n , const double x ) ;
     // ========================================================================
     /** alpha_n 
-     *  \f[\alpha_n(x) = \int_1^\inf t^n e^{-tx}dt\f] for \f$x>0\f$
+     *  \f[\alpha_n(x) = \int_1^\infty t^n e^{-tx}dt\f] for \f$x>0\f$
      *  Abramowitz & Stegun, 5.1.5
      *  @param n INPUT n-parameter 
      *  @param x INPUT x-argument 
@@ -107,7 +107,7 @@ namespace Ostap
     double beta_N ( const unsigned short n , const double x ) ;
     // ========================================================================
     /** confluent hypergeometrical function  1F1 aka Kummer's function
-     *  \f[ f(a,b,x) = \sum_i  \frac{(a,i)}{((b,i)}\frac{x^i}{i!}\$] 
+     *  \f[ f(a,b,x) = \sum_i  \frac{(a,i)}{((b,i)}\frac{x^i}{i!} \f] 
      *  @param a INPUT a-parameter 
      *  @param b INPUT b-argument  (b>0)
      *  @param x argument
@@ -119,14 +119,14 @@ namespace Ostap
       const double         x ) ;
     // ========================================================================
     /** get quantile function for standard normal distribution
-     *  @param alpha argument    \f$ 0<\alpha<1 \f$  
+     *  @param alpha argument    <code> 0<alpha<1</code>  
      *  @see http://en.wikipedia.org/wiki/Probit
      *  @return quantile value 
      */
     double  probit ( const double alpha  ) ;
     // ========================================================================
     /** scaled complementary error function 
-     *  \f$ 1 -  erf (x) = e^{-x^2} erfcx(x)  \f$ 
+     *  \f[ 1 -  \mathrm{erf} (x) = e^{-x^2} \mathrm{erfcx}(x)  \f]
      *  @param x  the argument 
      *  @return the value of the scaled complementary error function 
      *  @attention  overflow happens for x<-26.6
@@ -262,7 +262,7 @@ namespace Ostap
       const double high  ) ;
     // ========================================================================
     /** get the gaussian integral
-     *  \f[ f = \int_{a}^{_\inf} \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
+     *  \f[ f = \int_{a}^{_\infty} \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
      *  @param alpha the alpha parameter
      *  @param beta  the beta  parameter
      *  @param low   the low  integration limit
@@ -275,7 +275,7 @@ namespace Ostap
       const double low   ) ;
     // ========================================================================
     /** get the gaussian integral
-     *  \f[ f = \int_{-\inf}^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
+     *  \f[ f = \int_{-\infty}^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
      *  @param alpha the alpha parameter
      *  @param beta  the beta  parameter
      *  @param high  the high integration limit
@@ -412,9 +412,9 @@ namespace Ostap
     ( const std::vector<double>& a , 
       const std::vector<double>& b ) ;
     // ========================================================================
-  } //                                                    end of namespace Math 
+  } //                                             end of namespace Ostap::Math 
   // ==========================================================================
-} //                                                     end of namespace Gaudi 
+} //                                                     end of namespace Ostap 
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  Module with some simple but useful utilities
 #   - suppression of stdout/stderr 
@@ -11,9 +9,6 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 #  
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """Module with some simple but useful utilities"""
 # =============================================================================
@@ -446,39 +441,6 @@ class NoContext(object) :
     def __exit__  ( self , *args ) : pass  
 
 
-# =============================================================================
-## @class TakeIt#
-#  Take some object, keep it and delete at the exit
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  date 2014-08-03    
-class TakeIt(object):
-    """Take some object, keep it and delete at the exit
-    
-    >>> ds = dataset.reduce('pt>1')
-    >>> with takeIt ( ds ) :
-    ...
-    
-    """
-    def __init__  ( self , other ) :
-        self.other = other
-        
-    def __enter__ ( self ) :
-        ROOT.SetOwnership ( self.other , True )
-        return self.other
-    
-    def __exit__  ( self , *args ) :
-
-        o = self.other
-
-        ## delete it! 
-        del self.other
-        
-        if o and hasattr ( o , 'reset'  ) : o.reset  ()
-        if o and hasattr ( o , 'Reset'  ) : o.Reset  ()
-        if o and hasattr ( o , 'Delete' ) : o.Delete ()
-        
-        if o : del o
-                        
 # =============================================================================
 ## very simple context manager to duplicate Python-printout into file ("tee")
 #  into separate file

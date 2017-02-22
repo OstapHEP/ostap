@@ -4404,7 +4404,7 @@ Double_t Ostap::Models::PositiveSpline::analyticalIntegral
 // ============================================================================
 // monothonic spline 
 // ============================================================================
-/** constructor with the spline 
+/* constructor with the spline 
  *  @param name  the name 
  *  @param title the  title
  *  @param x     the  variable 
@@ -4519,7 +4519,7 @@ Double_t Ostap::Models::MonothonicSpline::analyticalIntegral
 // ============================================================================
 // convex spline 
 // ============================================================================
-/** constructor with the spline 
+/* constructor with the spline 
  *  @param name  the name 
  *  @param title the  title
  *  @param x     the  variable 
@@ -4634,7 +4634,7 @@ Double_t Ostap::Models::ConvexSpline::analyticalIntegral
 // ============================================================================
 // convex spline 
 // ============================================================================
-/** constructor with the spline 
+/* constructor with the spline 
  *  @param name  the name 
  *  @param title the  title
  *  @param x     the  variable 

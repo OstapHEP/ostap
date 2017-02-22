@@ -16,7 +16,7 @@ namespace Ostap
   namespace Math  
   {
     // ========================================================================
-    /** @namespace Gaudi::Math::Interpolation
+    /** @namespace Ostap::Math::Interpolation
      *  Collection of simple utilities for various types of interpolation
      *  - lagrange interpolation 
      *  - Neville  interpolation 
@@ -53,6 +53,7 @@ namespace Ostap
        *  @param  ybegin INPUT start iterator for the sequence of values 
        *  @param  yend   INPUT end   iterator for the sequence of values 
        *  @param  x      INPUT evaluate the polynomial in this point
+       *  @param  result result 
        *  @param  xvalue INPUT adapter for x-values  
        *  @param  yvalue INPUT adapter for y-values  
        *  @return the value of Largange interpolation polynomial at point x
@@ -172,7 +173,6 @@ namespace Ostap
        *  @param  ybegin UPDATE start iterator for the sequence of values 
        *  @param  x      INPUT  evaluate the polynomial in this point
        *  @param  xvalue INPUT  adapter for x-values  
-       *  @param  yvalue INPUT  adapter for y-values  
        *  @return the value of  interpolation polynomial at point x
        *  @see https://en.wikipedia.org/wiki/Neville%27s_algorithm
        */
@@ -201,9 +201,9 @@ namespace Ostap
        *  @param  xbegin INPUT  start iterator for the sequence of abscissas 
        *  @param  xend   INPUT  end   iterator for the sequence of abscissas 
        *  @param  ybegin UPDATE start iterator for the sequence of values 
+       *  @param  dbegin UPDATE start iterator
        *  @param  x      INPUT  evaluate the polynomial in this point
        *  @param  xvalue INPUT  adapter for x-values  
-       *  @param  yvalue INPUT  adapter for y-values  
        *  @return the pair (function,derivative) at point x 
        *  @see https://en.wikipedia.org/wiki/Neville%27s_algorithm
        */
@@ -260,7 +260,7 @@ namespace Ostap
        *  @param  xs INPUT sequence of abscissas 
        *  @param  ys INPUT sequence of values 
        *  @param  x  INPUT evaluate the polynomial in this point
-       *  @param  it INPUT index of y_i, the derivative shodul be calculated.
+       *  @param  iy INPUT index of y_i, the derivative shodul be calculated.
        *  @return the value of Largange interpolation polynomial at point x
        *
        *  - If ys-vector is shorter than x-vector, it is assumed to be zero padded
@@ -283,7 +283,7 @@ namespace Ostap
        *  - it also evaluate the derivative with respect to y_i 
        *  @param  data INPUT sequence of (x,y)
        *  @param  x    INPUT evaluate the polynomial in this point
-       *  @param  it   INPUT index of y_i, the derivative shodul be calculated.
+       *  @param  iy   INPUT index of y_i, the derivative shodul be calculated.
        *  @return the value of Largange interpolation polynomial at point x
        *
        *  - If data-vector is empty, polynomial is zero
@@ -376,11 +376,11 @@ namespace Ostap
       neville2  ( const DATA&  data , 
                   const double x  ) ;
       // ======================================================================      
-    } //                            end of namespace Gaudi::Math::Interpolation 
+    } //                            end of namespace Ostap::Math::Interpolation 
     // ========================================================================
-  } //                                             end of namespace Gaudi::Math
+  } //                                             end of namespace Ostap::Math
   // ==========================================================================
-} //                                                     end of namespace Gaudi
+} //                                                     end of namespace Ostap
 // ============================================================================
 /*  Very simple lagrange interpolation 
  *
@@ -453,7 +453,7 @@ Ostap::Math::Interpolation::lagrange
   return result ;                            // RETURN 
 }
 // ============================================================================
-/** simple interpolation using Neville's algorithm 
+/*  simple interpolation using Neville's algorithm 
  *
  *  In general it should be faster than largange algorithm, 
  *  but it includes a copy on input data, that could affect CPU performance
@@ -505,7 +505,7 @@ Ostap::Math::Interpolation::neville
   return neville ( xbegin , xend , _y.begin() , x , xvalue ) ;
 }
 // ============================================================================
-/** simple interpolation using Neville's algorithm:
+/*  simple interpolation using Neville's algorithm:
  *  - evaluate the interpolation polynomial and the derivative 
  *
  *  In general it should be faster than largange algorithm, 
@@ -559,7 +559,7 @@ Ostap::Math::Interpolation::neville2
   return neville ( xbegin , xend , _y.begin() , _d.begin() , x , xvalue ) ;
 }
 // ============================================================================
-/** simple interpolation using Neville's algorithm: 
+/* simple interpolation using Neville's algorithm: 
  *
  *
  *  In general it should be faster than largange algorithm, 
@@ -616,7 +616,7 @@ Ostap::Math::Interpolation::neville
   return *ybegin ;
 }
 // ============================================================================
-/** simple interpolation using Neville's algorithm with simultaneous 
+/* simple interpolation using Neville's algorithm with simultaneous 
  *  estimation of the derivative  
  *
  *  Numerically it is more stable than Lagrange interpolation, 

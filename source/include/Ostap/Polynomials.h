@@ -470,7 +470,7 @@ namespace Ostap
     // ========================================================================
     /** @class Polynomial
      *  Trivial polynomial
-     *  \f$ f(x) = \sum_i \p_i x^i\f$
+     *  \f$ f(x) = \sum_i p_i x^i\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-22
      */
@@ -631,7 +631,7 @@ namespace Ostap
     // ========================================================================
     /** @class ChebyshevSum 
      *  Sum of chebychev polinomials 
-     *  \f$ f(x) = \sum_i \p_i T_i(x)\f$
+     *  \f$ f(x) = \sum_i p_i T_i(x)\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-22
      */
@@ -792,7 +792,7 @@ namespace Ostap
     // ========================================================================
     /** @class LegendreSum 
      *  Sum of Legendre polinomials 
-     *  \f$ f(x) = \sum_i \p_i P_i(x)\f$
+     *  \f$ f(x) = \sum_i p_i P_i(x)\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-22
      */
@@ -954,8 +954,8 @@ namespace Ostap
     { return a.__div__   ( b ) ; }    
     // ========================================================================
     /** @class HermiteSum 
-     *  Sum of Hermitepolinomials 
-     *  \f$ f(x) = \sum_i \p_i He_i(x)\f$
+     *  Sum of Hermite polinomials 
+     *  \f$ f(x) = \sum_i p_i He_i(x)\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-08-08
      */
@@ -1088,7 +1088,7 @@ namespace Ostap
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
-} //                                                     end of namespace Gaudi
+} //                                                     end of namespace Ostap
 // ============================================================================
 namespace Ostap
 {

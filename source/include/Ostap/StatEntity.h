@@ -14,7 +14,7 @@ namespace Ostap
   // ========================================================================
   /** @class StatEntity StatEntity.h
    *
-   *  A slghtlymodified version of StatEntity from Gaudi project
+   *  A slghtly modified version of StatEntity from Gaudi project
    *
    *  The basic counter used for Monitoring purposes.
    *

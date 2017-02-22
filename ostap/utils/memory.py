@@ -3,12 +3,10 @@
 # =============================================================================
 ## @file
 #  Module with some simple but useful utilities for memory profiling 
-#
 #  - It is recommended to install psutil module
 #  @see http://fa.bianp.net/blog/2013/different-ways-to-get-memory-consumption-or-lessons-learned-from-memory_profiler/
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
-#  
 # =============================================================================
 """Module with some simple but useful utilities for momory profiling 
 - It is recommended to install psutil module (e.g. from pip)
@@ -21,11 +19,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    #
-    'virtualMemory'  , ## context manager to count virtual memory increase 
-    'memory'         , ## ditto
-    'Memory'         , ## ditto
-    'memory_usage'   , ## report current memory usage 
+    'virtualMemory'  , # context manager to count virtual memory increase 
+    'memory'         , # ditto
+    'Memory'         , # ditto
+    'memory_usage'   , # report current memory usage 
     )
 # =============================================================================
 import os , sys ## attention here!!
@@ -60,15 +57,15 @@ try :
 except ImportError :
     _psutil = False
 
-    ## 
-    ## import resource
-    ## def memory_usage ():
-    ##     rusage_denom = 1024.
-    ##     if sys.platform == 'darwin':
-    ##         # ... it seems that in OSX the output is different units ...
-    ##         rusage_denom = rusage_denom * rusage_denom
-    ##     mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / rusage_denom
-    ##     return mem
+    # 
+    # import resource
+    # def memory_usage ():
+    #     rusage_denom = 1024.
+    #     if sys.platform == 'darwin':
+    #         # ... it seems that in OSX the output is different units ...
+    #         rusage_denom = rusage_denom * rusage_denom
+    #     mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / rusage_denom
+    #     return mem
 
     # =========================================================================
     ## report current memory usage (in MB)
@@ -97,7 +94,7 @@ except ImportError :
 #  @code
 #
 #  with Memory() :
-#     <whatever action is>
+#     whatever action is here 
 #     at the exit it prints the chaneg in virtual memory 
 #  @endcode
 #
@@ -106,7 +103,7 @@ except ImportError :
 #  @code
 #
 #  with Memory() as Q :
-#     <whatever action is>
+#     whatever action is here 
 #     at the exit it prints the chaneg in virtual memory
 #
 #  print Q.delta 
@@ -120,11 +117,11 @@ class Memory(object):
     to be used as context manager:
     
     >>> with Memory('here...') :
-    ...     <whatever action is>
+    ...     whatever action is here
     at the exit it prints the change in virtual memory
     
     >>> with Memory('here...') as M :
-    >>> <whatever action is>
+    ...     whatever action is here
     at the exit it prints the change in virtual memory
     
     >>> delta = M.delta    
@@ -161,11 +158,11 @@ def virtualMemory ( name = '' ) :
     """Create the context manager to monitor the virtual memory increase:
     
     >>> with memory('here...') :
-    ...   <whatever action is>
+    ...   whatever action is here
     at the exit it prints the change in virtual memory
           
     >>> with memory('here...') as m :
-    ...   <whatever action is>
+    ...   whatever action is here
     at the exit it prints the change in virtual memory
     
     >>> delta = m.delta    

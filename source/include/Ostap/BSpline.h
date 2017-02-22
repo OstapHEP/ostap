@@ -532,6 +532,7 @@ namespace Ostap
        *  vector of parameters will be calculated automatically
        *  @param points non-empty vector of poinst/knots
        *  @param order  the order of splines
+       *  @param increasing the flag
        *  - vector of points is not requires to be ordered
        *  - duplicated knots will be ignored
        *  - min/max value will be used as interval boundaries
@@ -545,6 +546,7 @@ namespace Ostap
        *  The spline order will be calculated automatically
        *  @param points non-empty vector of poinst/knots
        *  @param pars   non-empty vector of parameters
+       *  @param increasing the flag
        *  - vector of points is not requires to be ordered
        *  - duplicated knots will be ignored
        *  - min/max value will be used as interval boundaries
@@ -558,7 +560,8 @@ namespace Ostap
        *  @param xmin   low  edge of spline interval
        *  @param xmax   high edge of spline interval
        *  @param inner  number of inner points in   (xmin,xmax) interval
-       *  @param order  the degree of splline
+       *  @param order  the degree of spline
+       *  @param increasing the flag
        */
       MonothonicSpline
         ( const double         xmin       = 0    ,
@@ -740,45 +743,41 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ) const ;
+      double integral   ( const double xlow  ,
+                          const double xhigh ,
+                          const double ylow  ,
+                          const double yhigh ) const ;
       /** get the integral over X  for given Y
-       *  @param y  (INPU) y-value
+       *  @param y  (INPUT) y-value
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
       double integrateX
-        ( const double y    ,
-          const double xlow , const double xhigh ) const ;
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
       /** get the integral over Y  for given X
-       *  @param x  (INPU) y-value
+       *  @param x  (INPUT) y-value
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
       double integrateY
-        ( const double x    ,
-          const double ylow , const double yhigh ) const ;
+      ( const double x     ,
+        const double ylow  , 
+        const double yhigh ) const ;
       // ======================================================================
     public: // specific integrals
       // ======================================================================
       /** get the integral over 2D-region
        *  \f[ x_{min}<x<x_{max}, y_{min}<y<y_{max}\f]
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
        */
       double integral   () const ;
       /** get the integral over X  for given Y
        *  @param y  (INPU) y-value
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
        */
       double integrateX ( const double y ) const ;
       /** get the integral over Y  for given X
        *  @param x  (INPU) y-value
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
        */
       double integrateY ( const double x ) const ;
       // ======================================================================
@@ -917,7 +916,7 @@ namespace Ostap
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
-} //                                                     end of namespace Gaudi
+} //                                                     end of namespace Ostap
 // ============================================================================
 //                                                                      The END
 // ============================================================================

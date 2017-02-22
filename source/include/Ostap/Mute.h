@@ -18,7 +18,7 @@ namespace Ostap
     // ========================================================================
     /** @class Mute Mute.h Analysis/Mute.h
      *  Helper utility to mute output (or redirect it to the file)
-     *  @see Gaudi::Utils::Tee
+     *  @see Ostap::Utils::Tee
      *  @author Vanya Belyaev
      *  @date   2013-02-19
      */
@@ -60,7 +60,7 @@ namespace Ostap
     // ========================================================================
   } //                                            end of namespace Ostap::Utils 
   // ==========================================================================
-} //                                                     end of namespace Gaudi
+} //                                                     end of namespace Ostap
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

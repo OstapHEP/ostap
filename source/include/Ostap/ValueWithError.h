@@ -57,7 +57,7 @@ namespace Ostap
       /** constructor from the (value,error)-pair 
        *   - first  element is "value" 
        *   - second element is "error" 
-       *  @param pair_  (value,error)-pair 
+       *  @param p  (value,error)-pair 
        */
       explicit ValueWithError ( const std::pair<double,double>& p ) ;
       // ======================================================================
@@ -383,10 +383,10 @@ namespace Ostap
       const ValueWithError& b ) { return a.mean ( b ) ; }
     // =======================================================================
     /** evaluate the mean of a and b 
-     *  taking into account correlation coefficient <code>rho</code>
+     *  taking into account correlation coefficient <code>-1<=rho<=1</code>
      *  @param a (INPUT) the first argument 
      *  @param b (INPUT) the second argument 
-     *  @param rho (INPUT) correlation coefficient \f$-1\le\rhi\le 1\f$
+     *  @param rho (INPUT) correlation coefficient \f$-1\le\rho\le1\f$
      */
     ValueWithError mean
     ( const ValueWithError& a   , 

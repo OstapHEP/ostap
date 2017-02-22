@@ -221,7 +221,7 @@ class ProgressBar(object):
     Use with helper function:
     
     >>> for i in progress_bar  ( xrange(10000 ) ) :
-    ...       <do something here>
+    ...       ... do something here ... 
     """
     def __init__(self, min_value = 0, max_value = 100, width=110 ,**kwargs):
 
@@ -363,7 +363,7 @@ class RunningBar(object):
     With helper function:
     
     >>> for i in running_bar  ( xrange(10000 ) ) :
-    ...    <do something here>
+    ...    do something here
     
     """
     def __init__(self, *args ,**kwargs ) :
@@ -445,7 +445,7 @@ class RunningBar(object):
 def running_bar ( iterable , frequency = 100 , description = '' , **kwargs ) :
     """ Helper function to display runnning bar 
     >>> for i in running_bar  ( xrange(10000 ) ) :
-    ...    <do something here>    
+    ...    do something here
     """
     with RunningBar ( frequency = frequency , description = description , **kwargs ) as bar :
         for i in iterable :
@@ -463,7 +463,7 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
     """ Helper function to display progress bar 
     
     >>> for i in progress_bar  ( xrange ( 10000 ) ) :
-    ...       <do something here>
+    ...      do something here
     """
     if   max_value is None and hasattr ( iterable , '__len__' ) :
         max_value = len ( iterable )

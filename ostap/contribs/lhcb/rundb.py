@@ -2,19 +2,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file
-#  Collection of simple utilites to deal with LHCb RunDB 
-#  via http://lbrundb.cern.ch/api
-#
-#  @thanks Alex PEARCE 
-# 
+#  Collection of simple utilites to deal with LHCb RunDB via http://lbrundb.cern.ch/api
+#  - thanks to Alex PEARCE 
 #  Run this script to get example of run/fill information that could be
 #  extracted using these utilities
-#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """Collection of simple utilites to deal with LHCb RunDB 
 via http://lbrundb.cern.ch/api
@@ -48,9 +40,9 @@ import json,urllib
 # =============================================================================
 ## local caches to minimize accesses to RunDB 
 # =============================================================================
-_fills_  = {} ## mapping: #run  -> #fill
-_finfos_ = {} ## mapping: #fill -> fill-info
-_rinfos_ = {} ## mapping: #run  -> run-info
+_fills_  = {} ## mapping: n-run  -> n-fill
+_finfos_ = {} ## mapping: n-fill -> fill-info
+_rinfos_ = {} ## mapping: n-run  -> run-info
 # =============================================================================
 ## LHCb RunDB url format 
 run_url  = 'http://lbrundb.cern.ch/api/run/{0}/'  ## pattern for runs  
@@ -76,8 +68,7 @@ def run_info ( run_num ) :
     >>> print 'Run Info %s ' %  rinfo 
     >>> print 'Magnet: %s' % rinfo['magnetState']
     >>> print 'Velo  : %s' % rinfo['veloPosition']
-    """
-    
+    """    
     global _rinfos_
     rinfo  = _rinfos_.get ( run_num , None )
     if rinfo : return rinfo 
@@ -121,8 +112,7 @@ def fill_info ( fill_num ) :
     >>> print 'Colliding bunches : %s' % finfo ['nCollidingBunches']
     >>> print 'Beam-1 bunches    : %s' % finfo ['nBunchesB1']
     >>> print 'Beam-2 bunches    : %s' % finfo ['nBunchesB2']    
-    """
-    
+    """    
     global _finfos_
     finfo  = _finfos_.get ( fill_num , None )
     if finfo : return finfo 
@@ -144,13 +134,13 @@ def fill_info ( fill_num ) :
     return None
     
 # ===============================================================================
-## get #fill from #run using LHCb RunDB
+## get n-fill from n-run using LHCb RunDB
 #  The function has been posted by Alex Pearce
 #  at lhcb-davinci mailing list at 2015-01-12
 #  @code
 #  run  =  169064
 #  fill = fill_number ( run )
-#  print 'Run/Fill# %s/%s ' % ( run , fill
+#  print 'Run/Fill# %s/%s ' % ( run , fill )
 #  @endcode 
 #  @author Alex PEARCE   alex.pearce@cern.ch
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

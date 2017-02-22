@@ -28,7 +28,7 @@ import time
 #  @code
 #
 #  with Clock() :
-#     <whatever action is>
+#     whatever action is here  
 #     at the exit it prints the clock counts 
 #  @endcode
 #
@@ -37,7 +37,7 @@ import time
 #  @code
 #
 #  with Clock() as c :
-#     <whatever action is>
+#     whatever action is here
 #     at the exit it prints the clock counts 
 #
 #  print c.delta 
@@ -46,11 +46,11 @@ import time
 class Clock(object):
     """Simple context manager to measure the clock counts
     >>> with Clock() :
-    ...  <whatever action is>
+    ...  whatever action is here 
     at the exit it prints the clock counts 
     
     >>> with Clock() as c :
-    ...  <whatever action is>
+    ...  whatever action is here
     at the exit it prints the clock counts 
     
     >>> print c.delta 
@@ -79,7 +79,7 @@ class Clock(object):
 #  @code
 #
 #  with Timer() :
-#     <whatever action is>
+#     whatever action is here 
 #     at the exit it prints the time 
 #  @endcode
 #
@@ -88,7 +88,7 @@ class Clock(object):
 #  @code
 #
 #  with Timer() as t :
-#     <whatever action is>
+#     whatever action is here 
 #     at the exit it prints the clock counts 
 #
 #  print ct.delta 
@@ -98,13 +98,13 @@ class Timer(object):
     """Simple context manager to measure the time
     
     >>> with Timer() :
-    ...  <whatever action is>
+    ...  whatever action is
     at the exit it prints the time 
     
     Or:
     
     >>> with Timer() as t :
-    ...  <whatever action is>
+    ...  whatever action is
     at the exit it prints the clock counts 
     
     >>> print ct.delta 
@@ -134,7 +134,7 @@ class Timer(object):
 #  @code
 #
 #  with clocks () :
-#     <whatever action is>
+#     whatever action is here 
 #     at the exit it prints the clock counts
 #
 #  @endcode
@@ -144,7 +144,7 @@ class Timer(object):
 #  @code
 #
 #  with clocks () as c :
-#     <whatever action is>
+#     whatever action is here
 #     at the exist it prints the clock counts 
 #
 #  print c.delta 
@@ -154,11 +154,11 @@ def clocks ( name = '' , logger = None ) :
     """Simple context manager to measure the clock counts 
     
     >>> with clocks () :
-    ...   <whatever action is>
+    ...   whatever action is here
     at the exit it prints the clock counts 
     
     >>> with clocks () as c :
-    ...   <whatever action is>
+    ...   whatever action is here
     at the exit it prints the clock counts 
     
     >>>print c.delta
@@ -171,7 +171,7 @@ def clocks ( name = '' , logger = None ) :
 #  @code
 #
 #  with timer () :
-#     <whatever action is>
+#     whatever action is here 
 #     at the exit it prints the time
 #
 #  @endcode
@@ -181,7 +181,7 @@ def clocks ( name = '' , logger = None ) :
 #  @code
 #
 #  with timer () as t :
-#     <whatever action is>
+#     whatever action is here 
 #     at the exit it prints the clock counts 
 #
 #  print t.delta 
@@ -191,11 +191,11 @@ def timing ( name = '' , logger = None ) :
     """Simple context manager to measure the clock counts 
     
     >>> with timing () :
-    ...   <whatever action is>
+    ...   whatever action is here
     at the exit it prints the clock counts 
     
     >>> with timing () as c :
-    ...   <whatever action is>
+    ...   whatever action is here 
     at the exit it prints the clock counts 
     
     >>> print c.delta

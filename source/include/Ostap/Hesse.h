@@ -127,10 +127,10 @@ namespace Ostap
       ( const gsl_matrix* matrix ,
         gsl_matrix*       result ) ;
       // ======================================================================
-    } //                                      end of namespace Gaudi::Math::GSL 
-  } //                                             end of namespace Gaudi::Math
+    } //                                      end of namespace Ostap::Math::GSL 
+  } //                                             end of namespace Ostap::Math
   // ==========================================================================
-} //                                                     end of namespace Gaudi
+} //                                                     end of namespace Ostap
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

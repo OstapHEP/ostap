@@ -17,13 +17,13 @@ namespace Ostap
   namespace Math 
   {
     // =======================================================================
-    /** @fn Gaudi::Math::pow
+    /** @struct Power 
      *  Template metafunction to calculate integer powers of integer
      *  and floating point numbers.
      *
      *  @code 
      *   // calculate 50.**10
-     *   const double result = Gaudi::Math::pow<double, 10> ( 50. ) ;
+     *   const double result = Ostap::Math::pow<double, 10> ( 50. ) ;
      *
      *  @code 
      *
@@ -75,13 +75,13 @@ namespace Ostap
     template <typename TYPE, int N, bool C>
     struct ImplementationSwitch 
     {
-      typedef Gaudi::Math::Power<TYPE, N>  powImpl;
+      typedef Ostap::Math::Power<TYPE, N>  powImpl;
     };
     
     template <typename TYPE, int N>
     struct ImplementationSwitch<TYPE, N, false> 
     {
-      typedef Gaudi::Math::InvPower<TYPE, N>  powImpl;
+      typedef Ostap::Math::InvPower<TYPE, N>  powImpl;
     };
     
     template<typename TYPE, int N>

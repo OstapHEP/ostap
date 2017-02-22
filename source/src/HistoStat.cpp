@@ -82,7 +82,7 @@ double Ostap::Utils::HistoStat::moment
   return result ;
 }
 // ============================================================================
-/** evaluate the uncertanty for 'bin-by-bin'-moment
+/* evaluate the uncertanty for 'bin-by-bin'-moment
  *  @param histo histogram
  *  @param order the moment parameter 
  *  @param value central value 

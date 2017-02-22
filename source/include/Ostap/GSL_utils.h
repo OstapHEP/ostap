@@ -38,9 +38,9 @@ namespace Ostap
     ( const gsl_matrix&  m , 
       std::ostream&      s ) ;
     // ========================================================================
-  } //                                            end of namespace Gaudi::Utils
+  } //                                            end of namespace Ostap::Utils
   // ==========================================================================
-} //                                                     end of namespace Gaudi
+} //                                                     end of namespace Ostap
 // ============================================================================
 /// print operator 
 inline 

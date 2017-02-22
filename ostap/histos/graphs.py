@@ -15,16 +15,16 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'makeGraph'   , ## make graph from primitive data
-    'makeGraph2'  , ## make graph from plain input two-column text 
-    'makeGraph3'  , ## make graph with errors  from plain input four-column text 
-    'makeGraphs3' , ## make graphs from plain input multicolumn text 
-    'makeGraphs4' , ## make graphs from plain input multicolumn text 
-    'hToGraph'    , ## convert histogram to graph 
-    'hToGraph2'   , ## convert histogram to graph 
-    'hToGraph3'   , ## convert histogram to graph
-    'lw_graph'    , ## make Laffery-Wyatt's graph
-    'fill_area'   , ## create a graph for the area between two curves/functions
+    'makeGraph'   , # make graph from primitive data
+    'makeGraph2'  , # make graph from plain input two-column text 
+    'makeGraph3'  , # make graph with errors  from plain input four-column text 
+    'makeGraphs3' , # make graphs from plain input multicolumn text 
+    'makeGraphs4' , # make graphs from plain input multicolumn text 
+    'hToGraph'    , # convert histogram to graph 
+    'hToGraph2'   , # convert histogram to graph 
+    'hToGraph3'   , # convert histogram to graph
+    'lw_graph'    , # make Laffery-Wyatt's graph
+    'fill_area'   , # create a graph for the area between two curves/functions
     ##
     ) 
 # =============================================================================
