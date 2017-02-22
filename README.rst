@@ -13,26 +13,16 @@ and
 `PyROOT <http://root.cern.ch/drupal/content/pyroot>`_
 and extending the existing functionality.
 
-Project started in 2009 from the private collections of python 
-functions used in Kali - framework for calibration of LHCb 
-electromagnetic calorimeter. A lot of functionality is picked from 
-Bender project - python based physics analysis environment used 
-in LHCb experiemnt. Till Autumn 2016 the project was a part of 
-LHCb software suit and with great success has been used for 
-preparation of approximately 30 physics papers/
-A standalone, LHCb independent version, has 
-appeared at start of 2017   
+Project started in 2009 from the private collections of python  functions used in `Kali <http://inspirehep.net/record/1111459>`_ - framework for calibration of LHCb  electromagnetic calorimeter. A lot of functionality is picked from `Bender <http://lhcb-release-area.web.cern.ch/LHCb-release-area/DOC/bender/>`_ project - python based physics analysis environment used in LHCb experiemnt. Till Autumn 2016 the project was a part of LHCb software suit and with great success has been used for 
+preparation of approximately 30 physics papers. A standalone, LHCb independent version, has appeared at start of 2017   
 
 Key features include:
 
-* Very easy manipulations with 
- `ROOT <https://root.cern.ch/>`_ and 
- `RooFit <https://root.cern.ch/roofit>`_ objects:
-    histograms, trees, datasets and
+* Very easy manipulations with `ROOT<https://root.cern.ch/>`_ and  `RooFit<https://root.cern.ch/roofit>`_ objects: histograms, trees, datasets, etc 
 
-* Very easy interface to `RooFit <https://root.cern.ch/roofit>`_ machinery 
+* Very easy interface to `RooFit<https://root.cern.ch/roofit>`_ machinery 
 
-* Extended set of models for  `RooFit <https://root.cern.ch/roofit>`_ machinery 
+* Extended set of models for  `RooFit <https://root.cern.ch/roofit>`_
 
 * Powerful, pickle-based persistency for object 
  
