@@ -778,7 +778,8 @@ unsigned long Ostap::StatVar::_statCov
   std::vector<std::unique_ptr<Ostap::Formula> > _vars ;
   for ( const std::string& v : vars ) 
   {
-    auto f = std::make_unique<Ostap::Formula>( "" , v , tree ) ;
+    // auto f = std::make_unique<Ostap::Formula>( "" , v , tree ) ;
+    auto f = std::unique_ptr<Ostap::Formula>( new Ostap::Formula( "" , v , tree ) ) ;
     if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
     _vars.push_back ( std::move ( f ) ) ;
   }
@@ -870,7 +871,8 @@ unsigned long Ostap::StatVar::_statCov
   std::vector<std::unique_ptr<Ostap::Formula> > _vars ;
   for ( const std::string& v : vars ) 
   {
-    auto f = std::make_unique<Ostap::Formula>( "" , v , tree ) ;
+    // auto f = std::make_unique<Ostap::Formula>( "" , v , tree ) ;
+    auto f = std::unique_ptr<Ostap::Formula> ( new Ostap::Formula( "" , v , tree ) ) ;
     if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
     _vars.push_back ( std::move ( f ) ) ;
   }
@@ -991,7 +993,8 @@ unsigned long Ostap::StatVar::_statCov
   std::vector<std::unique_ptr<RooFormulaVar> > _vars ;
   for ( const std::string& v : vars ) 
   {
-    auto f = std::make_unique<RooFormulaVar>( "" , v.c_str() , alst ) ;
+    // auto f = std::make_unique<RooFormulaVar>( "" , v.c_str() , alst ) ;
+    auto f = std::unique_ptr<RooFormulaVar> ( new RooFormulaVar( "" , v.c_str() , alst ) ) ;
     if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
     _vars.push_back ( std::move ( f ) ) ;
   }
@@ -1087,7 +1090,8 @@ unsigned long Ostap::StatVar::_statCov
   std::vector<std::unique_ptr<RooFormulaVar> > _vars ;
   for ( const std::string& v : vars ) 
   {
-    auto f = std::make_unique<RooFormulaVar>( "" , v.c_str() , alst ) ;
+    // auto f = std::make_unique<RooFormulaVar>( "" , v.c_str() , alst ) ;
+    auto f = std::unique_ptr<RooFormulaVar> ( new RooFormulaVar( "" , v.c_str() , alst ) ) ;
     if ( !f || !f->ok() ) { return 0 ; }                        // RETURN
     _vars.push_back ( std::move ( f ) ) ;
   }
