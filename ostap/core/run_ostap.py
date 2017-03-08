@@ -1,8 +1,6 @@
 #!/usr/bin/env python 
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$ 
-# =============================================================================
 ## @file run_ostap.py
 #  
 #     .oooooo.                .                        
@@ -31,9 +29,6 @@
 #  @date   2012-02-15
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #
-#                    $Revision$
-#  Last modification $Date$
-#                 by $Author$
 # =============================================================================
 
 """ Simple interactive PyRoot-based analysis environment

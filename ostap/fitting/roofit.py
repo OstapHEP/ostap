@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  Module with decoration of asome RooFit objects for efficient use in python
 #  - iterators  for RooArgList

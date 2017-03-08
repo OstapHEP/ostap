@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file fixes.py 
 #  Couple of minor fixes for Ostap
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

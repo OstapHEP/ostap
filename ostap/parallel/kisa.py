@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  Module with some multiprocessing functionality for Ostap 
 #  Currently it is not loaded on default, and requires manual activation

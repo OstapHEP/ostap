@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file specific.py
 #  A set of predefined ready-to-use shapes and PDFs 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 # 
-#                    $Revision$
-#  Last modification $Date$
-#                 by $Author$
 # =============================================================================
 """A set of predefined ready-to-use shapes and PDFs"""
 # =============================================================================

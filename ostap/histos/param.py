@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  Module with utilities for parameterization of historgams 
 #
@@ -70,9 +68,6 @@
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2011-06-07
 #  
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """Module with utilities for parameterization of historgams
 

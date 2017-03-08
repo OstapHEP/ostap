@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  Auxillary utilities for parameterization of histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$ 
-# =============================================================================
 ## The trivial startup sctript for Ostap session
 #
 #  This file is a part of 
@@ -23,9 +21,6 @@
 #  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
 #  @date   2006-10-08
 #
-#                    $Revision$
-#  Last modification $Date$
-#                 by $Author$ 
 # =============================================================================
 """This is a trivial startup script for Ostap session
  

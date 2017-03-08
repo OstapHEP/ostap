@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file parallel.py 
 #
 #  Useful utilities for multiprocessing and parallel processing for Ostap
@@ -12,9 +10,6 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-02-23
 #
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """   Useful utilities for multiprocessing and parallel processing for Ostap
 Actualy it is just a little bit upgraded version of original

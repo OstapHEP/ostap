@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  Tiny decoration for ROOT.FitResult object
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

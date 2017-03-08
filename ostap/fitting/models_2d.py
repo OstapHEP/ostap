@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file models_2d.py
 #  Smooth non-factorizable 2D-models to describe background distribtions
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru

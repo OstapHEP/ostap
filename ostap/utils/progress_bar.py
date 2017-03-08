@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  Progress bars for Ostap
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -51,8 +49,6 @@
 #  ProgressBar is an improvement from the original found at:
 #    http://code.activestate.com/recipes/168639/
 #
-#                   $Revision$
-# Last modification $Date$
 # =============================================================================
 """ Simple utilities for ``progrees bar'' 
 
