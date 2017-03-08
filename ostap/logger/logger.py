@@ -285,9 +285,10 @@ def colored_string ( what               ,
                      foreground = None  ,
                      background = None  ,
                      bold       = False ,
-                     blink      = False ) :
+                     blink      = False ,
+                     underline  = False ) :
     """
-    >>> print colored_string ( 'Hello' , foreground = RED , background = YELLOW , bold = True , blink = True )
+    >>> print colored_string ( 'Hello' , foreground = RED , background = YELLOW , bold = True , blink = True , underline = True )
     """
     ## nothing to colorize or no coloring is activated
     from ostap.utils.basic import isatty
@@ -295,23 +296,25 @@ def colored_string ( what               ,
 
     ## nothing to do 
     if foreground is None and backround is None :
-        if not bold and not blink : return what 
+        if not bold and not blink and not underline : return what 
 
     RESET_SEQ = "\033[0m"
     COLOR_SEQ = "\033[1;%dm"
-    BOLD_SEQ  = "\033[1m"    if bold  else ''
-    BLINK_SEQ = "\033[5m"    if blink else '' 
+    BOLD_SEQ  = "\033[1m"    if bold      else ''
+    BLINK_SEQ = "\033[5m"    if blink     else '' 
+    ULINE_SEQ = "\033[4m"    if underline else '' 
     
     fg = COLOR_SEQ % ( 30 + ( foreground % 8 ) ) if not foreground is None else '' 
     bg = COLOR_SEQ % ( 40 + ( background % 8 ) ) if not background is None else '' 
     
-    return '{fg}{bg}{bold}{blink}{what}{reset}'.format (
-        fg    = fg        , 
-        bg    = bg        , 
-        bold  = BOLD_SEQ  , 
-        blink = BLINK_SEQ , 
-        what  = what      ,
-        reset = RESET_SEQ )
+    return '{foreground}{background}{underline}{bold}{blink}{what}{reset}'.format (
+        foreground = fg        , 
+        background = bg        ,
+        underline  = ULINE_SEQ ,
+        bold       = BOLD_SEQ  , 
+        blink      = BLINK_SEQ , 
+        what       = what      ,
+        reset      = RESET_SEQ )
                    
 # =============================================================================
 ## make colors 
@@ -324,15 +327,15 @@ def make_colors () :
     global __with_colors__
     __with_colors__ = True 
     
-    def  makeName ( level , fg = None  , bg = None , blink = False ) :
+    def  makeName ( level , fg = None  , bg = None , blink = False , underline = False ) :
 
         name = logging.getLevelName ( level )
-        bold = fg is None and bg is None 
-        return colored_string ( name , fg , bg , bold , blink ) 
+        bold = fg is None and bg is None and not uderline 
+        return colored_string ( name , fg , bg , bold , blink , underline ) 
     
-    logging.addLevelName ( logging.CRITICAL ,  makeName ( logging.CRITICAL , fg = RED    , bg  = BLUE   , blink = True ) )
-    logging.addLevelName ( logging.WARNING  ,  makeName ( logging.WARNING  , fg = RED    , bg  = YELLOW ) )
-    logging.addLevelName ( logging.ERROR    ,  makeName ( logging.ERROR    , fg = YELLOW , bg  = RED    , blink = True ) )
+    logging.addLevelName ( logging.CRITICAL ,  makeName ( logging.CRITICAL , fg = RED    , bg  = BLUE   , blink     = True ) )
+    logging.addLevelName ( logging.WARNING  ,  makeName ( logging.WARNING  , fg = RED    , bg  = YELLOW , underline = True ) )
+    logging.addLevelName ( logging.ERROR    ,  makeName ( logging.ERROR    , fg = YELLOW , bg  = RED    , blink     = True ) )
     logging.addLevelName ( logging.INFO     ,  makeName ( logging.INFO     , bg = BLUE   , fg  = WHITE  ) )
     logging.addLevelName ( logging.DEBUG    ,  makeName ( logging.DEBUG    , bg = GREEN  , fg  = WHITE  ) )
 
