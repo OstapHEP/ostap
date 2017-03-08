@@ -284,64 +284,32 @@ BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 def colored_string ( what               ,
                      foreground = None  ,
                      background = None  ,
-                     bold       = False ) :
+                     bold       = False ,
+                     blink      = False ) :
     """
-    >>> print colored_string ( 'Hello' , foreground = RED , background = YELLOW , boold = True )
+    >>> print colored_string ( 'Hello' , foreground = RED , background = YELLOW , bold = True , blink = True )
     """
     ## nothing to colorize or no coloring is activated
     from ostap.utils.basic import isatty
     if not what or not with_colors() or not isatty() : return what
-    
+
+    ## nothing to do 
+    if foreground is None and backround is None :
+        if not bold and not blink : return what 
+
     RESET_SEQ = "\033[0m"
     COLOR_SEQ = "\033[1;%dm"
-    BOLD_SEQ  = "\033[1m"
+    BOLD_SEQ  = "\033[1m"    if bold  else ''
+    BLINK_SEQ = "\033[5m"    if blink else '' 
     
-    if foreground is None and background is None :
-        
-        return what if not bold else '{bold}{what}{reset}' .format (
-            bold  = BOLD_SEQ  , 
-            what  = what      ,
-            reset = RESET_SEQ )  
+    fg = COLOR_SEQ % ( 30 + ( foreground % 8 ) ) if not foreground is None else '' 
+    bg = COLOR_SEQ % ( 40 + ( background % 8 ) ) if not background is None else '' 
     
-    elif foreground is None :
-        
-        bg = background % 8
-        if bold : return '{bg}{bold}{what}{reset}' .format (
-            bg    = COLOR_SEQ % ( 40 + bg ) ,
-            bold  = BOLD_SEQ  ,
-            what  = what      ,
-            reset = RESET_SEQ )
-        return '{bg}{what}{reset}' .format (
-            bg    = COLOR_SEQ % ( 40 + bg ) ,
-            what  = what      ,
-            reset = RESET_SEQ )
-    
-    elif background is None :
-        
-        fg = foreground % 8
-        if bold : return '{fg}{bold}{what}{reset}' .format (
-            fg    = COLOR_SEQ % ( 30 + fg ) ,
-            bold  = BOLD_SEQ  ,
-            what  = what      ,
-            reset = RESET_SEQ )
-        return '{fg}{what}{reset}' .format (
-            fg    = COLOR_SEQ % ( 30 + fg ) ,
-            what  = what      ,
-            reset = RESET_SEQ )
-
-    fg = foreground % 8
-    bg = background % 8
-    if bold : return '{fg}{bg}{bold}{what}{reset}' .format (
-        fg    = COLOR_SEQ % ( 30 + fg ) ,
-        bg    = COLOR_SEQ % ( 40 + bg ) ,
-        bold  = BOLD_SEQ  ,
-        what  = what      ,
-        reset = RESET_SEQ )
-    
-    return '{fg}{bg}{what}{reset}' .format (
-        fg    = COLOR_SEQ % ( 30 + fg ) ,
-        bg    = COLOR_SEQ % ( 40 + bg ) ,
-        bold  = BOLD_SEQ  ,
+    return '{fg}{bg}{bold}{blink}{what}{reset}'.format (
+        fg    = fg        , 
+        bg    = bg        , 
+        bold  = BOLD_SEQ  , 
+        blink = BLINK_SEQ , 
         what  = what      ,
         reset = RESET_SEQ )
                    
@@ -353,25 +321,18 @@ def make_colors () :
     if with_colors() : return
     if not isatty () : return  ## no colorization for non-TTY output 
     
-    # ===================================================================================
-    #The background is set with 40 plus the number of the color, and the foreground with 30
-    #These are the sequences need to get colored ouput
-    RESET_SEQ = "\033[0m"
-    COLOR_SEQ = "\033[1;%dm"
-    BOLD_SEQ  = "\033[1m"
-    
     global __with_colors__
     __with_colors__ = True 
     
-    def  makeName ( level , fg = None  , bg = None  ) :
+    def  makeName ( level , fg = None  , bg = None , blink = False ) :
 
         name = logging.getLevelName ( level )
         bold = fg is None and bg is None 
-        return colored_string ( name , fg , bg , bold ) 
+        return colored_string ( name , fg , bg , bold , blink ) 
     
-    logging.addLevelName ( logging.CRITICAL ,  makeName ( logging.CRITICAL , fg = RED    , bg  = BLUE   ) )
+    logging.addLevelName ( logging.CRITICAL ,  makeName ( logging.CRITICAL , fg = RED    , bg  = BLUE   , blink = True ) )
     logging.addLevelName ( logging.WARNING  ,  makeName ( logging.WARNING  , fg = RED    , bg  = YELLOW ) )
-    logging.addLevelName ( logging.ERROR    ,  makeName ( logging.ERROR    , fg = YELLOW , bg  = RED    ) )
+    logging.addLevelName ( logging.ERROR    ,  makeName ( logging.ERROR    , fg = YELLOW , bg  = RED    , blink = True ) )
     logging.addLevelName ( logging.INFO     ,  makeName ( logging.INFO     , bg = BLUE   , fg  = WHITE  ) )
     logging.addLevelName ( logging.DEBUG    ,  makeName ( logging.DEBUG    , bg = GREEN  , fg  = WHITE  ) )
 
