@@ -186,6 +186,13 @@ def parse_args ( args = [] ) :
         help    = "Invoke profiler" , 
         default = False             )
     # 
+    parser.add_argument ( 
+        '--no-mt'                     ,        
+        dest    = 'NoImplicitMT'      , 
+        action  = 'store_true'        , 
+        help    = "DisableImplicitMT" , 
+        default = False               )
+    # 
     group2 = parser.add_mutually_exclusive_group()
     group2.add_argument ( '-i' ,  
                          '--interactive' , dest='batch', 

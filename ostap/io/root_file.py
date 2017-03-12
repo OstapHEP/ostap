@@ -479,7 +479,49 @@ def _rd_get_ ( rdir , name , default = None ) :
         return _rd_getitem_ ( rdir , name )
     except KeyError :
         return default
-    
+
+# =============================================================================
+## ``walk'' through the directory and its content
+#  @code
+#  rfile = ...
+#  for r,d,o in rfile.walk() :
+#    print 'root dir: %s, %d subdirs, %d objects' % ( r , len ( d ) , len( o ) )
+#  @endocode
+def _rd_walk_ ( rdir , topdown = True ) :
+    """``walk'' through the directory and its content
+    >>> rfile = ...
+    >>> for r,d,o in rfile.walk() :
+    ...  print 'root dir: %s, %d subdirs, %d objects' % ( r , len ( d ) , len( o ) )
+    """
+    with ROOTCWD() :
+        ##
+        rdir.cd()
+        _subdirs = []
+        _objects = []
+        _idirs   = [] 
+        _lst = rdir.GetListOfKeys()
+        for i in _lst :
+            inam   = i.GetName()
+            idir   = rdir.GetDirectory ( inam ) 
+            if idir :
+                _subdirs.append  ( inam )
+                _idirs.append    ( idir ) 
+            else    :
+                _objects.append  ( inam )
+
+        _subdirs = tuple ( _subdirs )
+        _objects = tuple ( _objects )
+        
+    if topdown : 
+        yield rdir.GetName(), _subdirs, _objects 
+
+    for isub in _idirs :
+        for jj in _rd_walk_ ( isub , topdown ) : yield jj
+
+    if not topdown :
+        yield rdir.GetName(), _subdirs, _objects 
+        
+
 # =============================================================================
 ## use ROOT-file with context-manager
 #  @code
@@ -516,6 +558,7 @@ ROOT.TDirectory.__getattr__  = _rd_getattr_
 ROOT.TDirectory.__delitem__  = _rd_delitem_
 ROOT.TDirectory.__iter__     = _rd_iter_
 
+
 # =============================================================================
 ## the extended protocol
 
@@ -529,6 +572,7 @@ ROOT.TDirectory.itervalues   = _rd_itervalues_
 # =============================================================================
 ## some extra stuff 
 
+ROOT.TDirectory.walk         = _rd_walk_
 ROOT.TDirectory.__rrshift__  = _rd_rrshift_
 ROOT.TNamed    .__rshift__   = _tnamed_rshift_ 
 

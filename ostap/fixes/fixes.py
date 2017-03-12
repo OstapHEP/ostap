@@ -26,6 +26,15 @@ with mute() :
     v = ROOT.RooRealVar()
     del v
 
+try :
+    ROOT.IsImplicitMTEnabled ()
+except AttributeError :
+    ROOT.IsImplicitMTEnabled  = lambda s    : False
+    ROOT.EnableImplicitMT     = lambda s,*_ : False
+    ROOT.DisableImplicitMT    = lambda s    : False 
+    logger.info ("``Enable/Disable''Implicit MT is not available") 
+    
+    
 # =============================================================================
 if '__main__' == __name__ : 
     

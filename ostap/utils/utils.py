@@ -47,14 +47,23 @@ __all__     = (
     'useBatch'           , ## contex manager to force ROOT ``batch''-mode
     ##
     'keepCanvas'         , ## context manager to keep the current ROOT canvas
-    'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas    
+    'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     ##
-    'Batch'              , ## contex manager to keep  ROOT ``batch''-mode
-    'UseBatch'           , ## contex manager to force ROOT ``batch''-mode
+    'keepArgs'           , ## context manager to keep sys.argv
+    ##
+    'implicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
+    ##
+    'Batch'              , ## context manager to keep  ROOT ``batch''-mode
+    'UseBatch'           , ## context manager to force ROOT ``batch''-mode
     ##
     'KeepCanvas'         , ## context manager to keep the current ROOT canvas
     'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
-    )
+    ##
+    'KeepArgs'           , ## context manager to keep sys.argv 
+    ##
+    'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
+    ##
+   )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
 # =============================================================================
@@ -445,7 +454,106 @@ def invisibleCanvas() :
     ... do something here 
     """
     return InvisibleCanvas() 
+
+
+# =============================================================================
+## @class KeepArgs
+#  context manager to keep/preserve sys.argv
+#  @code
+#  with KeepArgs() :
+#    ...  
+#  @endcode 
+class KeepArgs(object) :
+    """Context manager to keep/preserve sys.argv
+    >>> with KeepArgs() :
+    ...  
+    """
+    ## context manager  ENTER 
+    def __enter__ ( self ) :
+        import sys, copy
+        self._args = copy.deepcopy( sys.argv )
+        return self
+    ## context manager  EXIT
+    def __exit__ ( self , *_ ) :
+        import sys, copy
+        sys.argv = copy.deepcopy ( self._args )
+        del self._args 
+
+
+# =============================================================================
+## context manager to keep/preserve sys.argv
+#  @code
+#  with keepArgs() :
+#    ...  
+#  @endcode
+def keepArgs() :
+    """Context manager to keep/preserve sys.argv
+    >>> with keepArgs() :
+    ...  
+    """
+    return KeepArgs()
+
+
+# =============================================================================
+## EnableImplicitMT
+#  Context manager to enable/disable implicit MT in ROOT 
+#  @see ROOT::EnableImplicitMT 
+#  @see ROOT::DisableImplicitMT 
+#  @see ROOT::IsImplicitMTEnabled
+#  @code
+#  with ImplicitMT( True ) :
+#  ...
+#  @endcode
+class ImplicitMT(object) :
+    """Context manager to enable/disable implicit MT in ROOT 
+    >>> with ImplicitMT( True ) :
+        ...
+    - see ROOT::EnableImplicitMT 
+    - see ROOT::DisableImplicitMT 
+    - see ROOT::IsImplicitMTEnabled
+    """
+    def __init__  ( self , enable = True ) :
+        self.enable = enable
+        
+    ## Context manager: ENTER 
+    def __enter__ ( self ) :
+        self.enabled = ROOT.IsImplicitMCEnabled()
+        
+        if bool ( self.enabled ) == bool ( self.enable ) : pass 
+        elif self.enable : ROOT.EnableImplicitMT  ()
+        else             : ROOT.DisableImplicitMT ()
+
+        return self
     
+    ## Context managr: EXIT
+    def __exit__ ( self , *_ ) :
+        ##
+        enabled = ROOT.IsImplicitMCEnabled()
+        if bool ( enabled ) == bool ( self.enabled ) : pass 
+        elif self.enabled : ROOT.EnableImplicitMT  ()
+        else              : ROOT.DisableImplicitMT ()
+
+
+# =============================================================================
+## Context manager to enable/disable implicit MT in ROOT 
+#  @see ROOT::EnableImplicitMT 
+#  @see ROOT::DisableImplicitMT 
+#  @see ROOT::IsImplicitMTEnabled
+#  @code
+#  with implicitMT( True ) :
+#  ...
+#  @endcode
+def implicitMT ( enable = True ) :
+    """Context manager to enable/disable implicit MT in ROOT 
+    >>> with implicitMT( True ) :
+        ...
+    - see ROOT::EnableImplicitMT 
+    - see ROOT::DisableImplicitMT 
+    - see ROOT::IsImplicitMTEnabled
+    """
+    return ImplicitMT ( enable ) 
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
