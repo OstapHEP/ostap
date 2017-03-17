@@ -25,7 +25,7 @@
 #  @date   2016-02-23
 #
 # =============================================================================
-"""   Useful utilities for multiprocessing and parallel processing for Ostap
+"""Useful utilities for multiprocessing and parallel processing for Ostap
 Actualy it is just a little bit upgraded version of original
 GaudiMP.Parallel module developed by Pere MATO Pere.Mato@cern.ch
 
@@ -37,9 +37,9 @@ has very attractive functionality and solve pickling issues
 @see https://github.com/uqfoundation/pathos
 
 Current version works for multicore regime
-'Cluster' mode doe nto work due to two following reasons:
+'Cluster' mode does not work due to two following reasons:
 - conflict between pp/ppft and readline module
-- problem with serialization of  C++ types,
+- problem with serialization of  C++(ROOT) types
 
 see https://its.cern.ch/jira/browse/GAUDI-1197
 see https://sft.its.cern.ch/jira/browse/ROOT-8046
@@ -215,7 +215,7 @@ class WorkManager(object) :
         # --- Schedule all the jobs ....
         if self.mode == 'cluster' :
             
-            from Ostap.progress_bar import ProgressBar
+            from ostap.utils.progress_bar import ProgressBar
             with ProgressBar ( max_value = len(items) , silent = self.silent ) as bar : 
                 
                 jobs = self.pool.uimap(_ppfunction, zip([task for i in items] , items ))
@@ -234,7 +234,7 @@ class WorkManager(object) :
         elif self.mode == 'multicore' :
             
             start = time.time()
-            from Ostap.progress_bar import ProgressBar
+            from ostap.utils.progress_bar import ProgressBar
             with ProgressBar ( max_value = len(items) , silent = self.silent ) as bar : 
                 jobs = self.pool.uimap(_ppfunction, zip([task for i in items] , items ))
                 for result, stat in  jobs :

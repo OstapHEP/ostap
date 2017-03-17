@@ -176,13 +176,13 @@ def romberg ( fun                ,
         return VE( 0 , 0 ) if err else 0.0
 
     ## crazy settings for uncertainties 
-    if  ( ea <= 0 or iszero ) and ( er <=0 or iszero( er )  ) : 
+    if  ( ea <= 0 or iszero ( ea ) ) and ( er <= 0 or iszero  ( er )  ) : 
         raise AttributeError("Romberg: absolute and relative tolerances can't be non-positive simultaneously")
 
     ## adjust maximal number of steps in Richardson's extrapolation 
     nmax        = max ( 2 , nmax )
 
-    ## ensure that function returnd double values: 
+    ## ensure that function returns double values: 
     func        = lambda x : float ( fun ( x , *args ) )
 
     ## finally use Romberg's integration 

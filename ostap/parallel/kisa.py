@@ -58,15 +58,11 @@ class ProjectTask(Parallel.Task) :
         self.histo = histo
         self.histo.Reset()
         
-        import ROOT
-        if   isinstance ( tree , ROOT.TTree ) : self.tree = tree.GetName()
-        elif isinstance ( tree , str        ) : self.tree = tree 
-        
     ## local initialization (executed once in parent process)
     def initializeLocal   ( self ) :
         """Local initialization (executed once in parent process)
         """
-        import ROOT,ostap.pyrouts
+        import ROOT,ostap.core.pyrouts
         self.output = 0, self.histo.clone() 
         
     ## remote initialization (executed for each sub-processs)
@@ -92,7 +88,8 @@ class ProjectTask(Parallel.Task) :
         """
 
         import ROOT
-        import ostap.core.pyrouts 
+        from ostap.logger.utils import logWarning
+        with logWarning() : import ostap.core.pyrouts 
 
         if   isinstance ( params , str ) : params = ( param , 0 , n_large  )
         elif isinstance ( params , ROOT.TChainElement ) :
@@ -263,18 +260,41 @@ def  tproject ( tree                 ,   ## the tree
     ## use the regular projection  
     from ostap.trees.trees import _tt_project_ 
 
+    fname = None
+    tname = None
+    
     if isinstance ( tree , ROOT.TChain ) :
-        logger.warning ('``tproject'' method is TTree-specific, skip parallelization')
-        return _tt_project_ ( tree , histo , what , cuts , '' , total , first ) 
+        
+        if 1 == len( tree.files() ) :
+            
+            fname = tree.files()[0]
+            tname = tree.GetName()
+            
+        else :
+            
+            logger.warning ('``tproject'' method is TTree-specific, skip parallelization')
+            return _tt_project_ ( tree , histo , what , cuts , '' , nentries , first )
+        
+    else :         
 
-    ##
-    ## check if tree is file-resident:
-    tdir = tree.GetDirectory()
-    if tdir and isinstance ( tdir , ROOT.TFile ) : pass
-    else :
-        logger.debug ('TTree is not file resident, skip parallelization') 
+        tdir  = tree.GetDirectory ()
+        ftree = tdir.GetFile      ()
+        if not ftree :
+            logger.debug ('TTree is not file resident, skip parallelization') 
+            return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
+        fname         = ftree.GetName     ()
+        tpath         = tdir.GetPath  ()
+        pr , d , path = tpath.rpartition(':')
+        tname         = path + '/' + tree.GetName()
+
+    if not fname :
+        logger.info ("Can't determine fname, skip parallelization") 
         return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
-    # 
+    
+    if not tname :
+        logger.info ("Can't determine tname, skip parallelization") 
+        return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
+        
     # 
     if isinstance ( cuts , ROOT.TCut ) : cuts = str( cuts )
     if isinstance ( what , ROOT.TCut ) : what = str( what )
@@ -294,9 +314,7 @@ def  tproject ( tree                 ,   ## the tree
     ## the event range is rather short, no real need  in parallel processing
     if total * len ( what ) < maxentries and len ( what ) < 4 : 
         return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
-    
-    fname = tdir.GetName()
-    tname = tree.GetName()
+
 
     ## number of chunks & reminder 
     nchunks , rest = divmod ( total , maxentries )
