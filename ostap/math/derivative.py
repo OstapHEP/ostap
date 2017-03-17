@@ -633,7 +633,7 @@ class Partial(Derivative) :
 #  sin = EvalVE( math.sin , lambda s : math.cos(s) )
 #  print 'sin(x) = %s ' % sin(x) 
 #  @endcode
-#  @see LHCbMath.math_ve 
+#  @see ostap.math.math_ve 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-02-23
 class EvalVE(object) :
@@ -645,7 +645,7 @@ class EvalVE(object) :
     >>> print 'sin1(x) = %s ' % sin1(x) 
     >>> sin2 = EvalVE( math.sin )
     >>> print 'sin2(x) = %s ' % sin2(x) 
-    see also LHCbMath.math_ve
+    see also ostap.math.math_ve
     """
     ## constructor
     def __init__ ( self , func , deriv = None  , name = '' ) :

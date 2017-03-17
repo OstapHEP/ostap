@@ -678,7 +678,7 @@ def _gr_integral_ ( graph , xlow , xhigh , scipy = True ) :
     >>> i     = graph.integral ( 0 , 1 )
     """
     if scipy :
-        from LHCbMath.deriv import integral 
+        from ostap.math.integral import integral 
         return integral ( graph , xlow , xhigh )
     
     tf1 = graph.asTF1()

@@ -51,15 +51,13 @@
   >>> import ostap.math.base 
 
   Important: All types are defined in corresponding
-               C++ namespaces: Gaudi & Gaudi::Math
+               C++ namespaces: Ostap & Ostap::Math
 
-  >>> import LHCbMath.Types
-  >>> from GaudiPython.Bindings import gbl as cpp ## get global C++ namespace
-  >>> Gaudi = cpp.Gaudi                           ## get C++ namespace Gaudi
-  >>> p3 = Gaudi.XYZPoint(0,1,2)                  ## use C++ type Gaudi::XYZPoint
+  >>> Ostap = cpp.Ostap                           ## get C++ namespace Ostap
+  >>> p3 = Gaudi.XYZPoint(0,1,2)                  ## use C++ type Ostap::XYZPoint
 
-  >>> dir( Gaudi.Math )
-  >>> dir( Gaudi      )
+  >>> dir( Ostap.Math )
+  >>> dir( Ostap      )
 
 """
 # =============================================================================
