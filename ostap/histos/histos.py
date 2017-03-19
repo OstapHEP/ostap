@@ -5779,7 +5779,7 @@ def _h3_islice_Z_ (  h3 , zbin ) :
     nx = ax.GetNbins ()
     
     for ybin in range(1,ny+1) :
-        for xbin in range(1,nz+1) :
+        for xbin in range(1,nx+1) :
             yield xbin,ybin,zbin
 
 
