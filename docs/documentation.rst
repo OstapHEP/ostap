@@ -8,6 +8,6 @@ This is the main page documentating the *ostap* module, example usage, and the u
 .. toctree::
     :maxdepth: 2
 
-    examples/examples.rst
-    api/api.rst
+..    examples/examples.rst
+..    api/api.rst
     faq.rst

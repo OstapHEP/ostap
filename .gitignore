@@ -3,6 +3,11 @@
 # setup.py working directory
 build
 
+# Sphinx
+_build
+_static
+_templates
+
 # Compiled source #
 ###################
 *.py[ocd]

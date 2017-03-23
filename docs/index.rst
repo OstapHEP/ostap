@@ -3,7 +3,7 @@ Welcome to the Ostap project!
 
 To get started, first :ref:`install the skhep module <installation>` and then read the :ref:`main documentation <documentation>`.
 
-If there's a feature missing you'd like to see, you can :ref:`contribute to Ostap<contributing>` or check out the :ref:`list of affiliated packages <affiliations>`
+If there's a feature missing you'd like to see, you can :ref:`contribute to Ostap<contributing>`
 
 .. Here's some maths: :math:`\decay{D^{0}}{h^{+}h^{-}}`, and :math:`\pT` and :math:`x`.
 
@@ -15,7 +15,8 @@ If there's a feature missing you'd like to see, you can :ref:`contribute to Osta
    installation.rst
    documentation.rst
    contributing.rst
-   affiliations.rst
+   faq.rst
+..   affiliations.rst
 
 
 Indices and tables

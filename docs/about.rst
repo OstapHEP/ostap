@@ -1,7 +1,4 @@
 
-.. include:: ../README.rst
-
-
 Core team
 ---------
 
