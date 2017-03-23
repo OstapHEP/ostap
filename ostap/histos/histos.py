@@ -1308,6 +1308,29 @@ def _a_get_item_ ( axis , i ) :
 
 ROOT.TAxis.__getitem__  = _a_get_item_
 
+
+# =============================================================================
+## equality for axes
+def _a_equal_ ( axis , another ) :
+    """Equality for two axes
+    >>> a1 = ...
+    >>> a2 = ...
+    >>> print a1 == a1 
+    """
+    if      axis   is       another                        : return True 
+    if len( axis ) != len ( another )                      : return False
+    if not isequal ( axis.GetXmin()  , another.GetXmin() ) : return False
+    if not isequal ( axis.GetXmax()  , another.GetXmax() ) : return False
+    for i in axis :
+        l1,u1 = axis    [i]
+        l2,u2 = another [i]
+        if not isequal ( l1 , l2 ) : return False 
+        if not isequal ( u1 , u2 ) : return False
+    return True
+
+ROOT.TAxis.__eq__ =                  _a_equal_
+ROOT.TAxis.__ne__ = lambda a,o : not _a_equal_ ( a , o ) 
+
 # =============================================================================
 # some minor decoration for 2D-histos 
 # =============================================================================
@@ -1837,6 +1860,40 @@ ROOT.TH2F . __mod__  = zechEff_h2
 ROOT.TH2D . __mod__  = zechEff_h2
 ROOT.TH3F . __mod__  = zechEff_h3
 ROOT.TH3D . __mod__  = zechEff_h3
+
+# =============================================================================
+## get binomial division by ROOT
+#  @code 
+#  accepted  = ... ##  histogram for accepted sample 
+#  total     = ... ##  histogram for total    sample 
+#  efficiency = accepted.binomEff2 ( total )
+#  @endcode 
+#  - <code>ROOT.TH1.Divide ( ... , 1 , 1 , "B")</code> is used 
+def _h_binomEff_2_ ( accepted , total ) :
+    """Calculate the efficiency histogram using the binomial errors    
+    >>> accepted  = ... ##  histogram for accepted sample 
+    >>> total     = ... ##  histogram for total    sample 
+    >>> efficiency = accepted.binomEff2 ( total )
+    - ROOT.TH1.Divide ( ... , 1 , 1 , 'B') is used 
+    """
+    if not accepted.same_bins ( total ) :
+        total1 =  accepted.clone()
+        total1.Reset()
+        total1 += total 
+        result = _h_binomEff_2_ ( accepted  , total1 )
+        del total1
+        return result 
+
+    result = accepted.clone()
+    result.Reset()
+    ok = result.Divide ( accepted , total , 1.0 , 1.0 , 'b' )
+    if not ok :
+        logger.warning("Can't ``B''-divide histograms, switch to Zech's method")
+        return accepted % total 
+    return result 
+    
+
+ROOT.TH1.binomEff_2 = _h_binomEff_2_
 
 
 # =============================================================================
@@ -6147,6 +6204,61 @@ def _uniform_bins_ ( histo ) :
 ROOT.TH1.uniform_bins = _uniform_bins_
 ROOT.TH1.uniform      = _uniform_bins_
 
+# =============================================================================
+## same dims?
+def _h_same_dims_ ( histo , another ) :
+
+    if   isinstance ( histo , ROOT.TH3 ) :
+        return isinstance ( another , ROOT.TH3 )
+    elif isinstance ( histo , ROOT.TH2 ) :
+        return isinstance ( another , ROOT.TH2 ) \
+               and not isinstance ( another , ROOT.TH3 )
+    elif isinstance ( histo , ROOT.TH1 ) :
+        return isinstance ( another , ROOT.TH1 ) \
+               and not isinstance ( another , ( ROOT.TH2 , ROOT.TH3 ) ) 
+    return False 
+
+ROOT.TH1. same_dims = _h_same_dims_
+
+# =============================================================================
+## same binning?
+def _h_same_bins_ ( histo , another ) :
+    """Same binning for two histograms?
+    >>> h1 = ...
+    >>> h2 = ...
+    >>> print h1.same_bins( h2 ) 
+    """
+    ## same dimensions ? 
+    if not histo.same_dims ( another ) : return False
+    ## 
+    if   isinstance ( histo , ROOT.TH3 ) and isinstance ( another , ROOT.TH3 ) : 
+        a1 = histo  .GetXaxis()
+        a2 = another.GetXaxis()
+        if a1 != a2 : return False
+        a1 = histo  .GetYaxis()
+        a2 = another.GetYaxis()
+        if a1 != a2 : return False
+        a1 = histo  .GetZaxis()
+        a2 = another.GetZaxis()
+        if a1 != a2 : return False
+        return True
+    elif isinstance ( histo , ROOT.TH2 ) and isinstance ( another , ROOT.TH2 ) : 
+        a1 = histo  .GetXaxis()
+        a2 = another.GetXaxis()
+        if a1 != a2 : return False
+        a1 = histo  .GetYaxis()
+        a2 = another.GetYaxis()
+        return True
+    elif isinstance ( histo , ROOT.TH1 ) and isinstance ( another , ROOT.TH1 ) : 
+        a1 = histo  .GetXaxis()
+        a2 = another.GetXaxis()
+        return True
+    
+    return False 
+
+ROOT.TH1. same_bins = _h_same_bins_
+    
+#
 
 # =============================================================================
 ## transfrom the x-axis for the 1D-historgam
@@ -6299,6 +6411,9 @@ _new_methods_   = (
     ROOT.TAxis . __reversed__ ,
     ROOT.TAxis . __contains__ ,
     #
+    ROOT.TH1   . same_dims    , 
+    ROOT.TH1   . same_bins    , 
+    #
     ROOT.TH1F. __setitem__    ,
     ROOT.TH1D. __setitem__    ,
     #
@@ -6410,6 +6525,8 @@ _new_methods_   = (
     ROOT.TH3D  . iteritems    ,
     #
     ROOT.TAxis . iteritems    ,
+    ROOT.TAxis . __eq__       ,
+    ROOT.TAxis . __ne__       ,
     #
     ROOT.TH1F.bin , 
     ROOT.TH1D.bin ,
@@ -6433,12 +6550,14 @@ _new_methods_   = (
     ROOT.TH2F . texte   ,
     ROOT.TH2D . texte   ,
     #
-    ROOT.TH1F.       binomEff  ,
-    ROOT.TH1D.       binomEff  ,
-    ROOT.TH1F.       wilsonEff ,
-    ROOT.TH1D.       wilsonEff ,
-    ROOT.TH1F. agrestiCoullEff ,
-    ROOT.TH1D. agrestiCoullEff ,
+    ROOT.TH1F.       binomEff   ,
+    ROOT.TH1D.       binomEff   ,
+    ROOT.TH1F.       wilsonEff  ,
+    ROOT.TH1D.       wilsonEff  ,
+    ROOT.TH1F. agrestiCoullEff  ,
+    ROOT.TH1D. agrestiCoullEff  ,
+    #
+    ROOT.TH1 .       binomEff_2 ,
     #
     ROOT.TH1F.eff_wald                   ,
     ROOT.TH1D.eff_wald                   , 
