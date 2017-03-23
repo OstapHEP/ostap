@@ -6,5 +6,6 @@ before_install:
   - docker pull mazurov/cern-root
   - docker run mazurov/cern-root -v $(pwd):/app /bin/sh -c "cd /app; ./scripts/bootstrap"
 
+
 script: 
   - docker run mazurov/cern-root -v $(pwd):/app /bin/sh -c "cd /app; ./scripts/bootstrap"
