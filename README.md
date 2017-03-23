@@ -2,6 +2,8 @@
 
 # Ostap
 
+[![Join the chat at https://gitter.im/OstapHEP/ostap](https://badges.gitter.im/OstapHEP/ostap.svg)](https://gitter.im/OstapHEP/ostap?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Setup
 
 You need to provide ROOTSYS environment for building the library. Library should be built with the same compiler version as was used to build ROOT.
