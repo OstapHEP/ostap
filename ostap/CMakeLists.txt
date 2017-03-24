@@ -1,0 +1,6 @@
+
+# file(COPY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION ${PROJECT_BINARY_DIR}/python
+#      PATTERN *.in EXCLUDE
+#      PATTERN *.txt EXCLUDE
+# )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py)

@@ -1,0 +1,10 @@
+#ifndef OSTAP_CONFIG_H
+#define OSTAP_CONFIG_H 1
+
+// the configured options and settings for Ostap
+#define OSTAP_VERSION_MAJOR @OSTAP_VERSION_MAJOR@
+#define OSTAP_VERSION_MINOR @OSTAP_VERSION_MINOR@
+#define OSTAP_VERSION_PATCH @OSTAP_VERSION_PATCH@
+#define OSTAP_VERSION "@OSTAP_VERSION@"
+
+#endif

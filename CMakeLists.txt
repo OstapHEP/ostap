@@ -4,7 +4,12 @@ find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(ostap)
+project(Ostap)
+
+set(OSTAP_VERSION_MAJOR 1)
+set(OSTAP_VERSION_MINOR 2)
+set(OSTAP_VERSION_PATCH 0)
+set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH})
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 #   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
@@ -16,5 +21,5 @@ set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
 ### where to put the executables
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
-
+add_subdirectory(ostap)
 add_subdirectory(source)

@@ -9,6 +9,11 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
 
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap/Config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h"
+  )
+
 function( MAKE_DICT name header selection )
    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANTS)
    add_library( ${name}Dict SHARED ${name}.cxx )
@@ -20,7 +25,7 @@ endfunction( MAKE_DICT )
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 # REFLEX_GENERATE_DICTIONARY(ostap_dict src/dict/Ostap.hh SELECTION src/dict/Ostap.xml)
 MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
 
