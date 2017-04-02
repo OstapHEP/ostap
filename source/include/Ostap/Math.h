@@ -837,7 +837,7 @@ namespace Ostap
      *  @param end   (INPUT) end-iterator for the input data 
      */
     template <class ITERATOR>
-    inline double kahan_sum  
+    inline double sum_kahan
     ( ITERATOR begin , 
       ITERATOR end   )
     {
@@ -853,14 +853,14 @@ namespace Ostap
       return sum ;
     }
     // ========================================================================
-    /** make dot-multiplication of two sequences basen on Kahan summation 
+    /** make dot-multiplication of two sequences based on Kahan summation 
      *  \f$ r = \sum_i  x_i y_i \f$
      *  @param xbegin (INPUT) begin-iterator for the first sequence  
      *  @param xend   (INPUT) end-iterator for the first sequence 
      *  @param ybegin (INPUT) begin-iterator for the second sequence  
      */
     template <class ITERATOR1, class ITERATOR2>
-    inline double kahan_sum  
+    inline double dot_kahan
     ( ITERATOR1 xbegin , 
       ITERATOR1 xend   , 
       ITERATOR2 ybegin )
@@ -885,10 +885,10 @@ namespace Ostap
      *  @return   "dot" product of two sequences 
      */
     template <unsigned int N, class TYPE, class ITERATOR>
-    inline double kahan_sum 
+    inline double dot_kahan
     ( const std::array<TYPE,N>& x     , 
       ITERATOR                  begin )  
-    { return kahan_sum ( x.begin() , x.end() , begin ) ; }
+    { return dot_kahan ( x.begin() , x.end() , begin ) ; }
     // ========================================================================
     /** make dot-multiplication of two sequences using Kahan summation 
      *  \f$ r = \sum_i  x_i y_i \f$
@@ -897,10 +897,10 @@ namespace Ostap
      *  @return   "dot" product of two sequences 
      */
     template <unsigned int N, class TYPE1, class TYPE2>
-    inline double kahan_sum
+    inline double dot_kahan
     ( const std::array<TYPE1,N>& x , 
       const std::array<TYPE2,N>& y )  
-    { return kahan_sum ( x.begin() , x.end() , y.begin() ) ; }
+    { return dor_kahan ( x.begin() , x.end() , y.begin() ) ; }
     // ========================================================================    
     /** make dot-multiplication of two sequences using Kahan summation
      *  \f$ r = \sum_i  x_i y_i \f$
@@ -909,9 +909,9 @@ namespace Ostap
      *  @return   "dot" product of two sequences 
      */
     template <class TYPE,unsigned int N, class ITERATOR> 
-    inline double kahan_sum 
+    inline double dot_kahan 
     ( TYPE(&x)[N] , 
-      ITERATOR y  ) { return kahan_sum ( x , x + N , y ) ; }
+      ITERATOR y  ) { return dot_kahan ( x , x + N , y ) ; }
    // ========================================================================
     /** make dot-multiplication of two sequences using Kahan summation
      *  \f$ r = \sum_i  x_i y_i \f$
@@ -920,9 +920,9 @@ namespace Ostap
      *  @return   "dot" product of two sequences 
      */
     template <class TYPE1, class TYPE2, unsigned int N> 
-    inline double kahan_sum 
+    inline double dot_kahan
     ( TYPE1(&x)[N] , 
-      TYPE2(&y)[N] ) { return kahan_sum ( x , x + N , y ) ; }
+      TYPE2(&y)[N] ) { return dot_kahan ( x , x + N , y ) ; }
     // ========================================================================
     /** make dot-multiplication of two sequences using Kahan summation
      *  \f$ r = \sum_i  x_i y_i \f$
@@ -931,10 +931,10 @@ namespace Ostap
      *  @param y (INPUT) the second sequence 
      *  @return   "dot" product of two sequences 
      */
-    inline double kahan_sum 
+    inline double dot_kahan
     ( const unsigned int N , 
       const double*      x , 
-      const double*      y ) { return kahan_sum ( x , x + N , y ) ; }
+      const double*      y ) { return dot_kahan ( x , x + N , y ) ; }
     // ========================================================================
     /// simple scaling of elements of non-constant sequence        
     template <class ITERATOR, typename SCALAR>

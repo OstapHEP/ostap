@@ -67,7 +67,7 @@ def _delta_ ( x , ulps = _mULPs_ ) :
     return max ( abs ( n1 - x ) , abs ( n2 - x ) )
 
 # =============================================================================
-## four versions:
+## Four versions:
 
 ## (1) use dot_fma from ostap            ## 17.7s
 dot_fma = cpp.Ostap.Math.dot_fma  
@@ -75,7 +75,7 @@ import array
 ARRAY   = lambda x : array.array ( 'd' , x )
 
 ## (2) use dot based on Kahan summation  ## 17.5s 
-# dot_fma = cpp.Ostap.Math.kahan_sum
+# dot_fma = cpp.Ostap.Math.dot_kahan
 # import array 
 # ARRAY =  lambda x : array.array ( 'd' , x )
 
