@@ -755,7 +755,7 @@ namespace Ostap
     {
       long double dot = 0 ;
       for ( ; begin != end ; ++begin, ++begin2 ) 
-      { dot = std::fma ( *begin , *begin2 , dot ) ; }
+      { dot = std::fma ( (long double) *begin , (long double) *begin2 , dot ) ; }
       return dot  ;  
     }
     // ========================================================================
@@ -783,7 +783,158 @@ namespace Ostap
       const std::array<TYPE2,N>& y )  
     { return dot_fma ( x.begin() , x.end() , y.begin() ) ; }
     // ========================================================================
-    
+    /** make dot-multiplication of two sequences using std::fma 
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param x (INPUT) the first sequence 
+     *  @param y (INPUT) begin-iterator for the second sequence 
+     *  @return   "dot" product of two sequences 
+     */
+    template <class TYPE,unsigned int N, class ITERATOR> 
+    inline double dot_fma 
+    ( TYPE(&x)[N] , 
+      ITERATOR y  ) { return dot_fma ( x , x + N , y ) ; }
+    // ========================================================================
+    /** make dot-multiplication of two sequences using std::fma 
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param x (INPUT) the first sequence 
+     *  @param y (INPUT) the second sequence 
+     *  @return   "dot" product of two sequences 
+     */
+    template <class TYPE1, class TYPE2, unsigned int N> 
+    inline double dot_fma 
+    ( TYPE1(&x)[N] , 
+      TYPE2(&y)[N] ) { return dot_fma ( x , x + N , y ) ; }
+    // ========================================================================
+    /** make dot-multiplication of two sequences using std::fma 
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param N (INPUT) length of the sequences 
+     *  @param x (INPUT) the first sequence 
+     *  @param y (INPUT) the second sequence 
+     *  @return   "dot" product of two sequences 
+     */
+    inline double dot_fma 
+    ( const unsigned int N , 
+      const double*      x , 
+      const double*      y ) { return dot_fma ( x , x + N , y ) ; }
+    // ========================================================================
+    /** Kahan summation 
+     *  @see https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+     *  \f$ r = \sum_i x_i \f$ 
+     *  @code
+     *  // pseudocode 
+     *  function KahanSum(input)
+     *    var sum = 0.0
+     *    var c = 0.0                 // A running compensation for lost low-order bits.
+     *    for i = 1 to input.length do
+     *       var y = input[i] - c     // So far, so good: c is zero.
+     *       var t = sum + y          // Alas, sum is big, y small, so low-order digits of y are lost.
+     *       c = (t - sum) - y        // (t - sum) cancels the high-order part of y; subtracting y recovers negative (low part of y)
+     *       sum = t                  // Algebraically, c should always be zero. Beware overly-aggressive optimizing compilers!
+     *    next i                      // Next time around, the lost low part will be added to y in a fresh attempt.
+     *  return sum
+     *  @endcode 
+     *  @param begin (INPUT) begin-iterator for the input data 
+     *  @param end   (INPUT) end-iterator for the input data 
+     */
+    template <class ITERATOR>
+    inline double kahan_sum  
+    ( ITERATOR begin , 
+      ITERATOR end   )
+    {
+      long double sum = 0 ;
+      long double c   = 0 ;
+      for ( ; begin != end ; ++begin ) 
+      {
+        volatile const long double y = (*begin) - c ;
+        volatile const long double t = sum      + y ;
+        c        = ( t - sum ) - y ;
+        sum      =   t             ;
+      }
+      return sum ;
+    }
+    // ========================================================================
+    /** make dot-multiplication of two sequences basen on Kahan summation 
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param xbegin (INPUT) begin-iterator for the first sequence  
+     *  @param xend   (INPUT) end-iterator for the first sequence 
+     *  @param ybegin (INPUT) begin-iterator for the second sequence  
+     */
+    template <class ITERATOR1, class ITERATOR2>
+    inline double kahan_sum  
+    ( ITERATOR1 xbegin , 
+      ITERATOR1 xend   , 
+      ITERATOR2 ybegin )
+    {
+      long double sum = 0 ;
+      long double c   = 0 ;
+      for ( ; xbegin != xend ; ++xbegin , ++ybegin ) 
+      {
+        const          long double v = (*xbegin ) * (*ybegin) ;
+        volatile const long double y = v   - c ;
+        volatile const long double t = sum + y ;
+        c   = ( t - sum ) - y ;
+        sum =   t             ;
+      }
+      return sum ;
+    }
+    // ========================================================================
+    /** make dot-multiplication of two sequences using Kahan summation
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param x     (INPUT) the first sequence 
+     *  @param begin (INPUT) start iterator of the second sequence
+     *  @return   "dot" product of two sequences 
+     */
+    template <unsigned int N, class TYPE, class ITERATOR>
+    inline double kahan_sum 
+    ( const std::array<TYPE,N>& x     , 
+      ITERATOR                  begin )  
+    { return kahan_sum ( x.begin() , x.end() , begin ) ; }
+    // ========================================================================
+    /** make dot-multiplication of two sequences using Kahan summation 
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param x (INPUT) the first sequence 
+     *  @param y (INPUT) the second sequence
+     *  @return   "dot" product of two sequences 
+     */
+    template <unsigned int N, class TYPE1, class TYPE2>
+    inline double kahan_sum
+    ( const std::array<TYPE1,N>& x , 
+      const std::array<TYPE2,N>& y )  
+    { return kahan_sum ( x.begin() , x.end() , y.begin() ) ; }
+    // ========================================================================    
+    /** make dot-multiplication of two sequences using Kahan summation
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param x (INPUT) the first sequence 
+     *  @param y (INPUT) begin-iterator for the second sequence 
+     *  @return   "dot" product of two sequences 
+     */
+    template <class TYPE,unsigned int N, class ITERATOR> 
+    inline double kahan_sum 
+    ( TYPE(&x)[N] , 
+      ITERATOR y  ) { return kahan_sum ( x , x + N , y ) ; }
+   // ========================================================================
+    /** make dot-multiplication of two sequences using Kahan summation
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param x (INPUT) the first sequence 
+     *  @param y (INPUT) the second sequence 
+     *  @return   "dot" product of two sequences 
+     */
+    template <class TYPE1, class TYPE2, unsigned int N> 
+    inline double kahan_sum 
+    ( TYPE1(&x)[N] , 
+      TYPE2(&y)[N] ) { return kahan_sum ( x , x + N , y ) ; }
+    // ========================================================================
+    /** make dot-multiplication of two sequences using Kahan summation
+     *  \f$ r = \sum_i  x_i y_i \f$
+     *  @param N (INPUT) length of the sequences 
+     *  @param x (INPUT) the first sequence 
+     *  @param y (INPUT) the second sequence 
+     *  @return   "dot" product of two sequences 
+     */
+    inline double kahan_sum 
+    ( const unsigned int N , 
+      const double*      x , 
+      const double*      y ) { return kahan_sum ( x , x + N , y ) ; }
     // ========================================================================
     /// simple scaling of elements of non-constant sequence        
     template <class ITERATOR, typename SCALAR>

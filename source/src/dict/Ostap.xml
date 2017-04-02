@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!--- $Id: -->
-
 <lcgdict>
   
   <class pattern    = "Ostap::*"                 />
@@ -13,14 +11,14 @@
   <function pattern = "Ostap::Math::*"           />
   <function pattern = "Ostap::Utils::*"          />
   <function pattern = "Ostap::Utils::Histos::*"  />
-
+  
   <class name = "std::unary_function&lt;double,double&gt;" />
   <class name = "std::binary_function&lt;double,double,double&gt;" />
-
+  
   <class name   = "Ostap::Math::WorkSpace">
     <field name = "m_workspace" transient="true"/>      
   </class>
-
+  
   <exclusion>
     
     <class pattern = "Ostap::Math::details::*"     />
@@ -54,7 +52,7 @@
     <class pattern = "ROOT::Math::PositionVector*"     />
     <class pattern = "ROOT::Math::DisplacementVector*" />
     <class pattern = "ROOT::Math::LorentzVector*"      />
-
+    
   </exclusion>
   
 </lcgdict>
