@@ -29,6 +29,7 @@ Empricial PDFs to describe narrow peaks :
   - Apolonios
   - Apolonios2 (bifurcated Apolonios)
   - bifurcated Gauissian
+  - double     Gauissian
   - generalized normal v1 
   - generalized normal v2
   - skew Gaussian   ## temporarily disabled 
@@ -77,6 +78,7 @@ __all__ = (
     'Apolonios_pdf'          , ## Apolonios function         
     'Apolonios2_pdf'         , ## Apolonios function         
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
+    'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
     'GenGaussV2_pdf'         , ## generalized normal v2 
     ## 'SkewGauss_pdf'          , ## skewed gaussian

@@ -29,6 +29,7 @@ Empricial PDFs to describe narrow peaks
   - Apolonios
   - Apolonios2 (bifurcated Apolonious)
   - bifurcated Gauissian
+  - double     Gauissian
   - generalized normal v1 
   - generalized normal v2
   ## - skew Gaussian  (temporarily removed)
@@ -73,6 +74,7 @@ __all__ = (
     'Apolonios_pdf'          , ## Apolonios function         
     'Apolonios2_pdf'         , ## Apolonios function         
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
+    'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
     'GenGaussV2_pdf'         , ## generalized normal v2 
     ## 'SkewGauss_pdf'          , ## skewed gaussian (temporarily removed)
@@ -585,6 +587,7 @@ class Apolonios2_pdf(MASS) :
 
 
 models.append ( Apolonios2_pdf )    
+
 # =============================================================================
 ## @class BifurcatedGauss_pdf
 #  simple wrapper over bifurcated-gaussian
@@ -650,6 +653,60 @@ class BifurcatedGauss_pdf(MASS) :
             self.sigmaR )
 
 models.append ( BifurcatedGauss_pdf )    
+
+
+# =============================================================================
+## @class DoubleGauss_pdf
+#  simple wrapper over double gaussian
+#  @see RooGaussian
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2017-07-12
+class DoubleGauss_pdf(MASS) :
+    """Double Gauss :
+
+    f(x;mu,sigma,scale,fraction) =
+    fraction     * G(x;mu,sigma) +
+    (1-fraction) * G(x;mu;sigma*scale) 
+        
+    """
+    def __init__ ( self                  ,
+                   name                  ,
+                   mn        = None      ,
+                   mx        = None      ,
+                   mass      = None      ,
+                   mean      = None      ,
+                   sigma     = None      ,
+                   fraction  = None      ,
+                   scale     = None      ) :  
+        #
+        ## initialize the base
+        # 
+        MASS.__init__  ( self , name  ,
+                         mn   , mx    , mass ,
+                         mean , sigma )
+        
+        self.scale = makeVar (
+            scale ,
+            'SigmaScale'        + name ,
+            'SigmaScale(%s)'    % name , scale , 1 , 10 ) 
+        
+        ## the fraction 
+        self.fraction = makeVar (
+            fraction                   , 
+            'CoreFraction'      + name ,
+            'CoreFraction(%s)'  % name , fraction , 0 , 1 ) 
+        
+        self.pdf = Ostap.Models.DoubleGauss (           
+            "f2gau_"          + name ,
+            "DoubleGauss(%s)" % name ,
+            self.mass     ,
+            self.sigma    ,
+            self.fraction ,
+            self.scale    ,
+            self.mean    
+            )
+
+models.append ( DoubleGauss_pdf )    
 # =============================================================================
 ## @class GenGaussV1_pdf
 #  Simple class that implements the generalized normal distribution v1

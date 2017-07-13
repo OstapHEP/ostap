@@ -1321,6 +1321,138 @@ bool Ostap::Math::BifurcatedGauss::setPeak( const double value )
 }
 
 
+// ============================================================================
+/* constructor from all parameters
+ *  @param peak     the peak posiion
+ *  @param sigmaL   the sigma for first component
+ *  @param fraction the fraction of first component 
+ *  @param scale    the ratio of sigmas for second and first components
+ */
+// ============================================================================
+Ostap::Math::DoubleGauss::DoubleGauss
+( const double peak     ,
+  const double sigma    , 
+  const double fraction , 
+  const double scale    ) 
+  : m_peak     ( peak               ) 
+  , m_sigma    ( std::abs ( sigma ) )
+  , m_fraction ( std::min ( std::max ( fraction , 0.0 ), 1.0 ) ) 
+  , m_scale    ( std::abs ( scale ) )
+{}
+// ============================================================================
+bool Ostap::Math::DoubleGauss::setPeak   ( const double value ) 
+{
+  if ( s_equal ( value , m_peak ) ) { return false ; }
+  m_peak = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::DoubleGauss::setSigma ( const double value ) 
+{
+  const double value_ =  std::abs (value ) ;
+  if ( s_equal ( value_ , m_sigma ) ) { return false ; }
+  m_sigma = value_ ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::DoubleGauss::setFraction ( const double value ) 
+{
+  const double value_ = std::min ( std::max ( value , 0.0 ), 1.0 ) ;
+  if ( s_equal ( value_ , m_sigma ) ) { return false ; }
+  m_sigma = value_ ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::DoubleGauss::setScale ( const double value ) 
+{
+  const double value_ =  std::abs (value ) ;
+  if ( s_equal ( value_ , m_scale ) ) { return false ; }
+  m_scale = value_ ;
+  return true ;
+}
+// ============================================================================
+// evaluate Bifurcated Gaussian
+// ============================================================================
+double Ostap::Math::DoubleGauss::pdf ( const double x ) const 
+{
+  const double mu       = m_peak     ;
+  const double sigma    = m_sigma    ;
+  const double scale    = m_scale    ;
+  const double fraction = m_fraction ;
+  //
+  const double sigma2   =  scale *  sigma ;
+  //
+  const double dx1      = ( x - mu ) / sigma  ;
+  const double dx2      = ( x - mu ) / sigma2 ;
+  //
+  const double  f1 = fraction ;
+  const double  f2 = 1 - f1   ;
+  //
+  static const double s_norm = 1.0 / std::sqrt ( 2.0 * M_PI  ) ;
+  //
+  return 
+    s_norm * ( f1 * std::exp ( -0.5 * dx1 * dx1 ) / sigma  +
+               f2 * std::exp ( -0.5 * dx2 * dx2 ) / sigma2 ) ;  
+}
+// ============================================================================
+// get the integral between low and high limits
+// ============================================================================
+double Ostap::Math::DoubleGauss::integral 
+( const double xmin , 
+  const double xmax ) const 
+{
+  const double mu       = m_peak     ;
+  const double sigma    = m_sigma    ;
+  const double scale    = m_scale    ;
+  const double fraction = m_fraction ;
+  //
+  const double sigma2   =  scale *  sigma ;
+  //
+  const double  f1 = fraction ;
+  const double  f2 = 1 - f1 ;
+  //
+  static const double s_isqrt2 = 1.0 / std::sqrt ( 2.0 ) ;
+  //
+  const double ixscale1 = s_isqrt2 / sigma  ;
+  const double ixscale2 = s_isqrt2 / sigma2 ;
+  //
+  const double r1 = 
+    std::erf ( ( xmax - mu ) * ixscale1 ) - 
+    std::erf ( ( xmin - mu ) * ixscale1 ) ;
+  //
+  const double r2 = 
+    std::erf ( ( xmax - mu ) * ixscale2 ) - 
+    std::erf ( ( xmin - mu ) * ixscale2 ) ;
+  //
+  return 0.5 * ( f1 * r1 + f2 * r2  ) ;
+} 
+// ============================================================================
+// get cdf 
+// ============================================================================
+double Ostap::Math::DoubleGauss::cdf ( const double x )  const 
+{
+  const double mu       = m_peak     ;
+  const double sigma    = m_sigma    ;
+  const double scale    = m_scale    ;
+  const double fraction = m_fraction ;
+  //
+  const double sigma2   =  scale *  sigma ;
+  //
+  const double  f1 = fraction ;
+  const double  f2 =  1 - f1  ;
+  //
+  static const double s_isqrt2 = 1.0 / std::sqrt ( 2.0 ) ;
+  //
+  const double ixscale1 = s_isqrt2 / sigma  ;
+  const double ixscale2 = s_isqrt2 / sigma2 ;
+  //
+  const double r1 = std::erf ( ( x - mu ) * ixscale1 ) ;
+  const double r2 = std::erf ( ( x - mu ) * ixscale2 ) ;
+  //
+  return  0.5 * ( f1 * ( r1 + 1  ) + f2 * ( r2  + 1 ) ) ;
+}
+
+
 
 // ============================================================================
 /*  constructor from all agruments 

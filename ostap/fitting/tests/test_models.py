@@ -332,6 +332,42 @@ def test_bifurcated () :
 
 
 # =============================================================================
+## Bifurcated gauss PDF
+# =============================================================================
+def test_2gauss () :
+    
+    logger.info ('Test DoubleGauss_pdf: Double Gaussian' )
+    
+    signal_2gauss = Models.DoubleGauss_pdf ( name = 'Gau2' ,
+                                             mean  = signal_gauss.mean  ,
+                                             sigma = signal_gauss.sigma ,
+                                             mass  = mass               ,
+                                             fraction = 0.9             ,
+                                             scale    = 1.2             )
+    
+    model_2gauss = Models.Fit1D(
+        signal     = signal_2gauss      ,
+        background = Models.Bkg_pdf ('Bkg22G', mass = mass , power = 0 )) 
+    
+    model_2gauss.b.setVal (  500 )
+    model_2gauss.s.setVal ( 6000 )
+    with rooSilent() : 
+        result, frame = model_2gauss. fitTo ( dataset0 )
+        signal_2gauss.fraction.release() 
+        result, frame = model_2gauss. fitTo ( dataset0 )
+
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print result 
+    else :     
+        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
+        
+    models.add ( model_2gauss  )
+
+
+
+# =============================================================================
 ## GenGaussV1
 # =============================================================================
 def test_gengauss_v1 () :
@@ -867,6 +903,7 @@ if '__main__' == __name__ :
     test_apolonios      () ## Apolonios function                        + background 
     test_apolonios2     () ## modified Apolonios function               + background 
     test_bifurcated     () ## bifurcated Gaussian function              + background 
+    test_2gauss         () ## double     Gaussian function              + background 
     test_gengauss_v1    () ## generalized Gaussian function V1          + background 
     test_gengauss_v2    () ## generalized Gaussian function V2          + background 
     test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 

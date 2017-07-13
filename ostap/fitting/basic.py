@@ -752,8 +752,23 @@ class PDF (object) :
             else : return 0.0
             
         raise AttributeError, 'something wrong goes here'
-        
 
+
+# =============================================================================
+##  helper utilities to imlement resolution models.
+# =============================================================================
+class _CHECKMEAN(object) :
+    check = True
+def checkMean() :
+    return True if  _CHECKMEAN.check else False 
+class RESOLUTION(object) :    
+    def __init__  ( self , resolution = True ) :
+        self.check = False if resolution else True 
+    def __enter__ ( self ) :
+        self.old         = _CHECKMEAN.check 
+        _CHECKMEAN.check =  self.check
+    def __exit__  ( self , *_ ) :
+        _CHECKMEAN.check =  self.old 
 # =============================================================================
 ## helper base class for implementation  of various helper pdfs 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -803,7 +818,7 @@ class MASS(PDF) :
                               m_name , m_title ,
                               mass   , 
                               min ( mn , mx ) , max( mn , mx ) )
-        #
+
         self._mn = self.mass.getMin ()
         self._mx = self.mass.getMax ()
         #
@@ -815,24 +830,24 @@ class MASS(PDF) :
         self.mean = makeVar ( mean              ,
                               "mean_%s"  % name ,
                               "mean(%s)" % name , mean ,  self._mn  , self._mx )
-        #
-        if self.mean.isConstant() :
-            if not self._mn <= self.mean.getVal() <= self._mx :
-                raise AttributeError ( 'MASS(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , self._mn , self._mx ) )
-        elif hasattr ( self.mean , 'setMin' ) and hasattr( self.mean , 'setMax' ) : 
-            self.mean.setMin ( max ( self.mean.getMin () , self.mass.getMin() - 0.1 * _dm ) )
-            self.mean.setMax ( min ( self.mean.getMax () , self.mass.getMax() + 0.1 * _dm ) )
-            logger.debug ( 'MASS(%s) Mean range is redefined to be (%s,%s)' % ( name , self.mean.getMin() , self.mean.getMax() ) ) 
+        ## 
+        if checkMean () :
             
+            if self.mean.isConstant() :
+                if not self._mn <= self.mean.getVal() <= self._mx :
+                    raise AttributeError ( 'MASS(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , self._mn , self._mx ) )
+            elif hasattr ( self.mean , 'setMin' ) and hasattr( self.mean , 'setMax' ) : 
+                self.mean.setMin ( max ( self.mean.getMin () , self.mass.getMin() - 0.1 * _dm ) )
+                self.mean.setMax ( min ( self.mean.getMax () , self.mass.getMax() + 0.1 * _dm ) )
+                logger.debug ( 'MASS(%s) Mean range is redefined to be (%s,%s)' % ( name , self.mean.getMin() , self.mean.getMax() ) ) 
+                    
         #
         ## sigma
         #
         sigma_max  = 2.0 * _dm / math.sqrt ( 12 )
         self.sigma = makeVar ( sigma               ,
                                "sigma_%s"   % name ,
-                               "#sigma(%s)" % name , sigma , 0.01 * sigma_max , 0 , sigma_max )
-        
-
+                               "#sigma(%s)" % name , sigma , 0.01 * sigma_max , 0 , sigma_max )        
 
 # =============================================================================
 # @class PDF2

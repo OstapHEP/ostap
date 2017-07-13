@@ -46,6 +46,7 @@ namespace Ostap
    *  - Apolonios 
    *  - Apolonios2 (bifurcated apolonious)  
    *  - Bifurcated Gauissian 
+   *  - Double     Gauissian 
    *  - Generalized Gaussian v1 
    *  - Generalized Gaussian v2 
    *  - Skew Gaussian
@@ -1732,6 +1733,82 @@ namespace Ostap
       // ======================================================================
       /// the actual function 
       mutable Ostap::Math::BifurcatedGauss m_bg ;               // the function 
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class DoubleGauss 
+     *  @see Ostap::Math::DoubleGauss 
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2013-08-27
+     */
+    // ========================================================================
+    class  DoubleGauss : public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::DoubleGauss, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters 
+      DoubleGauss 
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         , 
+        RooAbsReal&          sigma     , 
+        RooAbsReal&          fraction  , 
+        RooAbsReal&          scale     , 
+        RooAbsReal&          mean      ) ;
+      /// "copy" constructor 
+      DoubleGauss ( const DoubleGauss& right , const char* name = 0  ) ;
+      /// virtual destructor  
+      virtual ~DoubleGauss () ;
+      /// clone 
+      virtual  DoubleGauss* clone ( const char* name ) const ; 
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      DoubleGauss () {} ;
+      // ======================================================================  
+    public:
+      // ======================================================================
+      // the actual evaluation of function 
+      virtual Double_t evaluate() const ;
+      // ======================================================================
+    public: // integrals  
+      // ======================================================================      
+      virtual Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      , 
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const ;
+      virtual Double_t analyticalIntegral 
+        ( Int_t          code         ,  
+          const char*    rangeName    ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters 
+      void setPars () const ; // set all parameters 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function 
+      const Ostap::Math::DoubleGauss& function() const { return m_2g ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        ;
+      RooRealProxy m_sigma    ;
+      RooRealProxy m_fraction ;
+      RooRealProxy m_scale    ;
+      RooRealProxy m_mean     ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function 
+      mutable Ostap::Math::DoubleGauss m_2g ;               // the function 
       // ======================================================================      
     } ;
     // ========================================================================

@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_MODELS_H
 #define OSTAP_MODELS_H 1
@@ -94,6 +93,74 @@ namespace Ostap
       double m_sigmaL ;       // sigma-left
       /// sigma right
       double m_sigmaR ;       // sigma-right
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class DoubleGauss
+     *  simple representation of double gaussian function
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+     *  @date 2011-04-19
+     */
+    class  DoubleGauss : public std::unary_function<double,double>
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param peak     the peak posiion
+       *  @param sigmaL   the sigma for first component
+       *  @param fraction the fraction of first component 
+       *  @param scale    the ratio of sigmas for second and first components
+       */
+      DoubleGauss
+      ( const double peak     = 0   ,
+        const double sigma    = 1   , 
+        const double fraction = 0.9 , 
+        const double scale    = 1.1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate Bifurcated Gaussian
+      double pdf        ( const double x ) const ;
+      double operator() ( const double x ) const { return pdf ( x )  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      double peak    () const { return m_peak    ; }
+      double m0      () const { return peak()    ; }
+      double sigma   () const { return m_sigma   ; }
+      double sigma1  () const { return m_sigma   ; }
+      double sigma2  () const { return m_sigma * m_scale ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setPeak     ( const double value ) ;
+      bool setM0       ( const double value ) { return setPeak ( value ) ; }
+      bool setMass     ( const double value ) { return setPeak ( value ) ; }
+      bool setSigma    ( const double value ) ;
+      bool setScale    ( const double value ) ;
+      bool setFraction ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the cdf 
+      double cdf      ( const double x ) const ;
+      /// get the integral
+      double integral () const { return 1  ; }  ;
+      /// get the integral between low and high limits
+      double integral ( const double low  ,
+                        const double high ) const ;
+      // ======================================================================
+    private: // parameters
+      // ======================================================================
+      /// the peak position
+      double m_peak     ;       //                              the peak position
+      /// sigma
+      double m_sigma    ;       // sigma
+      /// fraction
+      double m_fraction ;       // fraction
+      /// scale
+      double m_scale    ;       // scale
       // ======================================================================
     } ;
     // ========================================================================
