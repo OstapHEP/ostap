@@ -2,19 +2,19 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file resolution.py
-## Set of useful resoltuion models:
+## Set of useful resolution models:
 #  - single Gaussian
-#  - double Gaussian                    (gaussian   tails)
-#  - symmetric Apolonious               (exponenial tails)
-#  - symmetric double-sided Crytal Ball (power-law  tails)
+#  - double Gaussian                     (gaussian   tails)
+#  - symmetric Apolonious                (exponenial tails)
+#  - symmetric double-sided Crystal Ball (power-law  tails)
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2017-07-13
 # =============================================================================
-"""Set of useful resoltuion models:
+"""Set of useful resolution models:
 - single Gaussian
-- double Gaussian                    (gaussian   tails)
-- symmetric Apolonious               (exponenial tails)
-- symmetric double-sided Crytal Ball (power-law  tails)
+- double Gaussian                     (gaussian   tails)
+- symmetric Apolonious                (exponenial tails)
+- symmetric double-sided Crystal Ball (power-law  tails)
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -22,10 +22,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'ResoGauss'     , ## simple single-Gaussian resolutin model,
+    'ResoGauss'     , ## simple single-Gaussian resolution model,
     'ResoGauss2'    , ## double-Gaussian resolutin model,
-    'ResoApo2'      , ## symmetric Apolonios resolutin model,
-    'ResoCB2'       , ## symmetric double-sided Crystal Ball resolutin model,
+    'ResoApo2'      , ## symmetric Apolonios resolution model,
+    'ResoCB2'       , ## symmetric double-sided Crystal Ball resolution model,
     )
 # =============================================================================
 import ROOT
@@ -34,45 +34,48 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.resolution' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
-models = [] 
+from ostap.fitting.basic import RESOLUTION, makeVar
+# =============================================================================    
+models = set() 
 # =============================================================================
 ## sigle gaussian model for resolution
 # =============================================================================
-import ostap.fitting.signals as OFS
-class ResoGauss(OFS.Gauss_pdf) :
+## @class ResoGauss
+#  Trivial single gaussian resolution model
+class ResoGauss(RESOLUTION) :
     """Trivial single gaussian resolution model
     """
     def __init__ ( self      ,
                    name      ,   ## the  name 
                    mass      ,   ## the variable 
                    sigma     ,   ## the first sigma 
-                   mean  = 0 ) : ## mean-value 
+                   mean  = 0 ) : ## mean-value
+        ## initialize the base  
+        super(ResoGauss,self).__init__( name  = name  ,
+                                        mass  = mass  ,
+                                        sigma = sigma ,
+                                        mean  = mean  )
         
-        from ostap.fitting.basic import RESOLUTION
-        with RESOLUTION() :            
-            super(ResoGauss,self).__init__( name          ,
-                                            mass  = mass  ,
-                                            sigma = sigma ,
-                                            mean  = mean  ) 
-            PDF.__init__ ( self , name )
-            
-        ## gaussian 
+        ## build gaussian resolution model 
         self.gauss = ROOT.RooGaussModel(
-            'CoreGaussian'    + name ,
-            'CoreGaussian(%s' % name ,
-            self.mass                ,
-            self.mean                , 
-            self.sigma               )
+            'ResoGauss_'    + name ,
+            'ResoGauss(%s)' % name ,
+            self.mass            ,
+            self.mean            , 
+            self.sigma           )
         
         ## the final PDF 
         self.pdf = self.gauss
 
-models.append ( ResoGauss ) 
+models.add ( ResoGauss ) 
 # =============================================================================
-## double gaussian model for  resoltuion
-# =============================================================================
-class ResoGauss2(OFS.DoubleGauss_pdf) :
+## @class ResoGauss2
+#  Double Gaussian model for  resoltuion
+class ResoGauss2(RESOLUTION) :
     """Double-gaussian resolution model
+    - sigma of core Gaussian
+    - ratio of wide/core widths
+    - fraction of core component
     """        
     def __init__ ( self           ,
                    name           ,   ## the name 
@@ -80,23 +83,41 @@ class ResoGauss2(OFS.DoubleGauss_pdf) :
                    sigma          ,   ## the core sigma
                    scale    = 1.2 ,   ## sigma2/sigma1 ratio 
                    fraction = 0.5 ,   ## fraction of
-                   mean     = 0.0 ) : ## the mean value 
+                   mean     = 0.0 ) : ## the mean value
+        ## initialize the base 
+        super(ResoGauss2,self). __init__ ( name  = name  ,
+                                           mass  = mass  ,
+                                           sigma = sigma ,
+                                           mean  = mean  )
+        ## fraction of sigma1-component 
+        self.fraction = makeVar (
+            fraction                   , 
+            'CoreFraction_'     + name ,
+            'CoreFraction(%s)'  % name , fraction , 0 ,  1 ) 
+
+        ## sigma2/sigma1 width ratio;
+        self.scale = makeVar (
+            scale ,
+            'SigmaScale_'       + name ,
+            'SigmaScale(%s)'    % name , scale    , 1 , 10 ) 
         
-        from ostap.fitting.basic import RESOLUTION
-        with RESOLUTION() :            
-            super(ResoGauss2,self). __init__ ( self                ,
-                                               name                ,
-                                               mass     = mass     ,
-                                               sigma    = sigma    ,
-                                               mean     = mean     ,
-                                               fraction = fraction ,
-                                               scale    = scale    )
+        from ostap.core.core import Ostap
+        self.pdf = Ostap.Models.DoubleGauss (           
+            "Reso2Gauss_"       + name ,
+            "Reso2Gauss(%s)"    % name ,
+            self.mass     ,
+            self.sigma    ,
+            self.fraction ,
+            self.scale    ,
+            self.mean    
+            )
+
             
-models.append ( ResoGauss2 ) 
+models.add ( ResoGauss2 ) 
 # =============================================================================
-## Symmetrical  Apolonios  model for resolution
-# =============================================================================
-class ResoApo2(OFS.Apolonios2_pdf) :
+## @class ResoApo2
+#  Symmetrical  Apolonios  model for resolution
+class ResoApo2(RESOLUTION) :
     """Symmetric  Apolonios model for resolution
     """
     def __init__ ( self      ,
@@ -106,21 +127,35 @@ class ResoApo2(OFS.Apolonios2_pdf) :
                    beta  = 1 ,   ## the first sigma
                    mean  = 0 ) : ## the mean value 
 
-        from ostap.fitting.basic import RESOLUTION
-        with RESOLUTION() :            
-            super(ResoApo2,self).__init__ ( self               ,
-                                            name               ,
-                                            mass      = mass   ,
-                                            sigma     = sigma  ,
-                                            mean      = mean   ,
-                                            beta      = beta   ,
-                                            asymmetry = 0      )
-            
-models.append ( ResoApo2 ) 
+        ##  initlialize the base 
+        super(ResoApo2,self).__init__ ( name  = name  ,
+                                        mass  = mass  ,
+                                        sigma = sigma ,
+                                        mean  = mean  )
+        self.beta    = makeVar (
+            beta ,
+            'ResoBeta_%s'  % name  ,
+            'ResoBeta(%s)' % name  , beta , 0.01  , 10000 )
+        
+        ## build resoltuion model
+        from ostap.core.core import Ostap
+        self.apo2  = Ostap.Models.Apolonios2 (
+            "ResoApolonious_"   + name ,
+            "ResoApolonios(%s)" % name ,
+            self.mass   ,
+            self.mean   ,
+            self.sigma  ,
+            self.sigma  ,
+            self.beta   ) 
+
+        self.pdf = self.apo2
+        
+        ## 
+models.add ( ResoApo2 ) 
 # =============================================================================
-## Symmetrical double-sided Crystal Ball model for resolution
-# =============================================================================
-class ResoCB2(OFS.Gauss_pdf) :
+## @class ResoCB2
+#  Symmetrical double-sided Crystal Ball model for resolution
+class ResoCB2(RESOLUTION) :
     """Symmetric double-sided Crystal Ball model for resolution
     """
     def __init__ ( self        ,
@@ -131,36 +166,39 @@ class ResoCB2(OFS.Gauss_pdf) :
                    n     = 5   ,   ## power-law exponent
                    mean  = 0   ) : ## the mean value
 
-        from ostap.fitting.basic import RESOLUTION
-        with RESOLUTION() :            
-            super(ResoCB2,self).__init__ ( self , name ,  mass , sigma , mean )
-        
+        ## initialize the base 
+        super(ResoCB2,self).__init__ ( name  = name  ,
+                                       mass  = mass  ,
+                                       sigma = sigma ,
+                                       mean  = mean  )
+            
         self.alpha = makeVar (
             alpha                  ,
-            'ResoAlpha'     + name ,
-            'ResoAlpha(%s)' % name , alpha , 0.5 , 6 )
+            'ResoAlpha_'    + name ,
+            'ResoAlpha(%s)' % name , alpha , 0.5   ,  6 )
         
         self.n     = makeVar (
             n                  ,
-            'ResoN'     + name ,
-            'ResoN(%s)' % name , n , 1.e-4 , 20 )
+            'ResoN_'        + name ,
+            'ResoN(%s)'     % name , n     , 1.e-6 , 50 )
         
         ## gaussian 
+        from ostap.core.core import Ostap
         self.cb2 = Ostap.Models.CrystalBallDS (  
-            'ResoCB2'    + name ,
+            'ResoCB2_'   + name ,
             'ResoCB2(%s' % name ,
-            self.mass                ,
-            self.mean                , 
-            self.sigma               ,
-            self.alpha               ,
-            self.n                   ,
-            self.alpha               ,
-            self.n                   )
+            self.mass           ,
+            self.mean           , 
+            self.sigma          ,
+            self.alpha          ,
+            self.n              ,
+            self.alpha          ,
+            self.n              )
         
         ## the final PDF 
         self.pdf = self.cb2
         
-models.append ( ResoCB2 ) 
+models.add ( ResoCB2 ) 
 # =============================================================================
 if '__main__' == __name__ :
     

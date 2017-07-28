@@ -22,6 +22,7 @@ __all__     = (
     'PDF'           , ## useful base class for 1D-models
     'PDF2'          , ## useful base class for 2D-models
     'MASS'          , ## useful base class to create "signal" PDFs for mass-fits
+    'RESOLUION'     , ## useful base class to create "resolution" PDFs 
     'Fit1D'         , ## the model for 1D-fit: signal + background + optional components  
     'Fit2D'         , ## the model for 2D-fit: signal + background + optional components
     'Fit2DSym'      , ## the model for 2D-fit: signal + background + optional components
@@ -135,7 +136,6 @@ def makeVar ( var , name , comment , fix = None , *args ) :
     v = makeVar ( None , 'myvar' , 'mycomment' , '' , 0 , -1 , 1 )
     v = makeVar ( None , 'myvar' , 'mycomment' , 10 , 0 , -1 , 1 )
     v = makeVar ( v    , 'myvar' , 'mycomment' , 10 )
-    
     """
     #
     # var = ( value )
@@ -753,6 +753,164 @@ class PDF (object) :
             
         raise AttributeError, 'something wrong goes here'
 
+    # ========================================================================
+    # some generic stuff 
+    # ========================================================================
+    ## helper  function to implement some math stuff 
+    def _get_stat_ ( self , funcall , *args , **kwargs ) :
+        """Helper  function to implement some math stuff 
+        """
+        pdf         = self.pdf
+        xmin , xmax = self.mass.minmax()
+        
+        if hasattr ( pdf , 'function' ) :    
+            fun = pdf.function()
+            if   hasattr ( pdf  , 'setPars'   ) : pdf.setPars()             
+        else :            
+            from ostap.fitting.roofit import PDF_fun
+            fun = PDF_fun ( pdf , self.mass , xmin , xmax )
+            
+        return funcall (  fun , xmin , xmax , *args , **kwargs ) 
+        
+    
+    ## get the effective RMS 
+    def rms ( self ) :
+        """Get the effective RMS
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'RMS: %s ' % pdf.rms()
+        """
+        pdf  = self.pdf 
+        if   hasattr ( pdf , 'rms'            ) : return pdf.rms()        
+        elif hasattr ( pdf , 'Rms'            ) : return pdf.Rms()        
+        elif hasattr ( pdf , 'RMS'            ) : return pdf.RMS()        
+        elif hasattr ( pdf , 'function'       ) :
+            
+            fun = pdf.function()
+            if   hasattr ( pdf  , 'setPars'   ) : pdf.setPars() 
+            if   hasattr ( fun , 'rms'        ) : return fun.rms()
+            elif hasattr ( fun , 'variance'   ) : return fun.variance   ()**0.5  
+            elif hasattr ( fun , 'dispersion' ) : return fun.dispersion () **5 
+            
+        from ostap.stats.moments import rms as _rms
+        return  self._get_stat_ ( _rms )
+
+    ## get the effective Skewness
+    def skewness ( self ) :
+        """Get the effective Skewness
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'SKEWNESS: %s ' % pdf.skewness()
+        """
+        ## use generic machinery 
+        from ostap.stats.moments import skewness as _skewness
+        return self._get_stat_ ( _skewness )
+
+
+    ## get the effective Kurtosis
+    def kurtosis ( self ) :
+        """Get the effective Kurtosis
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'KURTOSIS: %s ' % pdf.kurtosis()
+        """
+        ## use generic machinery 
+        from ostap.stats.moments import kurtosis as _kurtosis
+        return self._get_stat_ ( _kurtosis ) 
+
+    
+    ## get the effective Full Width at Half Maximum
+    def fwhm ( self ) :
+        """Get the effective Full Width at  Half Maximum
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'FWHM: %s ' % pdf.fwhm()
+        """
+        ## use generic machinery 
+        from ostap.stats.moments import width as _width
+        w = self._get_stat_ ( _width )
+        return w[1]-w[0]
+    
+    ## get the effective mode 
+    def mode ( self ) :
+        """Get the effective mode
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'MODE: %s ' % pdf.mode()
+        """
+        from ostap.stats.moments import mode as _mode
+        return self._get_stat_ ( _mode )
+
+    ## get the effective median
+    def median ( self ) :
+        """Get the effective median
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'MEDIAN: %s ' % pdf.median()
+        """
+        from ostap.stats.moments import median as _median
+        return self._gets_stat_ ( _median )
+
+    ## get the effective mean
+    def get_mean ( self ) :
+        """Get the effective Mean
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'MEAG: %s ' % pdf.get_mean()
+        """
+        from ostap.stats.moments import mean as _mean
+        return self._get_stat_ ( _mean )
+
+    ## get the effective moment for the distribution
+    def moment ( self , N ) :
+        """Get the effective moment
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'MOMENT: %s ' % pdf.moment( 10 )
+        """
+        ## use generic machinery 
+        from ostap.stats.moments import moment as _moment
+        return self._get_stat_ ( _moment , N ) 
+    
+    ## get the effective central moment for the distribution
+    def central_moment ( self , N ) :
+        """Get the effective central moment
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'MOMENT: %s ' % pdf.moment( 10 )
+        """
+        from ostap.stats.moments import central_moment as _moment
+        return self._get_stat_ ( _moment , N ) 
+
+    ## get the effective quantile 
+    def quantile ( self , prob  ) :
+        """Get the effective quantile
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'QUANTILE: %s ' % pdf.quantile ( 0.10 )
+        """
+        from ostap.stats.moments import quantile as _quantile
+        return self._get_stat_ ( quantile , prob ) 
+    
+    ## get the symmetric confidence interval 
+    def cl_symm ( self , prob , x0 =  None ) :
+        """Get the symmetric confidence interval 
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'CL :  ',  pdf.cl_symm ( 0.10 )
+        """
+        from ostap.stats.moments import cl_symm as _cl
+        return self._get_sstat_ ( _cl , prob , x0 ) 
+
+    ## get the asymmetric confidence interval 
+    def cl_asymm ( self , prob ) :
+        """Get the asymmetric confidence interval 
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'CL :  ',  pdf.cl_asymm ( 0.10 )
+        """
+        from ostap.stats.moments import cl_asymm as _cl
+        return self._get_sstat_ ( _cl , prob ) 
 
 # =============================================================================
 ##  helper utilities to imlement resolution models.
@@ -760,8 +918,8 @@ class PDF (object) :
 class _CHECKMEAN(object) :
     check = True
 def checkMean() :
-    return True if  _CHECKMEAN.check else False 
-class RESOLUTION(object) :    
+    return True if  _CHECKMEAN.check else False
+class Resolution(object) :    
     def __init__  ( self , resolution = True ) :
         self.check = False if resolution else True 
     def __enter__ ( self ) :
@@ -774,7 +932,10 @@ class RESOLUTION(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class MASS(PDF) :
-    """Helper base class for implementation of various pdfs 
+    """Helper base class for implementation of various 1D-pdfs
+    (presumably models for mass distributions)
+    - it adds more functionality  to class PDF
+    - 
     """
     def __init__ ( self            ,
                    name            ,
@@ -845,9 +1006,31 @@ class MASS(PDF) :
         ## sigma
         #
         sigma_max  = 2.0 * _dm / math.sqrt ( 12 )
-        self.sigma = makeVar ( sigma               ,
-                               "sigma_%s"   % name ,
-                               "#sigma(%s)" % name , sigma , 0.01 * sigma_max , 0 , sigma_max )        
+        self.sigma = makeVar ( sigma              ,
+                               "sigma_%s"  % name ,
+                               "sigma(%s)" % name , sigma , 0.01 * sigma_max , 0 , sigma_max )        
+
+
+# =============================================================================
+## @class RESOLUTION
+#  helper base class  to parameterize the resolution
+#  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
+#  @date 2017-07-13
+class RESOLUTION(MASS) :
+    """Helper base class  to parameterize the resolution
+    """
+    def __init__ ( self            ,
+                   name            ,
+                   mass     = None ,
+                   sigma    = None , 
+                   mean     = None ) : 
+        from ostap.fitting.basic import Resolution
+        with Resolution() :
+            super(RESOLUTION,self).__init__ ( name  = name  ,
+                                              mass  = mass  ,
+                                              sigma = sigma ,
+                                              mean  = mean  )
+
 
 # =============================================================================
 # @class PDF2

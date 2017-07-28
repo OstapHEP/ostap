@@ -1358,8 +1358,8 @@ bool Ostap::Math::DoubleGauss::setSigma ( const double value )
 bool Ostap::Math::DoubleGauss::setFraction ( const double value ) 
 {
   const double value_ = std::min ( std::max ( value , 0.0 ), 1.0 ) ;
-  if ( s_equal ( value_ , m_sigma ) ) { return false ; }
-  m_sigma = value_ ;
+  if ( s_equal ( value_ , m_fraction ) ) { return false ; }
+  m_fraction = value_ ;
   return true ;
 }
 // ============================================================================
@@ -1371,7 +1371,7 @@ bool Ostap::Math::DoubleGauss::setScale ( const double value )
   return true ;
 }
 // ============================================================================
-// evaluate Bifurcated Gaussian
+// evaluate  double Gaussian
 // ============================================================================
 double Ostap::Math::DoubleGauss::pdf ( const double x ) const 
 {
