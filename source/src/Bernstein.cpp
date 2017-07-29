@@ -3,6 +3,7 @@
 // ============================================================================
 // STD& STL
 // ============================================================================
+#include <cmath>
 #include <array>
 #include <climits>
 #include <cassert>
@@ -205,7 +206,74 @@ Ostap::Math::Bernstein::Bernstein
                              xmin      , xmax    ) 
 {} 
 // ============================================================================
-
+/* construct Bernstein polynomial from its roots
+ *  Polinomial has a form
+ *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+ *  @param xmin low  edge for Bernstein polynomial
+ *  @param xmax high edge for Bernstein polynomial
+ *  @param r  the list of real  roots of the polinomial
+ *  @param c  the list of complex roots (only one root from cc-pair is needed)
+ */
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein 
+( const double xmin                            , 
+  const double xmax                            , 
+  const std::vector<double>& r                 ,
+  const std::vector<std::complex<double> > & c )
+  : Ostap::Math::PolySum ( r.size() + 2*c.size() ) 
+  , m_xmin ( std::min ( xmin , xmax ) )
+  , m_xmax ( std::max ( xmin , xmax ) )
+{
+  //
+  Bernstein result ( std::vector<double> ( 1 , 1.0 ) , xmin , xmax ) ;
+  Bernstein b1     ( std::vector<double> ( 2 , 1.0 ) , xmin , xmax ) ;
+  Bernstein b2     ( std::vector<double> ( 3 , 1.0 ) , xmin , xmax ) ;
+  for ( double rr : r )
+  { 
+    b1.setPar ( 0 , xmin - rr ) ;
+    b1.setPar ( 1 , xmax - rr ) ;
+    result = result * b1 ;
+  }
+  const double xmid = 0.5 * ( m_xmin + m_xmax );
+  for ( std::complex<double> cr : c )
+  {
+    //  a * x * x + bx + c 
+    const double a =  1               ;
+    const double b = -2*cr.real()     ;
+    const double c = std::norm ( cr ) ;    
+    //
+    const double a0 = c + m_xmin * ( b + m_xmin * a ) ;
+    const double a1 = c +   xmid * ( b +   xmid * a ) ;
+    const double a2 = c + m_xmax * ( b + m_xmax * a ) ;
+    //
+    b2.setPar ( 0 ,     a0                     ) ;
+    b2.setPar ( 1 , 2 * a1 - 0.5 * ( a0 + a2 ) ) ;
+    b2.setPar ( 2 ,     a2                     ) ;
+    //
+    result = result * b2 ;
+  }
+  //
+  this->m_pars = result.m_pars ;
+} 
+// ============================================================================
+/*  construct Bernstein polynomial from its roots
+ *
+ *  Polinomial has a form
+ *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+ *
+ *  @param xmin low  edge for Bernstein polynomial
+ *  @param xmax high edge for Bernstein polynomial
+ *  @param c  the list of complex roots (only one root from cc-pair is needed)
+ *  @param r  the list of real  roots of the polinomial
+ */
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein 
+( const double xmin , 
+  const double xmax , 
+  const std::vector<std::complex<double> > & c ,
+  const std::vector<double>&                 r )
+  : Ostap::Math::Bernstein::Bernstein ( xmin , xmax , r   , c ) 
+{}
 // ============================================================================
 // copy assignement 
 // ============================================================================

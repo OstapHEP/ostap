@@ -532,6 +532,10 @@ class PDF (object) :
         >>> model.draw ( dataset , nbins = 100 )
         >>> model.draw ( dataset , base_signal_color  = ROOT.kGreen+2 )
         >>> model.draw ( dataset , data_options = (ROOT.RooFit.DrawOptions('zp'),) )
+
+        Produce also residual & pull:
+        
+        >>> f,r,h = model.draw ( dataset , nbins = 100 , residual = True , pull = True )
         
         Drawing options:
         - data_options            ## drawing options for dataset  
@@ -549,7 +553,12 @@ class PDF (object) :
         - base_signal_color       ## base color for signal     component(s)
         - base_component_color    ## base color for other      component(s)
         
-        For default values see ostap.plotting.fit_draw
+        Other options:
+        -  residual               ## make also residual frame
+        -  pull                   ## make also residual frame
+ 
+        For default values see ostap.plotting.fit_draw       
+        
         """
         #
         import ostap.plotting.fit_draw as FD
@@ -615,18 +624,52 @@ class PDF (object) :
             #
             frame.SetXTitle ( '' )
             frame.SetYTitle ( '' )
-            frame.SetZTitle ( '' )
-            
+            frame.SetZTitle ( '' )            
             
             #
             ## Draw the frame!
             #
             frame.Draw()
             
+            residual =  kwargs.pop ( 'residual' , False )
+            if residual and not  dataset :
+                logger.warning("Can't produce residual without data")
+                residual = False
+                
+            pull     =  kwargs.pop ( 'pull'     , False ) 
+            if pull     and not  dataset :
+                logger.warning("Can't produce residual without data")
+                residual = False
+                
             if kwargs :
                 logger.warning("Ignored unknown options: %s" % kwargs.keys() )
-            
-            return frame 
+
+            if not residual and not pull:
+                return frame
+
+            rframe =  None 
+            if residual  :
+                if   residual is True               : residual =      "P" ,
+                elif isinstance  ( residual , str ) : residual = residual ,
+                rframe  = frame.emptyClone ( rootID ( 'residual_' ) )
+                rh      = frame.residHist()
+                rframe.addPlotable ( rh , *residual ) 
+                rframe.SetXTitle ( '' )
+                rframe.SetYTitle ( '' )
+                rframe.SetZTitle ( '' )
+                
+            pframe = None 
+            if pull      : 
+                if   pull is True               : pull =   "P",
+                elif isinstance  ( pull , str ) : pull = pull ,
+                pframe  = frame.emptyClone ( rootID ( 'pull_' ) )
+                ph      = frame.pullHist()
+                pframe.addPlotable ( ph , *pull ) 
+                pframe.SetXTitle ( '' )
+                pframe.SetYTitle ( '' )
+                pframe.SetZTitle ( '' )
+                
+            return frame, rframe, pframe  
 
     # =========================================================================
     ## fit the histogram (and draw it)

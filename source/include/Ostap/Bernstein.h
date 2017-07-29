@@ -146,6 +146,41 @@ namespace Ostap
                   const double xmin   ,
                   const double xmax   ) ;
       // ======================================================================
+      /** construct Bernstein polynomial from its roots
+       *
+       *  Polinomial has a form
+       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+       *
+       *  @param xmin low  edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial
+       *  @param r  the list of real  roots of the polinomial
+       *  @param c  the list of complex roots (only one root from cc-pair is needed)
+       */
+      Bernstein 
+      ( const double xmin , 
+        const double xmax , 
+        const std::vector<double>&                 r = 
+        std::vector<double> () , 
+        const std::vector<std::complex<double> > & c = 
+        std::vector<std::complex<double> > ()  );
+      // ======================================================================
+      /** construct Bernstein polynomial from its roots
+       *
+       *  Polinomial has a form
+       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+       *
+       *  @param xmin low  edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial
+       *  @param c  the list of complex roots (only one root from cc-pair is needed)
+       *  @param r  the list of real  roots of the polinomial
+       */
+      Bernstein 
+      ( const double xmin , 
+        const double xmax , 
+        const std::vector<std::complex<double> > & c ,
+        const std::vector<double>&                 r = 
+        std::vector<double> () ) ;
+      // ======================================================================
       /// copy
       Bernstein ( const Bernstein&  ) = default ;
       /// move

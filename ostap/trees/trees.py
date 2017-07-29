@@ -799,6 +799,49 @@ ROOT.TChain.slice  = lambda s,*x : _not_implemented_( s , 'slice'  , *x )
 ROOT.TChain.slices = lambda s,*x : _not_implemented_( s , 'slices' , *x ) 
 
 
+
+# =============================================================================
+## extending the existing chain 
+def _tc_iadd_ ( self ,  other ) :
+    """ Add elements (files,  chains) to existing chain
+    >>>  chain  = ...
+    >>>  chain += 'myfile.root'
+    >>>  chain += ( 'myfile1.root' , 'myfile2.root' )    
+    """
+    if   self == other                             : return self    
+    elif isinstance ( o , ( list , tuple , set ) ) :        
+        for f in other : _tc_iadd_ (  self , f )
+        return  self
+    
+    elif isinstance ( other , ROOT.TChain ) :
+        return _tc_iadd_ ( self , other.files() ) 
+    
+    elif isinstance ( other , str ) :        
+        if not other in self.files () : self.Add ( other )
+        return self
+        
+    return NotImplemented 
+
+# =============================================================================
+## summing two existing chains
+def _tc_add_ ( self ,  other ) :
+    """ Add two  chains together 
+    >>>  chain1 = ...
+    >>>  chain2 = ...
+    >>>  chain3 =  chain1         + chain2
+    >>>  chain4 =  chain1         + 'my_file.root'
+    >>>  chain5 =  chain1         + ( 'my_file1.root' , 'my_file2.root' )
+    >>>  chain5 =  'my_file.root' + chain2 
+    """
+    left  = ROOT.TChain ( self.GetName() )
+    left += self
+    left += other 
+    return  left
+
+ROOT.TChain.__iadd__ = _tc_iadd_
+ROOT.TChain.__add__  = _tc_add_
+ROOT.TChain.__radd__ = _tc_add_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TTree   ,

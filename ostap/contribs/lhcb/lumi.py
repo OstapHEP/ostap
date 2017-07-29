@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
 ## @file
 #  Helper function to extract luminosity 
 #
@@ -18,10 +16,6 @@
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-16
-#  
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """Helper function to extract luminosity 
 
@@ -48,7 +42,7 @@ import ROOT
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'Ostap.contrib.lhcb.lumi' )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.contrib.lhcb.lumi' )
 else                       : logger = getLogger ( __name__        )
 # =============================================================================
 ## get luminosity from Lumi tuple
