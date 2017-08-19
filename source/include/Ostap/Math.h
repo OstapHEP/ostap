@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 #ifndef OSTAP_MATH_H 
 #define OSTAP_MATH_H 1
@@ -17,6 +16,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Lomont.h"
+#include "Ostap/Power.h"
 // ============================================================================
 namespace Ostap
 {
@@ -529,6 +529,58 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @struct MuchSmaller 
+     *  Is a value of "a" tiny with respect to b ? 
+     *  -  if b is numerical zero, a is numerical zero also 
+     *  - otherwise (a+b) is numerically equal to b 
+     */
+    template <class TYPE>
+    struct MuchSmaller : public std::binary_function<TYPE,TYPE,bool>
+    {
+    public:
+      // ======================================================================      
+      /** Is a value of "a" tiny with respect to b ? 
+       *  - if b is numerically zero, a is also zero  
+       *  - otherwise (a+b) is numerically equal to b 
+       */
+      bool operator () ( const TYPE a ,  const TYPE b )  const 
+      { return m_zero ( b ) ? m_zero ( a ) : m_equal ( a + b , b ) ; }
+      // ======================================================================      
+    private :
+      // ======================================================================
+      /// zero ?
+      Zero    <TYPE> m_zero  {} ; // zero ?
+      Equal_To<TYPE> m_equal {} ; // equality ? 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @struct Tiny 
+     *  Is a value of "a" tiny with respect to b ? 
+     *  -  if b is numerical zero, a is numerical zero also 
+     *  - otherwise (a+b) is numerically equal to b 
+     */
+    template <class TYPE>
+    struct Tiny : public std::unary_function<TYPE,bool>
+    {
+    public:
+      // ======================================================================
+      // constructor 
+      Tiny ( TYPE  b ) : m_b (  b ) {} ;
+      Tiny () = delete ; //  no   default constructor 
+      // ======================================================================
+    public:
+      // ======================================================================      
+      /// Is a value of "a" tiny with respect to b ? 
+      bool operator () ( const TYPE a )  const { return m_smaller ( a , m_b ) ; }
+      // ======================================================================      
+    private :
+      // ======================================================================
+      // the reference value
+      TYPE              m_b       ;
+      MuchSmaller<TYPE> m_smaller ;
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @struct LessOrEqual
      *  check if two values ar less or equal (numerically)
      *  @see Ostap::Math::Equal_To
@@ -598,7 +650,7 @@ namespace Ostap
      */
     inline long round ( const float  x ) { return round ( double ( x ) ) ; }
     // ========================================================================
-    /** get mantissa and exponent 
+    /** get mantissa and (decimal) exponent 
      *  similar to std::frexp, but radix=10)
      *  @param x  INPUT  value 
      *  @param e  UPDATE exponent 
@@ -606,9 +658,9 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2015-07-21
      */
-    double frexp10 ( const double x , long& e ) ;
+    double frexp10 ( const double x , int& e ) ;
     // ========================================================================
-    /** get mantissa and exponent 
+    /** get mantissa and (decimal) exponent 
      *  similar to std::frexp, but radix=10)
      *  @param x  INPUT  value 
      *  @param e  UPDATE exponent 
@@ -616,17 +668,27 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2015-07-21
      */
-    float frexp10 ( const float x , long& e ) ;
+    float frexp10 ( const float x , int& e ) ;
     // ========================================================================
-    /** get mantissa and exponent 
+    /** get mantissa and (decimal) exponent 
      *  similar to std::frexp, but radix=10)
      *  @param x  INPUT  value 
-     *  @return   pair of mantissa (0.1<=m<1) and exponent 
+     *  @return   pair of mantissa (0.1<=m<1) and (decimal) exponent 
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2015-07-21
      */
     std::pair<double,int>
     frexp10 ( const double x ) ;
+    // ========================================================================
+    /** get mantissa and binary exponent 
+     *  similar to std::frexp
+     *  @param x  INPUT  value 
+     *  @return   pair of mantissa (0.5<=m<1) and (binary) exponent 
+     *  @author Vanya BELYAEV Ivan.Belyaev       
+     *  @date 2015-07-21
+     */
+    std::pair<double,int>
+    frexp2  ( const double x ) ;
     // ========================================================================
     /** round to N-significant digits 
      *  @param x  INPUT  input value 
@@ -824,13 +886,19 @@ namespace Ostap
      *  // pseudocode 
      *  function KahanSum(input)
      *    var sum = 0.0
-     *    var c = 0.0                 // A running compensation for lost low-order bits.
+     *    var c = 0.0                 
+     *    // A running compensation for lost low-order bits.
      *    for i = 1 to input.length do
-     *       var y = input[i] - c     // So far, so good: c is zero.
-     *       var t = sum + y          // Alas, sum is big, y small, so low-order digits of y are lost.
-     *       c = (t - sum) - y        // (t - sum) cancels the high-order part of y; subtracting y recovers negative (low part of y)
-     *       sum = t                  // Algebraically, c should always be zero. Beware overly-aggressive optimizing compilers!
-     *    next i                      // Next time around, the lost low part will be added to y in a fresh attempt.
+     *       var y = input[i] - c     
+     *    // So far, so good: c is zero.
+     *       var t = sum + y          
+     *    // Alas, sum is big, y small, so low-order digits of y are lost.
+     *       c = (t - sum) - y        
+     *    // (t - sum) cancels the high-order part of y; subtracting y recovers negative (low part of y)
+     *       sum = t                  
+     *    // Algebraically, c should always be zero. Beware overly-aggressive optimizing compilers!
+     *    next i                      
+     *    // Next time around, the lost low part will be added to y in a fresh attempt.
      *  return sum
      *  @endcode 
      *  @param begin (INPUT) begin-iterator for the input data 
@@ -950,10 +1018,35 @@ namespace Ostap
                  SCALAR   factor )
     { for ( ; first != last ; ++first ) { (*first) += factor ; } }
     // ========================================================================
+    /// simple scaling of exponents for all elements of non-constant sequence        
+    template <class ITERATOR>
+    void scale_exp2 ( ITERATOR    first ,
+                      ITERATOR    last  , 
+                      const int   iexp  )
+    { 
+      if ( 0 != iexp ) 
+      { for ( ; first != last ; ++first ) { (*first) = std::ldexp ( *first , iexp ) ; } }
+    }
+    // ========================================================================
     /// scale all elements of vector 
     template <class TYPE , typename SCALAR>
     void scale ( std::vector<TYPE>& vct , SCALAR factor ) 
     { scale    ( vct.begin() , vct.end () , factor ) ; }
+    // ========================================================================
+    /// scale all elements of vector 
+    template <class TYPE>    
+    inline void scale_exp2 ( std::vector<TYPE>& vct , const int iexp  ) 
+    { scale_exp2 ( vct.begin() , vct.end () , iexp ) ; }
+    // ========================================================================
+    /// scale all elements of vector  by 2**s
+    template <class TYPE>    
+    inline
+    std::vector<TYPE> 
+    ldexp ( std::vector<TYPE> vct , const short iexp )
+    {
+      if ( 0 != iexp ) { scale_exp2 ( vct , iexp ) ; }
+      return vct ;
+    }
     // ========================================================================
     /// shift all elements of vector 
     template <class TYPE , typename SCALAR>
@@ -967,6 +1060,125 @@ namespace Ostap
     template <class TYPE> 
     void negate ( std::vector<TYPE>& vct ) 
     { negate ( vct.begin() , vct.end() ) ; }
+    // ========================================================================
+    /** Calculate p-norm for the vector 
+     *  \f$ |v|_{p} \equiv = \left( \sum_i  \left| v_i\right|^{p} \right)^{1/p}\f$ 
+     *  Few special cases:
+     *  - p==1        : sum of absolute values 
+     *  - p==infinity : the maximal absolute value 
+     *  @param begin begin-itetator for the sequnce of coefficients 
+     *  @param end   end-iterator for the sequnce of coefficients 
+     *  @param pinv  (1/p)
+     *  @return p-norm of the vector
+     */
+    template <class ITERATOR>
+    long double p_norm 
+    ( ITERATOR      begin , 
+      ITERATOR      end   , 
+      const double  pinv  )  //  1/p
+    {
+      /// check i/p
+      const double ip = pinv < 0 ? 0 : pinv > 1 ? 1  : pinv ;
+      ///
+      long  double r  = 0 ;
+      /// few "easy" cases:  treat explicitely
+      /// 1) (p==1)        : sum of absolute values 
+      if      ( 1 == ip ) 
+      {
+        for ( ; begin != end ; ++begin ) 
+        { const long double c = *begin ; r += std::abs ( c ) ; }
+        return r ;                                                     // RETURN 
+      }
+      /// 2) (p==infinity) : maximal  absolte value 
+      else if ( 0 == ip )    // p = infinity
+      {
+        for ( ; begin != end ; ++begin ) 
+        {
+          const long double c = *begin ;
+          r = std::max ( r , std::abs(c) ) ; 
+        }
+        return r ;                                                      // RETURN 
+      }
+      /// 3) (p==2) : frequent case 
+      else if ( 0.5 == ip )  // p = 2 : frequent case 
+      {
+        for ( ; begin != end ; ++begin ) 
+        { const long double c  = *begin ; r += c * c ; }
+        return std::sqrt ( r ) ;                                        // RETURN 
+      }
+      /// 4) not very large integer 
+      else if (  ( 0.05 < ip ) && Ostap::Math::isint ( 1/ip ) ) 
+      {
+        const unsigned short p = Ostap::Math::round ( 1/ip ) ;
+        for ( ; begin != end ; ++begin ) 
+        {
+          const long double c = *begin ;
+          r += Ostap::Math::pow ( std::abs ( c ) , p ) ; 
+        }
+        return std::pow ( r , ip ) ;                                    // RETURN 
+      }
+      /// 5) generic case 
+      const double p = 1/ip ;
+      for ( ; begin != end ; ++begin ) 
+      { 
+        const long  double c = *begin ;
+        r += std::pow ( std::abs ( c )  , p ) ;
+      }
+      return std::pow ( r , ip ) ;
+    }
+    // ========================================================================
+    /** Calculate p-norm for the vector 
+     *  \f$ |v|_{p} \equiv = \left( \sum_i  \left| v_i\right|^{p} \right)^{1/p}\f$ 
+     *  @param vct  the vector 
+     *  @param pinv  (1/p)
+     *  @return p-norm of the vector
+     */
+    template <class TYPE>
+    long double p_norm 
+    ( const std::vector<TYPE>& vct  , 
+      const double             pinv )  //  1/p
+    { return p_norm (  vct.begin() , vct.end() , pinv ) ; }
+    // ========================================================================
+    /** sign of the number 
+     *  @see https://stackoverflow.com/a/4609795
+     */
+    template <typename T> 
+    inline constexpr signed char signum ( T x , std::false_type /* is_signed */ ) 
+    { return T(0)< x; }    
+    template <typename T> 
+    inline constexpr signed char signum ( T x , std::true_type  /* is_signed */ ) 
+    { return ( T(0) < x ) - ( x < T(0) ); }
+    template <typename T>
+    inline constexpr signed char signum ( T x ) 
+    { return signum ( x , std::is_signed<T>() ) ; }
+    // ========================================================================
+    /** number of (strickt) sign-variations in the sequence
+     *  @param first begin-iterator for the input sequence 
+     *  @param last  end-iterator for the  input sequence 
+     *  @return number if strickt sign varination 
+     */
+    template <class ITERATOR, class ZERO>
+    unsigned int sign_changes
+    ( ITERATOR first , 
+      ITERATOR last  , 
+      ZERO     zero  )
+    {
+      while ( first != last && zero ( *first ) ) { ++first ; }
+      //
+      if ( first == last ) { return 0 ; }         //   RETURN
+      //
+      signed char si = signum ( *first ) ;
+      unsigned int  nc = 0 ;
+      for ( ITERATOR j = first + 1 ; j != last ; ++j )
+      {
+        if ( zero ( *j ) )  { continue ;  }         // CONTINUE
+        const signed char sj  = signum ( *j ) ;
+        if ( 0 <= si * sj ) { continue ;  }         // CONTINUE 
+        nc +=1  ;
+        si = sj ;
+      }
+      return nc ;
+    }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

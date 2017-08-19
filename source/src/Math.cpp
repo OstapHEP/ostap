@@ -204,6 +204,22 @@ Ostap::Math::frexp10 ( const double x )
     std::pair<double,int>( -xa , q ) ;
 }
 // ============================================================================
+/*  get mantissa and binary exponent 
+ *  similar to std::frexp
+ *  @param x  INPUT  value 
+ *  @return   pair of mantissa (0.5<=m<1) and exponent 
+ *  @author Vanya BELYAEV Ivan.Belyaev       
+ *  @date 2015-07-21
+ */
+// ============================================================================
+std::pair<double,int>
+Ostap::Math::frexp2 ( const double x ) 
+{
+  int    e = 0 ;
+  double m = std::frexp ( x , &e ) ;
+  return std::make_pair ( m , e ) ;
+}
+// ============================================================================
 /*  get mantissa and exponent 
  *  similar to std::frexp, but radix=10)
  *  @param x  INPUT  value 
@@ -213,7 +229,7 @@ Ostap::Math::frexp10 ( const double x )
  *  @date 2011-07-18
  */
 // ============================================================================
-double Ostap::Math::frexp10 ( const double  x , long& e ) 
+double Ostap::Math::frexp10 ( const double  x , int& e ) 
 {
   //
   const std::pair<double,int> r = frexp10 ( x ) ;
@@ -230,7 +246,7 @@ double Ostap::Math::frexp10 ( const double  x , long& e )
  *  @date 2011-07-18
  */
 // ============================================================================
-float Ostap::Math::frexp10 ( const float  x , long& e ) 
+float Ostap::Math::frexp10 ( const float  x , int& e ) 
 {
   const double xx = x ;
   return frexp10 ( xx , e ) ;

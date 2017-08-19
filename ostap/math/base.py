@@ -69,6 +69,7 @@ __all__     = (
     'isequal'        , ## equality for doubles 
     'isint'          , ## Is equal  to int ? 
     'islong'         , ## Is equal  to long?
+    'signum'         , ## sign of the number 
     ##
     'inrange'        , ## is double number in certain range?
     ## 
@@ -80,6 +81,7 @@ __all__     = (
     'uints'          , ## construct std::vector<unsigned int>
     'longs'          , ## construct std::vector<long>
     'ulongs'         , ## construct std::vector<unsigned long>
+    'complexes'      , ## construct std::vector<ssstd::complex<double>>
     ) 
 # =============================================================================
 import ROOT, cppyy 
@@ -104,6 +106,19 @@ isequal  = Ostap.Math.Equal_To ('double')()
 isint    = Ostap.Math.isint 
 islong   = Ostap.Math.islong
 
+# =============================================================================
+##  get the sign of the number 
+def signum ( x ) :
+    """Get the sign of the number
+    >>>  signum ( -10  ) , signum(0),   signum ( +2.5 ) 
+    """
+    ### for integers 
+    if isinstance ( x ,  ( int , long ) ) :
+        return 0 if 0==x else +1 if 0<x else -1
+    ## for floating numbers
+    return 0 if iszero ( x ) else +1 if 0<x else -1
+
+# =============================================================================
 ## natural number ?
 natural_number = Ostap.Math.natural_number
 ## natural etry in histo-bin ? 
@@ -130,17 +145,20 @@ def inrange ( a , x , b ) :
 
 # =============================================================================
 ## decorate some basic std::vectors
-for t in ( 'int'                ,
-           'long'               ,
-           'long long'          ,
-           'unsigned int'       ,
-           'unsigned long'      ,
-           'unsigned long long' ,
-           'float'              ,
-           'double'             ) :
+for t in ( 'int'                  ,
+           'long'                 ,
+           'long long'            ,
+           'unsigned int'         ,
+           'unsigned long'        ,
+           'unsigned long long'   ,
+           'float'                ,
+           'double'               ,
+           'std::complex<double>' ) :
     v = std.vector( t )
     v.asList   = lambda s :       [ i for i in s ]   ## convert vector into list
     v.toList   = v.asList
+    v.asTuple  = lambda s : tuple ( s.asList() )
+    v.toTuple  = v.asTuple
     v.__repr__ = lambda s : str ( [ i for i in s ] ) ## print it !
     v.__str__  = lambda s : str ( [ i for i in s ] ) ## print it !
 
@@ -167,13 +185,13 @@ ROOT.TMatrix.__str__   = _tmg_str_
 
 # =============================================================================
 ## add something to std::vector 
-def _add_to ( vct , arg1 , *args ) :
+def _add_to ( vct , typ , arg1 , *args ) :
     ##
     if hasattr ( arg1 , '__iter__' ) :
-        for a in arg1 : vct.push_back ( a ) 
-    else : vct.push_back ( arg1 ) 
+        for a in arg1 : vct.push_back ( typ ( a )  ) 
+    else : vct.push_back ( typ( arg1 )  ) 
     #
-    for a in args : _add_to ( vct , a )
+    for a in args : _add_to ( vct , typ , a )
         
 # =============================================================================
 ## construct std::vector<double> from the arguments
@@ -187,7 +205,7 @@ def doubles ( arg1 , *args ) :
     VT  = std.vector('double')
     vct = VT()
     ## add arguments to the vector 
-    _add_to ( vct , arg1 , *args )
+    _add_to ( vct , float , arg1 , *args )
     ## 
     return vct
 
@@ -203,7 +221,7 @@ def ints ( arg1 , *args ) :
     VT  = std.vector('int')
     vct = VT()
     ## add arguments to the vector 
-    _add_to ( vct , arg1 , *args )
+    _add_to ( vct , int , arg1 , *args )
     ## 
     return vct
 
@@ -219,7 +237,7 @@ def uints ( arg1 , *args ) :
     VT  = std.vector('unsigned int')
     vct = VT()
     ## add arguments to the vector 
-    _add_to ( vct , arg1 , *args )
+    _add_to ( vct , long , arg1 , *args )
     ## 
     return vct
 
@@ -235,7 +253,7 @@ def longs ( arg1 , *args ) :
     VT  = std.vector('long')
     vct = VT()
     ## add arguments to the vector 
-    _add_to ( vct , arg1 , *args )
+    _add_to ( vct , long , arg1 , *args )
     ## 
     return vct
 
@@ -251,7 +269,7 @@ def ulongs ( arg1 , *args ) :
     VT  = std.vector('unsigned long')
     vct = VT()
     ## add arguments to the vector 
-    _add_to ( vct , arg1 , *args )
+    _add_to ( vct , long , arg1 , *args )
     ## 
     return vct
 
@@ -263,7 +281,9 @@ SPD.__repr__ = SPD.__str__
 # =============================================================================
 # Imporve operations with std.complex 
 # =============================================================================
-COMPLEX = cpp.std.complex('double')
+COMPLEX  = cpp.std.complex('double'      )
+COMPLEXf = cpp.std.complex('float'       )
+COMPLEXl = cpp.std.complex('long double' )
 # =============================================================================
 def _cmplx_to_complex_ ( s ) :
     """convert to complex"""
@@ -379,18 +399,6 @@ def _cmplx_ne_    ( s , o ) :
     if isinstance ( o, COMPLEX ) :
         return s.real() != o.real() or  s.imag() != o.imag()
     return complex( s.real() , s.imag() ) != o 
-    
-COMPLEX.__complex__ = _cmplx_to_complex_
-
-COMPLEX.__add__     = _cmplx_add_
-COMPLEX.__mul__     = _cmplx_mul_
-COMPLEX.__div__     = _cmplx_div_
-COMPLEX.__sub__     = _cmplx_sub_
-
-COMPLEX.__radd__    = _cmplx_add_
-COMPLEX.__rmul__    = _cmplx_mul_
-COMPLEX.__rdiv__    = _cmplx_rdiv_
-COMPLEX.__rsub__    = _cmplx_rsub_
 
 # =============================================================================
 def _cmplx_iadd_ ( s , o ) :
@@ -416,26 +424,84 @@ def _cmplx_idiv_ ( s , o ) :
     s.real(x.real)
     s.imag(x.imag)
 
-COMPLEX.__iadd__    = _cmplx_iadd_
-COMPLEX.__imul__    = _cmplx_imul_
-COMPLEX.__idiv__    = _cmplx_idiv_
-COMPLEX.__isub__    = _cmplx_isub_
+# =============================================================
+for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
+    
+    if not hasattr ( CMPLX , '_old_init_' ) : 
+        CMPLX._old_init_  = CMPLX.__init__
+        ## construct complex 
+        def _cmplx_new_init_ ( s , a , *b ) :
+            """Construct complex from complex or from real/imaginary parts
+            """
+            if not b :
+                a     = complex  ( a )
+                a , b = a.real , a.imag
+            elif 1 != len( b ) :
+                raise TypeError("Can't create std::complex!")
+            else :
+                b =   b[0]
+            
+            return s._old_init_ ( a , b )
+                
+        CMPLX.__init__    = _cmplx_new_init_
+        
+    CMPLX.__complex__ = _cmplx_to_complex_
+    
+    CMPLX.__add__     = _cmplx_add_
+    CMPLX.__mul__     = _cmplx_mul_
+    CMPLX.__div__     = _cmplx_div_
+    CMPLX.__sub__     = _cmplx_sub_
+    
+    CMPLX.__radd__    = _cmplx_add_
+    CMPLX.__rmul__    = _cmplx_mul_
+    CMPLX.__rdiv__    = _cmplx_rdiv_
+    CMPLX.__rsub__    = _cmplx_rsub_
+    
+    CMPLX.__iadd__    = _cmplx_iadd_
+    CMPLX.__imul__    = _cmplx_imul_
+    CMPLX.__idiv__    = _cmplx_idiv_
+    CMPLX.__isub__    = _cmplx_isub_
+    
+    CMPLX.__repr__    = lambda s : "%s" % complex ( s.real(), s.imag() )
+    CMPLX.__str__     = lambda s : "%s" % complex ( s.real(), s.imag() )
+    CMPLX.__abs__     = _cmplx_abs_
+    CMPLX.__pow__     = _cmplx_pow_
+    CMPLX.__rpow__    = _cmplx_rpow_
+    CMPLX.__neg__     = _cmplx_negate_
+    
+    CMPLX.__eq__      =  _cmplx_eq_
+    CMPLX.__ne__      =  _cmplx_ne_
+    
+    CMPLX.norm        = _cmplx_norm_
+    CMPLX.conjugate   = _cmplx_conjugate_
+    CMPLX.conj        = _cmplx_conjugate_
+    CMPLX.to_complex  = _cmplx_to_complex_ 
+    CMPLX.as_complex  = _cmplx_to_complex_ 
 
-COMPLEX.__repr__    = lambda s : "%s" % complex ( s.real(), s.imag() )
-COMPLEX.__str__     = lambda s : "%s" % complex ( s.real(), s.imag() )
-COMPLEX.__abs__     = _cmplx_abs_
-COMPLEX.__pow__     = _cmplx_pow_
-COMPLEX.__rpow__    = _cmplx_rpow_
-COMPLEX.__neg__     = _cmplx_negate_
 
-COMPLEX.__eq__      =  _cmplx_eq_
-COMPLEX.__ne__      =  _cmplx_ne_
+# =============================================================================
+## construct std::vector<std::complex> from the arguments
+def complexes ( arg1 , *args ) :
+    """Construct the std::vector<std::complex<dobule>> from the arguments    
+    >>> v1 = complexs( 1+2j )
+    >>> v2 = complexs( 1 , 1+2j , 1  )
+    >>> v3 = complexs( [ 1 , 2 , 3+3j ] )    
+    """
+    ## create new vector 
+    VC  = std.vector(COMPLEX)
+    vct = VC()
+    ## add arguments to the vector 
+    _add_to ( vct , COMPLEX , arg1 , *args )
+    ## 
+    return vct
 
-COMPLEX.norm        = _cmplx_norm_
-COMPLEX.conjugate   = _cmplx_conjugate_
-COMPLEX.conj        = _cmplx_conjugate_
-COMPLEX.to_complex  = _cmplx_to_complex_ 
-COMPLEX.as_complex  = _cmplx_to_complex_ 
+
+# =============================================================================
+## complex value ?   
+def is_complex ( value ) :
+    """Complex value?
+    """
+    return isinstance ( value , ( complex, COMPLEX , COMPLEXf  , COMPLEXl ) )
 
 ## decorated classes 
 _decorated_classes_  = (

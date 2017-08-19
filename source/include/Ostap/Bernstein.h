@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_BERNSTEIN_H
 #define OSTAP_BERNSTEIN_H 1
@@ -85,6 +84,11 @@ namespace Ostap
       Bernstein ( const std::vector<double>&  pars      ,
                   const double                xmin  = 0 ,
                   const double                xmax  = 1 ) ;
+      // ======================================================================
+      /// constructor from N+1 coefficients
+      Bernstein ( std::vector<double>&& pars      ,
+                  const double          xmin  = 0 ,
+                  const double          xmax  = 1 ) ;
       // ======================================================================
       /// construct the basic bernstein polinomial  B(k,N)
       Bernstein  ( const Basic&              basic     ,
@@ -215,6 +219,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// all coefficients are so small that  P(x) + c == c ? 
+      bool   small         ( const double c = 1.0 ) const ;
       /// is it a decreasing function?
       bool   decreasing    () const ;
       /// is it a increasing function?
@@ -272,6 +278,12 @@ namespace Ostap
        *  - q_inv = 0.0 ->  \f$ max_k    \left|c_k\right|  \f$
        *  - q_inv = 0.5 ->  \f$ \sqrt{ \sum_k  c_k^2 }     \f$
        *  - q_inv = 1.0 ->  \f$ \sum_k \left| c_k \right|  \f$
+       *  @see  R.M. Corless & N.Rezvani,
+       *        "The nearest polynomial of lower degree",
+       *        Proceedings of the 2007 international workshop on 
+       *        Symbolic-numeric computation SNC'07 
+       *        https://cs.uwaterloo.ca/conferences/issac2007/
+       *  @see http://dl.acm.org/citation.cfm?id=1277530&CFID=799220770&CFTOKEN=25289921
        *  @see  N.Rezvani and R.M. Corless,
        *       "The Nearest Polynomial With A Given Zero, Revisited"
        *        ACM SIGSAM Bulletin, Vol. 39, No. 3, September 2005
@@ -299,18 +311,6 @@ namespace Ostap
        */
       double    norm   ( const double q_inv = 0 ) const ;
       // ======================================================================
-      /** filter out very small terms
-       *  the term is considered to be very small if
-       *   - it is numerically zero
-       *   - or if epsilon > 0,
-       *          abs ( c(k) * C(n,k) * k^k(n-k)^(n-k)/n^n ) < epsilon
-       *  Since the maximum value for each term of
-       *  \f$ c_k C^n_k \frac{ k^k (n-k)^{n-k}}{ n^n}\f$
-       *  @param epsilon  parameter to define "smalness" of terms
-       *  @return number of nullified terms
-       */
-      unsigned short remove_noise ( const double epsilon = 0 ) ;
-      // ======================================================================
       /** how close are two polynomials in q-norm?
        *  where q-norm is defined as:
        *  \f$ \left| f \right|_{q} = \left( \sum_i \left|c_i\right|^q\right)^{\frac{1}{q}} \f$
@@ -320,6 +320,24 @@ namespace Ostap
        *  - q_inv = 1.0 -> \f$ \sum_k \left| c_k \right|  \f$
        */
       double distance ( const Bernstein& other , const double q_inv = 0 ) const ;
+      // ======================================================================
+      /** filter out very small terms
+       *  the term is considered to be very small if
+       *   - it is numerically zero
+       *   - or if epsilon > 0,
+       *          abs ( c(k) ) < epsilon
+       *   - or if scale   > 0  , 
+       *           scale + par ==  scale 
+       *   - or if scale   <= 0 ,
+       *           norm  + pars == norm    
+       *  Since the maximum value for each term of
+       *  \f$ c_k C^n_k \frac{ k^k (n-k)^{n-k}}{ n^n}\f$
+       *  @param  epsilon  parameter to define "smalness" of terms
+       *  @param  scale    parameter to define "smalness" of terms
+       *  @return number of nullified terms
+       */
+      unsigned short remove_noise ( const double epsilon = 0 , 
+                                    const double scale   = 0 ) ;
       // ======================================================================
     public:  // polynomial division
       // ======================================================================
@@ -420,6 +438,9 @@ namespace Ostap
       /// power function
       Bernstein  pow      ( const unsigned short i ) const ;
       // ======================================================================
+      /// scale  all coefficients with 2**i 
+      Bernstein  ldexp    ( const short i )  const ;
+      // ======================================================================
     public:  // various assignements
       // ======================================================================
       /// copy assignement
@@ -440,16 +461,16 @@ namespace Ostap
     // ========================================================================
     ///  Bernstein plus      constant
     inline Bernstein operator+( const Bernstein& p , const double v )
-    { return Bernstein ( p ) += v ; } //  Bernstein plus constant
-    ///  Bernstein multiply  constant
-    inline Bernstein operator*( const Bernstein& p , const double v )
-    { return Bernstein ( p ) *= v ; } //  Bernstein plus constant
+    { return Bernstein ( p ) += v ; } //  Bernstein plus constant    
     ///  Bernstein minus constant
     inline Bernstein operator-( const Bernstein& p , const double v )
-    { return Bernstein ( p ) -= v ; } //  Bernstein plus constant
+    { return Bernstein ( p ) -= v ; } //  Bernstein +  constant
+    ///  Bernstein multiply  constant
+    inline Bernstein operator*( const Bernstein& p , const double v )
+    { return Bernstein ( p ) *= v ; } //  Bernstein * constant
     ///  Bernstein divide constant
     inline Bernstein operator/( const Bernstein& p , const double v )
-    { return Bernstein ( p ) /= v ; } //  Bernstein plus constant
+    { return Bernstein ( p ) /= v ; } //  Bernstein / constant
     ///  Constant plus  Bernstein
     inline Bernstein operator+( const double v , const Bernstein& p ) { return p +   v  ; }
     ///  Constant times Bernstein
@@ -655,7 +676,7 @@ namespace Ostap
       /// number of parameters
       unsigned short npars () const { return m_N + 1 ; }
       /// all zero ?
-      bool                 zero  () const { return m_bernstein.zero() ; }
+      bool           zero  () const { return m_bernstein.zero() ; }
       /** set k-parameter
        *  @param k index
        *  @param value new value
@@ -1962,6 +1983,121 @@ Ostap::Math::Bernstein::Bernstein
   ///  finally set parameters 
   for ( unsigned short i = 0 ; i < N ; ++i ) { setPar ( i , c[i] ) ; }
 }
+// ============================================================================
+// few useful functions 
+// ============================================================================
+#include "Ostap/Math.h"
+namespace Ostap
+{
+  // ==========================================================================
+  namespace Math 
+  {
+    // ========================================================================
+    /** specialization:
+     *    is Bernstein polynomial close to zero?
+     */
+    template <>
+    struct Zero<Ostap::Math::Bernstein> 
+    {
+    public:
+      // ======================================================================
+      // is Bernstein polynomial almost to zero ?
+      inline bool operator () ( const Ostap::Math::Bernstein& b ) const
+      { return m_zero ( b.pars() ) ; }
+    private:
+      // ======================================================================
+      /// the actual comparator 
+      Zero< std::vector<double> > m_zero ;
+      // ======================================================================      
+    };
+    // ========================================================================
+    /** specialization: 
+     *    is Bernstein polynomial small enough ?
+     */
+    template <>
+    struct Tiny<Ostap::Math::Bernstein> 
+    {
+    public:
+      // ======================================================================
+      Tiny ( const double n ) : m_tiny ( std::abs ( n ) ) {}
+      Tiny () = delete ;
+      // is Bernstein polynomial sufficiently small 
+      inline bool operator () ( const Ostap::Math::Bernstein& b ) const
+      { return m_tiny ( b.norm() ) ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      Tiny<double> m_tiny ;
+      // ======================================================================      
+    };
+    // ========================================================================
+    /** scale all coefficients with 2**i
+     *  @param  b (INPUT) Berstein polynomial
+     *  @param  i (INPUT) the scaling binary exponent
+     *  @return the scaled polynomial
+     */
+    inline 
+    Ostap::Math::Bernstein 
+    ldexp ( const Ostap::Math::Bernstein& b , 
+            const short                   i ) { return b.ldexp ( i ) ; }
+    // ========================================================================
+    /** deflate Bernstein polynomial at  <code>x=xmin</code>
+     *  \f$ b(x)-b(x_{min})=(x-x_{min})*d(x)\f$      
+     *  @param  b  berntein polynomial to be deflated 
+     *  @return deflated polinomial "d"
+     */ 
+    Ostap::Math::Bernstein
+    deflate_left ( const Ostap::Math::Bernstein& b ) ;    
+    // ========================================================================
+    /** deflate Bernstein polynomial at  <code>x=xmax</code>
+     *  \f$ b(x)-b(x_{max})=(x-x_{max})*d(x)\f$      
+     *  @param  b  berntein polynomial to be deflated 
+     *  @return deflated polinomial "d"
+     */ 
+    Ostap::Math::Bernstein
+    deflate_right ( const Ostap::Math::Bernstein& b ) ;
+    // ========================================================================
+    /** deflate Bernstein polynomial at  <code>x=x0</code>
+     *  \f$ b(x)-b(x_{0})=(x-x_{0})*d(x)\f$      
+     *  @param  b  berntein polynomial to be deflated 
+     *  @param  x0 the point 
+     *  @return deflated polinomial "d"
+     */ 
+    Ostap::Math::Bernstein
+    deflate       ( const Ostap::Math::Bernstein& b , const double x0 ) ;
+    // ========================================================================
+    /** get abscissas of crosssing point of the control polygon 
+     *  for Bernstein polynomial
+     *  @param  b bernstein polynomial
+     *  @reutrn abscissas of crossing points of the control  polygon
+     */
+    std::vector<double> 
+    crossing_points  ( const Ostap::Math::Bernstein& b ) ;
+    // ========================================================================    
+    /** get number of (strickt) sign changes in trhe sequnce of coefficients
+     *  for Bernstein polynomial 
+     *  if  N is number of sign changes, then the number of real roots R is 
+     *  \f$ R = N - 2K\f$, where K is non-negative integer
+     */
+    unsigned short 
+    sign_changes ( const Ostap::Math::Bernstein& b ) ;
+    // ========================================================================
+    /** get the most left crossing  point of convex hull with  x-axis 
+     *  (it is a step  towards finding the most left root, if any 
+     *  if convex hull does not cross the x-axis, xmax is returned      
+     */
+    double left_line_hull ( const Ostap::Math::Bernstein& b  ) ;
+    // ========================================================================
+    /** get the most right rossing  point of convex hull with  x-axis 
+     *  (it is a step  towards finding the most right root, if any 
+     *  if convex hull does not cross the x-axis, xmin is returned      
+     */
+    double right_line_hull ( const Ostap::Math::Bernstein& b ) ;
+  } 
+  // ==========================================================================
+}
+// ============================================================================
+// some  specific interpolation part 
 // ============================================================================
 namespace Ostap
 {

@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 // Include files 
 // ============================================================================
@@ -360,6 +359,13 @@ Ostap::Math::PolySum::PolySum ( const unsigned short degree )
 Ostap::Math::PolySum::PolySum ( const std::vector<double>& pars ) 
   : std::unary_function<double,double>() 
   , m_pars ( pars  ) 
+{ if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
+// ============================================================================
+// constructor from vector of parameters 
+// ============================================================================
+Ostap::Math::PolySum::PolySum ( std::vector<double>&& pars ) 
+  : std::unary_function<double,double>() 
+  , m_pars ( std::forward<std::vector<double> >( pars ) )
 { if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
 // ============================================================================
 // copy constructor 
@@ -855,10 +861,6 @@ Ostap::Math::Polynomial::__radd__   ( const double a ) const
 Ostap::Math::Polynomial 
 Ostap::Math::Polynomial::__rsub__   ( const double a ) const 
 { return (-(*this))+a; } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__rmul__   ( const double a ) const 
-{ return __mul__ ( a ) ; } 
 // ============================================================================
 Ostap::Math::Polynomial 
 Ostap::Math::Polynomial::__neg__   () const { return -(*this); } 

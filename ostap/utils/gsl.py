@@ -37,11 +37,8 @@ __all__     = (
     'useHandler'         , ## ditto 
     )
 # =============================================================================
-import ROOT,cppyy 
-# =============================================================================
 ## helper base class/context manager  
 class ErrHandler(object) :
-    handler = None 
     def __init__  ( self ) :
         self.err_handler = None 
     def __enter__ ( self ) :
@@ -50,9 +47,6 @@ class ErrHandler(object) :
     def __exit__  ( self , *_ ) :
         if self.err_handler : del self.err_handler
         self.err_handler = None
-    #def __del__   ( self ) :
-    #    if self.err_handler : del self.err_handler
-    #    self.err_handler = None 
 # =============================================================================
 ## @class GslIgnore
 #  Simple context manager to ignore all GSL errors
@@ -65,8 +59,10 @@ class GslIgnore(ErrHandler) :
     >>> with GslIgnore() :
     >>>    ... do something...
     """
-    handler = cppyy.gbl.Ostap.Utils.GslIgnore
-    
+    def __init__ ( self ) :
+        import ROOT,cppyy 
+        self.handler = cppyy.gbl.Ostap.Utils.GslIgnore
+        super(GslIgnore,self).__init__()
 # =============================================================================
 ## @class GslError
 #  Simple context manager to print GSL errors to stderr 
@@ -79,8 +75,11 @@ class GslError(ErrHandler) :
     >>> with GslError() :
     >>>    ... do something...
     """
-    handler = cppyy.gbl.Ostap.Utils.GslError   
-            
+    def __init__ ( self ) :
+        import ROOT,cppyy 
+        self.handler = cppyy.gbl.Ostap.Utils.GslError   
+        super(GslError,self).__init__()
+        
 # =============================================================================
 ## @class GslException
 #  Simple context manager to turn GSL errors into C++/Python exceptions 
@@ -90,10 +89,13 @@ class GslError(ErrHandler) :
 #  @endcode 
 class GslException (ErrHandler) :
     """Simple context manager to turn GSL Errors into C++/Python exceptions 
-    >>> with GslError() :
+    >>> with GslException() :
     >>>    ... do something...
     """
-    handler = cppyy.gbl.Ostap.Utils.GslException 
+    def __init__ ( self ) : 
+        import ROOT,cppyy 
+        self.handler = cppyy.gbl.Ostap.Utils.GslException 
+        super(GslException,self).__init__()
 
 # =============================================================================
 ## Simple context manager to ignore all GSL errors
@@ -116,7 +118,7 @@ def gslIgnore   () :
 #  @endcode 
 def gslError    () :
     """Simple context manager to print GSL errors to stderr
-    >>> with GslError() :
+    >>> with gslError() :
     >>>    ... do something...
     """
     return GslError()
@@ -129,7 +131,7 @@ def gslError    () :
 #  @endcode 
 def gslException () :
     """Simple context manager to turn GSL Errors into C++/Python exceptions 
-    >>> with GslError() :
+    >>> with glException() :
     >>>    ... do something...
     """
     return GslException()
@@ -167,6 +169,7 @@ def setHandler ( handler ) :
     from   ostap.logger.logger import getLogger
     logger = getLogger( 'ostap.utils.gsl' )
     #
+    import ROOT,cppyy 
     Ostap  = cppyy.gbl.Ostap
     #
     global _global_gls_handler

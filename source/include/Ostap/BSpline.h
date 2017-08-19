@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_BPLINE_H
 #define OSTAP_BPLINE_H 1
@@ -9,10 +8,12 @@
 // ============================================================================
 #include <vector>
 #include <functional>
+#include <algorithm>
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/NSphere.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 /** @file LHCbMath/BSpline.h
  *  Simple implementation of (B,M,I)-splines and related stuff
@@ -125,6 +126,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// Greville's abscissas 
+      std::vector<double> greville_abscissas () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the integral between xmin and xmax
       double  integral   () const ;
       /// get the integral between low and high
@@ -222,6 +228,8 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
+    private:
+      // ======================================================================
       /// the list of knots
       std::vector<double>  m_knots  ;              // the list of knots
       /// the list of parameters
@@ -284,7 +292,7 @@ namespace Ostap
        *  @param points non-empty vector of poinst/knots
        *  @param order  the order of splines
        *  - vector of points is not requires to be ordered
-       *  - duplicated knots will be ignored
+       *  - duplicated inner knots will be ignored
        *  - min/max value will be used as interval boundaries
        */
       PositiveSpline ( const std::vector<double>& points    ,
@@ -295,7 +303,7 @@ namespace Ostap
        *  @param points non-empty vector of poinst/knots
        *  @param pars   non-empty vector of parameters
        *  - vector of points is not requires to be ordered
-       *  - duplicated knots will be ignored
+       *  - duplicated inner knots will be ignored
        *  - min/max value will be used as interval boundaries
        */
       PositiveSpline ( const std::vector<double>& points    ,
@@ -914,6 +922,137 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
+  } //                                             end of namespace Ostap::Math
+  // ==========================================================================
+} //                                                     end of namespace Ostap
+// ============================================================================
+namespace Ostap
+{
+  // ==========================================================================
+  namespace Math 
+  {
+    // ========================================================================
+    class Bernstein ;
+    // ========================================================================
+    /** calculate the upper convex hull for Bernstein Polynomial 
+     *  \f$ B(x) \le U (x) \f$ 
+     *  @param p  bernstein Polynomial
+     *  @return   the spline object that represents upper convex hull 
+     */
+    Ostap::Math::BSpline
+    upper_convex_hull ( const Ostap::Math::Bernstein& p ) ;
+    // ========================================================================
+    /** calculate the lower convex hull for Bernstein Polynomial 
+     *  \f$ B(x)  \ge  L (x) \f$ 
+     *  @param p  bernstein Polynomial
+     *  @return   the spline object that represents lower convex hull 
+     */
+    Ostap::Math::BSpline
+    lower_convex_hull ( const Ostap::Math::Bernstein& p ) ;
+    // ========================================================================
+    /** get control polygon  for Bernstein polynomial
+     *  @param p  bernstein Polynomial
+     *  @return   the spline object that represents the control polygon
+     */
+    Ostap::Math::BSpline
+    control_polygon   ( const Ostap::Math::Bernstein& p ) ;
+    // ========================================================================
+    /** get control polygon  for Basic spline
+     *  @param p  basic spline 
+     *  @return   the spline object that represents the control polygon
+     */
+    Ostap::Math::BSpline
+    control_polygon   ( const Ostap::Math::BSpline& p ) ;
+    // ========================================================================
+  } //                                             end of namespace Ostap::Math 
+  // ==========================================================================
+} //                                                      end of namespae Ostap
+// ============================================================================
+namespace Ostap
+{
+  // ==========================================================================
+  namespace Math 
+  {
+    // ========================================================================
+    namespace Interpolation
+    {
+      // ======================================================================
+      template <class FUNCTION>
+      inline 
+      Ostap::Math::BSpline 
+      spline_interpolate 
+      ( FUNCTION                   func  ,
+        const std::vector<double>& knots , 
+        const unsigned short       order ) ;      
+      // =====================================================================
+      /** Create variation diminishing spline approximation for the given function 
+       *  @param func the function 
+       *  @param knots vector of knots
+       *  @param order the order of approximation spline 
+       *  @return constructed VDS approximating spline
+       */
+      template <class FUNCTION>
+      inline  
+      Ostap::Math::BSpline 
+      spline_approximate  
+      ( FUNCTION                   func      ,
+        const std::vector<double>& knots     , 
+        const unsigned short       order = 3 ) 
+      {  
+        // constuct spline  
+        Ostap::Math::BSpline      bs ( knots , order ) ;
+        // get greville abscissas
+        const std::vector<double> ga ( bs.greville_abscissas() ) ;
+        unsigned short i  = 0 ;
+        // fill vector of parameters 
+        for ( double t : ga ) { bs.setPar ( i , func( t )  ); ++i ; }
+        return bs ;
+      }
+      // ======================================================================
+      /** define parameters for the interpolation spline 
+       *  @param xy (INPUT)   vector of data 
+       *  @param bs (UPDATE) the spline 
+       *  @return status code 
+       */
+      Ostap::StatusCode
+      bspline 
+      ( std::vector< std::pair<double,double> >  xy ,
+        Ostap::Math::BSpline&                    bs ) ;      
+      // ======================================================================
+      /** create the interpolation spline 
+       *  @param xy (INPUT)   vector of data 
+       *  @param bs (UPDATE) the spline 
+       *  @return status code 
+       */
+      Ostap::StatusCode
+      bspline  
+      ( const std::vector<double>& x  ,
+        const std::vector<double>& y  ,
+        Ostap::Math::BSpline&      bs ) ;      
+      // ======================================================================
+      /** define parameters for the interpolation spline 
+       *  @param func (INPUT) the function 
+       *  @param x    (INPUT) vector of abscissas 
+       *  @param bs   (UPDATE) the spline 
+       *  @return status code 
+       */
+      template <class FUNCTION>
+      inline 
+      Ostap::StatusCode
+      bspline 
+      ( FUNCTION                   func , 
+        const std::vector<double>& x    ,
+        Ostap::Math::BSpline&      bs   )
+      {
+        std::vector< std::pair<double,double> >  xy (  x.size() ) ;
+        std::transform 
+          ( x.begin() , x.end  () , xy.begin() , 
+            [&func]( const double a ) { return std::make_pair (  a , func ( a ) ) ; } ) ;
+        return bspline (  xy , bs ) ;
+      } ;
+      // ======================================================================
+    } //                            end of namespace Ostap::Math::Interpolation
+    // ======================================================================== 
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

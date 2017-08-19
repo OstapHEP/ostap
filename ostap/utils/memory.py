@@ -44,7 +44,7 @@ try :
     #  @code
     #  print memory_usage() 
     #  @endcode
-    def memory_usage ():
+    def memory_usage ( *args ):
         """Report current memory usage (in MB)
         (psutil-based version, fast and efficient)
         - see help(psutil)
@@ -55,37 +55,27 @@ try :
         return mem
     
 except ImportError :
+    
     _psutil = False
-
-    # 
-    # import resource
-    # def memory_usage ():
-    #     rusage_denom = 1024.
-    #     if sys.platform == 'darwin':
-    #         # ... it seems that in OSX the output is different units ...
-    #         rusage_denom = rusage_denom * rusage_denom
-    #     mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / rusage_denom
-    #     return mem
-
+    
     # =========================================================================
     ## report current memory usage (in MB)
     #  @attention it is ps-based version, slow...  :-(
     #  @code
     #  print memory_usage() 
     #  @endcode    
-    def memory_usage () :
+    def memory_usage ( proc = None ) :
         """Report current memory usage (in MB)
-        (ATTENTION: ps-based version, very slow 
-        >>> print memory_usage()
         """
-        import subprocess
-        out = subprocess.Popen( [ 'ps', 'v', '-p', str(os.getpid())],
-                                stdout=subprocess.PIPE).communicate()[0].split(b'\n')
-        vsz_index = out[0].split().index(b'RSS')
-        mem = float(out[1].split()[vsz_index]) / 1024
+        if not proc : 
+            import os 
+            proc = '/proc/%d/stat' % os.getpid()
+        try : 
+            with open ( proc , 'r' ) as p : 
+                for l in  p : return long(l.split(' ')[22])/1024./1024
+        except:
+            return -1 
         
-        return mem
-
 # =============================================================================
 ## @class Memory
 #  Simple context manager to measure the virtual memory increase
@@ -130,25 +120,29 @@ class Memory(object):
     _logger = getLogger( 'ostap.utils.utils' )
     del getLogger
     
-    _printed = False 
-    def __init__  ( self , name = '' , logger = None , format = 'Delta(memory) %-18s %.2fMB') :
+    _printed = False
+    def __init__  ( self , name = '' , logger = None , format = 'Memory %-18s %+.1fMB/[%.2fGB]') :
         self.name   = name
         self.logger = logger if logger else self._logger 
         self.format = format
+        self._proc  = None 
+        global _psutil 
         if not _psutil :
             if not self._printed :
-                self.logger.warning('Memory:"psutil" module is not available, "ps"-based replacement is in use')
+                self.logger.warning('Memory:"psutil" module is not available, "/proc/[pid]/stat"-based replacement is in use')
                 self.__class__._printed = True
-                
+            self.proc = '/procs/%d/stat' %  os.getpid()            
     def __enter__ ( self ) :
-        self.memory = memory_usage ()
+        self.memory = memory_usage ( self._proc )
         return self 
     def __exit__  ( self, *_ ) :
-        self.delta  = memory_usage () - self.memory
+
+        current     = memory_usage ( self._proc )
+        self.delta  = current - self.memory
         try :
-            message = self.format          % ( self.name , self.delta ) 
+            message = self.format                    % ( self.name , self.delta , current / 1024. ) 
         except TypeError :
-            message = 'Delta(memory) %-18s %.2fMB'% ( self.name , self.delta )
+            message = 'Memory %-18s %+.1fMB/[%.2fGB]'% ( self.name , self.delta , current / 1024. )
 
         self.logger.info ( message )
  
@@ -179,6 +173,7 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+    
     with memory(), memory() , memory()  :
         logger.info ( 80*'*' ) 
     

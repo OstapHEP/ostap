@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_POLYNOMIALS_H 
 #define OSTAP_POLYNOMIALS_H 1
@@ -17,10 +16,6 @@
  *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
- *
- *                    $Revision$
- *  Last modification $Date$
- *                 by $author$
  */
 // ============================================================================
 namespace Ostap
@@ -396,6 +391,8 @@ namespace Ostap
       PolySum ( const unsigned short degree = 0 ) ;
       /// constructor from vector of parameters 
       PolySum ( const std::vector<double>&  pars ) ;
+      /// constructor from vector of parameters 
+      PolySum (       std::vector<double>&& pars ) ;
       /// constructor from sequence of parameters 
       template <class ITERATOR>
         PolySum ( ITERATOR begin , 
@@ -458,7 +455,7 @@ namespace Ostap
       std::vector<double>  m_pars ; // parameters 
       // ======================================================================
     } ;  
-    // ========================================================================
+    // ========================================================================    
     /// forward declarations 
     class Bernstein    ; // forward declarations 
     class Polynomial   ; // forward declarations 

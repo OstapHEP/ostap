@@ -117,8 +117,7 @@ def _f1_draw_ ( self , *opts ) :
             self._tf1.SetMinimum(0)
             
     return self._tf1.Draw ( *opts )
-    
-    
+
 # =============================================================================
 ## get the regular complex value for amplitude 
 def _amp_ ( self , x ) :
@@ -215,7 +214,6 @@ from ostap.stats.moments import median   as sp_median
 from ostap.stats.moments import quantile as sp_quantile
 from ostap.stats.moments import mode     as sp_mode 
 
-
 # =============================================================================
 ## helper function to delegate some methods/attributes to TF1
 #  @code
@@ -223,7 +221,7 @@ from ostap.stats.moments import mode     as sp_mode
 #  f.SetLineColor(4) ## delegate to TF1
 #  f.SetLineWidth(2) ## delegate to TF1
 #  @endcode 
-def _f1_getattr_ ( self , attr ) :
+def _tf1_getattr_ ( self , attr ) :
     """Delegate some methods/attributes to TF1
     >>> f = ...
     >>> f.SetLineColor(4) ## delegate to TF1
@@ -318,7 +316,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                ) :
     model.tf1          = _tf1_ 
     model.sp_integrate = sp_integrate_1D
-    model.__getattr__  = _f1_getattr_
+    model.__getattr__  = _tf1_getattr_
     
     if not hasattr ( model , 'mean'     ) : model.mean     = sp_mean 
     if not hasattr ( model , 'variance' ) : model.variance = sp_variance 
@@ -354,6 +352,7 @@ for model in ( Ostap.Math.Bernstein         ,
     model.draw = _f1_draw_
     model.Draw = _f1_draw_
 
+
 # =============================================================================
 def _f_print_ ( self , typ = '' ) :
     if not typ : typ = str(type(self))
@@ -366,6 +365,9 @@ Ostap.Math.Bernstein     .__str__  = lambda s : _f_print_ ( s , 'Bernstein'     
 Ostap.Math.BernsteinEven .__str__  = lambda s : _f_print_ ( s , 'BernsteinEven' )
 Ostap.Math.Positive      .__str__  = lambda s : _f_print_ ( s , 'Positive'      )
 Ostap.Math.PositiveEven  .__str__  = lambda s : _f_print_ ( s , 'PositiveEven'  )
+Ostap.Math.Convex        .__str__  = lambda s : _f_print_ ( s , 'Convex'        ) 
+Ostap.Math.ConvexOnly    .__str__  = lambda s : _f_print_ ( s , 'ConvexOnly'    )
+Ostap.Math.Monothonic    .__str__  = lambda s : _f_print_ ( s , 'Monothonic'    )
 Ostap.Math.FourierSum    .__str__  = lambda s : _f_print_ ( s , 'FourierSum'    )
 Ostap.Math.CosineSum     .__str__  = lambda s : _f_print_ ( s , 'CosineSum'     )
 
@@ -384,6 +386,31 @@ Ostap.Math.FourierSum    .__repr__ = lambda s : _f_print_ ( s , 'FourierSum'    
 Ostap.Math.CosineSum     .__repr__ = lambda s : _f_print_ ( s , 'CosineSum'     )
 
 
+# =============================================================================
+## print function for splines 
+def _sp_print_ ( self ,   typ = 'BSpline' ) :
+    return '%s(%s,%s)' % ( typ, self.knots() , self.pars() )
+
+Ostap.Math.BSpline         .__str__  = lambda s : 'BSpline(%s,%s)'             % ( s.knots ()      ,
+                                                                                   s.pars  ()      )
+Ostap.Math.PositiveSpline  .__str__  = lambda s : 'PositiveSpline(%s,%s)'      % ( s.knots ()      ,
+                                                                                   s.pars  ()      )
+Ostap.Math.ConvexOnlySpline.__str__  = lambda s : 'ConvexOnlySpline(%s,%s,%s)' % ( s.knots ()      ,
+                                                                                   s.pars  ()      ,
+                                                                                   s.convex()      )
+Ostap.Math.MonothonicSpline.__str__  = lambda s : 'MonothonicSpline(%s,%s,%s)' % ( s.knots ()      ,
+                                                                                   s.pars  ()      ,
+                                                                                   s.increasing () )
+Ostap.Math.ConvexSpline    .__str__  = lambda s : 'ConvexSpline(%s,%s,%s,%s)'  % ( s.knots ()      ,
+                                                                                   s.pars  ()      ,
+                                                                                   s.increasing () ,
+                                                                                   s.convex()      )
+for t in ( Ostap.Math.BSpline          ,
+           Ostap.Math.PositiveSpline   ,
+           Ostap.Math.ConvexOnlySpline ,
+           Ostap.Math.MonothonicSpline ,
+           Ostap.Math.ConvexSpline     ) : t.__repr__ = t.__str__
+    
 # =============================================================================
 ## decorate 2D-models/functions 
 # =============================================================================
@@ -487,6 +514,7 @@ def _p_set_par_ ( o , index , value ) :
     >>> fun = ...
     >>> fun[1] = 10.0
     """
+    if  index < 0 :  index += o.npars()
     return o.setPar ( index , value )
 
 # =============================================================================
@@ -500,6 +528,7 @@ def _p_get_par_ ( o , index ) :
     >>> fun = ...
     >>> print fun[1]
     """
+    if  index < 0 :  index += o.npars()
     return o.par ( index )
 
 # =============================================================================
@@ -812,6 +841,62 @@ for i in ( _D1.Derivative , _D2.Integral , _D2.IntegralCache ) :
     if not hasattr ( i , 'tf1' ) : i.tf1 = _tf1_
 
 
+
+for t in  ( Ostap.Math.Bernstein        ,
+            Ostap.Math.BernsteinEven    ,
+            Ostap.Math.Positive         ,
+            Ostap.Math.PositiveEven     , 
+            Ostap.Math.Monothonic       ,
+            Ostap.Math.Convex           ,
+            Ostap.Math.ConvexOnly       ,
+            ##
+            Ostap.Math.BSpline          ,
+            Ostap.Math.PositiveSpline   ,
+            Ostap.Math.ConvexOnlySpline ,
+            Ostap.Math.MonothonicSpline ,
+            Ostap.Math.ConvexSpline     ) :
+
+    if not hasattr ( t ,  '_old_init_' ) :
+        
+        ## (Redefine standard constructor to allow usage of python vectors/tuples
+        def _new_init_ ( t ,  *args )  :
+            """(Redefine standard constructor to allow usage of python lists&tuples)
+            Lists and tuples are  converted on flight to :
+            - std::vector<double> 
+            - or std::vector<std::complex<double>>
+            """
+            from ostap.math.base import doubles, complexes
+            
+            largs = list ( args )
+            alen  = len(largs)
+            
+            for i in range(alen) :
+
+                arg = largs[i] 
+                if not isinstance ( arg ,  ( list , tuple ) ) : continue 
+                    
+                try: 
+                    _arg = doubles  ( *arg  )
+                    largs[i] = _arg
+                    continue 
+                except TypeError : pass
+                
+                try: 
+                    _arg = complexes ( *arg  )
+                    largs[i] = _arg
+                    continue 
+                except TypeError : pass
+                
+            targs = tuple(largs)
+            ## use old constructor 
+            t._old_init_ ( *targs ) 
+
+        _new_init_.__doc__ += '\n' + t.__init__.__doc__
+        
+        t._old_init_ = t.__init__
+        t.__init__   = _new_init_ 
+
+
 # =============================================================================
 _decorated_classes_ = set( [
     ##
@@ -1060,7 +1145,17 @@ _decorated_classes_ = set( [
     Ostap.Math.BreitWigner   ,
     ])
 
-    
+# ============================================================================
+##  few very specific methods
+# ============================================================================
+
+
+
+def sign ( v ) :
+    if 0 == v : return 0
+    return +1 if 0 < v else -1
+
+     
 # =============================================================================
 if '__main__' == __name__ :
     

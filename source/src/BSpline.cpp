@@ -402,6 +402,20 @@ Ostap::Math::BSpline& Ostap::Math::BSpline::operator=
   return *this ;
 }
 // ============================================================================
+// Greville's abscissas 
+// ============================================================================
+std::vector<double> Ostap::Math::BSpline::greville_abscissas () const 
+{
+  std::vector<double> ga ( npars() ) ;
+  const unsigned short Na = npars()  ;
+  for ( unsigned short i  = 0 ; i < Na ; ++i ) 
+  {
+    for ( unsigned short j = i ; j < i + order () ;  ++j ) { ga[i] += m_knots[i+1] ; }
+    ga[i] /= order () ;
+  }
+  return ga ;
+}
+// ============================================================================
 // is it a increasing function?
 // ============================================================================
 bool Ostap::Math::BSpline::increasing   () const 
@@ -2224,9 +2238,205 @@ double Ostap::Math::Spline2DSym::integrateX ( const double y ) const
 { return integrateY ( y ) ; }
 // ============================================================================
 
+// ============================================================================
+// Berstein polynomials 
+// ============================================================================
+#include "Ostap/Bernstein.h"
+// ============================================================================
+namespace 
+{
+  // =========================================================================
+  /// calculate the convex hull
+  template <class COMPARE> 
+  inline Ostap::Math::BSpline _convex_hull_ ( const Ostap::Math::Bernstein& p , COMPARE cmp )
+  {
+    const std::vector<double>& bpars = p.pars() ;
+    //
+    std::vector<double> knots ;
+    //
+    if ( 2 >= bpars.size() ) // special case 
+    {
+      knots.push_back ( p.xmin ()        ) ;
+      knots.push_back ( p.xmax ()        ) ;
+      return Ostap::Math::BSpline ( knots , bpars ) ;
+    }
+    //
+    std::vector<double> pars  ;
+    const unsigned short N = bpars.size() ;
+    //
+    knots . push_back ( 0        ) ;
+    pars  . push_back ( bpars[0] ) ;
+    unsigned short icurr = 1 ;
+    while (  icurr < N ) 
+    {
+      const double pl = pars .back() ;
+      const double kl = knots.back() ;
+      //
+      double xi = double ( icurr ) / ( N  -  1 ) ;
+      double is = ( bpars[ icurr ] - pl ) / ( xi - kl ) ;
+      //
+      for ( unsigned short j = icurr + 1 ; j < N ; ++j ) 
+      {
+        //
+        const double xj = double ( j ) / ( N  -  1 ) ;
+        const double js = ( bpars[j] - pl ) / ( xj - kl ) ;
+        //
+        if ( cmp ( js , is ) ) { is = js ; xi = xj ; icurr = j ; }
+      }
+      knots.push_back ( xi           ) ;
+      pars .push_back ( bpars[icurr] ) ;
+      ++icurr ;
+    }
+    //
+    std::transform ( knots.begin() , knots.end() ,  
+                     knots.begin() , [&p]( const double t ) { return p.x(t) ; }  );
+    //
+    return Ostap::Math::BSpline ( knots ,  pars ) ;
+  }
+  // ======================================================================
+}
+// ========================================================================
+/*  calculate the convex hull for Bernstein Polynomial 
+ *  @param p  bernstein Polynomial
+ *  @return   the spline object that represents upper convex hull 
+ */
+// ========================================================================
+Ostap::Math::BSpline
+Ostap::Math::upper_convex_hull   ( const Ostap::Math::Bernstein& p ) 
+{ return _convex_hull_ (  p , Ostap::Math::GreaterOrEqual<double>() ) ; }
+// ========================================================================
+/** calculate the convex hull for Bernstein Polynomial 
+ *  @param p  bernstein Polynomial
+ *  @return   the spline object that represents lower convex hull 
+ */
+Ostap::Math::BSpline
+Ostap::Math::lower_convex_hull ( const Ostap::Math::Bernstein& p ) 
+{ return _convex_hull_ (  p , Ostap::Math::LessOrEqual<double>() ) ; }
+// ========================================================================
+/*  get control polygon  for Bernstein polynomial
+ *  @param p  bernstein Polynomial
+ *  @return   the spline object that represents the control polygon
+ */
+// ========================================================================
+Ostap::Math::BSpline
+Ostap::Math::control_polygon   ( const Ostap::Math::Bernstein& p ) 
+{
+  const std::vector<double>& pars = p.pars() ;
+  //
+  if ( 1 >= pars.size() ) 
+  { return Ostap::Math::BSpline( {{ p.xmin() , p.xmax() }}  , pars ) ; }
+  //
+  const long double dx = ( p.xmax() - p.xmin() ) / ( pars.size() - 1 ) ;
+  std::vector<double>        knots ( pars.size() ) ;
+  const unsigned short N =   knots.size() ;
+  for ( unsigned short i = 0 ; i < N ; ++i ) 
+  { knots[i] = ( i * dx  + p.xmin() ) ; } ;
+  return Ostap::Math::BSpline ( knots , pars ) ;
+}
+// ========================================================================
+/*  get control polygon  basic spline 
+ *  @param p  Basis spline 
+ *  @return   the spline object that represents the control polygon
+ */
+// ========================================================================
+Ostap::Math::BSpline
+Ostap::Math::control_polygon   ( const Ostap::Math::BSpline& p ) 
+{ return Ostap::Math::BSpline ( p.greville_abscissas() , p.pars() ) ; }
 
 
-  
+// ============================================================================
+//  Here we'll use GSL
+// ============================================================================
+#include <gsl/gsl_linalg.h>
+// ============================================================================
+/* create the interpolation spline 
+ *  @param xy (INPUT)   vector of data 
+ *  @param bs (UPDATE) the spline 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Math::Interpolation::bspline 
+( const std::vector<double>& x  ,
+  const std::vector<double>& y  ,
+  Ostap::Math::BSpline&      bs ) 
+{
+  // 
+  if  ( x.size() != y.size() ) { return 100 ; }         // RETURN 100 
+  const unsigned  short N = x.size() ;
+  // mismatch for number of input parameters 
+  if ( N != bs.npars()       ) { return 100 ; }         // RETURN 100 
+  //
+  std::vector< std::pair<double,double> > xy { N } ;
+  for ( unsigned short i = 0 ; i < N ;   ++i ) 
+  { xy[i] = std::make_pair ( x[i] , y[i] ) ; }
+  return bspline ( xy , bs ) ;
+}
+// ============================================================================
+/* create the interpolation spline 
+ *  @param xy (INPUT)   vector of data 
+ *  @param bs (UPPDATE) the spline 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Math::Interpolation::bspline 
+( std::vector< std::pair<double,double> > xy ,
+  Ostap::Math::BSpline&                   bs ) 
+{
+  const unsigned  short N = xy.size() ;
+  // mismatch for number of input parameters 
+  if ( N != bs.npars() ) { return 100 ; }      // RETURN 100 
+  //
+  std::sort (  xy.begin() , xy.end() ) ;
+  //
+  gsl_matrix      * m = gsl_matrix_alloc ( N , N );
+  // 
+  for ( unsigned short i = 0 ; i < N ; ++i ) 
+  { for ( unsigned short j = 0 ; j < N ; ++i ) 
+    {
+      const double bij = bs.bspline ( j , xy[j].first ) ;
+      if  ( i == j && s_zero ( bij ) ) 
+      { gsl_matrix_free  ( m ) ; { return 101 ; } }  // RETURN 101 
+      gsl_matrix_set (  m , i , j , bij  ) ; 
+    } 
+  }
+  //
+  gsl_vector      *x = gsl_vector_alloc      ( N ) ;
+  for (  unsigned short i = 0 ; i < N ; ++i ) 
+  { gsl_vector_set ( x , i , xy[i].second ) ;  }
+  //
+  gsl_permutation *p = gsl_permutation_alloc ( N  );
+  //
+  // make LU decomposition 
+  int       signum = 0 ;
+  const int e1     = gsl_linalg_LU_decomp ( m , p , &signum  );
+  if ( e1 )
+  {
+    gsl_permutation_free ( p ) ;
+    gsl_matrix_free      ( m ) ;
+    gsl_vector_free      ( x ) ;
+    return 110 + e1 ;                       // RETURN 110 + e 
+  }
+  //
+  const int e2 = gsl_linalg_LU_svx ( m , p , x ) ;
+  if ( e2 )
+  {
+    gsl_permutation_free ( p ) ;
+    gsl_matrix_free      ( m ) ;
+    gsl_vector_free      ( x ) ;
+    return 120 + e2 ;                        // RETURN 120 + e
+  }
+  //
+  for (  unsigned short i = 0 ; i < N ; ++i ) 
+  { bs.setPar ( i , gsl_vector_get ( x , i ) ) ; }
+  //
+  gsl_permutation_free ( p ) ;
+  gsl_matrix_free      ( m ) ;
+  gsl_vector_free      ( x ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
 // ============================================================================
 // The END 
 // ============================================================================
