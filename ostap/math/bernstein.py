@@ -336,11 +336,17 @@ def _scale_ ( f ) :
     return f
 
 
-## ============================================================================
-#  solve   equation b(x)=c
+# ============================================================================
+## Solve   equation  B(x) = C, where B(x) is  Bernstein polynomial, and
+#  C is  e.g.  constant or another polynomial
+#  @code
+#  bernstein = ...
+#  roots = bernstein.solve ()
+#  roots = solve ( bernstein , C = 0 ) ## ditto
+#  @endcode
 def solve (  bp  , C = 0 , split = 2 ) :
-    """Solve   equation  B(x) = C, where B(x) is  Bernmstein polynomial, and
-    C is  e.g.  constant or  another polinomial
+    """Solve   equation  B(x) = C, where B(x) is  Bernstein polynomial, and
+    C is  e.g.  constant or another polynomial
     >>> bernstein = ...
     >>> roots = bernstein.solve ()
     >>> roots = solve ( bernstein , C = 0 ) ## ditto
@@ -349,12 +355,14 @@ def solve (  bp  , C = 0 , split = 2 ) :
     ## construct the equation  b'(x)=0:
     bp = bp.bernstein() 
     if C : bp = bp - C
-
+    
+    ## zero-degree polynomial
     if   0 == bp.degree() :
 
         if iszero ( bp[0] ) : return bp.xmin(),
         return () 
     
+    ## linear polynomial
     elif 1 == bp.degree() :
 
         x0 = bp.xmin()
@@ -374,10 +382,15 @@ def solve (  bp  , C = 0 , split = 2 ) :
 
     ## make a copy & scale is needed 
     bp  = _scale_ ( bp + 0 ) 
-    
-    ## treat separetely  roots at the left and right edges
+
+    ##  norm of polynomial 
     bn = bp.norm()
 
+    ## check number of roots
+    nc = bp.sign_changes()
+    if not nc : return ()      ## no roots !   RETURN
+
+    ## treat separetely roots at the left and right edges
     roots = []
     while 1 <= bp.degree() and isequal ( bp[0] +  bn , bn ) :
         bp   -= bp[0]
@@ -398,10 +411,13 @@ def solve (  bp  , C = 0 , split = 2 ) :
 
     ## check again number of roots
     nc = bp.sign_changes()
-
     if not nc : return ()      ## no roots !   RETURN
     
-    ## many  roots 
+    # =========================================================================
+    ## there are  many roots in the interval 
+    # =========================================================================
+
+
     if 1 < nc :
 
         xmin = bp.xmin ()
@@ -413,6 +429,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
         rcp  = bp.right_line_hull()
         if ( not rcp is None ) and xmin <= rcp <= xmax : xmax = min ( xmax , rcp )
 
+        # =====================================================================
         ## Two strategies for isolation of roots:
         #  - use control polygon 
         #  - use the derivative 
@@ -501,19 +518,20 @@ def solve (  bp  , C = 0 , split = 2 ) :
         return  tuple ( roots )   ##  RETURN
 
 
-    ##
+    # =========================================================================
     ## there is exactly 1 root here
-    ##
+    # =========================================================================
     
     l0 = ( bp.xmax() -  bp.xmin() ) / ( bp.degree() + 1 )
 
+    ## trivial case 
     if 1 == bp.degree() :        
         y0 =  bp[ 0]
         y1 =  bp[-1]
         x  = ( y1 * bp.xmin() -  y0 * bp.xmax() ) / ( y1 - y0)
         return x,
-
-    ## make several iterations
+    
+    ## make several iterations (not to much) for better isolation of root
     for i in range ( bp.degree() + 1 ) : 
 
         xmin = bp.xmin ()
@@ -550,9 +568,10 @@ def solve (  bp  , C = 0 , split = 2 ) :
         smn =  signum ( bp.evaluate ( xmin ) )
         smx =  signum ( bp.evaluate ( xmax ) )
 
-        ##  we have lost the root 
+        ##  we have lost the root ?
         if ( s0 * s1 ) * ( smn * smx ) < 0 :  break           ## BREAK 
 
+        ## refine the polynomial: 
         _bp = Bernstein ( bp , xmin , xmax )
         _bp = _scale_ ( _bp )
         _nc = _bp.sign_changes()
@@ -563,9 +582,9 @@ def solve (  bp  , C = 0 , split = 2 ) :
         bp = _bp 
         bn = bp.norm()
 
-    #
+    # =========================================================================
     ## start the of root-polishing machinery
-    # 
+    # ========================================================================= 
 
     f = bp 
     d1 = f .derivative ()
@@ -575,6 +594,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
     if cps : x = cps[0]
     else   : x = 0.5*(bp.xmin()+bp.xmax()) 
 
+    ##  use Laguerre's method to get the isolated root 
     l = _laguerre_ ( x , f , d1 , d2 )
 
     return l 
