@@ -320,7 +320,6 @@ def _laguerre_ ( x , f , d1 = None , d2 = None ) :
 
         x -= a
 
-        ## print 'LAGERRE ITERATION', i , a , x , vx , f.evaluate ( x )  , f.xmin() , f.xmax() 
         if isequal ( a + x , x ) : return x,  
         
     ## look for derivative
@@ -358,7 +357,6 @@ def solve (  bp  , C = 0 , split = 2 ) :
     
     elif 1 == bp.degree() :
 
-        ## print  'I am linear..' , bp 
         x0 = bp.xmin()
         x1 = bp.xmax()
         
@@ -379,8 +377,6 @@ def solve (  bp  , C = 0 , split = 2 ) :
     
     ## treat separetely  roots at the left and right edges
     bn = bp.norm()
-
-    print ' I AM HERE[1] ' , bp, bn
 
     roots = []
     while 1 <= bp.degree() and isequal ( bp[0] +  bn , bn ) :
