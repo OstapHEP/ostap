@@ -253,6 +253,20 @@ namespace Ostap
      */  
     double next_double ( const double  af , const short ulps ) ;
     // ========================================================================
+    /** "distance" in ULPS between two float values 
+     *   @param a (INPUT) the first  number 
+     *   @param b (INPUT) the second number 
+     *   @param "distance" in ULPs
+     */
+    long ulps_distance_float  ( const float  a , const float  b ) ;
+    // ========================================================================
+    /** "distance" in ULPS between two double values 
+     *   @param a (INPUT) the first  number 
+     *   @param b (INPUT) the second number 
+     *   @param "distance" in ULPs
+     */
+    long ulps_distance_double ( const double a , const double b ) ;
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

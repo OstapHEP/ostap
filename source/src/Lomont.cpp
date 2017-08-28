@@ -13,6 +13,7 @@
 // ============================================================================
 namespace 
 {
+  // ==========================================================================
   // prerequisites for "correct" Float 
   static_assert( std::numeric_limits<float>          ::is_specialized &&
                  std::numeric_limits<int>            ::is_specialized && 
@@ -41,6 +42,11 @@ namespace
   /// get the final types:
   typedef _Longs::Long  Long  ;
   typedef _Longs::ULong ULong ;
+  // ==========================================================================
+  ///  minimal int 
+  const int  const_min_int  = std::numeric_limits<int>::min  () ;
+  ///  minimal Long
+  const Long const_min_long = std::numeric_limits<Long>::min () ;
   // ==========================================================================
   /// the final check
   static_assert( std::numeric_limits<double>  ::is_specialized &&
@@ -134,6 +140,129 @@ namespace
     // ========================================================================
   } ;
   // ==========================================================================
+  // kind of "distance" between two floats
+  inline int _distance_float_ ( const float af , 
+                                const float bf ) 
+  {
+    //
+    if      ( af == bf    ) { return 0 ; }
+    else if ( af >  bf    ) { return -_distance_float_ ( bf , af ) ; }
+    //  
+    // both numbers are negative:
+    if      ( bf < 0      ) { return _distance_float_ ( -bf , -af ) ; }
+    // both numbers have differrent  signs: 
+    else if ( af < 0 && 0 < bf ) 
+    {
+      return 
+        _distance_float_ ( af   , 0.0f ) + 
+        _distance_float_ ( 0.0f ,   bf ) ;
+    }
+    //
+    Cast_F caster{} ;
+    //
+    const int ai   = caster.f2i ( af ) ;
+    const int bi   = caster.f2i ( bf ) ;
+    const int test = (((unsigned int)(ai^bi))>>31)-1;
+    //
+    return ((( const_min_int - ai ) & (~test)) | ( ai& test )) - bi ;
+  }
+  // ==========================================================================
+  // kind of "distance" between two doubles
+  inline Long  _distance_double_ ( const double af , 
+                                   const double bf ) 
+  {
+    //
+    if      ( af == bf    ) { return 0 ; }
+    else if ( af >  bf    ) { return - _distance_double_ (  bf ,  af ) ; }
+    //  
+    // both numbers are negative:
+    if      ( bf < 0      ) { return   _distance_double_ ( -bf , -af ) ; }
+    // both numbers have differrent  signs: 
+    else if ( af < 0 && 0 < bf ) 
+    {
+      return
+        _distance_double_ ( af   , 0.0l ) + 
+        _distance_double_ ( 0.0l ,   bf ) ;
+    }
+    //
+    Cast_D caster{} ;
+    //
+    const Long ai   = caster.d2l ( af ) ;
+    const Long bi   = caster.d2l ( bf ) ;
+    const Long test = (((ULong)(ai^bi))>>63)-1;
+    //
+    return ((( const_min_long - ai ) & (~test)) | ( ai& test )) - bi ;
+  }
+  // ==========================================================================
+  inline bool _compare_float_ 
+  ( const float          af      , 
+    const float          bf      , 
+    const unsigned short maxULPs ) 
+  {
+    //
+    const int diff     = _distance_float_ ( af  , bf ) ;
+    //
+    const int maxDiff_ = maxULPs ;
+    //
+    const int v1       = maxDiff_ + diff ;
+    const int v2       = maxDiff_ - diff ;
+    //
+    return 0 <= ( v1 | v2 ) ;
+  }
+  // ==========================================================================
+  bool _compare_double_
+  ( const double       af      , 
+    const double       bf      , 
+    const unsigned int maxULPs ) 
+  {
+    // ==========================================================================
+    //
+    const Long diff     = _distance_double_ ( af  , bf ) ;
+    //
+    const Long maxDiff_ = maxULPs ;
+    //
+    const Long v1       = maxDiff_ + diff ;
+    const Long v2       = maxDiff_ - diff ;
+    //
+    return 0 <= ( v1 | v2 ) ;
+  }
+  // ==========================================================================
+  // next  float
+  inline float _next_float_ ( const float af , const short ulps ) 
+  {
+    if      ( 0 == ulps ) { return af ; }
+    else if ( 0 > af    ) { return -_next_float_ ( -af , -ulps ) ; }
+    //
+    if ( 0 > ulps ) 
+    {
+      const int d = _distance_float_ ( af , 0.0f ) + ulps ;
+      if (  d < 0 ) { return -_next_float_ ( 0.0f , -d ) ; }
+    }
+    //
+    Cast_F caster{} ;
+    int ai  = caster.f2i ( af ) ;
+    ai     += ulps ;
+    return caster.i2f ( ai );
+  }
+  // ============================================================================
+  // next  double
+  inline double _next_double_ ( const double ad , const short ulps ) 
+  {
+    if      ( 0 == ulps ) { return ad ; }
+    else if ( 0 > ad    ) { return -_next_double_ ( -ad , -ulps ) ; }
+    //
+    if ( 0 > ulps ) 
+    {
+      const Long d = _distance_double_ ( ad , 0 ) + ulps ;
+      if (  d < 0 ) { return -_next_double_ ( 0 , -d ) ; }
+    }
+    //
+    Cast_D caster{} ;
+    Long al  = caster.d2l ( ad ) ;
+    al      += ulps ;
+    return caster.l2d ( al );
+  }
+  // ============================================================================
 } // end of anonymous namespace 
 // ============================================================================
 /*  equality comparion of float numbers using as the metric the maximal 
@@ -188,31 +317,8 @@ bool Ostap::Math::lomont_compare_float
                  sizeof(float)==sizeof(unsigned int)                &&
                  32 == std::numeric_limits<unsigned int>::digits    , "FAILED ASSUMPTIONS") ;
   // ==========================================================================
-  
-  Cast_F caster ;
-  
-  //int ai = *reinterpret_cast<const int*>( &af ) ;
-  //int bi = *reinterpret_cast<const int*>( &bf ) ;
-
-  int ai = caster.f2i ( af ) ;
-  int bi = caster.f2i ( bf ) ;
-  
-  int test = (((unsigned int)(ai^bi))>>31)-1;
-  
-  // assert ( (0==test) || ( boost::integer_traits<unsigned int>::const_max == test ) ) ;
-  
-  
-  // int diff = ((( boost::integer_traits<int>::const_min - ai ) & (~test)) | ( ai& test )) - bi ;
-  
-  static const int const_min = std::numeric_limits<int>::min() ;
-  int diff = ((( const_min - ai ) & (~test)) | ( ai& test )) - bi ;
-  
-  int maxDiff_ = maxULPs ;
-  
-  int v1 = maxDiff_ + diff ;
-  int v2 = maxDiff_ - diff ;
-  
-  return 0<=(v1|v2) ;
+  return _compare_float_ ( af ,   bf , maxULPs ) ;
+  // ==========================================================================
 }
 // ============================================================================
 /*  get the floating number that representation 
@@ -239,13 +345,8 @@ float Ostap::Math::next_float ( const float af , const short ulps )
                  std::numeric_limits<int>   ::is_specialized && 
                  sizeof(float)==sizeof(int) , "FAILED ASSUMPTIONS") ;
   // ==========================================================================
-  Cast_F caster ;
-  
-  // int ai = *reinterpret_cast<const int*>( &af ) ;
-  int ai = caster.f2i ( af ) ;
-  ai += ulps ;
-  // return *reinterpret_cast<float*>(&ai) ;
-  return   caster.i2f ( ai ) ;
+  return _next_float_ ( af , ulps ) ;
+  // ==========================================================================
 }
 // ============================================================================
 /*  equality comparison of float numbers using as the metric the maximal 
@@ -291,29 +392,7 @@ bool Ostap::Math::lomont_compare_double
                  sizeof(double)==sizeof(ULong)                 &&
                  64 == std::numeric_limits<ULong>::digits      , "FAILED ASSUMPTIONS") ;
   // ==========================================================================
-  Cast_D caster ;
-  
-  //Long ai = *reinterpret_cast<const Long*>( &af ) ;
-  //Long bi = *reinterpret_cast<const Long*>( &bf ) ;
-  
-  Long ai = caster.d2l ( af ) ;
-  Long bi = caster.d2l ( bf ) ;
-  
-  Long test = (((ULong)(ai^bi))>>63)-1;
-  
-  // assert ( (0==test) || ( boost::integer_traits<ULong>::const_max == test ) ) ;
-  
-  // Long diff = ((( boost::integer_traits<Long>::const_min - ai ) & (~test)) | ( ai& test )) - bi ;
-  
-  static const Long const_min = std::numeric_limits<Long>::min() ;
-  Long diff = ((( const_min - ai ) & (~test)) | ( ai& test )) - bi ;
-  
-  Long maxDiff_ = maxULPs ;
-  
-  Long v1 = maxDiff_ + diff ;
-  Long v2 = maxDiff_ - diff ;
-  
-  return 0<=(v1|v2) ;
+  return _compare_double_ ( af ,   bf , maxULPs ) ;
 }
 // ============================================================================
 /*  Get the floating number that representation 
@@ -326,7 +405,7 @@ bool Ostap::Math::lomont_compare_double
  *  the routine LHCb::Math::lomont_compare_float 
  *
  *  @see Gaudi::Math::lomont_compare
- *  @param af the reference number 
+ *  @param ad the reference number 
  *  @param ulps the bias 
  *  @return the biased float number (on distance "ulps")
  *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
@@ -341,17 +420,27 @@ double Ostap::Math::next_double ( const double ad , const short ulps )
                  std::numeric_limits<Long>   ::is_specialized && 
                  sizeof(double)==sizeof(Long) , "FAILED ASSUMPTIONS") ;
   // ==========================================================================
-  Cast_D caster ;
-  
-  //Long al = *reinterpret_cast<const Long*>( &ad ) ;
-  Long al = caster.d2l ( ad ) ;
-  al += ulps ;
-  //return *reinterpret_cast<double*>(&al) ;
-  return caster.l2d ( al ) ;
+  return _next_double_ (  ad , ulps ) ;
+  // ==========================================================================
 }
 // ============================================================================
-  
-
+/*  "distance" in ULPS between two float values 
+ *   @param a (INPUT) the first  number 
+ *   @param b (INPUT) the second number 
+ *   @param "distance" in ULPs
+ */
+// ============================================================================
+long Ostap::Math::ulps_distance_float  ( const float  a , const float  b ) 
+{ return _distance_float_  ( a , b ) ; }
+// ============================================================================
+/*  "distance" in ULPS between two double values 
+ *   @param a (INPUT) the first  number 
+ *   @param b (INPUT) the second number 
+ *   @param "distance" in ULPs
+ */
+// ============================================================================
+long Ostap::Math::ulps_distance_double ( const double a , const double b )
+{ return _distance_double_ ( a , b ) ; }
 // ============================================================================
 // The END 
 // ============================================================================

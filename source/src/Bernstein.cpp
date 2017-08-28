@@ -1322,74 +1322,6 @@ namespace
     Ostap::Math::scale_exp2  ( pars , iexp ) ;
     return Ostap::Math::Bernstein ( std::move( pars ) , b.xmin() , b.xmax() ) ;
   } 
-  inline Ostap::Math::Bernstein
-  _gcd_ ( Ostap::Math::Bernstein f , 
-          Ostap::Math::Bernstein g )
-  {
-    //
-    if      ( 0 == g.degree() || g.zero() ) { return f ; } 
-    else if ( 0 == f.degree() || f.zero() ) { return g ; } 
-    else if ( f.degree() < g.degree() ) { return _gcd_ ( g , f ) ; }
-    //
-    //
-    double fn = f.norm() ;
-    f.remove_noise ()    ;
-    while ( 0 < f.degree() && s_equal (  f.head() + fn , fn ) ) 
-    {
-      f  = f.reduce  ( 1 ) ;
-      f.remove_noise (   ) ;
-      fn = f.norm()        ;  
-    }
-    //    
-    //
-    double gn = g.norm() ;
-    g.remove_noise ()    ;
-    while ( 0 < g.degree() && s_equal (  g.head() + gn , gn ) ) 
-    {
-      g  = g.reduce  ( 1 ) ;
-      g.remove_noise (   ) ;
-      gn = g.norm ()       ;  
-    }
-    //
-    if      ( 0 == g.degree() ) { return f ; } 
-    else if ( 0 == f.degree() ) { return g ; } 
-    //
-    if ( f.degree() < g.degree() ) { return _gcd_ ( g , f ) ; }
-    //
-    if      ( g.small ( fn ) ) { return f ; }
-    else if ( f.small ( gn ) ) { return g ; }
-    //
-    f.remove_noise () ;
-    g.remove_noise () ;
-    //
-    const short sf =  Ostap::Math::frexp2 ( fn ).second ;
-    const short sg =  Ostap::Math::frexp2 ( gn ).second ;
-    //
-    if ( 1 != sf ) { f = f.ldexp ( 1 - sf ) ; }
-    if ( 1 != sg ) 
-    {
-      g = g.ldexp ( 1 - sg ) ;
-      return _gcd_ ( f , g ).ldexp ( sg - 1 ) ;
-    }
-    //
-    std::pair<Ostap::Math::Bernstein,Ostap::Math::Bernstein> ab = _divmod_ ( f ,  g ) ;
-    //
-    const double an =  ab.first .norm() ;
-    const double bn =  ab.second.norm() ;
-    //
-    fn = f.norm () ;
-    gn = g.norm () ;
-    //
-    if      ( s_equal ( fn + an * gn + bn , fn + an * gn      ) ) { return g ; }
-    else if ( s_equal ( fn + an * gn + bn , fn           + bn ) ) { return f ; }
-    else if ( 0 == ab.second.degree()                           ) { return g ; }
-    //
-    ab.first .remove_noise () ;
-    ab.second.remove_noise () ;
-    // 
-    return 
-      ab.second.small ( fn + an * gn ) ? g : _gcd_ ( g , ab.second ) ;
-  }
 }
 // ============================================================================
 /*  polynomial division 
@@ -1418,18 +1350,6 @@ Ostap::Math::Bernstein::quotient ( const Ostap::Math::Bernstein& g ) const
 Ostap::Math::Bernstein
 Ostap::Math::Bernstein::reminder ( const Ostap::Math::Bernstein& g ) const
 { return _divmod_ ( *this , g ) . second ; }
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::gcd ( const Ostap::Math::Bernstein& g ) const
-{ 
-  if ( !s_equal ( xmin () , g.xmin () ) || !s_equal ( xmax () , g.xmax () ) ) 
-  {
-    const double _xmin = std::min ( xmin() , g.xmin() ) ;
-    const double _xmax = std::max ( xmax() , g.xmax() ) ;
-    return _gcd_ ( Bernstein ( *this , _xmin , _xmax ) , 
-                   Bernstein (  g    , _xmin , _xmax ) ) ;               
-  }
-  return _gcd_ ( *this , g ) ;
-}
 // ============================================================================
 /* de Casteljau algorithm for summation of Bernstein polynomials 
  *  \f$ f(x) = \sum_i p_i B_ik(x) \f$

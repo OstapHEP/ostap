@@ -359,10 +359,6 @@ namespace Ostap
        */
       Bernstein                      reminder ( const Bernstein& g ) const ;
       // ======================================================================
-      /** get Greatest Common Divisor
-       */
-      Bernstein  gcd ( const Bernstein& b ) const ;
-      // ======================================================================
     public:
       // ======================================================================
       /** get the leading power coefficient
@@ -1993,9 +1989,7 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
-    /** specialization:
-     *    is Bernstein polynomial close to zero?
-     */
+    /// specialization: is Bernstein polynomial close to zero?
     template <>
     struct Zero<Ostap::Math::Bernstein> 
     {
@@ -2011,9 +2005,7 @@ namespace Ostap
       // ======================================================================      
     };
     // ========================================================================
-    /** specialization: 
-     *    is Bernstein polynomial small enough ?
-     */
+    /// specialization: is Bernstein polynomial small enough ?
     template <>
     struct Tiny<Ostap::Math::Bernstein> 
     {

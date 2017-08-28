@@ -115,16 +115,6 @@ namespace Ostap
   inline std::ostream& operator<< ( std::ostream& os , const Exception& e  ) 
   { return e.fillStream ( os ); }
   // ===========================================================================
-  /** throw the exception
-   *  @param message the reason 
-   *  @param tag     the tag 
-   *  @param code    the code 
-   */
-  void throwException
-  ( const std::string&       message           , 
-    const std::string&       tag     = "Ostap" , 
-    const Ostap::StatusCode& code    = Ostap::StatusCode::FAILURE ) ;
-  // ===========================================================================  
 } //                                                      end of namespace Ostap
 // =============================================================================
 //                                                                       The END 

@@ -76,6 +76,7 @@ __all__     = (
     'natural_number' , ## See Ostap::Math::natural_number  
     'natural_entry'  , ## See Ostap::Math::natural_entry
     ##
+    'make_vector'    , ## construct std::vector
     'doubles'        , ## construct std::vector<double>
     'ints'           , ## construct std::vector<int>
     'uints'          , ## construct std::vector<unsigned int>
@@ -161,7 +162,13 @@ for t in ( 'int'                  ,
     v.toTuple  = v.asTuple
     v.__repr__ = lambda s : str ( [ i for i in s ] ) ## print it !
     v.__str__  = lambda s : str ( [ i for i in s ] ) ## print it !
-
+    if not hasattr ( v , '__iter__' ) :
+        def _v_iter_ ( v ) :
+            _l = len(v)
+            for i in  range(_l) :
+                yield v[i]
+        v.__iter__ = _v_iter_ 
+    
 
 # =============================================================================
 ## self-printout of TMaxtrix 
@@ -183,16 +190,59 @@ def _tmg_str_ ( self , fmt = ' %+11.4g') :
 ROOT.TMatrix.__repr__  = _tmg_str_
 ROOT.TMatrix.__str__   = _tmg_str_
 
+
+    
 # =============================================================================
 ## add something to std::vector 
-def _add_to ( vct , typ , arg1 , *args ) :
-    ##
-    if hasattr ( arg1 , '__iter__' ) :
-        for a in arg1 : vct.push_back ( typ ( a )  ) 
-    else : vct.push_back ( typ( arg1 )  ) 
-    #
-    for a in args : _add_to ( vct , typ , a )
-        
+def _add_to ( vct , cnv , arg1 , *args ) :
+    """Add something to std::vector 
+    """
+    from types       import GeneratorType as GT
+    from collections import Iterable      as IT
+
+    VT = type(vct)
+    
+    ## the first argument: iterable or generator?
+    if   isinstance ( arg1 , VT ) :
+        for a in arg1 : vct.push_back ( a )
+    else :        
+        try :
+            vct.push_back ( cnv ( arg1 ) )
+        except TypeError :
+            for a in arg1 : _add_to (    vct , cnv , a )
+
+    ##  treat other arguments (recursively) 
+    for a in args : _add_to ( vct , cnv , a )
+
+    return vct 
+
+# =============================================================================
+##  create C++ std-vector from components
+#   @code
+#   a = make_vector( 'string' , str   , 1 , 2, 3 , 4 )
+#   a = make_vector( 'double' , float , 1 , 2, 3 , 4 )
+#   a = make_vector( 'int'    , int   , [ 1,2,3 ] , [4,5,6] )
+#   @endcode 
+def make_vector ( TYPE , cnv , arg1 , *args ) :
+    """ Create C++ std::vector<TYPE> from components
+    TYPE : the internal type
+    cnv  : the converter (if needed)
+    arg1 : the first mandatory arugment
+    args : other components
+    
+    :Examples:
+
+    >>> a = make_vector ( 'string' , str   , 1 , 2, 3 , 4 )
+    >>> a = make_vector ( 'double' , float , 1 , 2, 3 , 4 )
+    >>> a = make_vector ( 'int'    , int   , [ 1,2,3 ] , [4,5,6] )
+    
+    """
+    ## create new vector 
+    VT  = std.vector( TYPE ) ## vector type
+    vct = VT ( )             ## vector instance 
+    ## add arguments to the vector
+    return _add_to ( vct , cnv , arg1 , *args )
+
 # =============================================================================
 ## construct std::vector<double> from the arguments
 def doubles ( arg1 , *args ) :
@@ -201,13 +251,7 @@ def doubles ( arg1 , *args ) :
     >>> v2 = doubles ( 1.01 , 1.02 , 1.03  )
     >>> v3 = doubles ( [ 1.01 , 1.02 , 1.03 ] )    
     """
-    ## create new vector 
-    VT  = std.vector('double')
-    vct = VT()
-    ## add arguments to the vector 
-    _add_to ( vct , float , arg1 , *args )
-    ## 
-    return vct
+    return make_vector ( 'double' , float , arg1 , *args )
 
 # =============================================================================
 ## construct std::vector<ints> from the arguments
@@ -217,13 +261,7 @@ def ints ( arg1 , *args ) :
     >>> v2 = ints ( 1 , 1 , 1  )
     >>> v3 = ints ( [ 1 , 2 , 3 ] )    
     """
-    ## create new vector 
-    VT  = std.vector('int')
-    vct = VT()
-    ## add arguments to the vector 
-    _add_to ( vct , int , arg1 , *args )
-    ## 
-    return vct
+    return make_vector ( 'int' , int , arg1 , *args )
 
 # =============================================================================
 ## construct std::vector<unsigned int> from the arguments
@@ -233,13 +271,7 @@ def uints ( arg1 , *args ) :
     >>> v2 = uints ( 1 , 1 , 1  )
     >>> v3 = uints ( [ 1 , 2 , 3 ] )    
     """
-    ## create new vector 
-    VT  = std.vector('unsigned int')
-    vct = VT()
-    ## add arguments to the vector 
-    _add_to ( vct , long , arg1 , *args )
-    ## 
-    return vct
+    return make_vector ( 'unsigned int' , long , arg1 , *args )
 
 # =============================================================================
 ## construct std::vector<long> from the arguments
@@ -249,13 +281,7 @@ def longs ( arg1 , *args ) :
     >>> v2 = longs ( 1 , 1 , 1  )
     >>> v3 = longs ( [ 1 , 2 , 3 ] )    
     """
-    ## create new vector 
-    VT  = std.vector('long')
-    vct = VT()
-    ## add arguments to the vector 
-    _add_to ( vct , long , arg1 , *args )
-    ## 
-    return vct
+    return make_vector ( 'long' , long , arg1 , *args )
 
 # =============================================================================
 ## construct std::vector<unsigned long> from the arguments
@@ -265,28 +291,22 @@ def ulongs ( arg1 , *args ) :
     >>> v2 = ulongs ( 1 , 1 , 1  )
     >>> v3 = ulongs ( [ 1 , 2 , 3 ] )    
     """
-    ## create new vector 
-    VT  = std.vector('unsigned long')
-    vct = VT()
-    ## add arguments to the vector 
-    _add_to ( vct , long , arg1 , *args )
-    ## 
-    return vct
+    return make_vector ( 'unsigned long' , long , arg1 , *args )
 
 SPD = std.pair('double','double')
-SPD.asTuple  = lambda s : (s.first,s.second)
+SPD.asTuple  = lambda s :      (s.first,s.second)
 SPD.__str__  = lambda s : str( (s.first,s.second) )
 SPD.__repr__ = SPD.__str__
 
 # =============================================================================
-# Imporve operations with std.complex 
+# Improve operations with std.complex 
 # =============================================================================
 COMPLEX  = cpp.std.complex('double'      )
 COMPLEXf = cpp.std.complex('float'       )
 COMPLEXl = cpp.std.complex('long double' )
 # =============================================================================
 def _cmplx_to_complex_ ( s ) :
-    """convert to complex"""
+    """Convert C++ complex to Python's complex"""
     return  complex    ( s.real() , s.imag() )
 
 # =============================================================================
@@ -487,14 +507,7 @@ def complexes ( arg1 , *args ) :
     >>> v2 = complexs( 1 , 1+2j , 1  )
     >>> v3 = complexs( [ 1 , 2 , 3+3j ] )    
     """
-    ## create new vector 
-    VC  = std.vector(COMPLEX)
-    vct = VC()
-    ## add arguments to the vector 
-    _add_to ( vct , COMPLEX , arg1 , *args )
-    ## 
-    return vct
-
+    return make_vector( COMPLEX , COMPLEX , arg1 , *args )
 
 # =============================================================================
 ## complex value ?   

@@ -72,6 +72,21 @@ namespace Ostap
   // ===========================================================================
 } //                                                      end of namespace Ostap
 // =============================================================================
+namespace Ostap
+{
+  // ===========================================================================
+  /** throw the exception
+   *  @param message the reason 
+   *  @param tag     the tag 
+   *  @param code    the code 
+   */
+  void throwException
+  ( const std::string&       message           , 
+    const std::string&       tag     = "Ostap" , 
+    const Ostap::StatusCode& code    = Ostap::StatusCode::FAILURE ) ;
+  // ===========================================================================
+} //                                                      end of namespace Ostap
+// =============================================================================
 //                                                                       The END 
 // =============================================================================
 #endif  // OSTAP_STATUSCODES_H

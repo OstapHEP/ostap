@@ -4,11 +4,45 @@
 ## @file bernstein.py
 #
 #  Module with some useful utilities for dealing with Bernstein polynomials
+#  @see Ostap::Math::Bernstein
+#
+# - control_polygon    : get a control polygon for Bernstein polynomial
+# - upper_convex_hull  : upper convex hull for Bernstein polynomial
+# - lower_convex_hull  : lower convex hull for Bernstein polynomial
+# - convex_hull        :       convex hull for Bernstein polynomial
+# - crossing_points    : get crossing points of control polygon with x-axis
+# - sturm_sequence     : get Sturm's sequence for Bernstein polynomial
+# - nroots             : number of roots (using  Sturm's sequence)
+# - sign_changes       : number of sign changes in sequence of coefficients 
+# - deflate_left       : deflate Berntein polynomial at x=xmin
+# - deflate_right      : deflate Berntein polynomial at x=xmax
+# - deflate            : deflate Berntein polynomial at x=x0
+# - left_line_hull     : get the most left point of crossing of the convex hull with x-axis
+# - right_line_hull    : get the most right point of crossing of the convex hull with x-axis
+# - solve              : solve equaltion B(x)=C
+# - gcd                : find the greatest common divisor
+# - interpolate        : construct Bernstein interpolant
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-12-01
 # =============================================================================
-""" Module with some useful utilities for dealing with Bernstein polynomials
+""" Module with some useful utilities for dealing with Bernstein polynomials:
+- control_polygon    : get a control polygon for Bernstein polynomial
+- upper_convex_hull  : upper convex hull for Bernstein polynomial
+- lower_convex_hull  : lower convex hull for Bernstein polynomial
+- convex_hull        :       convex hull for Bernstein polynomial
+- sturm_sequence     : get Sturm's sequence for Bernstein polynomial
+- nroots             : number of roots (using  Sturm's sequence)
+- sign_changes       : number of sign changes in sequence of coefficients 
+- deflate_left       : deflate Berntein polynomial at x=xmin
+- deflate_right      : deflate Berntein polynomial at x=xmax
+- deflate            : deflate Berntein polynomial at x=x0
+- crossing_points    : get crossing points of control polygon with x-axis
+- left_line_hull     : get the most left point of crossing of the convex hull with x-axis
+- right_line_hull    : get the most right point of crossing of the convex hull with x-axis
+- solve              : solve equaltion B(x)=C
+- gcd                : find the greatest common divisor
+- interpolate        : construct Bernstein interpolant
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -19,6 +53,7 @@ __all__     = (
     'upper_convex_hull' , ## upper convex hull for Bernstein polynomial
     'lower_convex_hull' , ## lower convex hull for Bernstein polynomial
     'convex_hull'       , ##       convex hull for Bernstein polynomial
+    'crossing_points'   , ## get crossing points of control polygon with x-axis
     #
     'sturm_sequence'    , ## get Sturm's sequence for Bernstein polynomial
     'nroots'            , ## number of roots (using  Sturm's sequence)
@@ -28,9 +63,13 @@ __all__     = (
     'deflate_right'     , ## deflate Berntein polynomial at x=xmax
     'deflate'           , ## deflate Berntein polynomial at x=x0
     #
-    'crossing_points'   , ## get crossing points of control polygon with x-axis
     'left_line_hull'    , ## get the most left point of crossing of the convex hull with x-axis
     'right_line_hull'   , ## get the most right point of crossing of the convex hull with x-axis
+    #
+    'solve'             , ## solve equaltion B(x)=C
+    'gcd'               , ## find the greatest common divisor
+    #
+    'interpolate'       , ## construct Bernstein interpolant
     )
 # =============================================================================
 import  ROOT, math  
@@ -53,8 +92,7 @@ def control_polygon ( bp )  :
     >>>  cp = bernstein.control_polygon ()
     >>>  cp = control_polygon( bernstein )  ##  ditto 
     """
-    return  Ostap.Math.control_polygon (  bp.bernstein() ) 
-
+    return Ostap.Math.control_polygon (  bp.bernstein() ) 
 
 # =============================================================================
 ##  get Sturm sequence for bernstein polynomial 
@@ -121,9 +159,6 @@ def nroots ( bp , xmin =  None , xmax = None ) :
         if 0 > smn[i]*smn[i-1] : ncmn +=1
         if 0 > smx[i]*smx[i-1] : ncmx +=1
 
-    ## print smx , smn
-    ## print ncmn, ncmx
-     
     return ( ncmn - ncmx ) if xmin < xmax else ( ncmx - ncmn )  
 
 # =============================================================================
@@ -187,7 +222,7 @@ def deflate_right  ( bp ) :
     return Ostap.Math.deflate_right ( bp.bernstein() )   
 
 # ===============================================================================
-## get abscissas of crosssing point of the control polygon 
+## get abscissas of crosssing points of the control polygon with x-axis 
 #  for Bernstein polynomial
 #  @param  b bernstein polynomial
 #  @return abscissas of crossing points of the control  polygon with x-axis 
@@ -356,13 +391,13 @@ def solve (  bp  , C = 0 , split = 2 ) :
     bp = bp.bernstein() 
     if C : bp = bp - C
     
-    ## zero-degree polynomial
+    ## 1) zero-degree polynomial
     if   0 == bp.degree() :
 
         if iszero ( bp[0] ) : return bp.xmin(),
         return () 
     
-    ## linear polynomial
+    ## 2) linear polynomial
     elif 1 == bp.degree() :
 
         x0 = bp.xmin()
@@ -373,6 +408,10 @@ def solve (  bp  , C = 0 , split = 2 ) :
 
         s0 = signum ( p0 )
         s1 = signum ( p1 )
+
+        bn = bp.norm() 
+        if  iszero ( p0 ) or isequal ( p0 + bn , bn ) : s0 = 0
+        if  iszero ( p1 ) or isequal ( p1 + bn , bn ) : s1 = 0
         
         if   s0 ==     0 : return x0,  ## 
         elif s1 ==     0 : return x1,  ##
@@ -433,14 +472,14 @@ def solve (  bp  , C = 0 , split = 2 ) :
         ## Two strategies for isolation of roots:
         #  - use control polygon 
         #  - use the derivative 
-        #  For both cases, the zeros of contol=-polygon and/or derivatives
+        #  For both cases, the zeros of contol-polygon and/or derivatives
         #  are tested to be the roots of  polynomial..
         #  If they corresponds to the roots, polinomial is properly deflated and
         #  deflated roots are collected
         #  Remaining points are used to (recursively) split interval into smaller
         #  intervals with presumably smaller number of roots 
         
-        # 
+        #
         if 0 < split :
 
             cps = bp.crossing_points()
@@ -451,11 +490,6 @@ def solve (  bp  , C = 0 , split = 2 ) :
 
             split -= 1
             
-            ## use simple bisection
-            if 2 == len ( splits ) :
-                if xmin < xmax : splits =     xmin   , 0.5*(   xmin  +   xmax  ) ,    xmax
-                else           : splits =  bp.xmin() , 0.5*(bp.xmin()+bp.xmax()) , bp.xmax()
-                
         else :
             
             ## use the roots of derivative 
@@ -463,7 +497,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
             rd = dd.solve ( split = split )
             if not rd :
                 ## use bisection 
-                rd = xmin, 0.5 * ( xmin + xmax ), xmax
+                nrd = xmin, 0.5 * ( xmin + xmax ), xmax
             else :
                 ## use roots of derivative 
                 nrd = [ xmin , xmax ] 
@@ -475,11 +509,15 @@ def solve (  bp  , C = 0 , split = 2 ) :
                                 found = True
                                 break 
                         if not found : nrd.append ( r )
-                nrd.sort() 
-                splits = nrd[:]
-
-        splits = list(splits) 
-
+                nrd.sort()                
+            splits =  list(nrd)
+            
+        ## use simple bisection
+        if 2 >= len ( splits ) :
+            if xmin < xmax : splits =     xmin   , 0.5*(   xmin  +   xmax  ) ,    xmax
+            else           : splits =  bp.xmin() , 0.5*(bp.xmin()+bp.xmax()) , bp.xmax()
+            splits = list(splits) 
+        
         roots = []
         for s in splits :
             
@@ -497,7 +535,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
                         splits.remove ( q )
                 
         if roots :
-            roots += list ( bp.solve ( split = split - 1 ) )
+            roots += list ( bp.solve ( split =  ( split - 1 ) ) )
             roots.sort()
             return tuple(roots)
 
@@ -512,7 +550,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
             xl = splits[i-1]
             xr = splits[i  ]            
             bb = _scale_ ( Bernstein ( bp , xl , xr ) )
-            roots += bb.solve ( split = split - 1 )
+            roots += bb.solve ( split = ( split - 1 ) )
 
         roots.sort()
         return  tuple ( roots )   ##  RETURN
@@ -594,10 +632,134 @@ def solve (  bp  , C = 0 , split = 2 ) :
     if cps : x = cps[0]
     else   : x = 0.5*(bp.xmin()+bp.xmax()) 
 
-    ##  use Laguerre's method to get the isolated root 
+    ##  use Laguerre's method to refine the isolated root 
     l = _laguerre_ ( x , f , d1 , d2 )
 
     return l 
+
+
+# =============================================================================    
+## Find the greatest common divisor for two bernstein polynomials 
+#  @see https://en.wikipedia.org/wiki/Greatest_common_divisor
+#  @see https://en.wikipedia.org/wiki/Euclidean_algorithm
+#  @param f (INPUT) the first  polynomial
+#  @param g (INPUT) the second polynomial
+def gcd ( f  ,  g ) :
+    """ Find the greatest common divisor for two Bernstein polynomials
+    >>> b1 = ...
+    >>> b2 = ...
+    >>> r  = b1.gcd ( b2 )
+    >>> r  = gcd ( b1 , b2 ) ##  ditto 
+    - see https://en.wikipedia.org/wiki/Greatest_common_divisor
+    - see https://en.wikipedia.org/wiki/Euclidean_algorithm
+    """
+
+    fn = f.norm()
+    while 0 < f.degree() and isequal ( f.head() + fn , fn ) :
+        f  =  f.reduce ( 1 )
+        fn =  f.norm   (   )
+        
+    gn = g.norm()
+    while 0 < g.degree() and isequal ( g.head() + gn , gn ) :
+        g  =  g.reduce ( 1 )
+        gn =  g.norm   (   )
+        
+    if f.degree() < g.degree() : return gcd ( g , f ) 
+
+    if   0 == f.degree() : return f
+    elif 0 == g.degree() : return g
+        
+    if   f.zero() or f.small ( gn ) : return g
+    elif g.zero() or g.small ( fn ) : return f
+
+    ## scale them properly
+    import math
+    sf = math.frexp( fn )[1]
+    sg = math.frexp( gn )[1]
+    
+    scale = 0 
+    if 1 != sf : f = f.ldexp ( 1 - sf )
+    if 1 != sg :
+        g = g.ldexp ( 1 - sg )
+        return gcd ( f , g ).ldexp( sg - 1 ) 
+        
+    a , b = divmod ( f , g )
+    
+    fn = f.norm ()
+    gn = g.norm ()
+    an = a.norm ()
+    bn = b.norm ()
+    
+    if isequal ( an * gn + fn + bn , fn +  an *  gn  ) :
+        return g
+    
+    if isequal ( fn + bn + gn * an , fn + bn ) :
+        return b
+
+    return gcd ( g , b )
+
+# =============================================================================
+## Construct the interpolation Bernstein polynomial
+#  It relies on Newton-Bernstein algorithm
+#  @see http://arxiv.org/abs/1510.09197
+#  @see Mark Ainsworth and Manuel A. Sanches, 
+#       "Computing of Bezier control points of Largangian interpolant 
+#        in arbitrary dimension", arXiv:1510.09197 [math.NA]
+#  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+#  @code
+#  b1 = interpolate ( lambda x : x*x , [0,0.5,1,2]    , 0 , 4 )  
+#  b2 = interpolate ( { 0:0 , 0.5:0.25 , 1:1 } , None , 0 , 4 )  
+#  b3 = interpolate ( [0,0.25,1,4] , [ 0,0.5, 1,2]    , 0 , 4 )  
+#  @endcode 
+#  @param func  the function or list of function values
+def interpolate ( func , abscissas , xmin = 0 , xmax = 1 ) :
+    """Construct the interpolation Bernstein polynomial
+    It relies on Newton-Bernstein algorithm
+    - see http://arxiv.org/abs/1510.09197
+    - see Mark Ainsworth and Manuel A. Sanches, 
+    ``Computing of Bezier control points of Largangian interpolant 
+    in arbitrary dimension'', arXiv:1510.09197 [math.NA]
+    - see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+
+    func      : the ``function''
+    abscissas : absciccas
+    xmin      : minimal x-value 
+    xmax      : maximal x-value 
+
+    :Example:
+    
+    >> b1 = interpolate ( lambda x : x*x , [0,0.5,1,2]    , 0 , 4 )  
+    >> b2 = interpolate ( { 0:0 , 0.5:0.25 , 1:1 } , None , 0 , 4 )  
+    >> b3 = interpolate ( [0,0.25,1,4] , [ 0,0.5, 1,2]    , 0 , 4 )  
+    """
+    if xmin > xmax :
+        xmin , xmax = xmax , xmin
+        
+    from types       import GeneratorType as GT
+    from collections import Iterable      as IT
+    from collections import Mapping       as MT
+    
+    if isinstance ( abscissas , GT ):
+        abscissas = [ x for x in abscissas ]
+        
+    if   callable ( func ) :
+        func = [ func (x)  for x in abscissas ]                  ## callable 
+    elif isinstance ( func , GT   ) : func = [ f for f in func ] ## generator
+    elif isinstance ( func , dict ) and not abscissas :          ## mapping 
+        keys = func.keys()
+        keys.sort()
+        abscissas = [ x       for x in keys ]
+        func      = [ func[x] for x in keys ]
+    elif isinstance ( func , IT   ) : pass                       ## iterable 
+    else :
+        raise TypeError("Can't treat ``func''=%s"  %  func )
+
+    ##
+    from ostap.math.base import doubles
+    _x = doubles ( abscissas )
+    _y = doubles ( func      )
+    ##
+    return Ostap.Math.Interpolation.bernstein ( _x , _y , xmin , xmax ) 
 
 
 # =============================================================================    
@@ -615,16 +777,16 @@ for  p in ( Ostap.Math.Bernstein     ,
     p.left_line_hull    =     left_line_hull
     p.right_line_hull   =    right_line_hull
     #
-    p.sturm_sequence    =     sturm_sequence 
-    p.nroots            =             nroots
-    p.sign_changes      =       sign_changes
-    #
     p.deflate_left      =       deflate_left
     p.deflate_right     =      deflate_right 
     p.deflate           =            deflate
     #
+    p.sturm_sequence    =     sturm_sequence 
+    p.nroots            =             nroots
+    p.sign_changes      =       sign_changes
+    #
     p.solve             =              solve
-
+    p.gcd               =                gcd 
 
 # =============================================================================
 if '__main__' == __name__ :
