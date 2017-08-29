@@ -13,13 +13,23 @@
 # - crossing_points      : get crossing points of control polygon with x-axis
 # - solve                : solve equation B(x) = C
 # - interpolate          : construct interpolating B-spline 
-# - approximate          : construct approximating B-spline 
+# - approximate          : construct approximating B-spline
+# - generate&shoot       : generate random numbers 
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-12-01
 # =============================================================================
 """ Module with some useful utilities for dealing with BSplines
-"""
+- control_polygon      : get a control polygon for BSpline
+- upper_convex_hull    : upper convex hull for BSpline
+- lower_convex_hull    : lower convex hull for BSpline
+- convex_hull          :       convex hull for BSpline
+- crossing_points      : get crossing points of control polygon with x-axis
+- solve                : solve equation B(x) = C
+- interpolate          : construct interpolating B-spline 
+- approximate          : construct approximating B-spline
+- generate&shoot       : generate random numbers 
+#"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
@@ -33,11 +43,14 @@ __all__     = (
     'solve'                , ## solve equation B(x) = C
     'interpolate'          , ## spline interpolation
     'approximate'          , ## variation diminishing approximation 
+    'generate'             , ## generate random numbers 
+    'shoot'                , ## generate random numbers 
     )
 # =============================================================================
 import  ROOT, math  
-from    ostap.core.core import cpp, Ostap, funID
-from    ostap.math.base import iszero, isequal, signum, doubles   
+from    ostap.core.core      import cpp, Ostap, funID
+from    ostap.math.base      import iszero, isequal, signum, doubles
+import  ostap.math.bernstein 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -432,7 +445,103 @@ def solve ( bs , C = 0 , split = 5 ) :
     
     return roots
 
+
+# =============================================================================
+## generate random numbers from b-spline-distribuitions
+#  @code
+#  >>> func = ...
+#  >>> for x in func.generate( 1000 ) : print x 
+#  @endcode
+def generate ( fun , num ) :
+    """Generate random numbers from bspline-like distribuitions
+    >>> func = ...
+    >>> for x in func.generate( 1000 ) : print x 
+    """
+    bs  = fun.bspline() 
+    xmn = bs.xmin ()
+    xmx = bs.xmax ()
+    ymx = max ( bs.pars() )
+    i   = 0 
+    from random import uniform as _uniform_
+    while i < num : 
+        x = _uniform_ ( xmn , xmx ) 
+        y = _uniform_ (   0 , ymx )
+        v = fun ( x )
+        if v >= y :
+            i+= 1 
+            yield x
+            
+# =============================================================================
+## generate random numbers from b-spline-distribuitions
+#  @code
+#  >>> func = ...
+#  >>> for x in func.generate( 1000 ) : print x 
+#  @endcode
+def _random_generate_bspline_ ( fun , num ) :
+    """Generate random numbers from bspline-like distribuitions
+    >>> func = ...
+    >>> for x in func.generate( 1000 ) : print x 
+    """
+    xmn = fun.xmin ()
+    xmx = fun.xmax ()
+    ymx = max ( fun.bspline().pars() )
+    i   = 0 
+    while i < num : 
+        x = _uniform_ ( xmn , xmx ) 
+        y = _uniform_ (   0 , ymx )
+        v = fun ( x )
+        if v >= y :
+            i+= 1 
+            yield x
+            
+# =============================================================================
+## Get random number from bspline-like distribuitions
+#  @code
+#  >>> func = ...
+#  >>> print fun.shoot() 
+#  @endcode
+def shoot ( fun ) :
+    """Get random number from bspline-like distribuitions
+    >>> func = ...
+    >>> print func.shoot()  
+    """
+    for x in generate(  fun , 1 ) :
+        return x
+
+# =============================================================================
+## (Redefine standard constructor to allow usage of python lists&tuples)
+#  Lists and tuples are converted on flight to :
+# - std::vector<double> 
+# - std::vector<std::complex<double> >
+def _new_init_ ( t ,  *args )  :
+    """(Redefine standard constructor to allow usage of python lists&tuples)
+    Lists and tuples are  converted on flight to :
+    - std::vector<double> 
+    """
+    from ostap.math.base import doubles, complexes
     
+    largs = list (  args )
+    alen  = len  ( largs )
+    
+    for i in range(alen) :
+        
+        arg = largs[i] 
+        if not isinstance ( arg ,  ( list , tuple ) ) : continue 
+        
+        try: 
+            _arg = doubles  ( *arg  )
+            largs[i] = _arg
+            continue 
+        except TypeError : pass
+        
+    targs = tuple(largs)
+    ## use old constructor 
+    t._old_init_ ( *targs ) 
+
+# =============================================================================
+## set, get & iterator
+from ostap.math.bernstein import _p_set_par_ , _p_get_par_, _p_iter_ 
+   
 # =============================================================================    
 for  p in ( Ostap.Math.BSpline          ,
             Ostap.Math.PositiveSpline   ,
@@ -446,8 +555,36 @@ for  p in ( Ostap.Math.BSpline          ,
     p.convex_hulls      =        convex_hull
     p.control_polygon   =    control_polygon
     p.crossing_points   =    crossing_points
-    p.solve             =              solve 
+    p.solve             =              solve
+    p.generate          =           generate
+    p.shoot             =              shoot
     
+    p.__setitem__  = _p_set_par_
+    p.__getitem__  = _p_get_par_
+    p.__len__      = lambda s     : s.npars() 
+    p.__iter__     = _p_iter_
+    p.__contains__ = lambda s , i : 0<=i<len(s)
+
+    if not hasattr ( p , '_old_init_' ) :
+        p._old_init_ = p.__init__
+        ## Modifed constructor to allow python lists/tuples
+        def _p_new_init_ ( s ,  *args ) :
+            """Modifed constructor to allow python lists/tuples
+            """
+            _new_init_ ( s , *args )
+            
+        _p_new_init_.__doc__ += '\n' +   _new_init_.__doc__ 
+        _p_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
+        p.__init__ = _p_new_init_ 
+
+
+# =============================================================================
+_decorated_classes_ = set( [
+    Ostap.Math.BSpline          ,
+    Ostap.Math.PositiveSpline   ,
+    Ostap.Math.ConvexOnlySpline ,
+    Ostap.Math.MonothonicSpline ,
+    Ostap.Math.ConvexSpline  ] ) 
 # =============================================================================
 if '__main__' == __name__ :
     

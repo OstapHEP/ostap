@@ -21,7 +21,9 @@
 # - right_line_hull    : get the most right point of crossing of the convex hull with x-axis
 # - solve              : solve equaltion B(x)=C
 # - gcd                : find the greatest common divisor
+# - lcm                : find the least common multiple 
 # - interpolate        : construct Bernstein interpolant
+# - generate&shoot     : generate random  numbers         
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-12-01
@@ -42,7 +44,9 @@
 - right_line_hull    : get the most right point of crossing of the convex hull with x-axis
 - solve              : solve equaltion B(x)=C
 - gcd                : find the greatest common divisor
+- lcm                : find the least common multiple 
 - interpolate        : construct Bernstein interpolant
+- generate&shoot     : generate random  numbers         
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -68,8 +72,12 @@ __all__     = (
     #
     'solve'             , ## solve equaltion B(x)=C
     'gcd'               , ## find the greatest common divisor
+    'lcm'               , ## find the least common multiple
     #
     'interpolate'       , ## construct Bernstein interpolant
+    #
+    'generate'          , ## generate random  numbers         
+    'shoot'             , ## generate random  numbers         
     )
 # =============================================================================
 import  ROOT, math  
@@ -653,7 +661,7 @@ def gcd ( f  ,  g ) :
     - see https://en.wikipedia.org/wiki/Greatest_common_divisor
     - see https://en.wikipedia.org/wiki/Euclidean_algorithm
     """
-
+    
     fn = f.norm()
     while 0 < f.degree() and isequal ( f.head() + fn , fn ) :
         f  =  f.reduce ( 1 )
@@ -697,6 +705,43 @@ def gcd ( f  ,  g ) :
         return b
 
     return gcd ( g , b )
+
+
+
+
+# =============================================================================    
+## Find the least common multiple for two bernstein polynomials 
+#  https://en.wikipedia.org/wiki/Least_common_multiple
+#  @param f (INPUT) the first  polynomial
+#  @param g (INPUT) the second polynomial
+def lcm ( f  ,  g ) :
+    """Find the least common multiple for two bernstein polynomials 
+    - see https://en.wikipedia.org/wiki/Least_common_multiple
+    :Example:
+    >>> b1 = ...
+    >>> b2 = ...
+    >>> r  = b1.lcm ( b2 )
+    >>> r  = lcm ( b1 , b2 ) ##  ditto 
+    """
+    
+    fn = f.norm()
+    while 0 < f.degree() and isequal ( f.head() + fn , fn ) :
+        f  =  f.reduce ( 1 )
+        fn =  f.norm   (   )
+        
+    gn = g.norm()
+    while 0 < g.degree() and isequal ( g.head() + gn , gn ) :
+        g  =  g.reduce ( 1 )
+        gn =  g.norm   (   )
+        
+    if f.degree() < g.degree() : return lcm ( g , f ) 
+    
+    if   0 == f.degree() : return g
+    elif 0 == g.degree() : return f
+    
+    d = f.gcd ( g )
+    
+    return  ( g // d ) * f 
 
 # =============================================================================
 ## Construct the interpolation Bernstein polynomial
@@ -762,11 +807,224 @@ def interpolate ( func , abscissas , xmin = 0 , xmax = 1 ) :
     return Ostap.Math.Interpolation.bernstein ( _x , _y , xmin , xmax ) 
 
 
+
+
+# =============================================================================
+## generate random numbers from bernstein-like distribuitions
+#  @code
+#  >>> func = ...
+#  >>> for x in func.generate( 1000 ) : print x 
+#  @endcode
+def generate ( fun , num ) :
+    """Generate random numbers from bernstein-like distribuitions
+    >>> func = ...
+    >>> for x in func.generate( 1000 ) : print x 
+    """
+    b   = fun.bernstein() 
+    xmn = b.xmin ()
+    xmx = b.xmax ()
+    ymx = max ( b.pars() )
+    i   = 0 
+    from random import uniform as _uniform_
+    while i < num : 
+        x = _uniform_ ( xmn , xmx ) 
+        y = _uniform_ (   0 , ymx )
+        v = fun ( x )
+        if v >= y :
+            i+= 1 
+            yield x
+
+# =============================================================================
+## Get random number from bernstein-like distribuitions
+#  @code
+#  >>> func = ...
+#  >>> print fun.shoot() 
+#  @endcode
+def shoot ( fun ) :
+    """Get random number from bernstein-like distribuitions
+    >>> func = ...
+    >>> print func.shoot()  
+    """
+    for x in  generate ( fun , 1 ) :
+        return x
+
+# =============================================================================
+##  Long polynomial division
+#   f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
+#   deg(q)<=m-n, deg(r)<n
+#   @code
+#   f = ... # the first polynom
+#   g = ... # the second polynom
+#   q,r = divmod ( f , g ) 
+#   @endcode
+def _b_divmod_ ( b , p ) :
+    """Long polynomial division
+    f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
+    deg(q)<=m-n, deg(r)<n
+    
+    >>> f = ... # the first polynom
+    >>> g = ... # the second polynom
+    >>> q,r = divmod ( f , g ) 
+    """
+    rr = b.divmod(p)
+    return rr.first, rr.second
+
+
+# =============================================================================
+# Long Polynomial Division
+# =============================================================================
+##  Long polynomial division
+#   f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
+#   deg(q)<=m-n, deg(r)<n
+#   @code
+#   f = ... # the first polynom
+#   g = ... # thr second  polynom
+#   q = f // g # get quotient 
+#   @endcode
+def _b_floordiv_ ( b , p ) :
+    """Long polynomial division
+    f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
+    deg(q)<=m-n, deg(r)<n
+    
+    >>> f = ... # the first polynom
+    >>> g = ... # the second polynom
+    >>> q = f // g 
+    """
+    rr = b.divmod(p)
+    return rr.first
+
+# =============================================================================
+##  Long polynomial division
+#   f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
+#   deg(q)<=m-n, deg(r)<n
+#   @code
+#   f = ... # the first polynom
+#   g = ... # the second  polynom
+#   r = f % g # get reminder 
+#   @endcode
+def _b_mod_ ( b , p ) :
+    """Long polynomial division
+    f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
+    deg(q)<=m-n, deg(r)<n
+    
+    >>> f = ... # the first polynom
+    >>> g = ... # the second polynom
+    >>> r = f % g 
+    """
+    rr = b.divmod(p)
+    return rr.second
+
+# =============================================================================
+## power function for polynomials
+#  @code
+#  fun1 = ..
+#  fun2 = fun1**3  
+#  @endcode
+def _b_pow_ ( b , n ) :
+    """Power function for polynomials
+    >>> fun1 = ..
+    >>> fun2 = fun1**3  
+    """
+    if n != int ( n ) : raise ValueError('Illegal non-integer  exponent:%s' % n )
+    n = int ( n ) 
+    if 0  > n         : raise ValueError('Illegal negative     exponent:%s' % n )
+    return b.pow ( n )
+
+
+Ostap.Math.Bernstein. __divmod__   = _b_divmod_
+Ostap.Math.Bernstein. __floordiv__ = _b_floordiv_
+Ostap.Math.Bernstein. __mod__      = _b_mod_
+Ostap.Math.Bernstein. __pow__      = _b_pow_
+# =============================================================================
+
+# =============================================================================
+## (Redefine standard constructor to allow usage of python lists&tuples)
+#  Lists and tuples are converted on flight to :
+# - std::vector<double> 
+# - std::vector<std::complex<double> >
+def _new_init_ ( t ,  *args )  :
+    """(Redefine standard constructor to allow usage of python lists&tuples)
+    Lists and tuples are  converted on flight to :
+    - std::vector<double> 
+    - or std::vector<std::complex<double>>
+    """
+    from ostap.math.base import doubles, complexes
+    
+    largs = list (  args )
+    alen  = len  ( largs )
+    
+    for i in range(alen) :
+        
+        arg = largs[i] 
+        if not isinstance ( arg ,  ( list , tuple ) ) : continue 
+        
+        try: 
+            _arg = doubles  ( *arg  )
+            largs[i] = _arg
+            continue 
+        except TypeError : pass
+        
+        try: 
+            _arg = complexes ( *arg  )
+            largs[i] = _arg
+            continue 
+        except TypeError : pass
+        
+    targs = tuple(largs)
+    ## use old constructor 
+    t._old_init_ ( *targs ) 
+
+# =============================================================================
+## set parameter for polynomial/spline functions
+#  @code
+#  fun = ...
+#  fun[1] = 10.0
+#  @endcode 
+def _p_set_par_ ( o , index , value ) :
+    """Set parameter for polynomial/spline function
+    >>> fun = ...
+    >>> fun[1] = 10.0
+    """
+    if  index < 0 :  index += o.npars()
+    return o.setPar ( index , value )
+
+# =============================================================================
+## get parameter from polynomial/spline functions
+#  @code
+#  fun = ...
+#  print fun[1]
+#  @endcode 
+def _p_get_par_ ( o , index ) :
+    """Get parameter from polynomial/spline function
+    >>> fun = ...
+    >>> print fun[1]
+    """
+    if  index < 0 :  index += o.npars()
+    return o.par ( index )
+
+# =============================================================================
+## iterator over parameters of polynomial function
+#  @code
+#  fun = ...
+#  for i in fun  : print fun[i] 
+#  @endcode
+def _p_iter_ ( o ) :
+    """Iterator over parameters of polynomial function
+    >>> fun = ...
+    >>> for i in fun  : print fun[i] 
+    """
+    np = o.npars()
+    for i in  range(np) :
+        yield i
+
 # =============================================================================    
 for  p in ( Ostap.Math.Bernstein     ,
             Ostap.Math.BernsteinEven ,
             Ostap.Math.Positive      ,
-            Ostap.Math.PositiveEven  ) :
+            Ostap.Math.PositiveEven  ,
+            Ostap.Math.Monothonic    ,
+            Ostap.Math.Convex        ,
+            Ostap.Math.ConvexOnly    ) :
     
     p.lower_convex_hull =  lower_convex_hull
     p.upper_convex_hull =  upper_convex_hull
@@ -787,7 +1045,38 @@ for  p in ( Ostap.Math.Bernstein     ,
     #
     p.solve             =              solve
     p.gcd               =                gcd 
+    p.lcm               =                lcm
+    #
+    p.generate          =           generate
+    p.shoot             =              shoot
 
+    p.__setitem__  = _p_set_par_
+    p.__getitem__  = _p_get_par_
+    p.__len__      = lambda s     : s.npars() 
+    p.__iter__     = _p_iter_
+    p.__contains__ = lambda s , i : 0<=i<len(s)
+
+    if not hasattr ( p , '_old_init_' ) :
+        p._old_init_ = p.__init__
+        ## Modifed constructor to allow python lists/tuples
+        def _p_new_init_ ( s ,  *args ) :
+            """Modifed constructor to allow python lists/tuples
+            """
+            _new_init_ ( s , *args )
+            
+        _p_new_init_.__doc__ += '\n' +   _new_init_.__doc__ 
+        _p_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
+        p.__init__ = _p_new_init_ 
+    
+# =============================================================================
+_decorated_classes_ = set( [
+    Ostap.Math.Bernstein     ,
+    Ostap.Math.BernsteinEven ,
+    Ostap.Math.Positive      ,
+    Ostap.Math.PositiveEven  ,
+    Ostap.Math.Monothonic    ,
+    Ostap.Math.Convex        ,
+    Ostap.Math.ConvexOnly    ] )
 # =============================================================================
 if '__main__' == __name__ :
     

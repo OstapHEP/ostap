@@ -1253,10 +1253,14 @@ namespace
   {
     using namespace Ostap::Math ;
     ///  trivial case 
-    if ( f.zero () ) { return std::make_pair ( Bernstein ( 0 , f.xmin() , f.xmax () ) ,
-                                               Bernstein ( 0 , f.xmin() , f.xmax () ) ) ; }
-    if ( g.zero () ) { return std::make_pair ( Bernstein ( 0 , f.xmin() , f.xmax () ) ,
-                                               Bernstein ( 0 , f.xmin() , f.xmax () ) ) ; }
+    /// 1) f==0  or |f| << |g| 
+    if ( f.zero () || f.small ( g.norm() ) )
+    { return std::make_pair ( Bernstein ( 0 , g.xmin() , g.xmax () ) ,
+                              Bernstein ( 0 , g.xmin() , g.xmax () ) ) ; }
+    /// 2) g==0  or |g| << |f| 
+    if ( g.zero () || g.small ( f.norm() ) ) 
+    { return std::make_pair ( Bernstein ( 0 , f.xmin() , f.xmax () ) ,
+                              Bernstein ( 0 , f.xmin() , f.xmax () ) ) ; }
     //
     if ( !s_equal( f.xmin() , g.xmin() ) || !s_equal( f.xmin() , g.xmin() ) ) 
     {
@@ -1308,9 +1312,23 @@ namespace
       _divmod_ ( _f.begin() , _f.end() , 
                  pg.begin() , pg.end() ) ;           
     //
-    return std::make_pair ( Bernstein ( _q.begin() , _q.end  ()     , f.xmin() , f.xmax() ) , 
-                            Bernstein ( _f.begin() , _f.begin() + n , f.xmin() , f.xmax() ) ) ;
-    
+    Bernstein q ( _q.begin() , _q.end  ()     , f.xmin() , f.xmax() ) ;
+    Bernstein r ( _f.begin() , _f.begin() + n , f.xmin() , f.xmax() ) ;
+    //
+    const double qn = q.norm() ;
+    const double rn = r.norm() ;
+    //
+    if ( r.small ( fn + qn * gn ) ) 
+    { r = Bernstein( 0 , r.xmin() , r.xmax() ) ; }
+    else         
+    { r.remove_noise ( 0 , fn + qn * gn )      ; }
+    //
+    if ( s_equal ( qn * gn + fn + rn , fn + rn ) ) 
+    { q = Bernstein( 0 , q.xmin() , q.xmax() ) ; }
+    else   
+    { q.remove_noise ( 0 , ( fn + rn ) / gn )  ; }
+    //
+    return std::make_pair ( q , r ) ;
   }
   /// scale the exponents for Bernstein polynomial
   inline Ostap::Math::Bernstein

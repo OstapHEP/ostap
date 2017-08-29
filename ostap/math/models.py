@@ -502,62 +502,15 @@ for pdf in ( Ostap.Models.Poly2DPositive     ,
     
     pdf.sp_integrate = sp_integrate_2D_
 
-    
 # =============================================================================
-## set parameter for polynomial/spline functions
-#  @code
-#  fun = ...
-#  fun[1] = 10.0
-#  @endcode 
-def _p_set_par_ ( o , index , value ) :
-    """Set parameter for polynomial/spline function
-    >>> fun = ...
-    >>> fun[1] = 10.0
-    """
-    if  index < 0 :  index += o.npars()
-    return o.setPar ( index , value )
+## set, get & iterator
+from ostap.math.bernstein import _p_set_par_ , _p_get_par_, _p_iter_ 
 
-# =============================================================================
-## get parameter from polynomial/spline functions
-#  @code
-#  fun = ...
-#  print fun[1]
-#  @endcode 
-def _p_get_par_ ( o , index ) :
-    """Get parameter from polynomial/spline function
-    >>> fun = ...
-    >>> print fun[1]
-    """
-    if  index < 0 :  index += o.npars()
-    return o.par ( index )
-
-# =============================================================================
-## iterator over parameters of polynomial function
-#  @code
-#  fun = ...
-#  for i in fun  : print fun[i] 
-#  @endcode
-def _p_iter_ ( o ) :
-    """Iterator over parameters of polynomial function
-    >>> fun = ...
-    >>> for i in fun  : print fun[i] 
-    """
-    np = o.npars()
-    for i in  range(np) :
-        yield i
-        
-    
-for f in ( Ostap.Math.Positive       ,
-           Ostap.Math.PositiveEven   ,  
-           Ostap.Math.Bernstein      , 
-           Ostap.Math.BernsteinEven  , 
-           Ostap.Math.Bernstein2D    ,
+for f in ( Ostap.Math.Bernstein2D    ,
            Ostap.Math.Positive2D     ,
            Ostap.Math.Bernstein2DSym ,
            Ostap.Math.Positive2DSym  ,
            ##
-           Ostap.Math.BSpline        ,
-           Ostap.Math.PositiveSpline ,
            Ostap.Math.Spline2D       ,
            Ostap.Math.Spline2DSym    ,
            ## 
@@ -571,185 +524,12 @@ for f in ( Ostap.Math.Positive       ,
     f.__iter__     = _p_iter_
     f.__contains__ = lambda s , i : 0<=i<len(s)
 
-# =============================================================================
-##  Long polynomial division
-#   f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
-#   deg(q)<=m-n, deg(r)<n
-#   @code
-#   f = ... # the first polynom
-#   g = ... # the second polynom
-#   q,r = divmod ( f , g ) 
-#   @endcode
-def _b_divmod_ ( b , p ) :
-    """Long polynomial division
-    f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
-    deg(q)<=m-n, deg(r)<n
-    
-    >>> f = ... # the first polynom
-    >>> g = ... # the second polynom
-    >>> q,r = divmod ( f , g ) 
-    """
-    rr = b.divmod(p)
-    return rr.first, rr.second
-
-# =============================================================================
-##  Long polynomial division
-#   f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
-#   deg(q)<=m-n, deg(r)<n
-#   @code
-#   f = ... # the first polynom
-#   g = ... # thr second  polynom
-#   q = f // g # get quotient 
-#   @endcode
-def _b_floordiv_ ( b , p ) :
-    """Long polynomial division
-    f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
-    deg(q)<=m-n, deg(r)<n
-    
-    >>> f = ... # the first polynom
-    >>> g = ... # the second polynom
-    >>> q = f // g 
-    """
-    rr = b.divmod(p)
-    return rr.first
-
-# =============================================================================
-##  Long polynomial division
-#   f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
-#   deg(q)<=m-n, deg(r)<n
-#   @code
-#   f = ... # the first polynom
-#   g = ... # the second  polynom
-#   r = f % g # get reminder 
-#   @endcode
-def _b_mod_ ( b , p ) :
-    """Long polynomial division
-    f(x) = q(x)*g(x)+r(x), where  deg(f)=m >= def(g)=n, and
-    deg(q)<=m-n, deg(r)<n
-    
-    >>> f = ... # the first polynom
-    >>> g = ... # the second polynom
-    >>> r = f % g 
-    """
-    rr = b.divmod(p)
-    return rr.second
-
-# =============================================================================
-## power function for polynomials
-#  @code
-#  fun1 = ..
-#  fun2 = fun1**3  
-#  @endcode
-def _b_pow_ ( b , n ) :
-    """Power function for polynomials
-    >>> fun1 = ..
-    >>> fun2 = fun1**3  
-    """
-    if n != int(n) : raise ValueError('Illegal non-integer  exponent:%s' % n )
-    n = int(n) 
-    if 0  > n      : raise ValueError('Illegal negative     exponent:%s' % n )
-    return b.pow(n)
-
-Ostap.Math.Bernstein. __divmod__   = _b_divmod_
-Ostap.Math.Bernstein. __floordiv__ = _b_floordiv_
-Ostap.Math.Bernstein. __mod__      = _b_mod_
-Ostap.Math.Bernstein. __pow__      = _b_pow_
-# =============================================================================
-
 
 # =============================================================================
 ## random generators 
 # =============================================================================
 from random import uniform as _uniform_
 
-# =============================================================================
-## generate random numbers from bernstein-like distribuitions
-#  @code
-#  >>> func = ...
-#  >>> for x in func.generate( 1000 ) : print x 
-#  @endcode
-def _random_generate_bernstein_ ( fun , num ) :
-    """Generate random numbers from bernstein-like distribuitions
-    >>> func = ...
-    >>> for x in func.generate( 1000 ) : print x 
-    """
-    xmn = fun.xmin ()
-    xmx = fun.xmax ()
-    ymx = max ( fun.bernstein().pars() )
-    i   = 0 
-    while i < num : 
-        x = _uniform_ ( xmn , xmx ) 
-        y = _uniform_ (   0 , ymx )
-        v = fun ( x )
-        if v >= y :
-            i+= 1 
-            yield x
-            
-# =============================================================================
-## Get random number from bernstein-like distribuitions
-#  @code
-#  >>> func = ...
-#  >>> print fun.shoot() 
-#  @endcode
-def _random_shoot_bernstein_ ( fun ) :
-    """Get random number from bernstein-like distribuitions
-    >>> func = ...
-    >>> print func.shoot()  
-    """
-    xmn = fun.xmin ()
-    xmx = fun.xmax ()
-    ymx = max ( fun.bernstein().pars() )
-    i   = 0 
-    while True : 
-        x = _uniform_ ( xmn , xmx ) 
-        y = _uniform_ (   0 , ymx )
-        v = fun ( x )
-        if v >= y : return x 
-
-
-# =============================================================================
-## generate random numbers from b-spline-distribuitions
-#  @code
-#  >>> func = ...
-#  >>> for x in func.generate( 1000 ) : print x 
-#  @endcode
-def _random_generate_bspline_ ( fun , num ) :
-    """Generate random numbers from bspline-like distribuitions
-    >>> func = ...
-    >>> for x in func.generate( 1000 ) : print x 
-    """
-    xmn = fun.xmin ()
-    xmx = fun.xmax ()
-    ymx = max ( fun.bspline().pars() )
-    i   = 0 
-    while i < num : 
-        x = _uniform_ ( xmn , xmx ) 
-        y = _uniform_ (   0 , ymx )
-        v = fun ( x )
-        if v >= y :
-            i+= 1 
-            yield x
-            
-# =============================================================================
-## Get random number from bspline-like distribuitions
-#  @code
-#  >>> func = ...
-#  >>> print fun.shoot() 
-#  @endcode
-def _random_shoot_bspline_ ( fun ) :
-    """Get random number from bspline-like distribuitions
-    >>> func = ...
-    >>> print func.shoot()  
-    """
-    xmn = fun.xmin ()
-    xmx = fun.xmax ()
-    ymx = max ( fun.bspline().pars() )
-    i   = 0 
-    while True : 
-        x = _uniform_ ( xmn , xmx ) 
-        y = _uniform_ (   0 , ymx )
-        v = fun ( x )
-        if v >= y : return x 
 
 # =============================================================================
 ## generate random numbers from 2D bernstein-like distribuitions
@@ -801,20 +581,6 @@ def _random_shoot_bernstein2D_ ( fun ) :
         v = fun ( x , y )
         if v >= z : return x,y
 
-Ostap.Math.Bernstein     .generate = _random_generate_bernstein_
-Ostap.Math.Bernstein     .shoot    = _random_shoot_bernstein_
-
-Ostap.Math.BernsteinEven .generate = _random_generate_bernstein_
-Ostap.Math.BernsteinEven .shoot    = _random_shoot_bernstein_
-
-Ostap.Math.Positive      .generate = _random_generate_bernstein_
-Ostap.Math.Positive      .shoot    = _random_shoot_bernstein_
-
-Ostap.Math.PositiveEven  .generate = _random_generate_bernstein_
-Ostap.Math.PositiveEven  .shoot    = _random_shoot_bernstein_
-
-Ostap.Math.PositiveSpline.generate = _random_generate_bspline_
-Ostap.Math.PositiveSpline.shoot    = _random_shoot_bspline_
 
 Ostap.Math.Positive2D    .generate = _random_generate_bernstein2D_
 Ostap.Math.Positive2D    .shoot    = _random_shoot_bernstein2D_
@@ -839,63 +605,6 @@ import ostap.math.derivative as _D1
 import ostap.math.integral   as _D2
 for i in ( _D1.Derivative , _D2.Integral , _D2.IntegralCache ) :
     if not hasattr ( i , 'tf1' ) : i.tf1 = _tf1_
-
-
-
-for t in  ( Ostap.Math.Bernstein        ,
-            Ostap.Math.BernsteinEven    ,
-            Ostap.Math.Positive         ,
-            Ostap.Math.PositiveEven     , 
-            Ostap.Math.Monothonic       ,
-            Ostap.Math.Convex           ,
-            Ostap.Math.ConvexOnly       ,
-            ##
-            Ostap.Math.BSpline          ,
-            Ostap.Math.PositiveSpline   ,
-            Ostap.Math.ConvexOnlySpline ,
-            Ostap.Math.MonothonicSpline ,
-            Ostap.Math.ConvexSpline     ) :
-
-    if not hasattr ( t ,  '_old_init_' ) :
-        
-        ## (Redefine standard constructor to allow usage of python vectors/tuples
-        def _new_init_ ( t ,  *args )  :
-            """(Redefine standard constructor to allow usage of python lists&tuples)
-            Lists and tuples are  converted on flight to :
-            - std::vector<double> 
-            - or std::vector<std::complex<double>>
-            """
-            from ostap.math.base import doubles, complexes
-            
-            largs = list ( args )
-            alen  = len(largs)
-            
-            for i in range(alen) :
-
-                arg = largs[i] 
-                if not isinstance ( arg ,  ( list , tuple ) ) : continue 
-                    
-                try: 
-                    _arg = doubles  ( *arg  )
-                    largs[i] = _arg
-                    continue 
-                except TypeError : pass
-                
-                try: 
-                    _arg = complexes ( *arg  )
-                    largs[i] = _arg
-                    continue 
-                except TypeError : pass
-                
-            targs = tuple(largs)
-            ## use old constructor 
-            t._old_init_ ( *targs ) 
-
-        _new_init_.__doc__ += '\n' + t.__init__.__doc__
-        
-        t._old_init_ = t.__init__
-        t.__init__   = _new_init_ 
-
 
 # =============================================================================
 _decorated_classes_ = set( [
