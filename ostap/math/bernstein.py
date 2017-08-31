@@ -985,7 +985,10 @@ def _p_set_par_ ( o , index , value ) :
     >>> fun = ...
     >>> fun[1] = 10.0
     """
-    if  index < 0 :  index += o.npars()
+    n = o.npars() 
+    if   index <  0 :  index += n
+    if not 0 <= index < n :
+        raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
     return o.setPar ( index , value )
 
 # =============================================================================
@@ -1008,11 +1011,12 @@ def _p_get_par_ ( o , index ) :
     >>> print fun[:3]
     >>> print fun[2::3]
     """
-    n = len(o)
+    n = o.npars() 
     if  isinstance ( index , slice ) :
         return tuple ( o.par(i) for i in range( *index.indices ( n ) ) )
-    if  index <  0 :  index += o.npars()
-    if  index >= n :
+    #
+    if  index <  0 :  index += n
+    if not 0 <= index < n :
         raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
     return o.par ( index )
 
