@@ -23,6 +23,7 @@ __all__     = (
     'Landau_pdf'         , ## Landau distribution 
     'Argus_pdf'          , ## ARGUS distribution 
     'TwoExpos_pdf'       , ## difference of two exponents
+    'Gumbel_pdf'         , ## Gumbel distributions
     'Tsallis_pdf'        , ## Tsallis PDF 
     'QGSM_pdf'           , ## QGSM PDF 
     )
@@ -658,6 +659,59 @@ class TwoExpos_pdf(PDF) :
 
 models.append ( TwoExpos_pdf )
 
+# =============================================================================
+## @class Gumbel_pdf
+#  Gumbel distribution
+#  @see https://en.wikipedia.org/wiki/Gumbel_distribution
+#  \f$  f(x,\mu,\beta) = \frac{1}{\left|\beta\right|} e^{-e^{-z}} \f$,
+#  where \f$ z = \frac{x-\mu}{\beta}\f$
+#  Very useful and important case: 
+#  if \f$ g(x) \propto exp(-\tau x ) \f$ and \f$ z = \log(x) \f$,
+#  than \f$ F(z) = g(x) = f(z; -log(\tau) ,  1) \f$
+#  It means that sum exponential components will be represented by a set  of
+#  peak-like shifted Gumbel' structures with \f$ \beta=1, \mu=-log(\tau) \f$ 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2017-09-02
+#  @see Ostap::Models::Gumbel
+#  @see Ostap::Math::Gumbel
+class Gumbel_pdf(PDF) :
+    """Gumbel distribution
+    - see https://en.wikipedia.org/wiki/Gumbel_distribution
+    f(x,\mu,\beta) = 1/abs(beta) e^{-e^{-z}}, where z = (x-mu)/beta 
+    - Very useful and important case: 
+    if  g(x) ~ exp(- tau x ) and  z = log(x), than F(z) = f(z; -log(tau),1)
+    It means that sum of exponential components will be represented by a set of
+    peak-like Gumbel' structures with beta=1, mu=-log(tau) 
+    """
+    ## constructor
+    def __init__ ( self      ,   
+                   name      ,   ## the name 
+                   x         ,   ## the variable 
+                   mu   = 0  ,   ## shift parameter/mode
+                   beta = 1  ) : ## scale parameter 
+        #
+        PDF.__init__ ( self , name )
+        #
+        self.x     = makeVar ( x ,
+                               'x_%s'           % name ,
+                               'x_{Gumbel}(%s)' % name , x )                       
+        self.mass  = self.x  ## ditto
+        #
+        self.mu    = makeVar ( mu      ,
+                               'mu_%s'                  % name ,
+                               'mu_{Gumbel}(%s)'        % name , mu   )
+        self.beta  = makeVar ( beta        ,
+                               'beta_%s'                % name ,
+                               'beta_{Gumbel}(%s)'      % name , beta ) 
+        
+        self.pdf  = Ostap.Models.Gumbel (
+            'gumbel_%s'  % name ,
+            'Gumbel(%s)' % name ,
+            self.x              ,
+            self.mu             ,
+            self.beta           )
+        
+models.append ( Gumbel_pdf ) 
 
 # =============================================================================
 ## @class Tsallis_pdf

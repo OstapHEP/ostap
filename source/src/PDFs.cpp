@@ -28,79 +28,80 @@
  *  @date   2011-11-30
  */
 // ============================================================================
-ClassImp(Ostap::Models::BreitWigner) ;
-ClassImp(Ostap::Models::Rho0) ;
-ClassImp(Ostap::Models::Kstar) ;
-ClassImp(Ostap::Models::Phi) ;
-ClassImp(Ostap::Models::BW23L) ;
-ClassImp(Ostap::Models::Flatte) ;
-ClassImp(Ostap::Models::Flatte2) ;
-ClassImp(Ostap::Models::LASS) ;
-ClassImp(Ostap::Models::LASS23L) ;
-ClassImp(Ostap::Models::Bugg) ;
-ClassImp(Ostap::Models::Bugg23L) ;
-ClassImp(Ostap::Models::Voigt) ;
-ClassImp(Ostap::Models::PseudoVoigt) ;
-ClassImp(Ostap::Models::Swanson) ;
-ClassImp(Ostap::Models::CrystalBall) ;
-ClassImp(Ostap::Models::CrystalBallRS) ;
-ClassImp(Ostap::Models::CrystalBallDS) ;
-ClassImp(Ostap::Models::Needham) ;
-ClassImp(Ostap::Models::Apolonios) ;
-ClassImp(Ostap::Models::Apolonios2) ;
-ClassImp(Ostap::Models::BifurcatedGauss) ;
-ClassImp(Ostap::Models::DoubleGauss) ;
-ClassImp(Ostap::Models::GenGaussV1) ;
-ClassImp(Ostap::Models::GenGaussV2) ;
-// ClassImp(Ostap::Models::SkewGauss) ;
-ClassImp(Ostap::Models::Bukin) ;
-ClassImp(Ostap::Models::StudentT) ;
-ClassImp(Ostap::Models::BifurcatedStudentT) ;
-ClassImp(Ostap::Models::GramCharlierA) ;
-ClassImp(Ostap::Models::PhaseSpace2) ;
-ClassImp(Ostap::Models::PhaseSpaceLeft) ;
-ClassImp(Ostap::Models::PhaseSpaceRight) ;
-ClassImp(Ostap::Models::PhaseSpaceNL) ;
-ClassImp(Ostap::Models::PhaseSpacePol) ;
-ClassImp(Ostap::Models::PhaseSpace23L) ;
-ClassImp(Ostap::Models::PolyPositive) ;
-ClassImp(Ostap::Models::PolyPositiveEven) ;
-ClassImp(Ostap::Models::PolyMonothonic) ;
-ClassImp(Ostap::Models::PolyConvex) ;
-ClassImp(Ostap::Models::PolyConvexOnly) ;
-ClassImp(Ostap::Models::ExpoPositive) ;
-ClassImp(Ostap::Models::PolySigmoid) ;
-ClassImp(Ostap::Models::TwoExpoPositive) ;
-ClassImp(Ostap::Models::GammaDist) ;
-ClassImp(Ostap::Models::GenGammaDist) ;
-ClassImp(Ostap::Models::Amoroso) ;
-ClassImp(Ostap::Models::LogGammaDist) ;
-ClassImp(Ostap::Models::Log10GammaDist) ;
-ClassImp(Ostap::Models::LogGamma) ;
-ClassImp(Ostap::Models::BetaPrime) ;
-ClassImp(Ostap::Models::Landau) ;
-ClassImp(Ostap::Models::SinhAsinh) ;
-ClassImp(Ostap::Models::JohnsonSU) ;
-ClassImp(Ostap::Models::Atlas) ;
-ClassImp(Ostap::Models::Sech) ;
-ClassImp(Ostap::Models::Logistic) ;
-ClassImp(Ostap::Models::Argus) ;
-ClassImp(Ostap::Models::Tsallis) ;
-ClassImp(Ostap::Models::QGSM) ;
-ClassImp(Ostap::Models::TwoExpos) ;
-ClassImp(Ostap::Models::PositiveSpline) ;
-ClassImp(Ostap::Models::MonothonicSpline) ;
-ClassImp(Ostap::Models::ConvexOnlySpline) ;
-ClassImp(Ostap::Models::ConvexSpline) ;
-ClassImp(Ostap::Models::Poly2DPositive) ;
-ClassImp(Ostap::Models::Poly2DSymPositive) ;
-ClassImp(Ostap::Models::PS2DPol) ;
-ClassImp(Ostap::Models::PS2DPolSym) ;
-ClassImp(Ostap::Models::ExpoPS2DPol) ;
-ClassImp(Ostap::Models::Expo2DPol) ;
-ClassImp(Ostap::Models::Expo2DPolSym) ;
-ClassImp(Ostap::Models::Spline2D) ;
-ClassImp(Ostap::Models::Spline2DSym) ; 
+ClassImp(Ostap::Models::BreitWigner) 
+ClassImp(Ostap::Models::Rho0) 
+ClassImp(Ostap::Models::Kstar) 
+ClassImp(Ostap::Models::Phi) 
+ClassImp(Ostap::Models::BW23L) 
+ClassImp(Ostap::Models::Flatte) 
+ClassImp(Ostap::Models::Flatte2) 
+ClassImp(Ostap::Models::LASS) 
+ClassImp(Ostap::Models::LASS23L) 
+ClassImp(Ostap::Models::Bugg) 
+ClassImp(Ostap::Models::Bugg23L) 
+ClassImp(Ostap::Models::Voigt) 
+ClassImp(Ostap::Models::PseudoVoigt) 
+ClassImp(Ostap::Models::Swanson) 
+ClassImp(Ostap::Models::CrystalBall) 
+ClassImp(Ostap::Models::CrystalBallRS) 
+ClassImp(Ostap::Models::CrystalBallDS) 
+ClassImp(Ostap::Models::Needham) 
+ClassImp(Ostap::Models::Apolonios) 
+ClassImp(Ostap::Models::Apolonios2) 
+ClassImp(Ostap::Models::BifurcatedGauss) 
+ClassImp(Ostap::Models::DoubleGauss) 
+ClassImp(Ostap::Models::Gumbel) 
+ClassImp(Ostap::Models::GenGaussV1) 
+ClassImp(Ostap::Models::GenGaussV2) 
+// ClassImp(Ostap::Models::SkewGauss) 
+ClassImp(Ostap::Models::Bukin) 
+ClassImp(Ostap::Models::StudentT) 
+ClassImp(Ostap::Models::BifurcatedStudentT) 
+ClassImp(Ostap::Models::GramCharlierA) 
+ClassImp(Ostap::Models::PhaseSpace2) 
+ClassImp(Ostap::Models::PhaseSpaceLeft) 
+ClassImp(Ostap::Models::PhaseSpaceRight) 
+ClassImp(Ostap::Models::PhaseSpaceNL) 
+ClassImp(Ostap::Models::PhaseSpacePol) 
+ClassImp(Ostap::Models::PhaseSpace23L) 
+ClassImp(Ostap::Models::PolyPositive) 
+ClassImp(Ostap::Models::PolyPositiveEven) 
+ClassImp(Ostap::Models::PolyMonothonic) 
+ClassImp(Ostap::Models::PolyConvex) 
+ClassImp(Ostap::Models::PolyConvexOnly) 
+ClassImp(Ostap::Models::ExpoPositive) 
+ClassImp(Ostap::Models::PolySigmoid) 
+ClassImp(Ostap::Models::TwoExpoPositive) 
+ClassImp(Ostap::Models::GammaDist) 
+ClassImp(Ostap::Models::GenGammaDist) 
+ClassImp(Ostap::Models::Amoroso) 
+ClassImp(Ostap::Models::LogGammaDist) 
+ClassImp(Ostap::Models::Log10GammaDist) 
+ClassImp(Ostap::Models::LogGamma) 
+ClassImp(Ostap::Models::BetaPrime)
+ClassImp(Ostap::Models::Landau) 
+ClassImp(Ostap::Models::SinhAsinh) 
+ClassImp(Ostap::Models::JohnsonSU) 
+ClassImp(Ostap::Models::Atlas) 
+ClassImp(Ostap::Models::Sech) 
+ClassImp(Ostap::Models::Logistic) 
+ClassImp(Ostap::Models::Argus) 
+ClassImp(Ostap::Models::Tsallis) 
+ClassImp(Ostap::Models::QGSM) 
+ClassImp(Ostap::Models::TwoExpos) 
+ClassImp(Ostap::Models::PositiveSpline) 
+ClassImp(Ostap::Models::MonothonicSpline) 
+ClassImp(Ostap::Models::ConvexOnlySpline) 
+ClassImp(Ostap::Models::ConvexSpline) 
+ClassImp(Ostap::Models::Poly2DPositive) 
+ClassImp(Ostap::Models::Poly2DSymPositive) 
+ClassImp(Ostap::Models::PS2DPol) 
+ClassImp(Ostap::Models::PS2DPolSym) 
+ClassImp(Ostap::Models::ExpoPS2DPol) 
+ClassImp(Ostap::Models::Expo2DPol) 
+ClassImp(Ostap::Models::Expo2DPolSym) 
+ClassImp(Ostap::Models::Spline2D) 
+ClassImp(Ostap::Models::Spline2DSym) 
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -2285,6 +2286,95 @@ Double_t Ostap::Models::DoubleGauss::analyticalIntegral
   setPars () ;
   //
   return m_2g.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// Gumbel
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Gumbel::Gumbel
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , 
+  RooAbsReal&          mu        , 
+  RooAbsReal&          beta      )
+  : RooAbsPdf ( name , title ) 
+//
+  , m_x    ( "x"        , "Observable"                    , this , x    ) 
+  , m_mu   ( "mu"       , "location/mode/shift parameter" , this , mu   )
+  , m_beta ( "beta"     , "scale parameter"               , this , beta )
+    //
+  , m_gumbel   ( 0 , 1 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Gumbel::Gumbel
+( const Ostap::Models::Gumbel& right , 
+  const char*                  name   ) 
+  : RooAbsPdf ( right , name ) 
+//
+  , m_x     ( "x"    , this , right.m_x    ) 
+  , m_mu    ( "mu"   , this , right.m_mu   ) 
+  , m_beta  ( "beta" , this , right.m_beta ) 
+    //
+  , m_gumbel ( right.m_gumbel ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// desctructor
+// ============================================================================
+Ostap::Models::Gumbel::Gumbel(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Gumbel*
+Ostap::Models::Gumbel::clone( const char* name ) const 
+{ return new Ostap::Models::Gumbel ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Gumbel::setPars () const 
+{
+  //
+  m_gumbel . setMu   ( m_mu   ) ;
+  m_gumbel . setBeta ( m_beta ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Gumbel::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_gumbel ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Gumbel::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Gumbel::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  //
+  return m_gumbel.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
 

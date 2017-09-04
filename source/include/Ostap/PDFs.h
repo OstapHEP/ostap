@@ -1812,6 +1812,78 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================
+    /** @class Gumbel
+     *  @see Ostap::Math::Gumbel 
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2013-08-27
+     */
+    // ========================================================================
+    class  Gumbel : public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::Gumbel, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters 
+      Gumbel
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         , 
+        RooAbsReal&          mu        , 
+        RooAbsReal&          beta      ) ;
+      /// "copy" constructor 
+      Gumbel ( const Gumbel& right , const char* name = 0  ) ;
+      /// virtual destructor  
+      virtual ~Gumbel () ;
+      /// clone 
+      virtual  Gumbel* clone ( const char* name ) const ; 
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Gumbel () {} ;
+      // ======================================================================  
+    public:
+      // ======================================================================
+      // the actual evaluation of function 
+      virtual Double_t evaluate() const ;
+      // ======================================================================
+    public: // integrals  
+      // ======================================================================      
+      virtual Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      , 
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const ;
+      virtual Double_t analyticalIntegral 
+        ( Int_t          code         ,  
+          const char*    rangeName    ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters 
+      void setPars () const ; // set all parameters 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function 
+      const Ostap::Math::Gumbel& function() const { return m_gumbel ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        ;
+      RooRealProxy m_mu       ;
+      RooRealProxy m_beta     ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function 
+      mutable Ostap::Math::Gumbel m_gumbel ;                   // the function 
+      // ======================================================================      
+    } ;
+    // ========================================================================
     /** @class GenGaussV1
      *  Simple class that implements the generalized normal distribution v1
      *  @see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1

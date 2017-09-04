@@ -164,6 +164,86 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Gumbel
+     *  Gumbel distribution
+     *  @see https://en.wikipedia.org/wiki/Gumbel_distribution
+     *  \f$   G(x;\mu,\beta) = \frac{1}{\left|\beta\right|} e^{ -(z+e^{-z})}\f$,
+     *  where \f$z= \frac{x-\mu}{\beta}\f$
+     *  
+     *  Very useful important case:
+     *  If  x is distributed accrofing  to \f$ f(x) \propto e^{-\tau x} \f$, 
+     *  then z, \f$ z  =   log(x) \f$, is distributed accoring to 
+     *  \f$ F(z) = G(x, -\log(\tau), 1 ) \f$ 
+     * 
+     *  As a   result, if    x is distributes as sum of exponentilcomponents 
+     *  with different slopes, the transforomation \f$ z=log(x) \f$ will convert each 
+     *  exponential components into bump-like structure
+     */  
+    class Gumbel: public std::unary_function<double,double>
+    {
+    public:
+      // ======================================================================
+      /** constructor  from all parameters 
+       *  @param mu location, bias parameter 
+       *  @param beta scale parameter 
+       */
+      Gumbel ( const double mu   = 0 , 
+               const double beta = 1 );
+      // ======================================================================
+    public: // primary getters 
+      // ======================================================================
+      double mu       () const { return m_mu      ; }
+      double peak     () const { return   mu   () ; }
+      double location () const { return   mu   () ; }
+      double beta     () const { return m_beta    ; }
+      double scale    () const { return   beta () ; }
+      // ======================================================================
+    public: // settetrs 
+      // ======================================================================
+      bool setMu       ( const double value ) ;
+      bool setBeta     ( const double value ) ;
+      // ======================================================================
+      bool setPeak     ( const double value ) { return setMu   ( value ) ; }
+      bool setLocation ( const double value ) { return setMu   ( value ) ; }
+      bool setScale    ( const double value ) { return setBeta ( value ) ; }
+      // ======================================================================
+    public: // derived quantities 
+      // ======================================================================
+      double mean        () const ;
+      double median      () const ;
+      double mode        () const { return mu() ; }
+      double variance    () const ;
+      double dispersion  () const { return variance () ; }
+      double sigma2      () const { return variance () ; }
+      double sigma       () const ;
+      double skewness    () const ;
+      double kurtosis    () const { return  12.0 / 5 ; }
+      // ======================================================================
+    public: // the main block 
+      // ======================================================================
+      /// get a value for the function 
+      double operator() ( const double x )  const { return pdf ( x ) ; }
+      /// get a value for the function      
+      double pdf  ( const double x ) const ;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      double cdf      ( const double x ) const ;
+      /// get the integral
+      double integral () const { return 1 ; }
+      /// get the integral between low and high limits
+      double integral ( const double low  ,
+                        const double high ) const ;
+      // ======================================================================
+    private:      
+      // ======================================================================
+      /// mode, location, bias parameter 
+      double m_mu   ; // mode, location, bias parameter 
+      /// scale parameter 
+      double m_beta ; // scale parameter
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class GenGaussV1
      *  Simple class that implements the generalized normal distribution v1
      *  @see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1

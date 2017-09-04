@@ -21,6 +21,7 @@
 #include "gsl/gsl_sf_erf.h"
 #include "gsl/gsl_sf_gamma.h"
 #include "gsl/gsl_sf_psi.h"
+#include "gsl/gsl_sf_zeta.h"
 #include "gsl/gsl_integration.h"
 #include "gsl/gsl_randist.h"
 #include "gsl/gsl_cdf.h"
@@ -1453,7 +1454,98 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
 }
 
 
-
+// ============================================================================
+/* constructor  from all parameters 
+ *  @param mu location, bias parameter 
+ *  @param beta scale parameter 
+ */
+// ============================================================================
+Ostap::Math::Gumbel::Gumbel
+( const double mu   , 
+  const double beta )
+  : std::unary_function<double,double> () 
+  , m_mu   ( mu   ) 
+  , m_beta ( beta ) 
+{}
+// ============================================================================
+bool Ostap::Math::Gumbel::setMu ( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) {  return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Gumbel::setBeta ( const double value ) 
+{
+  if ( s_equal ( value , m_beta ) ) {  return false ; }
+  m_beta = value ;
+  return true ;
+}
+// ============================================================================
+double Ostap::Math::Gumbel::median () const 
+{
+  static const double s_lnln2 = std::log( std::log ( 2.0L ) ) ;
+  return mu() - m_beta * s_lnln2 ;
+}  
+// ============================================================================
+double Ostap::Math::Gumbel::mean () const 
+{
+  static const double s_gamma = M_EULER ;
+  return mu() + m_beta * s_gamma ;
+}
+// ============================================================================
+double Ostap::Math::Gumbel::variance () const 
+{
+  static const double s_pisq6 = M_PI * M_PI / 6.0L ;
+  return m_beta * m_beta * s_pisq6 ;
+}
+// ============================================================================
+double Ostap::Math::Gumbel::sigma () const 
+{
+  static const double s_pisqr6 = M_PI / std::sqrt ( 6.0L ) ;
+  return std::abs ( m_beta ) * s_pisqr6 ;
+}
+// ============================================================================
+double Ostap::Math::Gumbel::skewness () const 
+{
+  static const double s_skew  = 
+    16 * std::sqrt( 6.0L ) * gsl_sf_zeta_int ( 3 ) / ( M_PI * M_PI * M_PI ) ;
+  return std::copysign ( s_skew , m_beta ) ;
+}
+// ============================================================================
+// get a value for the function      
+// ============================================================================
+double Ostap::Math::Gumbel::pdf  ( const double x ) const 
+{
+  const long double ibeta = 1/m_beta ;
+  const long double z     = ( x - m_mu ) * ibeta ;
+  return std::abs ( m_beta ) * std::exp ( -( z + std::exp ( -z ) ) ) ;
+}
+// ============================================================================
+// get CDF
+// ============================================================================
+double Ostap::Math::Gumbel::cdf ( const double x ) const 
+{
+  const long double z     = ( x - m_mu ) / m_beta ;
+  return 0 < m_beta ? 
+    std::exp ( -std::exp ( -z ) ) : 1 - std::exp( -std::exp ( -z ) ) ;
+}
+// ============================================================================
+// get the integral between low and high limits
+// ============================================================================
+double Ostap::Math::Gumbel::integral ( const double low  ,
+                                       const double high ) const 
+{
+  if  ( s_equal ( low , high ) ) { return 0 ; }
+  //
+  const long double ibeta = 1/m_beta ;
+  const long double zmin = ( low  - m_mu ) * ibeta ;
+  const long double zmax = ( high - m_mu ) * ibeta ;
+  //
+  return 0 < m_beta ? 
+    std::exp ( -std::exp ( -zmax ) ) - std::exp ( -std::exp ( -zmin ) ) : 
+    std::exp ( -std::exp ( -zmin ) ) - std::exp ( -std::exp ( -zmax ) ) ;
+}
 // ============================================================================
 /*  constructor from all agruments 
  *  @param mu     location/peak posiiton 
