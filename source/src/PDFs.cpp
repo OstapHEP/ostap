@@ -2308,7 +2308,7 @@ Ostap::Models::Gumbel::Gumbel
   , m_mu   ( "mu"       , "location/mode/shift parameter" , this , mu   )
   , m_beta ( "beta"     , "scale parameter"               , this , beta )
     //
-  , m_gumbel   ( 0 , 1 ) 
+  , m_gumbel ( 0 , 1 ) 
 {
   setPars () ;
 }
@@ -2319,7 +2319,6 @@ Ostap::Models::Gumbel::Gumbel
 ( const Ostap::Models::Gumbel& right , 
   const char*                  name   ) 
   : RooAbsPdf ( right , name ) 
-//
   , m_x     ( "x"    , this , right.m_x    ) 
   , m_mu    ( "mu"   , this , right.m_mu   ) 
   , m_beta  ( "beta" , this , right.m_beta ) 
@@ -2331,7 +2330,7 @@ Ostap::Models::Gumbel::Gumbel
 // ============================================================================
 // desctructor
 // ============================================================================
-Ostap::Models::Gumbel::Gumbel(){}
+Ostap::Models::Gumbel::~Gumbel(){}
 // ============================================================================
 // clone 
 // ============================================================================
@@ -2376,8 +2375,7 @@ Double_t Ostap::Models::Gumbel::analyticalIntegral
   //
   return m_gumbel.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
-// ============================================================================
-
+// ===========================================================================
 
 // ============================================================================
 //         GenGaussV1 

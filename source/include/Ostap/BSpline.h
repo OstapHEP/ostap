@@ -996,11 +996,14 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      Tiny ( const double n ) : m_tiny ( std::abs ( n ) ) {}
-      Tiny () = delete ;
+      Tiny ( const double b ) : m_tiny ( std::abs ( b ) ) {}
       // is B-spline sufficiently small ?
       inline bool operator () ( const Ostap::Math::BSpline& b ) const
       { return m_tiny ( b.norm() ) ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      Tiny() : m_tiny ( 0 ) {} ;
       // ======================================================================
     private:
       // ======================================================================

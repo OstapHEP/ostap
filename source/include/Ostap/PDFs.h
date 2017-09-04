@@ -1844,7 +1844,7 @@ namespace Ostap
     public: // some fake functionality
       // ======================================================================
       // fake default contructor, needed just for proper (de)serialization
-      Gumbel () {} ;
+      // Gumbel () {} ;
       // ======================================================================  
     public:
       // ======================================================================

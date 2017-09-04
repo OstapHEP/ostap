@@ -1455,7 +1455,7 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
 
 
 // ============================================================================
-/* constructor  from all parameters 
+/*  constructor  from all parameters 
  *  @param mu location, bias parameter 
  *  @param beta scale parameter 
  */
@@ -1509,7 +1509,7 @@ double Ostap::Math::Gumbel::sigma () const
 double Ostap::Math::Gumbel::skewness () const 
 {
   static const double s_skew  = 
-    16 * std::sqrt( 6.0L ) * gsl_sf_zeta_int ( 3 ) / ( M_PI * M_PI * M_PI ) ;
+    12 * std::sqrt( 6.0L ) * gsl_sf_zeta_int ( 3 ) / ( M_PI * M_PI * M_PI ) ;
   return std::copysign ( s_skew , m_beta ) ;
 }
 // ============================================================================
@@ -1546,6 +1546,9 @@ double Ostap::Math::Gumbel::integral ( const double low  ,
     std::exp ( -std::exp ( -zmax ) ) - std::exp ( -std::exp ( -zmin ) ) : 
     std::exp ( -std::exp ( -zmin ) ) - std::exp ( -std::exp ( -zmax ) ) ;
 }
+// ============================================================================
+
+
 // ============================================================================
 /*  constructor from all agruments 
  *  @param mu     location/peak posiiton 
