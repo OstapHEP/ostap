@@ -30,6 +30,9 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
+    class Bernstein2D   ;
+    class Bernstein2DSym;    
+    // ========================================================================
     /** @class Bernstein2D
      *  The Bernstein's polynomial of order Nx*Ny
      */
@@ -45,12 +48,20 @@ namespace Ostap
                     const double               xmax  =  1 ,
                     const double               ymin  =  0 ,
                     const double               ymax  =  1 ) ;
+      /// from symmetric variant 
+      Bernstein2D ( const Bernstein2DSym& right ) ;
+      /// copy
+      Bernstein2D ( const Bernstein2D&    right ) = default ;
+      /// move 
+      Bernstein2D (       Bernstein2D&&   right ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x ,
-                           const double y ) const ;
+      double evaluate    ( const double x , const double y ) const ;
+      /// get the value
+      double operator () ( const double x , const double y ) const 
+      { return evaluate ( x , y ) ; }
       // ======================================================================
     public: // setters
       // ======================================================================
@@ -64,7 +75,13 @@ namespace Ostap
       /// set (l,m)-parameter
       bool setPar       ( const unsigned short l     ,
                           const unsigned short m     ,
-                          const double         value ) ;
+                          const double         value ) 
+        
+      { 
+        return 
+          l > m_nx ? false :
+          m > m_ny ? false : setPar ( index ( l , m ) , value ) ; 
+      }
       /// set (l,m)-parameter
       bool setParameter ( const unsigned short l     ,
                           const unsigned short m     ,
@@ -75,7 +92,8 @@ namespace Ostap
       // ======================================================================
       /// get (l,m)-parameter
       double  par       ( const unsigned short l ,
-                          const unsigned short m ) const ;
+                          const unsigned short m ) const 
+      { return l > m_nx ? 0 : m > m_ny ? 0 : par ( index ( l , m ) ) ; }
       /// get (l,m)-parameter
       double  parameter ( const unsigned short l ,
                           const unsigned short m ) const { return par (  l , m  ) ; }
@@ -86,6 +104,18 @@ namespace Ostap
       double  parameter ( const unsigned int k ) const { return par ( k ) ; }
       /// get all parameters at once
       const std::vector<double>& pars() const { return m_pars ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///  convert (l,m)-index into single k-index
+      unsigned int index ( const unsigned short l , 
+                           const unsigned short m ) const 
+      {
+        return
+          l > m_nx ? -1 :
+          m > m_ny ? -1 :
+          1u * l * ( m_ny + 1 ) + m ;  
+      }
       // ======================================================================
     public:
       // ======================================================================
@@ -165,6 +195,41 @@ namespace Ostap
        */
       double integrateY ( const double x    ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// simple  manipulations with polynoms: shift it!
+      Bernstein2D& operator += ( const double a ) ;
+      /// simple  manipulations with polynoms: shift it!
+      Bernstein2D& operator -= ( const double a ) ;
+      /// simple  manipulations with polynoms: scale it!
+      Bernstein2D& operator *= ( const double a ) ;
+      /// simple  manipulations with polynoms: scale it!
+      Bernstein2D& operator /= ( const double a ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// negate it!
+      Bernstein2D  operator-() const ;
+      // ======================================================================
+    public: // python! 
+      // ======================================================================
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein2D __add__   ( const double value ) const ;
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein2D __radd__  ( const double value ) const ;
+      /// Product of Bernstein polynomial and a constant
+      Bernstein2D __mul__   ( const double value ) const ;
+      /// Product of Bernstein polynomial and a constant
+      Bernstein2D __rmul__  ( const double value ) const ;
+      /// Subtract a constant from Benrstein polynomial
+      Bernstein2D __sub__   ( const double value ) const ;
+      /// Constant minus Bernstein polynomial
+      Bernstein2D __rsub__  ( const double value ) const ;
+      /// Divide Benrstein polynomial by a constant
+      Bernstein2D __div__   ( const double value ) const ;
+      /// Negate Bernstein polynomial
+      Bernstein2D __neg__   () const ;
+      // ======================================================================
     public: // few helper functions to expose internals
       // ======================================================================
       /// evaluate the basic polynomials
@@ -177,6 +242,17 @@ namespace Ostap
       const Bernstein& basicX ( const unsigned short i ) const { return m_bx[i] ; }
       /// expose some internals
       const Bernstein& basicY ( const unsigned short i ) const { return m_by[i] ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// swap  two 2D-polynomials 
+      void swap ( Bernstein2D&  right ) ;
+      // ======================================================================
+    private: // helper functions to make the calculations
+      // ======================================================================
+      /// helper function to make calculations
+      double calculate ( const std::vector<double>& fx , 
+                         const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -206,6 +282,31 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    ///  Bernstein plus      constant
+    inline Bernstein2D operator+( const Bernstein2D& p , const double v )
+    { return Bernstein2D ( p ) += v ; } //  Bernstein plus constant
+    ///  Bernstein multiply  constant
+    inline Bernstein2D operator*( const Bernstein2D& p , const double v )
+    { return Bernstein2D ( p ) *= v ; } //  Bernstein plus constant
+    ///  Bernstein minus constant
+    inline Bernstein2D operator-( const Bernstein2D& p , const double v )
+    { return Bernstein2D ( p ) -= v ; } //  Bernstein plus constant
+    ///  Bernstein divide constant
+    inline Bernstein2D operator/( const Bernstein2D& p , const double v )
+    { return Bernstein2D ( p ) /= v ; } //  Bernstein plus constant
+    ///  Constant plus  Bernstein
+    inline Bernstein2D operator+( const double v , const Bernstein2D& p ) 
+    { return p +   v  ; }
+    ///  Constant times Bernstein
+    inline Bernstein2D operator*( const double v , const Bernstein2D& p ) 
+    { return p *   v  ; }
+    ///  Constant minus Bernstein
+    inline Bernstein2D operator-( const double v , const Bernstein2D& p ) 
+    { return v + (-p) ; }
+    // ========================================================================
+    /// swap  two 2D-polynomials 
+    inline void  swap ( Bernstein2D& a  , Bernstein2D& b ) { a.swap ( b ) ; }
+    // ========================================================================
     /** @class Positive2D
      *  The "positive" 2D-polynomial of order Nx*Ny
      *  Actually it is a sum of basic bernstein 2D-polynomials with
@@ -223,12 +324,19 @@ namespace Ostap
                    const double               xmax  =  1 ,
                    const double               ymin  =  0 ,
                    const double               ymax  =  1 ) ;
+      /// copy 
+      Positive2D ( const Positive2D&  right ) = default ;
+      /// move 
+      Positive2D (       Positive2D&& right ) ;
       // ======================================================================
     public:
       // ======================================================================
+      ///  get the  value 
+      double evaluate    ( const double x , const double y ) const 
+      { return m_bernstein ( x , y ) ; }        
       /// get the value
       double operator () ( const double x , const double y ) const
-      { return m_bernstein ( x , y ) ; }
+      { return evaluate    ( x , y ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -317,8 +425,13 @@ namespace Ostap
       double integrateY ( const double x    ) const
       { return m_bernstein.integrateY ( x ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// swap  two 2D-polynomials 
+      void swap ( Positive2D&  right ) ;
+      // ======================================================================
     public: // ingeredients
-      // =====================================================================
+      // ======================================================================
       // get the bernstein polinomial in 2D
       const  Ostap::Math::Bernstein2D& bernstein () const
       { return m_bernstein ; }
@@ -340,6 +453,25 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /// p + v 
+    inline Bernstein2D operator+( const Positive2D& p , const double      v )
+    { return p.bernstein() + v ; } 
+    inline Bernstein2D operator*( const Positive2D& p , const double      v )
+    { return p.bernstein() * v ; } 
+    inline Bernstein2D operator-( const Positive2D& p , const double      v )
+    { return p.bernstein() - v ; } 
+    inline Bernstein2D operator/( const Positive2D& p , const double      v )
+    { return p.bernstein() / v ; } 
+    inline Bernstein2D operator+( const double      v , const Positive2D& p )
+    { return p +      v ; } 
+    inline Bernstein2D operator*( const double      v , const Positive2D& p )
+    { return p *      v ; } 
+    inline Bernstein2D operator-( const double      v , const Positive2D& p )
+    { return v + -1 * p ; } 
+    // ========================================================================
+    /// swap  two 2D-polynomials 
+    inline void  swap ( Positive2D& a  , Positive2D& b ) { a.swap ( b ) ; }
+    // ========================================================================
     /** @class Bernstein2DSym
      *  The symmetric Bernstein's polynomial of order N*N
      */
@@ -352,12 +484,18 @@ namespace Ostap
       Bernstein2DSym ( const unsigned short       n     =  1 ,
                        const double               xmin  =  0 ,
                        const double               xmax  =  1 ) ;
+      /// copy
+      Bernstein2DSym ( const Bernstein2DSym&  right ) = default ;
+      /// move 
+      Bernstein2DSym (       Bernstein2DSym&& right ) ;      
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x ,
-                           const double y ) const ;
+      double evaluate    ( const double x , const double y ) const ;
+      /// get the value
+      double operator () ( const double x , const double y ) const 
+      { return evaluate ( x , y ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -373,7 +511,12 @@ namespace Ostap
       /// set (l,m)-parameter
       bool setPar       ( const unsigned short l     ,
                           const unsigned short m     ,
-                          const double         value ) ;
+                          const double         value ) 
+      {
+        return
+          l > m_n ? false : 
+          m > m_n ? false : setPar ( index ( l , m ) , value ) ;
+      }
       /// set (l,m)-parameter
       bool setParameter ( const unsigned short l     ,
                           const unsigned short m     ,
@@ -381,7 +524,12 @@ namespace Ostap
       { return setPar   ( l , m  , value ) ; }
       /// get (l,m)-parameter
       double  par       ( const unsigned short l ,
-                          const unsigned short m ) const ;
+                          const unsigned short m ) const 
+      {
+        return 
+          l > m_n ? 0 : 
+          m > m_n ? 0 : par ( index ( l , m ) ) ;
+      }
       /// get (l,m)-parameter value
       double  parameter ( const unsigned short l ,
                           const unsigned short m ) const { return par (  l , m  ) ; }
@@ -392,6 +540,18 @@ namespace Ostap
       double  parameter ( const unsigned int   k ) const { return par ( k ) ; }
       /// get all parameters at once
       const std::vector<double>& pars() const { return m_pars ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///  convert (l,m)-index into single k-index
+      unsigned int index ( const unsigned short l , 
+                           const unsigned short m ) const 
+      {
+        return
+          m > l   ? index ( m , l )  :
+          l > m_n ? -1               :  // NB !!
+          1u * l * ( l + 1 ) / 2 + m ;
+      }
       // ======================================================================
     public:
       // ======================================================================
@@ -470,6 +630,41 @@ namespace Ostap
        */
       double integrateY ( const double x ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// simple  manipulations with polynoms: shift it!
+      Bernstein2DSym& operator += ( const double a ) ;
+      /// simple  manipulations with polynoms: shift it!
+      Bernstein2DSym& operator -= ( const double a ) ;
+      /// simple  manipulations with polynoms: scale it!
+      Bernstein2DSym& operator *= ( const double a ) ;
+      /// simple  manipulations with polynoms: scale it!
+      Bernstein2DSym& operator /= ( const double a ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// negate it!
+      Bernstein2DSym  operator-() const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein2DSym __add__   ( const double value ) const ;
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein2DSym __radd__  ( const double value ) const ;
+      /// Product of Bernstein polynomial and a constant
+      Bernstein2DSym __mul__   ( const double value ) const ;
+      /// Product of Bernstein polynomial and a constant
+      Bernstein2DSym __rmul__  ( const double value ) const ;
+      /// Subtract a constant from Benrstein polynomial
+      Bernstein2DSym __sub__   ( const double value ) const ;
+      /// Constant minus Bernstein polynomial
+      Bernstein2DSym __rsub__  ( const double value ) const ;
+      /// Divide Benrstein polynomial by a constant
+      Bernstein2DSym __div__   ( const double value ) const ;
+      /// Negate Bernstein polynomial
+      Bernstein2DSym __neg__   () const ;
+      // ======================================================================
     public: // few helper functions to expose internals
       // ======================================================================
       /// evaluate the basic polynomials
@@ -478,7 +673,18 @@ namespace Ostap
       /// expose some internals
       const Bernstein& basic ( const unsigned short i ) const { return m_b[i] ; }
       // ======================================================================
-    private:
+    public:
+      // ======================================================================
+      /// swap  two 2D-polynomials 
+      void swap ( Bernstein2DSym&  right ) ;
+      // ======================================================================
+    private: // helper functions to make the calculations
+      // ======================================================================
+      /// helper function to make calculations
+      double calculate ( const std::vector<double>& fx , 
+                         const std::vector<double>& fy ) const ;
+      // ======================================================================
+   private:
       // ======================================================================
       // polynom order
       unsigned short m_n  ; // polynom order in x-dimension
@@ -498,6 +704,28 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    ///  Bernstein plus      constant
+    inline Bernstein2DSym operator+( const Bernstein2DSym& p , const double v )
+    { return Bernstein2DSym ( p ) += v ; } //  Bernstein plus constant
+    ///  Bernstein multiply  constant
+    inline Bernstein2DSym operator*( const Bernstein2DSym& p , const double v )
+    { return Bernstein2DSym ( p ) *= v ; } //  Bernstein plus constant
+    ///  Bernstein minus constant
+    inline Bernstein2DSym operator-( const Bernstein2DSym& p , const double v )
+    { return Bernstein2DSym ( p ) -= v ; } //  Bernstein plus constant
+    ///  Bernstein divide constant
+    inline Bernstein2DSym operator/( const Bernstein2DSym& p , const double v )
+    { return Bernstein2DSym ( p ) /= v ; } //  Bernstein plus constant
+    ///  Constant plus  Bernstein
+    inline Bernstein2DSym operator+( const double v , const Bernstein2DSym& p ) { return p +   v  ; }
+    ///  Constant times Bernstein
+    inline Bernstein2DSym operator*( const double v , const Bernstein2DSym& p ) { return p *   v  ; }
+    ///  Constant minus Bernstein
+    inline Bernstein2DSym operator-( const double v , const Bernstein2DSym& p ) { return v + (-p) ; }
+    // ========================================================================
+    /// swap  two 2D-polynomials 
+    inline void  swap ( Bernstein2DSym& a  , Bernstein2DSym& b ) { a.swap ( b ) ; }
+    // ========================================================================
     /** @class Positive2DSym
      *  The "positive" symmetrical polynomial of order Nx*Ny
      *  Actually it is a sum of basic bernstein 2D-polynomials with
@@ -512,11 +740,19 @@ namespace Ostap
       Positive2DSym ( const unsigned short       Nx    =  1 ,
                       const double               xmin  =  0 ,
                       const double               xmax  =  1 ) ;
+      /// copy 
+      Positive2DSym ( const Positive2DSym&  right ) =  default ;
+      /// mobe 
+      Positive2DSym (       Positive2DSym&& right ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
+      double evaluate    ( const double x , const double y ) const 
+      { return m_bernstein ( x ,  y ) ; }
+      /// get the value
+      double operator () ( const double x , const double y ) const 
+      { return evaluate ( x , y ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -603,6 +839,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// swap  two 2D-polynomials 
+      void swap ( Positive2DSym&  right ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
       // get the bernstein 2D polynom
       const Ostap::Math::Bernstein2DSym& bernstein() const
       { return m_bernstein ; }
@@ -623,6 +864,9 @@ namespace Ostap
       Ostap::Math::NSphere        m_sphere ;
       // ======================================================================
     } ;
+    // ========================================================================
+    /// swap  two 2D-polynomials 
+    inline void  swap ( Positive2DSym& a  , Positive2DSym& b ) { a.swap ( b ) ; }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
