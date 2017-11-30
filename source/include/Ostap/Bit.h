@@ -144,7 +144,7 @@ namespace Ostap
        *  @date 2008-08-01
        */
       template <class TYPE, unsigned int N>
-      struct _Bit : public std::unary_function<TYPE,bool>
+      struct _Bit 
       {
       private:
         // ====================================================================
@@ -169,7 +169,7 @@ namespace Ostap
        *  @date 2008-08-01
        */
       template <class TYPE,unsigned int N1,unsigned int N2>
-      struct _Bits : public std::unary_function<TYPE,TYPE> 
+      struct _Bits 
       {
       private:
         // ====================================================================

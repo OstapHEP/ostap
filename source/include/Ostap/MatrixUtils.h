@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_MATRIXUTILS_H
 #define OSTAP_MATRIXUTILS_H 1
@@ -297,7 +296,7 @@ namespace Ostap
      *  @date 2006-05-25
      */
     template <class T>
-    struct _AbsCompare : public std::binary_function<T,T,bool>
+    struct _AbsCompare 
     {
       inline bool operator() ( const T v1 , const T v2 ) const 
       { return std::abs( v1 ) < std::abs( v2 ) ; }
@@ -1088,7 +1087,7 @@ namespace Ostap
      *  const Ostap::SymMatrix4x4 m2 = ... ;
      *  
      *   // comparison criteria:
-     *   struct Equal : publuc std::binary_fuction<double,double,bool>
+     *   struct Equal 
      *   {
      *     Equal ( const double value ) : m_threshold ( value ) {} ;
      *     bool operator() ( const double v1 , const double v2 ) const 
@@ -1141,7 +1140,7 @@ namespace Ostap
      *  const Ostap::Matrix4x4 m2 = ... ;
      *  
      *   // comparison criteria:
-     *   struct Equal : publuc std::binary_fuction<double,double,bool>
+     *   struct Equal
      *   {
      *     Equal ( const double value ) : m_threshold ( value ) {} ;
      *     bool operator() ( const double v1 , const double v2 ) const 

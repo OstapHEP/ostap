@@ -35,6 +35,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION ${LIBRAR
 add_library(ostap SHARED src/format.cpp
                          src/BSpline.cpp
                          src/Bernstein.cpp
+                         src/Bernstein1D.cpp
+                         src/Bernstein2D.cpp
                          src/Binomial.cpp
                          src/Choose.cpp
                          src/Combine.cpp
@@ -44,6 +46,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Exception.cpp
                          src/Faddeeva.cpp 
                          src/Formula.cpp   
+                         src/Fourier.cpp   
                          src/GSL_sentry.cpp 
                          src/GSL_utils.cpp 
                          src/Hesse.cpp
@@ -58,6 +61,7 @@ add_library(ostap SHARED src/format.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp
                          src/Models.cpp
+                         src/Models2D.cpp
                          src/MoreMath.cpp
                          src/Mute.cpp
                          src/NStatEntity.cpp
@@ -76,6 +80,7 @@ add_library(ostap SHARED src/format.cpp
                          src/UStat.cpp
                          src/ValueWithError.cpp
                          src/Vector3DWithError.cpp
+                         src/Workspace.cpp    
                          src/WStatEntity.cpp    
                          src/nSphere.cpp      
                         )    

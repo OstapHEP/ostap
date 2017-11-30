@@ -276,8 +276,7 @@ namespace
 Ostap::Math::BSpline::BSpline 
 ( const std::vector<double>& knots  ,
   const unsigned short       order  ) 
-  : std::unary_function<double,double>() 
-  , m_knots   ( knots  ) 
+  : m_knots   ( knots  ) 
   , m_pars    () 
   , m_order   ( order  ) 
   , m_inner   ( 0      )  
@@ -330,9 +329,7 @@ Ostap::Math::BSpline::BSpline
 Ostap::Math::BSpline::BSpline 
 ( const std::vector<double>& knots  ,
   const std::vector<double>& pars   ) 
-  : std::unary_function<double,double>() 
-    //
-  , m_knots ( knots  ) 
+  : m_knots ( knots  ) 
   , m_pars  ( pars   ) 
   , m_order ( 1      ) 
   , m_inner ( 0      )  
@@ -384,9 +381,7 @@ Ostap::Math::BSpline::BSpline
   const double         xmax    , 
   const unsigned short inner   , // number of inner points  
   const unsigned short order   ) 
-  : std::unary_function<double,double>() 
-    //
-  , m_knots () 
+  : m_knots () 
   , m_pars  ( order + inner + 1 , 0.0 ) 
   , m_order ( order )  
   , m_inner ( inner )  
@@ -427,9 +422,7 @@ Ostap::Math::BSpline::BSpline
 ( const Ostap::Math::BSpline& b   , 
   const double                xmn , 
   const double                xmx )
-  : std::unary_function<double,double>() 
-    //
-  , m_knots ( b.m_knots ) 
+  : m_knots ( b.m_knots ) 
   , m_pars  ( b.m_pars  ) 
   , m_order ( b.m_order ) 
   , m_inner ( 0      )  
@@ -498,8 +491,7 @@ Ostap::Math::BSpline::BSpline
 // move constructor 
 // ============================================================================
 Ostap::Math::BSpline::BSpline( Ostap::Math::BSpline&&  right ) 
-  : std::unary_function<double,double>( std::move ( right ) ) 
-  , m_knots   ( std::move ( right.m_knots   ) ) 
+  : m_knots   ( std::move ( right.m_knots   ) ) 
   , m_pars    ( std::move ( right.m_pars    ) ) 
   , m_order   ( std::move ( right.m_order   ) ) 
   , m_inner   ( std::move ( right.m_inner   ) ) 
@@ -1103,8 +1095,7 @@ Ostap::Math::knots_from_abscissas ( std::vector<double> abscissas ,
 Ostap::Math::PositiveSpline::PositiveSpline 
 ( const std::vector<double>& points ,
   const unsigned short       order  ) 
-  : std::unary_function<double,double> () 
-  , m_bspline ( points , order ) 
+  : m_bspline ( points , order ) 
   , m_sphere  ( 1 , 3 ) 
 {
   //
@@ -1128,8 +1119,7 @@ Ostap::Math::PositiveSpline::PositiveSpline
 Ostap::Math::PositiveSpline::PositiveSpline 
 ( const std::vector<double>& points    ,
   const std::vector<double>& pars      ) 
-  : std::unary_function<double,double> () 
-  , m_bspline ( points , std::vector<double>( pars.size() + 1 , 0 )  ) 
+  : m_bspline ( points , std::vector<double>( pars.size() + 1 , 0 )  ) 
   , m_sphere  ( pars   , 3 ) 
 {
   //
@@ -1153,8 +1143,7 @@ Ostap::Math::PositiveSpline::PositiveSpline
   const double         xmax  ,  
   const unsigned short inner ,   // number of inner points 
   const unsigned short order ) 
-  : std::unary_function<double,double> ()
-  , m_bspline ( xmin , xmax , inner , order ) 
+  : m_bspline ( xmin , xmax , inner , order ) 
   , m_sphere  ( 1 , 3 ) 
 {
   //
@@ -1170,8 +1159,7 @@ Ostap::Math::PositiveSpline::PositiveSpline
 // ============================================================================
 Ostap::Math::PositiveSpline::PositiveSpline 
 ( const Ostap::Math::BSpline& spline ) 
-  : std::unary_function<double,double> ()
-  , m_bspline ( spline ) 
+  : m_bspline ( spline ) 
   , m_sphere  ( 1 , 3  ) 
 {
   //
@@ -1716,9 +1704,7 @@ bool Ostap::Math::ConvexSpline::updateCoefficients  ()
 Ostap::Math::Spline2D::Spline2D
 ( const Ostap::Math::BSpline& xspline , 
   const Ostap::Math::BSpline& yspline ) 
-  : std::binary_function<double,double,double> () 
-    //
-  , m_xspline ( xspline        ) 
+  : m_xspline ( xspline        ) 
   , m_yspline ( yspline        ) 
   , m_sphere  ( xspline.npars() * yspline.npars() - 1 ) 
   , m_xcache  ( xspline.npars() , 0 ) 
@@ -2186,9 +2172,7 @@ double Ostap::Math::Spline2D::integrateX
 // ============================================================================
 Ostap::Math::Spline2DSym::Spline2DSym
 ( const Ostap::Math::BSpline&  spline )
-  : std::binary_function<double,double,double> () 
-    //
-  , m_spline ( spline             ) 
+  : m_spline ( spline             ) 
   , m_sphere ( spline.npars() * ( spline.npars()  + 1 ) / 2 - 1  ) 
   , m_xcache ( spline.npars() , 0 ) 
   , m_ycache ( spline.npars() , 0 ) 

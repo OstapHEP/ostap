@@ -6,15 +6,16 @@
 // ============================================================================
 // STD & STL
 // ============================================================================
-#include <functional>
 #include <vector>
 #include <complex>
 // ============================================================================
 // OStap
 // ============================================================================
 #include "Ostap/NSphere.h"
-#include "Ostap/Bernstein.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/Bernstein.h"
+#include "Ostap/Bernstein1D.h"
+#include "Ostap/Workspace.h"
 // ============================================================================
 /** @file Ostap/Models.h
  *
@@ -35,7 +36,7 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class  BifurcatedGauss : public std::unary_function<double,double>
+    class  BifurcatedGauss
     {
       // ======================================================================
     public:
@@ -101,7 +102,7 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class  DoubleGauss : public std::unary_function<double,double>
+    class  DoubleGauss 
     {
       // ======================================================================
     public:
@@ -179,7 +180,7 @@ namespace Ostap
      *  with different slopes, the transforomation \f$ z=log(x) \f$ will convert each 
      *  exponential components into bump-like structure
      */  
-    class Gumbel: public std::unary_function<double,double>
+    class Gumbel
     {
     public:
       // ======================================================================
@@ -250,7 +251,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2013-08-25
      */
-    class  GenGaussV1: public std::unary_function<double,double>
+    class  GenGaussV1
     {
     public:
       // ======================================================================
@@ -331,7 +332,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2013-08-25
      */
-    class  GenGaussV2: public std::unary_function<double,double>
+    class  GenGaussV2
     {
     public:
       // ======================================================================
@@ -413,7 +414,7 @@ namespace Ostap
     //  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     //  *  @date 2013-08-25
     //  */
-    // class  SkewGauss: public std::unary_function<double,double>
+    // class  SkewGauss
     // {
     // public:
     //   // ======================================================================
@@ -484,41 +485,6 @@ namespace Ostap
     //   // =======================================================================
     // } ;
     // ========================================================================
-    /** @class WorkSpace
-     *  helper utility to keep the integration workspace fro GSL integration
-     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-     *  @date 2011-12-03
-     */
-    class WorkSpace
-    {
-    public:
-      // ======================================================================
-      /// constructor
-      WorkSpace () ;
-      /// (fictive) copy constructor
-      WorkSpace ( const WorkSpace& right );
-      /// destructor
-      ~WorkSpace () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integration workspace
-      void* workspace () const ;               // get the integration workspace
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// (fictive) assignement operator
-      WorkSpace& operator= ( const WorkSpace& right ) ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual GSL-workspace
-      // mutable char*  m_workspace ;  /// the actual GSL-workspace
-      // char* here to please dictionary generator...
-      mutable char*  m_workspace ;  /// the actual GSL-workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
     /** @class Bukin
      *  ``Bukin-function'', aka "Modified Novosibirsk function"
      *  for description of asymmetric peaks with the exponential tails
@@ -527,7 +493,7 @@ namespace Ostap
      *  @see http://dx.doi.org/10.1007/JHEP06(2012)141
      *  @date 2011-04-19
      */
-    class  Bukin : public std::unary_function<double,double>
+    class  Bukin 
     {
     public :
       // ======================================================================
@@ -625,7 +591,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class  Novosibirsk : public std::unary_function<double,double>
+    class  Novosibirsk
     {
     public :
       // ======================================================================
@@ -725,7 +691,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-05-25
      */
-    class  CrystalBall : public std::unary_function<double,double>
+    class  CrystalBall
     {
     public:
       // ======================================================================
@@ -814,7 +780,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-05-13
      */
-    class  Needham : public std::unary_function<double,double>
+    class  Needham 
     {
     public:
       // ======================================================================
@@ -888,7 +854,7 @@ namespace Ostap
      *  @see CrystalBall
      *  @date 2011-05-25
      */
-    class  CrystalBallRightSide : public std::unary_function<double,double>
+    class  CrystalBallRightSide 
     {
     public:
       // ======================================================================
@@ -952,7 +918,6 @@ namespace Ostap
      *  @date 2011-05-25
      */
     class  CrystalBallDoubleSided
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -1059,7 +1024,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
      */
-    class  Apolonios : public std::unary_function<double,double>
+    class  Apolonios
     {
     public:
       // ======================================================================
@@ -1161,7 +1126,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
      */
-    class  Apolonios2 : public std::unary_function<double,double>
+    class  Apolonios2 
     {
     public:
       // ======================================================================
@@ -1238,7 +1203,6 @@ namespace Ostap
      *  @date 2011-06-13
      */
     class  GramCharlierA
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -1314,7 +1278,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  PhaseSpace2
-      : public std::unary_function<double,double>
     {
       // ======================================================================
     public:
@@ -1419,7 +1382,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  PhaseSpace3
-      : public std::unary_function<double,double>
     {
       // ======================================================================
     public:
@@ -1489,7 +1451,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  PhaseSpaceLeft
-      : public std::unary_function<double,double>
     {
       // ======================================================================
     public:
@@ -1530,7 +1491,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  PhaseSpaceRight
-      : public std::unary_function<double,double>
     {
       // ======================================================================
     public:
@@ -1574,7 +1534,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  PhaseSpaceNL
-      : public std::unary_function<double,double>
     {
       // ======================================================================
     public:
@@ -1646,7 +1605,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  PhaseSpacePol
-      : public std::unary_function<double,double>
     {
       // ======================================================================
     public:
@@ -1746,7 +1704,6 @@ namespace Ostap
      *  @date 2012-04-01
      */
     class  PhaseSpace23L
-      : public std::unary_function<double,double>
     {
       // ======================================================================
     public:
@@ -1872,7 +1829,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  BreitWigner
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -2108,7 +2064,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  Flatte
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -2262,7 +2217,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  Voigt
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -2332,7 +2286,6 @@ namespace Ostap
      *  @date 2016-06-13
      */
     class  PseudoVoigt
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -2620,7 +2573,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-06-11
      */
-    class  Swanson : public std::unary_function<double,double>
+    class  Swanson
     {
     public:
       // ======================================================================
@@ -2731,7 +2684,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2013-10-05
      */
-    class  LASS : public std::unary_function<double,double>
+    class  LASS
     {
       // ======================================================================
     public:
@@ -2824,7 +2777,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-04-01
      */
-    class  LASS23L : public std::unary_function<double,double>
+    class  LASS23L 
     {
       // ======================================================================
     public:
@@ -2929,7 +2882,6 @@ namespace Ostap
      *  @date 2012-04-01
      */
     class  Bugg
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3076,7 +3028,6 @@ namespace Ostap
      *  @date 2012-04-01
      */
     class  Bugg23L
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3222,7 +3173,6 @@ namespace Ostap
      *  @date 2012-05-23
      */
     class  BW23L
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3315,7 +3265,6 @@ namespace Ostap
      *  @date 2011-11-30
      */
     class  Flatte23L
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3417,7 +3366,6 @@ namespace Ostap
      *  @date 2012-04-01
      */
     class  Gounaris23L
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3536,7 +3484,6 @@ namespace Ostap
      *  @date 2013-01-05
      */
     class  StudentT
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3620,7 +3567,6 @@ namespace Ostap
      *  @date 2013-01-05
      */
     class  BifurcatedStudentT
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3727,7 +3673,6 @@ namespace Ostap
      *  @date   2013-05-11
      */
     class  GammaDist
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3809,7 +3754,6 @@ namespace Ostap
      *  @date   2013-05-11
      */
     class  LogGammaDist
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -3931,7 +3875,6 @@ namespace Ostap
      *  @date   2013-05-11
      */
     class  GenGammaDist
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -4013,7 +3956,6 @@ namespace Ostap
      *  @date   2013-05-11
      */
     class  Amoroso
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -4103,7 +4045,6 @@ namespace Ostap
      *  @date   2013-05-11
      */
     class  LogGamma
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -4171,7 +4112,6 @@ namespace Ostap
      *  @date   2013-05-11
      */
     class  BetaPrime
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -4245,7 +4185,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-05-11
      */
-    class  Landau : public std::unary_function<double,double>
+    class  Landau 
     {
     public:
       // ======================================================================
@@ -4309,7 +4249,6 @@ namespace Ostap
      *  @date   2014-08-02
      */
     class  SinhAsinh
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -4392,7 +4331,6 @@ namespace Ostap
      *  @date   2015-07-11
      */
     class  JohnsonSU
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -4461,7 +4399,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-08-21
      */
-    class  Atlas : public std::unary_function<double,double>
+    class  Atlas 
     {
     public:
       // ======================================================================
@@ -4540,7 +4478,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-04-25
      */
-    class  Sech : public std::unary_function<double,double>
+    class  Sech 
     {
     public:
       // ======================================================================
@@ -4617,7 +4555,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-06-14
      */
-    class  Logistic : public std::unary_function<double,double>
+    class  Logistic
     {
     public:
       // ======================================================================
@@ -4695,7 +4633,6 @@ namespace Ostap
      *  @date   2013-05-11
      */
     class  Argus
-      : public std::unary_function<double,double>
     {
     public:
       // ======================================================================
@@ -4753,7 +4690,7 @@ namespace Ostap
      *  product of the exponential and positive polinonmial
      *  @see Ostap::Math::Positive
      */
-    class  ExpoPositive :  public std::unary_function<double,double>
+    class  ExpoPositive 
     {
     public:
       // ======================================================================
@@ -4829,521 +4766,13 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    // 2D-models
-    // ========================================================================
-    /** @class PS2DPol
-     *  The 2D-function:
-     *  \f$ f(x,y) = Ps(x)*Ps(y)*P_{pos}(x,y) \f$, where
-     *  \f$Ps\f$ denotes phase-space function and
-     * \f$P_{pos}\f$ denotes the positive polynomial
-     */
-    class  PS2DPol
-      : public std::binary_function<double,double,double>
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from the order
-      PS2DPol ( const PhaseSpaceNL&   psx = PhaseSpaceNL () ,
-                const PhaseSpaceNL&   psy = PhaseSpaceNL () ,
-                const unsigned short  Nx  =  1 ,
-                const unsigned short  Ny  =  1 ) ;
-      /// constructor from the order
-      PS2DPol ( const PhaseSpaceNL&   psx     ,
-                const PhaseSpaceNL&   psy     ,
-                const unsigned short  Nx      ,
-                const unsigned short  Ny      ,
-                const double          xmin    ,
-                const double          xmax    ,
-                const double          ymin    ,
-                const double          ymax    ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the integral over 2D-region
-       *  \f[ \int_{x_low}^{x_high}\int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}x\mathrm{d}y\f]
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
-       */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in y
-       *  @param xhigh high edge in y
-       */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in x
-       *  @param yhigh high edge in x
-       */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      const Ostap::Math::PhaseSpaceNL& psX         () const { return m_psx      ; }
-      const Ostap::Math::PhaseSpaceNL& psY         () const { return m_psy      ; }
-      const Ostap::Math::PhaseSpaceNL& phasespaceX () const { return psX ()     ; }
-      const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY ()     ; }
-      const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
-      // ====================================== ===============================
-    private:
-      // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2D   m_positive ; // the actual bernstein polynomial
-      /// Phase space
-      Ostap::Math::PhaseSpaceNL m_psx      ;
-      Ostap::Math::PhaseSpaceNL m_psy      ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// workspace
-      Ostap::Math::WorkSpace m_workspace   ;
-      // ======================================================================
-    };
-    // ========================================================================
-    /** @class PS2DPolSym
-     *  The symmetric 2D-function:
-     *  \f$ f(x,y) = Ps(x)*Ps(y)*P_{sym}(x,y) \f$, where
-     *  \f$Ps\f$ denotes phase-space function and
-     * \f$P_{sym}\f$ denotes the symmetric positive polynomial
-     */
-    class  PS2DPolSym
-      : public std::binary_function<double,double,double>
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from the order
-      PS2DPolSym ( const PhaseSpaceNL&   ps = PhaseSpaceNL() ,
-                   const unsigned short  N  =  1             ) ;
-      /// constructor from the order
-      PS2DPolSym ( const PhaseSpaceNL&   ps      ,
-                   const unsigned short  N       ,
-                   const double          xmin    ,
-                   const double          xmax    ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the integral over 2D-region
-       *  \f[ \int_{x_low}^{x_high}\int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}x\mathrm{d}y\f]
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
-       */
-      double integral ( const double xlow  , 
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in y
-       *  @param xhigh high edge in y
-       */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in x
-       *  @param yhigh high edge in x
-       */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      const Ostap::Math::PhaseSpaceNL&  psX         () const { return m_ps       ; }
-      const Ostap::Math::PhaseSpaceNL&  psY         () const { return m_ps       ; }
-      const Ostap::Math::PhaseSpaceNL&  phasespaceX () const { return psX()      ; }
-      const Ostap::Math::PhaseSpaceNL&  phasespaceY () const { return psY()      ; }
-      const Ostap::Math::Positive2DSym& positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2DSym& polynom     () const { return m_positive ; }
-      // ====================================== ===============================
-    private:
-      // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2DSym m_positive ; // the actual bernstein polynomial
-      /// Phase space
-      Ostap::Math::PhaseSpaceNL m_ps        ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// workspace for numerical integration
-      Ostap::Math::WorkSpace m_workspace    ;
-      // ======================================================================
-    };
-    // ========================================================================
-    /** @class ExpoPS2DPol
-     *  The 2D-function:
-     *  \f$ f(x,y) = exp(tau*x)*Ps(y)*P_{pos}(x,y) \f$, where
-     *  \f$Ps\f$ denotes phase-space function and
-     * \f$P_{pos}\f$ denotes the positive polynomial
-     */
-    class  ExpoPS2DPol
-      : public std::binary_function<double,double,double>
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from the order
-      ExpoPS2DPol ( const PhaseSpaceNL&   psy  = PhaseSpaceNL() ,
-                    const double          xmin = 0 ,
-                    const double          xmax = 1 ,
-                    const unsigned short  Nx   = 1 ,
-                    const unsigned short  Ny   = 1 ) ;
-      /// constructor from the order
-      ExpoPS2DPol ( const PhaseSpaceNL&   psy     ,
-                    const double          xmin    ,
-                    const double          xmax    ,
-                    const unsigned short  Nx      ,
-                    const unsigned short  Ny      ,
-                    const double          ymin    ,
-                    const double          ymax    ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get tau
-      double         tau () const { return m_tau ;}
-      /// set tau
-      bool           setTau ( const double val ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the integral over 2D-region
-       *  \f[ \int_{x_low}^{x_high}\int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}x\mathrm{d}y\f]
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
-       */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in y
-       *  @param xhigh high edge in y
-       */
-      double integrateX ( const double y     ,
-                          const double xlow  ,
-                          const double xhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in x
-       *  @param yhigh high edge in x
-       */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      const Ostap::Math::PhaseSpaceNL& psY         () const { return m_psy      ; }
-      const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY ()     ; }
-      const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
-      // ====================================== ===============================
-    private:
-      // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2D   m_positive ; // the actual bernstein polynomial
-      /// Phase space
-      Ostap::Math::PhaseSpaceNL m_psy      ;
-      /// exponential
-      double                    m_tau      ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// workspace
-      Ostap::Math::WorkSpace m_workspace   ;
-      // ======================================================================
-    };
-    // ========================================================================
-    /** @class Expo2DPol
-     *  The 2D-function:
-     *  \f$ f(x,y) = exp(x)*expo(y)*P_{pos}(x,y) \f$, where
-     * \f$P_{pos}\f$ denotes the positive polynomial
-     */
-    class  Expo2DPol
-      : public std::binary_function<double,double,double>
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from the order
-      Expo2DPol ( const double          xmin = 0  ,
-                  const double          xmax = 1  ,
-                  const double          ymin = 0  ,
-                  const double          ymax = 1  ,
-                  const unsigned short  Nx   =  1 ,
-                  const unsigned short  Ny   =  1 ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get tau
-      double         tauX    () const { return m_tauX ;}
-      double         tauY    () const { return m_tauY ;}
-      /// set tau
-      bool           setTauX ( const double val ) ;
-      bool           setTauY ( const double val ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the integral over 2D-region
-       *  \f[ \int_{x_low}^{x_high}\int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}x\mathrm{d}y\f]
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
-       */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in y
-       *  @param xhigh high edge in y
-       */
-      double integrateX ( const double y     ,
-                          const double xlow  ,
-                          const double xhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in x
-       *  @param yhigh high edge in x
-       */
-      double integrateY ( const double x     ,
-                          const double ylow  , 
-                          const double yhigh ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
-      // ====================================== ===============================
-    private:
-      // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2D   m_positive ; // the actual bernstein polynomial
-      /// exponential
-      double                    m_tauX     ;
-      double                    m_tauY     ;
-      // ======================================================================
-    };
-    // ========================================================================
-    /** @class Expo2DPolSym
-     *  The 2D-function:
-     *  \f$ f(x,y) = exp(x)*expo(y)*P_{sym}(x,y) \f$, where
-     * \f$P_{pos}\f$ denotes the symmetric positive polynomial
-     */
-    class  Expo2DPolSym
-      : public std::binary_function<double,double,double>
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from the order
-      Expo2DPolSym ( const double          xmin = 0 ,
-                     const double          xmax = 1 ,
-                     const unsigned short  N    = 1 ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get nX & nY
-      unsigned short n  () const { return m_positive.nX () ; }
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get tau
-      double         tau     () const { return m_tau  ;}
-      /// set tau
-      bool           setTau  ( const double val ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the integral over 2D-region
-       *  \f[ \int_{x_low}^{x_high}\int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}x\mathrm{d}y\f]
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
-       */
-      double integral ( const double xlow , const double xhigh ,
-                        const double ylow , const double yhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
-       *  @param y     variable
-       *  @param xlow  low  edge in y
-       *  @param xhigh high edge in y
-       */
-      double integrateX ( const double y    ,
-                          const double xlow , const double xhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
-       *  @param x     variable
-       *  @param ylow  low  edge in x
-       *  @param yhigh high edge in x
-       */
-      double integrateY ( const double x    ,
-                          const double ylow , const double yhigh ) const ;
-      // ======================================================================
-    public:  // expose some internmals
-      // ======================================================================
-      const Ostap::Math::Positive2DSym& positive () const { return m_positive ; }
-      const Ostap::Math::Positive2DSym& polynom  () const { return m_positive ; }
-      // ====================================== ===============================
-    private:
-      // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2DSym m_positive ; // the actual bernstein polynomial
-      /// exponential
-      double                     m_tau      ;
-      // ======================================================================
-    };
-    // ========================================================================
     /** @class GenSigmoid
      *  Sigmoid function, modulated by the positive polynomial
      *  \f$ f(x) = ( 1 + tanh( \alpha ( x  - x_0) ) \times P_{pos} (x) \f$
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
-    class  Sigmoid : public std::unary_function<double,double>
+    class  Sigmoid 
     {
     public:
       // ============================================================
@@ -5441,7 +4870,7 @@ namespace Ostap
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
-    class  TwoExpos : public std::unary_function<double,double>
+    class  TwoExpos 
     {
     public:
       // ======================================================================
@@ -5531,7 +4960,7 @@ namespace Ostap
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
      *  @date 2015-03-28
      */
-    class  TwoExpoPositive : public std::unary_function<double,double>
+    class  TwoExpoPositive 
     {
     public:
       // ======================================================================
@@ -5669,7 +5098,7 @@ namespace Ostap
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
      *  @date 2015-07-11
      */
-    class  Tsallis : public std::unary_function<double,double>
+    class  Tsallis 
     {
     public:
       // ======================================================================
@@ -5772,7 +5201,7 @@ namespace Ostap
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
      *  @date 2015-07-11
      */
-    class  QGSM: public std::unary_function<double,double>
+    class  QGSM
     {
     public:
       // ======================================================================
@@ -5853,405 +5282,6 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ; // workspace
       // ======================================================================
     } ;
-    // ========================================================================
-    // forward declarations
-    class FourierSum ;
-    class CosineSum  ;
-    // ========================================================================
-    /** @class FourierSum
-     *  Fourier sum
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2015-07-26
-     */
-    class  FourierSum : public std::unary_function<double,double>
-    {
-    public:
-      // ======================================================================
-      /** @param degree  degree
-       *  @param xmin    low  edge
-       *  @param xmax    high edge
-       *  @param fejer   use fejer summation
-       */
-      FourierSum ( const unsigned short degree = 0     ,   // degree
-                   const double         xmin   = 0     ,   // low edge
-                   const double         xmax   = 1     ,   // high edge
-                   const bool           fejer  = false );  // use Fejer summation
-      /// constructor from cosine serie
-      FourierSum ( const CosineSum&  sum ) ;
-      /// constructor from Fourier series and fejer flag
-      FourierSum ( const FourierSum& sum  , const bool fejer ) ;
-      // ======================================================================
-    protected:  // protected constructor from parameters
-      // ======================================================================
-      /// protected constructor from parameters
-      FourierSum ( const std::vector<double>& pars  ,
-                   const double               xmin  ,
-                   const double               xmax  ,
-                   const double               fejer );
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value
-      double operator () ( const double x ) const
-      { return m_fejer ? fejer_sum ( x ) : fourier_sum ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate Fourier sum
-      double fourier_sum ( const double x ) const ;
-      /// calculate Fejer sum
-      double fejer_sum   ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get lower edge
-      double xmin  () const { return m_xmin  ; }
-      /// get upper edge
-      double xmax  () const { return m_xmax  ; }
-      /// use Fejer summation?
-      bool   fejer () const { return m_fejer ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double x ( const double t ) const { return    t / m_scale   + m_delta ; }
-      double t ( const double x ) const { return  ( x - m_delta ) * m_scale ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// degree  of polynomial
-      unsigned short degree () const { return ( m_pars.size() - 1 ) / 2 ; }
-      /// number of parameters
-      unsigned short npars  () const { return m_pars.size()     ; }
-      /// all zero ?
-      bool           zero   () const ;
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value
-       *  @return true if parameter is actually changed
-       */
-      bool setPar          ( const unsigned short k , const double value ) ;
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value
-       *  @return true if parameter is actually changed
-       */
-      bool setParameter    ( const unsigned short k , const double value )
-      { return setPar      ( k , value ) ; }
-      /// get the parameter value
-      double  par          ( const unsigned short k ) const
-      { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
-      /// get the parameter value
-      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }
-      /// get all parameters:
-      const std::vector<double>& pars () const { return m_pars ; }
-      /// get k-th cos-parameter
-      double a ( const unsigned short k ) const { return par ( 2 * k     ) ; }
-      /// get k-th sin-parameter
-      double b ( const unsigned short k ) const
-      { return 1 <= k ? par   ( 2 * k - 1 ) : 0 ; }
-      // set cosine terms
-      bool setA ( const unsigned short k , const double value )
-      { return setPar ( 2 * k , value ) ; }
-      // set cosine terms
-      bool setB ( const unsigned short k , const double value )
-      { return 1<= k ? setPar ( 2 * k - 1 , value ) : false ; }
-      /** get the magnitude of nth-harmonic
-       *  \f$m_k = \sqrt( a^2_k + b^2_k) \f$
-       */
-      double mag    ( const unsigned short k ) const ;
-      /// get the phase for n-th harmonic
-      double phase  ( const unsigned short k ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get Fejer sum
-      FourierSum fejer_sum   () const ;                       // get Fejer sum
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the derivative at point x
-      double     derivative   ( const double x ) const ;
-      /// get the derivative as function
-      FourierSum derivative   ( ) const ;
-      /// get nth derivative as function
-      FourierSum derivative_n ( const unsigned short n ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // get integral between low and high
-      double     integral   ( const double low , const double high ) const ;
-      /** get integral as function
-       *  @param c0  integration constant
-       */
-      FourierSum integral   ( const double c0 = 0 ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** convolute with gaussian
-       *  @param sigma resoltuion parameter for gaussian
-       *  @return convolution witgh gaussian
-       */
-      FourierSum   convolve     ( const double sigma     ) const ;
-      /** deconvolute with optional regularization
-       *  @param sigma sigma of gaussian
-       *  @param delta parameter of Tikhonov's regularization
-       *  for delta<=0, no regularization
-       *  @return regularised deconvolution
-       */
-      FourierSum deconvolve     ( const double sigma     ,
-                                  const double delta = 0 ) const ;
-      /**  get the effective cut-off (==number of effective harmonics)
-       *   of Tikhonov's regularization
-       *   \f$ n \equiv  \sqrt{2 \ln \delta} \frac{\pi\sigma}{L} \f$
-       *   @param sigma  gaussian resoltuion
-       *   @param delta  regularization parameter
-       *   @return number of effective harmonic
-       */
-      double     regularization ( const double sigma     ,
-                                  const double delta     ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// simple  manipulations with polynoms: scale it!
-      FourierSum& operator *= ( const double a ) ;     // scale it!
-      /// simple  manipulations with polynoms: scale it!
-      FourierSum& operator /= ( const double a ) ;     // scale it!
-      /// simple  manipulations with polynoms: add constant
-      FourierSum& operator += ( const double a ) ;     // add constant
-      /// simple  manipulations with polynoms: subtract constant
-      FourierSum& operator -= ( const double a ) ;     // subtract constant
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** sum of two Fourier series (with the same interval!)
-       *  @param other the first fourier sum
-       *  @return the sum of two Fourier series
-       */
-      FourierSum sum ( const FourierSum& other ) const ;
-      // ======================================================================
-      /** get "shifted" fourier sum
-       *  \f$ g(x) \equiv f ( x - a ) \f$
-       *  @param a the bias aprameter
-       *  @return the shifted fourier sum
-       */
-      FourierSum shift ( const double a ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// actual vector of coefficients
-      std::vector<double> m_pars ; // actual vector of coefficients
-      /// low edge
-      double m_xmin  ;             // the low edge
-      /// high edge
-      double m_xmax  ;             // the high edge
-      /// scale factor
-      double m_scale ;             // scale factor
-      /// delta
-      double m_delta ;             // delta
-      /// summation algorithm
-      bool m_fejer   ;             // summation algorithm
-       // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class CosineSum
-     *  Fourier sum over cosines
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2015-07-26
-     */
-    class  CosineSum : public std::unary_function<double,double>
-    {
-    public:
-      // ======================================================================
-      /** @param degree  degree
-       *  @param xmin    low  edge
-       *  @param xmax    high edge
-       *  @param fejer   use fejer summation
-       */
-      CosineSum ( const unsigned short degree = 0     ,    // degree
-                  const double         xmin   = 0     ,    // low edge
-                  const double         xmax   = 1     ,    // high edge
-                  const bool           fejer  = false ) ;  // use Fejer summation
-      /// constructor from Fourier sum
-      CosineSum ( const FourierSum&    sum            ) ;
-      /// constructor from Fourier series and fejer flag
-      CosineSum ( const CosineSum&     sum  , const bool fejer ) ;
-      // ======================================================================
-    protected:  // protected constructor from parameters
-      // ======================================================================
-      /// protected constructor from parameters
-      CosineSum ( const std::vector<double>& pars  ,
-                  const double               xmin  ,
-                  const double               xmax  ,
-                  const double               fejer );
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value
-      double operator () ( const double x ) const
-      { return m_fejer ? fejer_sum ( x ) : fourier_sum ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate Fourier sum
-      double fourier_sum ( const double x ) const ;
-      /// calculate Fejer sum
-      double fejer_sum   ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get lower edge
-      double xmin  () const { return m_xmin  ; }
-      /// get upper edge
-      double xmax  () const { return m_xmax  ; }
-      /// use Fejer summation?
-      bool   fejer () const { return m_fejer ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double x ( const double t ) const { return    t / m_scale  + m_xmin  ; }
-      double t ( const double x ) const { return  ( x - m_xmin ) * m_scale ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// degree  of polynomial
-      unsigned short degree () const { return m_pars.size() - 1 ; }
-      /// number of parameters
-      unsigned short npars  () const { return m_pars.size()     ; }
-      /// all zero ?
-      bool           zero   () const ;
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value
-       *  @return true if parameter is actually changed
-       */
-      bool setPar          ( const unsigned short k , const double value ) ;
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value
-       *  @return true if parameter is actually changed
-       */
-      bool setParameter    ( const unsigned short k , const double value )
-      { return setPar      ( k , value ) ; }
-      /// get the parameter value
-      double  par          ( const unsigned short k ) const
-      { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
-      /// get the parameter value
-      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }
-      /// get all parameters:
-      const std::vector<double>& pars () const { return m_pars ; }
-      /// get k-th cos-parameter
-      double a    ( const unsigned short k ) const { return par ( k     ) ; }
-      // set cosine terms
-      bool   setA ( const unsigned short k , const double value )
-      { return setPar ( k , value ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get Fejer sum
-      CosineSum fejer_sum   () const ;                         // get Fejer sum
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the derivative at point x
-      double     derivative ( const double x ) const ;
-      /// get the derivative as function
-      FourierSum derivative ( ) const ;
-      /// get nth derivative as function
-      FourierSum derivative_n ( const unsigned short n ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // get integral between low and high
-      double     integral   ( const double low , const double high ) const ;
-      /** get integral as function
-       *  @param c0  integration constant
-       */
-      FourierSum integral   ( const double c0 = 0 ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** convolute with gaussian
-       *  @param sigma resoltuion parameter for gaussian
-       *  @return convolution witgh gaussian
-       */
-      CosineSum   convolve     ( const double sigma     ) const ;
-      /** deconvolute with optional regularization
-       *  @param sigma sigma of gaussian
-       *  @param delta parameter of Tikhonov's regularization
-       *  for delta<=0, no regularization
-       *  @return regularised deconvolution
-       */
-      CosineSum deconvolve     ( const double sigma     ,
-                                 const double delta = 0 ) const ;
-      /** get the effective cut-off (==number of terms/harmonics)
-       *  of Tikhonov's regularization
-       *  \f$ n \equiv  \sqrt{2 \ln \delta} \frac{\pi\sigma}{L} \f$
-       *  @param sigma  gaussian resoltuion
-       *  @param delta  regularization parameter
-       *  @return number of effective harmonic
-       */
-      double    regularization ( const double sigma     ,
-                                 const double delta     ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// simple  manipulations with polynoms: scale it!
-      CosineSum& operator *= ( const double a ) ;     // scale it!
-      /// simple  manipulations with polynoms: scale it!
-      CosineSum& operator /= ( const double a ) ;     // scale it!
-      /// simple  manipulations with polynoms: add constant
-      CosineSum& operator += ( const double a ) ;     // add constant
-      /// simple  manipulations with polynoms: subtract constant
-      CosineSum& operator -= ( const double a ) ;     // subtract constant
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** sum of two Fourier series (with the same interval!)
-       *  @param other the first fourier sum
-       *  @return the sum of two Fourier series
-       */
-      CosineSum sum ( const CosineSum& other ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// actual vector of coefficients
-      std::vector<double> m_pars ; // actual vector of coefficients
-      /// low edge
-      double m_xmin  ;             // the low edge
-      /// high edge
-      double m_xmax  ;             // the high edge
-      /// scale factor
-      double m_scale ;             // scale factor
-      /// summation algorithm
-      bool m_fejer   ;             // summation algorithm
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** make a sum of two fourier series (with the same interval!)
-     *  @param s1 the first fourier sum
-     *  @param s2 the first fourier sum
-     *  @return s1+s2
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2016-06-26
-     */
-    
-    FourierSum sum ( const FourierSum& s1 , const FourierSum& s2 ) ;
-    // ========================================================================
-    /** make a sum of two fourier cosine series (with the same interval!)
-     *  @param s1 the first fourier cosine sum
-     *  @param s2 the first fourier cosine sum
-     *  @return s1+s2
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2016-06-26
-     */
-    CosineSum sum ( const CosineSum& s1 , const CosineSum& s2 ) ;
-    // ========================================================================
-    /// sum of two fourier series
-    inline FourierSum operator+( const FourierSum& a ,
-                                 const FourierSum& b ) { return a.sum ( b ) ; }
-    /// sum of two cosine series
-    inline CosineSum  operator+( const CosineSum&  a ,
-                                 const CosineSum&  b ) { return a.sum ( b ) ; }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

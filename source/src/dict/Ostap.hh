@@ -6,6 +6,8 @@
 // ============================================================================
 #include "Ostap/BSpline.h"
 #include "Ostap/Bernstein.h"
+#include "Ostap/Bernstein1D.h"
+#include "Ostap/Bernstein2D.h"
 #include "Ostap/Binomial.h"
 #include "Ostap/Bit.h"
 #include "Ostap/Chi2Fit.h"
@@ -17,6 +19,7 @@
 #include "Ostap/EigenSystem.h"
 #include "Ostap/Error2Exception.h"
 #include "Ostap/Formula.h"
+#include "Ostap/Fourier.h"
 #include "Ostap/GenericMatrixTypes.h"
 #include "Ostap/GenericVectorTypes.h"
 #include "Ostap/GeomFun.h"
@@ -38,6 +41,7 @@
 #include "Ostap/MatrixUtils.h"
 #include "Ostap/MatrixTransforms.h"
 #include "Ostap/Models.h"
+#include "Ostap/Models2D.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Mute.h"
 #include "Ostap/NSphere.h"
@@ -67,6 +71,7 @@
 #include "Ostap/Vector4DTypes.h"
 #include "Ostap/UStat.h"
 #include "Ostap/WStatEntity.h"
+#include "Ostap/Workspace.h"
 // ============================================================================
 
 namespace Ostap

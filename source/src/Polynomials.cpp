@@ -350,39 +350,39 @@ double Ostap::Math::Hermite::operator() ( const double x ) const
 // constructor from polynomial degree
 // ============================================================================
 Ostap::Math::PolySum::PolySum ( const unsigned short degree ) 
-  : std::unary_function<double,double>() 
-  , m_pars ( degree + 1 , 0 ) 
+  : m_pars ( degree + 1 , 0 ) 
 {}
 // ============================================================================
 // constructor from vector of parameters 
 // ============================================================================
 Ostap::Math::PolySum::PolySum ( const std::vector<double>& pars ) 
-  : std::unary_function<double,double>() 
-  , m_pars ( pars  ) 
+  : m_pars ( pars  ) 
 { if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
 // ============================================================================
 // constructor from vector of parameters 
 // ============================================================================
 Ostap::Math::PolySum::PolySum ( std::vector<double>&& pars ) 
-  : std::unary_function<double,double>() 
-  , m_pars ( std::forward<std::vector<double> >( pars ) )
+  : m_pars ( std::forward<std::vector<double> >( pars ) )
 { if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Math::PolySum::PolySum 
 ( const Ostap::Math::PolySum&  right ) 
-  : std::unary_function<double,double>( right )
- , m_pars ( right.m_pars ) 
+  : m_pars ( right.m_pars ) 
 {}
 // ============================================================================
 // move constructor 
 // ============================================================================
 Ostap::Math::PolySum::PolySum 
 (       Ostap::Math::PolySum&& right ) 
-  : std::unary_function<double,double>( right )
-  , m_pars ( std::move ( right.m_pars ) )  
+  : m_pars ( std::move ( right.m_pars ) )  
 {}
+// ============================================================================
+// swap two objects 
+// ============================================================================
+void Ostap::Math::PolySum::swap (  Ostap::Math::PolySum& right ) 
+{ std::swap ( m_pars ,  right.m_pars ); }
 // ============================================================================
 // copy assignement  
 // ============================================================================

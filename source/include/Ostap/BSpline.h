@@ -39,7 +39,7 @@ namespace Ostap
      *  @see http://link.springer.com/chapter/10.1007%2F978-3-0348-7692-6_6
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
-    class BSpline : public std::unary_function<double,double>
+    class BSpline 
     {
       // ======================================================================
     public:
@@ -324,7 +324,7 @@ namespace Ostap
      *  @see http://en.wikipedia.org/wiki/B-spline
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
-    class PositiveSpline : public std::unary_function<double,double>
+    class PositiveSpline
     {
       // ======================================================================
     public:
@@ -742,7 +742,7 @@ namespace Ostap
     /** @class Spline2D
      *  Non-negative spline in 2D
      */
-    class Spline2D : public std::binary_function<double,double,double>
+    class Spline2D 
     {
       // ======================================================================
     public:
@@ -858,7 +858,7 @@ namespace Ostap
     /** @class Spline2DSym
      *  Non-negative symmetric spline in 2D
      */
-    class Spline2DSym : public std::binary_function<double,double,double>
+    class Spline2DSym 
     {
       // ======================================================================
     public:

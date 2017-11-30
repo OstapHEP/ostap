@@ -174,7 +174,7 @@ namespace Ostap
        *  @date 2008-07-31
        */
       template <class TYPE, unsigned int N>
-      struct _Digit : public std::unary_function<TYPE,int>
+      struct _Digit
       {
         // ====================================================================
         static_assert (  std::numeric_limits<TYPE>::is_specialized && 
@@ -212,7 +212,7 @@ namespace Ostap
       template <class TYPE, 
                 unsigned int N1,
                 unsigned int N2>
-      struct _Digits : public std::unary_function<TYPE,TYPE>
+      struct _Digits 
       {
       private:
         // ====================================================================

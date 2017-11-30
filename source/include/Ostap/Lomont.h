@@ -145,7 +145,7 @@ namespace Ostap
      *  @date 2009-10-22
      */
     template <>
-    class Lomont<float> : public std::binary_function<float,float,bool>
+    class Lomont<float> 
     {
       // ======================================================================
     public:
@@ -191,7 +191,7 @@ namespace Ostap
      *  @date 2009-10-22
      */
     template <>
-    class Lomont<double> : public std::binary_function<double,double,bool>
+    class Lomont<double> 
     {
       // ======================================================================
     public:

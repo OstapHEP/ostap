@@ -34,7 +34,7 @@ namespace Ostap
      *  @date 2011-04-19
      */
     template <unsigned int N>
-    class  Chebyshev_ : public std::unary_function<double,double>
+    class  Chebyshev_
     {
     public:
       // ======================================================================
@@ -53,7 +53,7 @@ namespace Ostap
     // ========================================================================
     /// specialization for 0
     template <>
-    class  Chebyshev_<0> : public std::unary_function<double,double>
+    class  Chebyshev_<0>
     {
     public:
       // ======================================================================
@@ -63,7 +63,7 @@ namespace Ostap
     // ========================================================================
     /// specialization for N=1
     template <>
-    class  Chebyshev_<1> : public std::unary_function<double,double>
+    class  Chebyshev_<1>
     {
     public:
       // ======================================================================
@@ -82,7 +82,7 @@ namespace Ostap
      *  @date 2011-04-19
      */
     template <unsigned int N>
-    class  ChebyshevU_ : public std::unary_function<double,double>
+    class  ChebyshevU_
     {
     public:
       // ======================================================================
@@ -101,7 +101,7 @@ namespace Ostap
     // ========================================================================    
     /// specialization for N=0
     template <>
-    class  ChebyshevU_<0> : public std::unary_function<double,double>
+    class  ChebyshevU_<0>
     {
     public:
       // ======================================================================
@@ -112,7 +112,7 @@ namespace Ostap
     // ========================================================================
     /// specialization for N=1
     template <>
-    class  ChebyshevU_<1> : public std::unary_function<double,double>
+    class  ChebyshevU_<1> 
     {
     public:
       // ======================================================================
@@ -131,7 +131,7 @@ namespace Ostap
      *  @date 2011-04-19
      */
     template <unsigned int N>
-    class  Legendre_ : public std::unary_function<double,double>
+    class  Legendre_ 
     {
     public:
       // ======================================================================
@@ -150,7 +150,7 @@ namespace Ostap
     // ========================================================================
     /// specialization for 0
     template <>
-    class  Legendre_<0> : public std::unary_function<double,double>
+    class  Legendre_<0> 
     {
     public:
       // ======================================================================
@@ -161,7 +161,7 @@ namespace Ostap
     // ========================================================================
     /// specialization for N=1
     template <>
-    class  Legendre_<1> : public std::unary_function<double,double>
+    class  Legendre_<1> 
     {
     public:
       // ======================================================================
@@ -183,7 +183,7 @@ namespace Ostap
      *  @date 2011-04-19
      */
     template <unsigned int N>
-    class  Hermite_ : public std::unary_function<double,double>
+    class  Hermite_ 
     {
     public:
       // ======================================================================
@@ -202,7 +202,7 @@ namespace Ostap
     // ========================================================================
     /// specialization for 0
     template <>
-    class  Hermite_<0> : public std::unary_function<double,double>
+    class  Hermite_<0> 
     {
     public:
       // ======================================================================
@@ -212,7 +212,7 @@ namespace Ostap
     // ========================================================================
     /// specialization for N=1
     template <>
-    class  Hermite_<1> : public std::unary_function<double,double>
+    class  Hermite_<1> 
     {
     public:
       // ======================================================================
@@ -228,7 +228,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class Chebyshev : public std::unary_function<double,double>
+    class Chebyshev 
     {
     public :
       // ======================================================================
@@ -264,7 +264,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class ChebyshevU : public std::unary_function<double,double>
+    class ChebyshevU 
     {
     public :
       // ======================================================================
@@ -300,7 +300,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class Legendre : public std::unary_function<double,double>
+    class Legendre 
     {
     public :
       // ======================================================================
@@ -336,7 +336,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class Hermite : public std::unary_function<double,double>
+    class Hermite 
     {
     public :
       // ======================================================================
@@ -383,7 +383,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
      */
-    class PolySum : public std::unary_function<double,double>
+    class PolySum 
     {
     public:
       // ======================================================================
@@ -397,8 +397,7 @@ namespace Ostap
       template <class ITERATOR>
         PolySum ( ITERATOR begin , 
                   ITERATOR end   )
-        : std::unary_function<double,double>() 
-        , m_pars ( begin , end )
+        : m_pars ( begin , end )
       { if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
       // ======================================================================
       /// copy contructor
@@ -441,6 +440,11 @@ namespace Ostap
       PolySum& operator *= ( const double a ) ;     // scale it! 
       /// simple  manipulations with polynoms: scale it! 
       PolySum& operator /= ( const double a ) ;     // scale it! 
+      // ======================================================================
+    protected:
+      // ======================================================================
+      /// swap two polynomials 
+      void swap ( PolySum& right ) ;
       // ======================================================================
     protected:
       // ======================================================================

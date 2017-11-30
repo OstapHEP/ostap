@@ -95,7 +95,7 @@ namespace Ostap
      *  @date 2007-08-17
      */
     template <class TYPE>
-    struct abs_less : std::binary_function<TYPE,TYPE,TYPE>
+    struct abs_less 
     {
       inline TYPE operator() 
       ( typename detail::param<const TYPE>::param_type v1 ,
@@ -111,7 +111,7 @@ namespace Ostap
      *  @date 2007-08-17
      */
     template <class TYPE>
-    struct abs_greater : std::binary_function<TYPE,TYPE,TYPE>
+    struct abs_greater
     {
       inline TYPE operator() 
       ( typename detail::param<const TYPE>::param_type v1 ,
@@ -174,7 +174,7 @@ namespace Ostap
      *  @date 2007-11-27
      */
     template <class TYPE>
-    struct Equal_To : public std::binary_function<TYPE,TYPE,bool>
+    struct Equal_To 
     {
       // ======================================================================
       typedef typename detail::param<const TYPE>::param_type T ;
@@ -372,7 +372,7 @@ namespace Ostap
      *  @date 2007-11-27
      */
     template <class TYPE>
-    struct Zero : public std::unary_function<TYPE,bool>
+    struct Zero
     {
       // ======================================================================
       typedef typename detail::param<const TYPE>::param_type T ;
@@ -387,7 +387,7 @@ namespace Ostap
     } ;
     // ========================================================================
     template <>
-    struct Zero<double> : public std::unary_function<double,bool>
+    struct Zero<double> 
     {
       // ======================================================================
       /// comparison
@@ -402,7 +402,7 @@ namespace Ostap
     } ;
     // ========================================================================
     template <>
-    struct Zero<float> : public std::unary_function<float,bool>
+    struct Zero<float>
     {
       // ======================================================================
       /// comparison
@@ -430,7 +430,7 @@ namespace Ostap
      *  @date 2007-11-27
      */
     template <class TYPE>
-    struct NotZero : public std::unary_function<TYPE,bool>
+    struct NotZero 
     {
       // ======================================================================
       typedef typename detail::param<const TYPE>::param_type T ;
@@ -476,7 +476,7 @@ namespace Ostap
     // ========================================================================
     /// Is value sufficiently  small ?
     template <class TYPE>
-    struct Small : public std::unary_function<TYPE,bool>
+    struct Small 
     {
       // ======================================================================
       typedef  TYPE   Inner ;
@@ -502,8 +502,7 @@ namespace Ostap
      *  vector is small, if empty or all elements are small 
      */ 
     template <class TYPE>
-    struct Small<std::vector<TYPE> > : 
-      public std::unary_function<std::vector<TYPE>,bool>
+    struct Small<std::vector<TYPE> > 
     {
       // ======================================================================
       typedef TYPE Inner ;
@@ -535,7 +534,7 @@ namespace Ostap
      *  - otherwise (a+b) is numerically equal to b 
      */
     template <class TYPE>
-    struct MuchSmaller : public std::binary_function<TYPE,TYPE,bool>
+    struct MuchSmaller 
     {
     public:
       // ======================================================================      
@@ -560,7 +559,7 @@ namespace Ostap
      *  - otherwise (a+b) is numerically equal to b 
      */
     template <class TYPE>
-    struct Tiny : public std::unary_function<TYPE,bool>
+    struct Tiny
     {
     public:
       // ======================================================================
@@ -585,7 +584,7 @@ namespace Ostap
      *  @see Ostap::Math::Equal_To
      */
     template <class TYPE>
-    struct LessOrEqual : public std::binary_function<TYPE,TYPE,bool>
+    struct LessOrEqual 
     {
       // ====================================================================== 
       /// the only one method:  \f$ o_1 \le  o_2\f$  or \f$ o_1 \approx o_2\f$ 
@@ -604,7 +603,7 @@ namespace Ostap
      *  @see Ostap::Math::Equal_To
      */
     template <class TYPE>
-    struct GreaterOrEqual : public std::binary_function<TYPE,TYPE,bool>
+    struct GreaterOrEqual 
     {
       // ====================================================================== 
       /// the only one method:  \f$ o_1 \ge o_2 \f$  or  \f$ o_1 \approx = o_2 \f$  
@@ -624,7 +623,7 @@ namespace Ostap
      *  @see Ostap::Math::Equal_To
      */
     template <class TYPE>
-    struct NumLess :  public std::binary_function<TYPE,TYPE,bool>
+    struct NumLess 
     {
       // ======================================================================
       inline bool operator () ( const TYPE& o1 , const TYPE& o2 ) const 

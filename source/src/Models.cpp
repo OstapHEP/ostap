@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 // Include files
 // ============================================================================
@@ -7,7 +6,6 @@
 #include <cmath>
 #include <map>
 #include <limits>
-#include <iostream>
 #include <complex>
 #include <algorithm>
 #include <numeric>
@@ -43,7 +41,8 @@
 //  Local 
 // ============================================================================
 #include "Exception.h"
-#include "GSL_sentry.h"
+#include "local_math.h"
+#include "local_gsl.h"
 // ============================================================================
 /** @file
  *  Implementation file for functions from the file Ostap/Models.h
@@ -52,199 +51,8 @@
  *  @date 2010-04-19
  */
 // ============================================================================
-// Rho-functions from Jackson
-// ============================================================================
-/* the simplest function: constant
- *  @see Ostap::Math::BreitWigner
- *  @see Ostap::Math::BreitWigner::rho_fun
- *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
- *  @date 2011-11-30
- */
-// ============================================================================
-double Ostap::Math::Jackson::jackson_0
-( double /* m  */ ,
-  double /* m0 */ ,
-  double /* m1 */ ,
-  double /* m2 */ ) { return 1 ; }
-// ============================================================================
-/* the simple function for \f$ 1^- \rightarrow 0^- 0^- \f$, l = 1
- *  \f$\rho(\omega)= \omega^{-1}\f$
- *  @see Ostap::Math::BreitWigner
- *  @see Ostap::Math::BreitWigner::rho_fun
- *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
- *  @date 2011-11-30
- */
-// ============================================================================
-double Ostap::Math::Jackson::jackson_A2
-( double    m     ,
-  double /* m0 */ ,
-  double /* m1 */ ,
-  double /* m2 */ ) { return 1./m ; }
-// ============================================================================
-/*  the simple function for \f$ 1^- \rightarrow 0^- 1^- \f$, l = 1
- *  \f$\rho(\omega)= \omega \f$
- *  @see Ostap::Math::BreitWigner
- *  @see Ostap::Math::BreitWigner::rho_fun
- *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
- *  @date 2011-11-30
- */
-// ============================================================================
-double Ostap::Math::Jackson::jackson_A3
-( double    m     ,
-  double /* m0 */ ,
-  double /* m1 */ ,
-  double /* m2 */ ) { return m ; }
-// ============================================================================
-/*  the simple function for
- *  \f[ \frac{3}{2}^+ \rightarrow \frac{1}{2}^+ 0^- \f], l = 1
- *  $\rho(\omega)= \frac{ ( \omega + M )^2 - m^2 }{ \omega^2} \f$
- *  @see Ostap::Math::BreitWigner
- *  @see Ostap::Math::BreitWigner::rho_fun
- *  @param m the invariant mass
- *  @param m1 the invariant mass of the first  (spinor) particle
- *  @param m2 the invariant mass of the secodn (scalar) particle
- *  @return the value of rho-function
- *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
- *  @date 2011-11-30
- */
-// ============================================================================
-double Ostap::Math::Jackson::jackson_A4
-( double    m     ,
-  double /* m0 */ ,
-  double    m1    ,
-  double    m2    )
-{
-  const double a = m + m1 ;
-  //
-  return ( a * a  - m2 * m2 ) / ( m * m ) ;
-}
-// ============================================================================
-/*  the simple function for
- *  \f$ \frac{3}{2}^- \rightarrow \frac{1}{2}^+ 0^- \f$, l = 2
- *  $\rho(\omega)= \left[ ( \omega + M )^2 - m^2 \right]^{-1} \f$
- *  @see Ostap::Math::BreitWigner
- *  @see Ostap::Math::BreitWigner::rho_fun
- *  @param m the invariant mass
- *  @param m1 the invariant mass of the first  (spinor) particle
- *  @param m2 the invariant mass of the second (scalar) particle
- *  @return the value of rho-function
- *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
- *  @date 2011-11-30
- */
-// ============================================================================
-double Ostap::Math::Jackson::jackson_A5
-( double    m     ,
-  double /* m0 */ ,
-  double    m1    ,
-  double    m2    )
-{
-  const double a = m + m1 ;
-  //
-  return 1 / ( a * a  - m2 * m2 ) ;
-}
-// ============================================================================
-/*  the simple function for \f$\rho^- \rightarrow \pi^+ \pi^-\f$
- *  \f$ 1- \rightarrow 0^- 0^- \f$, l = 1
- *  $\rho(\omega)= \left[ q_0^2 + q^2 \right]^{-1}f$
- *  @see Ostap::Math::BreitWigner
- *  @see Ostap::Math::BreitWigner::rho_fun
- *  @param m  the invariant mass
- *  @param m0 the nominal   mass
- *  @param m1 the invariant mass of the first  particle
- *  @param m2 the invariant mass of the second particle
- *  @return the value of rho-function
- *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
- *  @date 2011-11-30
- */
-// ============================================================================
-double Ostap::Math::Jackson::jackson_A7
-( double    m   ,
-  double    m0  ,
-  double    m1  ,
-  double    m2  )
-{
-  //
-  const double q  = Ostap::Math::PhaseSpace2::q ( m  , m1 , m2 ) ;
-  const double q0 = Ostap::Math::PhaseSpace2::q ( m0 , m1 , m2 ) ;
-  //
-  if ( 0 >= q && 0 >= q0 ) { return 1 ; }
-  //
-  return 1. / ( q * q + q0 * q0 ) ;
-}
-// ============================================================================
 namespace
 {
-  // ==========================================================================
-  /// equality criteria for doubles
-  const Ostap::Math::Equal_To<double>            s_equal{} ; // equality criteria for doubles
-  /// zero for doubles  
-  const Ostap::Math::Zero<double>                s_zero{}  ; // zero for doubles
-  /// zero for vectors 
-  const Ostap::Math::Zero< std::vector<double> > s_vzero{} ; // zero for vectors
-  // ==========================================================================
-  typedef Ostap::Math::GSL::GSL_Error_Handler Sentry ;
-  // ==========================================================================
-  /// get GSL-workspace
-  inline gsl_integration_workspace* workspace
-  ( const Ostap::Math::WorkSpace& ws )
-  {
-    void* _ws =  ws.workspace() ;
-    return (gsl_integration_workspace*) _ws ;
-  }
-  // ==========================================================================
-  static_assert ( std::numeric_limits<float> ::is_specialized        ,
-                  "std::numeric_limits<float>  is not specialized"   ) ;
-  static_assert ( std::numeric_limits<double>::is_specialized        ,
-                  "std::numeric_limits<double> is not specialized"   ) ;
-  static_assert ( std::numeric_limits<double>::has_denorm            ,
-                  "std::numeric_limits<double> doed not have denorm" ) ;
-  // ==========================================================================
-  /** @var s_INFINITY
-   *  representation of positive INFINITY
-   */
-  //constexpr double s_INFINITY  = 0.8 * std::numeric_limits<double>::max ()  ;
-  constexpr double s_INFINITY  = 0.8 * std::numeric_limits<float>::max ()  ;
-  // ==========================================================================
-  /** @var s_SMALL
-   *  representation of positive "small"
-   */
-  constexpr double s_SMALL  = 10 * std::numeric_limits<double>::denorm_min () ;
-  constexpr double s_SMALL2 =  2 * std::numeric_limits<double>::min        () ;
-  // ==========================================================================
-  static_assert ( 0       < s_SMALL  , "``s_SMALL'' is not positive" ) ;
-  static_assert ( s_SMALL < s_SMALL2 , "``S_SMALL'' is too large"    ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned int>::is_specialized , 
-                  "std::numeric_limits<usigned int> is not specialized" ) ;
-  constexpr unsigned long s_UL_max = std::numeric_limits<unsigned int>::max () - 1 ;
-  static_assert ( 1 < s_UL_max ,  "s_UL_max is not large enough!" ) ;
-  // ==========================================================================
-  /** @var s_INFINITY_LOG
-   *  representation of positive INFINITY_LOG 
-   */
-  const double s_INFINITY_LOG  = std::log ( s_INFINITY ) ;
-  // ==========================================================================
-  /** @var s_PRECISION
-   *  the default precision for various calculations,
-   *       in particular GSL integration
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  const double s_PRECISION     = 1.e-8 ;
-  // ==========================================================================
-  /** @var s_PRECISION_TAIL
-   *  the low-relative precision for tails in GSL integration
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  const double s_PRECISION_TAIL = 1.e-4 ;
-  // ===========================================================================
-  /** @var s_SIZE
-   *  the workspace size parameter for GSL-integration
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  const std::size_t s_SIZE = 300 ;
   // ==========================================================================
   /** @var s_TRUNC
    *  trunkating parameter for CrystalBall-functions
@@ -253,78 +61,6 @@ namespace
    */
   const double      s_TRUNC = 15.0 ;
   // ==========================================================================
-  /** @var s_LN10
-   *  \f$\ln(10)\f$ 
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  const double      s_LN10 = std::log ( 10 ) ;
-  // ==========================================================================
-  // Constants
-  // ==========================================================================
-  /** @var s_SQRTPIHALF
-   *  helper constant \f$ \sqrt{\frac{\pi}{2}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  const double s_SQRTPIHALF = std::sqrt( M_PI_2 ) ;
-  // ==========================================================================
-  /** @var s_SQRTPI
-   *  helper constant \f$ \sqrt{\pi}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2016-06-11
-   */
-  const double s_SQRTPI = std::sqrt( M_PI ) ;
-  // ==========================================================================
-  /** @var s_SQRT2PI
-   *  helper constant \f$ \sqrt{2\pi}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  const double s_SQRT2PI    =       std::sqrt ( 2 * M_PI ) ;
-  // ===========================================================================
-  /** @var s_SQRT2PIi
-   *  helper constant \f$ \frac{1}{\sqrt{2\pi}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  const double s_SQRT2PIi    =      1./s_SQRT2PI ;
-  // ===========================================================================
-  /** @var s_SQRT2 
-   *  helper constant \f$\sqrt{2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2013-08-25
-   */
-  const double s_SQRT2      =       std::sqrt ( 2.0 )      ;
-  // ===========================================================================
-  /** @var s_SQRT2i 
-   *  helper constant \f$\frac{1}{\sqrt{2}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2013-08-25
-   */
-  const double s_SQRT2i      =       1/std::sqrt ( 2.0 )    ;
-  // ===========================================================================
-  /** @var s_HALFSQRTPI
-   *  helper constant \f$ \frac{\sqrt{\pi}}{2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  const double s_HALFSQRTPI = 0.5 * std::sqrt(     M_PI ) ;
-  // ==========================================================================
-  /** @var s_HALFSQRTPIi
-   *  helper constant \f$ \frac{2}{\sqrt{\pi}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  const double s_HALFSQRTPIi = 1/s_HALFSQRTPI  ;
-  // ==========================================================================
-  /** @var s_SQRT3 
-   *  helper constant \f$ \sqrt{3} \f$ 
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2015-08-21
-   */
-  const double s_SQRT3 = std::sqrt ( 3.0 ) ;
-  // ==========================================================================
   /** @var S_ATLAL 
    *  magic constant - integral for Atlas function 
    *  @see Ostap::Math::Atlas 
@@ -332,27 +68,6 @@ namespace
    *  @date 2015-08-21
    */   
   const double s_ATLAS = 3.052369876253939 ;
-  // ==========================================================================
-  /** @var s_HALFSQRTPI_log
-   *  helper constant \f$ \log \frac{\sqrt{\pi}}{2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  const double s_HALFSQRTPI_log  = std::log ( 0.5 * std::sqrt(     M_PI )  ) ;
-  // ==========================================================================
-  /** @var s_SQRT2PISQUARED 
-   *  helper constant  \f$   \sqrt{2}\pi^2\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2016-06-11
-   */
-  const double s_SQRT2PISQUARED  = std::sqrt(2.0)*M_PI*M_PI ;
-  // ==========================================================================
-  /** @var s_SQRT2PISQUAREDi
-   *  helper constant  \f$   \frac{1}{\sqrt{2}\pi^2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2016-06-11
-   */
-  const double s_SQRT2PISQUAREDi = 1.0/(std::sqrt(2.0)*M_PI*M_PI) ;
   // ==========================================================================
   // Bukin & Co
   // ==========================================================================
@@ -371,13 +86,6 @@ namespace
    *  @date 2010-04-19
    */
   const double s_ln2 = std::log ( 2.0 ) ;
-  // ==========================================================================
-  /** @var s_SQRT3overPI 
-   *  helper constant \f$ \frac{\sqrt{3}}{\pi} \f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2016-06-14
-   */
-  const double s_SQRT3overPI = std::sqrt(3.0)/M_PI ;
   // ==========================================================================
   /** helper function for itegration of Bukin's function
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -435,25 +143,6 @@ namespace
     return (*atlas)(x) ;
   }
   // ==========================================================================
-  /** evaluate the helper function  \f[ f = \frac{\log(1+x)}{x} \f]
-   *  it allows to calculate Bukin' function in efficient and regular way
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  inline double x_log
-  ( const double x  ) // , double precision = s_PRECISION )
-  {
-    //
-    if      ( s_equal   ( x , 0 )       ) { return 1 ; } // RETURN
-    else if ( x <= -1                   ) { return 0 ; } // RETURN ?
-    else if ( s_equal   ( x , -1 )      ) { return 0 ; } // RETURN ?
-    else if ( x < 0.9                   ) { return std::log1p ( x ) / x ; }
-    //
-    // the generic evaluation
-    //
-    return std::log ( 1.0 + x ) / x ;
-  }
-  // ==========================================================================
   /** evaluate the helper function \f[ f = \frac{\sinh (x) }{x} \f]
    *  it allows to calculate Novosibirsk's function in efficient and regular way
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -491,126 +180,9 @@ namespace
     return std::sinh ( x ) / x ;
   }
   // ==========================================================================
-  /** the simple wrapper for the standard error function
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double error_func ( const double x )
-  {
-    if ( 0 == x || s_zero ( x )       ) { return 0                  ; }
-    const double x2 = x * x ;
-    if ( GSL_LOG_DBL_MIN > -0.9 * x2  ) { return 0 < x ? 1 : -1     ; }
-    if ( 0 > x                        ) { return -error_func ( -x ) ; }
-    //
-    Sentry sentry ;
-    //
-    gsl_sf_result result ;
-    const int ierror = gsl_sf_erf_e ( x , &result ) ;
-    if ( ierror )
-    {
-      if ( ierror == GSL_EDOM     ||    // input domain error, e.g sqrt(-1)
-           ierror == GSL_ERANGE   ||    // output range error, e.g. exp(1e100)
-           ierror == GSL_EINVAL   ||    // invalid argument supplied by user
-           ierror == GSL_EUNDRFLW ||    // underflow
-           ierror == GSL_EOVRFLW  ||    // overflow
-           ierror == GSL_ELOSS    ||    // loss of accuracy
-           ierror == GSL_EROUND    )    // failed because of roundoff error
-      {}
-      else
-      {
-        gsl_error ( "Error from erf_e function" ,
-                    __FILE__ , __LINE__ , ierror ) ;
-      }
-      //
-      if      ( -25 > x ) { return -1 ; }
-      else if (  25 < x ) { return  1 ; }
-      //
-      return std::erf ( x ) ;
-      //
-    }
-    //
-    return result.val ;                    // RETURN
-  }
-  // ==========================================================================
   /// helper expression for erf(x)/x 
   inline double error_func_x ( const long double x ) 
   { return 0 == x || s_zero ( x ) ? s_HALFSQRTPIi : error_func( x ) / x ; }
-  // ==========================================================================
-  /** the protected exponent
-   *  @author Vanya BELYAEV
-   */
-  double my_exp ( const double arg )
-  {
-    //
-    if      ( GSL_LOG_DBL_MAX < arg ) { return s_INFINITY ; }
-    else if ( GSL_LOG_DBL_MIN > arg ) { return 0          ; } // s_SMALL ; }
-    //
-    Sentry sentry ;
-    //
-    gsl_sf_result      result ;
-    const int          ierror = gsl_sf_exp_e ( arg , &result ) ;
-    //
-    if ( ierror )
-    {
-      if ( ierror == GSL_EDOM     ||    /* input domain error, e.g  sqrt(-1)   */
-           ierror == GSL_ERANGE   ||    /* output range error, e.g. exp(1e100) */
-           ierror == GSL_EINVAL   ||    /* invalid argument supplied by user   */
-           ierror == GSL_EUNDRFLW ||    /* underflow                           */
-           ierror == GSL_EOVRFLW  ||    /* overflow                            */
-           ierror == GSL_ELOSS    ||    /* loss of accuracy                    */
-           ierror == GSL_EROUND    ) {} /* failed because of roundoff error    */
-      else
-      {
-        gsl_error ( "Error from exp_e function" ,
-                    __FILE__ , __LINE__ , ierror ) ;
-      }
-      //
-      if      ( -100 > arg ) { return s_SMALL    ; }
-      else if (  100 < arg ) { return s_INFINITY ; }
-      //
-      return std::exp ( arg ) ;
-      //
-    }
-    //
-    return result.val ;
-  }
-  // ==========================================================================
-  /** the protected logarithm
-   *  @author Vanya BELYAEV
-   */
-  double my_log ( const double arg )
-  {
-    //
-    if      ( 0          >= arg ) { return -s_INFINITY_LOG ; } // REUTRN
-    else if ( s_INFINITY <= arg ) { return  s_INFINITY_LOG ; } // RETURN 
-    //
-    Sentry sentry ;
-    gsl_sf_result result ;
-    const int     ierror = gsl_sf_log_e ( arg , &result ) ;
-    if ( ierror )
-    {
-      if ( ierror == GSL_EDOM     ||    /* input domain error, e.g sqrt(-1)    */
-           ierror == GSL_ERANGE   ||    /* output range error, e.g. exp(1e100) */
-           ierror == GSL_EINVAL   ||    /* invalid argument supplied by user   */
-           ierror == GSL_EUNDRFLW ||    /* underflow                           */
-           ierror == GSL_EOVRFLW  ||    /* overflow                            */
-           ierror == GSL_ELOSS    ||    /* loss of accuracy                    */
-           ierror == GSL_EROUND    )    /* failed because of roundoff error    */
-      {}
-      else
-      {
-        gsl_error ( "Error from log_e function" , __FILE__ , __LINE__ , ierror ) ;
-      }
-      //
-      if      (  1.e-100 > arg  ) { return -s_INFINITY_LOG ; }
-      else if (  1.e+100 < arg  ) { return  s_INFINITY_LOG ; }
-      //
-      return std::log ( arg ) ;
-      //
-    }
-    //
-    return result.val ;
-  }
   // ==========================================================================
   /** helper function for itegration
    *  \f[ f =  \mathrm{e}^{ \kappa x^2 + \xi x }  \f]
@@ -683,12 +255,6 @@ namespace
     return result ;
     //
   }
-  // ==========================================================================
-  /** get "reduced" exponent
-   *  \f[ f(x) = \frac{ e^{x}-1 }{x} \f]
-   */
-  long double reduced_exp ( const long double x ) 
-  { return ( 0 == x || s_zero ( x ) ) ? 1.0 : std::expm1 ( x ) / x ; }
   // ==========================================================================
   /** get the exponential integral 
    *  \f[ f = \int_a^b \exp { \beta x } \mathrm{d}x \f]
@@ -874,7 +440,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_sqrt2  = std::sqrt ( 2.0 ) ;
+  const double s_sqrt2  = s_SQRT2 ;
   // ==========================================================================
   /** helper function for integration of Gram-Charlier A function
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -1163,6 +729,136 @@ namespace
   // ==========================================================================
 } //                                                 end of anonymous namespace
 // ============================================================================
+
+
+
+// ============================================================================
+// Rho-functions from Jackson
+// ============================================================================
+/* the simplest function: constant
+ *  @see Ostap::Math::BreitWigner
+ *  @see Ostap::Math::BreitWigner::rho_fun
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2011-11-30
+ */
+// ============================================================================
+double Ostap::Math::Jackson::jackson_0
+( double /* m  */ ,
+  double /* m0 */ ,
+  double /* m1 */ ,
+  double /* m2 */ ) { return 1 ; }
+// ============================================================================
+/* the simple function for \f$ 1^- \rightarrow 0^- 0^- \f$, l = 1
+ *  \f$\rho(\omega)= \omega^{-1}\f$
+ *  @see Ostap::Math::BreitWigner
+ *  @see Ostap::Math::BreitWigner::rho_fun
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2011-11-30
+ */
+// ============================================================================
+double Ostap::Math::Jackson::jackson_A2
+( double    m     ,
+  double /* m0 */ ,
+  double /* m1 */ ,
+  double /* m2 */ ) { return 1./m ; }
+// ============================================================================
+/*  the simple function for \f$ 1^- \rightarrow 0^- 1^- \f$, l = 1
+ *  \f$\rho(\omega)= \omega \f$
+ *  @see Ostap::Math::BreitWigner
+ *  @see Ostap::Math::BreitWigner::rho_fun
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2011-11-30
+ */
+// ============================================================================
+double Ostap::Math::Jackson::jackson_A3
+( double    m     ,
+  double /* m0 */ ,
+  double /* m1 */ ,
+  double /* m2 */ ) { return m ; }
+// ============================================================================
+/*  the simple function for
+ *  \f[ \frac{3}{2}^+ \rightarrow \frac{1}{2}^+ 0^- \f], l = 1
+ *  $\rho(\omega)= \frac{ ( \omega + M )^2 - m^2 }{ \omega^2} \f$
+ *  @see Ostap::Math::BreitWigner
+ *  @see Ostap::Math::BreitWigner::rho_fun
+ *  @param m the invariant mass
+ *  @param m1 the invariant mass of the first  (spinor) particle
+ *  @param m2 the invariant mass of the secodn (scalar) particle
+ *  @return the value of rho-function
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2011-11-30
+ */
+// ============================================================================
+double Ostap::Math::Jackson::jackson_A4
+( double    m     ,
+  double /* m0 */ ,
+  double    m1    ,
+  double    m2    )
+{
+  const double a = m + m1 ;
+  //
+  return ( a * a  - m2 * m2 ) / ( m * m ) ;
+}
+// ============================================================================
+/*  the simple function for
+ *  \f$ \frac{3}{2}^- \rightarrow \frac{1}{2}^+ 0^- \f$, l = 2
+ *  $\rho(\omega)= \left[ ( \omega + M )^2 - m^2 \right]^{-1} \f$
+ *  @see Ostap::Math::BreitWigner
+ *  @see Ostap::Math::BreitWigner::rho_fun
+ *  @param m the invariant mass
+ *  @param m1 the invariant mass of the first  (spinor) particle
+ *  @param m2 the invariant mass of the second (scalar) particle
+ *  @return the value of rho-function
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2011-11-30
+ */
+// ============================================================================
+double Ostap::Math::Jackson::jackson_A5
+( double    m     ,
+  double /* m0 */ ,
+  double    m1    ,
+  double    m2    )
+{
+  const double a = m + m1 ;
+  //
+  return 1 / ( a * a  - m2 * m2 ) ;
+}
+// ============================================================================
+/*  the simple function for \f$\rho^- \rightarrow \pi^+ \pi^-\f$
+ *  \f$ 1- \rightarrow 0^- 0^- \f$, l = 1
+ *  $\rho(\omega)= \left[ q_0^2 + q^2 \right]^{-1}f$
+ *  @see Ostap::Math::BreitWigner
+ *  @see Ostap::Math::BreitWigner::rho_fun
+ *  @param m  the invariant mass
+ *  @param m0 the nominal   mass
+ *  @param m1 the invariant mass of the first  particle
+ *  @param m2 the invariant mass of the second particle
+ *  @return the value of rho-function
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2011-11-30
+ */
+// ============================================================================
+double Ostap::Math::Jackson::jackson_A7
+( double    m   ,
+  double    m0  ,
+  double    m1  ,
+  double    m2  )
+{
+  //
+  const double q  = Ostap::Math::PhaseSpace2::q ( m  , m1 , m2 ) ;
+  const double q0 = Ostap::Math::PhaseSpace2::q ( m0 , m1 , m2 ) ;
+  //
+  if ( 0 >= q && 0 >= q0 ) { return 1 ; }
+  //
+  return 1. / ( q * q + q0 * q0 ) ;
+}
+// ============================================================================
+
+
+
+
+
+// ============================================================================
 namespace
 {
   // ==========================================================================
@@ -1230,8 +926,7 @@ Ostap::Math::BifurcatedGauss::BifurcatedGauss
 ( const double peak   ,
   const double sigmaL ,
   const double sigmaR )
-  : std::unary_function<double,double> ()
-  , m_peak    ( peak )
+  : m_peak    ( peak )
   , m_sigmaL  ( std::fabs ( sigmaL ) )
   , m_sigmaR  ( std::fabs ( sigmaR ) )
 //
@@ -1463,8 +1158,7 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
 Ostap::Math::Gumbel::Gumbel
 ( const double mu   , 
   const double beta )
-  : std::unary_function<double,double> () 
-  , m_mu   ( mu   ) 
+  : m_mu   ( mu   ) 
   , m_beta ( beta ) 
 {}
 // ============================================================================
@@ -1560,8 +1254,7 @@ Ostap::Math::GenGaussV1::GenGaussV1
 ( const double mu    ,
   const double alpha , 
   const double beta  ) 
-  : std::unary_function<double,double>() 
-  , m_mu     ( mu                 ) 
+  : m_mu     ( mu                 ) 
   , m_alpha  ( std::abs ( alpha ) ) 
   , m_beta   ( std::abs ( beta  ) ) 
   , m_gbeta1 ( 0 )
@@ -1688,8 +1381,7 @@ Ostap::Math::GenGaussV2::GenGaussV2
 ( const double xi    ,
   const double alpha , 
   const double kappa )  // kappa=0 correponds to gaussian  
-  : std::unary_function<double,double>() 
-  , m_xi      ( xi                 ) 
+  : m_xi      ( xi                 ) 
   , m_alpha   ( std::abs ( alpha ) ) 
   , m_kappa   (            kappa   ) 
 {
@@ -1834,8 +1526,7 @@ double Ostap::Math::GenGaussV2::kurtosis () const
 // ( const double xi    ,
 //   const double omega , 
 //   const double alpha )  // alpha=0 correponds to gaussian  
-//   : std::unary_function<double,double>() 
-//   , m_xi      ( xi                 ) 
+//   : m_xi      ( xi                 ) 
 //   , m_omega   ( std::abs ( omega ) ) 
 //   , m_alpha   (            alpha   ) 
 // {}
@@ -1944,49 +1635,6 @@ double Ostap::Math::GenGaussV2::kurtosis () const
 
 
 
-// ============================================================================
-// WorskSpace
-// ============================================================================
-// constructor
-// ============================================================================
-Ostap::Math::WorkSpace::WorkSpace () : m_workspace ( nullptr ){}
-// ============================================================================
-// (fictive) copy constructor
-// ============================================================================
-Ostap::Math::WorkSpace::WorkSpace
-( const Ostap::Math::WorkSpace& /* right */ )
-  : m_workspace ( nullptr )
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::WorkSpace::~WorkSpace ()
-{
-  if ( nullptr != m_workspace )
-  {
-    gsl_integration_workspace * _ws = (gsl_integration_workspace*) m_workspace ;
-    m_workspace = nullptr ;
-    gsl_integration_workspace_free ( _ws );
-  }
-}
-// ============================================================================
-// get the integration workspace
-// ============================================================================
-void* Ostap::Math::WorkSpace::workspace () const
-{
-  if ( nullptr == m_workspace ) 
-  { m_workspace = (char*) gsl_integration_workspace_alloc ( s_SIZE ) ; }
-  //
-  return m_workspace ;
-}
-// ============================================================================
-// fictive assignement operator
-// ============================================================================
-Ostap::Math::WorkSpace&
-Ostap::Math::WorkSpace::operator=
-  ( const Ostap::Math::WorkSpace& /* right */ ) { return *this ; }
-// ============================================================================
-
 
 // ============================================================================
 // Bukin
@@ -2006,9 +1654,7 @@ Ostap::Math::Bukin::Bukin
   const double rho_L  ,
   const double rho_R  )
 //
-  : std::unary_function<double,double> ()
-//
-  , m_peak      ( M_PI + peak  )
+  : m_peak      ( M_PI + peak  )
   , m_sigma     ( M_PI + sigma )
   , m_xi        ( M_PI + xi    )
   , m_rho_L     ( M_PI + rho_L )
@@ -2285,9 +1931,7 @@ Ostap::Math::Novosibirsk::Novosibirsk
 ( const double m0         ,
   const double sigma      ,
   const double tau        )
-  : std::unary_function<double,double> ()
-//
-  , m_m0        ( m0                   )
+  : m_m0        ( m0                   )
   , m_sigma     ( std::fabs ( sigma )  )
   , m_tau       ( std::tanh ( tau   )  )
 //
@@ -2534,8 +2178,7 @@ Ostap::Math::CrystalBall::CrystalBall
   const double sigma  ,
   const double alpha  ,
   const double n      )
-  : std::unary_function<double,double> ()
-  , m_m0         ( m0 )
+  : m_m0         ( m0 )
   , m_sigma      (  1 )
   , m_alpha      (  2 )
   , m_n          (  2 )
@@ -2702,9 +2345,8 @@ Ostap::Math::Needham::Needham
   const double a0    ,
   const double a1    ,
   const double a2    )
-  : std::unary_function<double,double>()
 /// @see Ostap::Math:CrystalBall
-  , m_cb  ( m0 , sigma , 1 , 0 ) // Ostap::Math:CrystalBall
+  : m_cb  ( m0 , sigma , 1 , 0 ) // Ostap::Math:CrystalBall
   , m_a0  ( std::abs ( a0 )  )
   , m_a1  (            a1    )
   , m_a2  (            a2    )
@@ -2757,8 +2399,7 @@ Ostap::Math::CrystalBallRightSide::CrystalBallRightSide
   const double sigma ,
   const double alpha ,
   const double n     )
-  : std::unary_function<double,double> ()
-  , m_cb         ( m0 , sigma , alpha , n ) 
+  : m_cb         ( m0 , sigma , alpha , n ) 
 {}
 // ============================================================================
 // destructor
@@ -2801,8 +2442,7 @@ Ostap::Math::CrystalBallDoubleSided::CrystalBallDoubleSided
   const double n_L     ,
   const double alpha_R ,
   const double n_R     )
-  : std::unary_function<double,double> ()
-  , m_m0         (  m0 )
+  : m_m0         (  m0 )
   , m_sigma      (   1 )
   , m_alpha_L    (   2 )
   , m_n_L        (   2 )
@@ -3056,8 +2696,7 @@ Ostap::Math::Apolonios::Apolonios
   const double alpha ,
   const double n     ,
   const double bp    )
-  : std::unary_function<double,double> ()
-  , m_m0         ( m0 )
+  : m_m0         ( m0 )
   , m_sigma      (  1 )
   , m_alpha      (  2 )
   , m_n          (  2 )
@@ -3248,8 +2887,7 @@ Ostap::Math::Apolonios2::Apolonios2
   const double sigmaL ,
   const double sigmaR ,
   const double beta   )
-  : std::unary_function<double,double> ()
-  , m_m0         (  0 )
+  : m_m0         (  0 )
   , m_sigmaL     (  1 )
   , m_sigmaR     (  1 )
   , m_beta       (  1 )
@@ -3392,9 +3030,7 @@ Ostap::Math::GramCharlierA::GramCharlierA
   const double sigma  ,
   const double kappa3 ,
   const double kappa4 )
-  : std::unary_function<double,double> ()
-//
-  , m_mean   ( mean )
+  : m_mean   ( mean )
   , m_sigma  ( std::fabs ( sigma ) )
   , m_kappa3 ( kappa3 )
   , m_kappa4 ( kappa4 )
@@ -3555,8 +3191,7 @@ bool Ostap::Math::GramCharlierA::setKappa4 ( const double value )
 Ostap::Math::PhaseSpace2::PhaseSpace2
 ( const double m1 ,
   const double m2 )
-  : std::unary_function<double,double> ()
-  , m_m1 ( std::abs ( m1 ) )
+  : m_m1 ( std::abs ( m1 ) )
   , m_m2 ( std::abs ( m2 ) )
 {}
 // ============================================================================
@@ -3736,8 +3371,7 @@ Ostap::Math::PhaseSpace3::PhaseSpace3
   const double         m3 ,
   const unsigned short l1 ,
   const unsigned short l2 )
-  : std::unary_function<double,double> ()
-  , m_m1  ( std::abs ( m1 ) )
+  : m_m1  ( std::abs ( m1 ) )
   , m_m2  ( std::abs ( m2 ) )
   , m_m3  ( std::abs ( m3 ) )
   , m_l1  ( l1 )
@@ -3872,8 +3506,7 @@ double  Ostap::Math::PhaseSpace3::integral
 Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 ( const double         threshold ,
   const unsigned short num       )
-  : std::unary_function<double,double> ()
-  , m_threshold ( std::abs ( threshold ) )
+  : m_threshold ( std::abs ( threshold ) )
   , m_num       ( num )
 {}
 // ============================================================================
@@ -3881,8 +3514,7 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 // ============================================================================
 Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 ( const std::vector<double>& masses )
-  : std::unary_function<double,double> ()
-  , m_threshold ( 0              )
+  : m_threshold ( 0              )
   , m_num       ( masses.size()  )
 {
   //
@@ -3945,8 +3577,7 @@ Ostap::Math::PhaseSpaceRight::PhaseSpaceRight
 ( const double         threshold ,
   const unsigned short l         ,
   const unsigned short n         )
-  : std::unary_function<double,double> ()
-  , m_threshold ( std::abs ( threshold ) )
+  : m_threshold ( std::abs ( threshold ) )
   , m_N         ( std::max ( l , n ) )
   , m_L         ( std::min ( l , n ) )
 {}
@@ -4007,8 +3638,7 @@ Ostap::Math::PhaseSpaceNL::PhaseSpaceNL
   const double         threshold2 ,
   const unsigned short l          ,
   const unsigned short n          )
-  : std::unary_function<double,double> ()
-  , m_threshold1 ( std::min ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) )
+  : m_threshold1 ( std::min ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) )
   , m_threshold2 ( std::max ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) )
   , m_N          ( std::max ( l , n ) )
   , m_L          ( std::min ( l , n ) )
@@ -4152,8 +3782,7 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
   const unsigned short l           ,
   const unsigned short n           , 
   const unsigned short N           )  // degree of polynomial
-  : std::unary_function<double,double>() 
-  , m_phasespace ( threshold1 , threshold2 , l , n ) 
+  : m_phasespace ( threshold1 , threshold2 , l , n ) 
   , m_positive   ( N , 
                    std::min ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) , 
                    std::max ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) ) 
@@ -4168,8 +3797,7 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
 Ostap::Math::PhaseSpacePol::PhaseSpacePol 
 ( const Ostap::Math::PhaseSpaceNL& ps ,
   const unsigned short             N  )  // degree of polynomial
-  : std::unary_function<double,double>() 
-  , m_phasespace ( ps ) 
+  : m_phasespace ( ps ) 
   , m_positive   ( N  , ps.lowEdge() , ps.highEdge() ) 
   , m_workspace  ()
 {}
@@ -4184,8 +3812,7 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
   const unsigned short             N     , 
   const double                     xlow  , 
   const double                     xhigh ) 
-  : std::unary_function<double,double>() 
-  , m_phasespace ( ps ) 
+  : m_phasespace ( ps ) 
   , m_positive   ( N  , 
                    std::max ( ps. lowEdge() , std::min ( xlow , xhigh ) ) ,
                    std::min ( ps.highEdge() , std::max ( xlow , xhigh ) ) )
@@ -4285,9 +3912,7 @@ Ostap::Math::BreitWigner::BreitWigner
   const double         m1   ,
   const double         m2   ,
   const unsigned short L    )
-  : std::unary_function<double,double> ()
-    //
-  , m_m0         (             m0    )
+  : m_m0         (             m0    )
   , m_gam0       ( std::abs ( gam0 ) )
   , m_m1         ( std::abs (   m1 ) )
   , m_m2         ( std::abs (   m2 ) )
@@ -4307,9 +3932,7 @@ Ostap::Math::BreitWigner::BreitWigner
   const double                                m2   ,
   const unsigned short                        L    ,
   const Ostap::Math::FormFactors::JacksonRho  r    )
-  : std::unary_function<double,double> ()
-    //
-  , m_m0         (             m0    )
+  : m_m0         (             m0    )
   , m_gam0       ( std::abs ( gam0 ) )
   , m_m1         ( std::abs (   m1 ) )
   , m_m2         ( std::abs (   m2 ) )
@@ -4330,9 +3953,7 @@ Ostap::Math::BreitWigner::BreitWigner
   const double                   m2   ,
   const unsigned short           L    ,
   const Ostap::Math::FormFactor& ff   )
-  : std::unary_function<double,double> ()
-    //
-  , m_m0         (             m0    )
+  : m_m0         (             m0    )
   , m_gam0       ( std::abs ( gam0 ) )
   , m_m1         ( std::abs (   m1 ) )
   , m_m2         ( std::abs (   m2 ) )
@@ -4348,8 +3969,7 @@ Ostap::Math::BreitWigner::BreitWigner
 // ============================================================================
 Ostap::Math::BreitWigner::BreitWigner 
 ( const Ostap::Math::BreitWigner& bw ) 
-  : std::unary_function<double,double> ( bw )
-  , m_m0         ( bw.m_m0    )
+  : m_m0         ( bw.m_m0    )
   , m_gam0       ( bw.m_gam0  )
   , m_m1         ( bw.m_m1    )
   , m_m2         ( bw.m_m2    )
@@ -4365,8 +3985,7 @@ Ostap::Math::BreitWigner::BreitWigner
 // ============================================================================
 Ostap::Math::BreitWigner::BreitWigner 
 ( Ostap::Math::BreitWigner&& bw ) 
-  : std::unary_function<double,double> ( bw )
-  , m_m0         ( bw.m_m0    )
+  : m_m0         ( bw.m_m0    )
   , m_gam0       ( bw.m_gam0  )
   , m_m1         ( bw.m_m1    )
   , m_m2         ( bw.m_m2    )
@@ -4885,9 +4504,7 @@ Ostap::Math::Flatte::Flatte
   const double mA2   ,
   const double mB1   ,
   const double mB2   )
-  : std::unary_function<double,double> ()
-    //
-  , m_m0    ( std::fabs ( m0    ) )
+  : m_m0    ( std::fabs ( m0    ) )
   , m_m0g1  ( std::fabs ( m0g1  ) )
   , m_g2og1 ( std::fabs ( g2og1 ) )
   , m_A1    ( std::fabs ( mA1   ) )
@@ -5161,9 +4778,7 @@ Ostap::Math::Voigt::Voigt
 ( const double m0    ,
   const double gamma ,
   const double sigma )
-  : std::unary_function<double,double>()
-//
-  , m_m0        ( m0 )
+  : m_m0        ( m0 )
   , m_gamma     ( std::abs ( gamma ) )
   , m_sigma     ( std::abs ( sigma ) )
 //
@@ -5333,9 +4948,7 @@ Ostap::Math::PseudoVoigt::PseudoVoigt
 ( const double m0    ,
   const double gamma ,
   const double sigma )
-  : std::unary_function<double,double>()
-    //
-  , m_m0        ( m0 )
+  : m_m0        ( m0 )
   , m_gamma     ( std::abs ( gamma ) )
   , m_sigma     ( std::abs ( sigma ) )
     //
@@ -5644,9 +5257,7 @@ Ostap::Math::Swanson::Swanson
   const double         m2_0   ,   // the second particle for cusp 
   const double         beta_0 ,   // beta_0 parameter
   const unsigned short L      )   // orbital momentum for real particles 
-  : std::unary_function<double,double> ()
-    //
-  , m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
+  : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
            ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
            std::abs ( m1 ) , 
            std::abs ( m2 ) ,  
@@ -5669,8 +5280,7 @@ Ostap::Math::Swanson::Swanson
   const double         beta_0         ,   // beta_0 parameter
   const unsigned short L              ,   // orbital momentum for real particles 
   const Ostap::Math::FormFactors::JacksonRho  r )  //  formfactor
-  : std::unary_function<double,double> ()
-  , m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
+  : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
            ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
            std::abs ( m1 ) , 
            std::abs ( m2 ) ,  
@@ -5694,8 +5304,7 @@ Ostap::Math::Swanson::Swanson
   const double         beta_0         ,   // beta_0 parameter
   const unsigned short L              ,   // orbital momentum for real particles 
   const Ostap::Math::FormFactor&   f  )  //  formfactor
-  : std::unary_function<double,double> ()
-  , m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
+  : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
            ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
            std::abs ( m1 ) , 
            std::abs ( m2 ) ,  
@@ -5717,8 +5326,7 @@ Ostap::Math::Swanson::Swanson
   const double         m1_0   ,   // the first  particle for cusp
   const double         m2_0   ,   // the second particle for cusp 
   const double         beta_0 )   // beta_0 parameter
-  : std::unary_function<double,double> ()
-  , m_bw     ( bw ) 
+  : m_bw     ( bw ) 
   , m_m1     ( std::abs (   m1_0 ) )
   , m_m2     ( std::abs (   m2_0 ) )
   , m_beta0  ( std::abs ( beta_0 ) )
@@ -5731,8 +5339,7 @@ Ostap::Math::Swanson::Swanson
 // ============================================================================
 Ostap::Math::Swanson::Swanson
 ( const Ostap::Math::Swanson& sw ) 
-  : std::unary_function<double,double> ( sw )
-  , m_bw    ( sw.m_bw    )
+  : m_bw    ( sw.m_bw    )
   , m_m1    ( sw.m_m1    )
   , m_m2    ( sw.m_m2    )
   , m_beta0 ( sw.m_beta0 )
@@ -5935,8 +5542,7 @@ Ostap::Math::LASS::LASS
   const double         a  ,
   const double         r  ,
   const double         e  )
-  : std::unary_function<double,double> ()
-  , m_m0  ( std::abs ( m0 ) )
+  : m_m0  ( std::abs ( m0 ) )
   , m_g0  ( std::abs ( g0 ) )
   , m_a   ( std::abs ( a  ) )
   , m_r   ( std::abs ( r  ) )
@@ -6142,9 +5748,7 @@ Ostap::Math::PhaseSpace23L::PhaseSpace23L
   const double         m  ,
   const unsigned short L  ,
   const unsigned short l  )
-  : std::unary_function<double,double> ()
-//
-  , m_m1   ( std::abs ( m1 ) )
+  : m_m1   ( std::abs ( m1 ) )
   , m_m2   ( std::abs ( m2 ) )
   , m_m3   ( std::abs ( m3 ) )
   , m_m    ( std::abs ( m  ) )
@@ -6295,9 +5899,8 @@ Ostap::Math::LASS23L::LASS23L
   const double         a  ,
   const double         r  ,
   const double         e  )
-  : std::unary_function<double,double> ()
-// LASS-fiunction 
-  , m_lass ( m1 , m2 , m0 , g0  , a , r , e ) 
+// LASS-function 
+  : m_lass ( m1 , m2 , m0 , g0  , a , r , e )
 // phase space
   , m_ps   ( m1 , m2 , m3 , m   , L , 0 )
 //
@@ -6316,9 +5919,8 @@ Ostap::Math::LASS23L::LASS23L
   const double             m3     ,
   const double             m      ,
   const unsigned short     L      ) 
-  : std::unary_function<double,double> ()
-// LASS-fiunction 
-  , m_lass ( lass ) 
+// LASS-function 
+  : m_lass ( lass ) 
 // phase space
   , m_ps   ( lass.m1 ()  , lass.m2 () , m3 , m   , L , 0 )
 //
@@ -6432,9 +6034,8 @@ Ostap::Math::Bugg::Bugg
   const double         s1 ,
   const double         s2 ,
   const double         m1 )
-  : std::unary_function<double,double> ()
 //
-  , m_M  ( std::abs ( M  ) )
+  : m_M  ( std::abs ( M  ) )
   , m_g2 ( std::abs ( g2 ) )
   , m_b1 ( std::abs ( b1 ) )
   , m_b2 ( std::abs ( b2 ) )
@@ -6715,9 +6316,8 @@ Ostap::Math::Bugg23L::Bugg23L
   const double         m3 ,
   const double         m  ,
   const unsigned short L  )
-  : std::unary_function<double,double> ()
 //
-  , m_bugg ( M  , g2 , b1 , b2 , a , s1 , s2 , m1 ) 
+  : m_bugg ( M  , g2 , b1 , b2 , a , s1 , s2 , m1 ) 
   , m_ps   ( m1 , m1 , m3 , m  , L , 0 )
 //
   , m_workspace ()
@@ -6734,9 +6334,8 @@ Ostap::Math::Bugg23L::Bugg23L
   const double             m3   ,  // MeV
   const double             m    ,  // MeV
   const unsigned short     L    ) 
-  : std::unary_function<double,double> ()
 //
-  , m_bugg ( bugg ) 
+  : m_bugg ( bugg ) 
   , m_ps   ( bugg.m1 () , bugg.m1 ()  , m3 , m  , L , 0 )
 //
   , m_workspace ()
@@ -6832,9 +6431,8 @@ Ostap::Math::BW23L::BW23L
   const double         m    ,
   const unsigned short L1   ,
   const unsigned short L2   )
-  : std::unary_function<double,double>()
 //
-  , m_bw ( m0 , gam0 , m1  , m2 , L1      )
+  : m_bw ( m0 , gam0 , m1  , m2 , L1      )
   , m_ps ( m1 , m2   , m3  , m  , L2 , L1 )
 //
   , m_workspace ()
@@ -6852,9 +6450,8 @@ Ostap::Math::BW23L::BW23L
   const unsigned short                       L1   ,
   const unsigned short                       L2   ,
   const Ostap::Math::FormFactors::JacksonRho r    )
-  : std::unary_function<double,double>()
 //
-  , m_bw ( m0 , gam0 , m1  , m2 , L1 , r  )
+  : m_bw ( m0 , gam0 , m1  , m2 , L1 , r  )
   , m_ps ( m1 , m2   , m3  , m  , L2 , L1 )
 //
   , m_workspace ()
@@ -6867,9 +6464,8 @@ Ostap::Math::BW23L::BW23L
   const double                    m3 ,
   const double                    m  ,
   const unsigned short            L2 )
-  : std::unary_function<double,double>()
 //
-  , m_bw ( bw )
+  : m_bw ( bw )
   , m_ps ( bw.m1() , bw.m2() , m3  , m  , L2 , bw. L())
 //
   , m_workspace ()
@@ -6987,9 +6583,8 @@ Ostap::Math::Flatte23L::Flatte23L
   const double         m3    ,     // MeV
   const double         m     ,     // MeV
   const unsigned short L     )
-  : std::unary_function<double,double> ()
 //
-  , m_flatte    ( m0  , m0g1 , g2og1 , mA , mA , mB , mB ) 
+  : m_flatte    ( m0  , m0g1 , g2og1 , mA , mA , mB , mB ) 
   , m_ps        ( mA  , mA  , m3    , m  , L    )
 //
   , m_workspace ()
@@ -7006,9 +6601,8 @@ Ostap::Math::Flatte23L::Flatte23L
   const double               m3  ,     // MeV
   const double               m   ,     // MeV
   const unsigned short       L   )
-  : std::unary_function<double,double> ()
 //
-  , m_flatte    ( fun )
+  : m_flatte    ( fun )
   , m_ps        ( fun.mA1() , fun.mA2()  , m3    , m  , L    )
     //
   , m_workspace ()
@@ -7108,9 +6702,8 @@ Ostap::Math::Gounaris23L::Gounaris23L
   const double         m3 ,  // MeV
   const double         m  ,  // MeV
   const unsigned short L  )
-  : std::unary_function<double,double>  ()
 //
-  , m_M  ( std::abs ( M  ) )
+  : m_M  ( std::abs ( M  ) )
   , m_g0 ( std::abs ( g0 ) )
 //
   , m_ps ( m1 , m1 , m3 , m , L , 1 )
@@ -7301,8 +6894,7 @@ Ostap::Math::ExpoPositive::ExpoPositive
   const double              tau  ,   
   const double              xmin ,
   const double              xmax )
-  : std::unary_function<double,double> ()
-  , m_positive  ( N , xmin , xmax )
+  : m_positive  ( N , xmin , xmax )
   , m_tau       ( tau ) 
 {}
 // ============================================================================
@@ -7313,8 +6905,7 @@ Ostap::Math::ExpoPositive::ExpoPositive
   const double               tau  ,
   const double               xmin ,
   const double               xmax )
-  : std::unary_function<double,double> ()
-  , m_positive  ( pars , xmin , xmax )
+  : m_positive  ( pars , xmin , xmax )
   , m_tau       ( tau ) 
 {}
 // ============================================================================
@@ -7358,9 +6949,8 @@ Ostap::Math::StudentT::StudentT
 ( const double mass  , 
   const double sigma ,
   const double n     ) 
-  : std::unary_function<double,double>  ()
 //
-  , m_M    (      std::abs ( mass  ) )
+  : m_M    (      std::abs ( mass  ) )
   , m_s    (      std::abs ( sigma ) )
   , m_n    ( -1 )
   , m_norm ( -1 ) 
@@ -7480,9 +7070,8 @@ Ostap::Math::BifurcatedStudentT::BifurcatedStudentT
   const double sigmaR ,
   const double nL     , 
   const double nR     ) 
-  : std::unary_function<double,double>  ()
 //
-  , m_M     (      std::abs ( mass   ) )
+  : m_M     (      std::abs ( mass   ) )
   , m_sL    (      std::abs ( sigmaL ) )
   , m_sR    (      std::abs ( sigmaR ) )
   , m_nL    ( -1 )
@@ -7644,8 +7233,7 @@ double Ostap::Math::BifurcatedStudentT::integral
 Ostap::Math::GammaDist::GammaDist 
 ( const double k     ,   // shape parameter  
   const double theta )   // scale parameter
-  : std::unary_function<double,double> () 
-  , m_k     ( std::abs ( k     ) )
+  : m_k     ( std::abs ( k     ) )
   , m_theta ( std::abs ( theta ) )
   , m_aux   ( 0 ) 
 {
@@ -7758,8 +7346,7 @@ Ostap::Math::GenGammaDist::GenGammaDist
   const double theta , 
   const double p     , // 1 corresponds to gamma distribution 
   const double low   ) 
-  : std::unary_function<double,double>() 
-  , m_k     ( std::abs ( k     ) ) 
+  : m_k     ( std::abs ( k     ) ) 
   , m_theta ( std::abs ( theta ) ) 
   , m_p     ( std::abs ( p     ) ) 
   , m_low   ( low ) 
@@ -7853,8 +7440,7 @@ Ostap::Math::Amoroso::Amoroso
   const double alpha , 
   const double beta  ,
   const double a     ) 
-  : std::unary_function<double,double>() 
-  , m_a     (            a       ) 
+  : m_a     (            a       ) 
   , m_theta ( theta              ) 
   , m_alpha ( std::abs ( alpha ) ) 
   , m_beta  (            beta    ) 
@@ -8116,8 +7702,7 @@ Ostap::Math::LogGamma::LogGamma
 ( const double nu     , 
   const double lambda , 
   const double alpha  ) 
-  : std::unary_function<double,double>() 
-  , m_nu     ( nu     ) 
+  : m_nu     ( nu     ) 
   , m_lambda ( lambda ) 
   , m_alpha  ( std::abs ( alpha ) ) 
 {
@@ -8232,8 +7817,7 @@ Ostap::Math::BetaPrime::BetaPrime
   const double beta  , 
   const double scale , 
   const double shift )
-  : std::unary_function<double,double> () 
-  , m_alpha ( std::abs ( alpha ) )
+  : m_alpha ( std::abs ( alpha ) )
   , m_beta  ( std::abs ( beta  ) )
   , m_scale ( scale )
   , m_shift ( shift )
@@ -8372,8 +7956,7 @@ double Ostap::Math::BetaPrime::skewness  () const
 Ostap::Math::Landau::Landau
 ( const double scale , 
   const double shift )
-  : std::unary_function<double,double> () 
-  , m_scale ( scale )
+  : m_scale ( scale )
   , m_shift ( shift )
 {}
 // ============================================================================
@@ -8604,8 +8187,7 @@ Ostap::Math::SinhAsinh::SinhAsinh
   const double scale     , 
   const double epsilon   , 
   const double delta     )
-  : std::unary_function<double,double> () 
-  , m_mu       (            location   ) 
+  : m_mu       (            location   ) 
   , m_sigma    ( std::abs ( scale    ) ) 
   , m_epsilon  (            epsilon    ) 
   , m_delta    ( std::abs ( delta    ) ) 
@@ -8695,8 +8277,7 @@ Ostap::Math::JohnsonSU::JohnsonSU
   const double lambda  ,   // related to variance
   const double delta   ,   // shape 
   const double gamma   )  // shape 
-  : std::unary_function<double,double> () 
-  , m_xi      (            xi) 
+  : m_xi      (            xi) 
   , m_lambda  ( std::abs ( lambda ) ) 
   , m_delta   ( std::abs ( delta  ) ) 
   , m_gamma   (            gamma    ) 
@@ -8800,8 +8381,7 @@ double Ostap::Math::JohnsonSU::integral
 Ostap::Math::Atlas::Atlas
 ( const double mean  ,
   const double sigma ) 
-  : std::unary_function<double,double>() 
-  , m_mean      ( mean               ) 
+  : m_mean      ( mean               ) 
   , m_sigma     ( std::abs ( sigma ) )    
   , m_workspace ()
 {}
@@ -8913,8 +8493,7 @@ double Ostap::Math::Atlas::integral () const { return 1 ; }
 Ostap::Math::Sech::Sech  
 ( const double mean  ,
   const double sigma ) 
-  : std::unary_function<double,double>() 
-  , m_mean  (             mean    ) 
+  : m_mean  (             mean    ) 
   , m_sigma (  std::abs ( sigma ) )
 {}
 // ============================================================================
@@ -8989,8 +8568,7 @@ double Ostap::Math::Sech::quantile ( const double p ) const
 Ostap::Math::Logistic::Logistic
 ( const double mean  ,
   const double sigma ) 
-  : std::unary_function<double,double>() 
-  , m_mean  (             mean    ) 
+  : m_mean  (             mean    ) 
   , m_sigma (  std::abs ( sigma ) )
 {}
 // ============================================================================
@@ -9071,8 +8649,7 @@ Ostap::Math::Argus::Argus
 ( const double shape , 
   const double high  ,
   const double low   )
-  : std::unary_function<double,double> () 
-  , m_shape ( std::abs ( shape ) ) 
+  : m_shape ( std::abs ( shape ) ) 
   , m_high  ( std::abs ( high  ) ) 
   , m_low   ( std::abs ( low   ) ) 
 {}
@@ -9166,963 +8743,6 @@ double Ostap::Math::Argus::integral ( const double low  ,
 
 
 
-
-
-// ===========================================================================
-// constructor from the order
-// ===========================================================================
-Ostap::Math::PS2DPol::PS2DPol
-( const Ostap::Math::PhaseSpaceNL&   psx  , 
-  const Ostap::Math::PhaseSpaceNL&   psy  , 
-  const unsigned short               Nx   ,
-  const unsigned short               Ny   ) 
-  : std::binary_function<double,double,double> () 
-  , m_positive ( Nx, Ny , 
-                 psx.lowEdge() , psx.highEdge() , 
-                 psy.lowEdge() , psy.highEdge() )
-  , m_psx ( psx ) 
-  , m_psy ( psy )
-{}
-// ===========================================================================
-// constructor from the order
-// ===========================================================================
-Ostap::Math::PS2DPol::PS2DPol
-( const Ostap::Math::PhaseSpaceNL&   psx  , 
-  const Ostap::Math::PhaseSpaceNL&   psy  , 
-  const unsigned short               Nx   ,
-  const unsigned short               Ny   ,
-  const double                       xmin , 
-  const double                       xmax , 
-  const double                       ymin , 
-  const double                       ymax ) 
-  : std::binary_function<double,double,double> () 
-  , m_positive ( Nx , 
-                 Ny , 
-                 std::max ( psx. lowEdge () , std::min ( xmin , xmax ) ) , 
-                 std::min ( psx.highEdge () , std::max ( xmin , xmax ) ) , 
-                 std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
-                 std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) ) 
-  , m_psx ( psx ) 
-  , m_psy ( psy )
-{}
-// ===========================================================================
-// get the value
-// ===========================================================================
-double Ostap::Math::PS2DPol::operator () 
-  ( const double x , 
-    const double y ) const 
-{
-  //
-  if      ( x < m_psx. lowEdge() || x < m_positive.xmin () ) { return 0 ; }
-  else if ( x > m_psx.highEdge() || x > m_positive.xmax () ) { return 0 ; }
-  else if ( y < m_psy. lowEdge() || y < m_positive.ymin () ) { return 0 ; }
-  else if ( y > m_psy.highEdge() || y > m_positive.ymax () ) { return 0 ; }
-  //
-  return m_positive ( x , y ) * m_psx ( x ) * m_psy ( y ) ;
-}
-// ============================================================================
-// get the helper integral 
-// ============================================================================
-namespace 
-{
-  // ==========================================================================
-  struct _PSBERN_
-  {
-    //
-    double operator() ( const double x ) const 
-    { return  (*m_ps)( x ) * (*m_bp)( x ) ; }
-    //
-    const Ostap::Math::PhaseSpaceNL*   m_ps ; // phase space factor 
-    const Ostap::Math::Bernstein*      m_bp ; // bernstein polinomial 
-    //
-  };
-  // ==========================================================================
-  double _ps_bern_GSL ( double x , void* params )
-  {
-    const _PSBERN_* ps_bern = (const _PSBERN_*) params ;
-    return (*ps_bern)( x ) ;
-  }
-  // ==========================================================================
-  typedef std::pair<const Ostap::Math::PhaseSpaceNL*,
-                    const Ostap::Math::Bernstein*>     _KEY1 ;
-  typedef std::pair<double,double>                     _KEY2 ;
-  typedef std::pair<_KEY1,_KEY2>                       _KEY  ;
-  typedef std::map<_KEY,double>                        _MAP  ;
-  typedef _MAP::const_iterator                         _CIT  ;
-  _MAP _s_map_ ;
-  // ==========================================================================
-  double _integral_
-  ( const Ostap::Math::PhaseSpaceNL&    ps   , 
-    const Ostap::Math::Bernstein&       bp   ,
-    const double                        low  , 
-    const double                        high ,
-    const Ostap::Math::WorkSpace&       work ) 
-  {
-    //
-    if      ( ps.highEdge() <= bp.xmin() || ps. lowEdge() >= bp.xmax() ) { return 0 ; }
-    //
-    if      ( s_equal ( low , high ) ) { return 0 ; }
-    else if ( bp.zero()              ) { return 0 ; }
-    else if ( low > high  ) { return _integral_ ( ps , bp , high , low , work ) ; }
-    //
-    if      ( high <= ps.lowEdge () || high <= bp.xmin () ) { return 0 ; }
-    else if ( low  >= ps.highEdge() || low  >= bp.xmax () ) { return 0 ; }
-    //
-    const double xlow  = std::max ( std::max ( ps. lowEdge() , bp.xmin() ) , low  ) ;
-    const double xhigh = std::min ( std::min ( ps.highEdge() , bp.xmax() ) , high ) ;
-    //
-    if ( xlow >= xhigh   ) { return 0 ; }
-    //
-    if ( 1 == bp.npars() ) { return bp.par(0) * ps.integral ( xlow , xhigh ) ; }
-    //
-    // check the cache
-    const _KEY1 k1  = std::make_pair( &ps , &bp  ) ;
-    const _KEY2 k2  = std::make_pair( low , high ) ;
-    const _KEY  key = std::make_pair( k1  , k2   ) ;
-    _CIT  it = _s_map_.find  ( key ) ;
-    if ( _s_map_.end() != it ) {  return it->second ; }  // AVOID calculation 
-    //
-    // use GSL to evaluate the integral 
-    //
-    Sentry sentry ;
-    //
-    gsl_function F             ;
-    F.function = &_ps_bern_GSL ;
-    //
-    _PSBERN_ ps_bern ;
-    ps_bern.m_ps     = &ps  ; // phase space factor 
-    ps_bern.m_bp     = &bp  ; // basic bernstein polynomial 
-    //
-    F.params         = &ps_bern ;
-    //
-    double result    = 1.0 ;
-    double error     = 1.0 ;
-    //
-    const int ierror = gsl_integration_qag
-      ( &F                 ,            // the function
-        xlow   , xhigh     ,            // low & high edges
-        s_PRECISION        ,            // absolute precision
-        s_PRECISION        ,            // relative precision
-        s_SIZE             ,            // size of workspace
-        GSL_INTEG_GAUSS31  ,            // integration rule
-        workspace ( work ) ,            // workspace
-        &result            ,            // the result
-        &error             ) ;          // the error in result
-    //
-    if ( ierror )
-    {
-      gsl_error ( "Ostap::Math::PhaseSpaceNL::PS+BB::QAG" ,
-                  __FILE__ , __LINE__ , ierror ) ;
-    }
-    //
-    // clear the cache if too large
-    if ( 500 < _s_map_.size() ) { _s_map_.clear() ; }
-    // update the cache
-    _s_map_[key ] = result ;  
-    //
-    return result ;
-  }
-  // ==========================================================================
-}
-// ============================================================================
-double Ostap::Math::PS2DPol::integral 
-( const double xlow , const double xhigh , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( xlow , xhigh ) || s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  //
-  else if ( xlow  > xhigh ) { return -1*integral ( xhigh , xlow  , ylow  , yhigh ) ; }
-  else if ( ylow  > yhigh ) { return -1*integral ( xlow  , xhigh , yhigh , ylow  ) ; }
-  //
-  if      ( xhigh <  m_positive.xmin () || xhigh <  m_psx. lowEdge () ) { return 0 ; }
-  else if ( xlow  >  m_positive.xmax () || xlow  >  m_psx.highEdge () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () || yhigh <  m_psy. lowEdge () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () || ylow  >  m_psy.highEdge () ) { return 0 ; }
-  //
-  const double  x_low  = std::max ( std::max ( m_psx. lowEdge() , m_positive.xmin() ) , xlow  ) ;
-  const double  x_high = std::min ( std::min ( m_psx.highEdge() , m_positive.xmax() ) , xhigh ) ;
-  if ( x_low >= x_high ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( std::max ( m_psy. lowEdge() , m_positive.ymin() ) , ylow  ) ;
-  const double  y_high = std::min ( std::min ( m_psy.highEdge() , m_positive.ymax() ) , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = _integral_ ( m_psy , b2d.basicY ( i ) , y_low , y_high , m_workspace ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
-  { fx[i] = _integral_ ( m_psx , b2d.basicX ( i ) , x_low , x_high , m_workspace ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-double Ostap::Math::PS2DPol::integrateY 
-( const double x    , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  else if ( ylow  > yhigh ) { return -1*integrateY ( x , yhigh , ylow  ) ; }
-  if      ( x     <  m_positive.xmin () || x     <  m_psx. lowEdge () ) { return 0 ; }
-  else if ( x     >  m_positive.xmax () || x     >  m_psx.highEdge () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () || yhigh <  m_psy. lowEdge () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () || ylow  >  m_psy.highEdge () ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( std::max ( m_psy. lowEdge() , m_positive.ymin() ) , ylow  ) ;
-  const double  y_high = std::min ( std::min ( m_psy.highEdge() , m_positive.ymax() ) , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = _integral_ ( m_psy , b2d.basicY ( i ) , y_low , y_high , m_workspace ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
-  { fx[i] = m_psx ( x ) , b2d.basicX ( i ) ( x ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-double Ostap::Math::PS2DPol::integrateX 
-( const double y    , 
-  const double xlow , const double xhigh ) const 
-{
-  //
-  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; }
-  //
-  else if ( xlow  > xhigh ) { return -1*integrateX ( y , xhigh , xlow ) ; }
-  if      ( xhigh <  m_positive.xmin () || xhigh <  m_psx. lowEdge () ) { return 0 ; }
-  else if ( xlow  >  m_positive.xmax () || xlow  >  m_psx.highEdge () ) { return 0 ; }
-  else if ( y     <  m_positive.ymin () || y     <  m_psy. lowEdge () ) { return 0 ; }
-  else if ( y     >  m_positive.ymax () || y     >  m_psy.highEdge () ) { return 0 ; }
-  //
-  const double  x_low  = std::max ( std::max ( m_psx. lowEdge() , m_positive.xmin() ) , xlow  ) ;
-  const double  x_high = std::min ( std::min ( m_psx.highEdge() , m_positive.xmax() ) , xhigh ) ;
-  if ( x_low >= x_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = m_psy ( y ) * b2d.basicY ( i ) ( y ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
-  { fx[i] = _integral_ ( m_psx , b2d.basicX ( i ) , x_low , x_high , m_workspace ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-
-// ===========================================================================
-// constructor from the order
-// ===========================================================================
-Ostap::Math::PS2DPolSym::PS2DPolSym
-( const Ostap::Math::PhaseSpaceNL&   ps   , 
-  const unsigned short               N    ) 
-  : std::binary_function<double,double,double> () 
-  , m_positive ( N, ps.lowEdge() , ps.highEdge() )
-  , m_ps ( ps ) 
-{}
-// ===========================================================================
-// constructor from the order
-// ===========================================================================
-Ostap::Math::PS2DPolSym::PS2DPolSym
-( const Ostap::Math::PhaseSpaceNL&   ps   , 
-  const unsigned short               N    ,
-  const double                       xmin , 
-  const double                       xmax ) 
-  : std::binary_function<double,double,double> () 
-  , m_positive ( N  , 
-                 std::max ( ps. lowEdge () , std::min ( xmin , xmax ) ) , 
-                 std::min ( ps.highEdge () , std::max ( xmin , xmax ) ) ) 
-  , m_ps  ( ps  ) 
-{}
-// ===========================================================================
-// get the value
-// ===========================================================================
-double Ostap::Math::PS2DPolSym::operator () 
-  ( const double x , 
-    const double y ) const 
-{
-  //
-  if      ( x < m_ps. lowEdge() || x < m_positive.xmin () ) { return 0 ; }
-  else if ( x > m_ps.highEdge() || x > m_positive.xmax () ) { return 0 ; }
-  else if ( y < m_ps. lowEdge() || y < m_positive.ymin () ) { return 0 ; }
-  else if ( y > m_ps.highEdge() || y > m_positive.ymax () ) { return 0 ; }
-  //
-  return m_positive ( x , y ) * m_ps ( x ) * m_ps ( y ) ;
-}
-// ============================================================================
-double Ostap::Math::PS2DPolSym::integral 
-( const double xlow , const double xhigh , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( xlow , xhigh ) || s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  //
-  else if ( xlow  > xhigh ) { return -1*integral ( xhigh , xlow  , ylow  , yhigh ) ; }
-  else if ( ylow  > yhigh ) { return -1*integral ( xlow  , xhigh , yhigh , ylow  ) ; }
-  //
-  if      ( xhigh <  m_positive.xmin () || xhigh <  m_ps. lowEdge () ) { return 0 ; }
-  else if ( xlow  >  m_positive.xmax () || xlow  >  m_ps.highEdge () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () || yhigh <  m_ps. lowEdge () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () || ylow  >  m_ps.highEdge () ) { return 0 ; }
-  //
-  const double  x_low  = std::max ( std::max ( m_ps. lowEdge() , m_positive.xmin() ) , xlow  ) ;
-  const double  x_high = std::min ( std::min ( m_ps.highEdge() , m_positive.xmax() ) , xhigh ) ;
-  if ( x_low >= x_high ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( std::max ( m_ps. lowEdge() , m_positive.ymin() ) , ylow  ) ;
-  const double  y_high = std::min ( std::min ( m_ps.highEdge() , m_positive.ymax() ) , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short n = m_positive.n () ;
-  //
-  const Ostap::Math::Bernstein2DSym& b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( n + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= n ; ++i ) 
-  { fy[i] = _integral_ ( m_ps , b2d.basic( i )  , y_low , y_high , m_workspace ) ; }
-  //
-  std::vector<double> fx ( n + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= n ; ++i ) 
-  { fx[i] = _integral_ ( m_ps , b2d.basic( i )  , x_low , x_high , m_workspace ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= n ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= n ; ++iy ) 
-    { 
-      result += 
-        ix == iy ? b2d.par ( ix , iy ) * fx[ix] * fy[iy] :
-        0.5      * b2d.par ( ix , iy ) * fx[ix] * fy[iy] ;
-    }
-  }
-  //
-  const double scale = ( n + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  return result * scale * scale ;
-}
-// ============================================================================
-double Ostap::Math::PS2DPolSym::integrateY
-( const double x    , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  else if ( ylow  > yhigh ) { return -1*integrateY ( x , yhigh , ylow  ) ; }
-  //
-  if      ( x     <  m_positive.xmin () || x     <  m_ps. lowEdge () ) { return 0 ; }
-  else if ( x     >  m_positive.xmax () || x     >  m_ps.highEdge () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () || yhigh <  m_ps. lowEdge () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () || ylow  >  m_ps.highEdge () ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( std::max ( m_ps. lowEdge() , m_positive.ymin() ) , ylow  ) ;
-  const double  y_high = std::min ( std::min ( m_ps.highEdge() , m_positive.ymax() ) , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short n = m_positive.n () ;
-  //
-  const Ostap::Math::Bernstein2DSym& b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( n + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= n ; ++i ) 
-  { fy[i] = _integral_ ( m_ps , b2d.basic( i )  , y_low , y_high , m_workspace ) ; }
-  //
-  std::vector<double> fx ( n + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= n ; ++i ) 
-  { fx[i] = m_ps ( x ) , b2d.basic( i ) ( x )  ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= n ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= n ; ++iy ) 
-    {
-      result += 
-        ix == iy ? b2d.par ( ix , iy ) * fx[ix] * fy[iy] :
-        0.5      * b2d.par ( ix , iy ) * fx[ix] * fy[iy] ;
-    }
-  }  
-  //
-  const double scale = ( n + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  return result * scale * scale ;
-}
-// ============================================================================
-double Ostap::Math::PS2DPolSym::integrateX
-( const double y                         , 
-  const double xlow , const double xhigh ) const 
-{ return integrateY ( y , xlow , xhigh ) ; }
-
-// ===========================================================================
-// constructor from the order
-// ===========================================================================
-Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
-( const Ostap::Math::PhaseSpaceNL&   psy  , 
-  const double                       xmin , 
-  const double                       xmax , 
-  const unsigned short               Nx   ,
-  const unsigned short               Ny   ) 
-  : std::binary_function<double,double,double> () 
-  , m_positive ( Nx , 
-                 Ny , 
-                 std::min ( xmin , xmax ) , std::max ( xmin , xmax ) ,
-                 psy.lowEdge()            , psy.highEdge()           )
-  , m_psy ( psy )
-  , m_tau ( 0   ) 
-{}
-// ===========================================================================
-// constructor from the order
-// ===========================================================================
-Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
-( const Ostap::Math::PhaseSpaceNL&   psy  , 
-  const double                       xmin , 
-  const double                       xmax , 
-  const unsigned short               Nx   ,
-  const unsigned short               Ny   ,
-  const double                       ymin , 
-  const double                       ymax ) 
-  : std::binary_function<double,double,double> () 
-  , m_positive ( Nx , 
-                 Ny , 
-                 std::min ( xmin , xmax )   , std::max ( xmin , xmax ) ,
-                 std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
-                 std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) )
-  , m_psy ( psy )
-  , m_tau ( 0   ) 
-{}
-// ============================================================================
-// set tau-parameter
-// ============================================================================
-bool Ostap::Math::ExpoPS2DPol::setTau ( const double value )
-{
-  //
-  if ( s_equal ( m_tau , value ) ) { return false ; }
-  //
-  m_tau = value ;
-  //
-  return true ;
-}
-// ===========================================================================
-// get the value
-// ===========================================================================
-double Ostap::Math::ExpoPS2DPol::operator () 
-  ( const double x , 
-    const double y ) const 
-{
-  //
-  if      ( x < m_positive.xmin () || x > m_positive.xmax () ) { return 0 ; }
-  else if ( y < m_psy. lowEdge  () || y < m_positive.ymin () ) { return 0 ; }
-  else if ( y > m_psy.highEdge  () || y > m_positive.ymax () ) { return 0 ; }
-  //
-  return m_positive ( x , y ) * my_exp ( m_tau * x ) * m_psy ( y ) ;
-}
-// ============================================================================
-double Ostap::Math::ExpoPS2DPol::integral 
-( const double xlow , const double xhigh , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( xlow , xhigh ) || s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  //
-  else if ( xlow  > xhigh ) { return -1*integral ( xhigh , xlow  , ylow  , yhigh ) ; }
-  else if ( ylow  > yhigh ) { return -1*integral ( xlow  , xhigh , yhigh , ylow  ) ; }
-  //
-  if      ( xhigh <  m_positive.xmin () ) { return 0 ; }
-  else if ( xlow  >  m_positive.xmax () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () || yhigh <  m_psy. lowEdge () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () || ylow  >  m_psy.highEdge () ) { return 0 ; }
-  //
-  const double  x_low  = std::max ( m_positive.xmin() , xlow  ) ; 
-  const double  x_high = std::min ( m_positive.xmax() , xhigh ) ;
-  if ( x_low >= x_high ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( std::max ( m_psy. lowEdge() , m_positive.ymin() ) , ylow  ) ;
-  const double  y_high = std::min ( std::min ( m_psy.highEdge() , m_positive.ymax() ) , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = _integral_ ( m_psy , b2d.basicY ( i ) , y_low , y_high , m_workspace ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i )
-  { fx[i] = Ostap::Math::integrate ( b2d.basicX ( i ) , m_tau , x_low , x_high ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-double Ostap::Math::ExpoPS2DPol::integrateY
-( const double x    , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  else if ( ylow  > yhigh ) { return -1*integrateY ( x , yhigh , ylow  ) ; }
-  //
-  if      ( x     <  m_positive.xmin () ) { return 0 ; }
-  else if ( x     >  m_positive.xmax () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () || yhigh <  m_psy. lowEdge () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () || ylow  >  m_psy.highEdge () ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( std::max ( m_psy. lowEdge() , m_positive.ymin() ) , ylow  ) ;
-  const double  y_high = std::min ( std::min ( m_psy.highEdge() , m_positive.ymax() ) , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = _integral_ ( m_psy , b2d.basicY ( i ) , y_low , y_high , m_workspace ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i )
-  { fx[i] = b2d.basicX ( i ) ( x ) * my_exp (  m_tau * x ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-double Ostap::Math::ExpoPS2DPol::integrateX 
-( const double y    ,
-  const double xlow , const double xhigh ) const 
-{
-  //
-  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; }
-  //
-  else if ( xlow  > xhigh ) { return -1*integrateX ( y , xhigh , xlow ) ; }
-  //
-  if      ( xhigh <  m_positive.xmin () ) { return 0 ; }
-  else if ( xlow  >  m_positive.xmax () ) { return 0 ; }
-  else if ( y     <  m_positive.ymin () || y <  m_psy. lowEdge () ) { return 0 ; }
-  else if ( y     >  m_positive.ymax () || y >  m_psy.highEdge () ) { return 0 ; }
-  //
-  const double  x_low  = std::max ( m_positive.xmin() , xlow  ) ; 
-  const double  x_high = std::min ( m_positive.xmax() , xhigh ) ;
-  if ( x_low >= x_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = m_psy ( y ) *  b2d.basicY ( i ) ( y ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i )
-  { fx[i] = Ostap::Math::integrate ( b2d.basicX ( i ) , m_tau , x_low , x_high ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-
-
-// ===========================================================================
-// constructor from the order
-// ===========================================================================
-Ostap::Math::Expo2DPol::Expo2DPol
-( const double                       xmin , 
-  const double                       xmax , 
-  const double                       ymin , 
-  const double                       ymax , 
-  const unsigned short               Nx   ,
-  const unsigned short               Ny   )
-  : std::binary_function<double,double,double> () 
-  , m_positive ( Nx , Ny , 
-                 std::min ( xmin , xmax ) , std::max ( xmin , xmax ) ,
-                 std::min ( ymin , ymax ) , std::max ( ymin , ymax ) ) 
-  , m_tauX ( 0 ) 
-  , m_tauY ( 0 )
-{}
-// ===========================================================================
-// set tau-parameter
-// ============================================================================
-bool Ostap::Math::Expo2DPol::setTauX ( const double value )
-{
-  //
-  if ( s_equal ( m_tauX , value ) ) { return false ; }
-  //
-  m_tauX = value ;
-  //
-  return true ;
-}
-// ===========================================================================
-// set tau-parameter
-// ============================================================================
-bool Ostap::Math::Expo2DPol::setTauY ( const double value )
-{
-  //
-  if ( s_equal ( m_tauY , value ) ) { return false ; }
-  //
-  m_tauY = value ;
-  //
-  return true ;
-}
-// ===========================================================================
-// get the value
-// ===========================================================================
-double Ostap::Math::Expo2DPol::operator () 
-  ( const double x , const double y ) const 
-{
-  //
-  if      ( x < m_positive.xmin () || x > m_positive.xmax () ) { return 0 ; }
-  else if ( y < m_positive.ymin () || y > m_positive.ymax () ) { return 0 ; }
-  //
-  return m_positive ( x , y ) * my_exp ( m_tauX * x ) * my_exp ( m_tauY * y ) ;
-}
-// ============================================================================
-double Ostap::Math::Expo2DPol::integral 
-( const double xlow , const double xhigh , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( xlow , xhigh ) || s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  //
-  else if ( xlow  > xhigh ) { return -1*integral ( xhigh , xlow  , ylow  , yhigh ) ; }
-  else if ( ylow  > yhigh ) { return -1*integral ( xlow  , xhigh , yhigh , ylow  ) ; }
-  //
-  if      ( xhigh <  m_positive.xmin () ) { return 0 ; }
-  else if ( xlow  >  m_positive.xmax () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () ) { return 0 ; }
-  //
-  const double  x_low  = std::max ( m_positive.xmin() , xlow  ) ; 
-  const double  x_high = std::min ( m_positive.xmax() , xhigh ) ;
-  if ( x_low >= x_high ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( m_positive.ymin() , ylow  ) ;
-  const double  y_high = std::min ( m_positive.ymax() , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] =  Ostap::Math::integrate ( b2d.basicY ( i ) , m_tauY , y_low , y_high ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
-  { fx[i] =  Ostap::Math::integrate ( b2d.basicX ( i ) , m_tauX , x_low , x_high  ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-double Ostap::Math::Expo2DPol::integrateY  
-( const double x    , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  else if ( ylow  > yhigh ) { return -1*integrateY ( x , yhigh , ylow  ) ; }
-  //
-  if      ( x     <  m_positive.xmin () ) { return 0 ; }
-  else if ( x     >  m_positive.xmax () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( m_positive.ymin() , ylow  ) ;
-  const double  y_high = std::min ( m_positive.ymax() , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] =  Ostap::Math::integrate ( b2d.basicY ( i ) , m_tauY , y_low , y_high ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
-  { fx[i] =  my_exp ( m_tauX * x ) * b2d.basicX ( i ) ( x ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-double Ostap::Math::Expo2DPol::integrateX
-( const double y    , 
-  const double xlow , const double xhigh ) const 
-{
-  //
-  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; }
-  else if ( xlow  > xhigh ) { return -1*integrateX ( y , xhigh , xlow ) ; }
-  //
-  if      ( xhigh <  m_positive.xmin () ) { return 0 ; }
-  else if ( xlow  >  m_positive.xmax () ) { return 0 ; }
-  else if ( y     <  m_positive.ymin () ) { return 0 ; }
-  else if ( y     >  m_positive.ymax () ) { return 0 ; }
-  //
-  const double  x_low  = std::max ( m_positive.xmin() , xlow  ) ; 
-  const double  x_high = std::min ( m_positive.xmax() , xhigh ) ;
-  if ( x_low >= x_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2D&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] =  my_exp ( m_tauY * y ) * b2d.basicY ( i ) ( y )  ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
-  { fx[i] =  Ostap::Math::integrate ( b2d.basicX ( i ) , m_tauX , x_low , x_high  ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
-}
-// ============================================================================
-
-
-// ===========================================================================
-// constructor from the order
-// ===========================================================================
-Ostap::Math::Expo2DPolSym::Expo2DPolSym
-( const double                       xmin , 
-  const double                       xmax , 
-  const unsigned short               N    )
-  : std::binary_function<double,double,double> () 
-  , m_positive ( N , std::min ( xmin , xmax ) , std::max ( xmin , xmax ) )
-  , m_tau ( 0 ) 
-{}
-// ===========================================================================
-// set tau-parameter
-// ============================================================================
-bool Ostap::Math::Expo2DPolSym::setTau ( const double value )
-{
-  //
-  if ( s_equal ( m_tau , value ) ) { return false ; }
-  //
-  m_tau = value ;
-  //
-  return true ;
-}
-// ===========================================================================
-// get the value
-// ===========================================================================
-double Ostap::Math::Expo2DPolSym::operator () 
-  ( const double x , const double y ) const 
-{
-  //
-  if      ( x < m_positive.xmin () || x > m_positive.xmax () ) { return 0 ; }
-  else if ( y < m_positive.ymin () || y > m_positive.ymax () ) { return 0 ; }
-  //
-  return m_positive ( x , y ) * my_exp ( m_tau * ( x + y ) ) ;
-}
-// ============================================================================
-double Ostap::Math::Expo2DPolSym::integral 
-( const double xlow , const double xhigh , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( xlow , xhigh ) || s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  //
-  else if ( xlow  > xhigh ) { return -1*integral ( xhigh , xlow  , ylow  , yhigh ) ; }
-  else if ( ylow  > yhigh ) { return -1*integral ( xlow  , xhigh , yhigh , ylow  ) ; }
-  //
-  if      ( xhigh <  m_positive.xmin () ) { return 0 ; }
-  else if ( xlow  >  m_positive.xmax () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () ) { return 0 ; }
-  //
-  const double  x_low  = std::max ( m_positive.xmin() , xlow  ) ; 
-  const double  x_high = std::min ( m_positive.xmax() , xhigh ) ;
-  if ( x_low >= x_high ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( m_positive.ymin() , ylow  ) ;
-  const double  y_high = std::min ( m_positive.ymax() , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2DSym&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = Ostap::Math::integrate ( b2d.basic ( i ) , m_tau , y_low , y_high ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i )
-  { fx[i] = Ostap::Math::integrate ( b2d.basic ( i ) , m_tau , x_low , x_high ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { 
-      result += 
-        ix == iy ? b2d.par ( ix , iy ) * fx[ix] * fy[iy] :
-        0.5      * b2d.par ( ix , iy ) * fx[ix] * fy[iy] ;
-    }
-  }
-  // 
-  // return result ;
-  const double scale = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  return result * scale * scale ;
-}
-// ============================================================================
-double Ostap::Math::Expo2DPolSym::integrateY 
-( const double x    , 
-  const double ylow , const double yhigh ) const 
-{
-  //
-  if      ( s_equal ( ylow  , yhigh ) ) { return 0 ; }
-  else if ( ylow  > yhigh ) { return -1*integrateY ( x , yhigh , ylow  ) ; }
-  //
-  if      ( x     <  m_positive.xmin () ) { return 0 ; }
-  else if ( x     >  m_positive.xmax () ) { return 0 ; }
-  else if ( yhigh <  m_positive.ymin () ) { return 0 ; }
-  else if ( ylow  >  m_positive.ymax () ) { return 0 ; }
-  //
-  const double  y_low  = std::max ( m_positive.ymin() , ylow  ) ;
-  const double  y_high = std::min ( m_positive.ymax() , yhigh ) ;
-  if ( y_low >= y_high ) { return 0 ; }
-  //
-  const unsigned short nx  = m_positive.nX() ;
-  const unsigned short ny  = m_positive.nY() ;
-  //
-  const Bernstein2DSym&   b2d = m_positive.bernstein() ;
-  //
-  std::vector<double> fy ( ny + 1 , 0 ) ;
-  for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = Ostap::Math::integrate ( b2d.basic ( i ) , m_tau , y_low , y_high ) ; }
-  //
-  std::vector<double> fx ( nx + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= nx ; ++i )
-  { fx[i] = my_exp ( m_tau * x ) * b2d.basic ( i ) ( x ) ; }
-  //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    {
-      result += 
-        ix == iy ? b2d.par ( ix , iy ) * fx[ix] * fy[iy] :
-        0.5      * b2d.par ( ix , iy ) * fx[ix] * fy[iy] ;
-    }
-  }
-  //
-  const double scale = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  return result * scale * scale ;
-}
-// ============================================================================
-double Ostap::Math::Expo2DPolSym::integrateX
-( const double y    , 
-  const double xlow , const double xhigh ) const 
-{ return integrateY ( y , xlow , xhigh ) ; }
-// ============================================================================
-
-
 // ============================================================================
 // constructor from polynom and parameters "alpha" and "x0"
 // ============================================================================
@@ -10130,8 +8750,7 @@ Ostap::Math::Sigmoid::Sigmoid
 ( const Ostap::Math::Positive& poly  , 
   const double                 alpha ,
   const double                 x0    ) 
-  : std::unary_function<double,double>() 
-  , m_positive ( poly  )
+  : m_positive ( poly  )
   , m_alpha    ( alpha )
   , m_x0       ( x0    )
   , m_workspace() 
@@ -10145,8 +8764,7 @@ Ostap::Math::Sigmoid::Sigmoid
   const double                 xmax  , 
   const double                 alpha , 
   const double                 x0    ) 
-  : std::unary_function<double,double>() 
-  , m_positive ( N , xmin , xmax )
+  : m_positive ( N , xmin , xmax )
   , m_alpha    ( alpha )
   , m_x0       ( x0    )
   , m_workspace() 
@@ -10160,8 +8778,7 @@ Ostap::Math::Sigmoid::Sigmoid
   const double                 xmax  , 
   const double                 alpha , 
   const double                 x0    ) 
-  : std::unary_function<double,double>() 
-  , m_positive ( pars , xmin , xmax )
+  : m_positive ( pars , xmin , xmax )
   , m_alpha    ( alpha )
   , m_x0       ( x0    )
   , m_workspace() 
@@ -10268,8 +8885,7 @@ Ostap::Math::TwoExpos::TwoExpos
 ( const double alpha ,
   const double delta , 
   const double x0    ) 
-  : std::unary_function<double,double>() 
-  , m_alpha ( std::abs ( alpha ) ) 
+  : m_alpha ( std::abs ( alpha ) ) 
   , m_delta ( std::abs ( delta ) ) 
   , m_x0    ( x0 ) 
 {}
@@ -10442,8 +9058,7 @@ Ostap::Math::TwoExpoPositive::TwoExpoPositive
   const double         x0    ,
   const double         xmin  , 
   const double         xmax  ) 
-  : std::unary_function<double,double> () 
-  , m_positive ( N , xmin , xmax    )
+  : m_positive ( N , xmin , xmax    )
   , m_2exp     ( alpha , delta , x0 )
 {}
 // ============================================================================
@@ -10454,8 +9069,7 @@ Ostap::Math::TwoExpoPositive::TwoExpoPositive
   const double               x0    ,
   const double               xmin  , 
   const double               xmax  ) 
-  : std::unary_function<double,double> () 
-  , m_positive ( pars  , xmin  , xmax )
+  : m_positive ( pars  , xmin  , xmax )
   , m_2exp     ( alpha , delta , x0   )
 {}
 // ============================================================================
@@ -10464,24 +9078,21 @@ Ostap::Math::TwoExpoPositive::TwoExpoPositive
   const double                 alpha , 
   const double                 delta , 
   const double                 x0    ) 
-  : std::unary_function<double,double> () 
-  , m_positive ( poly                 )
+  : m_positive ( poly                 )
   , m_2exp     ( alpha , delta , x0   )
 {}
 // ============================================================================
 Ostap::Math::TwoExpoPositive::TwoExpoPositive  
 ( const Ostap::Math::Positive& poly   , 
   const Ostap::Math::TwoExpos& expos  ) 
-  : std::unary_function<double,double> () 
-  , m_positive ( poly  )
+  : m_positive ( poly  )
   , m_2exp     ( expos )
 {}
 // ============================================================================
 Ostap::Math::TwoExpoPositive::TwoExpoPositive  
 ( const Ostap::Math::TwoExpos& expos  , 
   const Ostap::Math::Positive& poly   )
-  : std::unary_function<double,double> () 
-  , m_positive ( poly  )
+  : m_positive ( poly  )
   , m_2exp     ( expos )
 {}
 // ============================================================================
@@ -10539,8 +9150,7 @@ Ostap::Math::Tsallis::Tsallis
 ( const double mass  , 
   const double n     ,  
   const double T     ) 
-  : std::unary_function<double,double>() 
-  , m_mass ( std::abs ( mass ) ) 
+  : m_mass ( std::abs ( mass ) ) 
   , m_n    ( std::abs ( n    ) )
   , m_T    ( std::abs ( T    ) )
   , m_workspace() 
@@ -10655,8 +9265,7 @@ double Ostap::Math::Tsallis::integral
 Ostap::Math::QGSM::QGSM 
 ( const double mass , 
   const double b    ) 
-  : std::unary_function<double,double>() 
-  , m_mass ( std::abs ( mass ) ) 
+  : m_mass ( std::abs ( mass ) ) 
   , m_b    ( std::abs ( b    ) )
   , m_workspace() 
 {}
@@ -10746,925 +9355,6 @@ double Ostap::Math::QGSM::integral
 // ============================================================================
 
 
-// ============================================================================
-// constructor from the degree 
-// ============================================================================
-Ostap::Math::FourierSum::FourierSum 
-( const unsigned short degree , 
-  const double         xmin   , 
-  const double         xmax   , 
-  const bool           fejer  )
-  : std::unary_function<double,double>() 
-  , m_pars  ( 2 * degree + 1 , 0.0 ) 
-  , m_xmin  ( std::min ( xmin , xmax ) )
-  , m_xmax  ( std::max ( xmin , xmax ) )
-  , m_scale ( 1 ) 
-  , m_delta ( 0 ) 
-  , m_fejer ( fejer ) 
-{
-  //
-  if ( s_equal ( -M_PI     , m_xmin ) ) { m_xmin = -M_PI     ; }
-  if ( s_equal ( -1        , m_xmin ) ) { m_xmin = -1        ; }
-  if ( s_equal (  0        , m_xmin ) ) { m_xmin =  0        ; }
-  //
-  if ( s_equal (  1        , m_xmax ) ) { m_xmax =  1        ; }
-  if ( s_equal (      M_PI , m_xmax ) ) { m_xmax =  M_PI     ; }
-  if ( s_equal (  2 * M_PI , m_xmax ) ) { m_xmax =  2 * M_PI ; }
-  //
-  m_scale = 2 * M_PI / ( m_xmax - m_xmin ) ;
-  m_delta = 0.5      * ( m_xmax + m_xmin ) ;
-}
-// ============================================================================
-// constructor from cosine series 
-// ============================================================================
-Ostap::Math::FourierSum::FourierSum 
-( const Ostap::Math::CosineSum& sum )
-  : std::unary_function<double,double>() 
-  , m_pars  ( 2 * sum.degree() + 1 , 0.0  ) 
-  , m_xmin  ( 2 * sum.xmin() - sum.xmax() )
-  , m_xmax  ( sum.xmax() )
-  , m_scale ( 1 ) 
-  , m_delta ( 0 ) 
-  , m_fejer ( sum.fejer() )
-{
-  //
-  if ( s_equal ( -M_PI     , m_xmin ) ) { m_xmin = -M_PI     ; }
-  if ( s_equal ( -1        , m_xmin ) ) { m_xmin = -1        ; }
-  if ( s_equal (  0        , m_xmin ) ) { m_xmin =  0        ; }
-  //
-  if ( s_equal (  1        , m_xmax ) ) { m_xmax =  1        ; }
-  if ( s_equal (      M_PI , m_xmax ) ) { m_xmax =  M_PI     ; }
-  if ( s_equal (  2 * M_PI , m_xmax ) ) { m_xmax =  2 * M_PI ; }
-  //
-  m_scale = 2 * M_PI / ( m_xmax - m_xmin ) ;
-  m_delta = 0.5      * ( m_xmax + m_xmin ) ;
-  //
-  for ( unsigned short i = 0 ; i <= degree() ; ++i ) 
-  { setA ( i , sum.par(i) ) ; }
-  //
-}
-// ============================================================================
-// constructor from Fourier series
-// ============================================================================
-Ostap::Math::FourierSum::FourierSum 
-( const Ostap::Math::FourierSum& sum   , 
-  const bool                     fejer )
-  : std::unary_function<double,double>() 
-  , m_pars  ( sum.m_pars  ) 
-  , m_xmin  ( sum.m_xmin  )
-  , m_xmax  ( sum.m_xmax  )
-  , m_scale ( sum.m_scale )
-  , m_delta ( sum.m_delta ) 
-  , m_fejer ( fejer   )
-{}
-// ============================================================================
-// protected constructor from the parameters 
-// ============================================================================
-Ostap::Math::FourierSum::FourierSum
-( const std::vector<double>& pars  , 
-  const double               xmin  , 
-  const double               xmax  , 
-  const double               fejer )
-  : std::unary_function<double,double>() 
-  , m_pars  ( pars )
-  , m_xmin  ( std::min ( xmin , xmax ) )
-  , m_xmax  ( std::max ( xmin , xmax ) )
-  , m_scale ( 1 ) 
-  , m_delta ( 0 ) 
-  , m_fejer ( fejer ) 
-{
-  m_scale = 2 * M_PI / ( m_xmax - m_xmin ) ;
-  m_delta = 0.5      * ( m_xmax + m_xmin ) ;
-}
-// ============================================================================
-// all zero ?
-// ============================================================================
-bool Ostap::Math::FourierSum::zero  () const { return s_vzero ( m_pars ) ; }
-// ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::FourierSum::setPar 
-( const unsigned short k , const double value ) 
-{
-  if ( m_pars.size() <= k            ) { return false ; }
-  if ( s_equal ( m_pars[k] , value ) ) { return false ; }
-  //
-  m_pars[k] = s_zero ( value ) ? 0.0 : value ;
-  return true ;
-}
-// ============================================================================
-/* get the magnitude of nth-harmonic
- * \f$m_k = \sqrt( a^2_k + b^2_k) \f$
- */
-// ============================================================================
-double Ostap::Math::FourierSum::mag    ( const unsigned short k ) const 
-{
-  if      ( k > degree() ) { return 0 ; }
-  else if ( 0 == k       ) { return std::abs ( m_pars[0] ) ; }
-  //
-  return std::hypot ( m_pars[ 2 * k - 1 ] , m_pars [ 2 * k ] ) ;
-}
-// ============================================================================
-// get the phase of nth-harmonic
-// ============================================================================
-double Ostap::Math::FourierSum::phase ( const unsigned short k ) const 
-{
-  if      ( k > degree() ) { return 0 ; }
-  else if ( 0 == k       ) { return 0 <= m_pars[0] ? 0. : -M_PI ; }
-  //
-  return std::atan2 ( m_pars[ 2 * k - 1 ] , m_pars [ 2 * k ] ) ;
-} 
-// ============================================================================
-// calculate Fourier sum 
-// ============================================================================
-double Ostap::Math::FourierSum::fourier_sum ( const double x ) const 
-{
-  /// transform to "t"-representation 
-  const long double tv = t(x) ;
-  return Ostap::Math::Clenshaw::fourier_sum ( m_pars.begin() , m_pars.end () , tv ) ;
-}
-// ============================================================================
-// calculate Fejer sum 
-// ============================================================================
-double Ostap::Math::FourierSum::fejer_sum ( const double x ) const 
-{
-  /// transform to "t"-representation 
-  const long double tv = t(x) ;
-  return Ostap::Math::Clenshaw::fejer_sum ( m_pars.begin() , m_pars.end ()  , tv ) ;
-}
-// ============================================================================
-// get Fejer sum 
-// ============================================================================
-Ostap::Math::FourierSum 
-Ostap::Math::FourierSum::fejer_sum   () const                  // get Fejer sum 
-{
-  // create fejer sum obejct 
-  FourierSum fejer ( m_pars , m_xmin , m_xmax , false ) ;
-  // fill it! 
-  const unsigned long N  = m_pars.size() ;
-  const double   long fd = 1.0L / ( N + 1 ) ;
-  /// start scaling of harmonics 
-  for ( unsigned short k = 1 ; 2 * k < N ; ++k  ) 
-  {
-    const long double f  = ( N + 1 - 2 * k ) * fd ;
-    fejer.m_pars[ 2 * k - 1 ] *= f ;
-    fejer.m_pars[ 2 * k     ] *= f ;
-  }
-  //
-  return fejer ;
-}
-// ============================================================================
-//  get the derivative at point x 
-// ============================================================================
-double Ostap::Math::FourierSum::derivative ( const double x ) const 
-{
-  //
-  std::vector<double> deriv ( m_pars.begin() , m_pars.end() ) ; 
-  deriv[0] = 0.0 ;
-  //
-  const unsigned long  N = m_pars.size() ;
-  for ( unsigned short k = 1 ; 2 * k < N ; ++k  ) 
-  {
-    deriv[ 2 * k     ] =  k * m_pars[ 2 * k - 1 ] * m_scale ;
-    deriv[ 2 * k - 1 ] = -k * m_pars[ 2 * k     ] * m_scale ;
-    //
-  }
-  /// transform to "t"-representation 
-  const long double tv = t(x) ;
-  /// make evaluation of fourier serie
-  return 
-    m_fejer ? 
-    Ostap::Math::Clenshaw::fejer_sum   ( deriv.begin() , deriv.end () , tv ) :
-    Ostap::Math::Clenshaw::fourier_sum ( deriv.begin() , deriv.end () , tv ) ;
-}
-// ============================================================================
-//  get the derivative 
-// ============================================================================
-Ostap::Math::FourierSum Ostap::Math::FourierSum::derivative () const 
-{ return derivative_n ( 1 ) ; }
-// ============================================================================
-//  get the nth derivative 
-// ============================================================================
-Ostap::Math::FourierSum 
-Ostap::Math::FourierSum::derivative_n ( const unsigned short n ) const 
-{
-  //
-  if      ( 0 == n ) { return *this ; }
-  // create derivate obejct 
-  FourierSum deriv ( m_pars , m_xmin , m_xmax , m_fejer ) ;
-  /// fill it! 
-  deriv.m_pars [0] = 0.0 ;
-  const unsigned long  N = m_pars.size() ;
-  //
-  const short ssin =   
-    1 == n % 4 ?  1 : 
-    2 == n % 4 ? -1 : 
-    3 == n % 4 ? -1 : 1 ;
-  //
-  const short scos =   
-    1 == n % 4 ? -1 : 
-    2 == n % 4 ? -1 : 1 ;
-  //
-  const bool           odd =  ( 1 == n % 2 ) ;
-  for ( unsigned short k = 1 ; 2 * k < N ; ++k  ) 
-  {
-    const double factor = Ostap::Math::pow ( 1.0L * k * m_scale , n ) ;
-    if ( odd ) 
-    {
-      deriv.m_pars [ 2 * k     ] = m_pars [ 2 * k - 1 ] * factor * ssin ;
-      deriv.m_pars [ 2 * k - 1 ] = m_pars [ 2 * k     ] * factor * scos ;
-    }
-    else 
-    {
-      deriv.m_pars [ 2 * k     ] = m_pars [ 2 * k     ] * factor * scos ;
-      deriv.m_pars [ 2 * k - 1 ] = m_pars [ 2 * k - 1 ] * factor * ssin ;
-    }
-    //
-  }
-  //
-  return deriv ;
-}
-// ============================================================================
-// get integral between low and high 
-// ============================================================================
-double Ostap::Math::FourierSum::integral 
-( const double low , const double high ) const 
-{
-  if ( s_equal ( low , high ) ) { return 0 ; }
-  //
-  // optionally shrink interval for period. but not now..
-  //
-  std::vector<double> integ ( m_pars.begin() , m_pars.end() ) ; 
-  //
-  integ[0] = 0 ;
-  const unsigned long  N = m_pars.size() ;
-  for ( unsigned short k = 1 ; 2 * k < N ; ++k  ) 
-  {
-    integ[ 2 * k     ] = -m_pars[ 2 * k - 1 ] / ( k * m_scale ) ;
-    integ[ 2 * k - 1 ] =  m_pars[ 2 * k     ] / ( k * m_scale ) ;
-  }
-  /// transform to "t"-representation 
-  const long double tl = t ( low  ) ;
-  const long double th = t ( high ) ;
-  /// evaluate Fourier series
-  return
-    m_fejer ? 
-    Ostap::Math::Clenshaw::fejer_sum   ( integ.begin() , integ.end() , th ) - 
-    Ostap::Math::Clenshaw::fejer_sum   ( integ.begin() , integ.end() , tl ) +
-    0.5 * m_pars[0] * ( th - tl ) :
-    Ostap::Math::Clenshaw::fourier_sum ( integ.begin() , integ.end() , th ) - 
-    Ostap::Math::Clenshaw::fourier_sum ( integ.begin() , integ.end() , tl ) +
-    0.5 * m_pars[0] * ( th - tl ) ;
-}
-// ============================================================================
-// get integral as object 
-// ============================================================================
-Ostap::Math::FourierSum
-Ostap::Math::FourierSum::integral ( const double c0 ) const 
-{
-  //
-  FourierSum integ ( m_pars , m_xmin , m_xmax , m_fejer ) ;
-  //
-  integ.m_pars[0] = c0 ;
-  const unsigned long  N   =  m_pars.size() ;
-  const double         a0  =  m_pars[0]     ;
-  const bool           add = !s_zero ( a0 ) ;
-  for ( unsigned short k   =  1 ; 2 * k < N ; ++k  ) 
-  {
-    //
-    const double a_cos = -m_pars[ 2*k-1 ]  / ( k * m_scale  ) ;
-    const double a_sin =  m_pars[ 2*k   ]  / ( k * m_scale  ) ;
-    
-    integ.m_pars[ 2 * k     ] = a_cos ;
-    integ.m_pars[ 2 * k - 1 ] = a_sin ;
-    //
-    // add a serie for f(x) = 2*a0*x 
-    if ( add ) { integ.m_pars [ 2 * k - 1 ] -= ( 0 == k%2 ? 1 : -1 ) * a0 / ( k * m_scale ) ; }
-  }
-  // add integration constant 
-  integ.setPar( 0 , 2 * c0 );
-  return integ ;
-}
-// ============================================================================
-
-// ============================================================================
-Ostap::Math::FourierSum
-Ostap::Math::FourierSum::convolve 
-( const double sigma ) const 
-{
-  //
-  // no convolution 
-  if ( s_zero ( sigma ) ) { return *this ; }
-  //
-  const long double ss      =  sigma / m_scale ;
-  const long double sigma2  =  ss*ss           ;
-  // create covolution obejct 
-  FourierSum conv( m_pars , m_xmin , m_xmax , m_fejer ) ;
-  /// fill it! 
-  conv.m_pars [0] = m_pars[0]  ;
-  const unsigned long  N = m_pars.size() ;
-  for ( unsigned short k = 1 ; 2 * k < N ; ++k  ) 
-  {
-    const long double s  = std::exp ( - 0.5L * k * k * sigma2 ) ;
-    //
-    const long double v1 = s * m_pars[ 2 * k    ] ;
-    if ( !s_zero ( v1 ) ) { conv.m_pars [ 2 * k    ] = v1 ; }
-    //
-    const long double v2 = s * m_pars[ 2 * k -1 ] ;
-    if ( !s_zero ( v2 ) ) { conv.m_pars [ 2 * k -1 ] = v2 ; }
-    //
-  }
-  //
-  return conv ;
-}
-// ============================================================================
-//  convolute Fourier sum with gaussian function 
-// ============================================================================
-Ostap::Math::FourierSum 
-Ostap::Math::FourierSum::deconvolve 
-( const double sigma , 
-  const double delta ) const 
-{
-  // no convolution 
-  if ( s_zero ( sigma ) ) { return *this ; }
-  //
-  const long double ss      =  sigma / m_scale ;
-  const long double sigma2  =  ss*ss           ;
-  // create covolution object 
-  FourierSum conv( m_pars , m_xmin , m_xmax , m_fejer ) ;
-  /// fill it! 
-  conv.m_pars [0] = m_pars[0]  ;
-  const unsigned long  N = m_pars.size() ;
-  //
-  const bool use_delta = !s_zero ( delta ) && 0 < delta ;
-  for ( unsigned short k = 1 ; 2 * k < N ; ++k  ) 
-  {
-    //  
-    const double v_1  = m_pars[2*k] ;
-    const double v_2  = m_pars[2*k-1] ;
-    if ( s_zero ( v_1 )  && s_zero ( v_2 ) ) { continue ; }
-    //
-    long double f = my_exp ( 0.5L * k * k * sigma2 ) ;
-    //
-    if ( use_delta ) 
-    { const long double fd = f * delta ; f /= ( 1 + fd * fd ) ; }
-    //
-    const long double   v1 = f * v_1 ;
-    if ( !s_zero ( v1 ) ) { conv.m_pars [ 2 * k    ] = v1 ; }
-    else { conv.m_pars[2*k  ] = 0 ; }    
-    //
-    const long double   v2 = f * v_2 ;
-    if ( !s_zero ( v2 ) ) { conv.m_pars [ 2 * k -1 ] = v2 ; }
-    else { conv.m_pars[2*k-1] = 0 ; }    
-    //
-  }
-  //
-  return conv ;
-}
-// ============================================================================
-/* get the effective cut-off (==number of effective harmonics) 
- * of Tikhonov's regularization 
- * \f$ n \equiv  \sqrt{2 \ln \delta} \frac{2\pi\sigma}{L} \f$
- * @param sigma  gaussian resolution 
- * @param delta  regularization parameter 
- * @return number of effective harmonic 
- */
-// ============================================================================
-double Ostap::Math::FourierSum::regularization 
-( const double sigma , 
-  const double delta ) const 
-{
-  if      ( 0 > delta || s_zero ( delta ) || s_zero ( sigma ) ) 
-  { return s_UL_max ; } // return
-  else if ( 1<= delta ) { return 1 ; }
-  //
-  return std::sqrt ( -2 * std::log ( delta ) ) * m_scale / std::abs ( sigma ) ;
-}
-// ============================================================================
-// simple  manipulations with polynoms: scale it! 
-// ============================================================================
-Ostap::Math::FourierSum&
-Ostap::Math::FourierSum::operator*=( const double a ) 
-{
-  Ostap::Math::scale ( m_pars , a ) ;
-  return *this ;
-}
-// ============================================================================
-// simple  manipulations with polynoms: scale it! 
-// ============================================================================
-Ostap::Math::FourierSum&
-Ostap::Math::FourierSum::operator/=( const double a ) 
-{
-  Ostap::Math::scale ( m_pars , 1/a ) ;
-  return *this ;
-}
-// ============================================================================
-// simple  manipulations with polynoms: add constant 
-// ===========================================================================
-Ostap::Math::FourierSum&
-Ostap::Math::FourierSum::operator+=( const double a ) 
-{
-  m_pars[0] += 2.0*a ;
-  return *this ;
-}
-// ============================================================================
-// simple  manipulations with polynoms: subtract constant 
-// ============================================================================
-Ostap::Math::FourierSum&
-Ostap::Math::FourierSum::operator-=( const double a ) 
-{
-  m_pars[0] -= 2.0*a ;
-  return *this ;
-}
-// =============================================================================
-/*  sum of two Fourier series (with the same interval!) 
- *  @param other the first fourier sum
- *  @return the sum of two Fourier series 
- */
-// =============================================================================
-Ostap::Math::FourierSum 
-Ostap::Math::FourierSum::sum( const Ostap::Math::FourierSum& other ) const 
-{
-  //
-  if ( this == &other ) 
-  {
-    FourierSum result ( *this  ) ;
-    result  *= 2 ;
-    return result ;
-  }
-  //
-  if      ( other.zero() ) { return *this ; } // 
-  else if (       zero() ) { return other ; } // random choice 
-  //
-  if ( !s_equal ( xmin () , other.xmin() ) || 
-       !s_equal ( xmax () , other.xmax() ) ) 
-  {
-    Ostap::throwException ( "Can't sum Fourier series with different domains" , 
-                            "Ostap::Math::FourierSum" ) ;
-  }
-  if ( fejer() != other.fejer () ) 
-  {
-    Ostap::throwException ( "Can't sum Fourier series with different 'fejer' flag" , 
-                            "Ostap::Math::FourierSum"  ) ;
-  }
-  //
-  const unsigned short idegree = std::max ( degree () , other.degree () ) ;
-  //
-  FourierSum result ( idegree , xmin() , xmax() , fejer() ) ;
-  const unsigned npars  = result.npars() ;
-  for ( unsigned short i = 0 ; i < npars ; ++i ) 
-  { result.m_pars [i] =  par(i)  + other.par(i) ; }
-  //
-  return result ;
-}
-// =============================================================================
-/*  get "shifted" fourier sum 
- *  \f$ g(x) \equiv f ( x - a ) \f$
- *  @param a the bias aprameter 
- *  @return the shifted fourier sum 
- */
-// =============================================================================
-Ostap::Math::FourierSum 
-Ostap::Math::FourierSum::shift ( const double a ) const
-{
-  if ( s_zero ( a ) ) { return *this ; }
-  //
-  FourierSum result ( *this ) ;
-  
-  const unsigned long  N = m_pars.size() ;
-  for ( unsigned short k = 1 ; 2 * k < N ; ++k  ) 
-  {
-    //  
-    const double ct  = m_pars[2*k]   ; // cosine term 
-    const double st  = m_pars[2*k-1] ; // sine   term 
-    //
-    const double ca  = std::cos ( k * a * m_scale ) ;
-    const double sa  = std::sin ( k * a * m_scale ) ;
-    //
-    result.m_pars [ 2*k    ] = ct * ca - st * sa ;
-    result.m_pars [ 2*k -1 ] = st * ca + ct * sa ;
-  }
-  //
-  return result ;
-}
-
-// ============================================================================
-// constructor from the degree 
-// ============================================================================
-Ostap::Math::CosineSum::CosineSum 
-( const unsigned short degree , 
-  const double         xmin   , 
-  const double         xmax   , 
-  const bool           fejer  )
-  : std::unary_function<double,double>() 
-  , m_pars  ( degree + 1 , 0.0 ) 
-  , m_xmin  ( std::min ( xmin , xmax ) )
-  , m_xmax  ( std::max ( xmin , xmax ) )
-  , m_scale ( 1 ) 
-  , m_fejer ( fejer ) 
-{
-  //
-  if ( s_equal ( -M_PI     , m_xmin ) ) { m_xmin = -M_PI     ; }
-  if ( s_equal ( -1        , m_xmin ) ) { m_xmin = -1        ; }
-  if ( s_equal (  0        , m_xmin ) ) { m_xmin =  0        ; }
-  //
-  if ( s_equal (  1        , m_xmax ) ) { m_xmax =  1        ; }
-  if ( s_equal (      M_PI , m_xmax ) ) { m_xmax =  M_PI     ; }
-  if ( s_equal (  2 * M_PI , m_xmax ) ) { m_xmax =  2 * M_PI ; }
-  //
-  m_scale = M_PI / ( m_xmax - m_xmin ) ;
-}
-// ============================================================================
-// constructor from Fourier sum 
-// ============================================================================
-Ostap::Math::CosineSum::CosineSum 
-( const Ostap::Math::FourierSum& sum ) 
-  : std::unary_function<double,double>() 
-  , m_pars  ( sum.degree() + 1 , 0.0 ) 
-  , m_xmin  ( 0.5 * ( sum.xmax() + sum.xmin() ) )
-  , m_xmax  (         sum.xmax()                )
-  , m_scale ( 1 ) 
-  , m_fejer ( sum.fejer() ) 
-{
-  //
-  if ( s_equal ( -M_PI     , m_xmin ) ) { m_xmin = -M_PI     ; }
-  if ( s_equal ( -1        , m_xmin ) ) { m_xmin = -1        ; }
-  if ( s_equal (  0        , m_xmin ) ) { m_xmin =  0        ; }
-  //
-  if ( s_equal (  1        , m_xmax ) ) { m_xmax =  1        ; }
-  if ( s_equal (      M_PI , m_xmax ) ) { m_xmax =  M_PI     ; }
-  if ( s_equal (  2 * M_PI , m_xmax ) ) { m_xmax =  2 * M_PI ; }
-  //
-  m_scale = M_PI / ( m_xmax - m_xmin ) ;
-  //
-  for ( unsigned short i = 0 ; i< m_pars.size() ; ++i ) 
-  { setPar ( i , sum.a(i) ) ; }
-}
-// ============================================================================
-// constructor from Fourier series
-// ============================================================================
-Ostap::Math::CosineSum::CosineSum 
-( const Ostap::Math::CosineSum& sum   ,
-  const bool                    fejer )
-  : std::unary_function<double,double>() 
-  , m_pars  ( sum.m_pars  ) 
-  , m_xmin  ( sum.m_xmin  )
-  , m_xmax  ( sum.m_xmax  )
-  , m_scale ( sum.m_scale )
-  , m_fejer ( fejer   )
-{}
-// ============================================================================
-// protected constructor from the parameters 
-// ============================================================================
-Ostap::Math::CosineSum::CosineSum
-( const std::vector<double>& pars  , 
-  const double               xmin  , 
-  const double               xmax  , 
-  const double               fejer )
-  : std::unary_function<double,double>() 
-  , m_pars  ( pars )
-  , m_xmin  ( std::min ( xmin , xmax ) )
-  , m_xmax  ( std::max ( xmin , xmax ) )
-  , m_scale ( 1 ) 
-  , m_fejer ( fejer ) 
-{
-  m_scale = M_PI / ( m_xmax - m_xmin ) ;
-}
-// ============================================================================
-// all zero ?
-// ============================================================================
-bool Ostap::Math::CosineSum::zero  () const { return s_vzero ( m_pars ) ; }
-// ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::CosineSum::setPar 
-( const unsigned short k , const double value ) 
-{
-  if ( m_pars.size() <= k            ) { return false ; }
-  if ( s_equal ( m_pars[k] , value ) ) { return false ; }
-  //
-  m_pars[k] = s_zero ( value ) ? 0.0 : value ;
-  //
-  return true ;
-}
-// ============================================================================
-// calculate Fourier sum 
-// ============================================================================
-double Ostap::Math::CosineSum::fourier_sum ( const double x ) const 
-{
-  /// transform to "t"-representation 
-  const long double tv = t(x) ;
-  return Ostap::Math::Clenshaw::cosine_sum ( m_pars.begin() , m_pars.end ()  , tv ) ;
-}
-// ============================================================================
-// calculate Fejer sum 
-// ============================================================================
-double Ostap::Math::CosineSum::fejer_sum ( const double x ) const 
-{
-  /// transform to "t"-representation 
-  const long double tv = t(x) ;
-  return Ostap::Math::Clenshaw::fejer_cosine_sum ( m_pars.begin() , m_pars.end ()  , tv ) ;
-}
-// ============================================================================
-// get Fejer sum 
-// ============================================================================
-Ostap::Math::CosineSum 
-Ostap::Math::CosineSum::fejer_sum   () const                  // get Fejer sum 
-{
-  // create fejer sum e obejct 
-  CosineSum fejer ( m_pars , m_xmin , m_xmax , false ) ;
-  // fill it! 
-  const unsigned long N  = m_pars.size() ;
-  const double   long fd = 1.0L / N  ;
-  /// start scaling of harmonics 
-  for ( unsigned short k = 0 ;  k < N ; ++k  ) 
-  {
-    const long double f  = ( N - k ) * fd ;
-    fejer.m_pars[  k  ] *= f ;
-  }
-  //
-  return fejer ;
-}
-// ============================================================================
-Ostap::Math::CosineSum
-Ostap::Math::CosineSum::convolve 
-( const double sigma ) const 
-{
-  //
-  // no convolution 
-  if ( s_zero ( sigma ) ) { return *this ; }
-  //
-  const long double ss      =  sigma / m_scale ;
-  const long double sigma2  =  ss*ss           ;
-  // create covolution obejct 
-  CosineSum conv( m_pars , m_xmin , m_xmax , m_fejer ) ;
-  /// fill it! 
-  conv.m_pars [0] = m_pars[0]  ;
-  const unsigned long  N = m_pars.size() ;
-  for ( unsigned short k = 1 ; k < N ; ++k  ) 
-  {
-    const long double s  = std::exp ( - 0.5L * k * k * sigma2 ) ;
-    //
-    const long double v1 = s * m_pars   [ k ]      ;
-    if ( !s_zero ( v1 ) ) { conv.m_pars [ k ] = v1 ; }
-  }
-  //
-  return conv ;
-}
-// ============================================================================
-//  convolute Fourier sum with gaussian function 
-// ============================================================================
-Ostap::Math::CosineSum 
-Ostap::Math::CosineSum::deconvolve 
-( const double sigma , 
-  const double delta ) const 
-{
-  // no convolution 
-  if ( s_zero ( sigma ) ) { return *this ; }
-  //
-  const long double ss      =  sigma / m_scale ;
-  const long double sigma2  =  ss*ss           ;
-  // create covolution obejct 
-  CosineSum conv( m_pars , m_xmin , m_xmax , m_fejer ) ;
-  /// fill it! 
-  conv.m_pars [0] = m_pars[0]  ;
-  const unsigned long  N = m_pars.size() ;
-  const bool use_delta = !s_zero ( delta ) && 0 < delta ;
-  for ( unsigned short k = 1 ; k < N ; ++k  ) 
-  {
-    //  
-    const double v = m_pars[k] ;
-    if ( s_zero ( v ) ) { continue ; }
-    //
-    long double f = my_exp ( 0.5L * k * k * sigma2 ) ;
-    //
-    if ( use_delta ) 
-    { const long double fd = f * delta ; f /= ( 1 + fd * fd ) ; }
-    //
-    const long double   v1 = f * v ;
-    if ( !s_zero ( v1 ) ) { conv.m_pars [ k ] = v1 ; }
-    else { conv.m_pars[k] = 0 ; }    
-    //
-  }
-  //
-  return conv ;
-}
-// ============================================================================
-/* Get the effective cut-off (==number of terms/harmonics) 
- * of Tikhonov's regularization 
- * \f$ n \equiv  \sqrt{2 \ln \delta} \frac{\pi\sigma}{L} \f$
- * @param sigma  gaussian resolution 
- * @param delta  regularization parameter 
- * @return number of effective harmonic 
- */
-// ============================================================================
-double Ostap::Math::CosineSum::regularization 
-( const double sigma , 
-  const double delta ) const 
-{
-  if      ( 0 > delta || s_zero ( delta ) || s_zero ( sigma ) ) { return s_UL_max ; } 
-  else if ( 1<= delta ) { return 1 ; }
-  //
-  return std::sqrt ( -2 * std::log ( delta ) ) * m_scale / std::abs ( sigma ) ;
-}
-// ============================================================================
-// simple  manipulations with polynoms: scale it! 
-// ============================================================================
-Ostap::Math::CosineSum&
-Ostap::Math::CosineSum::operator*=( const double a ) 
-{
-  Ostap::Math::scale ( m_pars , a ) ;
-  return *this ;
-}
-// ============================================================================
-// simple  manipulations with polynoms: scale it! 
-// ============================================================================
-Ostap::Math::CosineSum&
-Ostap::Math::CosineSum::operator/=( const double a ) 
-{
-  Ostap::Math::scale ( m_pars , 1/a ) ;
-  return *this ;
-}
-// ============================================================================
-// simple  manipulations with polynoms: add constant 
-// ===========================================================================
-Ostap::Math::CosineSum&
-Ostap::Math::CosineSum::operator+=( const double a ) 
-{
-  m_pars[0] += 2.0*a ;
-  return *this ;
-}
-// ============================================================================
-// simple  manipulations with polynoms: subtract constant 
-// ============================================================================
-Ostap::Math::CosineSum&
-Ostap::Math::CosineSum::operator-=( const double a )
-{  
-  m_pars[0] -= 2.0*a ;
-  return *this ;
-}
-// ============================================================================
-// get the derivative at point x 
-// ============================================================================
-double Ostap::Math::CosineSum::derivative ( const double x ) const 
-{
-  //
-  std::vector<double> deriv ( m_pars.size() - 1 , 0.0 ) ; 
-  deriv[0] = 0.0 ;
-  //
-  for ( unsigned short k = 0 ; k < deriv.size()  ; ++k  )
-  { 
-    deriv[k]  =  -m_pars[k+1] * ( k + 1 ) * m_scale ; 
-  }
-  //
-    
-  /// transform to "t"-representation 
-  const long double tv = t(x) ;
-  /// make evaluation of fourier serie
-  return 
-    m_fejer ? 
-    Ostap::Math::Clenshaw::fejer_sine_sum   ( deriv.begin() , deriv.end () , tv ) :
-    Ostap::Math::Clenshaw::sine_sum         ( deriv.begin() , deriv.end () , tv ) ;
-}
-// ============================================================================
-//  get the derivative at point x 
-// ============================================================================
-Ostap::Math::FourierSum Ostap::Math::CosineSum::derivative () const 
-{ return derivative_n ( 1 ) ; }
-// ============================================================================
-//  get the nth derivative 
-// ============================================================================
-Ostap::Math::FourierSum 
-Ostap::Math::CosineSum::derivative_n ( const unsigned short n ) const 
-{
-  //
-  if      ( 0 == n ) { return *this ; }
-  // create derivate obejct 
-  FourierSum deriv ( *this ) ;
-  //
-  /// fill it! 
-  const unsigned long  N = m_pars.size() ;
-  //
-  const short scos =   
-    1 == n % 4 ? -1 : 
-    2 == n % 4 ? -1 : 1 ;
-  //
-  const bool         odd =  ( 1 == n % 2 ) ;
-  for ( unsigned short k = 1 ;  k < N ; ++k  ) 
-  {
-    const long double factor = Ostap::Math::pow ( 1.0L * k * m_scale , n ) ;
-    if ( odd ) 
-    {
-      deriv.setPar (  2 * k - 1  , m_pars [ k ] * factor * scos ) ;
-      deriv.setPar (  2 * k      , 0                            ) ;
-    }
-    else       
-    { 
-      deriv.setPar ( 2 * k       , m_pars [ k ] * factor * scos ) ;
-      deriv.setPar ( 2 * k  - 1  , 0                            ) ;
-    }    
-    //
-  }
-  //
-  return deriv ;
-}
-// ============================================================================
-// get integral between low and high 
-// ============================================================================
-double Ostap::Math::CosineSum::integral 
-( const double low , const double high ) const 
-{
-  if ( s_equal ( low , high ) ) { return 0 ; }
-  //
-  // optionally shrink interval for period. but not now..
-  //
-  std::vector<double> integ ( m_pars.size() - 1 , 0.0 ) ; 
-  //
-  for ( unsigned short k = 0 ; k < integ.size() ; ++k  ) 
-  { integ[k] = m_pars[k+1] / ( k + 1 )  / m_scale ; }
-  /// transform to "t"-representation 
-  const long double tl = t ( low  ) ;
-  const long double th = t ( high ) ;
-  /// evaluate Fourier series
-  return
-    m_fejer ? 
-    Ostap::Math::Clenshaw::fejer_sine_sum ( integ.begin() , integ.end() , th ) - 
-    Ostap::Math::Clenshaw::fejer_sine_sum ( integ.begin() , integ.end() , tl ) +
-    0.5 * m_pars[0] * ( th - tl ) / m_scale :
-    Ostap::Math::Clenshaw::sine_sum       ( integ.begin() , integ.end() , th ) - 
-    Ostap::Math::Clenshaw::sine_sum       ( integ.begin() , integ.end() , tl ) +
-    0.5 * m_pars[0] * ( th - tl ) / m_scale ;
-}
-// ============================================================================
-// get integral as object 
-// ============================================================================
-Ostap::Math::FourierSum
-Ostap::Math::CosineSum::integral ( const double c0 ) const 
-{
-  //
-  FourierSum integ ( *this ) ;
-  //
-  integ.setPar ( 0 , c0 ) ;
-  const unsigned long  N   =  m_pars.size() ;
-  const double         a0  =  0.5 *  m_pars[0]     ;
-  const bool           add = !s_zero ( a0 ) ;
-  for ( unsigned short k   =  1 ; k < N ; ++k  ) 
-  {
-    // integration of cosine 
-    integ.setPar ( 2 * k - 1  , m_pars[k] / ( k * m_scale )  ) ; 
-    //
-    // integration of cconstant term 
-    if ( add && 0 != k%2 ) 
-    { integ.setPar  ( 2 * k , -4 * a0  / ( k * k * m_scale  * M_PI ) ) ; }    
-  }  
-  //
-  // add integration constant 
-  integ.setPar( 0 , 2*c0  + a0 * M_PI / m_scale );
-  return integ ;
-}
-// ============================================================================
-/*  sum of two Fourier series (with the same interval!) 
- *  @param other the first fourier sum
- *  @return the sum of two Fourier series 
- */
-// ============================================================================
-Ostap::Math::CosineSum 
-Ostap::Math::CosineSum::sum ( const Ostap::Math::CosineSum& other ) const 
-{
-  //
-  if ( this == &other ) 
-  {
-    CosineSum result ( *this ) ;
-    result *= 2 ;
-    return result ;
-  }
-  //
-  if      ( other.zero() ) { return *this ; }
-  else if (       zero() ) { return other ; }
-  //
-  if ( !s_equal ( xmin () , other.xmin() ) ||
-       !s_equal ( xmax () , other.xmax() ) ) 
-  {
-    Ostap::throwException ( "Can't sum Fourier cosine series with different domains" , 
-                            "Ostap::Math::CosineSum" ) ;
-  }
-  if ( fejer() != other.fejer () ) 
-  {
-    Ostap::throwException ( "Can't sum Fourier cosine series with different 'fejer' flag" , 
-                            "Ostap::Math::CosineSum" ) ;
-  }
-  //
-  const unsigned short idegree = std::max ( degree () , other.degree () ) ;
-  //
-  CosineSum result ( idegree , xmin() , xmax() , fejer() ) ;
-  const unsigned npars  = result.npars() ;
-  for ( unsigned short i = 0 ; i < npars ; ++i ) 
-  { result.m_pars[i] =  par(i)  + other.par(i) ; }
-  //
-  return result ;
-}
-// ============================================================================
-
 
 
 // ============================================================================
@@ -11723,37 +9413,6 @@ double Ostap::Math::gaussian_integral_left
   // note the difference in the arguments! 
   return gaussian_int_L ( alpha * alpha , beta , high ) ;
 }
-
-
-// ============================================================================
-/*  make a sum of two fourier series (with the same interval!) 
- *  @param s1 the first fourier sum
- *  @param s2 the first fourier sum 
- *  @return s1+s2 
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date 2016-06-26
- */
-// ============================================================================
-Ostap::Math::FourierSum
-Ostap::Math::sum 
-( const Ostap::Math::FourierSum& s1 ,
-  const Ostap::Math::FourierSum& s2 ) { return s1.sum ( s2 ) ; }
-// ============================================================================
-/*  make a sum of two fourier cosine series (with the same interval!) 
- *  @param s1 the first fourier cosine sum
- *  @param s2 the first fourier cosine sum 
- *  @return s1+s2 
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date 2016-06-26
- */
-// ============================================================================
-Ostap::Math::CosineSum 
-Ostap::Math::sum 
-( const Ostap::Math::CosineSum& s1 , 
-  const Ostap::Math::CosineSum& s2 ) { return s1.sum ( s2 ) ; }
-// ============================================================================
-
-
 // ============================================================================
 // The END
 // ============================================================================
