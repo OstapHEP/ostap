@@ -33,6 +33,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION ${LIBRAR
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 #---Create a shared library with geneated dictionary
 add_library(ostap SHARED src/format.cpp
+                         src/gauss.cpp
                          src/BSpline.cpp
                          src/Bernstein.cpp
                          src/Bernstein1D.cpp
@@ -66,7 +67,9 @@ add_library(ostap SHARED src/format.cpp
                          src/MoreMath.cpp
                          src/Mute.cpp
                          src/NStatEntity.cpp
+                         src/Peaks.cpp
                          src/PDFs.cpp
+                         src/PhaseSpace.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp
                          src/Printable.cpp

@@ -44,6 +44,7 @@
 #include "Ostap/Mute.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/NStatEntity.h"
+#include "Ostap/Peaks.h"
 #include "Ostap/Point3DTypes.h"
 #include "Ostap/Point3DWithError.h"
 #include "Ostap/Polynomials.h"

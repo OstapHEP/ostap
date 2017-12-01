@@ -196,6 +196,10 @@ namespace
   inline long double error_func ( const long double x )
   { return 500 < x * x ? ( 0 < x ? 1 : -1 ) : std::erf ( x ) ; }
   // ==========================================================================  
+  /// helper expression for erf(x)/x 
+  inline double error_func_x ( const long double x ) 
+  { return 0 == x || s_zero ( x ) ? s_HALFSQRTPIi : error_func( x ) / x ; }
+  // ==========================================================================
   /** evaluate the helper function  \f[ f = \frac{\log(1+x)}{x} \f]
    *  it allows to calculate Bukin' function in efficient and regular way
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch

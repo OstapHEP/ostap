@@ -49,6 +49,12 @@ namespace Ostap
      */
     double exp_rel_N  ( const double x , const unsigned short N ) ;
     // ========================================================================
+    /** compute \f$ f(x) = \frac{e^x-1}{x}\f$
+     *  @return the value of the function 
+     *  @see exp_rel_N 
+     */        
+    double exprel ( const double x ) ;
+    // ========================================================================
     /** regularized incomplete gamma function 
      *  \f[ \gamma^{\ast}(a,x) = \frac{x^{-a}}{\Gamma(a)} \gamma(a,x) \f], 
      *  where \f[\gamma(a,x) = \int_0^x e^{-t}t^{a-1}dt\f], 

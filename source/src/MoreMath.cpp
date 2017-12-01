@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 // Include files 
 // ============================================================================
@@ -11,8 +10,12 @@
 // ============================================================================
 // GSL 
 // ============================================================================
+#include "gsl/gsl_errno.h"
+#include "gsl/gsl_math.h"
 #include "gsl/gsl_sf_hyperg.h"
 #include "gsl/gsl_sf_gamma.h"
+#include "gsl/gsl_sf_exp.h"
+#include "gsl/gsl_sf_log.h"
 #include "gsl/gsl_sf_psi.h"
 // ============================================================================
 // LHCbMath
@@ -24,16 +27,14 @@
 // ============================================================================
 #include "GSL_sentry.h"
 #include "Faddeeva.hh"
+#include "gauss.h"
 // ============================================================================
 /** @file
  *  implementation file for function from file LHCbMath/MoreFunctions.h
  *  @see LHCbMath/MoreFunctions.h
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2015-03-26
- *                    $Revision$
- *  Last modification $Date$
- *                 by $Author$
- */  
+ */
 // ============================================================================
 namespace 
 {
@@ -193,11 +194,29 @@ namespace
 // ============================================================================
 double Ostap::Math::exp_rel_N ( const double x , const unsigned short N ) 
 {
+  // todo: switch to GSL implementation??
   const long double y = x ;
   return 
-    0 == N ?  std::exp ( y ) :  
+    0 == N ? std::exp ( y ) :
+    1 == N ? exprel   ( x ) :
     s_zero ( x ) ? 1 : 
     _exp_rel_N_ ( y , N ) ;  
+}
+// ============================================================================
+/*  compute \f$ f(x) = \frac{e^x-1}{x}\f$
+ *  @return the value of psi function 
+ *  @see exp_rel_N 
+ */        
+// ============================================================================
+double Ostap::Math::exprel ( const double x ) 
+{
+  //
+  const long double y = x ;
+  return
+    x < GSL_LOG_DBL_MIN ? -1.0 / y             : // RETURN
+    x > GSL_LOG_DBL_MAX ? s_infinity           : // RETURN 
+    1 > std::abs ( x )  ? std::expm1 ( y ) / y : // RETURN 
+    ( std::exp ( y ) - 1 ) / y ;
 }
 // ============================================================================
 namespace
@@ -795,7 +814,66 @@ double Ostap::Math::psi ( const double x )
   //
   return result.val ;
 }
+// ============================================================================
 
+
+
+// ============================================================================
+/*  get the gaussian integral
+ *  \f[ f = \int_a^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
+ *  @param alpha the alpha parameter
+ *  @param beta  the beta  parameter
+ *  @param low   the low  integration limit
+ *  @param high  the high integration limit
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2010-05-23
+ */
+// ============================================================================
+double Ostap::Math::gaussian_integral
+( const double alpha ,
+  const double beta  ,
+  const double low   ,
+  const double high  ) 
+{
+  // note the difference in the arguments! 
+  return details::gaussian_int ( alpha * alpha , beta , low , high ) ;
+}
+// ============================================================================
+/*  get the gaussian integral
+ *  \f[ f = \int_{a}^{_\inf} \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
+ *  @param alpha the alpha parameter
+ *  @param beta  the beta  parameter
+ *  @param low   the low  integration limit
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2010-05-23
+ */
+// ============================================================================
+double Ostap::Math::gaussian_integral_right
+( const double alpha ,
+  const double beta  ,
+  const double low   ) 
+{
+  // note the difference in the arguments! 
+  return details::gaussian_int_R ( alpha * alpha , beta , low ) ;
+}
+// ============================================================================
+/*  get the gaussian integral
+ *  \f[ f = \int_{-\inf}^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
+ *  @param alpha the alpha parameter
+ *  @param beta  the beta  parameter
+ *  @param high  the high integration limit
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date 2010-05-23
+ */
+// ============================================================================
+double Ostap::Math::gaussian_integral_left
+( const double alpha ,
+  const double beta  ,
+  const double high  ) 
+{
+  // note the difference in the arguments! 
+  return details::gaussian_int_L ( alpha * alpha , beta , high ) ;
+}
 
 
 // ============================================================================

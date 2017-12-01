@@ -13,6 +13,9 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Peaks.h"
+#include "Ostap/Peaks.h"
+#include "Ostap/BreitWigner.h"
 #include "Ostap/Models.h"
 #include "Ostap/Models2D.h"
 #include "Ostap/BSpline.h"
