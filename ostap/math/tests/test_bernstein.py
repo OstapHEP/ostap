@@ -46,7 +46,7 @@ def test_solve ():
 # ============================================================================
 ##  check number of roots using Sturm' sequence 
 def test_nroots ():
-    """Sheck number of roots using Sturm' sequence 
+    """Check number of roots using Sturm' sequence 
     """
 
     # 1) construct function with known roots
@@ -125,8 +125,133 @@ def test_division ():
     logger.info ('Reminder, roots: %s %s'  %  (  r2.norm () , a2.solve() ) )
     a3,r3 = divmod ( bs, b3 )
     logger.info ('Reminder, roots: %s %s'  %  (  r3.norm () , a3.solve() ) )
+
+# =============================================================================
+def check_equality ( a ,  b , message = '' , tolerance = 1.e-7 ) :
+    d = abs ( a - b ) 
+    if d > tolerance :
+        raise ValueError ( message + ' |%s-%s|=%s>%s' % ( a , b , d , tolerance ) )
+
+
+# =========================================================================----
+## test for elevate/reduce
+def test_elevatereduce () :
+
+    BP = Ostap.Math.Bernstein
     
-                 
+    b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
+    for i in b :
+        b[i] = random.uniform ( -10 , 10 )
+    
+    for r in (1,2,3,4,5) : 
+        be = b.elevate(r)
+        br = be.reduce(r)
+        for i in range(50) :
+            x = random.uniform ( b.xmin() , b.xmax() )
+            y  = b(x)
+            ye = be(x)
+            yr = br(x)
+            check_equality ( y  , ye  , 'Invalid elevate' , 1.e-6 )
+            check_equality ( y  , yr  , 'Invalid reduce'  , 1.e-6 )
+            
+    logger.info ('Elevate/reduce is OK' )
+
+# ==============================================================================
+## test  for polynomials 
+def test_poly1 () :
+    
+    BP = Ostap.Math.Bernstein
+    
+    # 1) create & evaluate the polynom 
+    
+    b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
+    b += 1 
+    
+    for i in  range(500) :
+        x = random.uniform ( b.xmin() , b.xmax() )
+        y = b(x)
+        check_equality ( y , 1 , 'Invalid polynom value:' )
+        
+    logger.info ('Constant poly is OK' )
+
+    # evaluate the polynom
+    for i in  b  : b[i] = random.uniform(-10,10)
+    ymin = min ( b.pars() )
+    ymax = max ( b.pars() )
+    
+    for i in  range(100) :
+        x = random.uniform ( b.xmin() , b.xmax() )
+        y = b(x)
+        if not ymin <= y <= ymax : 
+            raise ValueError ( 'Invalid polynom value y(%s)=%s (%s/%s)' % ( x , y , ymin , ymax ) )
+ 
+    logger.info ('Random poly is OK' )
+    
+# ==============================================================================
+## test  for even polynomials 
+def test_even () :
+
+    
+    BP = Ostap.Math.BernsteinEven
+    
+    
+    b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
+    for i in  b  : b[i] = random.uniform(-10,10)
+    
+    xmid = 0.5 * ( b.xmin() + b.xmax() )
+
+    for i in range(100) :
+        x1 = random.uniform ( b.xmin() , b.xmax() )
+        dx = x1   - xmid  
+        x2 = xmid - dx 
+        y1 = b(x1)
+        y2 = b(x2)
+        check_equality ( y1 , y2  , 'Invalid BernsteinEven'  , 1.e-7 )
+
+    
+    logger.info ('Even poly is OK' )
+
+# ==============================================================================
+## test  for monothonic polynomial 
+def test_monothonic () :
+    
+    ## 8-9) check for Monothonic 
+    BPM = Ostap.Math.Monothonic
+    
+    b = BPM ( 5 , 0 , 2 , True )
+    for i in  b :  b[i] = random.uniform ( -10 , 10 )
+    
+    for i in range(500) :
+        x1 = random.uniform ( b.xmin() , b.xmax() )
+        y1 = b(x1)
+        if y1 <= 0 :
+            raise ValueError ( 'Invalid Increasing y(%s)=%s' % ( x1 , y1 ) )
+        x2 = random.uniform ( x1 , b.xmax() )
+        y2 = b(x2)
+        if y2 <= 0 :
+            raise ValueError ( 'Invalid Increasing y(%s)=%s' % ( x2 , y2 ) )
+        if y1 > y2 :
+            raise ValueError ( 'Invalid Increasing y(%s)=%s>y(%s)=%s' % ( x1 , y1 , x2 , y1 ) )
+        
+    logger.info ('Increasing poly is OK' )
+    
+    b = BPM ( 5 , 0 , 2 , False )
+    for i in  b :  b[i] = random.uniform ( -10 , 10 )
+    
+    for i in range(500) :
+        x1 = random.uniform ( b.xmin() , b.xmax() )
+        y1 = b(x1)
+        if y1 <= 0 :
+            raise ValueError ( 'Invalid Decreasing y(%s)=%s' % ( x1 , y1 ) )
+        x2 = random.uniform ( x1 , b.xmax() )
+        y2 = b(x2)
+        if y2 <= 0 :
+            raise ValueError ( 'Invalid Decreasing y(%s)=%s' % ( x2 , y2 ) )
+        if y1 < y2 :
+            raise ValueError ( 'Invalid Decreasing y(%s)=%s>y(%s)=%s' % ( x1 , y1 , x2 , y1 ) )
+        
+    logger.info ('Decreasing poly is OK' )
+
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -135,6 +260,10 @@ if '__main__' == __name__ :
     test_nroots        ()
     test_interpolation ()
     test_division      ()
+    test_elevatereduce ()
+    test_poly1         ()
+    test_even          ()
+    test_monothonic    ()
     
 # =============================================================================
 # The END 

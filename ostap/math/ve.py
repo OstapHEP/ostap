@@ -230,6 +230,30 @@ def _ve_ne_ ( self , other ) :
 VE . __eq__ = _ve_eq_
 VE . __ne__ = _ve_ne_
 
+# ==============================================================================
+## get easy (and coherent)  way  to access min/max for
+#  the value with error object: (value-n*error,value+n*error)
+#  @code
+#  ve = VE(2,2)
+#  print ve.minmax()
+#  print ve.minmax(2)
+#  @endcode 
+def _ve_minmax_ ( s , n = 1 ) :
+    """Get an easy and coherent way to access ``min/max'' for
+    the value with error object:  (value-n*error,value+n*error)
+    >>> ve = VE(2,2) 
+    >>> print ve.minmax()
+    >>> print ve.minmax(2)
+    """
+    v = s.value()
+    e = s.error() 
+    if e <= 0 : return v,v
+    v1 = v + e * n
+    v2 = v - e * n
+    if v1 <= v2 : return v1 , v2
+    return v2,v1 
+
+VE.minmax = _ve_minmax_
 
 # =============================================================================
 from random import gauss as _gauss     
@@ -350,6 +374,7 @@ _new_methods_ = (
     VE . __ge__           , 
     VE . __eq__           , 
     VE . __ne__           , 
+    VE . minmax           ,
     VE . gauss            , 
     VE . poisson          ,
    )

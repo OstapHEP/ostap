@@ -3,6 +3,8 @@
 // ============================================================================
 // STD & STL  
 // ============================================================================
+#include <cmath>
+#include <array>
 // ============================================================================
 // GSL
 // ============================================================================
@@ -14,10 +16,13 @@
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/BreitWigner.h"
 #include "Ostap/Clenshaw.h"
+#include "Ostap/MoreMath.h"
 // ============================================================================
 // local
 // ============================================================================
+#include "Exception.h"
 #include "local_math.h"
+#include "local_gsl.h"
 // ============================================================================
 /** @file 
  *  implementation of useful models for describing signal peaks with the natural width \
@@ -214,10 +219,15 @@ namespace
     return (*f)(x) ;
   }
   // ==========================================================================
-
-
-}
-
+  /** @var s_BUKIN
+   *  useful constant (neded for pseudo-Vogt)
+   *  \f$ \sqrt{ 2 \log 2 } \f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-04-19
+   */
+  constexpr double s_BUKIN   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
+  // ==========================================================================
+} //                                            The end of  anonymous namespace 
 // ============================================================================
 // Rho-functions from Jackson
 // ============================================================================
@@ -1219,8 +1229,6 @@ double Ostap::Math::Flatte2::operator() ( const double x ) const
 { return flatte2 ( x ) ; }
 // ============================================================================
 
-
-
 // ============================================================================
 // LASS: Kpi S-wave 
 // ============================================================================
@@ -2089,7 +2097,7 @@ bool Ostap::Math::Voigt::setSigma ( const double x )
 // ============================================================================
 double Ostap::Math::Voigt::fwhm   () const 
 {
-  const double fg = 2 * m_sigma * s_Bukin ;
+  const double fg = 2 * m_sigma * s_BUKIN ;
   return 0.5346 * m_gamma + std::sqrt ( 0.2166 * m_gamma * m_gamma + fg * fg ) ;
 }
 // ============================================================================
@@ -2201,7 +2209,7 @@ namespace
 }
 // ============================================================================
 double Ostap::Math::PseudoVoigt::fwhm_gauss()  const 
-{ return 2 * m_sigma * s_Bukin ; }
+{ return 2 * m_sigma * s_BUKIN ; }
 // ============================================================================
 void Ostap::Math::PseudoVoigt::update() 
 {
