@@ -37,6 +37,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Bernstein.cpp
                          src/Bernstein1D.cpp
                          src/Bernstein2D.cpp
+                         src/Bernstein3D.cpp
                          src/Binomial.cpp
                          src/Choose.cpp
                          src/Combine.cpp

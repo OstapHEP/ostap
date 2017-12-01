@@ -48,8 +48,10 @@ namespace Ostap
                     const double               xmax  =  1 ,
                     const double               ymin  =  0 ,
                     const double               ymax  =  1 ) ;
+      // ======================================================================
       /// from symmetric variant 
       Bernstein2D ( const Bernstein2DSym& right ) ;
+      // ======================================================================
       /// copy
       Bernstein2D ( const Bernstein2D&    right ) = default ;
       /// move 

@@ -8,6 +8,7 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/Bernstein1D.h"
 #include "Ostap/Bernstein2D.h"
+#include "Ostap/Bernstein3D.h"
 #include "Ostap/Binomial.h"
 #include "Ostap/Bit.h"
 #include "Ostap/Chi2Fit.h"
