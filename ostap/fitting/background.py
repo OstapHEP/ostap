@@ -70,7 +70,7 @@ class Bkg_pdf(PDF) :
         #
         PDF.__init__  ( self , name )
         #                
-        self.mass  = mass
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
         #
         mn,mx   = mass.minmax()
@@ -144,7 +144,7 @@ class PSPol_pdf(PDF) :
         #
         PDF.__init__  ( self , name )
         #
-        self.mass  = mass  
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
         self.power = power
         
@@ -189,7 +189,7 @@ class TwoExpoPoly_pdf(PDF) :
         #
         PDF.__init__  ( self , name )
         #                
-        self.mass  = mass
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
         #
         mn,mx   = mass.minmax()
@@ -265,8 +265,8 @@ class PolyPos_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
-        self.mass  = mass 
         
         #
         self.makePhis ( power ) 
@@ -307,8 +307,8 @@ class PolyEven_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
-        self.mass  = mass 
         
         #
         self.makePhis ( power ) 
@@ -354,8 +354,8 @@ class Monothonic_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
-        self.mass       = mass 
         self.increasing = increasing
         # 
         self.makePhis ( power ) 
@@ -409,8 +409,8 @@ class Convex_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
-        self.mass       = mass 
         self.increasing = increasing
         self.convex     = convex  
         # 
@@ -455,8 +455,8 @@ class ConvexOnly_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
-        self.mass       = mass 
         self.convex     = convex  
         # 
         self.makePhis ( power ) 
@@ -492,8 +492,8 @@ class Sigmoid_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
-        self.mass       = mass
 
         xmin  = mass.getMin()
         xmax  = mass.getMax()
@@ -569,8 +569,8 @@ class PSpline_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
-        self.mass   = mass 
         
         # 
         self.makePhis ( spline.npars()  ) 
@@ -623,8 +623,8 @@ class MSpline_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
-        self.mass   = mass 
         
         # 
         self.makePhis ( spline.npars()  ) 
@@ -677,8 +677,8 @@ class CSpline_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
-        self.mass   = mass 
         
         # 
         self.makePhis ( spline.npars()  ) 
@@ -728,8 +728,8 @@ class CPSpline_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
+        self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
-        self.mass   = mass 
         
         # 
         self.makePhis ( spline.npars()  ) 
@@ -773,11 +773,11 @@ class PS2_pdf(PDF) :
         ## initialize the base 
         PDF.__init__ ( self , name )
         #
-        if hasattr ( mass , 'getMax' )  and mass.getMax() < abs ( m1 ) + abs ( m2 ) :
+        self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
+
+        if self.mass.getMax() < abs ( m1 ) + abs ( m2 ) :
             logger.error('PS2_pdf(%s): senseless setting of edges/threshold' % self.name ) 
 
-        self.mass = mass
-        
         self.pdf  = Ostap.Models.PhaseSpace2 (
             'ps2_%s'          % name ,
             'PhaseSpace2(%s)' % name ,
@@ -813,7 +813,7 @@ class PSLeft_pdf(PDF) :
         ## initialize the base 
         PDF.__init__ ( self , name )
         #
-        self.mass = mass
+        self.mass= makeVar( mass , 'bmass' , 'background-mass' ) 
         self.left = makeVar ( left                ,
                               'left_%s'    % name ,
                               'm_left(%s)' % name ,
@@ -854,7 +854,7 @@ class PSRight_pdf(PDF) :
         ## initialize the base 
         PDF.__init__ ( self , name )
         #
-        self.mass  = mass
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.right = makeVar ( right ,
                                'right_%s'      % name ,
                                'm_{right}(%s)' % name ,
@@ -907,7 +907,7 @@ class PSNL_pdf(PDF) :
         ## initialize the base 
         PDF.__init__ ( self , name )
         #
-        self.mass  = mass
+        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         #
         mmin = mass.getMin()
         mmax = mass.getMax()
@@ -983,7 +983,7 @@ class PS23L_pdf(PDF) :
         ## initialize the base 
         PDF.__init__ ( self , name )
         #
-        self.mass = mass        
+        self.mass = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.pdf  = Ostap.Models.PhaseSpace23L (
             'ps23l_%s'          % name ,
             'PhaseSpace23L(%s)' % name ,
