@@ -834,6 +834,7 @@ class Generic2D_pdf(PDF2) :
         PDF2  . __init__ ( self , name , varx , vary )
         self.pdf = pdf
 
+            
 # =============================================================================
 ## simple convertor of 2D-histo to data set
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -850,16 +851,16 @@ class H2D_dset(object) :
         #
         ## use mass-variable
         #
-        name         = histo2.GetName() 
-        self.mass    = makeVar ( mass  , 'm_%s'  % name , 'mass (%s)' % name , None , *(histo2.xminmax()) )
+        name         = histo3.GetName() 
+        self.mass    = makeVar ( mass  , 'm_%s'  % name , 'mass (%s)' % name , None , *(histo3.xminmax()) )
         self.mass1   = self.mass 
-        self.mass2   = makeVar ( mass2 , 'm2_%s' % name , 'mass2(%s)' % name , None , *(histo2.yminmax()) )
+        self.mass2   = makeVar ( mass2 , 'm2_%s' % name , 'mass2(%s)' % name , None , *(histo3.yminmax()) )
 
         self.impDens = density 
         self.var1    = self.mass1
         self.var2    = self.mass2
         self.x       = self.var1 
-        self.y       =   self.var2
+        self.y       = self.var2
         
         with roo_silent ( silent ) : 
 
@@ -870,7 +871,7 @@ class H2D_dset(object) :
                 "Data set for histogram '%s'" % histo2.GetTitle() ,
                 self.vlst  ,
                 self.vimp  )
-            
+
 
 # =============================================================================
 ## simple convertor of 2D-histogram into PDF
