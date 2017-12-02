@@ -32,8 +32,6 @@ __all__     = (
     'PSRight_pdf'     , ## High edge of L-body phase space from N-body decays  
     'PSNL_pdf'        , ## L-body phase space from N-body decays  
     'PS23L_pdf'       , ## 2-body phase space from 3-body decays with orbital momenta
-    ##
-    "makeBkg"         , ## helper function to create "background"
     )
 # =============================================================================
 import ROOT, math
@@ -995,62 +993,6 @@ class PS23L_pdf(PDF) :
 models.append ( PS23L_pdf ) 
 
 
-
-# =============================================================================
-## helper function to create "background"
-
-# =============================================================================
-## create simple background model
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2015-04-03
-def makeBkg ( bkg , name , xvar , **kwargs ) :
-    """Helper function to create background models (around Bkg_pdf)
-    
-    >>> x =   .. ## the variable
-    
-    ## non-negative integer, construct PDF using Bkg_pdf 
-    >>> bkg1  = makeBkg ( 3      , 'B1' , x ) ## use Bkg_pdf ( 'B1' , x , power = 3 )
-    
-    ## generic RooAbsPdf: use this PDF
-    >>> pdf   = RooPolynomial( ... )
-    >>> bkg2  = makeBkg ( pdf    , 'B2' , x ) ## use Generic1D_pdf ( pdf , x , 'B2' )
-    
-    ## some Ostap-based model, use it as it is  
-    >>> model = Convex_pdf ( ... )
-    >>> bkg3  = makeBkg ( models , 'B3' , x )  
-    
-    ## some RooAbsReal, use is as exponenial slope for Bkg_pdf
-    >>> tau  = RooRealVar( ....  )
-    >>> bkg4 = makeBkg ( tau     , 'B4' , x ) 
-    
-    """
-
-    ## Regular case: degree of polynom in Bkg_pdf 
-    if isinstance ( bkg , ( int , long ) ) and 0 <= bkg :
-        
-        model = Bkg_pdf ( name , power = bkg , mass = xvar , **kwargs )
-        return model
-    
-    ## native RooFit pdf ? 
-    elif isinstance ( bkg , ROOT.RooAbsPdf ) :
-        
-        from Ostap.FitBasic import Generic1D_pdf 
-        model = Generic1D_pdf ( bkg , varx = xvar , name = name ) 
-        return model
-    
-    ## some Ostap-based model ?
-    elif hasattr    ( bkg , 'pdf' ) and isinstance ( bkg.pdf , ROOT.RooAbsPdf ) :
-        
-        model = bkg
-        return model
-    
-    ## interprete it as exponential slope for Bkg-pdf 
-    elif isinstance ( bkg , ROOT.RooAbsReal ) :
-
-        model = Bkg_pdf ( name , mass = xvar , tau = bkg , **kwargs )
-        return model
-    
-    raise  TypeError("Wrong type of bkg object: %s/%s " % ( bkg , type(bkg) ) )
 
 
 # =============================================================================

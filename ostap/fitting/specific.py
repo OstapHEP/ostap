@@ -41,7 +41,8 @@ from   ostap.core.core           import cpp, Ostap, VE
 # =============================================================================
 # Specializations of double-sided Crystal Ball function 
 # =============================================================================
-from   ostap.fitting.basic   import PDF , PDF2 
+from   ostap.fitting.basic   import PDF, makeVar, makeBkg
+from   ostap.fitting.fit2d   import PDF2 
 from   ostap.fitting.signals import CB2_pdf
 models = [] 
 # =============================================================================
@@ -350,7 +351,6 @@ class Manca_pdf (PDF) :
         self.mass = mass
 
         # =====================================================================
-        from   ostap.fitting.basic   import makeVar
         from   ostap.fitting.signals import Needham_pdf
         # =====================================================================
         ## Y(1S)
@@ -481,7 +481,6 @@ class Manca_pdf (PDF) :
         self.y3s   = self.Y3S.pdf
         
         ## use helper function to create background  
-        from ostap.fitting.models_bkg import makeBkg
         self.background = makeBkg ( power , 'Bkg%s' % name , self.mass )
 
         self.n1s = makeVar ( None ,
@@ -578,7 +577,6 @@ class Manca2_pdf (PDF) :
         self.mass = mass
 
         # =====================================================================
-        from   ostap.fitting.basic   import makeVar
         from   ostap.fitting.signals import CB2_pdf
                 
         # =====================================================================
@@ -706,7 +704,6 @@ class Manca2_pdf (PDF) :
         
         
         ## use helper function to create background  
-        from ostap.fitting.models_bkg import makeBkg
         self.background = makeBkg ( power , 'Bkg%s' % name , self.mass )
 
         
@@ -778,7 +775,6 @@ class MancaX_pdf(PDF2) :
         self.signal2 = charm
 
         ## use helper function to create background  
-        from ostap.fitting.models_bkg import makeBkg
         #
         ## background components
         #

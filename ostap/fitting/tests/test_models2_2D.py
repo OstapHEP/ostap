@@ -130,10 +130,10 @@ def test_p2xp2 () :
         suffix   = '_2' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 2 , 
-        power2   = 2 ,
-        powerA   = 2 ,
-        powerB   = 2 , 
+        bkg1   = 2 , 
+        bkg2   = 2 ,
+        bkgA   = 2 ,
+        bkgB   = 2 , 
         )
     
     model.signal1.sigma.fix ( m.error () )
@@ -179,8 +179,8 @@ def test_p1xp1_BB () :
         suffix   = '_3' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1 , 
-        power2   = 1 ,
+        bkg1   = 1 , 
+        bkg2   = 1 ,
         bkg2D    = Models.PolyPos2D_pdf ( 'P2D' , m_x , m_y , nx = 2 , ny = 2 ) 
         )
     
@@ -226,8 +226,8 @@ def test_p1xp1_BBs () :
         suffix   = '_4' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1 , 
-        power2   = 1 ,
+        bkg1   = 1 , 
+        bkg2   = 1 ,
         bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2Ds' , m_x , m_y , n = 2 ) 
         )
     
@@ -272,8 +272,8 @@ def test_p1xp1_BBss () :
         suffix   = '_5' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1  , 
-        power2   = 1  ,
+        bkg1   = 1  , 
+        bkg2   = 1  ,
         bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2Ds' , m_x , m_y , n = 2 ) ,
         sb       = sb ,
         bs       = sb 
@@ -364,8 +364,8 @@ def test_pbxpb_BB  () :
         suffix   = '_7' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1 , 
-        power2   = 1 ,
+        bkg1   = 1 , 
+        bkg2   = 1 ,
         bkg2D    = Models.ExpoPol2D_pdf ( 'P2D7' , m_x , m_y , nx = 1 , ny = 1 ) 
         )
     
@@ -409,8 +409,8 @@ def test_pbxpb_BBs () :
         suffix   = '_8' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1 , 
-        power2   = 1 ,
+        bkg1   = 1 , 
+        bkg2   = 1 ,
         bkg2D    = Models.ExpoPol2Dsym_pdf ( 'P2D8' , m_x , m_y , n = 1 ) 
         )
     
@@ -497,8 +497,8 @@ def test_psxps_BBs () :
         suffix   = '_11' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1 , 
-        power2   = 1 ,
+        bkg1   = 1 , 
+        bkg2   = 1 ,
         bkg2D    = Models.PSPol2Dsym_pdf ( 'P2D11' , m_x , m_y , ps = PS , n = 1 ) 
         )
     
@@ -587,8 +587,8 @@ def test_model_13 () :
         suffix   = '_13' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1 , 
-        power2   = 1 ,
+        bkg1   = 1 , 
+        bkg2   = 1 ,
         bkg2D    = Models.ExpoPSPol2D_pdf ( 'P2D13' , m_x , m_y , psy = PS , nx = 1 , ny = 1 ) 
         )
     
@@ -642,8 +642,8 @@ def test_model_14 () :
         suffix   = '_14' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1 , 
-        power2   = 1 ,
+        bkg1   = 1 , 
+        bkg2   = 1 ,
         bkg2D    = Models.Spline2D_pdf ( 'P2D14' , m_x , m_y , spline = SPLINE ) 
         )
     
@@ -688,8 +688,8 @@ def test_model_15 () :
         suffix   = '_15' , 
         signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
-        power1   = 1 , 
-        power2   = 1 ,
+        bkg1   = 1 , 
+        bkg2   = 1 ,
         bkg2D    = Models.Spline2Dsym_pdf ( 'P2D15' , m_x , m_y , spline = SPLINES ) 
         )
     

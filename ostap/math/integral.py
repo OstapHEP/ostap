@@ -79,7 +79,7 @@ def romberg ( fun                ,
     """
     # =========================================================================
     ## internal recursive function
-    #  Romberg's adaptive integration wirh Richardson's extrapolation
+    #  Romberg's adaptive integration with Richardson's extrapolation
     def _romberg_ ( f , a , b , ea , er , nmax , depth = 0 ) :
         
         rp = nmax * [0.0]

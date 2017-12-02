@@ -28,7 +28,8 @@ __all__     = (
 import ROOT, math
 from   ostap.core.core     import cpp, Ostap
 from   ostap.math.base     import iszero
-from   ostap.fitting.basic import makeVar, PDF2 
+from   ostap.fitting.basic import makeVar
+from   ostap.fitting.fit2d import PDF2 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_2d' )
@@ -63,7 +64,6 @@ class PolyPos2D_pdf(PDF2) :
                    ny = 2           ) : ##  polynomial degree in Y 
 
         PDF2.__init__ ( self , name , x , y ) 
-        
         # 
         self.makePhis ( ( nx + 1 ) * ( ny + 1 ) - 1 ) 
         #
