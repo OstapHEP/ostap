@@ -13,8 +13,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'PDF2'          , ## useful base class for 2D-models
-    'Fit2D'         , ## the model for 2D-fit: signal + background + optional components
+    'PDF3'          , ## useful base class for 2D-models
+    'Fit3D'         , ## the model for 2D-fit: signal + background + optional components
     ##
     'H3D_dset'      , ## convertor of 2D-histo to RooDataHist 
     'H3D_pdf'       , ## convertor of 1D-histo to RooDataPdf
