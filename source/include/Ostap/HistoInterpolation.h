@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_HISTOINTERPOLATE_H 
 #define OSTAP_HISTOINTERPOLATE_H 1
@@ -25,10 +24,6 @@ class TH3 ; // from ROOT
  *
  *  @author Vanya Belyaev
  *  @date   2015-10-12
- *
- *  Version           $Revision$
- *  Last mofidication $Date$
- *                 by $Author$
  */
 // ============================================================================
 namespace Ostap
