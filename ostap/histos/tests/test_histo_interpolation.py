@@ -42,19 +42,33 @@ h1 += fun1
 h2 += fun2
 h3 += fun3
 
+##  prepare  2D-histograms with different binings 
+def make_histos ( entries = 100000 ) :
+    nbins = 2 , 3 , 4 , 5 , 10
+    h = {} 
+    for i in nbins :
+        for j in nbins :
+            for k in nbins :
+                histo = ROOT.TH3F( hID() ,'', i , -3 , 3 , j , -3 , 3 , k , -3 , 3 )
+                for n in range( entries ) : 
+                    histo.Fill ( random.gauss(0,1) , random.gauss(0,1) ,random.gauss(0,1) ) 
+                key    = i,j,k
+                h[key] = histo                    
+    return h 
+
 from collections import defaultdict 
 
 ##  test interpolation for 1D-historgams 
 def test_1D() :
     
-    N1 = 2000
+    N1 = 100000
     cnts_1D = defaultdict(SE) 
     for i in range(N1) :   
         x  = random.uniform(0,1)
         vf = fun1  ( x )
         for t in ( 0 , 1 , 2 , 3 ) :
             for edges in ( False , True ) :
-                for extrapolate in ( False , ) :
+                for extrapolate in ( False , True ) :
                     key = t , edges , extrapolate
                     vh  = h1 (  x , interpolate = t , edges = edges  , extrapolate = extrapolate ) 
                     cnts_1D[key] += (vh.value()/vf-1.0)*100
@@ -73,7 +87,7 @@ def test_1D() :
 ##  test interpolation for 2D-historgams 
 def test_2D() :
 
-    N2 = 10
+    N2 = 100
     cnts_2D = defaultdict(SE) 
     for i in range(N2) :   
         x  = random.uniform(0,1)
@@ -83,7 +97,7 @@ def test_2D() :
             for tx in ( 0 , 1 , 2 , 3 ) :
                 for ty in ( 0 , 1 , 2 , 3 ) :                
                     for edges in ( False , True ) :
-                        for extrapolate in ( False , ) :
+                        for extrapolate in ( False , True ) :
                             key = tx, ty , edges , extrapolate                        
                             vh  = h2 ( x , y , interpolate = (tx , ty)  ,
                                        edges = edges  , extrapolate = extrapolate  )
@@ -105,7 +119,7 @@ def test_3D() :
 
     cnts_3D = defaultdict(SE)
     
-    N3 = 10
+    N3 = 30
     for i in range(N3) :   
         x  = random.uniform(0,1)
         for j in range(N3) :
@@ -117,7 +131,7 @@ def test_3D() :
                     for ty in ( 0 , 1 , 2 , 3 ) :
                         for tz in ( 0 , 1 , 2 , 3 ) :                        
                             for edges in ( False , True ) :
-                                for extrapolate in ( False , ) :
+                                for extrapolate in ( False , True ) :
                                     key = tx, ty , tz,  edges , extrapolate                              
                                     vh  = h3 ( x , y , z , interpolate= ( tx , ty , tz )  ,
                                                edges  = edges , extrapolate = extrapolate ) 
@@ -133,13 +147,37 @@ def test_3D() :
         r = v.rms ()
         logger.info ( 'Key:%-20s bias:%15s%% RMS:%.2f%%' % ( k , b.toString("(%.2f+-%.2f)") , r ) ) 
         
+
+##  test interpolation for 3D-historgams 
+def test_3D2() :
+    histos = make_histos ( 10000 )
+    
+    ## interpolation types 
+    itypes =   0 , 1 , 2 , 3
+    
+    for key in histos :
+        h = histos[key]
+        for i in  itypes :
+            for j in itypes :
+                for k in itypes :
+                    itype = i,j,j
+                    for i in range (100) :
+                        
+                        x = random.uniform ( *h.xminmax() )
+                        y = random.uniform ( *h.yminmax() )
+                        z = random.uniform ( *h.zminmax() )
+
+                        v = h ( x,y,z, interpolate = itype ) 
+        
+
         
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_1D() ## test interpolaiton for 1D-histograms
-    test_2D() ## test interpolaiton for 2D-histograms
-    test_3D() ## test interpolaiton for 3D-histograms
+    test_1D  () ## test interpolaiton for 1D-histograms
+    test_2D  () ## test interpolaiton for 2D-histograms
+    test_3D  () ## test interpolaiton for 3D-histograms
+    test_3D2 () ## test interpolaiton for 3D-histograms
     
 # =============================================================================
 # The END 
