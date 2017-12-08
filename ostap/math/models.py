@@ -738,7 +738,7 @@ def _random_generate_bernstein2D_ ( fun , num = 1 ) :
 #  >>> func = ...
 #  >>> for x,y,z in func.generate( 1000 ) : print x,y,z 
 #  @endcode
-def _random_generate_bernstein2D_ ( fun , num = 1 ) :
+def _random_generate_bernstein3D_ ( fun , num = 1 ) :
     """Generate random numbers from 2D bernstein-like distribuitions
     >>> func = ...
     >>> for x,y,z in func.generate( 1000 ) : print x,y,z 
