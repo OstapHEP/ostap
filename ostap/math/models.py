@@ -30,11 +30,18 @@ class _WO1_ (object)  :
     "Helper adapter for 1D-functions"
     def __init__ ( self , o              ) :        self._o   =  o 
     def __call__ ( self , x , pars  = [] ) : return self._o ( x [0]        )
-# helper adapter for 1D-functions 
+# =============================================================================
+# helper adapter for 2D-functions 
 class _WO2_ (object)  :
     "Helper adapter for 2D-functions"
     def __init__ ( self , o              ) :        self._o   =  o 
     def __call__ ( self , x , pars  = [] ) : return self._o ( x [0] , x[1] )
+# =============================================================================
+# helper adapter for 3D-functions 
+class _WO3_ (object)  :
+    "Helper adapter for 2D-functions"
+    def __init__ ( self , o              ) :        self._o   =  o 
+    def __call__ ( self , x , pars  = [] ) : return self._o ( x [0] , x[1] , x[2] )
 # =============================================================================
 pos_infinity = float('+inf')
 neg_infinity = float('-inf')
@@ -90,6 +97,41 @@ def _tf2_ ( self ,
     fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
     fun.SetNpx ( 100 ) 
     fun.SetNpy ( 100 ) 
+    #
+    return fun 
+
+# =============================================================================
+## convert the model into TF3
+def _tf3_ ( self ,
+            xmin  = neg_infinity ,
+            xmax  = pos_infinity ,
+            ymin  = neg_infinity ,
+            ymax  = pos_infinity ,
+            zmin  = neg_infinity ,
+            zmax  = pos_infinity ,
+            npars = 0            , *args ) :
+    """Convert the function to TF3
+    >>> obj = ...    
+    >>> fun = obj.tf3 ( 3.0 , 3.2 , 3.0 , 3.2 , 1 , 2 )    
+    >>> fun.Draw() 
+    """
+    ##
+    if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( self )
+    if not self._wo3                 : self._wo3 = _WO3_ ( self )
+    ## 
+    if hasattr ( self , 'xmin'  ) : xmin  = max ( xmin  , self.xmin () )
+    if hasattr ( self , 'xmax'  ) : xmax  = min ( xmax  , self.xmax () )
+    if hasattr ( self , 'ymin'  ) : ymin  = max ( ymin  , self.ymin () )
+    if hasattr ( self , 'ymax'  ) : ymax  = min ( ymax  , self.ymax () )
+    if hasattr ( self , 'zmin'  ) : zmin  = max ( zmin  , self.zmin () )
+    if hasattr ( self , 'zmax'  ) : zmax  = min ( zmax  , self.zmax () )
+    if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
+    #
+    _wo = self._wo3
+    fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , npars , *args )
+    fun.SetNpx ( 40 ) 
+    fun.SetNpy ( 40 ) 
+    fun.SetNpy ( 40 ) 
     #
     return fun 
 
@@ -179,6 +221,37 @@ def sp_integrate_2D ( func  ,
                                  *args , **kwargs )
     return result[0]
 
+
+# =============================================================================
+## make 3D-integration using SciPy
+#  @see http://www.scipy.org/
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_3D ( func  ,
+                      xmin  , xmax ,
+                      ymin  , ymax ,
+                      zmin  , zmax , *args , **kwargs ) :
+    """Make 3D-integration using SciPy
+
+    >>> func = ...  ## func ( x , y , z )
+    ##                            xmin , xmax , ymin , ymax   zmin zmax 
+    >>> print func.sp_integrate ( -10  , 10   , -20  , 20   , -1 ,   1 ) 
+    
+    Note different naming with respect to SciPy:
+    - SciPy first integrates over 3rd variable
+    """
+    from scipy import integrate
+    ##
+    result = integrate.tplquad ( func ,
+                                 zmin ,
+                                 zmax ,
+                                 lambda   z : ymin ,
+                                 lambda   z : ymax ,
+                                 lambda y,z : xmin ,
+                                 lambda y,z : xmax ,
+                                 *args , **kwargs )
+    return result[0]
+
 # =============================================================================
 ## make 1D-integration using SciPy
 #  @see http://www.scipy.org/
@@ -205,6 +278,22 @@ def sp_integrate_2D_ ( pdf   ,
     func = pdf.function()
     return func.sp_integrate_2D ( xmin , xmax , ymin , ymax , *args , **kwargs ) 
 
+# =============================================================================
+## make 3D-integration using SciPy
+#  @see http://www.scipy.org/
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_3D_  ( pdf   ,
+                        xmin  , xmax ,
+                        ymin  , ymax ,
+                        zmin  , zmax ,
+                        *args , **kwargs ) :
+    """ Make 3D integration over the PDF using SciPy
+    """
+    if hasattr ( pdf , 'setPars' ) : pdf.setPars() 
+    func = pdf.function()
+    return func.sp_integrate_3D ( xmin , xmax , ymin , ymax , zmin , zmax , *args , **kwargs ) 
+
 
 from ostap.stats.moments import moment   as sp_moment
 from ostap.stats.moments import mean     as sp_mean
@@ -230,6 +319,44 @@ def _tf1_getattr_ ( self , attr ) :
     if  hasattr ( ROOT.TF1 , attr ) :
         if not hasattr  ( self      , '_tf1' ) : self._tf1 = self.tf1 ( ) 
         return getattr  ( self._tf1 , attr   )
+    
+    raise AttributeError
+
+# =============================================================================
+## helper function to delegate some methods/attributes to TF2
+#  @code
+#  f = ...
+#  f.SetLineColor(4) ## delegate to TF2
+#  f.SetLineWidth(2) ## delegate to TF2
+#  @endcode 
+def _tf2_getattr_ ( self , attr ) :
+    """Delegate some methods/attributes to TF2
+    >>> f = ...
+    >>> f.SetLineColor(4) ## delegate to TF2
+    >>> f.SetLineWidth(2) ## delegate to TF2
+    """
+    if  hasattr ( ROOT.TF2 , attr ) :
+        if not hasattr  ( self      , '_tf2' ) : self._tf2 = self.tf2 ( ) 
+        return getattr  ( self._tf2 , attr   )
+    
+    raise AttributeError
+
+# =============================================================================
+## helper function to delegate some methods/attributes to TF3
+#  @code
+#  f = ...
+#  f.SetLineColor(4) ## delegate to TF3
+#  f.SetLineWidth(2) ## delegate to TF3
+#  @endcode 
+def _tf3_getattr_ ( self , attr ) :
+    """Delegate some methods/attributes to TF2
+    >>> f = ...
+    >>> f.SetLineColor(4) ## delegate to TF2
+    >>> f.SetLineWidth(2) ## delegate to TF2
+    """
+    if  hasattr ( ROOT.TF3 , attr ) :
+        if not hasattr  ( self      , '_tf3' ) : self._tf3 = self.tf3 ( ) 
+        return getattr  ( self._tf3 , attr   )
     
     raise AttributeError
 
@@ -429,7 +556,29 @@ for model in ( Ostap.Math.Spline2D       ,
                Ostap.Math.Expo2DPolSym   ) :
     
     model . tf2 = _tf2_ 
-    model.sp_integrate = sp_integrate_2D
+    model . tf  = _tf2_ 
+    model.__getattr__     = _tf2_getattr_
+    model.sp_integrate    = sp_integrate_2D
+    model.sp_integrate_2D = sp_integrate_2D
+
+# =============================================================================
+## Decorate 3D models
+# ============================================================================= 
+for model in ( Ostap.Math.Bernstein3D    ,
+               Ostap.Math.Bernstein3DSym ,
+               Ostap.Math.Bernstein3DMix ,
+               Ostap.Math.Positive3D     ,
+               Ostap.Math.Positive3DSym  ,
+               Ostap.Math.Positive3DMix  ) :
+    
+    model . tf3 = _tf3_ 
+    model . tf  = _tf3_ 
+    model.sp_integrate = sp_integrate_3D
+    model.__getattr__  = _tf3_getattr_
+
+# =============================================================================
+## decorate 1D-PDFs
+# =============================================================================
 
 for pdf in ( Ostap.Models.BreitWigner          , 
              Ostap.Models.Rho0               ,
@@ -494,6 +643,11 @@ for pdf in ( Ostap.Models.BreitWigner          ,
 
     pdf.sp_integrate = sp_integrate_1D_
 
+
+# =============================================================================
+## decorate 2D-PDFs
+# =============================================================================
+
 for pdf in ( Ostap.Models.Poly2DPositive     ,
              Ostap.Models.Poly2DSymPositive  , 
              Ostap.Models.PS2DPol            ,
@@ -506,6 +660,17 @@ for pdf in ( Ostap.Models.Poly2DPositive     ,
     
     pdf.sp_integrate = sp_integrate_2D_
 
+
+# =============================================================================
+## decorate 3D-PDFs
+# =============================================================================
+
+for pdf in ( Ostap.Models.Poly3DPositive    ,
+             Ostap.Models.Poly3DSymPositive ,
+             Ostap.Models.Poly3DMixPositive ) :
+    
+    pdf.sp_integrate = sp_integrate_3D_
+
 # =============================================================================
 ## set, get & iterator
 from ostap.math.bernstein import _p_set_par_ , _p_get_par_, _p_iter_ 
@@ -515,9 +680,17 @@ for f in ( Ostap.Math.Bernstein2D    ,
            Ostap.Math.Bernstein2DSym ,
            Ostap.Math.Positive2DSym  ,
            ##
+           ##
            Ostap.Math.Spline2D       ,
            Ostap.Math.Spline2DSym    ,
-           ## 
+           ##
+           Ostap.Math.Bernstein3D    ,
+           Ostap.Math.Bernstein3DSym ,
+           Ostap.Math.Bernstein3DMix ,
+           Ostap.Math.Positive3D     ,
+           Ostap.Math.Positive3DSym  ,
+           Ostap.Math.Positive3DMix  ,
+
            Ostap.Math.PolySum        ,
            ## 
            Ostap.Math.NSphere        ) :
@@ -550,16 +723,41 @@ def _random_generate_bernstein2D_ ( fun , num = 1 ) :
     xmx = fun.xmax ()
     ymn = fun.ymin ()
     ymx = fun.ymax ()
-    zmx = max ( fun.bernstein().pars() )
+    vmx = max ( fun.bernstein().pars() )
     i   = 0 
     while i < num : 
         x = _uniform_ ( xmn , xmx ) 
         y = _uniform_ ( ymn , ymx ) 
-        x = _uniform_ (   0 , zmx )
-        v = fun ( x , y )
-        if v >= z :
+        if fun ( x , y ) >= _uniform_ (   0 , vmx ) : 
             i+= 1 
             yield x,y
+
+# =============================================================================
+## generate random numbers from 3D bernstein-like distribuitions
+#  @code
+#  >>> func = ...
+#  >>> for x,y,z in func.generate( 1000 ) : print x,y,z 
+#  @endcode
+def _random_generate_bernstein2D_ ( fun , num = 1 ) :
+    """Generate random numbers from 2D bernstein-like distribuitions
+    >>> func = ...
+    >>> for x,y,z in func.generate( 1000 ) : print x,y,z 
+    """
+    xmn = fun.xmin ()
+    xmx = fun.xmax ()
+    ymn = fun.ymin ()
+    ymx = fun.ymax ()
+    zmn = fun.zmin ()
+    zmx = fun.zmax ()
+    vmx = max ( fun.bernstein().pars() )
+    i   = 0 
+    while i < num : 
+        x = _uniform_ ( xmn , xmx ) 
+        y = _uniform_ ( ymn , ymx ) 
+        z = _uniform_ ( zmn , zmx )
+        if v >= _uniform_ ( 0 , vmx ) :
+            i+= 1 
+            yield x,y,z
 
 # =============================================================================
 ## Get random number from 2D bernstein-like distribuitions
@@ -576,14 +774,40 @@ def _random_shoot_bernstein2D_ ( fun ) :
     xmx = fun.xmax ()
     ymn = fun.ymin ()
     ymx = fun.ymax ()
-    zmx = max ( fun.bernstein().pars() )
-    i   = 0 
+    
+    vmx = max ( fun.bernstein().pars() )
     while True : 
         x = _uniform_ ( xmn , xmx ) 
         y = _uniform_ ( ymn , ymx ) 
-        z = _uniform_ (   0 , zmx )
-        v = fun ( x , y )
-        if v >= z : return x,y
+        if fun ( x , y ) >= _uniform_ (   0 , vmx ) : 
+            return x,y
+
+# =============================================================================
+## Get random number from 3D bernstein-like distributions
+#  @code
+#  >>> func = ...
+#  >>> print fun.shoot() 
+#  @endcode
+def _random_shoot_bernstein3D_ ( fun ) :
+    """Get random number from 3D bernstein-like distribuitions
+    >>> func = ...
+    >>> print func.shoot()  
+    """
+    xmn = fun.xmin ()
+    xmx = fun.xmax ()
+    ymn = fun.ymin ()
+    ymx = fun.ymax ()
+    zmn = fun.zmin ()
+    zmx = fun.zmax ()
+    
+    vmx = max ( fun.bernstein().pars() )
+    while True : 
+        x = _uniform_ ( xmn , xmx ) 
+        y = _uniform_ ( ymn , ymx ) 
+        z = _uniform_ ( zmn , zmx ) 
+        if fun ( x , y , z ) >= _uniform_ ( 0 , vmx ) : 
+            return x,y,z 
+
 
 
 Ostap.Math.Positive2D    .generate = _random_generate_bernstein2D_
@@ -591,6 +815,13 @@ Ostap.Math.Positive2D    .shoot    = _random_shoot_bernstein2D_
 
 Ostap.Math.Positive2DSym .generate = _random_generate_bernstein2D_
 Ostap.Math.Positive2DSym .shoot    = _random_shoot_bernstein2D_
+
+for p in ( Ostap.Math.Positive3D    ,
+           Ostap.Math.Positive3DSym ,
+           Ostap.Math.Positive3DMix ) :
+    p.generate = _random_generate_bernstein3D_
+    p.shoot    = _random_shoot_bernstein3D_
+         
 
 # =============================================================================
 ## add complex amplitudes 
@@ -858,6 +1089,14 @@ _decorated_classes_ = set( [
     Ostap.Math.Flatte2       , 
     Ostap.Math.Flatte23L     , 
     Ostap.Math.BreitWigner   ,
+    ##
+    Ostap.Math.Bernstein3D    ,
+    Ostap.Math.Bernstein3DSym ,
+    Ostap.Math.Bernstein3DMix ,
+    Ostap.Math.Positive3D     ,
+    Ostap.Math.Positive3DSym  ,
+    Ostap.Math.Positive3DMix  ,
+    ##
     ])
 
 # ============================================================================

@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 // Include files 
 // ============================================================================
@@ -6,7 +5,7 @@
 // ============================================================================
 #include <limits>
 // ============================================================================
-// Ostap
+// Local
 // ============================================================================
 #include "Ostap/PDFs.h"
 #include "Ostap/Iterator.h"
@@ -16,92 +15,11 @@
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 // ============================================================================
-// Local 
-// ============================================================================
-#include "Exception.h"
-// ============================================================================
 /** @file 
  *  Implementation file for namespace Ostap::Models
- *
- *
  *  @author Vanya BELYAEV  Ivan.Belyaev@cern.ch
  *  @date   2011-11-30
  */
-// ============================================================================
-ClassImp(Ostap::Models::BreitWigner) 
-ClassImp(Ostap::Models::Rho0) 
-ClassImp(Ostap::Models::Kstar) 
-ClassImp(Ostap::Models::Phi) 
-ClassImp(Ostap::Models::BW23L) 
-ClassImp(Ostap::Models::Flatte) 
-ClassImp(Ostap::Models::Flatte2) 
-ClassImp(Ostap::Models::LASS) 
-ClassImp(Ostap::Models::LASS23L) 
-ClassImp(Ostap::Models::Bugg) 
-ClassImp(Ostap::Models::Bugg23L) 
-ClassImp(Ostap::Models::Voigt) 
-ClassImp(Ostap::Models::PseudoVoigt) 
-ClassImp(Ostap::Models::Swanson) 
-ClassImp(Ostap::Models::CrystalBall) 
-ClassImp(Ostap::Models::CrystalBallRS) 
-ClassImp(Ostap::Models::CrystalBallDS) 
-ClassImp(Ostap::Models::Needham) 
-ClassImp(Ostap::Models::Apolonios) 
-ClassImp(Ostap::Models::Apolonios2) 
-ClassImp(Ostap::Models::BifurcatedGauss) 
-ClassImp(Ostap::Models::DoubleGauss) 
-ClassImp(Ostap::Models::Gumbel) 
-ClassImp(Ostap::Models::GenGaussV1) 
-ClassImp(Ostap::Models::GenGaussV2) 
-// ClassImp(Ostap::Models::SkewGauss) 
-ClassImp(Ostap::Models::Bukin) 
-ClassImp(Ostap::Models::StudentT) 
-ClassImp(Ostap::Models::BifurcatedStudentT) 
-ClassImp(Ostap::Models::GramCharlierA) 
-ClassImp(Ostap::Models::PhaseSpace2) 
-ClassImp(Ostap::Models::PhaseSpaceLeft) 
-ClassImp(Ostap::Models::PhaseSpaceRight) 
-ClassImp(Ostap::Models::PhaseSpaceNL) 
-ClassImp(Ostap::Models::PhaseSpacePol) 
-ClassImp(Ostap::Models::PhaseSpace23L) 
-ClassImp(Ostap::Models::PolyPositive) 
-ClassImp(Ostap::Models::PolyPositiveEven) 
-ClassImp(Ostap::Models::PolyMonothonic) 
-ClassImp(Ostap::Models::PolyConvex) 
-ClassImp(Ostap::Models::PolyConvexOnly) 
-ClassImp(Ostap::Models::ExpoPositive) 
-ClassImp(Ostap::Models::PolySigmoid) 
-ClassImp(Ostap::Models::TwoExpoPositive) 
-ClassImp(Ostap::Models::GammaDist) 
-ClassImp(Ostap::Models::GenGammaDist) 
-ClassImp(Ostap::Models::Amoroso) 
-ClassImp(Ostap::Models::LogGammaDist) 
-ClassImp(Ostap::Models::Log10GammaDist) 
-ClassImp(Ostap::Models::LogGamma) 
-ClassImp(Ostap::Models::BetaPrime)
-ClassImp(Ostap::Models::Landau) 
-ClassImp(Ostap::Models::SinhAsinh) 
-ClassImp(Ostap::Models::JohnsonSU) 
-ClassImp(Ostap::Models::Atlas) 
-ClassImp(Ostap::Models::Sech) 
-ClassImp(Ostap::Models::Logistic) 
-ClassImp(Ostap::Models::Argus) 
-ClassImp(Ostap::Models::Tsallis) 
-ClassImp(Ostap::Models::QGSM) 
-ClassImp(Ostap::Models::TwoExpos) 
-ClassImp(Ostap::Models::PositiveSpline) 
-ClassImp(Ostap::Models::MonothonicSpline) 
-ClassImp(Ostap::Models::ConvexOnlySpline) 
-ClassImp(Ostap::Models::ConvexSpline) 
-ClassImp(Ostap::Models::Poly2DPositive) 
-ClassImp(Ostap::Models::Poly2DSymPositive) 
-ClassImp(Ostap::Models::PS2DPol) 
-ClassImp(Ostap::Models::PS2DPolSym) 
-ClassImp(Ostap::Models::ExpoPS2DPol) 
-ClassImp(Ostap::Models::Expo2DPol) 
-ClassImp(Ostap::Models::Expo2DPolSym) 
-ClassImp(Ostap::Models::Spline2D) 
-ClassImp(Ostap::Models::Spline2DSym) 
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -2193,189 +2111,6 @@ Double_t Ostap::Models::BifurcatedGauss::analyticalIntegral
 }
 // ============================================================================
 
-// ============================================================================
-// DoubleGauss 
-// ============================================================================
-// constructor from all parameters 
-// ============================================================================
-Ostap::Models::DoubleGauss::DoubleGauss 
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         , 
-  RooAbsReal&          sigma     , 
-  RooAbsReal&          fraction  , 
-  RooAbsReal&          scale     , 
-  RooAbsReal&          mean      ) 
-  : RooAbsPdf ( name , title ) 
-//
-  , m_x        ( "x"        , "Observable"   , this , x        ) 
-  , m_sigma    ( "sigma"    , "sigma"        , this , sigma    )
-  , m_fraction ( "fraction" , "fratcion"     , this , fraction )
-  , m_scale    ( "scale"    , "scale"        , this , scale    )
-  , m_mean     ( "mean"     , "mean"         , this , mean     )
-    //
-  , m_2g       ( 0 , 1 , 0.5 , 2 )
-{
-  setPars () ;
-}
-// ============================================================================
-// "copy" constructor 
-// ============================================================================
-Ostap::Models::DoubleGauss::DoubleGauss
-( const Ostap::Models::DoubleGauss& right , 
-  const char*                      name   ) 
-  : RooAbsPdf ( right , name ) 
-//
-  , m_x        ( "x"        , this , right.m_x        ) 
-  , m_sigma    ( "sigma"    , this , right.m_sigma    ) 
-  , m_fraction ( "fraction" , this , right.m_fraction ) 
-  , m_scale    ( "scale"    , this , right.m_scale    ) 
-  , m_mean     ( "mean"     , this , right.m_mean     ) 
-    //
-  , m_2g     ( right.m_2g ) 
-{
-  setPars() ;
-}
-// ============================================================================
-// desctructor
-// ============================================================================
-Ostap::Models::DoubleGauss::~DoubleGauss(){}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::DoubleGauss*
-Ostap::Models::DoubleGauss::clone( const char* name ) const 
-{ return new Ostap::Models::DoubleGauss ( *this , name ) ; }
-// ============================================================================
-void Ostap::Models::DoubleGauss::setPars () const 
-{
-  //
-  m_2g . setSigma    ( m_sigma    ) ;
-  m_2g . setFraction ( m_fraction ) ;
-  m_2g . setScale    ( m_scale    ) ;
-  m_2g . setPeak     ( m_mean     ) ;
-  //
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::DoubleGauss::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_2g ( m_x ) ;
-}
-// ============================================================================
-Int_t Ostap::Models::DoubleGauss::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
-  return 0 ;
-}
-// ============================================================================
-Double_t Ostap::Models::DoubleGauss::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
-  //
-  setPars () ;
-  //
-  return m_2g.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
-}
-// ============================================================================
-
-
-
-// ============================================================================
-// Gumbel
-// ============================================================================
-// constructor from all parameters 
-// ============================================================================
-Ostap::Models::Gumbel::Gumbel
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         , 
-  RooAbsReal&          mu        , 
-  RooAbsReal&          beta      )
-  : RooAbsPdf ( name , title ) 
-//
-  , m_x    ( "x"        , "Observable"                    , this , x    ) 
-  , m_mu   ( "mu"       , "location/mode/shift parameter" , this , mu   )
-  , m_beta ( "beta"     , "scale parameter"               , this , beta )
-    //
-  , m_gumbel ( 0 , 1 ) 
-{
-  setPars () ;
-}
-// ============================================================================
-// "copy" constructor 
-// ============================================================================
-Ostap::Models::Gumbel::Gumbel
-( const Ostap::Models::Gumbel& right , 
-  const char*                  name   ) 
-  : RooAbsPdf ( right , name ) 
-  , m_x     ( "x"    , this , right.m_x    ) 
-  , m_mu    ( "mu"   , this , right.m_mu   ) 
-  , m_beta  ( "beta" , this , right.m_beta ) 
-    //
-  , m_gumbel ( right.m_gumbel ) 
-{
-  setPars() ;
-}
-// ============================================================================
-// desctructor
-// ============================================================================
-Ostap::Models::Gumbel::~Gumbel(){}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::Gumbel*
-Ostap::Models::Gumbel::clone( const char* name ) const 
-{ return new Ostap::Models::Gumbel ( *this , name ) ; }
-// ============================================================================
-void Ostap::Models::Gumbel::setPars () const 
-{
-  //
-  m_gumbel . setMu   ( m_mu   ) ;
-  m_gumbel . setBeta ( m_beta ) ;
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::Gumbel::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_gumbel ( m_x ) ;
-}
-// ============================================================================
-Int_t Ostap::Models::Gumbel::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
-  return 0 ;
-}
-// ============================================================================
-Double_t Ostap::Models::Gumbel::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
-  //
-  setPars () ;
-  //
-  return m_gumbel.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
-}
-// ===========================================================================
 
 // ============================================================================
 //         GenGaussV1 
@@ -4589,7 +4324,7 @@ Double_t Ostap::Models::PositiveSpline::analyticalIntegral
 // ============================================================================
 // monothonic spline 
 // ============================================================================
-/* constructor with the spline 
+/** constructor with the spline 
  *  @param name  the name 
  *  @param title the  title
  *  @param x     the  variable 
@@ -4704,7 +4439,7 @@ Double_t Ostap::Models::MonothonicSpline::analyticalIntegral
 // ============================================================================
 // convex spline 
 // ============================================================================
-/* constructor with the spline 
+/** constructor with the spline 
  *  @param name  the name 
  *  @param title the  title
  *  @param x     the  variable 
@@ -4819,7 +4554,7 @@ Double_t Ostap::Models::ConvexSpline::analyticalIntegral
 // ============================================================================
 // convex spline 
 // ============================================================================
-/* constructor with the spline 
+/** constructor with the spline 
  *  @param name  the name 
  *  @param title the  title
  *  @param x     the  variable 
@@ -6725,1246 +6460,264 @@ Double_t Ostap::Models::TwoExpos::analyticalIntegral
 }
 // ============================================================================
 
-
-
+// constructor from all parameters 
 // ============================================================================
-// generic polinomial
-// ============================================================================
-Ostap::Models::Poly2DPositive::Poly2DPositive 
+Ostap::Models::DoubleGauss::DoubleGauss
 ( const char*          name      , 
   const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const unsigned short nX        , 
-  const unsigned short nY        ,
-  RooArgList&          phis      ) 
-  : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"       , "Observable-X" , this , x ) 
-  , m_y        ( "y"       , "Observable-Y" , this , y ) 
-  , m_phis     ( "phis"    , "Coefficients" , this     )
-//
-  , m_positive ( nX , nY , x.getMin() , x.getMax() , y.getMin() , y.getMax() ) 
-{
+  RooAbsReal&          x         ,
+  RooAbsReal&          sigma     ,  // narrow sigma 
+  RooAbsReal&          fraction  ,  // fraction of narrow sigma 
+  RooAbsReal&          scale     ,  // wide/narrow sigma ratio    
+  RooAbsReal&          mean      )  // mean, presumably  fixed at 0
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_positive.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_positive.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::Poly2DPositive"            ) ; }
-  //
-  setPars () ;
-}
+  : RooAbsPdf( name , title ) 
+  , m_x        ( "x"         , "Observable"          , this , x        ) 
+  , m_sigma    ( "sigma"     , "Narrow sigma"        , this , sigma    ) 
+  , m_fraction ( "fraction"  , "Fraction"            , this , fraction ) 
+  , m_scale    ( "scale"     , "Scale"               , this , scale    ) 
+  , m_mean     ( "mean"      , "Mean"                , this , mean     ) 
+{}
 // ============================================================================
-// copy constructor
+// "copy" constructor 
 // ============================================================================
-Ostap::Models::Poly2DPositive::Poly2DPositive
-( const Ostap::Models::Poly2DPositive&  right ,      
-  const char*                              name  ) 
-  : RooAbsPdf  ( right , name ) 
-//
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-//
-  , m_positive ( right.m_positive ) 
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::Poly2DPositive::~Poly2DPositive(){}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::Poly2DPositive*
-Ostap::Models::Poly2DPositive::clone( const char* name ) const 
-{ return new Ostap::Models::Poly2DPositive(*this,name) ; }
-// ============================================================================
-void Ostap::Models::Poly2DPositive::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::Poly2DPositive::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_positive ( m_x , m_y ) ; 
-}
-// ============================================================================
-Int_t Ostap::Models::Poly2DPositive::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
-  return 0 ;
-}
-//_____________________________________________________________________________
-Double_t Ostap::Models::Poly2DPositive::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( 1 == code || 2 ==code || 3 == code ) ;
-  //
-  setPars () ;
-  //
-  return 
-    1 == code ? m_positive.integral   (        m_x.min(rangeName) , m_x.max(rangeName) ,
-                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_positive.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_positive.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
-}
-// ============================================================================
-// generic polinomial
-// ============================================================================
-Ostap::Models::Poly2DSymPositive::Poly2DSymPositive 
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const unsigned short n         ,
-  RooArgList&          phis      ) 
-  : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable-X" , this , x ) 
-  , m_y        ( "y"       , "Observable-Y" , this , y ) 
-  , m_phis     ( "phis"    , "Coefficients" , this     )
-//
-  , m_positive ( n , x.getMin() , x.getMax() ) 
-{
-  //
-  if (  x.getMin() != y.getMin() || x.getMax() != y.getMax() )
-  { Ostap::throwException ( "Non-equal x/y-edges "     , 
-                            "Ostap::Poly2DSymPositive" ) ; }
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_positive.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_positive.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector" , 
-                            "Ostap::Poly2DSymPositive"          ) ; }
-  //
-  setPars () ;
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-Ostap::Models::Poly2DSymPositive::Poly2DSymPositive
-( const Ostap::Models::Poly2DSymPositive&  right ,      
-  const char*                                 name  ) 
+Ostap::Models::DoubleGauss::DoubleGauss
+( const Ostap::Models::DoubleGauss& right ,  
+  const char*                          name  ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-//
-  , m_positive ( right.m_positive ) 
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::Poly2DSymPositive::~Poly2DSymPositive() {}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::Poly2DSymPositive*
-Ostap::Models::Poly2DSymPositive::clone( const char* name ) const 
-{ return new Ostap::Models::Poly2DSymPositive(*this,name) ; }
-// ============================================================================
-void Ostap::Models::Poly2DSymPositive::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
     //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+  , m_x        ( "x"        , this , right.m_x        ) 
+  , m_sigma    ( "sigma"    , this , right.m_sigma    )
+  , m_fraction ( "fraction" , this , right.m_fraction )
+  , m_scale    ( "scale"    , this , right.m_scale    )
+  , m_mean     ( "mean"     , this , right.m_mean    )
+{}
+// ============================================================================
+// clone it!
+// ============================================================================
+Ostap::Models::DoubleGauss*
+Ostap::Models::DoubleGauss::clone( const char* name ) const 
+{ return new Ostap::Models::DoubleGauss ( *this , name ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
-Double_t Ostap::Models::Poly2DSymPositive::evaluate() const 
+Double_t Ostap::Models::DoubleGauss::evaluate() const 
 {
   //
-  setPars () ;
+  const double x        = m_x        ;
+  const double mu       = m_mean     ;
+  const double sigma    = m_sigma    ;
+  const double scale    = m_scale    ;
+  const double fraction = m_fraction ;
   //
-  return m_positive ( m_x , m_y ) ; 
+  const double sigma2   =  scale *  sigma ;
+  //
+  const double dx1      = ( x - mu ) / sigma  ;
+  const double dx2      = ( x - mu ) / sigma2 ;
+  //
+  const double  f1 =  std::max ( 0.0 , std::min ( fraction , 1.0 ) ) ;
+  const double  f2 =  1 - f1 ;
+  //
+  static const double s_norm = 1.0 / std::sqrt ( 2.0 * M_PI  ) ;
+  //
+  return 
+    s_norm * ( f1 * std::exp ( -0.5 * dx1 * dx1 ) / sigma  +
+               f2 * std::exp ( -0.5 * dx2 * dx2 ) / sigma2 ) ;
 }
 // ============================================================================
-Int_t Ostap::Models::Poly2DSymPositive::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
+Int_t Ostap::Models::DoubleGauss::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
 {
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
+  if (matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
   return 0 ;
 }
 // ============================================================================
-Double_t Ostap::Models::Poly2DSymPositive::analyticalIntegral 
+Double_t Ostap::Models::DoubleGauss::analyticalIntegral
 ( Int_t       code      , 
-  const char* rangeName ) const 
+  const char* rangeName ) const
 {
-  assert ( 1 == code || 2 == code || 3 == code ) ;
-  //
-  setPars () ;
-  //
-  return 
-    1 == code ? m_positive.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
-                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_positive.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_positive.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
-}
+  assert( code == 1 ) ;
+  if ( 1 != code ){}
 
+  const double mu       = m_mean     ;
+  const double sigma    = m_sigma    ;
+  const double scale    = m_scale    ;
+  const double fraction = m_fraction ;
+  //
+  const double sigma2   =  scale *  sigma ;
+  //
+  const double  f1 =  std::max ( 0.0 , std::min ( fraction , 1.0 ) ) ;
+  const double  f2 =  1 - f1 ;
+  //
+  const double  xmax = m_x.max ( rangeName )  ;
+  const double  xmin = m_x.min ( rangeName )  ;
+  //
+  static const double s_isqrt2 = 1.0 / std::sqrt ( 2.0 ) ;
+  //
+  const double ixscale1 = s_isqrt2 / sigma  ;
+  const double ixscale2 = s_isqrt2 / sigma2 ;
+  //
+  const double r1 = 
+    std::erf ( ( xmax - mu ) * ixscale1 ) - 
+    std::erf ( ( xmin - mu ) * ixscale1 ) ;
+  //
+  const double r2 = 
+    std::erf ( ( xmax - mu ) * ixscale2 ) - 
+    std::erf ( ( xmin - mu ) * ixscale2 ) ;
+  //
+  return 0.5 * ( f1 * r1 + f2 * r2  ) ;  
+}
 // ============================================================================
-//  PS(x)*PS(y)*Polynom 
+/*  constructor from all parameters
+ *  @param  z    the  variable 
+ *  @param  eta  the shape eta-parameter 
+ *  @param  b    the scale b-parameter 
+ *  @param  xmin the bias  parameter
+ */
 // ============================================================================
-Ostap::Models::PS2DPol::PS2DPol
+Ostap::Models::Gumbel::Gumbel
 ( const char*          name      , 
   const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const Ostap::Math::PhaseSpaceNL& psx , 
-  const Ostap::Math::PhaseSpaceNL& psy ,
-  const unsigned short nX        ,
-  const unsigned short nY        ,
-  RooArgList&          phis      ) 
-  : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable-X" , this , x ) 
-  , m_y        ( "y"       , "Observable-Y" , this , y ) 
-  , m_phis     ( "phis"    , "Coefficients" , this     )
-    //
-  , m_function ( psx, psy , nX , nY , 
-                 x.getMin() , x.getMax() ,
-                 y.getMin() , y.getMax() )
-{
-  //  
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS22DPol"                  ) ; }
-  //
-}
-// ============================================================================
-// generic polinomial
-// ============================================================================
-Ostap::Models::PS2DPol::PS2DPol
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const Ostap::Math::PS2DPol& ps , 
-  RooArgList&          phis      ) 
-  : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable-X" , this , x ) 
-  , m_y        ( "y"       , "Observable-Y" , this , y ) 
-  , m_phis     ( "phis"    , "Coefficients" , this     )
-    //
-  , m_function ( ps ) 
-{
-  //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS22DPol"                  ) ; }
-  //
-  setPars () ;
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-Ostap::Models::PS2DPol::PS2DPol
-( const Ostap::Models::PS2DPol&  right ,      
-  const char*                       name  ) 
-  : RooAbsPdf  ( right , name ) 
-    //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-    //
-  , m_function ( right.m_function )
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::PS2DPol::~PS2DPol() {}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::PS2DPol*
-Ostap::Models::PS2DPol::clone( const char* name ) const 
-{ return new Ostap::Models::PS2DPol ( *this , name ) ; }
-// ============================================================================
-void Ostap::Models::PS2DPol::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::PS2DPol::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_function ( m_x , m_y ) ;
-}
-// ============================================================================
-Int_t Ostap::Models::PS2DPol::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
-  return 0 ;
-}
-// ============================================================================
-Double_t Ostap::Models::PS2DPol::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( 1 == code || 2 == code || 3 == code ) ;
-  //
-  setPars () ;
-  //
-  return 
-    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
-                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
-}
-// ============================================================================
-//  PS(x)*PS(y)*SymPolynom 
-// ============================================================================
-Ostap::Models::PS2DPolSym::PS2DPolSym
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const Ostap::Math::PhaseSpaceNL& ps ,
-  const unsigned short n         ,
-  RooArgList&          phis      ) 
-  : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable-X" , this , x ) 
-  , m_y        ( "y"       , "Observable-Y" , this , y ) 
-  , m_phis     ( "phis"    , "Coefficients" , this     )
-    //
-  , m_function ( ps , n , x.getMin() , x.getMax() ) 
-{
-  //
-  RooAbsArg* coef = 0 ;
-  unsigned   num  = 0 ;  
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS22DPol"                  ) ; }
-  //
-}
-// ============================================================================
-// generic polinomial
-// ============================================================================
-Ostap::Models::PS2DPolSym::PS2DPolSym
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const Ostap::Math::PS2DPolSym& ps , 
-  RooArgList&          phis      ) 
-  : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable-X" , this , x ) 
-  , m_y        ( "y"       , "Observable-Y" , this , y ) 
-  , m_phis     ( "phis"    , "Coefficients" , this     )
-    //
-  , m_function ( ps ) 
-{
-  //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector" , 
-                            "Ostap::PS22DPol"                   ) ; }
-  //
-  setPars () ;
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-Ostap::Models::PS2DPolSym::PS2DPolSym
-( const Ostap::Models::PS2DPolSym& right ,      
-  const char*                         name  ) 
-  : RooAbsPdf  ( right , name ) 
-    //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-    //
-  , m_function ( right.m_function )
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::PS2DPolSym::~PS2DPolSym() {}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::PS2DPolSym*
-Ostap::Models::PS2DPolSym::clone( const char* name ) const 
-{ return new Ostap::Models::PS2DPolSym ( *this , name ) ; }
-// ============================================================================
-void Ostap::Models::PS2DPolSym::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::PS2DPolSym::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_function ( m_x , m_y ) ;
-}
-// ============================================================================
-Int_t Ostap::Models::PS2DPolSym::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
-  return 0 ;
-}
-// ============================================================================
-Double_t Ostap::Models::PS2DPolSym::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( 1 == code || 2 == code || 3 == code ) ;
-  //
-  setPars () ;
-  //
-  return 
-    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
-                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
-}
-
-
-// ============================================================================
-//  exp(x)*PS(y)*Polynom 
-// ============================================================================
-Ostap::Models::ExpoPS2DPol::ExpoPS2DPol
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  RooAbsReal&          tau       ,
-  const Ostap::Math::PhaseSpaceNL& psy ,
-  const unsigned short nX        ,
-  const unsigned short nY        ,
-  RooArgList&          phis      ) 
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        , 
+  RooAbsReal&          beta      )
   : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"       , "Observable-X"      , this , x   ) 
-  , m_y        ( "y"       , "Observable-Y"      , this , y   ) 
-  , m_tau      ( "tau"     , "Exponential slope" , this , tau ) 
-  , m_phis     ( "phis"    , "Coefficients"      , this       )
-    //
-  , m_function ( psy        ,
-                 x.getMin() , x.getMax() ,
-                 nX         , nY         , 
-                 y.getMin() , y.getMax() )
-{
-  //
-  RooAbsArg* coef = 0 ;
-  unsigned   num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector" , 
-                            "Ostap::ExpoPS22DPol"               ) ; }
-}
-// ============================================================================
-// generic polinomial
-// ============================================================================
-Ostap::Models::ExpoPS2DPol::ExpoPS2DPol
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  RooAbsReal&          tau       ,
-  const Ostap::Math::ExpoPS2DPol& ps , 
-  RooArgList&          phis      ) 
-  : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable-X"      , this , x   ) 
-  , m_y        ( "y"       , "Observable-Y"      , this , y   ) 
-  , m_tau      ( "tau"     , "Exponential slope" , this , tau ) 
-  , m_phis     ( "phis"    , "Coefficients"      , this       )
-    //
-  , m_function ( ps ) 
-{
-  //  
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector" ,  
-                            "Ostap::ExpoPS22DPol"               ) ; }
-  //
-  setPars () ;
-}
+  , m_x        ( "x"     , "Observable"           , this , x    ) 
+  , m_mu       ( "mu"    , "Shift parameter/mode" , this , mu   ) 
+  , m_beta     ( "beta"  , "Scale parameter"      , this , beta ) 
+{}
 // ============================================================================
 // copy constructor
 // ============================================================================
-Ostap::Models::ExpoPS2DPol::ExpoPS2DPol
-( const Ostap::Models::ExpoPS2DPol&  right ,      
-  const char*                       name  ) 
+Ostap::Models::Gumbel::Gumbel
+( const Ostap::Models::Gumbel& right ,
+  const char*                     name  ) 
   : RooAbsPdf  ( right , name ) 
     //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_tau      ( "tau"    , this , right.m_tau   ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-    //
-  , m_function ( right.m_function )
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::ExpoPS2DPol::~ExpoPS2DPol() {}
+  , m_x        ( "x"    , this , right.m_x    ) 
+  , m_mu       ( "mu"   , this , right.m_mu   ) 
+  , m_beta     ( "beta" , this , right.m_beta ) 
+{}
 // ============================================================================
 // clone 
 // ============================================================================
-Ostap::Models::ExpoPS2DPol*
-Ostap::Models::ExpoPS2DPol::clone( const char* name ) const 
-{ return new Ostap::Models::ExpoPS2DPol ( *this , name ) ; }
-// ============================================================================
-void Ostap::Models::ExpoPS2DPol::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short   k     = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-  m_function.setTau ( m_tau ) ;
-}
+Ostap::Models::Gumbel*
+Ostap::Models::Gumbel::clone( const char* name ) const 
+{ return new Ostap::Models::Gumbel(*this,name) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
-Double_t Ostap::Models::ExpoPS2DPol::evaluate() const 
+Double_t Ostap::Models::Gumbel::evaluate() const 
 {
   //
-  setPars () ;
-  //
-  return m_function ( m_x , m_y ) ;
+  const double x    = m_x    ;
+  const double mu   = m_mu   ;
+  const double beta = m_beta ;
+  // 
+  const double dx =  ( x - mu ) / beta ;
+  return std::exp ( -( dx + std::exp ( -dx ) ) ) / std::abs ( beta ) ;
 }
 // ============================================================================
-Int_t Ostap::Models::ExpoPS2DPol::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
+Int_t Ostap::Models::Gumbel::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
 {
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
   return 0 ;
 }
 // ============================================================================
-Double_t Ostap::Models::ExpoPS2DPol::analyticalIntegral 
+Double_t Ostap::Models::Gumbel::analyticalIntegral
 ( Int_t       code      , 
-  const char* rangeName ) const 
+  const char* rangeName ) const
 {
-  assert ( 1 == code || 2 == code || 3 == code ) ;
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
   //
-  setPars () ;
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
   //
-  return 
-    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
-                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
+  const double mu   = m_mu   ;
+  const double beta = m_beta ;
+  //
+  const double dxmin = ( xmin - mu ) / beta ;
+  const double dxmax = ( xmax - mu ) / beta ;
+  //
+  return  
+    0 < beta ? 
+    std::exp ( -std::exp ( -dxmax ) ) - std::exp ( -std::exp ( -dxmin ) ) :
+    std::exp ( -std::exp ( -dxmin ) ) - std::exp ( -std::exp ( -dxmax ) ) ;
 }
 
 
-
 // ============================================================================
-//  exp(x)*exp(y)*Polynom 
-// ============================================================================
-Ostap::Models::Expo2DPol::Expo2DPol
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  RooAbsReal&          taux      ,
-  RooAbsReal&          tauy      ,
-  const unsigned short nX        ,
-  const unsigned short nY        ,
-  RooArgList&          phis      ) 
-  : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"       , "Observable-X"      , this , x    ) 
-  , m_y        ( "y"       , "Observable-Y"      , this , y    ) 
-  , m_taux     ( "taux"    , "Exponential slope" , this , taux ) 
-  , m_tauy     ( "tauy"    , "Exponential slope" , this , tauy ) 
-  , m_phis     ( "phis"    , "Coefficients"      , this        )
-    //
-  , m_function ( x.getMin() , x.getMax() ,
-                 y.getMin() , y.getMax() ,
-                 nX         , nY         )
-{
-  //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector" , 
-                            "Ostap::ExpoPS22DPol"               ) ; }
-  //
-  m_function.setTauX ( m_taux ) ;
-  m_function.setTauY ( m_tauy ) ;
-  //
-  setPars () ;
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-Ostap::Models::Expo2DPol::Expo2DPol
-( const Ostap::Models::Expo2DPol&  right ,      
-  const char*                       name  ) 
-  : RooAbsPdf  ( right , name ) 
-    //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_taux     ( "taux"   , this , right.m_taux  ) 
-  , m_tauy     ( "tauy"   , this , right.m_tauy  ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-    //
-  , m_function ( right.m_function )
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::Expo2DPol::~Expo2DPol() {}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::Expo2DPol*
-Ostap::Models::Expo2DPol::clone( const char* name ) const 
-{ return new Ostap::Models::Expo2DPol ( *this , name ) ; }
-// ============================================================================
-void Ostap::Models::Expo2DPol::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-  m_function.setTauX ( m_taux ) ;
-  m_function.setTauY ( m_tauy ) ;
-  //
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::Expo2DPol::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_function ( m_x , m_y ) ;
-}
-// ============================================================================
-Int_t Ostap::Models::Expo2DPol::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
-  return 0 ;
-}
-// ============================================================================
-Double_t Ostap::Models::Expo2DPol::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( 1 == code || 2 == code || 3 == code ) ;
-  //
-  setPars () ;
-  //
-  return 
-    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
-                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
-}
-
-// ============================================================================
-//  exp(x)*exp(y)*SymPolynom 
-// ============================================================================
-Ostap::Models::Expo2DPolSym::Expo2DPolSym
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  RooAbsReal&          tau       ,
-  const unsigned short n         ,
-  RooArgList&          phis      ) 
-  : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"       , "Observable-X"      , this , x    ) 
-  , m_y        ( "y"       , "Observable-Y"      , this , y    ) 
-  , m_tau      ( "tau"     , "Exponential slope" , this , tau  ) 
-  , m_phis     ( "phis"    , "Coefficients"      , this        )
-    //
-  , m_function ( x.getMin() , x.getMax() , n )
-{
-  //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector" , 
-                            "Ostap::ExpoPS22DPol"               ) ; }
-  //
-  setPars () ;
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-Ostap::Models::Expo2DPolSym::Expo2DPolSym
-( const Ostap::Models::Expo2DPolSym& right ,      
-  const char*                           name  ) 
-  : RooAbsPdf  ( right , name ) 
-    //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_tau      ( "tau"    , this , right.m_tau   ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-    //
-  , m_function ( right.m_function )
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::Expo2DPolSym::~Expo2DPolSym() {}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::Expo2DPolSym*
-Ostap::Models::Expo2DPolSym::clone( const char* name ) const 
-{ return new Ostap::Models::Expo2DPolSym ( *this , name ) ; }
-// ============================================================================
-void Ostap::Models::Expo2DPolSym::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-  m_function.setTau ( m_tau ) ;
-  //
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::Expo2DPolSym::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_function ( m_x , m_y ) ;
-}
-// ============================================================================
-Int_t Ostap::Models::Expo2DPolSym::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
-  return 0 ;
-}
-// ============================================================================
-Double_t Ostap::Models::Expo2DPolSym::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( 1 == code || 2 == code || 3 == code ) ;
-  //
-  setPars () ;
-  //
-  return 
-    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
-                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
-}
-// ============================================================================
-
-
-
-
-
-
-
-// ============================================================================
-// generic 2D-spline
-// ============================================================================
-Ostap::Models::Spline2D::Spline2D
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const Ostap::Math::Spline2D& spline, 
-  RooArgList&          phis      ) 
-  : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"       , "Observable-X" , this , x ) 
-  , m_y        ( "y"       , "Observable-Y" , this , y ) 
-  , m_phis     ( "phis"    , "Coefficients" , this     )
-    //
-  , m_spline   ( spline ) 
-{
-  //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator   tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_spline.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_spline.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector" , 
-                            "Ostap::Spline2D"                   ) ; }  
-  //
-  setPars () ;
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-Ostap::Models::Spline2D::Spline2D
-( const Ostap::Models::Spline2D&  right ,      
-  const char*                              name  ) 
-  : RooAbsPdf  ( right , name ) 
-//
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-//
-  , m_spline   ( right.m_spline ) 
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::Spline2D::~Spline2D(){}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::Spline2D*
-Ostap::Models::Spline2D::clone( const char* name ) const 
-{ return new Ostap::Models::Spline2D(*this,name) ; }
-// ============================================================================
-void Ostap::Models::Spline2D::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator   it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_spline.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::Spline2D::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_spline ( m_x , m_y ) ; 
-}
-// ============================================================================
-Int_t Ostap::Models::Spline2D::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
-  return 0 ;
-}
-//_____________________________________________________________________________
-Double_t Ostap::Models::Spline2D::analyticalIntegral 
-( Int_t       code       , 
-  const char* rangeName  ) const 
-{
-  //
-  assert ( 1 == code || 2 == code || 3 == code ) ;
-  //
-  setPars () ;
-  //
-  return 
-    1 == code ? m_spline.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
-                                             m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_spline.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_spline.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
-}
-
-// ============================================================================
-// generic 2D symmetric spline
-// ============================================================================
-Ostap::Models::Spline2DSym::Spline2DSym
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const Ostap::Math::Spline2DSym& spline, 
-  RooArgList&          phis      ) 
-  : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"       , "Observable-X" , this , x ) 
-  , m_y        ( "y"       , "Observable-Y" , this , y ) 
-  , m_phis     ( "phis"    , "Coefficients" , this     )
-    //
-  , m_spline   ( spline ) 
-{
-  //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_spline.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_spline.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector" , 
-                            "Ostap::Spline2DSym"                ) ; }
-  //
-  setPars () ;
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-Ostap::Models::Spline2DSym::Spline2DSym
-( const Ostap::Models::Spline2DSym&  right ,      
-  const char*                              name  ) 
-  : RooAbsPdf  ( right , name ) 
-//
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_y        ( "y"      , this , right.m_y     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
-//
-  , m_spline   ( right.m_spline ) 
-{
-  setPars () ;
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Models::Spline2DSym::~Spline2DSym(){}
-// ============================================================================
-// clone 
-// ============================================================================
-Ostap::Models::Spline2DSym*
-Ostap::Models::Spline2DSym::clone( const char* name ) const 
-{ return new Ostap::Models::Spline2DSym(*this,name) ; }
-// ============================================================================
-void Ostap::Models::Spline2DSym::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_spline.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::Spline2DSym::evaluate() const 
-{
-  //
-  setPars () ;
-  //
-  return m_spline ( m_x , m_y ) ; 
-}
-// ============================================================================
-Int_t Ostap::Models::Spline2DSym::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
-  //
-  return 0 ;
-}
-//_____________________________________________________________________________
-Double_t Ostap::Models::Spline2DSym::analyticalIntegral 
-( Int_t       code       , 
-  const char* rangeName  ) const 
-{
-  //
-  assert ( 1 == code || 2 == code || 3 == code ) ;
-  //
-  setPars () ;
-  //
-  return 
-    1 == code ? m_spline.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
-                                             m_y.min(rangeName) , m_y.max(rangeName) ) : 
-    2 == code ? m_spline.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
-    3 == code ? m_spline.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
-}
-
+ClassImp(Ostap::Models::BreitWigner        ) 
+ClassImp(Ostap::Models::Rho0               )
+ClassImp(Ostap::Models::Kstar              )
+ClassImp(Ostap::Models::Phi                ) 
+ClassImp(Ostap::Models::BW23L              ) 
+ClassImp(Ostap::Models::Flatte             ) 
+ClassImp(Ostap::Models::Flatte2            ) 
+ClassImp(Ostap::Models::LASS               ) 
+ClassImp(Ostap::Models::LASS23L            ) 
+ClassImp(Ostap::Models::Bugg               ) 
+ClassImp(Ostap::Models::Bugg23L            ) 
+ClassImp(Ostap::Models::Voigt              ) 
+ClassImp(Ostap::Models::PseudoVoigt        ) 
+ClassImp(Ostap::Models::Swanson            ) 
+ClassImp(Ostap::Models::CrystalBall        ) 
+ClassImp(Ostap::Models::CrystalBallRS      ) 
+ClassImp(Ostap::Models::CrystalBallDS      ) 
+ClassImp(Ostap::Models::Needham            ) 
+ClassImp(Ostap::Models::Apolonios          ) 
+ClassImp(Ostap::Models::Apolonios2         ) 
+ClassImp(Ostap::Models::BifurcatedGauss    ) 
+ClassImp(Ostap::Models::GenGaussV1         ) 
+ClassImp(Ostap::Models::GenGaussV2         ) 
+// ClassImp(Ostap::Models::SkewGauss          ) 
+ClassImp(Ostap::Models::Bukin              ) 
+ClassImp(Ostap::Models::StudentT           ) 
+ClassImp(Ostap::Models::BifurcatedStudentT ) 
+ClassImp(Ostap::Models::GramCharlierA      ) 
+ClassImp(Ostap::Models::PhaseSpace2        ) 
+ClassImp(Ostap::Models::PhaseSpaceLeft     ) 
+ClassImp(Ostap::Models::PhaseSpaceRight    ) 
+ClassImp(Ostap::Models::PhaseSpaceNL       ) 
+ClassImp(Ostap::Models::PhaseSpacePol      ) 
+ClassImp(Ostap::Models::PhaseSpace23L      ) 
+ClassImp(Ostap::Models::PolyPositive       ) 
+ClassImp(Ostap::Models::PolyPositiveEven   ) 
+ClassImp(Ostap::Models::PolyMonothonic     ) 
+ClassImp(Ostap::Models::PolyConvex         ) 
+ClassImp(Ostap::Models::PolyConvexOnly     ) 
+ClassImp(Ostap::Models::ExpoPositive       ) 
+ClassImp(Ostap::Models::PolySigmoid        )
+ClassImp(Ostap::Models::TwoExpoPositive    ) 
+ClassImp(Ostap::Models::GammaDist          ) 
+ClassImp(Ostap::Models::GenGammaDist       ) 
+ClassImp(Ostap::Models::Amoroso            ) 
+ClassImp(Ostap::Models::LogGammaDist       ) 
+ClassImp(Ostap::Models::Log10GammaDist     ) 
+ClassImp(Ostap::Models::LogGamma           )
+ClassImp(Ostap::Models::BetaPrime          ) 
+ClassImp(Ostap::Models::Landau             ) 
+ClassImp(Ostap::Models::SinhAsinh          ) 
+ClassImp(Ostap::Models::JohnsonSU          ) 
+ClassImp(Ostap::Models::Atlas              ) 
+ClassImp(Ostap::Models::Sech               ) 
+ClassImp(Ostap::Models::Logistic           ) 
+ClassImp(Ostap::Models::Argus              ) 
+ClassImp(Ostap::Models::Tsallis            ) 
+ClassImp(Ostap::Models::QGSM               ) 
+ClassImp(Ostap::Models::TwoExpos           ) 
+ClassImp(Ostap::Models::DoubleGauss        ) 
+ClassImp(Ostap::Models::Gumbel             )
+ClassImp(Ostap::Models::PositiveSpline     ) 
+ClassImp(Ostap::Models::MonothonicSpline   ) 
+ClassImp(Ostap::Models::ConvexOnlySpline   )
+ClassImp(Ostap::Models::ConvexSpline       )
 // ============================================================================
 // The END 
 // ============================================================================
