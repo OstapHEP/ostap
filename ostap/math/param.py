@@ -6,12 +6,12 @@
 #
 ## (1) using histogram data only:
 # 
-# - as      Legendre         sum  (relies on scipy.integrate.quad)
+# - as      Legendre         sum  
 # - as      Chebyshev        sum  
 # - as      Fourier          sum  (relies on numpy.fft.rfft & numpy.linspace)
 # - as      Cosine/Fourier   sum  (relies on scipy.fftpack)
-# - as      Bernstein/Bezier sum  (relies on scipy.integrate.quad)
-# - as even Bernstein/Bezier sum  (relies on scipy.integrate.quad)
+# - as      Bernstein/Bezier sum  
+# - as even Bernstein/Bezier sum  
 # 
 # Typical usage:
 #
@@ -39,12 +39,12 @@
 
 ## (1) using histogram data only:
 
-- as      Legendre         sum  (relies on scipy.integrate.quad)
+- as      Legendre         sum  
 - as      Chebyshev        sum  
 - as      Fourier          sum  (relies on numpy.fft.rfft & numpy.linspace)
 - as      Cosine/Fourier   sum  (relies on scipy.fftpack)
-- as      Bernstein/Bezier sum  (relies on scipy.integrate.quad)
-- as even Bernstein/Bezier sum  (relies on scipy.integrate.quad)
+- as      Bernstein/Bezier sum  
+- as even Bernstein/Bezier sum  
 
 Typical usage:
 
@@ -137,11 +137,11 @@ def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
 #  @endcode 
 #  @see Gaudi::Math::LegendreSum
 #  @author Vanya Belyaev Ivan.Belyaev@iter.ru
-#  It is not very CPU efficient (scipy is used for integration), but stable enough...
+#  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
 def legendre_sum ( func , N , xmin , xmax , **kwargs ) :
     """ Make a function representation in terms of Legendre polynomials
-    [It is not very CPU efficient (scipy is used for integration), but stable enough...]
+    [It is not very CPU efficient, but stable enough...]
     >>> func = lambda x : x * x
     >>> fsum = legendre_sum ( func , 4 , -1 , 1 )
     >>> print fsum
@@ -388,7 +388,6 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
     ## result 
     bsum = Ostap.Math.Bernstein ( N , xmin , xmax )
  
-    ## from scipy import integrate
     from ostap.math.integral import integral as _integral 
 
     args = {} 
@@ -408,7 +407,7 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
         ## get the integration function 
         fun_i = lambda x : float ( func ( x ) ) * dual ( bsum.t( x ) )
 
-        ## use scipy for integration 
+        ## use integration 
         if kwargs : args = deepcopy ( kwargs )
         c_i = _integral ( fun_i , xmin , xmax , **args ) / ( xmax - xmin )
             
@@ -488,7 +487,7 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
         ## get the integration function 
         fun_i = lambda x : _sym_func_ ( x ) * dual ( bsum.t( x ) )
 
-        ## use scipy for integration 
+        ## use integration 
         if kwargs : args = deepcopy ( kwargs )
         c_i = _integral ( fun_i , xmin , xmax , **args ) / ( xmax - xmin )
             

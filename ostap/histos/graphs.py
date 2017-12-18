@@ -7,7 +7,18 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07 
 # =============================================================================
-"""TGraph-related decorations"""
+"""TGraph-related decorations:
+ - makeGraph    : make graph from primitive data
+ - makeGraph2   : make graph from plain input two-column text 
+ - makeGraph3   : make graph with errors  from plain input four-column text 
+ - makeGraphs3  : make graphs from plain input multicolumn text 
+ - makeGraphs4' : make graphs from plain input multicolumn text 
+ - hToGraph'    : convert histogram to graph 
+ - hToGraph2'   : convert histogram to graph 
+ - hToGraph3'   : convert histogram to graph
+ - lw_graph'    : make Laffery-Wyatt's graph  (require scipy.optimize,brentq)
+ - fill_area'   : create a graph for the area between two curves/functions
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -21,7 +32,7 @@ __all__     = (
     'hToGraph'    , # convert histogram to graph 
     'hToGraph2'   , # convert histogram to graph 
     'hToGraph3'   , # convert histogram to graph
-    'lw_graph'    , # make Laffery-Wyatt's graph
+    'lw_graph'    , # make Laffery-Wyatt's graph  (require scipy.optimize,brentq)
     'fill_area'   , # create a graph for the area between two curves/functions
     ##
     ) 
@@ -1697,7 +1708,7 @@ def _lw_graph_ ( histo , func ) :
     ## start actual evaluations
     #
     
-    from scipy import integrate
+    from ostap.math.intergal import integral as _integral 
     from scipy import optimize 
     
     for item in histo.iteritems () :
@@ -1720,7 +1731,7 @@ def _lw_graph_ ( histo , func ) :
         #
 
         ##  1) calculate int(f,xmin,xmax)
-        fint  = integrate.quad ( lambda x : float ( func ( x ) ) , xmn , xmx ) 
+        fint  = _integral ( lambda x : float ( func ( x ) ) , xmn , xmx ) 
 
         ## bin-width 
         dx    = 2.0 * xe 

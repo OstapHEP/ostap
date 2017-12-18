@@ -181,106 +181,85 @@ Ostap.Math.BreitWigner . amp = _amp_
 Ostap.Math.Swanson     . amp = _amp_
 
 # =============================================================================
-## make 1D-integration using SciPy
-#  @see http://www.scipy.org/
+## make 1D- numerical integration
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-12-01
 def sp_integrate_1D ( func , xmin , xmax , *args , **kwargs ) :
-    """Make 1D-integration using SciPy
+    """Make 1D numerical integration 
     
     >>> func = ...
     >>> print func.sp_integrate ( -10 , 10 )    
     """    
-    from scipy import integrate
-    result = integrate.quad ( func , xmin , xmax , *args , **kwargs )
-    return result[0]
+    from ostap.math.integral import integral as _integral 
+    return _integral ( func , xmin , xmax , *args , **kwargs )
 
 # =============================================================================
-## make 2D-integration using SciPy
-#  @see http://www.scipy.org/
+## make 2D numerical integration 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-12-01
 def sp_integrate_2D ( func  ,
                       xmin  , xmax ,
                       ymin  , ymax , *args , **kwargs ) :
-    """Make 2D-integration using SciPy
+    """Make 2D numerical integration
 
     >>> func = ...  ## func ( x , y )
     ##                            xmin , xmax , ymin , ymax 
     >>> print func.sp_integrate ( -10  , 10   , -20  , 20   ) 
-    
-    Note different naming with respect to SciPy:
-    - SciPy first integrates over 2nd variable
-    """
-    from scipy import integrate
-    result = integrate.dblquad ( func ,
-                                 ymin ,
-                                 ymax ,
-                                 lambda x : xmin ,
-                                 lambda x : xmax , 
-                                 *args , **kwargs )
-    return result[0]
 
+    """
+    from ostap.math.inntegral import integral2 as _integral2 
+    return _integral2 ( func  ,
+                        xmin  , xmax ,
+                        ymin  , ymax ,
+                        *args , **kwargs )
 
 # =============================================================================
-## make 3D-integration using SciPy
-#  @see http://www.scipy.org/
+## make 3D numerical integration 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-12-01
 def sp_integrate_3D ( func  ,
                       xmin  , xmax ,
                       ymin  , ymax ,
                       zmin  , zmax , *args , **kwargs ) :
-    """Make 3D-integration using SciPy
-
+    """Make 3D numerical integration
+    
     >>> func = ...  ## func ( x , y , z )
     ##                            xmin , xmax , ymin , ymax   zmin zmax 
     >>> print func.sp_integrate ( -10  , 10   , -20  , 20   , -1 ,   1 ) 
-    
-    Note different naming with respect to SciPy:
-    - SciPy first integrates over 3rd variable
     """
-    from scipy import integrate
-    ##
-    result = integrate.tplquad ( func ,
-                                 zmin ,
-                                 zmax ,
-                                 lambda   z : ymin ,
-                                 lambda   z : ymax ,
-                                 lambda y,z : xmin ,
-                                 lambda y,z : xmax ,
-                                 *args , **kwargs )
-    return result[0]
+    from ostap.math.inntegral import integral2 as _integral3 
+    return _integral3 ( func  ,
+                        xmin  , xmax ,
+                        ymin  , ymax ,
+                        zmin  , zmax ,
+                        *args , **kwargs )
 
 # =============================================================================
-## make 1D-integration using SciPy
-#  @see http://www.scipy.org/
+## make 1D numerical integration
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-12-01
 def sp_integrate_1D_ ( pdf , xmin , xmax , *args , **kwargs ) :
-    """Make 1D integration over the PDF using SciPy
+    """Make 1D numerical integration over the PDF using SciPy
     """
     if hasattr ( pdf , 'setPars' ) : pdf.setPars() 
     func = pdf.function()
     return func.sp_integrate_1D ( xmin , xmax , *args , **kwargs ) 
 
 # =============================================================================
-## make 2D-integration using SciPy
-#  @see http://www.scipy.org/
+## make 2D numerical integration
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-12-01
 def sp_integrate_2D_ ( pdf   ,
                       xmin  , xmax ,
                       ymin  , ymax , *args , **kwargs ) :
-    """ Make 3D integration over the PDF using SciPy
+    """ Make 3D numerical integration over the PDF
     """
     if hasattr ( pdf , 'setPars' ) : pdf.setPars() 
     func = pdf.function()
     return func.sp_integrate_2D ( xmin , xmax , ymin , ymax , *args , **kwargs ) 
 
 # =============================================================================
-## make 3D-integration using SciPy
-#  @see http://www.scipy.org/
+## make 3D numerical integration 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-12-01
 def sp_integrate_3D_  ( pdf   ,
@@ -288,7 +267,7 @@ def sp_integrate_3D_  ( pdf   ,
                         ymin  , ymax ,
                         zmin  , zmax ,
                         *args , **kwargs ) :
-    """ Make 3D integration over the PDF using SciPy
+    """ Make 3D numerical integration over the PDF 
     """
     if hasattr ( pdf , 'setPars' ) : pdf.setPars() 
     func = pdf.function()

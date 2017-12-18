@@ -289,7 +289,6 @@ def _tf2_integrate_Y_ ( tf2 , x , ylow = None , yhigh = None ) :
     
     >>> func = ROOT.TF2( ... )
     >>> a = func.integrate_Y ( x , ylow , yhigh )
-    Integration is performed using scipy 
     """
     ## check X 
     xmin,xmax = tf2.xminmax()
@@ -321,7 +320,6 @@ def _tf2_integrate_X_ ( tf2 , y , xlow = None , xhigh = None ) :
     
     >>> func = ROOT.TF2( ... )
     >>> a = func.integrate_X ( y , xlow , xhigh )
-    Integration is performed using scipy 
     """
     ## check Y 
     ymin,ymax = tf2.yminmax()

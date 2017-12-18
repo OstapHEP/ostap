@@ -328,7 +328,68 @@ class PDF2 (PDF) :
             else : return 0.0
             
         raise AttributeError, 'something wrong goes here'
-        
+    
+    # =========================================================================
+    ## get integral over (xmin,xmax,ymin,ymax) region
+    #  @code
+    #  pdf = ...
+    #  print pdf.integral( 0,1,0,2)
+    #  @endcode
+    def integral ( self, xmin , xmax , ymin , ymax ) :
+        """Get integral over (xmin,xmax,ymin,ymax) region
+        >>> pdf = ...
+        >>> print pdf.integral( 0,1,0,2)
+        """
+        xmn , xmx = self.m1.minmax()
+        ymn , ymx = self.m2.minmax()
+
+        xmin = max ( xmin , xmn )
+        xmax = min ( xmax , xmx )
+        ymin = max ( ymin , ymn )
+        ymax = min ( ymax , ymx )
+
+        ## 1) make a try to use analytical integral (could be fast)
+        if hasattr ( self , 'pdf' ) :
+            _pdf = self.pdf 
+            if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
+            try: 
+                if hasattr ( _pdf , 'function' ) :
+                    _func = _pdf.function() 
+                    if hasattr ( _func , 'integral' ) :
+                        return _func.integral ( xmin , xmax , ymin , ymax )
+            except:
+                pass
+            
+        ## 2) use numerical integration 
+        from ostap.math.integral import integral2 as _integral2 
+        return _integral2 ( self ,
+                            xmin , xmax ,
+                            ymin , ymax )
+      
+# =============================================================================
+## suppress methods specific for 1D-PDFs only
+for _a in (
+    ##'_get_stat_'     ,
+    'rms'            , 
+    'fwhm'           , 
+    'skewness'       , 
+    'kurtosis'       , 
+    'mode'           , 
+    'mode'           , 
+    'median'         , 
+    'get_mean'       , 
+    'moment'         , 
+    'central_moment' , 
+    'quantile'       , 
+    'cl_symm'        , 
+    'cl_asymm'       ,
+    'derivative'     ) :
+
+    if hasattr ( PDF2 , _a ) :
+        def _suppress_ ( self , *args , **kwargs ) :
+            raise AttributeError ( "'%s' object has no attribute '%s'" % ( type(self) , _a ) )
+        setattr ( PDF2 , _a , _suppress_ ) 
+        logger.verbose ( 'Remove attribute %s from PDF2' ) 
 
 
 # =============================================================================

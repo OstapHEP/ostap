@@ -14,7 +14,6 @@
 >>> func = lambda x : x*x
 >>> print derivative ( func , 1 )
 
-... and also very simple wrapper to numerical integation using scipy
 
 >>> func = lambda x : x*x
 >>> print integral ( func , 0 , 1 )

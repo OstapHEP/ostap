@@ -198,7 +198,7 @@ def _h1_chi2_cmp_ ( h1                                    ,
     elif integral and hasattr ( func , 'Integral' ) :  
         _func_  = lambda x,xl,xr : func.Integral(xl,xr)/(xr-xl) 
     elif integral :
-        ## use numerical integration from scipy
+        ## use numerical integration 
         from ostap.math.intergal import integral as _integral_
         _func_  = lambda x,xl,xr : _integral_ ( func , xl , xr )/(xr-xl)
         

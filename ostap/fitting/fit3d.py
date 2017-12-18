@@ -331,16 +331,11 @@ class PDF3 (PDF2) :
                 pass
             
         ## use numerical integration 
-        from scipy import integrate
-        result = integrate.tplquad ( self ,
-                                     zmin ,
-                                     zmax ,
-                                     lambda   z : ymin ,
-                                     lambda   z : ymax ,
-                                     lambda y,z : xmin ,
-                                     lambda y,z : xmax ,
-                                     *args , **kwargs )
-        return result[0]
+        from ostap.math.integral import integral3 as _integral3 
+        return _integral3 ( self ,
+                            xmin , xmax ,
+                            ymin , ymax ,
+                            zmin , zmax )
     
 # =============================================================================
 ## @class Fit3D
