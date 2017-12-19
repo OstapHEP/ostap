@@ -80,7 +80,7 @@ def test_1D() :
         v = cnts_1D[k]
         b = v.mean()
         r = v.rms ()
-        logger.info ( 'Key:%-20s bias:%15s%% RMS:%.2f%%' % ( k , b.toString("(%.2f+-%.2f)") , r ) ) 
+        logger.info ( 'Key:%-30s bias:%15s%% RMS:%.3f%%' % ( k , b.toString("(%.3f+-%.3f)") , r ) ) 
         
 
 # =============================================================================
@@ -111,7 +111,7 @@ def test_2D() :
         v = cnts_2D[k]
         b = v.mean()
         r = v.rms ()
-        logger.info ( 'Key:%-20s bias:%15s%% RMS:%.2f%%' % ( k , b.toString("(%.2f+-%.2f)") , r ) ) 
+        logger.info ( 'Key:%-30s bias:%15s%% RMS:%.3f%%' % ( k , b.toString("(%.3f+-%.3f)") , r ) ) 
         
 # =============================================================================
 ##  test interpolation for 3D-historgams 
@@ -145,7 +145,7 @@ def test_3D() :
         v = cnts_3D[k]
         b = v.mean()
         r = v.rms ()
-        logger.info ( 'Key:%-20s bias:%15s%% RMS:%.2f%%' % ( k , b.toString("(%.2f+-%.2f)") , r ) ) 
+        logger.info ( 'Key:%-30s bias:%15s%% RMS:%.3f%%' % ( k , b.toString("(%.3f+-%.3f)") , r ) ) 
         
 
 ##  test interpolation for 3D-historgams 
@@ -174,10 +174,10 @@ def test_3D2() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_1D  () ## test interpolaiton for 1D-histograms
-    test_2D  () ## test interpolaiton for 2D-histograms
-    test_3D  () ## test interpolaiton for 3D-histograms
-    test_3D2 () ## test interpolaiton for 3D-histograms
+    test_1D  () ## test interpolation for 1D-histograms
+    test_2D  () ## test interpolation for 2D-histograms
+    test_3D  () ## test interpolation for 3D-histograms
+    test_3D2 () ## test interpolation for 3D-histograms
     
 # =============================================================================
 # The END 
