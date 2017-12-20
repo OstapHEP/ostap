@@ -86,7 +86,7 @@ def test_moments2 () :
     except ImportError :
         logger.warning('Scipy.optimize.brentq is not availabe, skip test')
         return
-        
+
     med  = Median   (0, math.pi)
     logger.info ( 'sin@[0,pi]              median: %s ' % med  (math.sin) ) 
 

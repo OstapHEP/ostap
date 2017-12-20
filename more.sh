@@ -1,5 +1,5 @@
-export LCG_DIR=/cvmfs/lhcb.cern.ch/lib/lcg/releases/LCG_88
-
+export LCG_DIR=/cvmfs/lhcb.cern.ch/lib/lcg/releases/LCG_92
+## /cvmfs/lhcb.cern.ch/lib/lcg/releases/LCG_91/GSL/2.1/x86_64-slc6-gcc62-opt/include
 
 export OSTAP_DIR=$HOME/cmtuser/ostap
 

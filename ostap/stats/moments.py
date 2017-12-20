@@ -143,12 +143,12 @@ class Moment(object) :
         self._x0   = x0  
         self._err  = err
         self._args = args
-        self._moms = {} 
+        self._moms = {}
 
     ## make an integral 
     def _integral_ ( self , func , xmn , xmx , *args ) :
-        from ostap.math.integral import Integral
-        integrator = Integral ( func , xmn , err = self._err )
+        from ostap.math.integral import IntegralCache 
+        integrator = IntegralCache ( func , xmn , err = self._err , args = args )
         return integrator ( xmx , *args )
     
     ## calculate un-normalized 0-moment  
@@ -167,9 +167,10 @@ class Moment(object) :
     
     ## calculate the moment 
     def __call__ ( self , func , *args ) :
-        ## 
+        ##
         args   = args if args else self._args
         ##
+        
         n0  = self._moment0_ (            func ,            *args ) 
         nN  = self._momentK_ ( self._N  , func , self._x0 , *args ) 
         ##
@@ -246,6 +247,7 @@ class Mean(Moment) :
     >>> value = mean ( math.sin    )
     
     """
+    
     def __init__ ( self , xmin , xmax , err = False ) :
         Moment.__init__ ( self , 1 , xmin , xmax , err )
 
@@ -434,14 +436,16 @@ class Median(RMS) :
     """
     def __init__ ( self , xmin , xmax ) :
         RMS.__init__ ( self , xmin , xmax , err = False )
-
+        
     ## calculate he median
     def _median_ ( self , func , xmin , xmax , *args ) :
+
         ## need to know the integral
-        from ostap.math.integral import IntegralCache
-        iint   = IntegralCache ( func ,  xmin , False , *args )
-        half   = 2.0 / iint    ( xmax ) 
+        from ostap.math.integral import Integral
         
+        iint   = Integral      ( func ,  xmin , err = False ,  args = args )
+        half   = 2.0 / iint    ( xmax ) 
+
         from scipy import optimize
         ifun   = lambda x : iint( x ) * half - 1.0
 
@@ -462,10 +466,9 @@ class Median(RMS) :
             
         return result
 
-        
     ## calculate the median 
     def __call__ ( self , func , *args ) :
-        return self._median_ ( func , self._xmin , self._xmax )
+        return self._median_ ( func , self._xmin , self._xmax ,  *args )
 
     def __str__ ( self ) :
         return "Median(%s,%s)" % ( self._xmin , self._xmax )
@@ -508,7 +511,7 @@ class Quantile(Median) :
 
         ## need to know the integral
         from ostap.math.integral import IntegralCache
-        iint = IntegralCache ( func, self._xmin, False , *args )
+        iint = IntegralCache ( func, self._xmin, err = False ,  args = args )
         quan = 1.0 / iint    (  self._xmax ) / self._Q 
         
         from scipy import optimize
@@ -562,7 +565,7 @@ class Mode(Median) :
     """
     def __init__ ( self , xmin , xmax ) :
         Median.__init__ ( self , xmin , xmax )
-        
+
     ## calculate the mode 
     def __call__ ( self , func , *args ) :
         ##
@@ -627,7 +630,6 @@ class Width(Mode) :
 
         ## half height 
         vheight = 1.0 * v0 * self._hfactor
-
         
         ## use scipy to find solution 
         from scipy import optimize        
@@ -682,7 +684,7 @@ class CL_symm(object) :
 
         ## additional arguments
         args   = args if args else self._args
-        
+
         #
         ## define integration rules
         #
@@ -690,7 +692,7 @@ class CL_symm(object) :
             _integral_ = lambda f , low , high : f.integral (      low , high , *args )
         else                             :
             from ostap.math.integral import integral 
-            _integral_ = lambda f , low , high :   integral ( f  , low , high , False , *args )
+            _integral_ = lambda f , low , high :   integral ( f  , low , high , *args )
 
         #
         ## xmin/max
@@ -800,7 +802,7 @@ class CL_asymm(object) :
             _integral_ = lambda f , low , high : f.integral (      low , high , *args )
         else                             :
             from ostap.math.integral import integral
-            _integral_ = lambda f , low , high :   integral ( f  , low , high , False , *args )
+            _integral_ = lambda f , low , high :   integral ( f  , low , high , *args )
 
         #
         ## xmin/max

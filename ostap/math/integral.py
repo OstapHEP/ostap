@@ -277,7 +277,8 @@ class Integral(object) :
     ## Calculate the integral for the 1D-function
     def _integrate_ ( self , xmn , xmx , args = () ) :
         args   = args if args else self._args
-        return integral ( self._func , xmn , xmx , args , self._err , **self._kwargs )
+        return integral ( self._func , xmn , xmx ,
+                          args = args , err = self._err , **self._kwargs )
             
     ## Calculate the integral for the 1D-function 
     def __call__ ( self , x , *args ) :
@@ -323,27 +324,38 @@ class IntegralCache(Integral) :
         >>> func_0 = Integral(func,0)
         >>> func_0 ( 10 ) 
         """
-        x    = float ( x ) 
-        args = args if args else self._args
-
-        xmn  = self._xmin
-        dlt  = 0
+        x      = float ( x ) 
+        args   = args if args else self._args
         
-        ## check previos calculations 
-        if not args  and isinstance ( x , float ) and self._prev :
-            if       isinstance ( self._xmin , float ) and ( self._prev[0] - x ) < abs ( self._xmin - x ) :
-                xmn = self._prev[0]
-                dlt = self._prev[1]
-            elif not isinstance ( self._xmin , float ) :                        
-                xmn = self._prev[0]
-                dlt = self._prev[1]
+        xmn    = self._xmin
+        delta  = 0
+        
+        _x     = float ( x )
+        
+        ## there is previos calculation
+        if self._prev :
+            ##
+            prev_args   = self._prev[0]
+            prev_x      = self._prev[1]
+            prev_result = self._prev[2]
+            ##
+            if prev_args == args : ## the    same   additional arguments                
                 
-        ## 
-        result  = self._integrate_ ( xmn , x , args =   args )
-        result += dlt 
+                ## the point is good! 
+                if prev_x == _x or isequal ( _x , prev_x ) :
+                    return prev_result                                 ## RETURN
+                
+                ## old point is good 
+                if abs ( prev_x - _x ) <= abs ( self._xmin - _x ) :
+
+                    xmn    = prev_x
+                    delta = prev_result
+                    
+        result  = self._integrate_ ( xmn , _x , args =   args )
+        result += delta 
         
-        if not args and isinstance ( x , float ) :
-            self._prev =  x , result 
+        ## fill cache 
+        self._prev = args , _x , result 
             
         return result 
 
