@@ -339,7 +339,7 @@ class IntegralCache(Integral) :
             prev_x      = self._prev[1]
             prev_result = self._prev[2]
             ##
-            if prev_args == args : ## the    same   additional arguments                
+            if prev_args == args : ## the same additional arguments                
                 
                 ## the point is good! 
                 if prev_x == _x or isequal ( _x , prev_x ) :
@@ -347,8 +347,7 @@ class IntegralCache(Integral) :
                 
                 ## old point is good 
                 if abs ( prev_x - _x ) <= abs ( self._xmin - _x ) :
-
-                    xmn    = prev_x
+                    xmn   = prev_x
                     delta = prev_result
                     
         result  = self._integrate_ ( xmn , _x , args =   args )
