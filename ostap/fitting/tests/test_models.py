@@ -472,8 +472,8 @@ def test_bukin() :
         signal = Models.Bukin_pdf ( name  = 'Bukin' ,
                                     mass  = mass    ,
                                     xi    = 0    ,
-                                    rhol  = 0    ,
-                                    rhor  = 0    , 
+                                    rhoL  = 0    ,
+                                    rhoR  = 0    , 
                                     mean  = signal_gauss.mean  , 
                                     sigma = signal_gauss.sigma ) ,
         background = Models.Bkg_pdf ('BkgBK', mass = mass , power = 0 )) 
@@ -487,9 +487,9 @@ def test_bukin() :
         result, frame = model_bukin. fitTo ( dataset0 )
         model_bukin.signal.xi  .release()     
         result, frame = model_bukin. fitTo ( dataset0 )
-        model_bukin.signal.rhol.release()     
+        model_bukin.signal.rhoL.release()     
         result, frame = model_bukin. fitTo ( dataset0 )
-        model_bukin.signal.rhor.release()     
+        model_bukin.signal.rhoR.release()     
         result, frame = model_bukin. fitTo ( dataset0 )
         model_bukin.signal.mean .release() 
         model_bukin.signal.sigma.release() 
@@ -635,7 +635,7 @@ def test_johnsonSU () :
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 )  
         result,f  = model.fitTo ( dataset0 )  
-        signal.lam  .release()
+        signal.lambd .release()
         signal.delta.release()
         result,f  = model.fitTo ( dataset0 )  
         
@@ -645,7 +645,7 @@ def test_johnsonSU () :
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Xi                   is: %-28s ' %  result ( signal.xi     )[0] )
-        logger.info ( 'Lambda               is: %-28s ' %  result ( signal.lam    )[0] )
+        logger.info ( 'Lambda               is: %-28s ' %  result ( signal.lambd  )[0] )
         logger.info ( 'Delta                is: %-28s ' %  result ( signal.delta  )[0] )
         logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  )[0] )
 

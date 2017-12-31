@@ -149,8 +149,11 @@ def makeVar ( var , name , comment , fix = None , *args ) :
     if not isinstance ( var , ROOT.RooAbsReal ) : 
         var = ROOT.RooRealVar ( name , comment , *args )
         
-    ## fix it, if needed 
-    if isinstance ( fix , ( float , int , long ) ) :
+    ## fix it, if needed:
+        
+    if   fix is False : pass
+    elif fix is True  : var.fix ( var.getVal() )
+    elif isinstance ( fix , ( float , int , long ) ) :
         
         if hasattr ( var , 'getMin' ) and fix < var.getMin() :
             logger.warning("Min-value for %s is redefined to be %s " % ( var.GetName() , fix ) )
@@ -305,6 +308,7 @@ class PDF (object) :
         self._components  = ROOT.RooArgList ()
         ## take care about sPlots 
         self._splots      = []
+        self._properties  = set () 
 
     ## get all declared components 
     def components  ( self ) : return self._components
@@ -1035,47 +1039,43 @@ class MASS(PDF) :
     """
     def __init__ ( self            ,
                    name            ,
-                   mn       = None ,
-                   mx       = None , 
+                   ## mn       = None ,
+                   ## mx       = None ,
                    mass     = None ,
                    mean     = None ,
                    sigma    = None ) : 
 
         ## intialize the base 
         PDF.__init__ ( self , name )
+
+        ##  if not mn is None : logger.warning('Ignore mn-argument')
+        ## if not mx is None : logger.warning('Ignore mx-argument')
         
         m_name  = "m_%s"     % name
         m_title = "mass(%s)" % name
 
-        if isinstance ( mass , tuple ) :
-            mn      = mass [0]
-            mx      = mass [1]
-            mass    = None
-            
-        if isinstance ( mass , ROOT.TH1   ) :
-            mn,mx   = mass.xminmax()
-            m_title = mass.GetTitle ()
-            mass    = None
-            
-        if isinstance ( mass , ROOT.TAxis ) :
-            mn      = mass.GetXmin()
-            mx      = mass.GetXmax()
-            mass    = None
-            
-        if mass is None :
-            if not isinstance ( mn , ( float , int , long ) ) :
-                raise AttributeError( "MASS(%s): invalid 'min'-parameter %s" % ( name , mn ) ) 
-            if not isinstance ( mx , ( float , int , long ) ) :
-                raise AttributeError( "MASS(%s): invalid 'max'-parameter %s" % ( name , mx ) )
-            
-        #
-        ## adjust the mass and edges, create if needed
-        #
-        self.mass = makeVar ( mass   ,
-                              m_name , m_title ,
-                              mass   , 
-                              min ( mn , mx ) , max( mn , mx ) )
+        if   isinstance ( mass , ROOT.TH1   ) :
+            mass    = mass.xminmax()
+            m_title = name.GetTitle()            
+        elif isinstance ( mass , ROOT.TAxis ) :
+            mass    = mass.GetXmin() , mass.GetXmax()
 
+        ## create the variable 
+        if isinstance ( mass , tuple ) and 2 == len(mass) :  
+            self.mass = makeVar ( mass    , ## var 
+                                  m_name  , ## name 
+                                  m_title , ## title/comment
+                                  *mass   , ## min/max 
+                                  fix = None ) ## fix ? 
+        elif isinstance ( mass , ROOT.RooAbsReal ) :
+            self.mass = makeVar ( mass    , ## var 
+                                  m_name  , ## name 
+                                  m_title , ## title/comment
+                                  fix = None  ) ## fix ? 
+        else :
+            raise AttributeError("Unknown type of ``mass'' parameter %s/%s" % ( type ( mass ) , mass ) ) 
+                
+        
         self._mn = self.mass.getMin ()
         self._mx = self.mass.getMax ()
         #
@@ -1084,9 +1084,9 @@ class MASS(PDF) :
         #
         ## mean-value
         # 
-        self.mean = makeVar ( mean              ,
-                              "mean_%s"  % name ,
-                              "mean(%s)" % name , mean ,  self._mn  , self._mx )
+        self.__mean = makeVar ( mean              ,
+                                "mean_%s"  % name ,
+                                "mean(%s)" % name , mean ,  self._mn  , self._mx )
         ## 
         if checkMean () :
             
@@ -1102,11 +1102,33 @@ class MASS(PDF) :
         ## sigma
         #
         sigma_max  = 2.0 * _dm / math.sqrt ( 12 )
-        self.sigma = makeVar ( sigma              ,
-                               "sigma_%s"  % name ,
-                               "sigma(%s)" % name , sigma , 0.01 * sigma_max , 0 , sigma_max )        
+        self.__sigma = makeVar ( sigma              ,
+                                 "sigma_%s"  % name ,
+                                 "sigma(%s)" % name , sigma , 0.01 * sigma_max , 0 , sigma_max )        
 
-
+    @property
+    def mean ( self ):
+        """This is my doc for property mean"""
+        return self.__mean
+    @mean.setter
+    def mean ( self , value ) :
+        self.mean.setVal ( value )
+        return self.mean.getVal()
+    @mean.deleter
+    def mean ( self ) : del self.__mean
+        
+    @property
+    def sigma ( self ):
+        """This is doc for property sigma"""
+        return self.__sigma
+    @sigma.setter
+    def sigma ( self , value ) :
+        self.sigma.setVal ( value )
+        return self.sigma.getVal()
+    @sigma.deleter
+    def sigma ( self ) : del self.__sigma
+    
+    
 # =============================================================================
 ## @class RESOLUTION
 #  helper base class  to parameterize the resolution
