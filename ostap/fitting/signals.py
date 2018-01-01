@@ -1610,7 +1610,7 @@ class JohnsonSU_pdf(MASS) :
 
 
         ## provide backup name 
-        self.lambda_ = self.lam
+        self.lambda_ = self.lambd
         
         self.__delta   = makeVar ( delta                 ,
                                    'delta_%s'     % name ,
