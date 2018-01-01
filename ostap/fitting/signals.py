@@ -1863,7 +1863,7 @@ class Voigt_pdf(MASS) :
         # 
         MASS.__init__  ( self , name , mass , mean , sigma ) 
 
-        dm = self.mass.getmax() -  self.mass.getMin()
+        dm = self.mass.getMax() -  self.mass.getMin()
         self.__gamma  = makeVar ( gamma               ,
                                   'gamma_%s'   % name ,   
                                   '#gamma(%s)' % name , gamma , 
