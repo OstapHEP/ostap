@@ -1631,7 +1631,7 @@ class JohnsonSU_pdf(MASS) :
             "JohnsonSU(%s)" % name ,
             self.mass      ,
             self.xi        ,
-            self.lam       ,
+            self.lambd     ,
             self.delta     ,
             self.gamma     ) 
 
