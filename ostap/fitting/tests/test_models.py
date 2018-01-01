@@ -756,7 +756,7 @@ def test_voigt () :
     
     logger.info ('Test Voigt_pdf: Breit-Wigner convoluted with Gauss' )
     model = Models.Fit1D (
-        signal = Models.Voigt_pdf ( 'V' , mass.getMin() , mass.getMax()  ,
+        signal = Models.Voigt_pdf ( 'V' , 
                                     mass  = mass                ,
                                     mean  = signal_gauss.mean   , 
                                     sigma = signal_gauss.sigma  ) , 
@@ -796,7 +796,7 @@ def test_pvoigt () :
     
     logger.info ('Test PSeudoVoigt_pdf: fast approximation to Voigt profile' )
     model = Models.Fit1D (
-        signal = Models.PseudoVoigt_pdf ( 'PV' , mass.getMin() , mass.getMax()  ,
+        signal = Models.PseudoVoigt_pdf ( 'PV' , 
                                           mass  = mass                ,
                                           mean  = signal_gauss.mean   , 
                                           sigma = signal_gauss.sigma  ) , 

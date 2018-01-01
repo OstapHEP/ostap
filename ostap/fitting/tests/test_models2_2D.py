@@ -84,8 +84,8 @@ def test_const () :
     
     logger.info ('Simplest (factorized) fit model:  ( Gauss + const ) x ( Gauss + const ) ' )
     model   = Models.Fit2D (
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y )
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y )
         )
     
     model.signal1.sigma.fix ( m.error () )
@@ -128,8 +128,8 @@ def test_p2xp2 () :
     logger.info ('Simple (factorized) fit model:  ( Gauss + P2 ) (x) ( Gauss + P2 ) ' )
     model   = Models.Fit2D (
         suffix   = '_2' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 2 , 
         bkg2   = 2 ,
         bkgA   = 2 ,
@@ -177,8 +177,8 @@ def test_p1xp1_BB () :
     logger.info ('Simplest non-factorized fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BB' )
     model   = Models.Fit2D (
         suffix   = '_3' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1 , 
         bkg2   = 1 ,
         bkg2D    = Models.PolyPos2D_pdf ( 'P2D' , m_x , m_y , nx = 2 , ny = 2 ) 
@@ -224,8 +224,8 @@ def test_p1xp1_BBs () :
     logger.info ('Non-factorized symmetric background fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
     model   = Models.Fit2D (
         suffix   = '_4' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1 , 
         bkg2   = 1 ,
         bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2Ds' , m_x , m_y , n = 2 ) 
@@ -270,8 +270,8 @@ def test_p1xp1_BBss () :
     sb      = ROOT.RooRealVar('sb','SB',0,10000)
     model   = Models.Fit2D (
         suffix   = '_5' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1  , 
         bkg2   = 1  ,
         bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2Ds' , m_x , m_y , n = 2 ) ,
@@ -318,8 +318,8 @@ def test_p1xp1_BBsym () :
     sb      = ROOT.RooRealVar('sb','SB',0,10000)
     model   = Models.Fit2DSym (
         suffix   = '_6' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1     = 1 , 
         bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2D5' , m_x , m_y , n = 2 ) ,
         )
@@ -362,8 +362,8 @@ def test_pbxpb_BB  () :
     logger.info ('Non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + (expo*P1)**2')
     model   = Models.Fit2D (
         suffix   = '_7' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1 , 
         bkg2   = 1 ,
         bkg2D    = Models.ExpoPol2D_pdf ( 'P2D7' , m_x , m_y , nx = 1 , ny = 1 ) 
@@ -407,8 +407,8 @@ def test_pbxpb_BBs () :
     logger.info ('Non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + Sym(expo*P1)**2')
     model   = Models.Fit2D (
         suffix   = '_8' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1 , 
         bkg2   = 1 ,
         bkg2D    = Models.ExpoPol2Dsym_pdf ( 'P2D8' , m_x , m_y , n = 1 ) 
@@ -451,8 +451,8 @@ def test_pbxpb_BBsym () :
     logger.info ('Symmetric fit model with non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + Sym(expo*P1)**2')
     model   = Models.Fit2DSym (
         suffix   = '_9' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1     = 1 , 
         bkg2D    = Models.ExpoPol2Dsym_pdf ( 'P2D9' , m_x , m_y , n = 1 ) 
         )
@@ -495,8 +495,8 @@ def test_psxps_BBs () :
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
     model   = Models.Fit2D (
         suffix   = '_11' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1 , 
         bkg2   = 1 ,
         bkg2D    = Models.PSPol2Dsym_pdf ( 'P2D11' , m_x , m_y , ps = PS , n = 1 ) 
@@ -540,8 +540,8 @@ def test_psxps_BBsym () :
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
     model   = Models.Fit2DSym (
         suffix   = '_12' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1     = 1 , 
         bkg2D    = Models.PSPol2Dsym_pdf ( 'P2D12' , m_x , m_y , ps = PS , n = 1 ) 
         )
@@ -585,8 +585,8 @@ def test_model_13 () :
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
     model   = Models.Fit2D (
         suffix   = '_13' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1 , 
         bkg2   = 1 ,
         bkg2D    = Models.ExpoPSPol2D_pdf ( 'P2D13' , m_x , m_y , psy = PS , nx = 1 , ny = 1 ) 
@@ -640,8 +640,8 @@ def test_model_14 () :
     SPLINE  = Ostap.Math.Spline2D ( spline1 , spline1 ) 
     model   = Models.Fit2D (
         suffix   = '_14' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1 , 
         bkg2   = 1 ,
         bkg2D    = Models.Spline2D_pdf ( 'P2D14' , m_x , m_y , spline = SPLINE ) 
@@ -686,8 +686,8 @@ def test_model_15 () :
     SPLINES = Ostap.Math.Spline2DSym ( spline1 ) 
     model   = Models.Fit2D (
         suffix   = '_15' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1   = 1 , 
         bkg2   = 1 ,
         bkg2D    = Models.Spline2Dsym_pdf ( 'P2D15' , m_x , m_y , spline = SPLINES ) 
@@ -732,8 +732,8 @@ def test_model_16() :
     SPLINES = Ostap.Math.Spline2DSym ( spline1 ) 
     model   = Models.Fit2DSym (
         suffix   = '_16' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , m_x.getMin () , m_x.getMax () , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , m_y.getMin () , m_y.getMax () , mass = m_y ) ,
+        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
         bkg1     = 1 , 
         bkg2D    = Models.Spline2Dsym_pdf ( 'P2D16' , m_x , m_y , spline = SPLINES ) 
         )

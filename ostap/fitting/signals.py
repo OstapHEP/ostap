@@ -1604,9 +1604,9 @@ class JohnsonSU_pdf(MASS) :
             otitle   = self.lambd.GetTitle()
             nname    = oname .replace ( 'sigma' , 'lambda' )
             ntitle   = otitle.replace ( 'sigma' , 'lambda' )
-            self.lam.SetName  ( nname  )
-            self.lam.SetTitle ( ntitle )
-            self.lam.setMax ( self.lam.getMax() * 10 ) ## adjust it! 
+            self.lambd.SetName  ( nname  )
+            self.lambd.SetTitle ( ntitle )
+            self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
 
 
         ## provide backup name 
