@@ -25,6 +25,7 @@ __all__     = (
     ##
     'Adjust'        , ## addjust PDF to avoid zeroes (sometimes useful)
     'Convolution'   , ## helper utility to build convolution
+    'Phases'        , ## helper utility to build/keep list of phases 
     ##
     'Generic1D_pdf' , ## wrapper over imported RooFit (1D)-pdf  
     )
@@ -308,7 +309,7 @@ class PDF (object) :
         self._components  = ROOT.RooArgList ()
         ## take care about sPlots 
         self._splots      = []
-        self._properties  = set () 
+        self._properties  = {} 
 
     ## get all declared components 
     def components  ( self ) : return self._components
@@ -337,7 +338,6 @@ class PDF (object) :
                         cs.add ( a )
         del cs
 
-            
     ## adjust PDF a little bit to avoid zeroes 
     def adjust ( self , value ) :
         """Adjust PDF a little bit to avoid zeroes 
@@ -350,25 +350,6 @@ class PDF (object) :
         self.old_pdf  = self.adjusted.old_pdf
         self.pdf      = self.adjusted.pdf
         
-    ## Create vector of phases (needed for various polynomial forms)
-    def makePhis    ( self , num , the_phis = None ) :
-        """Create vector of phases (needed for various polynomial forms)
-        """
-        if the_phis :
-            self.phis     = the_phis.phis 
-            self.phi_list = the_phis.phi_list
-            return
-        
-        self.phis     = []
-        self.phi_list = ROOT.RooArgList()
-        from math import pi 
-        for i in range( 1 , num + 1 ) :
-            phi_i = makeVar ( None ,
-                              'phi%d_%s'      % ( i , self.name )  ,
-                              '#phi_{%d}(%s)' % ( i , self.name )  ,
-                              None , 0 ,  -0.75 * pi  , 1.25 * pi  )
-            self.phis.append  ( phi_i ) 
-            self.phi_list.add ( phi_i )
 
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
@@ -1491,6 +1472,7 @@ class Fit1D (PDF) :
             logger.debug ( "Non-extended model ``%s'' with %s/%s components"  % ( self.pdf.GetName() , len( self.alist1) , len(self.alist2) ) )
 
 
+
 # =============================================================================
 ## simple class to adjust certaint PDF to avoid zeroes 
 class Adjust(object) :
@@ -1599,6 +1581,50 @@ class Convolution(object):
                 if hasattr ( self , 'cnv_mean' ) and hasattr ( self , 'cnv_sigma' ) :
                     self.pdf.setConvolutonWindow ( self.cnv_mean , self.cnv_sigma , 7 )
 
+
+# =============================================================================
+## helper class to build/keep the list of ``phi''-arguments (needed e.g. for polynomial functions)
+class Phases(object) :
+    """Helper class to build/keep the list of ``phi''-arguments (needed e.g. for polynomial functions)
+    """
+    ## Create vector of phases (needed for various polynomial forms)
+    def __init__( self  , num , the_phis = None ) :
+        """Create vector of phases (needed for various polynomial forms)
+        """
+        if the_phis :
+            self.__phis     = [ i for i in the_phis.phis ]  
+            self.__phi_list = the_phis.phi_list
+            return
+        
+        self.__phis     = []
+        self.__phi_list = ROOT.RooArgList()
+        from math import pi 
+        for i in range( 1 , num + 1 ) :
+            phi_i = makeVar ( None ,
+                              'phi%d_%s'      % ( i , self.name )  ,
+                              '#phi_{%d}(%s)' % ( i , self.name )  ,
+                              None , 0 ,  -0.75 * pi  , 1.25 * pi  )
+            self.__phis.append  ( phi_i ) 
+            self.phi_list.add ( phi_i )
+
+    ## set all phis to be 0
+    def reset_phis ( self ) :
+        """Set all phases to be zero
+        """
+        for f in self.__phis : f.setVal(0)
+        
+    @property
+    def phis ( self ) :
+        """The list of ``phases'', used to parameterize various polynomial-like shapes
+        """
+        return tuple ( [ i for i in self.__phis ] )
+
+    @property
+    def phi_list ( self ) :
+        """The list/ROOT.RooArgList of ``phases'', used to parameterize polynomial-like shapes
+        """
+        return self.__phi_list
+    
 
 # =============================================================================
 ## @class Generic1D_pdf

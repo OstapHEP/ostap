@@ -23,12 +23,21 @@ __all__     = (
 import ROOT, math
 from   ostap.core.core     import cpp, Ostap
 from   ostap.math.base     import iszero
-from   ostap.fitting.basic import makeVar
+from   ostap.fitting.basic import makeVar, Phases
 from   ostap.fitting.fit3d import PDF3 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_3d' )
 else                       : logger = getLogger ( __name__                  )
+# =============================================================================
+##  @class PolyBase3
+#   helper base class to implement various polynomial-like shapes
+class PolyBase3(PDF3,Phases) :
+    """Helper base class to implement various polynomial-like shapes
+    """
+    def __init__ ( self , name , xvar , yvar , zvar , power , the_phis = None ) :
+        PDF3  .__init__ ( self , name  , xvar , yvar , zvar )
+        Phases.__init__ ( self , power , the_phis  )
 # =============================================================================
 models = []
 # =============================================================================
@@ -44,7 +53,7 @@ models = []
 #  @see Ostap::Math::Positive3D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class PolyPos3D_pdf(PDF3) :
+class PolyPos3D_pdf(PolyBase3) :
     """Positive (non-factorizable!) polynomial in 3D:
     
     The 3D-polynomial of order Nx*Ny*Nz, that is constrained 
@@ -66,7 +75,8 @@ class PolyPos3D_pdf(PDF3) :
                    nz = 1 ) : ## polynomial degree in Z
 
         ##   inialize the base :
-        PDF3.__init__ ( self , name , x , y , z ) 
+        num = ( nx + 1 ) * ( ny + 1 ) *  ( nz + 1 ) 
+        PolyBase3.__init__ ( self , name , x , y , z , num - 1 ) 
         #
         if 0 > nx : raise ValueError('PolyPos3D_pdf: Invalid nx=%s' % nx )
         if 0 > ny : raise ValueError('PolyPos3D_pdf: Invalid ny=%s' % ny )
@@ -75,8 +85,6 @@ class PolyPos3D_pdf(PDF3) :
         #
         ## create parameters
         #
-        num = ( nx + 1 ) * ( ny + 1 ) *  ( nz + 1 ) 
-        self.makePhis ( num - 1 ) 
             
         #
         ## finally build PDF 
@@ -107,7 +115,7 @@ models.append ( PolyPos3D_pdf )
 #  @date 2017-11-14
 #  @see Analysis::Models::Poly3DSymPositive
 #  @see Gaudi::Math::Positive3DSym
-class PolyPos3Dsym_pdf(PDF3) :
+class PolyPos3Dsym_pdf(PolyBase3) :
     """Positive (non-factorizable!) symmetric polynomial in 3D:
     
     The 3D-polynomial of order N*N*N, that is constrained 
@@ -132,7 +140,8 @@ class PolyPos3Dsym_pdf(PDF3) :
                    n  = 1 ) : ## polynomial degree in X,Y,Z
 
         ##   inialize the base :
-        PDF3.__init__ ( self , name , x , y , z ) 
+        num = ( n + 1 ) * ( n + 2 ) *  ( n + 3 ) / 6
+        PolyBase3.__init__ ( self , name , x , y , z , num  - 1 ) 
         #
         if 0 > n : raise ValueError('PolyPos3Dsym_pdf: Invalid n=%s' % n )
 
@@ -140,16 +149,7 @@ class PolyPos3Dsym_pdf(PDF3) :
            self.x.getMax() != self.y.getMax() or self.y.getMax() != self.z.getMax() :
             logger.warning("PolyPos3Dsym_pdf: non-equal ranges for 3D-symmetric model")  
             
-        #
-        ## create parameters
-        #
-        num = ( n + 1 ) * ( n + 2 ) *  ( n + 3 ) / 6
-        self.makePhis ( num - 1 ) 
-        #
-            
-        #
         ## finally build PDF 
-        #
         self.pdf = cpp.Ostap.Models.Poly3DSymPositive (
             'p3Ds_%s'               % name ,
             'Poly3DSymPositive(%s)' % name ,
@@ -175,7 +175,7 @@ models.append ( PolyPos3Dsym_pdf )
 #  @date 2017-11-14
 #  @see Analysis::Models::Poly3DMixPositive
 #  @see Gaudi::Math::Positive3DMix
-class PolyPos3Dmix_pdf(PDF3) :
+class PolyPos3Dmix_pdf(PolyBase3) :
     """Positive (non-factorizable!)  x<-->y symmetric polynomial in 3D:
     
     The 3D-polynomial of order N*N*N, that is constrained 
@@ -197,7 +197,8 @@ class PolyPos3Dmix_pdf(PDF3) :
                    nz = 1 ) : ## polynomial degree in Z
 
         ##   inialize the base :
-        PDF3.__init__ ( self , name , x , y , z ) 
+        num = ( n + 1 ) * ( n + 2 ) *  ( nz + 1 ) / 2 
+        PolyBase3.__init__ ( self , name , x , y , z , num - 1 ) 
         #
         if 0 > n  : raise ValueError('PolyPos3Dmix_pdf: Invalid n=%s'  % n )
         if 0 > nz : raise ValueError('PolyPos3Dmix_pdf: Invalid nz=%s' % nz )
@@ -206,15 +207,7 @@ class PolyPos3Dmix_pdf(PDF3) :
             logger.warning("PolyPos3Dmix_pdf: non-equal ranges for 3D-(x<-->y) symmetric model")  
             
         #
-        ## create parameters
-        #
-        num = ( n + 1 ) * ( n + 2 ) *  ( nz + 1 ) / 2 
-        self.makePhis ( num - 1 ) 
-        #
-            
-        #
         ## finally build PDF 
-        #
         self.pdf = cpp.Ostap.Models.Poly3DMixPositive (
             'p3Dm_%s'               % name ,
             'Poly3DMixPositive(%s)' % name ,

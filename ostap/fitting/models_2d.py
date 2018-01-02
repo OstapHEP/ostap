@@ -28,12 +28,21 @@ __all__     = (
 import ROOT, math
 from   ostap.core.core     import cpp, Ostap
 from   ostap.math.base     import iszero
-from   ostap.fitting.basic import makeVar
+from   ostap.fitting.basic import makeVar, Phases
 from   ostap.fitting.fit2d import PDF2 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_2d' )
 else                       : logger = getLogger ( __name__                  )
+# =============================================================================
+##  @class PolyBase2
+#   helper base class to implement various polynomial-like shapes
+class PolyBase2(PDF2,Phases) :
+    """Helper base class to implement various polynomial-like shapes
+    """
+    def __init__ ( self , name , xvar , yvar , power , the_phis = None ) :
+        PDF2  .__init__ ( self , name  , xvar , yvar )
+        Phases.__init__ ( self , power , the_phis  )
 # =============================================================================
 models = []
 # =============================================================================
@@ -45,7 +54,7 @@ models = []
 #  @see Gaudi::Math::Poly2DPositive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class PolyPos2D_pdf(PDF2) :
+class PolyPos2D_pdf(PolyBase2) :
     """Positive (non-factorizable!) polynomial in 2D:
 
     f(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y)
@@ -63,14 +72,9 @@ class PolyPos2D_pdf(PDF2) :
                    nx = 2           ,   ##  polynomial degree in X 
                    ny = 2           ) : ##  polynomial degree in Y 
 
-        PDF2.__init__ ( self , name , x , y ) 
-        # 
-        self.makePhis ( ( nx + 1 ) * ( ny + 1 ) - 1 ) 
-        #
+        PolyBase2.__init__ ( self , name , x , y , ( nx + 1 ) * ( ny + 1 ) - 1 ) 
             
-        #
         ## finally build PDF 
-        #
         self.pdf = cpp.Ostap.Models.Poly2DPositive (
             'p2Dp_%s'            % name ,
             'Poly2DPositive(%s)' % name ,
@@ -91,7 +95,7 @@ models.append ( PolyPos2D_pdf )
 #  @see Gaudi::Math::Poly2DSymPositive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class PolyPos2Dsym_pdf(PDF2) :
+class PolyPos2Dsym_pdf(PolyBase2) :
     """Positive (non-factorizable!) SYMMETRIC polynomial in 2D:
     
     f(x,y) = sum^{i=n}_{i=0}sum{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y)
@@ -117,15 +121,10 @@ class PolyPos2Dsym_pdf(PDF2) :
             logger.warning( 'PolyPos2Dsym: x&y have different high edges %s vs %s'
                             % ( x.getMax() , y.getMax() ) )
             
-        PDF2.__init__ ( self , name , x , y ) 
-        
-        # 
         num = ( n + 1 ) * ( n + 2 ) / 2 
-        self.makePhis ( num - 1 ) 
-        #
+        PolyBase2.__init__ ( self , name , x , y , num )  
 
         ## finally build PDF 
-        #
         self.pdf = Ostap.Models.Poly2DSymPositive (
             'p2Dsp_%s'              % name ,
             'Poly2DSymPositive(%s)' % name ,
@@ -145,7 +144,7 @@ models.append ( PolyPos2Dsym_pdf )
 #  @see Gaudi::Math::PS2DPol
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class PSPol2D_pdf(PDF2) :
+class PSPol2D_pdf(PolyBase2) :
     """Product of phase space factors, modulated by the positive polynom in 2D
     
     f(x,y) = PSX(x) * PSY(y) * Pnk(x,y)
@@ -172,19 +171,13 @@ class PSPol2D_pdf(PDF2) :
                    nx  = 2          ,   ##  polynomial degree in X 
                    ny  = 2          ) : ##  polynomial degree in Y 
         
-        PDF2.__init__ ( self , name , x , y ) 
+        num = ( nx + 1 ) * ( ny + 1 )  - 1 
+        PolyBase2.__init__ ( self , name , x , y , num )  
 
         self.psx = psx  
         self.psy = psy
                         
-        #
-        num = ( nx + 1 ) * ( ny + 1 )  - 1 
-        self.makePhis ( num ) 
-        #
-            
-        #
         ## finally build PDF 
-        #
         self.pdf = Ostap.Models.PS2DPol (
             'ps2D_%s'     % name ,
             'PS2DPol(%s)' % name ,
@@ -206,7 +199,7 @@ models.append ( PSPol2D_pdf )
 #  @see Ostap::Math::PS2DPolSym
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class PSPol2Dsym_pdf(PDF2) :
+class PSPol2Dsym_pdf(PolyBase2) :
     """Symmetric product of phase space factors, modulated by the symmetrical
     positive polynom in 2D
     
@@ -242,20 +235,14 @@ class PSPol2Dsym_pdf(PDF2) :
             logger.warning( 'PSPos2Dsym: x&y have different high edges %s vs %s'
                             % ( x.getMax() , y.getMax() ) )
                 
-        PDF2.__init__ ( self , name , x , y ) 
+        num = ( n + 1 ) * ( n + 2 ) / 2  - 1 
+        PolyBase2.__init__ ( self , name , x , y , num )  
 
         self.ps  = ps
         self.psx = ps
         self.psy = ps
             
-        #
-        num = ( n + 1 ) * ( n + 2 ) / 2  - 1 
-        self.makePhis ( num ) 
-        #
-            
-        #
         ## finally build PDF 
-        #
         self.pdf = Ostap.Models.PS2DPolSym (
             'ps2Ds_%s'       % name ,
             'PS2DPolSym(%s)' % name ,
@@ -275,7 +262,7 @@ models.append ( PSPol2Dsym_pdf )
 #  @see Ostap::Math::ExpoPS2DPol
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class ExpoPSPol2D_pdf(PDF2) :
+class ExpoPSPol2D_pdf(PolyBase2) :
     """Product of exponential and phase space factor,
     modulated by the positive polynom in 2D
 
@@ -300,7 +287,8 @@ class ExpoPSPol2D_pdf(PDF2) :
                    ny  = 2          ,   ##  polynomial degree in Y 
                    tau = None       ) : ##  the exponent 
         
-        PDF2.__init__ ( self , name , x , y ) 
+        num = ( nx + 1 ) * ( ny + 1 ) - 1 
+        PolyBase2.__init__ ( self , name , x , y , num )  
 
         #
         ## get tau
@@ -322,14 +310,7 @@ class ExpoPSPol2D_pdf(PDF2) :
         
         self.psy = psy
                         
-        #
-        num = ( nx + 1 ) * ( ny + 1 ) - 1 
-        self.makePhis ( num ) 
-        #
-            
-        #
         ## finally build PDF 
-        #
         self.pdf = Ostap.Models.ExpoPS2DPol (
             'ps2D_%s'     % name ,
             'PS2DPol(%s)' % name ,
@@ -351,7 +332,7 @@ models.append ( ExpoPSPol2D_pdf )
 #  @see Ostap::Math::Expo2DPol
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class ExpoPol2D_pdf(PDF2) :
+class ExpoPol2D_pdf(PolyBase2) :
     """Product of exponential factors
     modulated by the positive polynom in 2D
 
@@ -376,7 +357,9 @@ class ExpoPol2D_pdf(PDF2) :
                    taux = None      ,   ##  the exponent in X 
                    tauy = None      ) : ##  the exponent in Y
         
-        PDF2.__init__ ( self , name , x , y ) 
+        #
+        num = ( nx + 1 ) * ( ny + 1 ) - 1 
+        PolyBase2.__init__ ( self , name , x , y , num )  
 
         #
         ## get tau_x
@@ -412,14 +395,7 @@ class ExpoPol2D_pdf(PDF2) :
         self.m1  = x ## ditto 
         self.m2  = y ## ditto
 
-        #
-        num = ( nx + 1 ) * ( ny + 1 ) - 1 
-        self.makePhis ( num ) 
-        #
-            
-        #
         ## finally build PDF 
-        #
         self.pdf = Ostap.Models.Expo2DPol (
             'exp2D_%s'      % name ,
             'Expo2DPol(%s)' % name ,
@@ -441,7 +417,7 @@ models.append ( ExpoPol2D_pdf )
 #  @see Ostap::Math::Expo2DPolSym
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class ExpoPol2Dsym_pdf(PDF2) :
+class ExpoPol2Dsym_pdf(PolyBase2) :
     """Symmetric product of exponential factors modulated by the positive polynom in 2D
     
     f(x,y) = exp(tau*x) * exp(tau*y) * Sn(x,y)
@@ -472,7 +448,9 @@ class ExpoPol2Dsym_pdf(PDF2) :
             logger.warning( 'PSPos2Dsym: x&y have different high edges %s vs %s'
                             % ( x.getMax() , y.getMax() ) )
                 
-        PDF2.__init__ ( self , name , x , y ) 
+        #
+        num = ( n + 1 ) * ( n + 2 ) / 2 - 1 
+        PolyBase2.__init__ ( self , name , x , y , num )  
 
         #
         ## get tau
@@ -494,15 +472,8 @@ class ExpoPol2Dsym_pdf(PDF2) :
         #
         self.m1  = x ## ditto 
         self.m2  = y ## ditto
-
-        #
-        num = ( n + 1 ) * ( n + 2 ) / 2 - 1 
-        self.makePhis ( num ) 
-        #
             
-        #
         ## finally build PDF 
-        #
         self.pdf = Ostap.Models.Expo2DPolSym (
             'exp2Ds_%s'        % name ,
             'Expo2DPolSym(%s)' % name ,
@@ -523,7 +494,7 @@ models.append ( ExpoPol2Dsym_pdf )
 #  @see Ostap::Math::Spline2D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class Spline2D_pdf(PDF2) :
+class Spline2D_pdf(PolyBase2) :
     """Positive non-factorizable spline in 2D
     
     f(x,y) = sum_i sum_j a^2_{i,j} Nx_i(x) * Ny_j(y),
@@ -539,17 +510,12 @@ class Spline2D_pdf(PDF2) :
                    y                ,   ##  the second dimension
                    spline           ) : ## the spline: Gaudi.Math.Spline2D 
 
-        PDF2.__init__ ( self , name , x , y )
+        
+        PolyBase2.__init__ ( self , name , x , y , spline.npars() )
         
         self.spline = spline
 
-        #
-        self.makePhis ( spline.npars() ) 
-        #
-            
-        #
         ## finally build PDF 
-        #
         self.pdf = Ostap.Models.Spline2D (
             's2Dp_%s'      % name ,
             'Spline2D(%s)' % name ,
@@ -568,7 +534,7 @@ models.append ( Spline2D_pdf )
 #  @see Ostap::Math::Spline2DSym
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class Spline2Dsym_pdf(PDF2) :
+class Spline2Dsym_pdf(PolyBase2) :
     """SYMMETRIC positive non-factorizable spline in 2D
     
     f(x,y) = sum_i sum_j a^2_{i,j} N_i(x) * N_j(y),
@@ -585,17 +551,11 @@ class Spline2Dsym_pdf(PDF2) :
                    y                ,   ##  the second dimension
                    spline           ) : ## the spline: Gaudi.Math.Spline2DSym 
 
-        PDF2.__init__ ( self , name , x , y )
+        PolyBase2.__init__ ( self , name , x , y , spline.npars() )
         
         self.spline = spline
 
-        #
-        self.makePhis ( spline.npars() ) 
-        #
-
-        #
         ## finally build PDF 
-        #
         self.pdf = Ostap.Models.Spline2DSym (
             's2Dp_%s'         % name ,
             'Spline2DSym(%s)' % name ,

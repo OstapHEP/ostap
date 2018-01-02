@@ -37,7 +37,7 @@ __all__     = (
 import ROOT, math
 from   ostap.core.core     import cpp, Ostap
 from   ostap.math.base     import iszero
-from   ostap.fitting.basic import makeVar, PDF 
+from   ostap.fitting.basic import makeVar, PDF, Phases 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_bkg' )
@@ -46,12 +46,22 @@ else                       : logger = getLogger ( __name__             )
 logger.debug ( __doc__ )
 models = []
 # =============================================================================
+##  @class PolyBase
+#   helper base class to implement various polynomial-like shapes
+class PolyBase(PDF,Phases) :
+    """Helper base class to implement various polynomial-like shapes
+    """
+    def __init__ ( self , name , power , the_phis = None ) :
+        PDF   .__init__ ( self , name )
+        Phases.__init__ ( self , power , the_phis  )
+        
+# =============================================================================
 ## @class  Bkg_pdf
 #  The exponential modified with the positive polynomial 
 #  @see Ostap::Models::ExpoPositive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Bkg_pdf(PDF) :
+class Bkg_pdf(PolyBase) :
     """Exponential function, modulated by the positive polynomial:
     
     f(x) ~ exp(-tau*X) * Pol_n(x)
@@ -68,7 +78,7 @@ class Bkg_pdf(PDF) :
                    tau      = None  ,   ## exponential slope 
                    the_phis = None  ) : ## the phis... 
         #
-        PDF.__init__  ( self , name )
+        PolyBase.__init__  ( self , name , power )
         #                
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
@@ -83,36 +93,41 @@ class Bkg_pdf(PDF) :
         # 
         ## the exponential slope
         #
-        self.tau  = makeVar ( tau              ,
-                              "tau_%s"  % name ,
-                              "tau(%s)" % name , tau , 0 , -taumax, taumax )
+        self.__tau  = makeVar ( tau              ,
+                                "tau_%s"  % name ,
+                                "tau(%s)" % name , tau , 0 , -taumax, taumax )
         #
-        if the_phis :
-            ## copy phis 
-            self.makePhis ( power , the_phis = the_phis ) ## copy phis 
             
-        elif 0 >= self.power :
+        if 0 >= self.power :
             
-            self.phis     = []
-            self.phi_list = ROOT.RooArgList ()
+            while self.phis :
+                del self.phis[-1] 
+            self.phi_list.removeAll()
+            
             self.pdf      = ROOT.RooExponential (
                 'exp_%s' % name  , 'exp(%s)' % name , mass , self.tau )
             
         else :
             
-            # 
-            self.makePhis ( power ) 
-            #
-            
-        self.pdf  = Ostap.Models.ExpoPositive (
-            'expopos_%s'  % name ,
-            'expopos(%s)' % name ,
-            mass                 ,
-            self.tau             ,
-            self.phi_list        ,
-            mass.getMin()        ,
-            mass.getMax()        )
-        
+            self.pdf  = Ostap.Models.ExpoPositive (
+                'expopos_%s'  % name ,
+                'expopos(%s)' % name ,
+                mass                 ,
+                self.tau             ,
+                self.phi_list        ,
+                mass.getMin()        ,
+                mass.getMax()        )
+
+    @property
+    def tau ( self ) :
+        """Tau-parameter (exponential slope) for expo*pol function"""
+        return self.__tau
+    @tau.setter
+    def tau ( self , value ) :
+        value = float ( value  )
+        self.__tau.setVal ( value  ) 
+        return self.__tau.getVal() 
+    
 models.append ( Bkg_pdf ) 
 # =============================================================================
 ## @class  PSPol_pdf
@@ -122,7 +137,7 @@ models.append ( Bkg_pdf )
 #  @see Ostap::Math::PhaseSpaceNL 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class PSPol_pdf(PDF) :
+class PSPol_pdf(PolyBase) :
     """The phase space function modified with positive polynomial 
     
     f(x) ~ PS( x ) * Pol_n(x)
@@ -142,16 +157,13 @@ class PSPol_pdf(PDF) :
                    power = 1        ) : ## degree of the polynomial
         
         #
-        PDF.__init__  ( self , name )
+        PolyBase.__init__  ( self , name , power )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
         self.power = power
-        
-        # 
-        self.makePhis ( power ) 
-        #
-            
+
+        ## make PDF 
         self.pdf  = Ostap.Models.PhaseSpacePol (
             'pspol_%s'          % name ,
             'PhaseSpacePol(%s)' % name ,
@@ -167,10 +179,10 @@ models.append ( PSPol_pdf )
 #  @see Ostap::Math::TwoExpoPositive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-03-26
-class TwoExpoPoly_pdf(PDF) :
+class TwoExpoPoly_pdf(PolyBase) :
     """Difference of two exponential function, modulated by the positive polynomial:
     
-    f(x) ~ ( exp(-alpha*x) - exp(-(alpha_delta)*x) *  Pol_n(x)
+    f(x) ~ ( exp(-alpha*x) - exp(-(alpha+delta)*x) *  Pol_n(x)
     where Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
     
     >>>  mass = ROOT.RooRealVar( ... ) 
@@ -187,7 +199,7 @@ class TwoExpoPoly_pdf(PDF) :
                    power = 0        ,   ## degree of polynomial
                    tau   = None     ) : ##  
         #
-        PDF.__init__  ( self , name )
+        PolyBase.__init__  ( self , name , power )
         #                
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
@@ -202,43 +214,62 @@ class TwoExpoPoly_pdf(PDF) :
         # 
         ## the exponential slope
         #
-        self.alpha  = makeVar ( alpha               ,
-                                "alpha_%s"   % name ,
-                                "#alpha(%s)" % name , alpha , 1 , 0 , taumax )
+        self.__alpha  = makeVar ( alpha               ,
+                                  "alpha_%s"   % name ,
+                                  "#alpha(%s)" % name , alpha , 1 , 0 , taumax )
         
-        self.delta  = makeVar ( delta               ,
-                                "delta_%s"   % name ,
-                                "#delta(%s)" % name , delta , 1 , 0 , taumax )
+        self.__delta  = makeVar ( delta               ,
+                                  "delta_%s"   % name ,
+                                  "#delta(%s)" % name , delta , 1 , 0 , taumax )
         
-        self.x0     = makeVar ( x0                 ,
-                                "x0_%s"     % name ,
-                                "x_{0}(%s)" % name , x0  ,
-                                mn , mn-0.5*(mx-mn) , mx+0.5*(mx-mn) ) 
+        self.__x0     = makeVar ( x0                 ,
+                                  "x0_%s"     % name ,
+                                  "x_{0}(%s)" % name , x0  ,
+                                  mn , mn-0.5*(mx-mn) , mx+0.5*(mx-mn) ) 
         #
-        # 
-        if 0 >= self.power :
-            
-            self.phis     = []
-            self.phi_list = ROOT.RooArgList ()
-            self.pdf      = ROOT.RooExponential (
-                'exp_%s' % name  , 'exp(%s)' % name , mass , self.tau )
-            
-        else :
-            
-            # 
-            self.makePhis ( power ) 
-            #
-            
-            self.pdf  = Ostap.Models.TwoExpoPositive (
-                '2expopos_%s'  % name ,
-                '2expopos(%s)' % name ,
-                mass                  ,
-                self.alpha            ,
-                self.delta            ,
-                self.x0               ,
-                self.phi_list         ,
-                mass.getMin()         ,
-                mass.getMax()         )
+        self.pdf  = Ostap.Models.TwoExpoPositive (
+            '2expopos_%s'  % name ,
+            '2expopos(%s)' % name ,
+            mass                  ,
+            self.alpha            ,
+            self.delta            ,
+            self.x0               ,
+            self.phi_list         ,
+            mass.getMin()         ,
+            mass.getMax()         )
+        
+    @property
+    def alpha ( self ) :
+        """Alpha-parameter (slope of leading exponnet) of the TwoExpo function"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0 <= value, 'Alpha-parameter must be non-negative'
+        self.alpha.setVal ( value ) 
+        return self.__alpha.getVal()
+    
+    @property
+    def delta ( self ) :
+        """Delta-parameter (second exponent slope is ``alpha+delta'') of the TwoExpo function"""
+        return self.__delta
+    @delta.setter
+    def delta ( self , value ) :
+        value = float ( value )
+        assert 0 <= value, 'Delta-parameter must be non-negative'
+        self.delta.setVal ( value ) 
+        return self.__delta.getVal()
+    
+    @property
+    def x0 ( self ) :
+        """x0-parameter of the TwoExpo function  (f(x)=0 for x<x0)"""
+        return self.__x0
+    @x0.setter
+    def x0 ( self , value ) :
+        value = float ( value )
+        self.x0.setVal ( value ) 
+        return self.__x0.getVal()
+    
 
 models.append ( TwoExpoPoly_pdf ) 
 # =============================================================================
@@ -248,7 +279,7 @@ models.append ( TwoExpoPoly_pdf )
 #  @see Ostap::Math::Positive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class PolyPos_pdf(PDF) :
+class PolyPos_pdf(PolyBase) :
     """Positive (Bernstein) polynomial: 
     
     f(x) = Pol_n(x)
@@ -263,14 +294,12 @@ class PolyPos_pdf(PDF) :
                    mass             ,   ## the varibale 
                    power = 1        ) : ## degree of the polynomial
         #
-        PDF.__init__ ( self , name )
+        PolyBase.__init__ ( self , name , power )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
-        
-        #
-        self.makePhis ( power ) 
-            
+
+        ## make PDF
         self.pdf  = Ostap.Models.PolyPositive (
             'pp_%s'            % name ,
             'PolyPositive(%s)' % name ,
@@ -289,7 +318,7 @@ models.append ( PolyPos_pdf )
 #  @see Ostap::Math::PositiveEven
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-10-03
-class PolyEven_pdf(PDF) :
+class PolyEven_pdf(PolyBase) :
     """Positive (Bernstein) even polynomial: 
     
     f(x) = Pol_n(x)
@@ -305,14 +334,12 @@ class PolyEven_pdf(PDF) :
                    mass             ,   ## the varibale 
                    power = 1        ) : ## (half)degree of the polynomial
         #
-        PDF.__init__ ( self , name )
+        PolyBase.__init__ ( self , name , power )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
         
-        #
-        self.makePhis ( power ) 
-        
+        ## make PDF
         self.pdf  = Ostap.Models.PolyPositiveEven (
             'ppe_%s'               % name ,
             'PolyPositiveEven(%s)' % name ,
@@ -330,7 +357,7 @@ models.append ( PolyPos_pdf )
 #  @see Ostap::Math::Monothonic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Monothonic_pdf(PDF) :
+class Monothonic_pdf(PolyBase) :
     """Positive monothonic (Bernstein) polynomial:
     
     f(x) = Pol_n(x)
@@ -352,14 +379,12 @@ class Monothonic_pdf(PDF) :
                    power = 2         ,   ## degree of the polynomial
                    increasing = True ) : ## increasing or decreasing ?
         #
-        PDF.__init__ ( self , name )
+        PolyBase.__init__ ( self , name , power )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
         self.increasing = increasing
         # 
-        self.makePhis ( power ) 
-            
         self.pdf  = Ostap.Models.PolyMonothonic (
             'pp_%s'              % name ,
             'PolyMonothonic(%s)' % name ,
@@ -378,7 +403,7 @@ models.append ( Monothonic_pdf )
 #  @see Ostap::Math::Convex
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Convex_pdf(PDF) :
+class Convex_pdf(PolyBase) :
     """Positive monothonic (Bernstein) polynomial with fixed-sign second derivative:
     
     f(x) = Pol_n(x)
@@ -407,15 +432,13 @@ class Convex_pdf(PDF) :
                    increasing = True ,   ## increasing or decreasing ?
                    convex     = True ) : ## convex or concave ?
         #
-        PDF.__init__ ( self , name )
+        PolyBase.__init__ ( self , name , power )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
         self.increasing = increasing
         self.convex     = convex  
-        # 
-        self.makePhis ( power ) 
-            
+        ## make PDF 
         self.pdf  = Ostap.Models.PolyConvex (
             'pp_%s'          % name ,
             'PolyConvex(%s)' % name ,
@@ -434,7 +457,7 @@ models.append ( Convex_pdf )
 #  @see Ostap::Math::ConvexOnly
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class ConvexOnly_pdf(PDF) :
+class ConvexOnly_pdf(PolyBase) :
     """ Positive (Bernstein) polynomial with fixed-sign second derivative:
     
     f(x) = Pol_n(x)
@@ -453,14 +476,13 @@ class ConvexOnly_pdf(PDF) :
                    power = 2         ,   ## degree of the polynomial
                    convex     = True ) : ## convex or concave ?
         #
-        PDF.__init__ ( self , name )
+        PolyBase.__init__ ( self , name , power )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
-        self.convex     = convex  
-        # 
-        self.makePhis ( power ) 
-            
+        self.convex     = convex
+        
+        ## make PDF 
         self.pdf  = Ostap.Models.PolyConvexOnly (
             'pp_%s'          % name ,
             'PolyConvex(%s)' % name ,
@@ -478,7 +500,7 @@ models.append ( ConvexOnly_pdf )
 #  @see Ostap::Math::Sigmoid
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Sigmoid_pdf(PDF) :
+class Sigmoid_pdf(PolyBase) :
     """A sigmoid function modulated by positive (Bernstein) polynomial 
     f(x) = 0.5*(1+tahn(alpha*(x-x0))*Pol_n(x)
     """
@@ -490,7 +512,7 @@ class Sigmoid_pdf(PDF) :
                    alpha = None      ,   ##
                    x0    = None      ) :
         #
-        PDF.__init__ ( self , name )
+        PolyBase.__init__ ( self , name , power )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
@@ -500,20 +522,18 @@ class Sigmoid_pdf(PDF) :
         dx    = xmax - xmin 
         alpmx = 2000.0/dx 
         
-        self.alpha  = makeVar ( alpha               ,
+        self.__alpha  = makeVar ( alpha               ,
                                   'alpha_%s'  % name  ,
                                   'alpha(%s)' % name  ,
                                   alpha               , 0 , -alpmx , alpmx ) 
         
-        self.x0    = makeVar  ( x0               ,
+        self.__x0    = makeVar  ( x0               ,
                                 'x0_%s'  % name  ,
                                 'x0(%s)' % name  ,
                                 x0               ,
                                 0.5*(xmax+xmin)  ,
                                 xmin - 0.1 * dx  ,
                                 xmax + 0.1 * dx  ) 
-        # 
-        self.makePhis ( power ) 
             
         self.pdf  = Ostap.Models.PolySigmoid (
             'ps_%s'           % name ,
@@ -525,6 +545,26 @@ class Sigmoid_pdf(PDF) :
             self.alpha           ,
             self.x0              )
 
+    @property
+    def alpha ( self ) :
+        """Alpha-parameter for Sigmoid function"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self , value ) :
+        value = float ( value )
+        self.alpha.setVal ( value ) 
+        return self.__alpha.getVal()
+    
+    @property
+    def x0 ( self ) :
+        """x0-parameter for Sigmoid fuction"""
+        return self.__x0
+    @x0.setter
+    def x0 ( self , value ) :
+        value = float ( value )
+        self.x0.setVal ( value ) 
+        return self.__x0.getVal()
+    
         
 models.append ( Sigmoid_pdf ) 
 # =============================================================================
@@ -541,7 +581,7 @@ models.append ( Sigmoid_pdf )
 #  @see Ostap::Math::NSphere
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class PSpline_pdf(PDF) :
+class PSpline_pdf(PolyBase) :
     """A positive spline, a composion of M-splines with non-negative coefficients
 
     >>> mass   = ... ## the variable
@@ -567,15 +607,12 @@ class PSpline_pdf(PDF) :
                    mass             ,   ## the variable
                    spline           ) : ## the spline object Ostap::Math::PositiveSpline
         #
-        PDF.__init__ ( self , name )
+        PolyBase.__init__ ( self , name , spline.npars() )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
-        
-        # 
-        self.makePhis ( spline.npars()  ) 
-        #
-            
+
+        ## make PDF 
         self.pdf  = Ostap.Models.PositiveSpline (
             'ps_%s'              % name ,
             'PositiveSpline(%s)' % name ,
@@ -595,7 +632,7 @@ models.append ( PSpline_pdf )
 #  @see http://link.springer.com/chapter/10.1007%2F978-3-0348-7692-6_6
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class MSpline_pdf(PDF) :
+class MSpline_pdf(PolyBase) :
     """A positive monothonic spline
 
     >>> mass   = ... ## the variable
@@ -621,14 +658,11 @@ class MSpline_pdf(PDF) :
                    mass             ,   ## the variable
                    spline           ) : ## the spline object Ostap::Math::MonothonicSpline
         #
-        PDF.__init__ ( self , name )
+        PolyBase .__init__ ( self , name  , spline.npars() )
         #
         self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
-        self.spline = spline 
-        
-        # 
-        self.makePhis ( spline.npars()  ) 
-        #
+        self.spline = spline         
+        # make PDF
         self.pdf  = Ostap.Models.MonothonicSpline (
             'is_%s'                % name ,
             'MonothonicSpline(%s)' % name ,
@@ -649,7 +683,7 @@ models.append ( MSpline_pdf )
 #  @see http://link.springer.com/chapter/10.1007%2F978-3-0348-7692-6_6
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class CSpline_pdf(PDF) :
+class CSpline_pdf(PolyBase) :
     """A positive monothonic convex/concave spline
 
     >>> mass   = ... ## the variable
@@ -675,14 +709,12 @@ class CSpline_pdf(PDF) :
                    mass             ,   ## the variable
                    spline           ) : ## the spline object Ostap::Math::ConvexSpline
         #
-        PDF.__init__ ( self , name )
+        PolyBase   .__init__ ( self , name  , spline.npars() )
         #
         self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
         
-        # 
-        self.makePhis ( spline.npars()  ) 
-        #
+        # make PDF 
         self.pdf  = Ostap.Models.ConvexSpline (
             'is_%s'            % name ,
             'ConvexSpline(%s)' % name ,
@@ -700,7 +732,7 @@ models.append ( CSpline_pdf )
 #  @see Ostap::Math::ConvexOnlySpline 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class CPSpline_pdf(PDF) :
+class CPSpline_pdf(PolyBase) :
     """A positive convex/concave spline
 
     >>> mass   = ... ## the variable
@@ -726,14 +758,12 @@ class CPSpline_pdf(PDF) :
                    mass             ,   ## the variable
                    spline           ) : ## the spline object Ostap::Math::ConvexOnlySpline
         #
-        PDF.__init__ ( self , name )
+        PolyBase.__init__ ( self , name , spline.npars () )
         #
         self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
         
-        # 
-        self.makePhis ( spline.npars()  ) 
-        #
+        # make PDF 
         self.pdf  = Ostap.Models.ConvexOnlySpline (
             'is_%s'                % name ,
             'ConvexOnlySpline(%s)' % name ,
@@ -814,7 +844,7 @@ class PSLeft_pdf(PDF) :
         PDF.__init__ ( self , name )
         #
         self.mass= makeVar( mass , 'bmass' , 'background-mass' ) 
-        self.left = makeVar ( left                ,
+        self.__left = makeVar ( left                ,
                               'left_%s'    % name ,
                               'm_left(%s)' % name ,
                               None , mass.getMin() , mass.getMax() )
@@ -829,6 +859,16 @@ class PSLeft_pdf(PDF) :
             self.left ,
             N         ) 
 
+    @property
+    def left( self ) :
+        """(Left) threshold for N-body phase space"""
+        return self.__left
+    @left.setter
+    def left ( self , value ) :
+        value = float ( value )
+        self.__left.setVal ( value  )
+        return self.__left.getVal()
+    
 models.append ( PSLeft_pdf ) 
 # =============================================================================
 ## @class  PSRight_pdf
@@ -855,10 +895,10 @@ class PSRight_pdf(PDF) :
         PDF.__init__ ( self , name )
         #
         self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
-        self.right = makeVar ( right ,
-                               'right_%s'      % name ,
-                               'm_{right}(%s)' % name ,
-                               None , mass.getMin() , mass.getMax() )
+        self.__right = makeVar ( right ,
+                                 'right_%s'      % name ,
+                                 'm_{right}(%s)' % name ,
+                                 None , mass.getMin() , mass.getMax() )
         
         if self.right.getMax() <= self.mass.getMax() :
             logger.error('PSRight_pdf(%s): invalid setting!' % name )
@@ -869,7 +909,17 @@ class PSRight_pdf(PDF) :
             self.mass  ,
             self.right ,
             L          , 
-            N          ) 
+            N          )
+        
+    @property
+    def right( self ) :
+        """(Right) threshold for ``L-from-N''-body phase space"""
+        return self.__right
+    @right.setter
+    def right ( self , value ) :
+        value = float ( value )
+        self.__right.setVal ( value  )
+        return self.__right.getVal()
 
 models.append ( PSRight_pdf ) 
 # =============================================================================
@@ -912,14 +962,14 @@ class PSNL_pdf(PDF) :
         mmin = mass.getMin()
         mmax = mass.getMax()
         #
-        self.left  = makeVar ( left ,
+        self.__left  = makeVar ( left ,
                                'left_%s'        % name ,
                                'm_{left}(%s)'   % name , left  , 
                                0.9 * mmin + 0.1 * mmax ,
                                mmin ,
                                mmax ) 
         
-        self.right = makeVar ( right ,
+        self.__right = makeVar ( right ,
                                'right_%s'       % name ,
                                'm_{right}(%s)'  % name , right , 
                                0.1 * mmin + 0.9 * mmax ,
@@ -939,7 +989,26 @@ class PSNL_pdf(PDF) :
             self.left  ,
             self.right ,
             L          , 
-            N          ) 
+            N          )
+        
+    @property
+    def left( self ) :
+        """(Left) threshold for ``L-from-N''-body phase space"""
+        return self.__left
+    @left.setter
+    def left ( self , value ) :
+        value = float ( value )
+        self.__left.setVal ( value  )
+        return self.__left.getVal()
+    @property
+    def right( self ) :
+        """(Right) threshold for ``L-from-N''-body phase space"""
+        return self.__right
+    @right.setter
+    def right ( self , value ) :
+        value = float ( value )
+        self.__right.setVal ( value  )
+        return self.__right.getVal()
 
 
 models.append ( PSNL_pdf ) 
@@ -991,7 +1060,6 @@ class PS23L_pdf(PDF) :
             m1 , m2 , m3 , m , L , l )
         
 models.append ( PS23L_pdf ) 
-
 
 
 
