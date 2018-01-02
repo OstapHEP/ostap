@@ -85,24 +85,16 @@ class GammaDist_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x  , 'x' , 'x-variable' ) 
+        self.mass  = self.x                                ## ditto
         #
-        self.k     = makeVar ( k       ,
-                               'k_%s'                % name ,
-                               'k_{#Gamma}(%s)'      % name , k     , 1 , 1.e-3 , 100 )
-        self.theta = makeVar ( theta   ,
-                               'theta_%s'            % name ,
-                               '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-3 , 100 )
+        self.__k     = makeVar ( k       ,
+                                 'k_%s'                % name ,
+                                 'k_{#Gamma}(%s)'      % name , k     , 1 , 1.e-6 , 1000 )
+        self.__theta = makeVar ( theta   ,
+                                 'theta_%s'            % name ,
+                                 '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-6 , 1000 )
         
-        if self.k.getMin() <= 0 :
-            self.k.setMin ( 1.e-3 ) 
-            logger.warning( 'GammaDist(%s): min(k)     is set %s ' % ( name , self.k.getMin() ) )
-            
-        if self.theta.getMin() <= 0 :
-            theta.setMin ( 1.e-3 ) 
-            logger.warning( 'GammaDist(%s): min(theta) is set %s ' % ( name , self.theta.getMin() ) )
-            
         self.pdf  = Ostap.Models.GammaDist (
             'gd_%s'         % name ,
             'GammaDist(%s)' % name ,
@@ -110,6 +102,29 @@ class GammaDist_pdf(PDF) :
             self.k                 ,
             self.theta             )
 
+    @property
+    def k ( self ) :
+        """k-parameter of Gamma distribution   (k>0)"""
+        return self.__k
+    @k.setter 
+    def k ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'k-value must be positive!'
+        self.__k.setVal ( value ) 
+        return self.__k.getVal() 
+
+    @property
+    def theta ( self ) :
+        """Theta-parameter of Gamma distribution   (theta>0)"""
+        return self.__theta
+    @theta.setter 
+    def theta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'theta-value must be positive!'
+        self.__theta.setVal ( value ) 
+        return self.__theta.getVal() 
+
+    
 models.append ( GammaDist_pdf ) 
 # =============================================================================
 ## @class GenGammaDist_pdf 
@@ -145,37 +160,25 @@ class GenGammaDist_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
+        self.mass  = self.x  ## ditto
         #
-        self.k     = makeVar ( k       ,
-                               'k_%s'                % name ,
-                               'k_{#Gamma}(%s)'      % name , k     , 1 , 1.e-3 , 100 )
-        self.theta = makeVar ( theta   ,
-                               'theta_%s'            % name ,
-                               '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-3 , 100 )
-        self.p     = makeVar ( p       ,
-                               'p_%s'                % name ,
-                               'p_{#Gamma}(%s)'      % name , p     , 1 , 1.e-3 ,   6 )
+        self.__k     = makeVar ( k       ,
+                                 'k_%s'                % name ,
+                                 'k_{#Gamma}(%s)'      % name , k     , 1 , 1.e-5 , 1000 )
+        self.__theta = makeVar ( theta   ,
+                                 'theta_%s'            % name ,
+                                 '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-5 , 1000 )
+        self.__p     = makeVar ( p       ,
+                                 'p_%s'                % name ,
+                                 'p_{#Gamma}(%s)'      % name , p     , 1 , 1.e-5 ,   10 )
         
-        self.low   = makeVar ( low      ,
-                               'low_%s'              % name ,
-                               'l_{#Gamma}(%s)'      % name ,
-                               low      ,
-                               min ( 0 , x.getMin() ) , x.getMax() ) 
+        self.__low   = makeVar ( low      ,
+                                 'low_%s'              % name ,
+                                 'l_{#Gamma}(%s)'      % name ,
+                                 low      ,
+                                 min ( 0 , x.getMin() ) , x.getMax() ) 
         
-        if self.k    .getMin() <= 0 :
-            self.k   .setMin ( 1.e-3 ) 
-            logger.warning( 'GenGammaDist(%s): min(k)     is set %s ' % ( name , self.k.getMin() ) ) 
-            
-        if self.theta.getMin() <= 0 :
-            self.theta.setMin ( 1.e-3 ) 
-            logger.warning( 'GenGammaDist(%s): min(theta) is set %s ' % ( name , self.theta.getMin() ) ) 
-            
-        if self.p    .getMin() <= 0 :
-            self.p   .setMin ( 1.e-3 ) 
-            logger.warning( 'GenGammaDist(%s): min(p)     is set %s ' % ( name , self.p.getMin() ) ) 
-            
         self.pdf  = Ostap.Models.GenGammaDist (
             'ggd_%s'           % name ,
             'GenGammaDist(%s)' % name ,
@@ -184,6 +187,50 @@ class GenGammaDist_pdf(PDF) :
             self.theta     ,
             self.p         , 
             self.low       )
+
+    @property
+    def k ( self ) :
+        """k-parameter of generalized Gamma distribution   (k>0)"""
+        return self.__k
+    @k.setter 
+    def k ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'k-value must be positive!'
+        self.__k.setVal ( value ) 
+        return self.__k.getVal() 
+
+    @property
+    def theta ( self ) :
+        """Theta-parameter of generalized Gamma distribution   (theta>0)"""
+        return self.__theta
+    @theta.setter 
+    def theta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'theta-value must be positive!'
+        self.__theta.setVal ( value ) 
+        return self.__theta.getVal() 
+
+    @property
+    def p ( self ) :
+        """p-parameter of generalized Gamma distribution   (p>0)"""
+        return self.__p
+    @p.setter 
+    def theta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'p-value must be positive!'
+        self.__p.setVal ( value ) 
+        return self.__p.getVal() 
+
+    @property
+    def low ( self ) :
+        """``x-low''-parameter of generalized Gamma distribution   (f(x)=0., for x < x_low)"""
+        return self.__low
+    @low.setter 
+    def theta ( self , value ) :
+        value = float ( value )
+        self.__low.setVal ( value ) 
+        return self.__low.getVal() 
+
 
 models.append ( GenGammaDist_pdf ) 
 # =============================================================================
@@ -210,27 +257,22 @@ class Amoroso_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x , 'x' , 'x-variable' )  
+        self.mass  = self.x  ## ditto
         #
-        self.theta = makeVar ( theta   ,
-                               'theta_%s'             % name ,
-                               '#theta_{Amoroso}(%s)' % name , theta , 1 , 1.e-3 , 100 )
-        self.alpha = makeVar ( alpha   ,
-                               'alpha_%s'             % name ,
-                               '#alpha_{Amoroso}(%s)' % name , alpha , 1 , 1.e-3 , 100 )
-        self.beta  = makeVar ( beta    ,
-                               'beta_%s'              % name ,
-                               '#beta_{Amoroso}(%s) ' % name , beta  , 1 , 1.e-3 ,  10 )        
-        self.a     = makeVar ( a       ,
-                               'a_%s'                 % name ,
-                               'a_{Amoroso}(%s)'      % name , a     , 1 , -10   ,  10  )
-           
-        logger.debug ('Amoroso theta  %s' % self.theta  )
-        logger.debug ('Amoroso alpha  %s' % self.alpha  )
-        logger.debug ('Amoroso beta   %s' % self.beta   )
-        logger.debug ('Amoroso a      %s' % self.a      )
-
+        self.__theta = makeVar ( theta   ,
+                                 'theta_%s'             % name ,
+                                 '#theta_{Amoroso}(%s)' % name , theta , 1 , 1.e-6 , 1000 )
+        self.__alpha = makeVar ( alpha   ,
+                                 'alpha_%s'             % name ,
+                                 '#alpha_{Amoroso}(%s)' % name , alpha , 1 , 1.e-6  , 1000 )
+        self.__beta  = makeVar ( beta    ,
+                                 'beta_%s'              % name ,
+                                 '#beta_{Amoroso}(%s) ' % name , beta  , 1 , 1.e-6  ,  100 )        
+        self.__a     = makeVar ( a       ,
+                                 'a_%s'                 % name ,
+                                 'a_{Amoroso}(%s)'      % name , a     , 1 , -100   ,  100 )
+        
         self.pdf  = Ostap.Models.Amoroso (
             'amo_%s'      % name ,
             'Amoroso(%s)' % name ,
@@ -239,6 +281,51 @@ class Amoroso_pdf(PDF) :
             self.alpha     ,
             self.beta      ,
             self.a         )
+
+    @property
+    def theta ( self ) :
+        """Theta-parameter of Amoroso function (theta>0)"""
+        return self.__theta
+    @theta.setter 
+    def theta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'theta-value must be positive!'
+        self.__theta.setVal ( value ) 
+        return self.__theta.getVal() 
+
+    @property
+    def alpha ( self ) :
+        """Alpha-parameter of Amoroso function (alpha>0)"""
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'theta-value must be positive!'
+        self.__alpha.setVal ( value ) 
+        return self.__alpha.getVal() 
+
+    @property
+    def beta ( self ) :
+        """Beta-parameter of Amoroso function (beta>0)"""
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'beta-value must be positive!'
+        self.__beta.setVal ( value ) 
+        return self.__beta.getVal() 
+
+    @property
+    def a ( self ) :
+        """A-parameter of Amoroso function"""
+        return self.__a
+    @a.setter 
+    def a ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'a-value must be positive!'
+        self.__a.setVal ( value ) 
+        return self.__a.getVal() 
+
 
 models.append ( Amoroso_pdf ) 
 # =============================================================================
@@ -264,26 +351,15 @@ class LogGammaDist_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
+        self.mass  = self.x                             ## ditto
         #
         self.k     = makeVar ( k       ,
                                'k_%s'                   % name ,
-                               'k_{log#Gamma}(%s)'      % name , k     , 1 , 1.e-5 , 1000 )
+                               'k_{log#Gamma}(%s)'      % name , k     , 1 , 1.e-6 , 10000 )
         self.theta = makeVar ( theta   ,
                                'theta_%s'               % name ,
-                               '#theta_{log#Gamma}(%s)' % name , theta , 1 , 1.e-5 , 1000 )
-
-        if self.k.getMin() <= 0 :
-            self.k.setMin ( 1.e-3 ) 
-            logger.warning( 'LogGammaDist(%s): min(k)     is set %s ' % ( name  , self.k.getMin() ) ) 
-            
-        if self.theta.getMin() <= 0 :
-            theta.setMin ( 1.e-3 ) 
-            logger.warning( 'LogGammaDist(%s): min(theta) is set %s ' % ( name , self.theta.getMin() ) )
-            
-        logger.debug ('LogGammaDist k      %s' % self.k      )
-        logger.debug ('LogGammaDist theta  %s' % self.theta  )
+                               '#theta_{log#Gamma}(%s)' % name , theta , 1 , 1.e-6 , 10000 )
 
         self.pdf  = Ostap.Models.LogGammaDist (
             'lgd_%s'           % name ,
@@ -291,6 +367,29 @@ class LogGammaDist_pdf(PDF) :
             self.x                 ,
             self.k                 ,
             self.theta             )
+
+    @property
+    def k ( self ) :
+        """k-parameter of log(Gamma) distribution   (k>0)"""
+        return self.__k
+    @k.setter 
+    def k ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'k-value must be positive!'
+        self.__k.setVal ( value ) 
+        return self.__k.getVal() 
+
+    @property
+    def theta ( self ) :
+        """Theta-parameter of log(Gamma) distribution   (theta>0)"""
+        return self.__theta
+    @theta.setter 
+    def theta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'theta-value must be positive!'
+        self.__theta.setVal ( value ) 
+        return self.__theta.getVal() 
+
 
 models.append ( LogGammaDist_pdf ) 
 # =============================================================================
@@ -318,33 +417,46 @@ class Log10GammaDist_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
+        self.mass  = self.x  ## ditto
         #
-        self.k     = makeVar ( k       ,
-                               'k_%s'                     % name ,
-                               'k_{log10#Gamma}(%s)'      % name , k     , 1 , 1.e-4 , 10000 )
-        self.theta = makeVar ( theta   ,
-                               'theta_%s'                 % name ,
-                               '#theta_{log10#Gamma}(%s)' % name , theta , 1 , 1.e-4 , 10000 )
+        self.__k     = makeVar ( k       ,
+                                 'k_%s'                     % name ,
+                                 'k_{log10#Gamma}(%s)'      % name , k     , 1 , 1.e-6 , 100000 )
+        self.__theta = makeVar ( theta   ,
+                                 'theta_%s'                 % name ,
+                                 '#theta_{log10#Gamma}(%s)' % name , theta , 1 , 1.e-6 , 100000 )
         
-        if self.k.getMin() <= 0 :
-            self.k.setMin ( 1.e-4 ) 
-            logger.warning( 'Log10GammaDist(%s): min(k)     is set %s ' % ( name , self.k.getMin() ) ) 
-            
-            if self.theta.getMin() <= 0 :
-                theta.setMin ( 1.e-4 ) 
-            logger.warning( 'Log10GammaDist(%s): min(theta) is set %s ' % ( name , self.theta.getMin() ) ) 
-            
-        logger.debug ('Log10GammaDist k      %s' % self.k      )
-        logger.debug ('Log10GammaDist theta  %s' % self.theta  )
-
         self.pdf  = Ostap.Models.Log10GammaDist (
             'lgd10_%s'           % name ,
             'Log10GammaDist(%s)' % name ,
             self.x                 ,
             self.k                 ,
             self.theta             )
+        
+    @property
+    def k ( self ) :
+        """k-parameter of log10(Gamma) distribution   (k>0)"""
+        return self.__k
+    @k.setter 
+    def k ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'k-value must be positive!'
+        self.__k.setVal ( value ) 
+        return self.__k.getVal() 
+
+    @property
+    def theta ( self ) :
+        """Theta-parameter of log10(Gamma) distribution   (theta>0)"""
+        return self.__theta
+    @theta.setter 
+    def theta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'theta-value must be positive!'
+        self.__theta.setVal ( value ) 
+        return self.__theta.getVal() 
+
+
 
 models.append ( Log10GammaDist_pdf ) 
 # =============================================================================
@@ -382,43 +494,68 @@ class LogGamma_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x  , 'x' , 'x-variable' ) 
+        self.mass  = self.x  ## ditto
         #
         xmin = self.x.getMin()
         xmax = self.x.getMax()
         dx   = xmax - xmin
         # 
-        self.nu     = makeVar ( nu       ,
-                                'nu_%s'                    % name ,
-                                '#nu_{#log#Gamma}(%s)'     % name , nu    ,
-                                0.5 * ( xmin + xmax ) ,
-                                xmin - 10 * dx ,
-                                xmax + 10 * dx ) 
+        self.__nu     = makeVar ( nu       ,
+                                  'nu_%s'                    % name ,
+                                  '#nu_{#log#Gamma}(%s)'     % name , nu    ,
+                                  0.5 * ( xmin + xmax ) ,
+                                  xmin - 10 * dx ,
+                                  xmax + 10 * dx ) 
         
-        self.lam    = makeVar ( lam      ,
-                                'lambda_%s'                % name ,
-                                '#lambda_{#log#Gamma}(%s)' % name , lam   , 2 , -1000 , 1000 )
+        self.__lambd  = makeVar ( lam      ,
+                                  'lambda_%s'                % name ,
+                                  '#lambda_{#log#Gamma}(%s)' % name , lam   , 2 , -10000 , 10000 )
         
-        self.alpha  = makeVar ( alpha    ,
-                                'alpha_%s'                 % name ,
-                                '#alpha_{#log#Gamma}(%s)'  % name , alpha , 1 , 1.e-3 , 1000 )
+        self.__alpha  = makeVar ( alpha    ,
+                                  'alpha_%s'                 % name ,
+                                  '#alpha_{#log#Gamma}(%s)'  % name , alpha , 1 , 1.e-6 , 10000 )
         
-        if self.alpha.getMin() <= 0 :
-            self.alpha.setMin ( 1.e-3 ) 
-            logger.warning( 'LogGamma(%s): min(alpha) is set %s ' % ( name , self.alpha.getMin() ) ) 
-            
-        logger.debug ('LogGamma nu     %s' % self.nu     )
-        logger.debug ('LogGamma lambda %s' % self.lam    )
-        logger.debug ('LogGamma alpha  %s' % self.alpha  )
-
         self.pdf  = Ostap.Models.LogGamma (
             'lg_%s'        % name ,
             'LogGamma(%s)' % name ,
             self.x     ,
             self.nu    ,
-            self.lam   ,
+            self.lambd ,
             self.alpha )
+
+    @property
+    def nu ( self ) :
+        """nu-parameter (location) of log-Gamma distribution"""
+        return self.__nu
+    @nu.setter 
+    def nu ( self , value ) :
+        value = float ( value )
+        self.__nu.setVal ( value ) 
+        return self.__nu.getVal() 
+
+    @property
+    def lambd ( self ) :
+        """lambda-parameter (scale) of log-Gamma distribution   (theta>0)"""
+        return self.__lambd
+    @lambd.setter 
+    def lambd ( self , value ) :
+        value = float ( value )
+        self.__lambd.setVal ( value ) 
+        return self.__lambd.getVal() 
+
+    @property
+    def alpha  ( self ) :
+        """alpha-parameter of log-Gamma distribution   (alpha>0)"""
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'alpha-value must be positive!'
+        self.__alpha.setVal ( value ) 
+        return self.__alpha.getVal() 
+
+
 
 models.append ( LogGamma_pdf ) 
 # =============================================================================
@@ -443,43 +580,29 @@ class BetaPrime_pdf(PDF) :
         #
         PDF.__init__ ( self , name )
         # 
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar  ( x  , 'x' , 'x-variable' ) 
+        self.mass  = self.x  ## ditto
         #
-        self.alpha  = makeVar ( alpha    ,
-                                'alpha_%s'                 % name ,
-                                '#alpha_{#beta#prime}(%s)' % name , alpha , 1 , 1.e-3 , 1000 )
-        self.beta   = makeVar ( beta     ,
-                                'beta_%s'                  % name ,
-                                '#beta_{#beta#prime}(%s)'  % name , beta  , 1 , 1.e-3 , 1000 )
-
+        self.__alpha  = makeVar ( alpha    ,
+                                  'alpha_%s'                 % name ,
+                                  '#alpha_{#beta#prime}(%s)' % name , alpha , 1 , 1.e-6 , 10000 )
+        self.__beta   = makeVar ( beta     ,
+                                  'beta_%s'                  % name ,
+                                  '#beta_{#beta#prime}(%s)'  % name , beta  , 1 , 1.e-6 , 10000 )
         
-        if self.alpha.getMin() <= 0 :
-            self.alpha.setMin ( 1.e-3 ) 
-            logger.warning( 'BetaPrime(%s): min(alpha) is set %s ' % ( name , self.alpha.getMin() ) ) 
-            
-        if self.beta .getMin() <= 0 :
-            self.beta.setMin ( 1.e-3 ) 
-            logger.warning( 'BetaPrime(%s): min(beta) is set %s ' %  ( name , self.beta.getMin  () ) ) 
-    
-        self.scale  = makeVar ( scale     ,
-                                'scale_%s'                 % name ,
-                                '#theta_{#beta#prime}(%s)' % name , scale ,
-                                1 , -1000 , 1000 )
+        self.__scale  = makeVar ( scale     ,
+                                  'scale_%s'                 % name ,
+                                  '#theta_{#beta#prime}(%s)' % name , scale ,
+                                  1 , -1000 , 1000 )
 
         _dm = self.x.getMax()  - self.x.getMin() 
-        self.delta  = makeVar ( delta     ,
-                                'delta_%s'                 % name ,
-                                '#delta_{#beta#prime}(%s)' % name , delta ,
-                                0 ,
-                                self.x.getMin() - 10 * _dm ,
-                                self.x.getMax() + 10 * _dm ) 
-
-        logger.debug ("Beta' alpha     %s" % self.alpha     )
-        logger.debug ("Beta' beta      %s" % self.beta      )
-        logger.debug ("Beta' scale     %s" % self.scale     )
-        logger.debug ("Beta' sdelta    %s" % self.delta     )
-
+        self.__delta  = makeVar ( delta     ,
+                                  'delta_%s'                 % name ,
+                                  '#delta_{#beta#prime}(%s)' % name , delta ,
+                                  0 ,
+                                  self.x.getMin() - 10 * _dm ,
+                                  self.x.getMax() + 10 * _dm ) 
+        
         self.pdf  = Ostap.Models.BetaPrime (
             'bp_%s'         % name ,
             'BetaPrime(%s)' % name ,
@@ -488,6 +611,50 @@ class BetaPrime_pdf(PDF) :
             self.beta  ,
             self.scale ,
             self.delta )
+        
+    @property
+    def alpha ( self ) :
+        """alpha-parameter of Beta' distribution   (alpha>0)"""
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'alpha-value must be positive!'
+        self.__alpha.setVal ( value ) 
+        return self.__alpha.getVal() 
+
+    @property
+    def beta ( self ) :
+        """beta-parameter of Beta' distribution   (alpha>0)"""
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, 'beta-value must be positive!'
+        self.__beta.setVal ( value ) 
+        return self.__beta.getVal() 
+
+    @property
+    def scale ( self ) :
+        """scale-parameter of Beta' distribution"""
+        return self.__scale
+    @scale.setter 
+    def scale ( self , value ) :
+        value = float ( value )
+        self.__scale.setVal ( value ) 
+        return self.__scale.getVal() 
+
+    @property
+    def delta ( self ) :
+        """delta-parameter of Beta' distribution"""
+        return self.__delta
+    @delta.setter 
+    def delta ( self , value ) :
+        value = float ( value )
+        self.__delta.setVal ( value ) 
+        return self.__delta.getVal() 
+
+
 
 models.append ( BetaPrime_pdf ) 
 # =============================================================================
@@ -510,31 +677,49 @@ class Landau_pdf(PDF) :
         #
         PDF.__init__ ( self , name ) 
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
+        self.mass  = self.x  ## ditto
         #
-        self.scale  = makeVar ( scale     ,
-                                'scale_%s'            % name ,
-                                '#theta_{Landau}(%s)' % name , scale ,
-                                1 , -1000 , 1000 )
+        self.__scale  = makeVar ( scale     ,
+                                  'scale_%s'            % name ,
+                                  '#theta_{Landau}(%s)' % name , scale ,
+                                  1 , -1000 , 1000 )
         
         _dm = self.x.getMax()  - self.x.getMin() 
-        self.delta  = makeVar ( delta     ,
-                                'delta_%s'            % name ,
-                                '#delta_{Landau}(%s)' % name , delta ,
-                                0 ,
-                                self.x.getMin() - 10 * _dm ,
-                                self.x.getMax() + 10 * _dm ) 
-                                
-        logger.debug ('Landau scale  %s' % self.scale  )
-        logger.debug ('Landau delta  %s' % self.delta  )
+        self.__delta  = makeVar ( delta     ,
+                                  'delta_%s'            % name ,
+                                  '#delta_{Landau}(%s)' % name , delta ,
+                                  0 ,
+                                  self.x.getMin() - 10 * _dm ,
+                                  self.x.getMax() + 10 * _dm ) 
         
         self.pdf  = Ostap.Models.Landau (
-            'land_%s'    % name ,
+            'landau_%s'    % name ,
             'Landau(%s)' % name ,
             self.x     ,
             self.scale ,
             self.delta )
+
+    @property
+    def scale ( self ) :
+        """scale-parameter of Landau distribution"""
+        return self.__scale
+    @scale.setter 
+    def scale ( self , value ) :
+        value = float ( value )
+        self.__scale.setVal ( value ) 
+        return self.__scale.getVal() 
+
+    @property
+    def delta ( self ) :
+        """delta-parameter of Landau distribution"""
+        return self.__delta
+    @delta.setter 
+    def delta ( self , value ) :
+        value = float ( value )
+        self.__delta.setVal ( value ) 
+        return self.__delta.getVal() 
+
 
 models.append ( Landau_pdf ) 
 # =============================================================================
@@ -558,35 +743,31 @@ class Argus_pdf(PDF) :
         #
         PDF.__init__ ( self , name ) 
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
+        self.mass  = self.x  ## ditto
         #
-        self.shape  = makeVar ( shape     ,
-                                'shape_%s'         % name ,
-                                '#chi_{Argus}(%s)' % name , shape ,
-                                1     ,
-                                1.e-4 , 20 )
+        self.__shape  = makeVar ( shape     ,
+                                  'shape_%s'         % name ,
+                                  '#chi_{Argus}(%s)' % name , shape ,
+                                  1     ,
+                                  1.e-4 , 20 )
         
-        self.high  = makeVar ( high      ,
-                               'high_%s'          % name ,
-                               'high_{Argus}(%s)' % name , high ,
-                               0.1 * self.x.getMin ()  + 0.9 * self.x.getMax () , 
-                               self.x.getMin () ,
-                               self.x.getMax () )
+        self.__high  = makeVar ( high      ,
+                                 'high_%s'          % name ,
+                                 'high_{Argus}(%s)' % name , high ,
+                                 0.1 * self.x.getMin ()  + 0.9 * self.x.getMax () , 
+                                 self.x.getMin () ,
+                                 self.x.getMax () )
         
         _dm  = self.x.getMax()  - self.x.getMin()
         lmin = min ( 0 , self.x.getMin() - 10 * _dm )
         lmax =           self.x.getMax() + 10 * _dm 
-        self.low   = makeVar ( low      ,
-                               'low_%s'          % name ,
-                               'low_{Argus}(%s)' % name , low ,
-                               0.9 * self.x.getMin ()  + 0.1 * self.x.getMax () , 
-                               lmin , lmax ) 
+        self.__low   = makeVar ( low      ,
+                                 'low_%s'          % name ,
+                                 'low_{Argus}(%s)' % name , low ,
+                                 0.9 * self.x.getMin ()  + 0.1 * self.x.getMax () , 
+                                 lmin , lmax ) 
         
-        logger.debug ('ARGUS shape  %s' % self.shape  )
-        logger.debug ('ARGUS high   %s' % self.high   )
-        logger.debug ('ARGUS low    %s' % self.low    )
-
         self.pdf  = Ostap.Models.Argus (
             'arg_%s'    % name ,
             'Argus(%s)' % name ,
@@ -594,6 +775,38 @@ class Argus_pdf(PDF) :
             self.shape ,
             self.high  ,
             self.low   )
+
+    @property
+    def shape ( self ) :
+        """shape-parameter of Argus distribution"""
+        return self.__shape
+    @shape.setter 
+    def shape ( self , value ) :
+        value = float ( value )
+        self.__shape.setVal ( value ) 
+        return self.__shape.getVal() 
+
+    @property
+    def high ( self ) :
+        """``high''-parameter of Argus distribution"""
+        return self.__high
+    @high.setter 
+    def shape ( self , value ) :
+        value = float ( value )
+        self.__high.setVal ( value ) 
+        return self.__high.getVal() 
+
+    @property
+    def low ( self ) :
+        """``low''-parameter of Argus distribution"""
+        return self.__low
+    @low.setter 
+    def low ( self , value ) :
+        value = float ( value )
+        self.__low.setVal ( value ) 
+        return self.__low.getVal() 
+
+
 
 models.append ( Argus_pdf ) 
 
@@ -622,33 +835,29 @@ class TwoExpos_pdf(PDF) :
         #
         PDF.__init__ ( self , name ) 
         #
-        self.x     = x
-        self.mass  = x  ## ditto
+        self.x     = makeVar ( x , 'x' , 'x-variable' )  
+        self.mass  = self.x  ## ditto
         #
-        self.alpha  = makeVar ( alpha      ,
-                                'alpha_%s'        % name ,
-                                '#alpha_{2e}(%s)' % name , alpha ,
-                                1     ,
-                                1.e-4 , 50 )
-        self.delta  = makeVar ( delta     ,
-                                'delta_%s'        % name ,
-                                '#delta_{2e}(%s)' % name , delta ,
-                                1     ,
-                                1.e-4 , 50 )
+        self.__alpha  = makeVar ( alpha      ,
+                                  'alpha_%s'        % name ,
+                                  '#alpha_{2e}(%s)' % name , alpha ,
+                                  1     ,
+                                  1.e-6 , 100 )
+        self.__delta  = makeVar ( delta     ,
+                                  'delta_%s'        % name ,
+                                  '#delta_{2e}(%s)' % name , delta ,
+                                  1     ,
+                                  1.e-6 , 100 )
         
         xmin = self.x.getMin()
         xmax = self.x.getMin()
         dx   = xmax - xmin 
-        self.x0     = makeVar ( x0    ,
-                                'x0_%s'       % name ,
-                                'x0_{2e}(%s)' % name , x0 ,
-                                xmin ,
-                                xmin -0.1 * dx , xmax + 0.1 * dx )
-
-        logger.debug ('2expos alpha  %s' % self.alpha  )
-        logger.debug ('2expos delta  %s' % self.delta  )
-        logger.debug ('2expos x0     %s' % self.x0     )
-
+        self.__x0     = makeVar ( x0    ,
+                                  'x0_%s'       % name ,
+                                  'x0_{2e}(%s)' % name , x0 ,
+                                  xmin ,
+                                  xmin -0.1 * dx , xmax + 0.1 * dx )
+        
         self.pdf  = Ostap.Models.TwoExpos (
             'exp2_%s'    % name ,
             '2Expos(%s)' % name ,
@@ -657,6 +866,39 @@ class TwoExpos_pdf(PDF) :
             self.delta ,
             self.x0    )
 
+    @property
+    def alpha ( self ) :
+        """Alpha-parameter (slope of leading exponnet) of the TwoExpo function"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0 <= value, 'Alpha-parameter must be non-negative'
+        self.alpha.setVal ( value ) 
+        return self.__alpha.getVal()
+    
+    @property
+    def delta ( self ) :
+        """Delta-parameter (second exponent slope is ``alpha+delta'') of the TwoExpo function"""
+        return self.__delta
+    @delta.setter
+    def delta ( self , value ) :
+        value = float ( value )
+        assert 0 <= value, 'Delta-parameter must be non-negative'
+        self.delta.setVal ( value ) 
+        return self.__delta.getVal()
+    
+    @property
+    def x0 ( self ) :
+        """x0-parameter of the TwoExpo function  (f(x)=0 for x<x0)"""
+        return self.__x0
+    @x0.setter
+    def x0 ( self , value ) :
+        value = float ( value )
+        self.x0.setVal ( value ) 
+        return self.__x0.getVal()
+    
+        
 models.append ( TwoExpos_pdf )
 
 # =============================================================================
@@ -697,12 +939,12 @@ class Gumbel_pdf(PDF) :
                                'x_{Gumbel}(%s)' % name , x )                       
         self.mass  = self.x  ## ditto
         #
-        self.mu    = makeVar ( mu      ,
-                               'mu_%s'                  % name ,
-                               'mu_{Gumbel}(%s)'        % name , mu   )
-        self.beta  = makeVar ( beta        ,
-                               'beta_%s'                % name ,
-                               'beta_{Gumbel}(%s)'      % name , beta ) 
+        self.__mu    = makeVar ( mu      ,
+                                 'mu_%s'                  % name ,
+                                 'mu_{Gumbel}(%s)'        % name , mu   )
+        self.__beta  = makeVar ( beta        ,
+                                 'beta_%s'                % name ,
+                                 'beta_{Gumbel}(%s)'      % name , beta ) 
         
         self.pdf  = Ostap.Models.Gumbel (
             'gumbel_%s'  % name ,
@@ -710,6 +952,27 @@ class Gumbel_pdf(PDF) :
             self.x              ,
             self.mu             ,
             self.beta           )
+
+    @property
+    def mu ( self ) :
+        """mu-parameter (shift) of the Gumbel function"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :
+        value = float ( value )
+        self.__mu.setVal ( value ) 
+        return self.__mu.getVal()
+
+    @property
+    def beta ( self ) :
+        """beta-parameter (scale) of the Gumbel function"""
+        return self.__beta
+    @beta.setter
+    def mu ( self , value ) :
+        value = float ( value )
+        self.__beta.setVal ( value ) 
+        return self.__beta.getVal()
+    
         
 models.append ( Gumbel_pdf ) 
 
@@ -757,25 +1020,23 @@ class Tsallis_pdf(PDF) :
 
         ## initialize the base 
         PDF.__init__  ( self , name )
-        if not isinstance ( pt , ROOT.RooAbsReal ) :
-            raise AttributeError( "Tsallis(%s): invalid 'pt'-parameter %s" % ( name , pt ) )
         
-        self.pt   = pt
+        self.pt   = makeVar ( pt , 'pt' , 'pt-variable' )  
         
         self.m    = self.pt
         self.mass = self.pt
         
-        self.m0   = makeVar ( mass            ,
-                              'm0_%s'  % name , 
-                              'm0(%s)' % name , mass , 0     , 1e+6 )
+        self.__m0   = makeVar ( mass            ,
+                                'm0_%s'  % name , 
+                                'm0(%s)' % name , mass , 0     , 1e+6 )
         
-        self.n    = makeVar ( n               ,
-                              'n_%s'   % name , 
-                              'n(%s) ' % name , n    , 0.01  , 1000 )  
+        self.__n    = makeVar ( n               ,
+                                'n_%s'   % name , 
+                                'n(%s) ' % name , n    , 0.01  , 1000 )  
         
-        self.n    = makeVar ( T               ,
-                              'n_%s'   % name , 
-                              'n(%s) ' % name , n    , 1.e-3 , 1e+6 )
+        self.__T    = makeVar ( T               ,
+                                'n_%s'   % name , 
+                                'n(%s) ' % name , n    , 1.e-3 , 1e+6 )
         
         self.pdf  = Ostap.Models.Tsallis (
             'tsallis_'    + name  ,
@@ -784,6 +1045,37 @@ class Tsallis_pdf(PDF) :
             self.n                ,
             self.T                ,
             self.m0               )
+        
+    @property
+    def m0 ( self ) :
+        """m0-parameter of Tsallis' function"""
+        return self.__m0
+    @m0.setter
+    def m0 ( self , value ) :
+        value = float ( value )
+        self.__b0.setVal ( value ) 
+        return self.__b0.getVal()
+
+    @property
+    def n ( self ) :
+        """n-parameter of Tsallis' function"""
+        return self.__n
+    @n.setter
+    def n ( self , value ) :
+        value = float ( value )
+        self.__n.setVal ( value ) 
+        return self.__n.getVal()
+
+    @property
+    def T ( self ) :
+        """T-parameter of Tsallis' function"""
+        return self.__T
+    @T.setter
+    def T ( self , value ) :
+        value = float ( value )
+        self.__T.setVal ( value ) 
+        return self.__T.getVal()
+    
         
 models.append ( Tsallis_pdf ) 
 # =============================================================================
@@ -823,21 +1115,18 @@ class QGSM_pdf(PDF) :
         
         ## initialize the base 
         PDF.__init__  ( self , name )
-        if not isinstance ( pt , ROOT.RooAbsReal ) :
-            raise AttributeError( "QGSM(%s): invalid 'pt'-parameter %s" % ( name , pt ) )
         
-        self.pt   = pt
-        
+        self.pt   = makeVar ( pt , 'pT' , 'pt-variable' ) 
         self.m    = self.pt
         self.mass = self.pt
         
-        self.m0   = makeVar ( mass            ,
-                              'm0_%s'  % name , 
-                              'm0(%s)' % name , mass , 0     , 1e+6 )
+        self.__m0   = makeVar ( mass            ,
+                                'm0_%s'  % name , 
+                                'm0(%s)' % name , mass , 0     , 1e+6 )
         
-        self.b    = makeVar ( b               ,
-                              'b_%s'   % name , 
-                              'b(%s) ' % name , b    , 0.    , 1e+6 )  
+        self.__b    = makeVar ( b               ,
+                                'b_%s'   % name , 
+                                'b(%s) ' % name , b    , 0.    , 1e+6 )  
         
         self.pdf  = Ostap.Models.QGSM (
             'qgsm_'    + name  ,
@@ -846,6 +1135,26 @@ class QGSM_pdf(PDF) :
             self.b                ,
             self.m0               )
         
+    @property
+    def m0 ( self ) :
+        """m0-parameter of QGSM function"""
+        return self.__m0
+    @m0.setter
+    def m0 ( self , value ) :
+        value = float ( value )
+        self.__b0.setVal ( value ) 
+        return self.__b0.getVal()
+
+    @property
+    def b ( self ) :
+        """n-parameter of QGSM function"""
+        return self.__b
+    @b.setter
+    def n ( self , value ) :
+        value = float ( value )
+        self.__b.setVal ( value ) 
+        return self.__b.getVal()
+
 
 models.append ( QGSM_pdf )
 
