@@ -1471,6 +1471,7 @@ _new_methods_ += [
     RAD.Fit ,
     RAD.fitTo
     ]
+
     
 # =============================================================================
 ## @class SETVAR
@@ -1579,6 +1580,156 @@ class PDF_fun(object):
         with SETVAR( self.xvar ) :
             self.xvar.setVal ( x )
             return self.pdf.getVal()
+
+
+# =============================================================================
+def _rav_getval_  ( self ) :
+    """Get the value, associated with the variable
+    >>> var = ...
+    >>> print var.value 
+    """
+    return self.getVal()
+
+# =============================================================================
+def _rav_getvale_ ( self ) :
+    """Get the value(and the error), associated with the variable
+    >>> var = ...
+    >>> print  var.value 
+    """
+    v = self.getVal()
+    e = self.getError() 
+    return VE ( v , e*e ) if e>0 else v
+
+# =============================================================================
+def _rav_setval_  ( self , value ) :
+    """Assign the valeu for the variable 
+    >>> var = ...
+    >>> var.value = 10 
+    """
+    value = float ( value )
+    self.setVal ( value ) 
+    return self.getVal()
+
+# =============================================================================
+def _rav_setvalc_  ( self , value ) :
+    """Assign the valeu for the variable 
+    >>> var = ...
+    >>> var.value = 10 
+    """
+    value = float ( value )
+    mn,mx  = self.getMin(), self.getMax() 
+    if not mn <= value <= mx :
+        logger.warning('Value %s is out the range [%s,%s]' %  ( value  , mn , mx ) ) 
+    self.setVal ( value ) 
+    return self.getVal()
+
+# =============================================================================
+def _rav_geterr_  ( self ) :
+    """Get the error
+    >>> var = ...
+    >>> print(var.error)
+    """
+    return self.getError()
+
+# =============================================================================
+def _rav_seterr_  ( self , value ) :
+    """Set the error
+    >>> var = ...
+    >>> var.error = 10 
+    """
+    value = float ( value )
+    if not 0<= value :
+        logger.warning('Error %s is not non-negative' % value  ) 
+    self.setError ( value )
+    return self.getError()
+
+# =============================================================================
+## decorate classes 
+for t in ( ROOT.RooAbsReal       , 
+           ROOT.RooAbsLValue     , 
+           ROOT.RooAbsRealLValue , 
+           ROOT.RooRealVar       ) :
+
+    _getter_ = None
+    _setter_ = None
+
+    if hasattr  ( t , 'getVal' ) and hasattr ( t , 'getError' ) :
+        _getter_ = _rav_getvale_
+    elif hasattr  ( t , 'getVal' ) :
+        _getter_ = _rav_getval_
+
+    if hasattr  ( t , 'setVal' ) and hasattr ( t , 'getMin' ) and hasattr ( t , 'getMax' ) :
+        _setter_ = _rav_setvalc_
+    elif hasattr  ( t , 'setVal' ) :
+        _setter_ = _rav_setval_
+
+    doc1 = """The current value, associated with the variable,
+    
+    >>> var = ...
+    
+    get value:
+    =========
+    
+    >>> print (var.value) ## getter
+    
+    """
+    doc2 = """The current value, associated with the variable,
+    
+    >>> var = ...
+    
+    get value:
+    =========
+    
+    >>> print (var.value) ## getter
+    
+    Set value:
+    ==========
+
+    >>> var.value = 15 
+    
+    """
+    if   _setter_  : t.value = property ( _getter_ , _setter_ , None  , doc2 )
+    elif _getter_  : t.value = property ( _getter_ , _setter_ , None  , doc1 )
+
+
+    doce1 = """The current error, associated with the variable,
+    
+    >>> var = ...
+    
+    Get error:
+    =========
+    
+    >>> print (var.error) ## getter
+    
+    """
+    doce2 = """The current error, associated with the variable,
+    
+    >>> var = ...
+    
+    Get error:
+    =========
+    
+    >>> print (var.error) ## getter
+    
+    Set error:
+    ==========
+
+    >>> var.error = 15 
+    
+    """
+    
+    _gettere_ = None
+    _settere_ = None
+
+    if hasattr  ( t , 'getError' ) and hasattr ( t , 'setError' ) :
+        _gettere_ = _rav_geterr_
+        _settere_ = _rav_seterr_
+    elif hasattr  ( t , 'getError' ) :
+        _gettere_ = _rav_geterr_
+
+    if   _settere_  : t.error = property ( _gettere_ , _settere_ , None  , doce2 )
+    elif _gettere_  : t.error = property ( _gettere_ , _settere_ , None  , doce1 )
+
     
 # =============================================================================
 _decorated_classes_ = (
