@@ -874,6 +874,45 @@ double Ostap::Math::gaussian_integral_left
   // note the difference in the arguments! 
   return details::gaussian_int_L ( alpha * alpha , beta , high ) ;
 }
+// ============================================================================
+
+
+// ============================================================================
+/*  get the standard gaussian pdf 
+ *  @see https://en.wikipedia.org/wiki/Normal_distribution
+ *  @param x x-value  
+ *  @param sigma sigma (width)  
+ *  @param mu    mu (location)
+ *  @return the value of gaussian pdf 
+ */
+// ============================================================================
+double Ostap::Math::phi ( const double x     ,
+                          const double mu    ,
+                          const double sigma )
+{
+  static const double s_norm = 1.0/std::sqrt( 2.0 * M_PI ) ;
+  const double dx = ( x  - mu ) / std::abs ( sigma ) ;
+  return s_norm * std::exp ( -0.5 * dx * dx ) / std::abs ( sigma ) ;
+}
+// ============================================================================
+/*  get the standard gaussian cdf 
+ *  @see https://en.wikipedia.org/wiki/Normal_distribution
+ *  \f$ f(x) = \frac{1}{2} \left( 1 + erf ( \frac{x} { \sqrt{2} } ) \right) \f$ 
+ *  @param x x-value  
+ *  @return the value of gaussian cdf 
+ */
+// ============================================================================
+double Ostap::Math::Phi ( const double x     ,
+                          const double mu    ,
+                          const double sigma )
+{
+  //
+  static const double s_sqrt2 = std::sqrt( 2.0 ) ;
+  const double y = ( x - mu ) / ( s_sqrt2 * std::abs ( sigma ) ) ;
+  return 0.5 * ( 1 + std::erf ( y ) ) ;
+}
+// ============================================================================
+
 
 
 // ============================================================================

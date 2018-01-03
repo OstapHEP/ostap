@@ -90,6 +90,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Workspace.cpp    
                          src/WStatEntity.cpp    
                          src/nSphere.cpp      
+                         src/owens.cpp      
                         )    
 
 target_link_libraries(ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES})

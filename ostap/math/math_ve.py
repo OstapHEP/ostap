@@ -24,7 +24,8 @@ __all__     = (
     'probit' , 
     'gamma'  , 'tgamma' , 'lgamma' , 'igamma' , 
     'exp2'   , 'log2'   ,
-    'hypot'  , 'fma'  
+    'hypot'  , 'fma'    ,
+    'phi'    , 'Phi'
     )
 # =============================================================================
 import ROOT,math
@@ -391,6 +392,99 @@ def hypot ( x , y , c = 0 ) :
     _y = VE ( y )
     return _hypot_ ( _x , _y , c )
 
+
+
+_phi_ = cpp.Ostap.Math.phi
+# =============================================================================
+## calculate the standard gaussian PDF
+#  @param x x-value
+#  @param mu mu-parameter (location)
+#  @param sigma sigma-parameter (width)
+#  @return gaussian PDF 
+def phi ( x , mu = 0 , sigma = 1 ) :
+    """Standard gaussian PDF
+    >>> x,mu, sigma = ....
+    >>> pdf = phi ( x  , mu , sigma )
+    """
+    y  = VE ( x     )
+    m  = VE ( mu    ) 
+    s  = VE ( sigma ) 
+    v  = _phi_ ( x , m , s ) 
+    e2 = 0.0
+    
+    if  0 < y.cov2() :
+        xv = y.value()
+        mv = m.value()
+        sv = s.value()
+        dx = xv - mv
+        dd = v * dx / sv 
+        e2 += dd * dd * y.cov2()
+        
+    if 0 < m.cov2() :
+        xv = y.value()
+        mv = m.value()
+        sv = s.value()
+        dx = xv - mv
+        dd = v * dx / sv 
+        e2 += dd * dd * m.cov2()
+        
+    if 0 < s.cov2() :
+        xv = y.value()
+        mv = m.value()
+        sv = s.value()
+        dx = xv - mv 
+        dd = v * ( dx * dx / (sv * sv) - 1 ) / sv    
+        e2 += dd * dd * s.cov2()
+        
+    we = e2>0 or isinstance ( x  , VE ) or isinstance ( mu , VE  ) or isinstance ( sigma , VE ) 
+    return VE ( v , e2 ) if we else v   
+
+
+_Phi_ = cpp.Ostap.Math.Phi
+# =============================================================================
+## calculate the standard gaussian CDF
+#  @param x x-value
+#  @param mu mu-parameter (location)
+#  @param sigma sigma-parameter (width)
+#  @return gaussian CDF 
+def Phi ( x , mu = 0.0 , sigma = 1.0 ) :
+    """Standard gaussian CDF
+    >>> x,mu, sigma = ....
+    >>> cdf = Phi ( x  , mu , sigma )
+    """
+    y  = VE ( x     )
+    m  = VE ( mu    ) 
+    s  = VE ( sigma ) 
+    v  = _Phi_ ( x , m , s ) 
+    e2 = 0.0
+    
+    if  0 < y.cov2() :
+        xv = y.value()
+        mv = m.value()
+        sv = s.value()
+        dd = _phi_ ( xv , mv , sv ) 
+        e2 += dd * dd * y.cov2()
+        
+    if 0 < m.cov2() :
+        xv = y.value()
+        mv = m.value()
+        sv = s.value()
+        dd = _phi_ ( xv , mv , sv ) 
+        e2 += dd * dd * m.cov2()
+        
+    if 0 < s.cov2() :
+        xv = y.value()
+        mv = m.value()
+        sv = s.value()
+        dd = _phi_ ( xv , mv , sv ) * ( xv - mv ) / ( sv * sv ) 
+        e2 += dd * dd * s.cov2()
+
+    we = e2>0 or isinstance ( x  , VE ) or isinstance ( mu , VE  ) or isinstance ( sigma , VE ) 
+    return VE ( v , e2 ) if we else v   
+
+
+
+        
 # =============================================================================
 ## FIX
 #  @see https://sft.its.cern.ch/jira/browse/ROOT-6627'

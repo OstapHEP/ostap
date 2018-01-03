@@ -252,6 +252,40 @@ namespace Ostap
      */
     double psi ( const double x ) ;    
     // ========================================================================
+    /** get the standard gaussian pdf 
+     *  @see https://en.wikipedia.org/wiki/Normal_distribution
+     *  @param x x-value  
+     *  @param mu    mu (location)
+     *  @param sigma sigma (width)  
+     *  @return the value of gaussian pdf 
+     */
+    double phi ( const double x         ,
+                 const double mu    = 0 ,
+                 const double sigma = 1 ) ;
+    // ========================================================================
+    /** get the standard gaussian cdf 
+     *  @see https://en.wikipedia.org/wiki/Normal_distribution
+     *  \f$ f(x) = \frac{1}{2} \left( 1 + erf ( \frac{x} { \sqrt{2} } ) \right) \f$ 
+     *  @param x x-value  
+     *  @param mu    mu (location)
+     *  @param sigma sigma (width)  
+     *  @return the value of gaussian cdf 
+     */
+    double Phi ( const double x         ,
+                 const double mu    = 0 ,
+                 const double sigma = 1 ) ;
+    // ========================================================================
+    /** compute Owen's T-function
+     *  \f$ f(h,a) = \frac{1}{2\pi}\int_0^a \frac{ e^{ -\frac{1}{2} h^2(1+x^2)}}{1+x^2}dx \f$ 
+     *  @see https://en.wikipedia.org/wiki/Owen%27s_T_function
+     *  @see http://people.sc.fsu.edu/~burkardt/f_src/owens/owens.html
+     *  @param h  h-parameter
+     *  @param a  a-parameter
+     *  @return the value of Owen's T-function
+     *  The actual code is copied from http://people.sc.fsu.edu/~burkardt/f_src/owens/owens.html
+     */
+    double owen  ( const double h , const double a ) ;
+    // ========================================================================
     /** get the gaussian integral
      *  \f[ f = \int_a^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
      *  @param alpha the alpha parameter
