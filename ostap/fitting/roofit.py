@@ -143,6 +143,54 @@ ROOT.RooArgSet . __str__   = lambda s : str ( tuple ( _rs_list_ ( s ) ) )
 ROOT.RooArgSet . __repr__  = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
 
 # =============================================================================
+## add more data into list/set
+def _ral_iadd_ ( self , other ) :
+    """Update/increment collections
+    >>> lst = ....
+    >>> lst += another_lst
+    """
+    from collections import Container as _CNT
+    _RAC = ROOT.RooAbsCollection 
+    if not isinstance ( other , ( _CNT, _RAC ) ) : return NotImplemented
+    if     isinstance ( other , str )            : return NotImplemented 
+    for o in other : self.add ( o )
+    return self
+
+# =============================================================================
+## add more data into list/set
+def _ral_add_ ( self , other ) :
+    """Make a sum of two lists/sets/collections
+    >>> lst1 = ...
+    >>> set2 = ...
+    >>> lst2 = lst1 + set2 
+    """
+    from collections import Container as _CNT
+    _RAC = ROOT.RooAbsCollection 
+    if not isinstance ( other , ( _CNT, _RAC ) ) : return NotImplemented
+    if     isinstance ( other , str )            : return NotImplemented
+    _clone = self.clone('')
+    _clone += other
+    return _clone
+
+# =============================================================================
+## add two list/sets 
+def _ral_radd_ ( self , other ) : 
+    """Make a sum of two lists/sets/collections
+    >>> lst1 = ...
+    >>> set2 = ...
+    >>> lst2 = lst1 + set2 
+    """
+    return self + other
+
+# =============================================================================
+for t in ( ROOT.RooArgList , ROOT.RooArgSet ) :
+    t. __add__  =  _ral_add_
+    t.__iadd__  = _ral_iadd_
+    t.__radd__  = _ral_radd_
+
+
+    
+# =============================================================================
 ## iterator for RooAbsData
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
