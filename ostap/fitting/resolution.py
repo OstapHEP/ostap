@@ -90,13 +90,13 @@ class ResoGauss2(RESOLUTION) :
                                            sigma = sigma ,
                                            mean  = mean  )
         ## fraction of sigma1-component 
-        self.fraction = makeVar (
+        self.__fraction = makeVar (
             fraction                   , 
             'CoreFraction_'     + name ,
             'CoreFraction(%s)'  % name , fraction , 0 ,  1 ) 
-
+        
         ## sigma2/sigma1 width ratio;
-        self.scale = makeVar (
+        self.__scale = makeVar (
             scale ,
             'SigmaScale_'       + name ,
             'SigmaScale(%s)'    % name , scale    , 1 , 10 ) 
@@ -112,7 +112,30 @@ class ResoGauss2(RESOLUTION) :
             self.mean    
             )
 
-            
+    @property
+    def fraction ( self  ) :
+        """``Fraction'' parameter for double Gaussian resolution function
+        """
+        return self.__fraction
+    @fraction.setter
+    def fraction ( self , value ) :
+        value = float ( value )
+        assert 0<= value <= 1, "``Fraction'' must be in  (0,1) range"
+        self.__fraction.setVal ( value )
+        return self.__fraction.getVal()
+
+    @property
+    def scale ( self  ) :
+        """``Scale'' parameter for double Gaussian resolution function
+        """
+        return self.__scale
+    @scale.setter
+    def scale ( self , value ) :
+        value = float ( value )
+        assert 0 < value, "``Value'' must be >1"
+        self.__scale.setVal ( value )
+        return self.__scale.getVal()
+    
 models.add ( ResoGauss2 ) 
 # =============================================================================
 ## @class ResoApo2
@@ -132,12 +155,12 @@ class ResoApo2(RESOLUTION) :
                                         mass  = mass  ,
                                         sigma = sigma ,
                                         mean  = mean  )
-        self.beta    = makeVar (
+        self.__beta    = makeVar (
             beta ,
             'ResoBeta_%s'  % name  ,
-            'ResoBeta(%s)' % name  , beta , 0.01  , 10000 )
+            'ResoBeta(%s)' % name  , beta , 1.e-6  , 10000 )
         
-        ## build resoltuion model
+        ## build (symmetric) resoltuion model
         from ostap.core.core import Ostap
         self.apo2  = Ostap.Models.Apolonios2 (
             "ResoApolonious_"   + name ,
@@ -149,6 +172,19 @@ class ResoApo2(RESOLUTION) :
             self.beta   ) 
 
         self.pdf = self.apo2
+
+    @property
+    def beta ( self  ) :
+        """``Beta'' parameter for Apolonious resolution function
+        """
+        return self.__beta
+    @beta.setter
+    def beta ( self , value ) :
+        value = float ( value )
+        assert 0<= value , "``Beta'' must be non-negative"
+        self.__beta.setVal ( value )
+        return self.__beta.getVal()
+
         
         ## 
 models.add ( ResoApo2 ) 
@@ -172,17 +208,17 @@ class ResoCB2(RESOLUTION) :
                                        sigma = sigma ,
                                        mean  = mean  )
             
-        self.alpha = makeVar (
+        self.__alpha = makeVar (
             alpha                  ,
             'ResoAlpha_'    + name ,
-            'ResoAlpha(%s)' % name , alpha , 0.5   ,  6 )
+            'ResoAlpha(%s)' % name , alpha , 0.5   ,  5)
         
-        self.n     = makeVar (
+        self.__n     = makeVar (
             n                  ,
             'ResoN_'        + name ,
             'ResoN(%s)'     % name , n     , 1.e-6 , 50 )
         
-        ## gaussian 
+        ## 
         from ostap.core.core import Ostap
         self.cb2 = Ostap.Models.CrystalBallDS (  
             'ResoCB2_'   + name ,
@@ -197,6 +233,31 @@ class ResoCB2(RESOLUTION) :
         
         ## the final PDF 
         self.pdf = self.cb2
+
+    @property
+    def alpha ( self  ) :
+        """``Alpha'' parameter for Doubble-sided symmetric resolution function
+        """
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0.1<= value<=10 , "``Alpha'' must be in [0.1,10] interval"
+        self.__alpha.setVal ( value )
+        return self.__alpha.getVal()
+
+    @property
+    def n ( self  ) :
+        """``n'' parameter for Doubble-sided symmetric resolution function
+        """
+        return self.__n
+    @n.setter
+    def n ( self , value ) :
+        value = float ( value )
+        assert 1.e-6 <= value <= 100 , "``n'' must be in [1.e-6,100] interval"
+        self.__n.setVal ( value )
+        return self.__n.getVal()
+
         
 models.add ( ResoCB2 ) 
 # =============================================================================
