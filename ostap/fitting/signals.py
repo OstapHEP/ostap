@@ -32,7 +32,7 @@ Empricial PDFs to describe narrow peaks
   - double     Gauissian
   - generalized normal v1 
   - generalized normal v2
-  ## - skew Gaussian  (temporarily removed)
+  - skew Gaussian  (temporarily removed)
   - Bukin,
   - Student-T
   - bifurcated Student-T
@@ -77,7 +77,7 @@ __all__ = (
     'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
     'GenGaussV2_pdf'         , ## generalized normal v2 
-    ## 'SkewGauss_pdf'          , ## skewed gaussian (temporarily removed)
+    'SkewGauss_pdf'          , ## skewed gaussian (temporarily removed)
     'Bukin_pdf'              , ## generic Bukin PDF: skewed gaussian with exponential tails
     'StudentT_pdf'           , ## Student-T function 
     'BifurcatedStudentT_pdf' , ## bifurcated Student-T function
@@ -1101,6 +1101,103 @@ class GenGaussV2_pdf(MASS) :
 
 
 models.append ( GenGaussV2_pdf )    
+
+
+
+
+# =============================================================================
+## @classSkewGauss_pdf
+#  Skew Normal distribution 
+#  @see https://en.wikipedia.org/wiki/Skew_normal_distribution
+#  @see Ostap::Models::SkewGauss
+#  @see Ostap::Math::SkewGauss 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-12-01
+class SkewGauss_pdf(MASS) :
+    """SkewNormal distribution v2
+    - see https://en.wikipedia.org/wiki/Skew_normal_distribution
+
+    Parameters:
+    - xi      : location 
+    - omega>0 : scale
+    - alpha   : shape   (alpha=0 corresponds to gaussian distribution)
+    """
+    def __init__ ( self               ,
+                   name               ,
+                   mass               ,
+                   mean        = None ,
+                   omega       = None ,
+                   alpha       = 0    ) : ## 0 corresponds to gaussian distribution 
+        
+        #
+        ## initialize the base
+        # 
+        MASS.__init__  ( self , name , mass , mean , omega ) 
+        
+        #
+        ## rename it!
+        #
+        self.__omega = self.sigma        
+        sname      = self.sigma.GetName  ()
+        stitle     = self.sigma.GetTitle ()
+        gname      = sname .replace ( 'sigma' , 'omega' )
+        gtitle     = stitle.replace ( 'sigma' , 'omega' )
+        self.omega.SetName  ( gname  ) 
+        self.omega.SetTitle ( gtitle )
+        
+
+        self.__xi   = self.mean 
+        
+        self.__alpha = makeVar ( alpha ,
+                                 'alpha_%s'   % name  ,
+                                 '#alpha(%s)' % name  , alpha, 
+                                 0 , -1000 , 1000  ) 
+        
+        #
+        ## finally build PDF
+        #
+        self.pdf = Ostap.Models.SkewGaussV2 (
+            "skew_"         + name ,
+            "SkewGauss(%s)" % name ,
+            self.mass   ,
+            self.xi     ,
+            self.omega  ,
+            self.alpha  )
+
+    @property
+    def xi ( self ) :
+        """xi-parameter (location) for Skew Gaussian"""
+        return self.__xi
+    @xi.setter
+    def xi ( self, value ) :
+        value  = float ( value )
+        self.__xi.setVal ( abs ( value ) ) 
+        return self.__xi.getVal ()
+
+    @property
+    def omega ( self ) :
+        """omega-parameter (scale/width) for Skew Gaussian"""
+        return self.__omega
+    @omega.setter
+    def omega ( self, value ) :
+        value  = float ( value )
+        assert 0 < omega, 'Omega-parameter must be positive!'
+        self.__omega.setVal ( value ) 
+        return self.__omega.getVal ()
+
+    @property
+    def alpha( self ) :
+        """alpha-parameter (shape/skew) for Skew Gaussian"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self, value ) :
+        value  = float ( value )
+        self.__alpha.setVal ( value ) 
+        return self.__alpha.getVal ()
+    
+
+
+models.append ( SkewGauss_pdf )    
 # =============================================================================
 ## @class Bukin_pdf
 #  Bukin function, aka ``modified Novosibirsk function''

@@ -325,85 +325,83 @@ namespace Ostap
       double m_alpha   ;  // scale
       double m_kappa   ;  // shape
     } ;
-    // // ========================================================================
-    // /** @class SkewGauss
-    //  *  Simple class that implements the skew normal distribution
-    //  *  @see http://en.wikipedia.org/wiki/Skew_normal_distribution
-    //  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    //  *  @date 2013-08-25
-    //  */
-    // class  SkewGauss
-    // {
-    // public:
-    //   // ======================================================================
-    //   /** constructor from all agruments
-    //    *  @param xi     location/peak posiiton
-    //    *  @param omega  "scale" parameter
-    //    *  @param alpha  "shape" parameter
-    //    */
-    //   SkewGauss
-    //   ( const double xi    = 0 ,
-    //     const double omega = 1 ,
-    //     const double alpha = 0 ) ; // alpha=0 correponds to gaussian
-    //   /// desctructor
-    //   ~SkewGauss () ;
-    //   // ======================================================================
-    // public: // primary getters
-    //   // ======================================================================
-    //   double xi          () const { return m_xi       ; }
-    //   double peak        () const { return   xi    () ; }
-    //   double location    () const { return   xi    () ; }
-    //   double omega       () const { return m_omega    ; }
-    //   double scale       () const { return   omega () ; }
-    //   double alpha       () const { return m_alpha    ; }
-    //   double shape       () const { return   alpha () ; }
-    //   // ======================================================================
-    // public: // setters
-    //   // ======================================================================
-    //   bool  setXi        ( const double value ) ;
-    //   bool  setOmega     ( const double value ) ;
-    //   bool  setAlpha     ( const double value ) ;
-    //   //
-    //   bool  setPeak      ( const double value ) { return setXi    ( value ) ; }
-    //   bool  setLocation  ( const double value ) { return setXi    ( value ) ; }
-    //   bool  setScale     ( const double value ) { return setOmega ( value ) ; }
-    //   bool  setShape     ( const double value ) { return setAlpha ( value ) ; }
-    //   // ======================================================================
-    // public: // derived getters
-    //   // ======================================================================
-    //   double mean        () const ;
-    //   double mode        () const ;
-    //   double variance    () const ;
-    //   double dispersion  () const { return variance () ; }
-    //   double sigma2      () const { return variance () ; }
-    //   double sigma       () const ;
-    //   double skewness    () const ;
-    //   double kurtosis    () const ;
-    //   // ======================================================================
-    // public :
-    //   // ======================================================================
-    //   /// get pdf
-    //   double operator() ( const double x ) const { return pdf ( x ) ; }
-    //   double pdf        ( const double x ) const ;
-    //   // ======================================================================
-    // public:  // integrals
-    //   // ======================================================================
-    //   double cdf        ( const double x ) const ;
-    //   /// get the integral
-    //   double integral   () const { return 1 ; }
-    //   /// get the integral between low and high limits
-    //   double integral   ( const double low  ,
-    //                       const double high ) const ;
-    //   // ======================================================================
-    // private:
-    //   // ======================================================================
-    //   double m_xi     ;  // location
-    //   double m_omega  ;  // scale
-    //   double m_alpha  ;  // shape
-    //   // =======================================================================
-    // } ;
-    
- // ========================================================================
+    // ========================================================================
+    /** @class SkewGauss
+     *  Simple class that implements the skew normal distribution
+     *  @see http://en.wikipedia.org/wiki/Skew_normal_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2013-08-25
+     */
+    class  SkewGauss
+    {
+    public:
+      // ======================================================================
+      /** constructor from all agruments
+       *  @param xi     location/peak posiiton
+       *  @param omega  "scale" parameter
+       *  @param alpha  "shape" parameter
+       */
+      SkewGauss
+      ( const double xi    = 0 ,
+        const double omega = 1 ,
+        const double alpha = 0 ) ; // alpha=0 correponds to gaussian
+      /// desctructor
+      ~SkewGauss () ;
+      // ======================================================================
+    public: // primary getters
+      // ======================================================================
+      double xi          () const { return m_xi       ; }
+      double peak        () const { return   xi    () ; }
+      double location    () const { return   xi    () ; }
+      double omega       () const { return m_omega    ; }
+      double scale       () const { return   omega () ; }
+      double alpha       () const { return m_alpha    ; }
+      double shape       () const { return   alpha () ; }
+      // ======================================================================
+    public: // setters
+      // ======================================================================
+      bool  setXi        ( const double value ) ;
+      bool  setOmega     ( const double value ) ;
+      bool  setAlpha     ( const double value ) ;
+      //
+      bool  setPeak      ( const double value ) { return setXi    ( value ) ; }
+      bool  setLocation  ( const double value ) { return setXi    ( value ) ; }
+      bool  setScale     ( const double value ) { return setOmega ( value ) ; }
+      bool  setShape     ( const double value ) { return setAlpha ( value ) ; }
+      // ======================================================================
+    public: // derived getters
+      // ======================================================================
+      double mean        () const ;
+      double variance    () const ;
+      double dispersion  () const { return variance () ; }
+      double sigma2      () const { return variance () ; }
+      double sigma       () const ;
+      double skewness    () const ;
+      double kurtosis    () const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// get pdf
+      double operator() ( const double x ) const { return pdf ( x ) ; }
+      double pdf        ( const double x ) const ;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      double cdf        ( const double x ) const ;
+      /// get the integral
+      double integral   () const { return 1 ; }
+      /// get the integral between low and high limits
+      double integral   ( const double low  ,
+                          const double high ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_xi     ;  // location
+      double m_omega  ;  // scale
+      double m_alpha  ;  // shape
+      // =======================================================================
+    } ;
+    // ========================================================================
     /** @class Bukin
      *  ``Bukin-function'', aka "Modified Novosibirsk function"
      *  for description of asymmetric peaks with the exponential tails

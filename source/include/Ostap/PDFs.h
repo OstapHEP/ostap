@@ -1885,82 +1885,82 @@ namespace Ostap
       mutable Ostap::Math::GenGaussV2 m_ggv2 ;                 // the function
       // ======================================================================
     } ;
-    // // ========================================================================
-    // /** @class SkewGauss
-    //  *  Simple class that implements the skew normal distribution
-    //  *  @see http://en.wikipedia.org/wiki/Skew_normal_distribution
-    //  *  @see Ostap::Math::SkewGauss
-    //  *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-    //  *  @date 2013-08-27
-    //  */
-    // // ========================================================================
-    // class  SkewGauss : public RooAbsPdf
-    // {
-    //   // ======================================================================
-    // public :
-    //   // ======================================================================
-    //   ClassDef(Ostap::Models::SkewGauss, 1) ;
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// constructor from all parameters
-    //   SkewGauss
-    //   ( const char*          name      ,
-    //     const char*          title     ,
-    //     RooAbsReal&          x         ,
-    //     RooAbsReal&          xi        ,
-    //     RooAbsReal&          omega     ,
-    //     RooAbsReal&          alpha     ) ;
-    //   /// "copy" constructor
-    //   SkewGauss ( const SkewGauss& right , const char* name = 0  ) ;
-    //   /// virtual destructor
-    //   virtual ~SkewGauss () ;
-    //   /// clone
-    //   SkewGauss* clone ( const char* name ) const override;
-    //   // ======================================================================
-    // public: // some fake functionality
-    //   // ======================================================================
-    //   // fake default contructor, needed just for proper (de)serialization
-    //   SkewGauss () {} ;
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   // the actual evaluation of function
-    //   Double_t evaluate() const override;
-    //   // ======================================================================
-    // public: // integrals
-    //   // ======================================================================
-    //   Int_t    getAnalyticalIntegral
-    //     ( RooArgSet&     allVars      ,
-    //       RooArgSet&     analVars     ,
-    //       const char* /* rangename */ ) const override;
-    //   Double_t analyticalIntegral
-    //     ( Int_t          code         ,
-    //       const char*    rangeName    ) const override;
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// set all parameters
-    //   void setPars () const ; // set all parameters
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// access to underlying function
-    //   const Ostap::Math::SkewGauss& function() const { return m_sg ; }
-    //   // ======================================================================
-    // protected:
-    //   // ======================================================================
-    //   RooRealProxy m_x      ;
-    //   RooRealProxy m_xi     ;
-    //   RooRealProxy m_omega  ;
-    //   RooRealProxy m_alpha  ;
-    //   // ======================================================================
-    // private:
-    //   // ======================================================================
-    //   /// the actual function
-    //   mutable Ostap::Math::SkewGauss m_sg ;                     // the function
-    //   // ======================================================================
-    // } ;
+    // ========================================================================
+    /** @class SkewGauss
+     *  Simple class that implements the skew normal distribution
+     *  @see http://en.wikipedia.org/wiki/Skew_normal_distribution
+     *  @see Ostap::Math::SkewGauss
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2013-08-27
+     */
+    // ========================================================================
+    class  SkewGauss : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::SkewGauss, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      SkewGauss
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          xi        ,
+        RooAbsReal&          omega     ,
+        RooAbsReal&          alpha     ) ;
+      /// "copy" constructor
+      SkewGauss ( const SkewGauss& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~SkewGauss () ;
+      /// clone
+      SkewGauss* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      SkewGauss () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::SkewGauss& function() const { return m_sg ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_xi     ;
+      RooRealProxy m_omega  ;
+      RooRealProxy m_alpha  ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::SkewGauss m_sg ;                     // the function
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class Bukin
      *  "Bukin"-function, aka "Modified Novosibirsk function"

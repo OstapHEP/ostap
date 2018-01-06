@@ -14,6 +14,7 @@
 class TObject          ;  // ROOT 
 class TIterator        ;  // ROOT 
 class TCollection      ;  // ROOT 
+class RooLinkedList    ;  // RooFit
 class RooAbsCollection ;  // RooFit
 // ============================================================================
 namespace Ostap
@@ -36,6 +37,8 @@ namespace Ostap
       Iterator  ( const RooAbsCollection& collection ) ;    
       /// standard constructor: create and keep the ietrator 
       Iterator  ( const TCollection&      collection ) ;    
+      /// standard constructor: create and keep the ietrator 
+      Iterator  ( const RooLinkedList&    collection ) ;    
       // ======================================================================
     public:
       // ======================================================================

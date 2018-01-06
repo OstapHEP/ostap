@@ -757,122 +757,105 @@ double Ostap::Math::GenGaussV2::kurtosis () const
     + 3 * Ostap::Math::pow ( ek2 , 2 ) - 6 ;
 }
 // ============================================================================
-// #include "boost/math/distributions/skew_normal.hpp"
-// // ============================================================================
-// /*  constructor from all agruments 
-//  *  @param xi     location/peak posiiton 
-//  *  @param omega  "scale" parameter 
-//  *  @param alpha  "shape" parameter 
-//  */
-// // ============================================================================
-// Ostap::Math::SkewGauss::SkewGauss
-// ( const double xi    ,
-//   const double omega , 
-//   const double alpha )  // alpha=0 correponds to gaussian  
-//   : m_xi      ( xi                 ) 
-//   , m_omega   ( std::abs ( omega ) ) 
-//   , m_alpha   (            alpha   ) 
-// {}
-// // ============================================================================
-// // desctructor
-// // ============================================================================
-// Ostap::Math::SkewGauss::~SkewGauss(){}
-// // ============================================================================
-// bool Ostap::Math::SkewGauss::setXi        ( const double value ) 
-// {
-//   if ( s_equal ( value , m_xi) ) { return false ; }
-//   m_xi = value ;
-//   return true ;
-// }
-// // ============================================================================
-// bool Ostap::Math::SkewGauss::setOmega     ( const double value ) 
-// {
-//   const double value_ = std::abs ( value ) ;
-//   if ( s_equal ( value_ , m_omega ) ) { return false ; }
-//   m_omega = value_ ;
-//   return true ;
-// }
-// // ============================================================================
-// bool Ostap::Math::SkewGauss::setAlpha  ( const double value ) 
-// {
-//   //
-//   if ( s_equal ( value , m_alpha ) ) { return false ; }
-//   m_alpha = value ;
-//   if ( s_equal ( 0     , m_alpha ) ) { m_alpha = 0  ; }
-//   //
-//   return true ;
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::pdf ( const double x ) const 
-// {
-//   typedef boost::math::skew_normal_distribution<>  skew ;
-//   skew skew_ ( m_xi , m_omega , m_alpha ) ;
-//   return boost::math::pdf ( skew_ , x ) ;
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::cdf ( const double x ) const 
-// {
-//   typedef boost::math::skew_normal_distribution<>  skew ;
-//   skew skew_ ( m_xi , m_omega , m_alpha ) ;
-//   return boost::math::cdf ( skew_ , x ) ;
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::integral ( const double low  , 
-//                                           const double high ) const 
-// {
-//   if ( s_equal ( low , high ) ) { return 0 ; }
-//   //
-//   typedef boost::math::skew_normal_distribution<>  skew ;
-//   skew skew_ ( m_xi , m_omega , m_alpha ) ;
-//   //
-//   return 
-//     boost::math::cdf ( skew_ , high ) - 
-//     boost::math::cdf ( skew_ , low  ) ;  
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::mean () const 
-// {
-//   typedef boost::math::skew_normal_distribution<>  skew ;
-//   skew skew_ ( m_xi , m_omega , m_alpha ) ;
-//   //
-//   return boost::math::mean ( skew_ ) ;
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::variance () const 
-// {
-//   typedef boost::math::skew_normal_distribution<>  skew ;
-//   skew skew_ ( m_xi , m_omega , m_alpha ) ;
-//   //
-//   return boost::math::variance ( skew_ ) ;
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::skewness () const 
-// {
-//   typedef boost::math::skew_normal_distribution<>  skew ;
-//   skew skew_ ( m_xi , m_omega , m_alpha ) ;
-//   //
-//   return boost::math::skewness ( skew_ ) ;
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::kurtosis () const 
-// {
-//   typedef boost::math::skew_normal_distribution<>  skew ;
-//   skew skew_ ( m_xi , m_omega , m_alpha ) ;
-//   //
-//   return boost::math::kurtosis ( skew_ ) ;
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::mode  () const 
-// {
-//   typedef boost::math::skew_normal_distribution<>  skew ;
-//   skew skew_ ( m_xi , m_omega , m_alpha ) ;
-//   //
-//   return boost::math::kurtosis ( skew_ ) ;
-// }
-// // ============================================================================
-// double Ostap::Math::SkewGauss::sigma  () const 
-// { return std::sqrt ( variance () ) ; }
-// // ============================================================================
+/*  constructor from all agruments 
+ *  @param xi     location/peak posiiton 
+ *  @param omega  "scale" parameter 
+ *  @param alpha  "shape" parameter 
+ */
+// ============================================================================
+Ostap::Math::SkewGauss::SkewGauss
+( const double xi    ,
+  const double omega , 
+  const double alpha )  // alpha=0 correponds to gaussian  
+  : m_xi      ( xi                 ) 
+  , m_omega   ( std::abs ( omega ) ) 
+  , m_alpha   (            alpha   ) 
+{}
+// ============================================================================
+// desctructor
+// ============================================================================
+Ostap::Math::SkewGauss::~SkewGauss(){}
+// ============================================================================
+bool Ostap::Math::SkewGauss::setXi        ( const double value ) 
+{
+  if ( s_equal ( value , m_xi) ) { return false ; }
+  m_xi = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::SkewGauss::setOmega     ( const double value ) 
+{
+  const double value_ = std::abs ( value ) ;
+  if ( s_equal ( value_ , m_omega ) ) { return false ; }
+  m_omega = value_ ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::SkewGauss::setAlpha  ( const double value ) 
+{
+  //
+  if ( s_equal ( value , m_alpha ) ) { return false ; }
+  m_alpha = value ;
+  if ( s_equal ( 0     , m_alpha ) ) { m_alpha = 0  ; }
+  //
+  return true ;
+}
+// ============================================================================
+double Ostap::Math::SkewGauss::pdf ( const double x ) const 
+{
+  const double y = ( x - m_xi ) / m_omega ;
+  return 2* phi ( y ) * Phi ( m_alpha * y ) / m_omega ;
+}
+// ============================================================================
+double Ostap::Math::SkewGauss::cdf ( const double x ) const 
+{
+  const double y = ( x - m_xi ) / m_omega ;
+  return Phi ( y ) - 2 * owen ( y , m_alpha ) ;
+}
+// ============================================================================
+double Ostap::Math::SkewGauss::integral ( const double low  , 
+                                          const double high ) const 
+{
+  if ( s_equal ( low , high ) ) { return 0 ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+double Ostap::Math::SkewGauss::mean () const 
+{
+  static const double s_c = std::sqrt ( 2.0L / M_PI ) ;
+  const double delta = m_alpha / std::sqrt ( 1 + m_alpha * m_alpha ) ;
+  return m_xi + m_omega * delta * s_c ;
+}
+// ============================================================================
+double Ostap::Math::SkewGauss::variance () const 
+{
+  const double delta = m_alpha / std::sqrt( 1 + m_alpha * m_alpha ) ;
+  return m_omega * m_omega * ( 1 - 2 * delta * delta , M_PI ) ;
+}
+// ============================================================================
+double Ostap::Math::SkewGauss::skewness () const 
+{
+  static const double s_c1 =  ( 4.0- M_PI ) / 2.0 ;
+  static const double s_c2 =  std::sqrt ( 2.0 / M_PI ) ;
+  //
+  const double delta = m_alpha / std::sqrt( 1 + m_alpha * m_alpha ) ;
+  return s_c1 * std::pow ( delta * s_c2 , 3 ) /
+    std::pow ( 1 - 2 * delta * delta / M_PI , 1.5  ) ;
+}
+// ============================================================================
+double Ostap::Math::SkewGauss::kurtosis () const 
+{
+  static const double s_c1 =  2.0 * ( M_PI - 3 ) ;
+  static const double s_c2 =  std::sqrt ( 2.0 / M_PI ) ;
+  //
+  const double delta = m_alpha / std::sqrt ( 1 + m_alpha * m_alpha ) ;
+  return s_c1 * std::pow ( delta * s_c2 , 4 ) / std::pow ( 1 - 2 * delta * delta / M_PI , 2 ) ;
+}
+// ============================================================================
+double Ostap::Math::SkewGauss::sigma  () const 
+{ return std::sqrt ( variance () ) ; }
+// ============================================================================
 
 
 

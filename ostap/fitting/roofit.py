@@ -53,11 +53,28 @@ def _ral_iter_ ( self ) :
         yield self[i]
 
 # =============================================================================
+## check presence of eleemnt or inndex in nthe list
+def _ral_contains_ ( self , i ) :
+    """Check the presence of element or index in the list
+    """
+    if isinstance ( i , int ) : return 0<= i < len(self)
+    return  0 <= self.index ( i )
+
+# =============================================================================
+def _ral_getitem_ ( self , index ) :
+    if not isinstance ( index , int ) or not index in self :
+        raise IndexError('List Index %s is out of the range [%d,%d)' % ( index , 0 , len(self) ) )
+    return self.at ( index  )
+
+# =============================================================================
 ## some decoration over RooArgList 
 ROOT.RooArgList . __len__       = lambda s   : s.getSize()
-ROOT.RooArgList . __contains__  = lambda s,i :  0<= i < len(s)
+ROOT.RooArgList . __contains__  = _ral_contains_ 
 ROOT.RooArgList . __iter__      = _ral_iter_
 ROOT.RooArgList . __nonzero__   = lambda s   : 0 != len ( s ) 
+ROOT.RooArgList . __getitem__   = _ral_getitem_
+ROOT.RooArgList . __setitem__   = lambda s,*_ : NotImplemented 
+
 #
 # =============================================================================
 # helper function 
@@ -139,8 +156,11 @@ ROOT.RooArgSet . __getitem__   = _ras_getitem_
 ROOT.RooArgSet . __contains__  = _ras_contains_ 
 ROOT.RooArgSet . __nonzero__   = lambda s   : 0 != len ( s ) 
         
-ROOT.RooArgSet . __str__   = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
-ROOT.RooArgSet . __repr__  = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
+ROOT.RooArgSet     . __str__   = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
+ROOT.RooArgSet     . __repr__  = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
+ROOT.RooLinkedList . __repr__  = lambda s : str (  _rs_list_ ( s ) )
+ROOT.RooLinkedList . __iter__  = _ras_iter_ 
+
 
 # =============================================================================
 ## add more data into list/set
@@ -150,9 +170,15 @@ def _ral_iadd_ ( self , other ) :
     >>> lst += another_lst
     """
     from collections import Container as _CNT
-    _RAC = ROOT.RooAbsCollection 
-    if not isinstance ( other , ( _CNT, _RAC ) ) : return NotImplemented
-    if     isinstance ( other , str )            : return NotImplemented 
+    _RAC = ROOT.RooAbsCollection
+    _RAC = ROOT.RooAbsCollection
+    _RAA = ROOT.RooAbsArg      
+    if not isinstance ( other , ( _CNT, _RAC , _RAA ) ) : return NotImplemented
+    if     isinstance ( other , str )                   : return NotImplemented
+
+    ##
+    if isinstance ( other , _RAA ) and not isinstance ( other , _RAC ) : other = [ other ]
+
     for o in other : self.add ( o )
     return self
 
@@ -165,9 +191,10 @@ def _ral_add_ ( self , other ) :
     >>> lst2 = lst1 + set2 
     """
     from collections import Container as _CNT
-    _RAC = ROOT.RooAbsCollection 
-    if not isinstance ( other , ( _CNT, _RAC ) ) : return NotImplemented
-    if     isinstance ( other , str )            : return NotImplemented
+    _RAC = ROOT.RooAbsCollection
+    _RAA = ROOT.RooAbsArg  
+    if not isinstance ( other , ( _CNT, _RAC , _RAA ) ) : return NotImplemented
+    if     isinstance ( other , str )                   : return NotImplemented
     _clone = self.clone('')
     _clone += other
     return _clone
@@ -182,8 +209,15 @@ def _ral_radd_ ( self , other ) :
     """
     return self + other
 
+# ============================================================================
+def _ral_clone_  ( self , name = '' ) :
+    return self.Clone(name)
+
+ROOT.RooLinkedList.add = ROOT.RooLinkedList.Add
+
 # =============================================================================
-for t in ( ROOT.RooArgList , ROOT.RooArgSet ) :
+for t in ( ROOT.RooArgList , ROOT.RooArgSet , ROOT.RooLinkedList ) :
+    t. clone    =  _ral_clone_ 
     t. __add__  =  _ral_add_
     t.__iadd__  = _ral_iadd_
     t.__radd__  = _ral_radd_
