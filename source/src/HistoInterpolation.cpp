@@ -113,8 +113,8 @@ namespace
     //
     const double vv = v2.value() * c1      + v1.value() * c2      ;
     const double e2 = 
-      ( 0 < v1.cov2() ? v1.cov2 () * c1 * c1 : 0.0 ) + 
-      ( 0 < v2.cov2() ? v2.cov2 () * c2 * c2 : 0.0 ) ;
+      ( 0 < v1.cov2() ? v1.cov2 () * c2 * c2 : 0.0 ) + 
+      ( 0 < v2.cov2() ? v2.cov2 () * c1 * c1 : 0.0 ) ;
     //
     return Ostap::Math::ValueWithError ( vv , s_zero ( e2 ) ? 0.0 : e2 ) ;
   }
