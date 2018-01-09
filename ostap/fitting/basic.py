@@ -200,9 +200,9 @@ def addPdf ( pdflist , name , title , fname , ftitle , model , recursive = True 
     fracs = makeFracs ( len ( pdfs ) , fname , ftitle , fractions = True , model = model ) 
     pdf   = ROOT.RooAddPdf ( name , title , pdfs, fracs , recursive )
     ##
-    setattr ( model , '_addPdf_'       + name , pdf   )
-    setattr ( model , '_addPdf_lst_'   + name , pdfs  )
-    setattr ( model , '_addPdf_fracs_' + name , fracs )
+    setattr ( model , '__addPdf_'       + name , pdf   )
+    setattr ( model , '__addPdf_lst_'   + name , pdfs  )
+    setattr ( model , '__addPdf_fracs_' + name , fracs )
     ##
     return pdf, fracs , pdfs
   
@@ -1095,8 +1095,6 @@ class MASS(PDF) :
     def mean ( self , value ) :
         self.mean.setVal ( value )
         return self.mean.getVal()
-    @mean.deleter
-    def mean ( self ) : del self.__mean
         
     @property
     def sigma ( self ):
@@ -1106,8 +1104,6 @@ class MASS(PDF) :
     def sigma ( self , value ) :
         self.sigma.setVal ( value )
         return self.sigma.getVal()
-    @sigma.deleter
-    def sigma ( self ) : del self.__sigma
     
     
 # =============================================================================
@@ -1473,6 +1469,7 @@ class Fit1D (PDF) :
 
 
 
+        
 # =============================================================================
 ## simple class to adjust certaint PDF to avoid zeroes 
 class Adjust(object) :

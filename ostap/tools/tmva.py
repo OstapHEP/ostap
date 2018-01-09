@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+3#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file py.py
@@ -67,13 +67,16 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.tmva' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
     
+pattern_XML   = "%s/weights/%s*.weights.xml"
+pattern_CLASS = "%s/weights/%s*.class.C" 
+
 # =============================================================================
 ## @class TMVATrainer
 #  Helper class to train TMVA
 #
 #  @code
 #
-#  from PyTMVA import Trainer 
+#  from Ostap.PyTMVA import Trainer 
 #  t = Trainer( methods =  [
 #  ## type, name, configuration 
 #  ( ROOT.TMVA.Types.kMLP ,
@@ -103,11 +106,11 @@ else                       : logger = getLogger( __name__ )
 # 
 #  @date   2013-10-02
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
-#  - thanks to Albert PUIG
+#  @thanks Albert PUIG
 class Trainer(object):
     """Helper class to train TMVA:  
     #
-    #  from PyTMVA import Trainer 
+    #  from Ostap.PyTMVA import Trainer 
     #  t = Trainer( methods =  [
     #  ## type, name, configuration 
     #  ( ROOT.TMVA.Types.kMLP ,
@@ -148,17 +151,20 @@ class Trainer(object):
     #  @endcode
     #  For more detailes
     #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
-    def __init__(self, methods , verbose = True ):
+    def __init__(self, methods , verbose = True ,  name = 'TMVA' ):
         """Constructor with list of methoods
-        >>> from PyTMVA import Trainer
+        >>> from Ostap.PyTMVA import Trainer
         >>> methods = ....
         >>> trainer = Trainer ( methods )        
         For more detailes
         see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
         """
+        self.name    = name 
         self.methods = methods
         self.verbose = verbose 
 
+        ROOT.TMVA.Tools.Instance()
+        
     ## define the verbosity 
     def setVerbose(self, verbosity ): self.verbose =  bool( verbosity )
 
@@ -181,26 +187,44 @@ class Trainer(object):
     #          spectators      = []                  ) 
     #  @endcode  
     #  @return the name of output XML file with weights 
-    def train ( self   , var_list             ,
-                signal , background           ,
-                outputfile      = 'TMVA.root' ,
-                signal_cuts     = ''          ,
-                background_cuts = ''          ,
-                spectators      = []          ,
-                bookingoptions  = "Transformations=I;D;P;G,D" , 
-                configuration   = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ) :
+    def train ( self   , var_list               ,
+                signal , background             ,
+                output_file       = ''          ,
+                signal_cuts       = ''          ,
+                background_cuts   = ''          ,
+                spectators        = []          ,
+                bookingoptions    = "Transformations=I;D;P;G,D" , 
+                configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ,
+                signal_weight     = None        ,                
+                background_weight = None        ,
+                ) :
         """Train the TMVA:
         >>> trainer.train ( var_list , ... ) 
         """
         #
         ## get the logger
         #
-        import os 
-        name = os.path.split    ( outputfile )[-1] 
-        name = os.path.splitext ( name       )[ 0]
+        import os
+        name = self.name
+        if not output_file : output_file = '%s.root'  % name 
+        
+        dirname    = str(self.name)
+        for s in ( ' ' , '%' , '!' , '>' , '<' , '\n' , '?' ) :  
+            while s in dirname : dirname = dirname.replace ( ' ' , '_' )
+            
+        pattern_xml = pattern_XML   % ( dirname ,  dirname )
+        pattern_C   = pattern_CLASS % ( dirname ,  dirname )
+        
+        import glob,os
+        for f in glob.glob ( pattern_xml ) :
+            logger.debug ( 'Remove existing weight-file %s' % dirname ) 
+            os.remove ( f ) 
+        for f in glob.glob ( pattern_C   ) :
+            logger.debug ( 'Remove existing class-file  %s' % dirname ) 
+            os.remove ( f ) 
 
-        outFile = ROOT.TFile.Open   ( outputfile, 'RECREATE' )
-        logger.info ( 'Trainer(%s): output ROOT file: %s ' % ( name , outputfile  ) )
+        outFile = ROOT.TFile.Open   ( output_file, 'RECREATE' )
+        logger.info ( 'Trainer(%s): output ROOT file: %s ' % ( name , output_file  ) )
 
         if self.verbose and 0 > bookingoptions.find ('Silent') : bookingoptions+= ':Silent'
         #
@@ -234,67 +258,86 @@ class Trainer(object):
 
 
         factory = ROOT.TMVA.Factory (
-            "TMVAClassification"  ,
+            self.name             ,
             outFile               ,
             bookingoptions        )
         logger.info ( 'Trainer(%s): book TMVA-factory %s ' % ( name , bookingoptions ) )
+
+
+        dataloader = ROOT.TMVA.DataLoader ( dirname ) 
         
         factory.SetVerbose(self.verbose)
         #
         for v in var_list :
             vv = v
-            if isinstance ( vv , str ) : vv = ( vv , 'F' ) 
-            factory.AddVariable  ( *vv )
+            if isinstance ( vv , str ) : vv = ( vv , 'F' )
+            dataloader.AddVariable  ( *vv )
             
         for v in spectators :
             vv = v
             if isinstance ( vv , str ) : vv = ( vv , 'F' )             
-            factory.AddSpectator ( *vv )
+            dataloader.AddSpectator ( *vv )
         #
         signalWeight     = 1.0
         backgroundWeight = 1.0
         #
-        logger.info ( 'Trainer(%s): Signal     cuts: "%s" ' % ( name ,     signal_cuts ) ) 
-        logger.info ( 'Trainer(%s): Background cuts: "%s" ' % ( name , background_cuts ) )
+        if signal_cuts :
+            logger.info ( 'Trainer(%s): Signal       cuts: "%s" ' % ( name ,     signal_cuts ) ) 
+        if background_cuts :
+            logger.info ( 'Trainer(%s): Background   cuts: "%s" ' % ( name , background_cuts ) )
         # 
-        factory.AddTree ( signal     , 'Signal'     ,     signalWeight ,
-                          ROOT.TCut (      signal_cuts ) )
-        factory.AddTree ( background , 'Background' , backgroundWeight ,
-                          ROOT.TCut (  background_cuts ) )
+        dataloader.AddTree ( signal     , 'Signal'     ,     signalWeight ,
+                             ROOT.TCut (      signal_cuts ) )
+        dataloader.AddTree ( background , 'Background' , backgroundWeight ,
+                             ROOT.TCut (  background_cuts ) )
         #
+        if signal_weight :
+            dataloader.SetSignalWeightExpression     ( signalweight     )
+            logger.info ( 'Trainer(%s): Signal     weight: "%s" ' % ( name ,     signal_weight ) )
+            
+        if background_weight :
+            dataloader.SetBackgroundWeightExpression ( backgroundweight )
+            logger.info ( 'Trainer(%s): Background weight: "%s" ' % ( name , background_weight ) )
+            
         logger.info ( 'Trainer(%s): Configuration  : "%s" ' % ( name , configuration ) )
-        factory.PrepareTrainingAndTestTree(
+        dataloader.PrepareTrainingAndTestTree(
             ROOT.TCut ( signal_cuts     ) ,
             ROOT.TCut ( background_cuts ) ,
             configuration                 )
         #
         for m in self.methods :
-            factory.BookMethod( *m )
+            factory.BookMethod ( dataloader , *m )
 
         # Train MVAs
-        logger.info  ( "Trainer(%s): Train    all Methods" % name )  
+        ms = tuple( i[1] for i in  self.methods )
+        logger.info  ( "Trainer(%s): Train    all Methods %s " % ( name , ms ) )
         factory.TrainAllMethods    ()
         # Test MVAs
-        logger.info  ( "Trainer(%s): Test     all Methods" % name )  
+        logger.info  ( "Trainer(%s): Test     all Methods %s " % ( name , ms ) )
         factory.TestAllMethods     ()
         # Evaluate MVAs
-        logger.info  ( "Trainer(%s): Evaluate all Methods" % name )  
+        logger.info  ( "Trainer(%s): Evaluate all Methods %s " % ( name , ms ) )
         factory.EvaluateAllMethods ()
         # Save the output.
-        logger.info  ( "Trainer(%s): Output ROOT file %s is closed" % ( name , outputfile ) )  
+        logger.debug ( "Trainer(%s): Output ROOT file %s is closed" % ( name , output_file ) )  
         outFile.Close()
-        # Now move the weights files
-        import glob, os, shutil 
-        for weightFile in glob.glob("weights/TMVAClassification*.xml"):
-            typeWeight = os.path.splitext(weightFile)[0].split("_")[-1].replace('.weights', '')
-            outWeight  = os.path.splitext(outputfile)[0] + '_%s_weights.xml' % typeWeight
-            shutil.move   ( weightFile, outWeight)
-            logger.info   ( "Trainer(%s): Weights file is created: %s" % ( name , outWeight ) ) 
-        shutil.rmtree ( 'weights')
+        
+        # get the weights files
+        import glob, os
+        
+        self.weight_files = [ f for f in glob.glob ( pattern_xml ) ]
+        self.class_files  = [ f for f in glob.glob ( pattern_C   ) ]
+        self.output_file  = output_file
+        
+        logger.info  ( "Trainer(%s): Weights files : %s" % ( name , self.weight_files ) )
+        logger.info  ( "Trainer(%s): Output  file  : %s" % ( name , self.output_file  ) ) 
+        logger.debug ( "Trainer(%s): Class   files : %s" % ( name , self.class_files  ) ) 
+        
+        del dataloader
+        del factory 
 
-        ## return the name of weigth file w
-        return outWeight 
-
+        return self.weight_files[:]
+    
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader
@@ -321,7 +364,7 @@ class Trainer(object):
 #  @see TMVA::Reader
 #  @date   2013-10-02
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
-#  - thanks to Alexander BARANOV
+#  @thanks Alexander BARANOV
 class Reader(object)  :
     """ Rather generic python interface to TMVA-reader
     #
@@ -339,10 +382,12 @@ class Reader(object)  :
     #       weights_file = 'my_weights.xml'
     #      )
     """
-    def __init__ ( self         ,
-                   name         , 
-                   variables    ,
-                   weights_file ) :
+    def __init__ ( self          ,
+                   name          , 
+                   variables     ,
+                   weights_files ) :
+        
+        ROOT.TMVA.Tools.Instance()
         
         self.reader = ROOT.TMVA.Reader()
         self.name   = name
@@ -380,16 +425,76 @@ class Reader(object)  :
         ## declare all variables to TMVA.Reader 
         for v in self._variables :
             self.reader.AddVariable ( v[0] , v[2] )            
+
+        import os
+        
+        if   isinstance ( weights_files , str  ) : weights_files = [ weights_file ]
+        elif isinstance ( weights_files , dict ) :
+            weights_files = [ (k,v) for k,v in weights_files.iteritems() ]
+        
+        self.methods = []
+        
+        for wf in  weights_files :
             
-        self.reader.BookMVA( self.name , weights_file )
-        logger.info ('TMVA Reader(%s) is booked: %s ' % ( self.name , weights_file ) ) 
+            if isinstance ( wf , str ) : method , xml = None, wf 
+            else                       : method , xml =       wf
+            
+            if not os.path.exists ( xml ) or not os.path.isfile ( xml ) : 
+                raise IOError("No weights file '%s'"  %  xml )
+
+            if not method :
+                f      = os.path.split ( xml ) [-1]
+                p,s,m  = f.rpartition('_')
+                method = m[:m.find('.weights.xml')]
+
+            if not method :
+                if not s : raise AttributeError("Can't extract method name from %s" % xml )
+                
+                
+            self.reader.BookMVA ( method , xml )
+            self.methods.append ( method ) 
+            logger.info ('TMVA Reader(%s) is booked for method:%s xml: %s' % (  self.name ,
+                                                                                method    ,
+                                                                                xml       ) )
+        logger.info ('TMVA Reader(%s) booked methods are %s' %  ( self.name , self.methods ) )
+        self.methods = tuple ( self.methods )
+
+
+    # =========================================================================
+    ## helper class to get TMVA decision for certain method 
+    class Var (object) :
+        """Helper class to get TMVA decision for certain method
+        >>>  reader = ...
+        >>>  var = reader[ method ]
+        >>>  val = var ( entry )
+        """
+        def __init__ ( self , reader , method ) :
+            self.reader = reader
+            self.method = method
+        def __call__ ( self , entry , cut_efficiency = 0.9 ) :
+            return self.reader( self.method , entry , cut_efficiency )
+            v   =  self.reader( self.method , entry , cut_efficiency )
+            print v 
+            return v 
+
+    ## =======================================================================
+    def __getitem__ ( self , method ) :
+        if not method in self.methods :
+            return KeyError( 'No method %s is booked!' %  method )
+        return Reader.Var  ( self , method )
+    
+    ## =======================================================================
+    def __getattr__ ( self , method ) :
+        if not method in self.methods :
+            return AttributeError( 'No method %s is booked!' %  method )
+        return Reader.Var  ( self , method ) 
 
     # =========================================================================
     ## evaluate TMVA
     #  @attention it is *not* CPU efficient
-    #  Ugly trick with arrays is needed due to some technicla problems
+    #  Ugly trick with arrays is needed due to some technical problems
     #  (actually TMVA reader needs the address of ``float''(in C++ sense) variable
-    def __call__ ( self , entry ) :
+    def __call__ ( self , method , entry , cut_efficiency = 0.90 ) :
         """Evaluate TMVA
         - It is not CPU efficient :-( 
         - Ugly trick with arrays is needed due to some pure technical problem
@@ -402,20 +507,25 @@ class Reader(object)  :
             v[2][0] = vfun ( entry ) ## fill variable from the tree/chain 
             
         ## evaluate TMVA 
-        return self.reader.EvaluateMVA( self.name ) 
+        return self.reader.EvaluateMVA ( method , cut_efficiency ) 
 
+
+_canvas = []
 # =============================================================================
 ## start TMVA gui 
 def tmvaGUI ( filename , new_canvas = True ) :
-    """ Start TMVA-GUI
+    """
+    Start TMVA-GUI
     """
     ## ROOT.gROOT.LoadMacro('TMVAGui.C')
     if new_canvas :
-        from ostap.plotting.canvas import getCanvas
-        _c = getCanvas ('glTMVA' , 'TMVA' , 1000 , 800 )
-        
+        from Ostap.Canvas import getCanvas
+        _c = getCanvas ('glTMVA' , 'TMVA' )
+        if not _c in _canvas : _canvas.append ( _c )
+    #
     ## start GUI
     return ROOT.TMVA.TMVAGui( filename )
+
 
 
 # =============================================================================

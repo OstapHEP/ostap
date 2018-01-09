@@ -250,6 +250,7 @@ def _process_ ( self , selector , *args ) :
     >>> chain = ...
     >>> chain.process ( selector )  ## NB: note lowercase ``process'' here !!!    
     """
+    import ostap.fitting.roofit
     return Ostap.Process.process ( self , selector , *args )
 
 _process_. __doc__ += '\n' + Ostap.Process.process.__doc__
@@ -258,6 +259,75 @@ _process_. __doc__ += '\n' + Ostap.Process.process.__doc__
 # =============================================================================
 ## finally: decorate TTree/TChain
 for t in ( ROOT.TTree , ROOT.TChain ) : t.process  = _process_ 
+
+# =============================================================================
+## helper function to decode information about the variable
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2010-04-30
+def makeEntry( var , *args ) :
+    """Helper function to decode information about the variable
+    >>> e = makeEntry( 'a' , 'description' , -1000 , 1000 ,  lambda s : s.pt/2 )
+    >>> e = makeEntry( 'a' , 'description' , -1000 ,         lambda s : s.pt/2 )
+    >>> e = makeEntry( 'a' , 'description'                   lambda s : s.pt/2 )
+    >>> e = makeEntry( 'a' , 'description' , -1000 , 1000 )
+    >>> e = makeEntry( 'a' , 'description' , -1000 )
+    >>> e = makeEntry( 'a' , 'description' )
+    """
+
+    if   isinstance ( var , str ) :      ## just the name of variable
+
+        vname = var            ## name
+
+        a = list ( args )
+
+        ## accessor function
+        if a and callable ( a[-1] )    : vfun  = a.pop(-1)
+        else                           : vfun  = lambda s : getattr ( s , vname )
+
+        if   not a                     : vdesc = 'Variable: %s'   % vname
+        elif isinstance ( a[0] , str ) : vdesc = a.pop(0)
+        else                           : vdesc = 'Variable:   %s' % vname
+
+        import sys
+        _f  =  sys.float_info
+        _fs = float,int,long
+
+        if   not a                     : vmin = - _f.max
+        elif isinstance ( a[0] , _fs ) : vmin =    float(a.pop(0))
+        else : raise AttributeError (" Invalid min-value specification %s %s " % ( var , list ( args ) ) )
+
+        if   not a                     : vmax =   _f.max
+        elif isinstance ( a[0] , _fs ) : vmax =    float(a.pop(0))
+        else : raise AttributeError (" Invalid max-value specification %s %s " % ( var , list ( args ) ) )
+
+        if vmax <= vmin :
+            raise AttributeError (" Invalid min/max specification %s %s "      % ( var , list ( args ) ) )
+
+        var = ROOT.RooRealVar ( vname , vdesc , vmin , vmax )
+
+    elif isinstance ( var , ROOT.RooRealVar ) : # variable itself
+
+        vname = var.GetName  () ## name
+        vdesc = var.GetTitle () ## description
+        vmin  = var.getMin   () ## min-value
+        vmax  = var.getMax   () ## max-value
+        #
+
+        a = list (  args )
+
+        ## accessor function
+        if a and callable ( a[-1] )    : vfun  = a.pop(-1)
+        else                           : vfun  = lambda s : getattr ( s , vname )
+
+    else :
+
+        raise AttributeError ( 'Invalid variable description  %s %s' % (  var , list   ( args ) ) )
+
+    ## unprocessed aruments ?
+    if a : raise AttributeError ( "Can't recognize all arguments %s  %s "  % ( var , list ( args ) ) )
+
+    ## finally the entry
+    return var , vdesc , vmin , vmax , vfun
 
 # =============================================================================
 ## helper class to decode/keep infomration about the variable in c
@@ -428,7 +498,7 @@ class SelectorWithVars(SelectorWithCuts) :
                    silence      = False           ) :
         
         if not     name :
-            from   Ostap.PyRoUts import dsID 
+            from   ostap.core.core import dsID 
             name = dsID()
             
         if not fullname : fullname = "%s/%s " % ( __name__ , name )
@@ -436,9 +506,15 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         ## create the logger 
         #
-        from   Ostap.Logger           import getLogger
+        from  ostap.logger.logger           import getLogger
         self._logger = getLogger ( fullname ) 
         #
+
+        self._events   = 0
+        self._progress = None 
+        self._total    = 1
+        self._skip     = 0 
+        self._silence  = silence
 
         #
         ## instantiate the base class
@@ -476,20 +552,15 @@ class SelectorWithVars(SelectorWithCuts) :
         ## it is still very puzzling for me: should this line be here at all??
         ROOT.SetOwnership ( self.data  , False )
         
-        self._events   = 0
-        self._progress = None 
-        self._total    = 1
-        self._skip     = 0 
-        self._silence  = silence
 
-    ## delete the selector, try to clear and delete the dataset 
-    def __del__    ( self  )  :
-        #
-        if hasattr ( self , 'data' ) and self.data : 
-            self.data.Clear()
-            self.data.reset()
-            #
-            del self.data
+    ## ## delete the selector, try to clear and delete the dataset 
+    ## def __del__    ( self  )  :
+    ##     #
+    ##     if hasattr ( self , 'data' ) and self.data : 
+    ##         self.data.Clear()
+    ##         self.data.reset()
+    ##         #
+    ##         del self.data
         
     ## get the dataset 
     def dataset   ( self  ) :
@@ -511,7 +582,7 @@ class SelectorWithVars(SelectorWithCuts) :
             self._total =  self.fChain.GetEntries()
             self._logger.info ( "Processing TChain('%s') #entries: %d" % ( self.fChain.GetName() , self._total ) )
             ## decoration:
-            from Ostap.progress_bar import ProgressBar
+            from ostap.utils.progress_bar import ProgressBar
             self._progress = ProgressBar ( max_value = self._total   ,
                                            silent    = self._silence )
             
@@ -557,42 +628,17 @@ class SelectorWithVars(SelectorWithCuts) :
         """
         Add decared variable to RooDataSet 
         """
-        if   isinstance ( var , str ) :      ## just the name of variable   
-            
-            vname = var            ## name 
-            vdesc = args[0]        ## description 
-            vmin  = args[1]        ## min-value 
-            vmax  = args[2]        ## max-value 
-            #
-            ## accessor function
-            #
-            if 3 < len ( args ) : vfun = args[3]
-            else                : vfun = lambda s : getattr( s , vname )
-            # 
-            var = ROOT.RooRealVar ( vname , vdesc , vmin , vmax )
-
-        elif isinstance ( var , ROOT.RooRealVar ) : # variable itself 
-
-            vname = var.GetName  () ## name 
-            vdesc = var.GetTitle () ## description
-            vmin  = var.getMin   () ## min-value 
-            vmax  = var.getMax   () ## max-value 
-            #
-            ## accessor function
-            #
-            if 0 < len ( args ) : vfun = args[0]
-            else                : vfun = lambda s : getattr( s , vname )
-
-        else :
-
-            self._logger.error   ( 'Invalid variable description!' )
-            raise AttributeError ( 'Invalid variable description!' ) 
         
-        ## finally the entry
-        self.varset.add      ( var ) 
-        self._variables += [ ( var , vdesc , vmin , vmax , vfun ) ] 
+        entry = makeEntry  ( var , *args )
 
-    #
+        self.varset.add        ( entry[0] )
+        self._variables.append ( entry    )
+        if not self._silence:
+            self._logger.info ( 'Add variable name/desc/min/max %s/%s/%.2g/%.2g' % ( entry[0].GetName() ,
+                                                                                     entry[1] ,
+                                                                                     entry[2] ,
+                                                                                     entry[3] ) )
+     #
     def Terminate ( self  ) :
         #
         if self._progress :
@@ -612,6 +658,11 @@ class SelectorWithVars(SelectorWithCuts) :
         ##
         if 0 != self.GetAbort() :
             self._logger.error('Process has been aborted!')
+
+        ##
+        print 'DELETE varibales'
+        del self._variables
+        
     # 
     def Init    ( self, chain ) :
         # 
