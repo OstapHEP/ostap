@@ -660,7 +660,7 @@ class SelectorWithVars(SelectorWithCuts) :
             self._logger.error('Process has been aborted!')
 
         ##
-        print 'DELETE varibales'
+        logger.debug('Terminate: DELETE all variables')
         del self._variables
         
     # 
