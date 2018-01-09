@@ -76,7 +76,7 @@ pattern_CLASS = "%s/weights/%s*.class.C"
 #
 #  @code
 #
-#  from Ostap.PyTMVA import Trainer 
+#  from ostap.tools.tmva import Trainer 
 #  t = Trainer( methods =  [
 #  ## type, name, configuration 
 #  ( ROOT.TMVA.Types.kMLP ,
@@ -110,7 +110,7 @@ pattern_CLASS = "%s/weights/%s*.class.C"
 class Trainer(object):
     """Helper class to train TMVA:  
     #
-    #  from Ostap.PyTMVA import Trainer 
+    #  from ostap.tools.tmva import Trainer 
     #  t = Trainer( methods =  [
     #  ## type, name, configuration 
     #  ( ROOT.TMVA.Types.kMLP ,
@@ -142,7 +142,7 @@ class Trainer(object):
     ## constructor
     #  @code
     # 
-    #  from TMVA import Trainer 
+    #  from ostap.tools.tmva import Trainer 
     #  t = Trainer( methods = [
     #  ## type                   name   configuration 
     #  ( ROOT.TMVA.Types.kMLP , "MLP", "H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator" ) 
@@ -153,7 +153,7 @@ class Trainer(object):
     #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
     def __init__(self, methods , verbose = True ,  name = 'TMVA' ):
         """Constructor with list of methoods
-        >>> from Ostap.PyTMVA import Trainer
+        >>> from ostap.tools.tmva import Trainer
         >>> methods = ....
         >>> trainer = Trainer ( methods )        
         For more detailes
@@ -473,9 +473,9 @@ class Reader(object)  :
             self.method = method
         def __call__ ( self , entry , cut_efficiency = 0.9 ) :
             return self.reader( self.method , entry , cut_efficiency )
-            v   =  self.reader( self.method , entry , cut_efficiency )
-            print v 
-            return v 
+            ##v   =  self.reader( self.method , entry , cut_efficiency )
+            ## print v 
+            ##return v 
 
     ## =======================================================================
     def __getitem__ ( self , method ) :
@@ -519,7 +519,7 @@ def tmvaGUI ( filename , new_canvas = True ) :
     """
     ## ROOT.gROOT.LoadMacro('TMVAGui.C')
     if new_canvas :
-        from Ostap.Canvas import getCanvas
+        from ostap.plotting.canvas import getCanvas
         _c = getCanvas ('glTMVA' , 'TMVA' )
         if not _c in _canvas : _canvas.append ( _c )
     #
