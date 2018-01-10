@@ -38,9 +38,9 @@ dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )
 m = VE(3.100,0.015**2)
 w = VE(3.100,0.100**2) 
 for i in xrange(0,5000) :
-
-    m_x.setVal ( random.uniform ( m_x.getMin() , m_x.getMax() ) ) 
-    m_y.setVal ( random.uniform ( m_y.getMin() , m_y.getMax() ) )
+    
+    m_x.setVal ( random.uniform ( *m_x.minmax() )  
+                 m_y.setVal ( random.uniform ( *m_y.minmax() )
     
     dataset.add ( varset  )
 

@@ -45,30 +45,29 @@ random.seed(0)
 
 ## fill it : 5000 events  Gauss * Gauss 
 for i in xrange(0,N_ss) : 
-    m_x.setVal  ( m.gauss() )
-    m_y.setVal  ( m.gauss() )
+    m_x.value = m.gauss() 
+    m_y.value = m.gauss() 
     dataset.add ( varset  )
 
 
 ## fill it : 2500 events  Gauss * const  
 for i in xrange(0,N_sb) : 
-    m_x.setVal  ( m.gauss() )
-    m_y.setVal  ( random.uniform ( m_y.getMin() , m_y.getMax() ) ) 
+    m_x.value = m.gauss() 
+    m_y.value = random.uniform ( *m_y.minmax() )  
     dataset.add ( varset  )
 
 ## fill it : 2500 events  const * Gauss
 for i in xrange(0,N_bs) : 
-    m_x.setVal  ( random.uniform ( m_x.getMin() , m_x.getMax() ) ) 
-    m_y.setVal  ( m.gauss() )
+    m_x.value = random.uniform ( *m_x.minmax() ) 
+    m_y.value = m.gauss() 
     dataset.add ( varset  )
 
 ## fill it : 5000 events  const * const
 for i in xrange(0,N_bb) :
 
-    m_x.setVal ( random.uniform ( m_x.getMin() , m_x.getMax() ) ) 
-    m_y.setVal ( random.uniform ( m_y.getMin() , m_y.getMax() ) ) 
+    m_x.value  = random.uniform ( *m_x.minmax() )
+    m_y.value  = random.uniform ( *m_y.minmax() )
     dataset.add ( varset  )
-
 
 logger.info ( 'Dataset:%s ' % dataset ) 
 
@@ -87,7 +86,7 @@ def test_const () :
         signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
         signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y )
         )
-    
+
     model.signal1.sigma.fix ( m.error () )
     model.signal2.sigma.fix ( m.error () )
     model.signal1.mean .fix ( m.value () )
@@ -107,17 +106,17 @@ def test_const () :
         model.signal1.mean .release () 
         model.signal2.mean .release () 
         result, frame = model. fitTo ( dataset )
-        
+
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.ss ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.sb ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.bs ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.bb ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
 
     models.add ( model ) 
 
@@ -162,10 +161,10 @@ def test_p2xp2 () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.ss ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.sb ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.bs ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.bb ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
 
     models.add ( model ) 
 
@@ -208,10 +207,10 @@ def test_p1xp1_BB () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.ss ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.sb ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.bs ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.bb ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
 
     models.add ( model ) 
 
@@ -255,10 +254,10 @@ def test_p1xp1_BBs () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.ss ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.sb ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.bs ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.bb ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
 
     models.add ( model ) 
 
@@ -303,10 +302,10 @@ def test_p1xp1_BBss () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.ss ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.sb ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.bs ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.bb ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
 
     models.add ( model ) 
 
@@ -347,10 +346,10 @@ def test_p1xp1_BBsym () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' % ( result ( model.sb ) [0]/2 ) ) 
-        logger.info ('B1xS2 : %20s' % ( result ( model.bs ) [0]/2 ) ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+        logger.info ('S1xS2 : %20s' %   result ( model.S1S2 ) [0]      )
+        logger.info ('S1xB2 : %20s' % ( result ( model.S1B2 ) [0] /2 ) ) 
+        logger.info ('B1xS2 : %20s' % ( result ( model.B1S2 ) [0] /2 ) ) 
+        logger.info ('B1xB2 : %20s' %   result ( model.B1B2 ) [0]      )
 
     models.add ( model ) 
 
@@ -392,10 +391,10 @@ def test_pbxpb_BB  () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' %   result ( model.sb ) [0]   ) 
-        logger.info ('B1xS2 : %20s' %   result ( model.bs ) [0]   ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]    )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]    )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]    )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]    )
 
     models.add ( model ) 
 
@@ -437,10 +436,12 @@ def test_pbxpb_BBs () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' %   result ( model.sb ) [0]   ) 
-        logger.info ('B1xS2 : %20s' %   result ( model.bs ) [0]   ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]    )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]    )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]    )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]    )
+
 
     models.add ( model ) 
  
@@ -479,10 +480,11 @@ def test_pbxpb_BBsym () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' %   ( result ( model.sb ) [0]  / 2 ) )
-        logger.info ('B1xS2 : %20s' %   ( result ( model.bs ) [0]  / 2 ) )
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+
+        logger.info ('S1xS2 : %20s' %   result ( model.S1S2 ) [0]       )
+        logger.info ('S1xB2 : %20s' % ( result ( model.S1B2 ) [0] /2  ) )
+        logger.info ('B1xS2 : %20s' % ( result ( model.B1S2 ) [0] /2  ) )
+        logger.info ('B1xB2 : %20s' %   result ( model.B1B2 ) [0]       )
 
     models.add ( model ) 
                      
@@ -525,10 +527,11 @@ def test_psxps_BBs () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' %   result ( model.sb ) [0]   ) 
-        logger.info ('B1xS2 : %20s' %   result ( model.bs ) [0]   ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]     )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]     )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]     )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]     )
 
     models.add ( model ) 
 
@@ -569,10 +572,11 @@ def test_psxps_BBsym () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' %   ( result ( model.sb ) [0]  / 2 ) )
-        logger.info ('B1xS2 : %20s' %   ( result ( model.bs ) [0]  / 2 ) )
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+
+        logger.info ('S1xS2 : %20s' %   result ( model.S1S2 ) [0]       )
+        logger.info ('S1xB2 : %20s' % ( result ( model.S1B2 ) [0]  /2 ) )
+        logger.info ('B1xS2 : %20s' % ( result ( model.B1S2 ) [0]  /2 ) ) 
+        logger.info ('B1xB2 : %20s' %   result ( model.B1B2 ) [0]       )
 
     models.add ( model ) 
     
@@ -615,10 +619,11 @@ def test_model_13 () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' %   result ( model.sb ) [0]   ) 
-        logger.info ('B1xS2 : %20s' %   result ( model.bs ) [0]   ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]     )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]     )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]     )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]     )
 
     models.add ( model ) 
 
@@ -670,10 +675,11 @@ def test_model_14 () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' %   result ( model.sb ) [0]   ) 
-        logger.info ('B1xS2 : %20s' %   result ( model.bs ) [0]   ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]     )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]     )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]     )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]     )
 
     models.add ( model )
     
@@ -716,10 +722,12 @@ def test_model_15 () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]   )
-        logger.info ('S1xB2 : %20s' %   result ( model.sb ) [0]   ) 
-        logger.info ('B1xS2 : %20s' %   result ( model.bs ) [0]   ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]   )
+
+
+        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]     )
+        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]     )
+        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]     )
+        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]     )
 
     models.add ( model )
 
@@ -760,10 +768,11 @@ def test_model_16() :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.ss ) [0]      )
-        logger.info ('S1xB2 : %20s' % ( result ( model.sb ) [0] /2 ) ) 
-        logger.info ('B1xS2 : %20s' % ( result ( model.bs ) [0] /2 ) ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.bb ) [0]      )
+        
+        logger.info ('S1xS2 : %20s' %   result ( model.S1S2 ) [0]       )
+        logger.info ('S1xB2 : %20s' % ( result ( model.S1B2 ) [0] /2  ) )
+        logger.info ('B1xS2 : %20s' % ( result ( model.B1S2 ) [0] /2  ) )
+        logger.info ('B1xB2 : %20s' %   result ( model.B1B2 ) [0]       )
 
     models.add ( model )
 

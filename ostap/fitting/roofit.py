@@ -728,6 +728,7 @@ ROOT.RooRealVar     . Release         = _rel_par_
 ROOT.RooRealVar     . __float__       = lambda s : s.getVal()
 ## print it in more suitable form 
 ROOT.RooRealVar     . __repr__        = lambda s : "'%s' : %s " % ( s.GetName() , s.ve() )
+ROOT.RooRealVar     . __str__         = lambda s : "'%s' : %s " % ( s.GetName() , s.ve() )
 
 
 ROOT.RooConstVar    . as_VE          = lambda s : VE( s.getVal() , 0 )

@@ -473,12 +473,12 @@ class Fit2D (PDF2) :
                    components = []    ,
                    name       = ''    ) : 
         
-        self._crossterms1 = ROOT.RooArgSet()
-        self._crossterms2 = ROOT.RooArgSet()
+        self.__crossterms1 = ROOT.RooArgSet()
+        self.__crossterms2 = ROOT.RooArgSet()
         
         self.suffix    = suffix 
-        self.signal1   = signal_1
-        self.signal2   = signal_2
+        self.__signal1 = signal_1
+        self.__signal2 = signal_2
 
         #
         ## initialize base class
@@ -491,88 +491,91 @@ class Fit2D (PDF2) :
         #
         ## First component: Signal(1) and Signal(2)
         # 
-        self.ss_pdf = ROOT.RooProdPdf ( "S1S2pdf" + suffix ,
-                                        "Sig(1) x Sig(2)"  ,
-                                        self.signal1.pdf   ,
-                                        self.signal2.pdf   )
-
-        self._bkg1 = bkg1 
-        self.bkg1  = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.xvar )
+        self.__ss_pdf = ROOT.RooProdPdf ( "S1S2pdf" + suffix ,
+                                          "Sig(1) x Sig(2)"  ,
+                                          self.signal1.pdf   ,
+                                          self.signal2.pdf   )
+        
+        self.__arg_bkg1 = bkg1 
+        self.__bkg1 = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.xvar )
         
         #
         ## Second component: Background(1) and Signal(2)
         # 
-        self.bs_pdf = ROOT.RooProdPdf ( "B1S2pdf" + suffix  ,
-                                        "Bkg(1) x Sig(2)"   ,
-                                        self.bkg1.pdf       ,
-                                        self.signal2.pdf    )
-
-        self._bkg2 = bkg2
-        self.bkg2 = makeBkg ( bkg2   , 'Bkg(2)' + suffix , self.yvar )
+        self.__bs_pdf = ROOT.RooProdPdf ( "B1S2pdf" + suffix  ,
+                                          "Bkg(1) x Sig(2)"   ,
+                                          self.__bkg1.pdf     ,
+                                          self.signal2.pdf    )
+        
+        self.__arg_bkg2 = bkg2
+        self.__bkg2 = makeBkg ( bkg2   , 'Bkg(2)' + suffix , self.yvar )
         
         #
         ## Third component:  Signal(1) and Background(2)
         # 
-        self.sb_pdf = ROOT.RooProdPdf ( "S1B2pdf" + suffix  ,
-                                        "Sig(1) x Bkg(2)"   ,
-                                        self.signal1.pdf    ,
-                                        self.bkg2.pdf       )
+        self.__sb_pdf = ROOT.RooProdPdf ( "S1B2pdf" + suffix  ,
+                                          "Sig(1) x Bkg(2)"   ,
+                                          self.signal1.pdf    ,
+                                          self.__bkg2.pdf     )
         
         ## 
-        self._bkgs = ( bkg1 , bkg2 , bkgA , bkgB ) 
+        self.__bkgs = ( bkg1 , bkg2 , bkgA , bkgB ) 
         #
         ## fourth component: Background(1) and Background(2) 
         #
-        if bkg2D : self._bb2D  = bkg2D
-        # 
-        if   bkg2D and isinstance ( bkg2D , ROOT.RooAbsPdf ) : self.bb_pdf = bkg2D 
-        elif bkg2D and hasattr    ( bkg2D , 'pdf'          ) : self.bb_pdf = bkg2D.pdf
+        if bkg2D : self.__bb2D  = bkg2D
+        #
+        self.__bkgA = None 
+        self.__bkgB = None 
+
+        if   bkg2D and isinstance ( bkg2D , ROOT.RooAbsPdf ) : self.__bb_pdf = bkg2D 
+        elif bkg2D and hasattr    ( bkg2D , 'pdf'          ) : self.__bb_pdf = bkg2D.pdf
         else     :            
 
-            self._bkgA = bkgA 
-            self._bkgB = bkgB
+            self.__arg_bkgA = bkgA 
+            self.__arg_bkgB = bkgB
             
             if bkgA is None : bkgA = bkg1
             if bkgB is None : bkgB = bkg2
             
-            self.bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.xvar )
-            self.bkgB = makeBkg ( bkgB   , 'Bkg(B)' + suffix , self.yvar )
+            self.__bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.xvar )
+            self.__bkgB = makeBkg ( bkgB   , 'Bkg(B)' + suffix , self.yvar )
             
-            self.bb_pdf = ROOT.RooProdPdf ( "B1B2pdf" + suffix ,
-                                            "Bkg(A) x Bkg(B)"  ,
-                                            self.bkgA.pdf      ,
-                                            self.bkgB.pdf      )
+            self.__bb_pdf = ROOT.RooProdPdf ( "B1B2pdf" + suffix ,
+                                              "Bkg(A) x Bkg(B)"  ,
+                                              self.__bkgA.pdf    ,
+                                              self.__bkgB.pdf    )
         #
         ## coefficients
         #
-        self.ss = makeVar ( ss   ,
-                            "S1S2"          + suffix ,
-                            "Sig(1)&Sig(2)" + suffix , None , 1000  , 0 ,  1.e+6 )
-        self.sb = makeVar ( sb   ,
-                            "S1B2"          + suffix ,
-                            "Sig(1)&Bkg(2)" + suffix , None ,  100  , 0 ,  1.e+6 )
+        self.__ss = makeVar ( ss   ,
+                              "S1S2"          + suffix ,
+                              "Sig(1)&Sig(2)" + suffix , None , 1000  , 0 , 1.e+7 )
+        self.__sb = makeVar ( sb   ,
+                              "S1B2"          + suffix ,
+                              "Sig(1)&Bkg(2)" + suffix , None ,  100  , 0 , 1.e+7 )
+        self.__bs = makeVar ( bs   ,
+                              "B1S2"          + suffix ,
+                              "Bkg(1)&Sig(2)" + suffix , None ,  100  , 0 , 1.e+7 )        
+        self.__bb = makeVar ( bb   ,
+                              "B1B2"          + suffix ,
+                              "Bkg(1)&Bkg(2)" + suffix , None ,   10  , 0 , 1.e+7 )
         
-        self.bs = makeVar ( bs   ,
-                            "B1S2"          + suffix ,
-                            "Bkg(1)&Sig(2)" + suffix , None ,  100  , 0 ,  1.e+6 )
-
-        self.bb = makeVar ( bb   ,
-                            "B1B2"          + suffix ,
-                            "Bkg(1)&Bkg(2)" + suffix , None ,   10  , 0 ,  1.e+6 )
-            
-        self.SS_name = self.ss.GetName()
-        self.SB_name = self.sb.GetName()
-        self.BS_name = self.bs.GetName()
-        self.BB_name = self.bb.GetName()
+        self.SS_name = self.S1S2.GetName()
+        self.SB_name = self.S1B2.GetName()
+        self.BS_name = self.B1S2.GetName()
+        self.BB_name = self.B1B2.GetName()
         
-        self.alist1 = ROOT.RooArgList ( self.ss_pdf , self.sb_pdf ,
-            self.bs_pdf ,
-            self.bb_pdf )
+        self.alist1 = ROOT.RooArgList (
+            self.__ss_pdf ,
+            self.__sb_pdf ,
+            self.__bs_pdf ,
+            self.__bb_pdf )
         self.alist2 = ROOT.RooArgList (
-            self.ss ,
-            self.sb ,
-            self.bs ,
-            self.bb )
+            self.__ss ,
+            self.__sb ,
+            self.__bs ,
+            self.__bb )
 
         #
         ## treat additional components (if specified)
@@ -620,18 +623,94 @@ class Fit2D (PDF2) :
                                       self.alist2 )
 
 
-        self.signals     ().add ( self.ss_pdf )
-        self.backgrounds ().add ( self.bb_pdf )
-        self.crossterms1 ().add ( self.sb_pdf      ) ## cross-terms 
-        self.crossterms2 ().add ( self.bs_pdf      ) ## cross-terms 
+        self.signals     ().add ( self.__ss_pdf )
+        self.backgrounds ().add ( self.__bb_pdf )
+        self.crossterms1 ().add ( self.__sb_pdf      ) ## cross-terms 
+        self.crossterms2 ().add ( self.__bs_pdf      ) ## cross-terms 
 
 
     ## get all declared components 
-    def crossterms1 ( self ) : return self._crossterms1
+    def crossterms1 ( self ) : return self.__crossterms1
     ## get all declared components 
-    def crossterms2 ( self ) : return self._crossterms2
+    def crossterms2 ( self ) : return self.__crossterms2
 
- 
+    @property
+    def S1S2 ( self ) :
+        """The yield of Signal(x)*Signal(y) component"""
+        return self.__ss
+    @S1S2.setter 
+    def S1S2 ( self , value ) :
+        value = float ( value  )
+        assert value in self.__ss, "Value %s is out of the allowed range %s " % ( value , self.__ss.minmax() )
+        self.__ss.setVal ( value ) 
+        return self.__ss.getValue() 
+
+    @property
+    def S1B2 ( self ) :
+        """The yield of Signal(x)*Background(y) component"""
+        return self.__sb
+    @S1B2.setter 
+    def S1B2 ( self , value ) :
+        value = float ( value  )
+        assert value in self.__sb, "Value %s is out of the allowed range %s " % ( value , self.__sb.minmax() )
+        self.__sb.setVal ( value ) 
+        return self.__sb.getValue() 
+
+    @property
+    def B1S2 ( self ) :
+        """The yield of Background(x)*Signal(y) component"""
+        return self.__bs
+    @B1S2.setter 
+    def B1S2 ( self , value ) :
+        value = float ( value  )
+        assert value in self.__bs, "Value %s is out of the allowed range %s " % ( value , self.__bs.minmax() )
+        self.__bs.setVal ( value ) 
+        return self.__bs.getValue() 
+
+    @property
+    def B1B2 ( self ) :
+        """The yield of Background(x,y) component"""
+        return self.__bb
+    @B1B2.setter 
+    def B1B2 ( self , value ) :
+        value = float ( value  )
+        assert value in self.__bb, "Value %s is out of the allowed range %s " % ( value , self.__bb.minmax() )
+        self.__bb.setVal ( value ) 
+        return self.__bb.getValue() 
+
+    @property 
+    def signal1 ( self  ) :
+        """Signal(x) component/pdf"""
+        return self.__signal1
+
+    @property 
+    def signal2 ( self  ) :
+        """Signal(y) component/pdf"""
+        return self.__signal2
+
+    @property
+    def bkg1( self ) :
+        """ The background PDF for Backgroud(x)*Signal(y) component"""
+        return self.__bkg1
+    
+    @property
+    def bkg2( self ) :
+        """ The background PDF for Signal(x)*Background(y) component"""
+        return self.__bkg2
+
+    @property
+    def bkgA( self ) :
+        """ The background(x) PDF for Backgroud(x)*Background(y) component"""
+        return self.__bkgA
+
+    @property
+    def bkgB( self ) :
+        """ The background(y) PDF for Backgroud(x)*Background(y) component"""
+        return self.__bkgB
+    
+
+
+    
 # =============================================================================
 ## suppress methods specific for 1D-PDFs only
 for _a in (
@@ -714,8 +793,8 @@ class Fit2DSym (PDF2) :
         self._crossterms2 = ROOT.RooArgSet()
         
         self.suffix    = suffix 
-        self.signal1   = signal_1
-        self.signal2   = signal_2
+        self.__signal1   = signal_1
+        self.__signal2   = signal_2
 
         #
         ## initialize base class
@@ -729,105 +808,110 @@ class Fit2DSym (PDF2) :
         #
         ## First component: Signal(1) and Signal(2)
         # 
-        self.ss_pdf = ROOT.RooProdPdf ( "S1S2pdf" + suffix ,
-                                        "Sig(1) x Sig(2)"  ,
-                                        self.signal1.pdf   ,
-                                        self.signal2.pdf   )
+        self.__ss_pdf = ROOT.RooProdPdf ( "S1S2pdf" + suffix ,
+                                          "Sig(1) x Sig(2)"  ,
+                                          self.signal1.pdf   ,
+                                          self.signal2.pdf   )
+        
+        
 
-        self._bkg1 = bkg1 
-        self.bkg1  = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.xvar )
-
+        self.__arg_bkg1 = bkg1 
+        self.__bkg1  = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.xvar )
+        
         if bkg1 :
             if hasattr ( self.bkg1, 'tau' )  :
-                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 , tau = self.bkg1.tau )
+                self.__bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 , tau = self.bkg1.tau )
             else :
-                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 )
+                self.__bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 )
         else    :
             if hasattr ( self.bkg1, 'tau' )  :
-                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 , tau = self.bkg1.tau )
+                self.__bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 , tau = self.bkg1.tau )
             else :
-                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 )
+                self.__bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 )
         
         
         #
         ## Second sub-component: Background (1) and Signal     (2)
         ## Third  sub-component: Signal     (1) and Background (2)
         # 
-        self._bs_pdf = ROOT.RooProdPdf ( "B1S2pdf" + suffix  ,
+        self.__sub_bs_pdf = ROOT.RooProdPdf ( "B1S2pdf" + suffix  ,
                                          "Bkg(1) x Sig(2)"   ,
                                          self.bkg1.pdf       ,
                                          self.signal2.pdf    )
-        self._sb_pdf = ROOT.RooProdPdf ( "S1B2pdf" + suffix  ,
-                                         "Sig(1) x Bkg(2)"   ,
-                                         self.signal1.pdf    ,
-                                         self.bkg2.pdf       )
+        self.__sub_sb_pdf = ROOT.RooProdPdf ( "S1B2pdf" + suffix  ,
+                                              "Sig(1) x Bkg(2)"   ,
+                                              self.signal1.pdf    ,
+                                              self.bkg2.pdf       )
         
-        self._f_cross = ROOT.RooConstVar ( 'SxBfraction'   + suffix  , '(S1B2-vs-B1S2) fraction' , 0.5 )
+        self.__f_cross = ROOT.RooConstVar ( 'SxBfraction'   + suffix  , '(S1B2-vs-B1S2) fraction' , 0.5 )
         # 
-        self.sb_pdf   = ROOT.RooAddPdf ( "SxB_pdf" + suffix  ,
-                                         "Sig(1) x Bkg(2) + Bkg(1) x Sig(2)"   ,
-                                         self._sb_pdf  ,
-                                         self._bs_pdf  ,
-                                         self._f_cross ) 
+        self.__sb_pdf   = ROOT.RooAddPdf ( "SxB_pdf" + suffix  ,
+                                           "Sig(1) x Bkg(2) + Bkg(1) x Sig(2)"   ,
+                                           self.__sub_sb_pdf  ,
+                                           self.__sub_bs_pdf  ,
+                                           self.__f_cross ) 
         
         ## just for convinience 
-        self.bs_pdf   = self.sb_pdf 
+        self.__bs_pdf   = self.__sb_pdf 
         ## 
         self._bkgs = ( bkg1 , bkg1 , bkgA , bkgA ) 
 
         #
         ## fourth component: Background(1) and Background(2) 
         #
-        if bkg2D : self._bb2D  = bkg2D
+        if bkg2D : self.__bb2D  = bkg2D
         # 
-        if   bkg2D and isinstance ( bkg2D , ROOT.RooAbsPdf ) : self.bb_pdf = bkg2D 
-        elif bkg2D and hasattr    ( bkg2D , 'pdf'          ) : self.bb_pdf = bkg2D.pdf
+        self.__bkgA = None  
+        self.__bkgB = None 
+        
+        if   bkg2D and isinstance ( bkg2D , ROOT.RooAbsPdf ) : self.__bb_pdf = bkg2D 
+        elif bkg2D and hasattr    ( bkg2D , 'pdf'          ) : self.__bb_pdf = bkg2D.pdf
         else     :            
 
-            self._bkgA = bkgA
+            self.__arg_bkgA = bkgA
             if bkgA is None : bkgA = bkg1
             
-            self.bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.xvar )
-            self.bkgB = makeBkg ( bkgA   , 'Bkg(B)' + suffix , self.yvar , the_phis = self.bkgA )
+            self.__bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.xvar )
+            self.__bkgB = makeBkg ( bkgA   , 'Bkg(B)' + suffix , self.yvar , the_phis = self.bkgA )
             
-            self.bb_pdf = ROOT.RooProdPdf ( "B1B2pdf" + suffix ,
-                                            "Bkg(A) x Bkg(B)"  ,
-                                            self.bkgA.pdf      ,
-                                            self.bkgB.pdf      )
+            self.__bb_pdf = ROOT.RooProdPdf ( "B1B2pdf" + suffix ,
+                                              "Bkg(A) x Bkg(B)"  ,
+                                              self.bkgA.pdf      ,
+                                              self.bkgB.pdf      )
         #
         ## coefficients
         #
-        self.ss = makeVar ( ss   ,
-                            "S1S2"          + suffix ,
-                            "Sig(1)&Sig(2)" + suffix , None , 1000  , 0 ,  1.e+7 )
+        self.__ss = makeVar ( ss   ,
+                              "S1S2"          + suffix ,
+                              "Sig(1)&Sig(2)" + suffix , None , 1000  , 0 ,  1.e+7 )
         
-        self.bb = makeVar ( bb   ,
-                            "B1B2"          + suffix ,
-                            "Bkg(1)&Bkg(2)" + suffix , None ,   10  , 0 ,  1.e+7 )
-
-        self.sb = makeVar ( sb   ,
-                            "SxB"           + suffix ,
-                            "Sig(1)&Bkg(2)+Bkg(1)&Sig(2)" + suffix , None ,  100  , 0 ,  1.e+7 )
+        self.__bb = makeVar ( bb   ,
+                              "B1B2"          + suffix ,
+                              "Bkg(1)&Bkg(2)" + suffix , None ,   10  , 0 ,  1.e+7 )
         
-        self.bs = self.sb
+        self.__sb = makeVar ( sb   ,
+                              "SxB"           + suffix ,
+                              "Sig(1)&Bkg(2)+Bkg(1)&Sig(2)" + suffix , None ,  100  , 0 ,  1.e+7 )
         
-        self.sb_  = ROOT.RooFormulaVar (
+        self.__bs = self.__sb
+        
+        self.__sb_  = ROOT.RooFormulaVar (
             'S1B2' + suffix ,
             'Sig(1)&Bkg(2)' ,
-            '0.5*%s' % self.sb.GetName() , ROOT.RooArgList ( self.sb ) )
+            '0.5*%s' % self.__sb.GetName() , ROOT.RooArgList ( self.__sb ) )
         
-        self.bs_  = ROOT.RooFormulaVar (
+        self.__bs_  = ROOT.RooFormulaVar (
             'B1S2' + suffix ,
             'Bkg(1)&Sig(2)' ,
-            '0.5*%s' % self.sb.GetName() , ROOT.RooArgList ( self.sb ) )        
+            '0.5*%s' % self.__sb.GetName() , ROOT.RooArgList ( self.__sb ) )        
         
-        self.SS_name = self.ss.GetName()
-        self.BB_name = self.bb.GetName()
-        self.SB_name = self.sb.GetName()
-        self.BS_name = self.bs.GetName()
+        self.SS_name = self.S1S2.GetName()
+        self.BB_name = self.B1B2.GetName()
+        self.SB_name = self.S1B2.GetName()
+        self.BS_name = self.B1S2.GetName()
         
-        self.alist1 = ROOT.RooArgList ( self.ss_pdf , self.sb_pdf , self.bb_pdf )
-        self.alist2 = ROOT.RooArgList ( self.ss     , self.sb     , self.bb     )
+        self.alist1 = ROOT.RooArgList ( self.__ss_pdf , self.__sb_pdf , self.__bb_pdf )
+        self.alist2 = ROOT.RooArgList ( self.__ss     , self.__sb     , self.__bb     )
 
         #
         ## treat additional components (if specified)
@@ -875,10 +959,10 @@ class Fit2DSym (PDF2) :
                                       self.alist2 )
 
 
-        self.signals     ().add ( self.ss_pdf )
-        self.backgrounds ().add ( self.bb_pdf )
-        self.crossterms1 ().add ( self.sb_pdf      ) ## cross-terms 
-        self.crossterms2 ().add ( self.bs_pdf      ) ## cross-terms 
+        self.signals     ().add ( self.__ss_pdf )
+        self.backgrounds ().add ( self.__bb_pdf )
+        self.crossterms1 ().add ( self.__sb_pdf ) ## cross-terms 
+        self.crossterms2 ().add ( self.__bs_pdf ) ## cross-terms 
 
 
         
@@ -888,8 +972,80 @@ class Fit2DSym (PDF2) :
     ## get all declared components 
     def crossterms2 ( self ) : return self._crossterms2
 
+    @property
+    def S1S2 ( self ) :
+        """The yield of Signal(x)*Signal(y) component"""
+        return self.__ss
+    @S1S2.setter 
+    def S1S2 ( self , value ) :
+        value = float ( value  )
+        assert value in self.__ss, "Value %s is out of the allowed range %s " % ( value , self.__ss.minmax() )
+        self.__ss.setVal ( value ) 
+        return self.__ss.getValue() 
 
+    @property
+    def S1B2 ( self ) :
+        """The yield of Signal(x)*Background(y)+BAckgroun(1)*Signal(2) component (the same as ``S2B1'')"""
+        return self.__sb
+    @S1B2.setter 
+    def S1B2 ( self , value ) :
+        value = float ( value  )
+        assert value in self.__sb, "Value %s is out of the allowed range %s " % ( value , self.__sb.minmax() )
+        self.__sb.setVal ( value ) 
+        return self.__sb.getValue() 
+    
+    @property
+    def B1S2 ( self ) :
+        """The yield of Signal(x)*Background(y)+BAckgroun(1)*Signal(2) component (the same as ``S1B2'')"""
+        return self.__bs
+    @B1S2.setter 
+    def B1S2 ( self , value ) :
+        value = float ( value  )
+        assert value in self.__bs, "Value %s is out of the allowed range %s " % ( value , self.__bs.minmax() )
+        self.__bs.setVal ( value ) 
+        return self.__bs.getValue() 
 
+    @property
+    def B1B2 ( self ) :
+        """The yield of Background(x,y) component"""
+        return self.__bb
+    @B1B2.setter 
+    def B1B2 ( self , value ) :
+        value = float ( value  )
+        assert value in self.__bb, "Value %s is out of the allowed range %s " % ( value , self.__bb.minmax() )
+        self.__bb.setVal ( value ) 
+        return self.__bb.getValue() 
+
+    @property 
+    def signal1 ( self  ) :
+        """Signal(x) component/pdf"""
+        return self.__signal1
+
+    @property 
+    def signal2 ( self  ) :
+        """Signal(y) component/pdf"""
+        return self.__signal2
+
+    @property
+    def bkg1( self ) :
+        """ The background PDF for Backgroud(x)*Signal(y) component"""
+        return self.__bkg1
+    
+    @property
+    def bkg2( self ) :
+        """ The background PDF for Signal(x)*Background(y) component"""
+        return self.__bkg2
+
+    @property
+    def bkgA( self ) :
+        """ The background(x) PDF for Backgroud(x)*Background(y) component"""
+        return self.__bkgA
+
+    @property
+    def bkgB( self ) :
+        """ The background(y) PDF for Backgroud(x)*Background(y) component"""
+        return self.__bkgB
+    
 
 # =============================================================================
 ## @class Generic2D_pdf
