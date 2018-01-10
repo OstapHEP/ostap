@@ -181,11 +181,11 @@ def makeFracs ( N , pname , ptitle , model , fractions = True )  :
     fracs = ROOT.RooArgList()
     n     = (N-1) if fractions else N
     lst   = []
-    for i in range(1,n+1) :
+    for i in range(0,n) :
         if fractions : fi = makeVar ( None , pname  % i , ptitle % i , None , 1.0/N , 0 , 1     )
         else         : fi = makeVar ( None , pname  % i , ptitle % i , None , 1     , 0 , 1.e+6 )
         fracs.add  ( fi )
-        setattr ( model , fi.GetName() , fi ) 
+        setattr ( model , '__' + fi.GetName() , fi ) 
     ##    
     return fracs
 
@@ -304,9 +304,9 @@ class PDF (object) :
     """
     def __init__ ( self , name , xvar = None ) :
         self.name         = name
-        self._signals     = ROOT.RooArgList ()
-        self._backgrounds = ROOT.RooArgList ()
-        self._components  = ROOT.RooArgList ()
+        self.__signals     = ROOT.RooArgList ()
+        self.__backgrounds = ROOT.RooArgList ()
+        self.__components  = ROOT.RooArgList ()
         ## take care about sPlots 
         self._splots      = []
         self._properties  = {}
@@ -333,6 +333,9 @@ class PDF (object) :
             ##logger.warning('x-variable is not specified (yet)')
             self.__xvar = makeVar( xvar , 'x' , 'x-variable' )
         
+    def xminmax ( self ) :
+        """Min/max values for x-variable"""
+        return self.__xvar.minmax()
 
     @property 
     def xvar ( self ) :
@@ -344,17 +347,13 @@ class PDF (object) :
         """``x''-variable for the fit (same as ``xvar'')"""
         return self.__xvar
     
-    @property
-    def xminmax ( self ) :
-        """Min/max values for x-variable"""
-        return self.__xvar.minmax()
         
     ## get all declared components 
-    def components  ( self ) : return self._components
+    def components  ( self ) : return self.__components
     ## get all declared signals 
-    def signals     ( self ) : return self._signals
+    def signals     ( self ) : return self.__signals
     ## get all declared backgrounds 
-    def backgrounds ( self ) : return self._backgrounds 
+    def backgrounds ( self ) : return self.__backgrounds 
     ## can be useful 
     def setPars     ( self ) :
 
@@ -365,10 +364,10 @@ class PDF (object) :
             
         ## check other PDFs 
         cs = set() 
-        for att in ( '_signals'     , '_backgrounds'     , '_components'     ,
-                     'all_signals'  , 'all_backgrounds'  , 'all_components'  ,
-                     'more_signals' , 'more_backgrounds' , 'more_components' ,
-                     '_sigs'        , '_bkgs'            , '_cmps'           ) :
+        for att in ( '__signals'      , '__backgrounds'      , '__components'      ,
+                     '__all_signals'  , '__all_backgrounds'  , '__all_components'  ,
+                     '__more_signals' , '__more_backgrounds' , '__more_components' ,
+                     '_sigs'        , '__bkgs'               , '_cmps'           ) :
             if hasattr ( self , att ) :
                 for a in getattr ( self , att ) : 
                     if hasattr ( a , 'setPars' ) and not a in cs :  
@@ -443,10 +442,10 @@ class PDF (object) :
         #
         ## check the integrals (when possible)
         #
-        if hasattr ( self , 'nums' ) and self.nums :
+        if hasattr ( self , '__nums' ) and self.__nums :
             
             nsum = VE()            
-            for i in self.nums :
+            for i in self.__nums :
                 nsum += i.as_VE() 
                 if hasattr ( i , 'getMax' ) and i.getVal() > i.getMax() - 0.05 * ( i.getMax() - i.getMin() ) :
                     logger.warning ( 'PDF(%s).fitTo: Variable %s == %s [too close to maximum %s]'
@@ -506,7 +505,7 @@ class PDF (object) :
         return self.fitTo ( dataset , *args , **kwargs ) 
         
     ## helper method to draw set of components 
-    def _draw ( self , what , frame , options , base_color ) :
+    def __draw ( self , what , frame , options , base_color ) :
         """ Helper method to draw set of components """
         i = 0 
         for cmp in what : 
@@ -601,31 +600,31 @@ class PDF (object) :
             boptions = kwargs.pop (     'background_options' , FD.   background_options )
             bbcolor  = kwargs.pop (  'base_background_color' , FD.base_background_color ) 
             if self.backgrounds () :
-                self._draw( self.backgrounds() , frame , boptions , bbcolor )
+                self.__draw( self.backgrounds() , frame , boptions , bbcolor )
                 
             ## ugly :-(
             ct1options = kwargs.pop (     'crossterm1_options' , FD.   crossterm1_options )
             ct1bcolor  = kwargs.pop (  'base_crossterm1_color' , FD.base_crossterm1_color ) 
             if hasattr ( self , 'crossterms1' ) and self.crossterms1() : 
-                self._draw( self.crossterms1() , frame , ct1options , ct1bcolor )
+                self.__draw( self.crossterms1() , frame , ct1options , ct1bcolor )
 
             ## ugly :-(
             ct2options = kwargs.pop (     'crossterm2_options' , FD.   crossterm1_options )
             ct2bcolor  = kwargs.pop (  'base_crossterm2_color' , FD.base_crossterm1_color )                 
             if hasattr ( self , 'crossterms2' ) and self.crossterms2() :
-                self._draw( self.crossterms2() , frame , ct2options , ct2bcolor )
+                self.__draw( self.crossterms2() , frame , ct2options , ct2bcolor )
 
             ## draw ``other'' components
             coptions   = kwargs.pop (      'component_options' , FD.    component_options  )
             cbcolor    = kwargs.pop (   'base_component_color' , FD. base_component_color  ) 
             if self.components () :
-                self._draw( self.components() , frame , coptions , cbcolor )
+                self.__draw( self.components() , frame , coptions , cbcolor )
 
             ## draw ``signal'' components
             soptions   = kwargs.pop (         'signal_options' , FD.      signal_options  )
             sbcolor    = kwargs.pop (      'base_signal_color' , FD.   base_signal_color  ) 
             if self.signals    () :
-                self._draw( self.signals() , frame , soptions , sbcolor )
+                self.__draw( self.signals() , frame , soptions , sbcolor )
 
             #
             ## the total fit curve
@@ -817,7 +816,7 @@ class PDF (object) :
     # some generic stuff 
     # ========================================================================
     ## helper  function to implement some math stuff 
-    def _get_stat_ ( self , funcall , *args , **kwargs ) :
+    def __get_stat_ ( self , funcall , *args , **kwargs ) :
         """Helper  function to implement some math stuff 
         """
         pdf         = self.pdf
@@ -853,7 +852,7 @@ class PDF (object) :
             elif hasattr ( fun , 'dispersion' ) : return fun.dispersion () **5 
             
         from ostap.stats.moments import rms as _rms
-        return  self._get_stat_ ( _rms )
+        return  self.__get_stat_ ( _rms )
 
     ## get the effective Skewness
     def skewness ( self ) :
@@ -864,7 +863,7 @@ class PDF (object) :
         """
         ## use generic machinery 
         from ostap.stats.moments import skewness as _skewness
-        return self._get_stat_ ( _skewness )
+        return self.__get_stat_ ( _skewness )
 
 
     ## get the effective Kurtosis
@@ -876,7 +875,7 @@ class PDF (object) :
         """
         ## use generic machinery 
         from ostap.stats.moments import kurtosis as _kurtosis
-        return self._get_stat_ ( _kurtosis ) 
+        return self.__get_stat_ ( _kurtosis ) 
 
     
     ## get the effective Full Width at Half Maximum
@@ -888,7 +887,7 @@ class PDF (object) :
         """
         ## use generic machinery 
         from ostap.stats.moments import width as _width
-        w = self._get_stat_ ( _width )
+        w = self.__get_stat_ ( _width )
         return w[1]-w[0]
     
     ## get the effective mode 
@@ -899,7 +898,7 @@ class PDF (object) :
         >>>  print 'MODE: %s ' % pdf.mode()
         """
         from ostap.stats.moments import mode as _mode
-        return self._get_stat_ ( _mode )
+        return self.__get_stat_ ( _mode )
 
     ## get the effective median
     def median ( self ) :
@@ -909,7 +908,7 @@ class PDF (object) :
         >>>  print 'MEDIAN: %s ' % pdf.median()
         """
         from ostap.stats.moments import median as _median
-        return self._gets_stat_ ( _median )
+        return self.__gets_stat_ ( _median )
 
     ## get the effective mean
     def get_mean ( self ) :
@@ -919,7 +918,7 @@ class PDF (object) :
         >>>  print 'MEAG: %s ' % pdf.get_mean()
         """
         from ostap.stats.moments import mean as _mean
-        return self._get_stat_ ( _mean )
+        return self.__get_stat_ ( _mean )
 
     ## get the effective moment for the distribution
     def moment ( self , N ) :
@@ -930,7 +929,7 @@ class PDF (object) :
         """
         ## use generic machinery 
         from ostap.stats.moments import moment as _moment
-        return self._get_stat_ ( _moment , N ) 
+        return self.__get_stat_ ( _moment , N ) 
     
     ## get the effective central moment for the distribution
     def central_moment ( self , N ) :
@@ -940,7 +939,7 @@ class PDF (object) :
         >>>  print 'MOMENT: %s ' % pdf.moment( 10 )
         """
         from ostap.stats.moments import central_moment as _moment
-        return self._get_stat_ ( _moment , N ) 
+        return self.__get_stat_ ( _moment , N ) 
 
     ## get the effective quantile 
     def quantile ( self , prob  ) :
@@ -950,7 +949,7 @@ class PDF (object) :
         >>>  print 'QUANTILE: %s ' % pdf.quantile ( 0.10 )
         """
         from ostap.stats.moments import quantile as _quantile
-        return self._get_stat_ ( quantile , prob ) 
+        return self.__get_stat_ ( quantile , prob ) 
     
     ## get the symmetric confidence interval 
     def cl_symm ( self , prob , x0 =  None ) :
@@ -960,7 +959,7 @@ class PDF (object) :
         >>>  print 'CL :  ',  pdf.cl_symm ( 0.10 )
         """
         from ostap.stats.moments import cl_symm as _cl
-        return self._get_sstat_ ( _cl , prob , x0 ) 
+        return self.__get_sstat_ ( _cl , prob , x0 ) 
 
     ## get the asymmetric confidence interval 
     def cl_asymm ( self , prob ) :
@@ -970,7 +969,7 @@ class PDF (object) :
         >>>  print 'CL :  ',  pdf.cl_asymm ( 0.10 )
         """
         from ostap.stats.moments import cl_asymm as _cl
-        return self._get_sstat_ ( _cl , prob ) 
+        return self.__get_sstat_ ( _cl , prob ) 
 
     ## get the integral between xmin and xmax 
     def integral ( self , xmin , xmax ) :
@@ -978,13 +977,11 @@ class PDF (object) :
         >>> pdf = ...
         >>> print pdf.integral ( 0 , 10 )
         """
-        ## check limits 
-        if hasattr ( self.mass , 'getMin' ) :
-            xmin = max ( xmin , self.mass.getMin() )
-            xmax = max ( xmax , self.mass.getMin() )
-        if hasattr ( self.mass , 'getMax' ) :
-            xmin = min ( xmin , self.mass.getMax() )
-            xmax = min ( xmax , self.mass.getMax() )
+        ## check limits
+        xmnmx = self.xminmax()
+        if xmnmx :
+            xmin = max ( xmin , xmnmx[0] )
+            xmax = min ( xmax , xmnmx[1] )
             
         if xmin == xmax : return 0 
             
@@ -1341,27 +1338,27 @@ class Fit1D (PDF) :
         self.signals     ().add ( self.signal     .pdf )
         self.backgrounds ().add ( self.background .pdf )
 
-        self.more_signals       = othersignals
-        self.more_backgrounds   = otherbackgrounds
-        self.more_components    = others
+        self.__more_signals       = othersignals
+        self.__more_backgrounds   = otherbackgrounds
+        self.__more_components    = others
         #
         ## treat additional signals
         #
-        for c in self.more_signals : 
+        for c in self.__more_signals : 
             if   isinstance ( c , ROOT.RooAbsPdf ) : self.signals() .add ( c     ) 
             elif hasattr    ( c , 'pdf' )          : self.signals() .add ( c.pdf ) 
             else : logger.error('Fit1D(%s): Unknown signal component type %s, skip it!' % ( self.name , type(c) ) ) 
         #
         ## treat additional backgounds 
         #
-        for c in self.more_backgrounds :             
+        for c in self.__more_backgrounds :             
             if   isinstance ( c ,  ROOT.RooAbsPdf ) : self.backgrounds () .add ( c     ) 
             elif hasattr    ( c ,'pdf' )            : self.backgrounds () .add ( c.pdf ) 
             else : logger.error('Fit1D(%s): Unknown background component type %s, skip it!' % ( self.name , type(c) ) ) 
         #
         ## treat additional components
         #
-        for c in self.more_components : 
+        for c in self.__more_components : 
             if   isinstance ( c ,  ROOT.RooAbsPdf ) : self.components () .add ( c     ) 
             elif hasattr    ( c ,'pdf' )            : self.components () .add ( c.pdf ) 
             else : logger.error('Fit1D(%s): Unknown additional component type %s, skip it!' % ( self.name , type(c) ) ) 
@@ -1377,14 +1374,15 @@ class Fit1D (PDF) :
         self.alist2 = ROOT.RooArgList ()
         
         
-        self.all_signals     = self.signals     ()
-        self.all_backgrounds = self.backgrounds ()
-        self.all_components  = self.components  ()
+        self.__all_signals     = self.signals     ()
+        self.__all_backgrounds = self.backgrounds ()
+        self.__all_components  = self.components  ()
         
-        self.save_signal     = self.signal
-        self.save_background = self.background
+        self.__save_signal     = self.signal
+        self.__save_background = self.background
         
-        ## combine signal components into single signal  (if needed) 
+        ## combine signal components into single signal  (if needed)
+        self.__signal_fractions = ()  
         if combine_signals and 1 < len( self.signals() ) :
             
             sig , fracs , sigs = addPdf ( self.signals()        ,
@@ -1394,13 +1392,13 @@ class Fit1D (PDF) :
                                           'fS(%%d)%s'  % suffix , recursive = True , model = self )
             ## new signal
             self.signal      = Generic1D_pdf   ( sig , self.mass , 'SIGNAL_' + suffix )
-            self.all_signals = ROOT.RooArgList ( sig )
+            self.__all_signals = ROOT.RooArgList ( sig )
             self._sigs       = sigs 
-            self.signals_fractions = fracs 
-            for fi in fracs : setattr ( self , fi.GetName() , fi )
+            self.__signal_fractions = fracs 
             logger.verbose('Fit1D(%s): %2d signals     are combined into single SIGNAL'     % ( self.name , len ( sigs ) ) ) 
             
         ## combine background components into single backhround (if needed ) 
+        self.__background_fractions = () 
         if combine_backgrounds and 1 < len( self.backgrounds() ) :
             
             bkg , fracs , bkgs = addPdf ( self.backgrounds()        ,
@@ -1410,13 +1408,13 @@ class Fit1D (PDF) :
                                           'fB(%%d)%s'      % suffix , recursive = True , model = self )
             ## new background
             self.background      = Generic1D_pdf   ( bkg , self.mass , 'BACKGROUND_' + suffix )
-            self.all_backgrounds = ROOT.RooArgList ( bkg )
-            self._bkgs           = bkgs 
-            self.backgrounds_fractions = fracs 
-            for fi in fracs : setattr ( self , fi.GetName() , fi ) 
+            self.__all_backgrounds = ROOT.RooArgList ( bkg )
+            self.__bkgs          = bkgs 
+            self.__background_fractions = fracs 
             logger.verbose ('Fit1D(%s): %2d backgrounds are combined into single BACKGROUND' % ( self.name , len ( bkgs ) ) ) 
 
         ## combine other components into single component (if needed ) 
+        self.__components_fractions = () 
         if combine_others and 1 < len( self.components() ) :
             
             cmp , fracs , cmps = addPdf ( self.components()    ,
@@ -1427,79 +1425,87 @@ class Fit1D (PDF) :
             ## save old background
             self.other          = Generic1D_pdf   ( cmp , self.mass , 'COMPONENT_' + suffix )
             self.all_components = ROOT.RooArgList ( cmp )
-            self.components_fractions = fracs 
-            for fi in fracs : setattr ( self , fi.GetName() , fi ) 
+            self.__components_fractions = fracs 
             logger.verbose('Fit1D(%s): %2d components  are combined into single COMPONENT'    % ( self.name , len ( cmps ) ) )
 
 
-        self.nums   = [] 
+        self.__nums   = [] 
 
+        self.__nums_signals     = []
+        self.__nums_backgrounds = []
+        self.__nums_components  = []
+        self.__nums_fractions   = []
+        
         ## build models 
         if extended :
             
-            ns = len ( self.all_signals )
+            ns = len ( self.__all_signals )
             if 1 == ns :
                 sf = makeVar ( None , "S"+suffix , "Signal"     + suffix , None , 1 , 0 , 1.e+6 )
-                self.alist1.add  ( self.all_signals[0]  )
+                self.alist1.add  ( self.__all_signals[0]  )
                 self.alist2.add  ( sf ) 
-                self.s = sf
-                self.S = sf
-                self.S_name = self.s.GetName()
-                self.nums.append ( self.s ) 
+                self.__nums.append ( sf )
+                self.__nums_signals.append ( sf ) 
             elif 2 <= ns : 
                 fis = makeFracs ( ns , 'S_%%d%s' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False , model = self )
-                for s in self.all_signals : self.alist1.add ( s )
+                for s in self.__all_signals : self.alist1.add ( s )
                 for f in fis :
                     self.alist2.add  ( f )
-                    self.nums.append ( f ) 
+                    self.__nums.append ( f ) 
+                    self.__nums_signals.append ( f ) 
 
-            nb = len ( self.all_backgrounds )
+            nb = len ( self.__all_backgrounds )
             if 1 == nb :
                 bf = makeVar ( None , "B"+suffix , "Background" + suffix , None , 1 , 0 , 1.e+6 )
-                self.alist1.add  ( self.all_backgrounds[0]  )
+                self.alist1.add  ( self.__all_backgrounds[0]  )
                 self.alist2.add  ( bf ) 
-                self.b = bf
-                self.B = bf
-                self.B_name = self.b.GetName()
-                self.nums.append ( self.b ) 
+                self.__nums.append ( bf ) 
+                self.__nums_backgrounds.append ( bf ) 
             elif 2 <= nb :
                 fib = makeFracs ( nb , 'B_%%d%s' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False , model = self )
-                for b in self.all_backgrounds : self.alist1.add ( b )
+                for b in self.__all_backgrounds : self.alist1.add ( b )
                 for f in fib :
                     self.alist2.add  ( f )
-                    self.nums.append ( f ) 
+                    self.__nums.append ( f ) 
+                    self.__nums_backgrounds.append ( f ) 
                     
-            nc = len ( self.all_components )
+            nc = len ( self.__all_components )
             if 1 == nc :
                 cf = makeVar ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+6 )
-                self.alist1.add  ( self.all_components[0]  )
+                self.alist1.add  ( self.__all_components[0]  )
                 self.alist2.add  ( cf ) 
-                self.c = cf
-                self.C = cf
-                self.C_name = self.c.GetName()
-                self.nums.append ( self.c ) 
+                self.__nums.append ( cf ) 
+                self.__nums_components.append ( cf ) 
             elif 2 <= nc : 
                 fic = makeFracs ( nc , 'C_%%d%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False , model = self )
-                for c in self.all_components : self.alist1.add ( c )
+                for c in self.__all_components : self.alist1.add ( c )
                 for f in fic :
                     self.alist2.add  ( f )
-                    self.nums.append ( f ) 
+                    self.__nums.append ( f ) 
+                    self.__nums_components.append ( f ) 
 
         else :
 
-            ns = len ( self.all_signals     )
-            nb = len ( self.all_backgrounds )
-            nc = len ( self.all_components  )
+            ns = len ( self.__all_signals     )
+            nb = len ( self.__all_backgrounds )
+            nc = len ( self.__all_components  )
             
-            for s in self.all_signals     : self.alist1.add ( s )
-            for b in self.all_backgrounds : self.alist1.add ( b )
-            for c in self.all_components  : self.alist1.add ( c )
+            for s in self.__all_signals     : self.alist1.add ( s )
+            for b in self.__all_backgrounds : self.alist1.add ( b )
+            for c in self.__all_components  : self.alist1.add ( c )
             
             fic = makeFracs ( ns + nb + nc , 'f_%%d%s' % suffix ,  'f(%%d)%s'  % suffix , fractions  = True , model = self )
             for f in fic :
                 self.alist2.add ( f )
-                setattr ( self , f.GetName() , f ) 
+                self.__nums_fractions.append ( f ) 
 
+                
+        self.__nums_signals     = tuple ( self.__nums_signals     ) 
+        self.__nums_backgrounds = tuple ( self.__nums_backgrounds ) 
+        self.__nums_components  = tuple ( self.__nums_components  ) 
+        self.__nums_fractions   = tuple ( self.__nums_fractions   )
+        self.__nums             = tuple ( self.__nums             )
+        
         #
         ## The final PDF
         #       
@@ -1518,8 +1524,56 @@ class Fit1D (PDF) :
             logger.debug ( "Non-extended model ``%s'' with %s/%s components"  % ( self.pdf.GetName() , len( self.alist1) , len(self.alist2) ) )
 
 
+    @property
+    def fS ( self  ) :
+        """(Recursive) fractions for the compound signal components (empty for simple cignal) """
+        lst = [ i for i in self.__signal_fractions ]
+        return tuple ( lst )
 
-        
+    @property
+    def fB ( self  ) :
+        """(Recursive) fractions for the compound background components (empty for simple background)"""
+        lst = [ i for i in self.__background_fractions ]
+        return tuple ( lst )
+    
+    @property
+    def fC ( self  ) :
+        """(Recursive) fractions for the compound ``other'' components (empty for no additional commponents case)"""
+        lst = [ i for i in self.__components_fractions ]
+        return tuple ( lst )
+
+    @property
+    def S ( self ) :
+        """Get the  yields of signal component(s) (empty for non-extended fits)"""
+        lst = [ i for i in self.__nums_signals ]
+        if not lst          : return ()     ## extended fit? 
+        elif  1 == len(lst) : return lst[0] ## simple signal?
+        return tuple ( lst )
+
+    @property
+    def B ( self ) :
+        """Get the  yields of background  component(s) (empty for non-extended fits)"""
+        lst = [ i for i in self.__nums_backgrounds ]
+        if not lst          : return ()     ## extended fit? 
+        elif  1 == len(lst) : return lst[0] ## simple background?
+        return tuple ( lst )
+
+    @property
+    def C ( self ) :
+        """Get the  yields of ``other'' component(s) (empty for non-extended fits)"""
+        lst = [ i for i in self.__nums_components ]
+        if not lst          : return ()     ## extended fit? no other components?
+        elif  1 == len(lst) : return lst[0] ## single component?
+        return tuple ( lst )
+
+    @property 
+    def F ( self ) :
+        """Get fit fractions for no-expended fits (empty for extended fits)"""
+        lst = [ i for i in self.__nums_fractions ]
+        if not lst          : return ()     ## extended fit? 
+        elif  1 == len(lst) : return lst[0] ## simple two component fit ?
+        return tuple ( lst )
+    
 # =============================================================================
 ## simple class to adjust certaint PDF to avoid zeroes 
 class Adjust(object) :

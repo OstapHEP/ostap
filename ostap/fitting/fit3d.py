@@ -60,6 +60,9 @@ class PDF3 (PDF2) :
             ##logger.warning('x-variable is not specified (yet)')
             self.__zvar = makeVar( zvar , 'z' , 'z-variable' )
 
+    def zminmax ( self ) :
+        """Min/max values for y-variable"""
+        return self.__zvar. minmax()
 
     @property 
     def zvar ( self ) :
@@ -71,11 +74,6 @@ class PDF3 (PDF2) :
         """``z''-variable for the fit (same as ``zvar'')"""
         return self.__zvar
     
-    @property
-    def zminmax ( self ) :
-        """Min/max values for y-variable"""
-        return self.__zvar. minmax()
-
 
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
@@ -285,9 +283,9 @@ class PDF3 (PDF2) :
         
         """
         
-        xminmax = histo.xminmax
-        yminmax = histo.yminmax
-        zminmax = histo.zminmax
+        xminmax = histo.xminmax()
+        yminmax = histo.yminmax()
+        zminmax = histo.zminmax()
         
         with     RangeVar ( self.xvar , *xminmax ) , \
                  RangeVar ( self.yvar , *yminmax ) , \
@@ -335,9 +333,9 @@ class PDF3 (PDF2) :
         >>> pdf = ...
         >>> print pdf.integral( 0,1,0,2,0,5)
         """
-        xmn , xmx = self.xminmax
-        ymn , ymx = self.yminmax
-        zmn , zmx = self.zminmax
+        xmn , xmx = self.xminmax()
+        ymn , ymx = self.yminmax()
+        zmn , zmx = self.zminmax()
 
         xmin = max ( xmin , xmn )
         xmax = min ( xmax , xmx )

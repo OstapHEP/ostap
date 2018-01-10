@@ -41,7 +41,7 @@ mmin,mmax = mass.minmax()
 m = VE(3.100,0.015**2)
 for i in xrange(0,5000) :
     mass.value = m.gauss () 
-    dataset0.add ( varset0    )
+    dataset0.add ( varset0 )
 
 for i in xrange(0,500) :
     mass.value = random.uniform ( mmin , mmax ) 
@@ -140,8 +140,8 @@ def test_crystalball_RS () :
         background = Models.Bkg_pdf ('BkgCBRS', mass = mass , power = 0 )
         )
     
-    model_cbrs.s.setVal(5000)
-    model_cbrs.b.setVal( 500)
+    model_cbrs.S.value  = 5000
+    model_cbrs.B.value  =  500
     
     with rooSilent() : 
         result, frame = model_cbrs. fitTo ( dataset0 )
@@ -176,8 +176,8 @@ def test_crystalball_DS () :
         background = Models.Bkg_pdf ('BkgCBDS', mass = mass , power = 0 )
         )
 
-    model_cbds.s.setVal(5000)
-    model_cbds.b.setVal( 500)
+    model_cbds.S.setVal(5000)
+    model_cbds.B.setVal( 500)
     
     with rooSilent() : 
         result, frame = model_cbds. fitTo ( dataset0 )
@@ -245,8 +245,8 @@ def test_apolonios () :
         background = Models.Bkg_pdf ('BkgAPO', mass = mass , power = 0 )
         )
     
-    model_apolonios.s.setVal(5000)
-    model_apolonios.b.setVal( 500)
+    model_apolonios.S.setVal(5000)
+    model_apolonios.B.setVal( 500)
     
     with rooSilent() : 
         result, frame = model_apolonios. fitTo ( dataset0 )
@@ -278,8 +278,8 @@ def test_apolonios2() :
         )
     
     model_apolonios2.signal.mean.fix( m.value() ) 
-    model_apolonios2.s.setVal(5000)
-    model_apolonios2.b.setVal( 500)
+    model_apolonios2.S.setVal(5000)
+    model_apolonios2.B.setVal( 500)
     
     with rooSilent() : 
         result, frame = model_apolonios2. fitTo ( dataset0 )
@@ -314,8 +314,8 @@ def test_bifurcated () :
         signal     = signal_bifurcated       ,
         background = Models.Bkg_pdf ('BkgBFG', mass = mass , power = 0 )) 
     
-    model_bifurcated.b.setVal (  500 )
-    model_bifurcated.s.setVal ( 6000 )
+    model_bifurcated.B.setVal (  500 )
+    model_bifurcated.S.setVal ( 6000 )
     with rooSilent() : 
         result, frame = model_bifurcated . fitTo ( dataset0 )
         result, frame = model_bifurcated . fitTo ( dataset0 )
@@ -348,8 +348,8 @@ def test_2gauss () :
         signal     = signal_2gauss      ,
         background = Models.Bkg_pdf ('Bkg22G', mass = mass , power = 0 )) 
     
-    model_2gauss.b.setVal (  500 )
-    model_2gauss.s.setVal ( 6000 )
+    model_2gauss.B.setVal (  500 )
+    model_2gauss.S.setVal ( 6000 )
     with rooSilent() : 
         result, frame = model_2gauss. fitTo ( dataset0 )
         signal_2gauss.fraction.release() 
@@ -379,8 +379,8 @@ def test_gengauss_v1 () :
     
     model_gauss_gv1.signal.beta .fix(2)
     model_gauss_gv1.signal.mean .fix( m.value() ) 
-    model_gauss_gv1.s.setVal(5000)
-    model_gauss_gv1.b.setVal( 500)
+    model_gauss_gv1.S.setVal(5000)
+    model_gauss_gv1.B.setVal( 500)
     
     with rooSilent() : 
         result, frame = model_gauss_gv1. fitTo ( dataset0 )
@@ -414,16 +414,16 @@ def test_gengauss_v2 () :
     with rooSilent() : 
         result, frame = model_gauss_gv2. fitTo ( dataset0 )
         model_gauss_gv2.signal.mean.release() 
-        model_gauss_gv2.s.setVal(5000)
-        model_gauss_gv2.b.setVal( 500)
+        model_gauss_gv2.S.setVal(5000)
+        model_gauss_gv2.B.setVal( 500)
         result, frame = model_gauss_gv2. fitTo ( dataset0 )
         ##model_gauss_gv2.signal.kappa.release() 
-        model_gauss_gv2.s.setVal(5000)
-        model_gauss_gv2.b.setVal( 500)
+        model_gauss_gv2.S.setVal(5000)
+        model_gauss_gv2.B.setVal( 500)
         result, frame = model_gauss_gv2. fitTo ( dataset0 )
         result, frame = model_gauss_gv2. fitTo ( dataset0 )
-        model_gauss_gv2.s.setVal(5000)
-        model_gauss_gv2.b.setVal( 500)
+        model_gauss_gv2.S.setVal(5000)
+        model_gauss_gv2.B.setVal( 500)
         result, frame = model_gauss_gv2. fitTo ( dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -446,8 +446,8 @@ def test_gengauss_v2 () :
 ##         background = Models.Bkg_pdf ('BkgSkG', mass = mass , power = 0 )) 
     
 ##     model_gauss_skew.signal.alpha.fix(0)
-##     model_gauss_skew.s.setVal(5000)
-##     model_gauss_skew.b.setVal( 500)
+##     model_gauss_skew.S.setVal(5000)
+##     model_gauss_skew.B.setVal( 500)
     
 ##     with rooSilent() : 
 ##         result, frame = model_gauss_skew. fitTo ( dataset0 )
@@ -479,8 +479,8 @@ def test_bukin() :
     
     model_bukin.signal.mean .fix  ( m.value() )
     model_bukin.signal.sigma.fix  ( m.error() )
-    model_bukin.s.setVal(5000)
-    model_bukin.b.setVal( 500)
+    model_bukin.S.setVal(5000)
+    model_bukin.B.setVal( 500)
     
     with rooSilent() : 
         result, frame = model_bukin. fitTo ( dataset0 )
@@ -517,8 +517,8 @@ def test_studentT () :
     
     model_student.signal.n    .setVal(20)
     model_student.signal.sigma.setVal(0.013)
-    model_student.s.setVal(5000)
-    model_student.b.setVal( 500)
+    model_student.S.setVal(5000)
+    model_student.B.setVal( 500)
     
     with rooSilent() : 
         result, frame = model_student. fitTo ( dataset0 )
@@ -548,8 +548,8 @@ def test_bifstudentT():
         background = Models.Bkg_pdf ('BkgST2', mass = mass , power = 0 )) 
     
     signal = model.signal 
-    model.s.setVal(5000)
-    model.b.setVal( 500)
+    model.S.setVal(5000)
+    model.B.setVal( 500)
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
@@ -585,8 +585,8 @@ def test_sinhasinh() :
     
     signal = model.signal
     
-    model.s.setVal(5000)
-    model.b.setVal( 500)
+    model.S.setVal(5000)
+    model.B.setVal( 500)
     
     signal.mu      .setVal (  3.10  )
     signal.sigma   .setVal (  0.015 ) 
@@ -628,8 +628,8 @@ def test_johnsonSU () :
     
     signal = model.signal
     
-    model.s.setVal(5000)
-    model.b.setVal( 500)
+    model.S.setVal(5000)
+    model.B.setVal( 500)
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 )  
@@ -663,8 +663,8 @@ def test_atlas () :
         background = Models.Bkg_pdf ('BkgATLAS', mass = mass , power = 0 )) 
     
     signal = model.signal
-    model.s.setVal(5000)
-    model.b.setVal( 500)
+    model.S.setVal(5000)
+    model.B.setVal( 500)
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 )  
@@ -696,8 +696,8 @@ def test_sech() :
         background = Models.Bkg_pdf ('BkgSECH', mass = mass , power = 0 )) 
     
     signal = model.signal
-    model.s.setVal(5000)
-    model.b.setVal( 500)
+    model.S.setVal(5000)
+    model.B.setVal( 500)
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 )  
@@ -729,8 +729,8 @@ def test_logistic () :
         background = Models.Bkg_pdf ('BkgLOGI', mass = mass , power = 0 )) 
     
     signal = model.signal
-    model.s.setVal(5000)
-    model.b.setVal( 500)
+    model.S.setVal(5000)
+    model.B.setVal( 500)
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 )  
@@ -766,8 +766,8 @@ def test_voigt () :
     signal.gamma.fix ( 0.010     )
     signal.mean .fix() 
     
-    model.b.setVal( 500)
-    model.s.setVal(5000)
+    model.B.setVal( 500)
+    model.S.setVal(5000)
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
@@ -806,8 +806,8 @@ def test_pvoigt () :
     signal.sigma.fix ( m.error() )
     signal.gamma.fix ( 0.010     )
     
-    model.b.setVal( 500)
-    model.s.setVal(5000)
+    model.B.setVal( 500)
+    model.S.setVal(5000)
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
@@ -855,8 +855,8 @@ def test_bw () :
         background = Models.Bkg_pdf ('BkgBW', mass = mass , power = 0 )) 
 
     signal = model.signal 
-    model.s.setVal(5000)
-    model.b.setVal(500)
+    model.S.setVal(5000)
+    model.B.setVal(500)
     
     signal.mean.fix ( m.value() )
     

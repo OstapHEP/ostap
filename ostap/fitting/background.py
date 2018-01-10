@@ -87,7 +87,7 @@ class Bkg_pdf(PolyBase) :
         #                
         self.power = power
         #
-        mn,mx   = self.xminmax
+        mn,mx   = self.xminmax ()
         mc      = 0.5 * ( mn + mx )
         taumax  = 100
         #
@@ -206,7 +206,7 @@ class TwoExpoPoly_pdf(PolyBase) :
         #                
         self.power = power
         #
-        mn,mx   = self.xminmax
+        mn,mx   = self.xminmax()
         mc      = 0.5 * ( mn + mx )
         taumax  = 100
         #

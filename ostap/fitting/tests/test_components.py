@@ -103,30 +103,31 @@ def test_extended1 () :
  
     with rooSilent() : 
     ## signals
-        model.S_1.fix    ( 5000 )
-        model.S_2.fix    ( 5000 )
-        model.S_3.fix    ( 5000 )
+        model.S[0].fix    ( 5000 )
+        model.S[1].fix    ( 5000 )
+        model.S[2].fix    ( 5000 )
     
         ## backgrounds 
-        model.B_1.fix    ( 5000 )
-        model.B_2.fix    ( 1000 )
-        model.B_3.setVal ( 1000 )
+        model.B[0].fix    ( 5000 )
+        model.B[1].fix    ( 1000 )
+        model.B[2].setVal ( 1000 )
         
         ## "components"
-        model.C_1.fix    ( 1000 )
-        model.C_2.setVal ( 1000 )
+        model.C[0].fix    ( 1000 )
+        model.C[1].setVal ( 1000 )
         
         r, f = model.fitTo ( dataset , draw = False )
 
-        model.S_1.release() 
-        model.S_2.release()
-        model.S_3.release() 
-        model.B_1.release()
+        model.S[0].release() 
+        model.S[1].release()
+        model.S[2].release()
+        
+        model.B[0].release()
 
         r, f = model.fitTo ( dataset , draw = False , silent = True )
         
-        model.B_2.release()
-        model.C_1.release() 
+        model.B[1].release()
+        model.C[0].release() 
         
     r, f = model.fitTo ( dataset , draw = False , silent = True )
         
@@ -155,12 +156,12 @@ def test_extended2 () :
     with rooSilent() :
         model.S.fix ( 15000 )
         model.B.fix (  7000 )
-        model.C.fix (  2000 )
+        model.C[0].fix (  2000 )
         r, f = model.fitTo ( dataset , draw = False , silent = True )
         
-    model.S.release() 
-    model.B.release() 
-    model.C.release() 
+    model.S   .release() 
+    model.B   .release() 
+    model.C[0].release() 
     r, f = model.fitTo ( dataset , draw = False , silent = True )
     
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
@@ -181,14 +182,14 @@ def test_nonextended1 () :
         extended            = False  ## ATTENTION! 
         )
 
-    model.f_1.setVal ( 0.20 )
-    model.f_2.setVal ( 0.25 )
-    model.f_3.setVal ( 0.36 )
+    model.F[0].setVal ( 0.20 )
+    model.F[1].setVal ( 0.25 )
+    model.F[2].setVal ( 0.36 )
 
-    model.f_4.setVal ( 0.65 )
-    model.f_5.setVal ( 0.05 )
-    model.f_6.setVal ( 0.25 )
-    model.f_7.setVal ( 0.50 )
+    model.F[3].setVal ( 0.65 )
+    model.F[4].setVal ( 0.05 )
+    model.F[5].setVal ( 0.25 )
+    model.F[6].setVal ( 0.50 )
     
     r, f = model.fitTo ( dataset , draw = False , silent = True )
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
@@ -218,24 +219,25 @@ def test_nonextended2 () :
                   ## fS_2    3.3333e-01    4.9896e-01 +/-  5.60e-03  <none>
                   ##  f_1    3.3333e-01    6.3647e-01 +/-  6.05e-03  <none>
                   ##  f_2    3.3333e-01    7.3854e-01 +/-  1.71e-02  <none>
-    
+
     with rooSilent() :
-        model.f_1 .fix( 0.63 ) 
-        model.f_2 .fix( 0.74 )
+        model.F[0] .fix( 0.63 ) 
+        model.F[1] .fix( 0.74 )
         
-        model.fB_1.setVal( 0.95 )
-        model.fB_2.setVal( 0.01 )
-        model.fC_1.fix   ( 0.50 )
-        model.fS_1.fix   ( 0.33 )
-        model.fS_2.fix   ( 0.50 )
+        model.fB[0].setVal( 0.95 )
+        model.fB[1].setVal( 0.01 )
+        model.fC[0].fix   ( 0.50 )
+        model.fS[0].fix   ( 0.33 )
+        model.fS[1].fix   ( 0.50 )
         r, f = model.fitTo ( dataset , draw = False , silent = True )
         
-        model.f_1. release() 
-        model.f_2 .release() 
+        model.F[0]. release() 
+        model.F[1] .release() 
         
-        model.fC_1.release() 
-        model.fS_1.release() 
-        model.fS_2.release() 
+        model.fC[0].release() 
+        model.fS[0].release() 
+        model.fS[1].release()
+        
         r, f = model.fitTo ( dataset , draw = False , silent = True )        
         
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
@@ -260,21 +262,21 @@ def test_nonextended3 () :
 
     with rooSilent() :
         
-        model.f_1.fix    ( 0.20 )
-        model.f_2.fix    ( 0.20 )
-        model.f_3.fix    ( 0.20 )
-        model.f_4.fix    ( 0.25 )
+        model.F[0].fix    ( 0.20 )
+        model.F[1].fix    ( 0.20 )
+        model.F[2].fix    ( 0.20 )
+        model.F[3].fix    ( 0.25 )
         
-        model.f_5.setVal ( 0.01  )
-        model.f_6.setVal ( 0.02  )
-        model.f_7.setVal ( 0.02  )
+        model.F[4].setVal ( 0.01  )
+        model.F[5].setVal ( 0.02  )
+        model.F[6].setVal ( 0.02  )
         
         r, f = model.fitTo ( dataset , draw = False , silent = True )
         
-        model.f_1.release() 
-        model.f_2.release() 
-        model.f_3.release()
-        model.f_4.release()  
+        model.F[0].release() 
+        model.F[1].release() 
+        model.F[2].release()
+        model.F[3].release()  
         
         r, f = model.fitTo ( dataset , draw = False , silent = True )
         

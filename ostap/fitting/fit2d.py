@@ -61,6 +61,10 @@ class PDF2 (PDF) :
             self.__yvar = makeVar( yvar , 'y' , 'y-variable' )
 
 
+    def yminmax ( self ) :
+        """Min/max values for y-varibale"""
+        return self.__yvar.minmax()
+    
     @property 
     def yvar ( self ) :
         """``y''-variable for the fit (same as ``y'')"""
@@ -71,10 +75,6 @@ class PDF2 (PDF) :
         """``y''-variable for the fit (same as ``yvar'')"""
         return self.__yvar
     
-    @property
-    def yminmax ( self ) :
-        """Min/max values for y-varibale"""
-        return self.__yvar.minmax()
 
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
@@ -364,8 +364,8 @@ class PDF2 (PDF) :
         >>> pdf = ...
         >>> print pdf.integral( 0,1,0,2)
         """
-        xmn , xmx = self.xminmax
-        ymn , ymx = self.yminmax
+        xmn , xmx = self.xminmax()
+        ymn , ymx = self.yminmax()
 
         xmin = max ( xmin , xmn )
         xmax = min ( xmax , xmx )
