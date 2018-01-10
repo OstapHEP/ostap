@@ -83,10 +83,7 @@ class GammaDist_pdf(PDF) :
                    k     = None     ,   ## k-parameter
                    theta = None     ) : ## theta-parameter
         #
-        PDF.__init__ ( self , name )
-        #
-        self.x     = makeVar ( x  , 'x' , 'x-variable' ) 
-        self.mass  = self.x                                ## ditto
+        PDF.__init__ ( self , name , x )
         #
         self.__k     = makeVar ( k       ,
                                  'k_%s'                % name ,
@@ -158,10 +155,7 @@ class GenGammaDist_pdf(PDF) :
                    p     = None  ,   ## p-parameter
                    low   = None  ) : ## low-parameter
         #
-        PDF.__init__ ( self , name )
-        #
-        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
-        self.mass  = self.x  ## ditto
+        PDF.__init__ ( self , name , x  )
         #
         self.__k     = makeVar ( k       ,
                                  'k_%s'                % name ,
@@ -255,10 +249,7 @@ class Amoroso_pdf(PDF) :
                    a     = None  ) : ## s-parameter
         
         #
-        PDF.__init__ ( self , name )
-        #
-        self.x     = makeVar ( x , 'x' , 'x-variable' )  
-        self.mass  = self.x  ## ditto
+        PDF.__init__ ( self , name , x )
         #
         self.__theta = makeVar ( theta   ,
                                  'theta_%s'             % name ,
@@ -349,10 +340,7 @@ class LogGammaDist_pdf(PDF) :
                    k     = None ,   ## k-parameter
                    theta = None ) : ## theta-parameter
         #
-        PDF.__init__ ( self , name )
-        #
-        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
-        self.mass  = self.x                             ## ditto
+        PDF.__init__ ( self , name , x  )
         #
         self.k     = makeVar ( k       ,
                                'k_%s'                   % name ,
@@ -415,10 +403,7 @@ class Log10GammaDist_pdf(PDF) :
                    k     = None ,   ## k-parameter
                    theta = None ) :  ## theta-parameter
         #
-        PDF.__init__ ( self , name )
-        #
-        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
-        self.mass  = self.x  ## ditto
+        PDF.__init__ ( self , name , x  )
         #
         self.__k     = makeVar ( k       ,
                                  'k_%s'                     % name ,
@@ -492,10 +477,7 @@ class LogGamma_pdf(PDF) :
                    lam   = None ,   ## lambda-parameter
                    alpha = None ) : ## nu-parameter
         #
-        PDF.__init__ ( self , name )
-        #
-        self.x     = makeVar ( x  , 'x' , 'x-variable' ) 
-        self.mass  = self.x  ## ditto
+        PDF.__init__ ( self , name , x )
         #
         xmin = self.x.getMin()
         xmax = self.x.getMax()
@@ -578,11 +560,8 @@ class BetaPrime_pdf(PDF) :
                    scale = 1    ,   ## scale-parameter 
                    delta = 0    ) : ## shift-parameter 
         #
-        PDF.__init__ ( self , name )
+        PDF.__init__ ( self , name , x )
         # 
-        self.x     = makeVar  ( x  , 'x' , 'x-variable' ) 
-        self.mass  = self.x  ## ditto
-        #
         self.__alpha  = makeVar ( alpha    ,
                                   'alpha_%s'                 % name ,
                                   '#alpha_{#beta#prime}(%s)' % name , alpha , 1 , 1.e-6 , 10000 )
@@ -675,10 +654,7 @@ class Landau_pdf(PDF) :
                    scale = 1 ,   ## scale-parameter 
                    delta = 0 ) : ## shift-parameter 
         #
-        PDF.__init__ ( self , name ) 
-        #
-        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
-        self.mass  = self.x  ## ditto
+        PDF.__init__ ( self , name , x  ) 
         #
         self.__scale  = makeVar ( scale     ,
                                   'scale_%s'            % name ,
@@ -741,10 +717,7 @@ class Argus_pdf(PDF) :
                    high  = None     ,   ## high-parameter 
                    low   = 0        ) : ## low-parameter 
         #
-        PDF.__init__ ( self , name ) 
-        #
-        self.x     = makeVar ( x , 'x' , 'x-variable' ) 
-        self.mass  = self.x  ## ditto
+        PDF.__init__ ( self , name , x  ) 
         #
         self.__shape  = makeVar ( shape     ,
                                   'shape_%s'         % name ,
@@ -833,10 +806,7 @@ class TwoExpos_pdf(PDF) :
                    delta = None     ,   ## high-parameter 
                    x0    = 0        ) : ## low-parameter 
         #
-        PDF.__init__ ( self , name ) 
-        #
-        self.x     = makeVar ( x , 'x' , 'x-variable' )  
-        self.mass  = self.x  ## ditto
+        PDF.__init__ ( self , name , x  ) 
         #
         self.__alpha  = makeVar ( alpha      ,
                                   'alpha_%s'        % name ,
@@ -932,12 +902,7 @@ class Gumbel_pdf(PDF) :
                    mu   = 0  ,   ## shift parameter/mode
                    beta = 1  ) : ## scale parameter 
         #
-        PDF.__init__ ( self , name )
-        #
-        self.x     = makeVar ( x ,
-                               'x_%s'           % name ,
-                               'x_{Gumbel}(%s)' % name , x )                       
-        self.mass  = self.x  ## ditto
+        PDF.__init__ ( self , name , x )
         #
         self.__mu    = makeVar ( mu      ,
                                  'mu_%s'                  % name ,
@@ -1019,12 +984,7 @@ class Tsallis_pdf(PDF) :
                    name      = ''         ) :
 
         ## initialize the base 
-        PDF.__init__  ( self , name )
-        
-        self.pt   = makeVar ( pt , 'pt' , 'pt-variable' )  
-        
-        self.m    = self.pt
-        self.mass = self.pt
+        PDF.__init__  ( self , name , pt )
         
         self.__m0   = makeVar ( mass            ,
                                 'm0_%s'  % name , 
@@ -1041,11 +1001,16 @@ class Tsallis_pdf(PDF) :
         self.pdf  = Ostap.Models.Tsallis (
             'tsallis_'    + name  ,
             'Tsallis(%s)' % name  ,
-            self.pt               ,
+            self.xvar             ,
             self.n                ,
             self.T                ,
             self.m0               )
-        
+
+    @property
+    def pt ( self ) :
+        """``pt''-variable for Tsallis distribution (the same as ``x'')"""
+        return self.xvar
+    
     @property
     def m0 ( self ) :
         """m0-parameter of Tsallis' function"""
@@ -1114,12 +1079,8 @@ class QGSM_pdf(PDF) :
                    name      = ''   ) :
         
         ## initialize the base 
-        PDF.__init__  ( self , name )
-        
-        self.pt   = makeVar ( pt , 'pT' , 'pt-variable' ) 
-        self.m    = self.pt
-        self.mass = self.pt
-        
+        PDF.__init__  ( self , name , pt )
+
         self.__m0   = makeVar ( mass            ,
                                 'm0_%s'  % name , 
                                 'm0(%s)' % name , mass , 0     , 1e+6 )
@@ -1135,6 +1096,11 @@ class QGSM_pdf(PDF) :
             self.b                ,
             self.m0               )
         
+    @property
+    def pt ( self ) :
+        """``pt''-variable for QGSM distribution (the same as ``x'')"""
+        return self.xvar
+    
     @property
     def m0 ( self ) :
         """m0-parameter of QGSM function"""

@@ -68,8 +68,6 @@ class Bd_pdf(CB2_pdf) :
         ## 
         CB2_pdf.__init__ ( self             ,
                            name             ,
-                           mass.getMin()    ,
-                           mass.getMax()    ,
                            mass             , 
                            mean             ,
                            sigma            ,
@@ -102,8 +100,6 @@ class Bu_pdf(CB2_pdf) :
         ## 
         CB2_pdf.__init__ ( self             ,
                            name             ,
-                           mass.getMin()    ,
-                           mass.getMax()    ,
                            mass             , 
                            mean             ,
                            sigma            ,
@@ -135,8 +131,6 @@ class Bs_pdf(CB2_pdf) :
         ## 
         CB2_pdf.__init__ ( self             ,
                            name             ,
-                           mass.getMin()    ,
-                           mass.getMax()    ,
                            mass             , 
                            mean             ,
                            sigma            ,
@@ -168,8 +162,6 @@ class Bc_pdf(CB2_pdf) :
         ## 
         CB2_pdf.__init__ ( self             ,
                            name             ,
-                           mass.getMin()    ,
-                           mass.getMax()    ,
                            mass             , 
                            mean             ,
                            sigma            ,
@@ -204,8 +196,6 @@ class D0_pdf(Bukin_pdf) :
         
         Bukin_pdf.__init__ ( self          ,
                              name          ,
-                             mass.getMin() ,
-                             mass.getMax() ,
                              mass          , 
                              mean          ,
                              sigma         ,
@@ -234,8 +224,6 @@ class Dp_pdf(Bukin_pdf) :
 
         Bukin_pdf.__init__ ( self          ,
                              name          ,
-                             mass.getMin() , 
-                             mass.getMax() , 
                              mass          ,
                              mean          ,
                              sigma         ,
@@ -264,8 +252,6 @@ class Ds_pdf(Bukin_pdf) :
         
         Bukin_pdf.__init__ ( self          ,
                              name          ,
-                             mass.getMin() , 
-                             mass.getMax() , 
                              mass          , 
                              mean          ,
                              sigma         ,
@@ -294,8 +280,6 @@ class Lc_pdf(Bukin_pdf) :
         
         Bukin_pdf.__init__ ( self     ,
                              name     ,
-                             mass.getMin() , 
-                             mass.getMax() , 
                              mass     , 
                              mean     ,
                              sigma    ,
@@ -389,8 +373,6 @@ class Manca_pdf (PDF) :
         self.sigma = self.s1s 
         self.Y1S   = Needham_pdf (
             name + '1S'           ,
-            mass.getMin()         ,
-            mass.getMax()         ,
             mass     = self.mass  ,
             mean     = self.m1s   ,
             sigma    = self.s1s   ,
@@ -426,8 +408,6 @@ class Manca_pdf (PDF) :
         
         self.Y2S   = Needham_pdf (
             name + '2S'           ,
-            mass.getMin()         ,
-            mass.getMax()         ,
             mass     = self.mass  ,
             mean     = self.m2s   ,
             sigma    = self.s2s   ,
@@ -464,8 +444,6 @@ class Manca_pdf (PDF) :
         
         self.Y3S   = Needham_pdf (
             name + '3S'           ,
-            mass.getMin()         ,
-            mass.getMax()         ,
             mass     = self.mass  ,
             mean     = self.m3s   ,
             sigma    = self.s3s   ,
@@ -608,8 +586,6 @@ class Manca2_pdf (PDF) :
         
         self.Y1S   = CB2_pdf (
             name + '1S'           ,
-            mass.getMin()         ,
-            mass.getMax()         ,
             mass     = self.mass  ,
             mean     = self.m1s   ,
             sigma    = self.s1s   ,
@@ -646,8 +622,6 @@ class Manca2_pdf (PDF) :
         
         self.Y2S  = CB2_pdf (
             name + '2S'           ,
-            mass.getMin()         ,
-            mass.getMax()         ,
             mass     = self.mass  ,
             mean     = self.m2s   ,
             sigma    = self.s2s   ,
@@ -685,8 +659,6 @@ class Manca2_pdf (PDF) :
         
         self.Y3S  = CB2_pdf (
             name + '3S'           ,
-            mass.getMin()         ,
-            mass.getMax()         ,
             mass     = self.mass  ,
             mean     = self.m3s   ,
             sigma    = self.s3s   ,

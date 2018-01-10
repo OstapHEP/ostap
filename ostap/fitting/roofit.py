@@ -729,16 +729,24 @@ ROOT.RooRealVar     . __float__       = lambda s : s.getVal()
 ## print it in more suitable form 
 ROOT.RooRealVar     . __repr__        = lambda s : "'%s' : %s " % ( s.GetName() , s.ve() )
 
-ROOT.RooRealVar     . xmin            = lambda s : s.getMin()
-ROOT.RooRealVar     . xmax            = lambda s : s.getMax()
-ROOT.RooRealVar     . minmax          = lambda s : (s.xmin(),s.xmax()) 
 
 ROOT.RooConstVar    . as_VE          = lambda s : VE( s.getVal() , 0 )
 ROOT.RooFormulaVar  . as_VE          = lambda s : VE( s.getVal() , 0 )
 ROOT.RooConstVar    . asVE           = lambda s : VE( s.getVal() , 0 )
 ROOT.RooFormulaVar  . asVE           = lambda s : VE( s.getVal() , 0 )
 
+
+ROOT.RooAbsReal       .__contains__ = lambda s,v : False ## ??? do we need it???
 ROOT.RooAbsRealLValue .__contains__ = _rrv_contains_ 
+
+# =====================================================================
+ROOT.RooAbsReal. minmax  = lambda s : ()
+ROOT.RooAbsReal.xminmax  = lambda s : ()
+ROOT.RooAbsRealLValue  . xmin            = lambda s : s.getMin()
+ROOT.RooAbsRealLValue  . xmax            = lambda s : s.getMax()
+ROOT.RooAbsRealLValue  . minmax          = lambda s : (s.xmin(),s.xmax()) 
+ROOT.RooAbsRealLValue  .xminmax          = lambda s : (s.xmin(),s.xmax()) 
+
 
 _new_methods_ += [
     ROOT.RooRealVar   . as_VE     ,

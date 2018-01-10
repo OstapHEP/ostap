@@ -43,11 +43,39 @@ class PDF3 (PDF2) :
         
         PDF2.__init__ ( self , name , xvar , yvar ) 
         
-        var3  = makeVar ( zvar , 'var3' , '3rd-variable' )
-        
-        self.varz         = var3
-        self.z            = var3 ## ditto
-        self.m3           = var3 ## ditto 
+        self.__zvar = None 
+        ## create the variable 
+        if isinstance ( zvar , tuple ) and 2 == len(zvar) :  
+            self.__zvar = makeVar ( zvar               , ## var 
+                                    'z'                , ## name 
+                                    'z-variable(mass)' , ## title/comment
+                                    *zvar              , ## min/max 
+                                    fix = None         ) ## fix ? 
+        elif isinstance ( zvar , ROOT.RooAbsReal ) :
+            self.__zvar = makeVar ( zvar               , ## var 
+                                    'z'                , ## name 
+                                    'z-variable/mass'  , ## title/comment
+                                    fix = None         ) ## fix ? 
+        else :
+            ##logger.warning('x-variable is not specified (yet)')
+            self.__zvar = makeVar( zvar , 'z' , 'z-variable' )
+
+
+    @property 
+    def zvar ( self ) :
+        """``z''-variable for the fit (same as ``z'')"""
+        return self.__zvar
+
+    @property 
+    def z    ( self ) :
+        """``z''-variable for the fit (same as ``zvar'')"""
+        return self.__zvar
+    
+    @property
+    def zminmax ( self ) :
+        """Min/max values for y-variable"""
+        return self.__zvar. minmax()
+
 
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
@@ -92,7 +120,7 @@ class PDF3 (PDF2) :
     #
     #  fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = (2,3) ) ## draw results
     #
-    #  model.m2.setRange ( 'QUQU2' , 2 , 3 ) 
+    #  model.yvar.setRange ( 'QUQU2' , 2 , 3 ) 
     #  fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
     #
     #  @endcode 
@@ -110,27 +138,27 @@ class PDF3 (PDF2) :
         
         >>> fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = (2,3) ) ## draw results
 
-        >>> model.m2.setRange ( 'QUQU2' , 2 , 3 ) 
+        >>> model.yvar.setRange ( 'QUQU2' , 2 , 3 ) 
         >>> fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            self.m3.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
+            self.zvar.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
             in_range2 = 'aux_rng2'
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_ran3e2 ) :
-            self.m3.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
+            self.zvar.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
             in_range3 = 'aux_rng3'
 
         in_range = []
         if in_range2 : in_range.append( in_range2 )
         if in_range3 : in_range.append( in_range3 )
         in_ranage = tuple( in_range ) 
-        return self.draw ( self.m1  , 
-                           dataset  ,
-                           nbins    ,
-                           20       , ## fake 
-                           silent   ,
+        return self.draw ( self.xvar  , 
+                           dataset    ,
+                           nbins      ,
+                           20         , ## fake 
+                           silent     ,
                            in_range = in_range , *args , **kwargs )
 
 
@@ -143,7 +171,7 @@ class PDF3 (PDF2) :
     #
     #  fy  = model.draw1 ( dataset , nbins = 100 , in_range1 = (2,3) ) ## draw results
     #
-    #  model.m1.setRange ( 'QUQU1' , 2 , 3 ) 
+    #  model.xvar.setRange ( 'QUQU1' , 2 , 3 ) 
     #  fy  = model.draw1 ( dataset , nbins = 100 , in_range1 = 'QUQU1') ## draw results
     #
     #  @endcode 
@@ -161,27 +189,27 @@ class PDF3 (PDF2) :
         
         >>> fx  = model.draw2 ( dataset , nbins = 100 , in_range1 = (2,3) ) ## draw results
 
-        >>> model.m1.setRange ( 'QUQU1' , 2 , 3 ) 
+        >>> model.xvar.setRange ( 'QUQU1' , 2 , 3 ) 
         >>> fx  = model.draw2 ( dataset , nbins = 100 , in_range1 = 'QUQU1') ## draw results
         
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            self.m1.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
+            self.xvar.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
             in_range1 = 'aux_rng1'
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_ran3e2 ) :
-            self.m3.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
+            self.zvar.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
             in_range3 = 'aux_rng3'
 
         in_range = []
         if in_range1 : in_range.append( in_range1 )
         if in_range3 : in_range.append( in_range3 )
         in_ranage = tuple( in_range ) 
-        return self.draw ( self.m2  , 
-                           dataset  ,
-                           nbins    ,
-                           20       , ## fake 
-                           silent   ,
+        return self.draw ( self.yvar  , 
+                           dataset    ,
+                           nbins      ,
+                           20         , ## fake 
+                           silent     ,
                            in_range = in_range , *args , **kwargs )
 
 
@@ -194,7 +222,7 @@ class PDF3 (PDF2) :
     #
     #  fz  = model.draw3 ( dataset , nbins = 100 , in_range2 = (2,3) ) ## draw results
     #
-    #  model.m2.setRange ( 'QUQU2' , 2 , 3 ) 
+    #  model.yvar.setRange ( 'QUQU2' , 2 , 3 ) 
     #  f  = model.draw3 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
     #  @endcode 
     def draw3 ( self            ,
@@ -211,27 +239,27 @@ class PDF3 (PDF2) :
         
         >>> fx  = model.draw3 ( dataset , nbins = 100 , in_range2 = (2,3) ) ## draw results
 
-        >>> model.m2.setRange ( 'QUQU2' , 2 , 3 ) 
+        >>> model.yvar.setRange ( 'QUQU2' , 2 , 3 ) 
         >>> fx  = model.draw3 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            self.m1.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
+            self.xvar.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
             in_range1 = 'aux_rng1'
 
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            self.m3.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
+            self.zvar.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
             in_range2 = 'aux_rng2'
 
         in_range = []
         if in_range1 : in_range.append( in_range1 )
         if in_range2 : in_range.append( in_range2 )
         in_ranage = tuple( in_range ) 
-        return self.draw ( self.m3  , 
-                           dataset  ,
-                           nbins    ,
-                           20       , ## fake 
-                           silent   ,
+        return self.draw ( self.zvar , 
+                           dataset   ,
+                           nbins     ,
+                           20        , ## fake 
+                           silent    ,
                            in_range = in_range , *args , **kwargs )
 
     # =========================================================================
@@ -257,16 +285,16 @@ class PDF3 (PDF2) :
         
         """
         
-        xminmax = histo.xminmax()
-        yminmax = histo.yminmax()
-        zminmax = histo.zminmax()
+        xminmax = histo.xminmax
+        yminmax = histo.yminmax
+        zminmax = histo.zminmax
         
-        with     RangeVar ( self.m1 , *xminmax ) , \
-                 RangeVar ( self.m2 , *yminmax ) , \
-                 RangeVar ( self.m3 , *zminmax ): 
+        with     RangeVar ( self.xvar , *xminmax ) , \
+                 RangeVar ( self.yvar , *yminmax ) , \
+                 RangeVar ( self.zvar , *zminmax ): 
             
             ## convert it! 
-            self.hdset = H3D_dset ( histo , self.m1 , self.m2  , self.m3 , density , silent )
+            self.hdset = H3D_dset ( histo , self.xvar , self.yvar  , self.xvar , density , silent )
             self.hset  = self.hdset.dset
                 
             ## fit it!!
@@ -281,16 +309,16 @@ class PDF3 (PDF2) :
     ## simple 'function-like' interface 
     def __call__ ( self , x , y , z ) :
         
-        if     isinstance ( self.m1 , ROOT.RooRealVar ) and \
-               isinstance ( self.m2 , ROOT.RooRealVar ) and \
-               isinstance ( self.m3 , ROOT.RooRealVar ) :
+        if     isinstance ( self.xvar , ROOT.RooRealVar ) and \
+               isinstance ( self.yvar , ROOT.RooRealVar ) and \
+               isinstance ( self.xvar , ROOT.RooRealVar ) :
            
             from ostap.fitting.roofit import SETVAR
-            if x in  self.m1 and y in self.m2  and  z in self.m3 : 
-                with SETVAR( self.m1 ) , SETVAR( self.m2 ) ,  SETVAR( self.m3 ) :
-                    self.m1.setVal ( x )
-                    self.m2.setVal ( y )
-                    self.m3.setVal ( z )
+            if x in  self.xvar and y in self.yvar  and  z in self.zvar : 
+                with SETVAR( self.xvar ) , SETVAR( self.yvar ) ,  SETVAR( self.zvar ) :
+                    self.xvar.setVal ( x )
+                    self.yvar.setVal ( y )
+                    self.zvar.setVal ( z )
                     return self.pdf.getVal()
             else : return 0.0
             
@@ -307,9 +335,9 @@ class PDF3 (PDF2) :
         >>> pdf = ...
         >>> print pdf.integral( 0,1,0,2,0,5)
         """
-        xmn , xmx = self.m1.minmax()
-        ymn , ymx = self.m2.minmax()
-        zmn , zmx = self.m3.minmax()
+        xmn , xmx = self.xminmax
+        ymn , ymx = self.yminmax
+        zmn , zmx = self.zminmax
 
         xmin = max ( xmin , xmn )
         xmax = min ( xmax , xmx )
@@ -538,9 +566,9 @@ class Fit3D (PDF3) :
         self._bkgY1 = bkgY1
         self._bkgZ1 = bkgZ1
         
-        self.bkgX1 = makeBkg ( bkgX1 , 'BkgX_S2S3' + suffix , self.m1 )
-        self.bkgY1 = makeBkg ( bkgY1 , 'BkgY_S1S3' + suffix , self.m2 )
-        self.bkgZ1 = makeBkg ( bkgZ1 , 'BkgZ_S1S2' + suffix , self.m3 )
+        self.bkgX1 = makeBkg ( bkgX1 , 'BkgX_S2S3' + suffix , self.xvar )
+        self.bkgY1 = makeBkg ( bkgY1 , 'BkgY_S1S3' + suffix , self.yvar )
+        self.bkgZ1 = makeBkg ( bkgZ1 , 'BkgZ_S1S2' + suffix , self.zvar )
         
         self._ssb_list = ROOT.RooArgList (
             self.signal1.pdf , self.signal2.pdf , self.bkgZ1  .pdf )
@@ -570,9 +598,9 @@ class Fit3D (PDF3) :
         if bkgY2 is None : bkgY2 = bkgY1
         if bkgZ2 is None : bkgZ2 = bkgZ1
         
-        self.bkgX2  = makeBkg ( bkgX2 , 'BkgX_S2' + suffix , self.m1 )        
-        self.bkgY2  = makeBkg ( bkgY2 , 'BkgY_S2' + suffix , self.m2 )        
-        self.bkgZ2  = makeBkg ( bkgZ2 , 'BkgZ_S2' + suffix , self.m3 )
+        self.bkgX2  = makeBkg ( bkgX2 , 'BkgX_S2' + suffix , self.xvar )        
+        self.bkgY2  = makeBkg ( bkgY2 , 'BkgY_S2' + suffix , self.yvar )        
+        self.bkgZ2  = makeBkg ( bkgZ2 , 'BkgZ_S2' + suffix , self.zvar )
         
         self._bkgXY = bkgXY
         self._bkgXZ = bkgXZ
@@ -625,9 +653,9 @@ class Fit3D (PDF3) :
             if bkgY3 is None : bkgY3 = bkgY2
             if bkgZ3 is None : bkgZ3 = bkgZ2
             
-            self.bkgX3 = makeBkg ( bkgX3 , 'BkgX_S0' + suffix , self.m1 )
-            self.bkgY3 = makeBkg ( bkgY3 , 'BkgY_S0' + suffix , self.m2 )
-            self.bkgZ3 = makeBkg ( bkgZ3 , 'BkgZ_S0' + suffix , self.m3 )
+            self.bkgX3 = makeBkg ( bkgX3 , 'BkgX_S0' + suffix , self.xvar )
+            self.bkgY3 = makeBkg ( bkgY3 , 'BkgY_S0' + suffix , self.yvar )
+            self.bkgZ3 = makeBkg ( bkgZ3 , 'BkgZ_S0' + suffix , self.zvar )
             
             self._bbb_list = ROOT.RooArgList ( self.bkgX3.pdf ,
                                                self.bkgY3.pdf ,

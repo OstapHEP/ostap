@@ -40,17 +40,41 @@ class PDF2 (PDF) :
     """
     def __init__ ( self , name , xvar = None , yvar = None ) : 
 
-        PDF.__init__ ( self , name )
+
+        PDF.__init__ ( self , name , xvar )
         
-        var1 = makeVar ( xvar , 'var1' , '1st-variable' ) 
-        var2 = makeVar ( yvar , 'var2' , '2nd-variable' ) 
-        
-        self.varx         = var1 
-        self.vary         = var2 
-        self.x            = var1 
-        self.y            = var2 
-        self.m1           = var1 ## ditto
-        self.m2           = var2 ## ditto 
+        self.__yvar = None 
+        ## create the variable 
+        if isinstance ( yvar , tuple ) and 2 == len(yvar) :  
+            self.__yvar = makeVar ( yvar               , ## var 
+                                    'y'                , ## name 
+                                    'y-varibale(mass)' , ## title/comment
+                                    *yvar              , ## min/max 
+                                    fix = None         ) ## fix ? 
+        elif isinstance ( yvar , ROOT.RooAbsReal ) :
+            self.__yvar = makeVar ( yvar               , ## var 
+                                    'y'                , ## name 
+                                    'y-variable/mass'  , ## title/comment
+                                    fix = None         ) ## fix ? 
+        else :
+            ##logger.warning('x-varibale is not specified (yet)')
+            self.__yvar = makeVar( yvar , 'y' , 'y-variable' )
+
+
+    @property 
+    def yvar ( self ) :
+        """``y''-variable for the fit (same as ``y'')"""
+        return self.__yvar
+
+    @property 
+    def y    ( self ) :
+        """``y''-variable for the fit (same as ``yvar'')"""
+        return self.__yvar
+    
+    @property
+    def yminmax ( self ) :
+        """Min/max values for y-varibale"""
+        return self.__yvar.minmax()
 
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
@@ -106,7 +130,7 @@ class PDF2 (PDF) :
     #
     #  f1  = model.draw1 ( dataset , nbins = 100 , in_range = (2,3) ) ## draw results
     #
-    #  model.m2.setRange ( 'QUQU2' , 2 , 3 ) 
+    #  model.yvar.setRange ( 'QUQU2' , 2 , 3 ) 
     #  f1  = model.draw1 ( dataset , nbins = 100 , in_range = 'QUQU2') ## draw results
     #
     #  @endcode 
@@ -122,20 +146,20 @@ class PDF2 (PDF) :
         
         >>> f1  = model.draw1 ( dataset , nbins = 100 , in_range = (2,3) ) ## draw results
 
-        >>> model.m2.setRange ( 'QUQU2' , 2 , 3 ) 
+        >>> model.yvar.setRange ( 'QUQU2' , 2 , 3 ) 
         >>> f1  = model.draw1 ( dataset , nbins = 100 , in_range = 'QUQU2') ## draw results
         
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
-            self.m2.setRange ( 'aux_rng2' , in_range[0] , in_range[1] )
+            self.yvar.setRange ( 'aux_rng2' , in_range[0] , in_range[1] )
             in_range = 'aux_rng2'
             
-        return self.draw ( self.m1  , 
-                           dataset  ,
-                           nbins    ,
-                           20       , ## fake 
-                           silent   ,
-                           in_range , *args , **kwargs )
+        return self.draw ( self.xvar , 
+                           dataset   ,
+                           nbins     ,
+                           20        , ## fake 
+                           silent    ,
+                           in_range  , *args , **kwargs )
     
     # =========================================================================
     ## draw the projection over 2nd variable
@@ -146,7 +170,7 @@ class PDF2 (PDF) :
     #
     #  f2  = model.draw2 ( dataset , nbins = 100 , in_range = (2,3) ) ## draw results
     #
-    #  model.m1.setRange ( 'QUQU1' , 2 , 3 ) 
+    #  model.xvar.setRange ( 'QUQU1' , 2 , 3 ) 
     #  f2  = model.draw2 ( dataset , nbins = 100 , in_range = 'QUQU1') ## draw results
     #
     #  @endcode 
@@ -162,18 +186,18 @@ class PDF2 (PDF) :
         
         >>> f2  = model.draw2 ( dataset , nbins = 100 , in_range = (2,3) ) ## draw results
 
-        >>> model.m1.setRange ( 'QUQU1' , 2 , 3 ) 
+        >>> model.xvar.setRange ( 'QUQU1' , 2 , 3 ) 
         >>> f2  = model.draw2 ( dataset , nbins = 100 , in_range = 'QUQU1') ## draw results
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
-            self.m1.setRange ( 'aux_rng1' , in_range[0] , in_range[1] )
+            self.xvar.setRange ( 'aux_rng1' , in_range[0] , in_range[1] )
             in_range = 'aux_rng1'
 
-        return self.draw ( self.m2 ,
-                           dataset ,
-                           nbins   ,
-                           20      , ## fake
-                           silent  , in_range , *args , **kwargs )
+        return self.draw ( self.yvar ,
+                           dataset   ,
+                           nbins     ,
+                           20        , ## fake
+                           silent    , in_range , *args , **kwargs )
 
     # =========================================================================
     ## draw as 2D-histograms 
@@ -186,13 +210,13 @@ class PDF2 (PDF) :
         
         _xbins = ROOT.RooFit.Binning ( xbins ) 
         _ybins = ROOT.RooFit.Binning ( ybins ) 
-        _yvar  = ROOT.RooFit.YVar    ( self.m2 , _ybins )
+        _yvar  = ROOT.RooFit.YVar    ( self.yvar , _ybins )
         _clst  = ROOT.RooLinkedList  ()
-        hdata  = self.pdf.createHistogram ( hID() , self.m1 , _xbins , _yvar )
-        hpdf   = self.pdf.createHistogram ( hID() , self.m1 , _xbins , _yvar )
+        hdata  = self.pdf.createHistogram ( hID() , self.xvar , _xbins , _yvar )
+        hpdf   = self.pdf.createHistogram ( hID() , self.xvar , _xbins , _yvar )
         hdata.SetTitle(';;;')
         hpdf .SetTitle(';;;')
-        _lst   = ROOT.RooArgList ( self.m1 , self.m2 )  
+        _lst   = ROOT.RooArgList ( self.xvar , self.yvar )  
         if dataset : dataset.fillHistogram( hdata , _lst ) 
         self.pdf.fillHistogram  ( hpdf , _lst )
         
@@ -292,10 +316,10 @@ class PDF2 (PDF) :
 
         xminmax = histo.xminmax()
         yminmax = histo.yminmax()        
-        with RangeVar( self.m1 , *xminmax ) , RangeVar ( self.m2 , *yminmax ): 
+        with RangeVar( self.xvar , *xminmax ) , RangeVar ( self.yvar , *yminmax ): 
             
             ## convert it! 
-            self.hdset = H2D_dset ( histo , self.m1 , self.m2  , density , silent )
+            self.hdset = H2D_dset ( histo , self.xvar , self.yvar  , density , silent )
             self.hset  = self.hdset.dset
                 
             ## fit it!!
@@ -318,12 +342,12 @@ class PDF2 (PDF) :
         >>> x, y = 0.45, 0.88 
         >>> print 'Value of PDF at x=%f,y=%s is %f' % ( x , y , pdf ( x , y ) ) 
         """        
-        if isinstance ( self.m1 , ROOT.RooRealVar ) and isinstance ( self.m2 , ROOT.RooRealVar ) :
+        if isinstance ( self.xvar , ROOT.RooRealVar ) and isinstance ( self.yvar , ROOT.RooRealVar ) :
             from ostap.fitting.roofit import SETVAR
-            if x in self.m1 and y in  self.m2 : 
-                with SETVAR( self.m1 ) , SETVAR( self.m2 ) :
-                    self.m1.setVal ( x )
-                    self.m2.setVal ( y )
+            if x in self.xvar and y in  self.xvar : 
+                with SETVAR( self.xvar ) , SETVAR( self.yvar ) :
+                    self.xvar.setVal ( x )
+                    self.yvar.setVal ( y )
                     return self.pdf.getVal()
             else : return 0.0
             
@@ -340,8 +364,8 @@ class PDF2 (PDF) :
         >>> pdf = ...
         >>> print pdf.integral( 0,1,0,2)
         """
-        xmn , xmx = self.m1.minmax()
-        ymn , ymx = self.m2.minmax()
+        xmn , xmx = self.xminmax
+        ymn , ymx = self.yminmax
 
         xmin = max ( xmin , xmn )
         xmax = min ( xmax , xmx )
@@ -473,7 +497,7 @@ class Fit2D (PDF2) :
                                         self.signal2.pdf   )
 
         self._bkg1 = bkg1 
-        self.bkg1  = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.m1 )
+        self.bkg1  = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.xvar )
         
         #
         ## Second component: Background(1) and Signal(2)
@@ -484,7 +508,7 @@ class Fit2D (PDF2) :
                                         self.signal2.pdf    )
 
         self._bkg2 = bkg2
-        self.bkg2 = makeBkg ( bkg2   , 'Bkg(2)' + suffix , self.m2 )
+        self.bkg2 = makeBkg ( bkg2   , 'Bkg(2)' + suffix , self.yvar )
         
         #
         ## Third component:  Signal(1) and Background(2)
@@ -511,8 +535,8 @@ class Fit2D (PDF2) :
             if bkgA is None : bkgA = bkg1
             if bkgB is None : bkgB = bkg2
             
-            self.bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.m1 )
-            self.bkgB = makeBkg ( bkgB   , 'Bkg(B)' + suffix , self.m2 )
+            self.bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.xvar )
+            self.bkgB = makeBkg ( bkgB   , 'Bkg(B)' + suffix , self.yvar )
             
             self.bb_pdf = ROOT.RooProdPdf ( "B1B2pdf" + suffix ,
                                             "Bkg(A) x Bkg(B)"  ,
@@ -566,9 +590,9 @@ class Fit2D (PDF2) :
                 cmp = cmp.pdf 
             elif isinstance ( cmp , ( float , int , long ) ) and not isinstance ( cmp , bool ) :
                 px  = ROOT.RooPolynomial ( 'Px%d'    % icmp + suffix ,
-                                           'Px(%d)'  % icmp + suffix , self.m1 ) 
+                                           'Px(%d)'  % icmp + suffix , self.xvar ) 
                 py  = ROOT.RooPolynomial ( 'Py%d'    % icmp + suffix ,
-                                           'Py(%d)'  % icmp + suffix , self.m2 ) 
+                                           'Py(%d)'  % icmp + suffix , self.yvar) 
                 cmp = ROOT.RooProdPdf    ( "Pxy%d"   % icmp + suffix ,
                                            "Pxy(%d)" % icmp + suffix , px , py )  
                 self._cmps += [ px,py,cmp]
@@ -711,18 +735,18 @@ class Fit2DSym (PDF2) :
                                         self.signal2.pdf   )
 
         self._bkg1 = bkg1 
-        self.bkg1  = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.m1 )
+        self.bkg1  = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.xvar )
 
         if bkg1 :
             if hasattr ( self.bkg1, 'tau' )  :
-                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.m2 , the_phis = self.bkg1 , tau = self.bkg1.tau )
+                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 , tau = self.bkg1.tau )
             else :
-                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.m2 , the_phis = self.bkg1 )
+                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 )
         else    :
             if hasattr ( self.bkg1, 'tau' )  :
-                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.m2 , the_phis = self.bkg1 , tau = self.bkg1.tau )
+                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 , tau = self.bkg1.tau )
             else :
-                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.m2 , the_phis = self.bkg1 )
+                self.bkg2 = makeBkg ( bkg1   , 'Bkg(2)' + suffix , self.yvar , the_phis = self.bkg1 )
         
         
         #
@@ -763,8 +787,8 @@ class Fit2DSym (PDF2) :
             self._bkgA = bkgA
             if bkgA is None : bkgA = bkg1
             
-            self.bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.m1 )
-            self.bkgB = makeBkg ( bkgA   , 'Bkg(B)' + suffix , self.m2 , the_phis = self.bkgA )
+            self.bkgA = makeBkg ( bkgA   , 'Bkg(A)' + suffix , self.xvar )
+            self.bkgB = makeBkg ( bkgA   , 'Bkg(B)' + suffix , self.yvar , the_phis = self.bkgA )
             
             self.bb_pdf = ROOT.RooProdPdf ( "B1B2pdf" + suffix ,
                                             "Bkg(A) x Bkg(B)"  ,
@@ -821,9 +845,9 @@ class Fit2DSym (PDF2) :
                 cmp = cmp.pdf 
             elif isinstance ( cmp , ( float , int , long ) ) and not isinstance ( cmp , bool ) :
                 px  = ROOT.RooPolynomial ( 'Px%d'    % icmp + suffix ,
-                                           'Px(%d)'  % icmp + suffix , self.m1 ) 
+                                           'Px(%d)'  % icmp + suffix , self.xvar ) 
                 py  = ROOT.RooPolynomial ( 'Py%d'    % icmp + suffix ,
-                                           'Py(%d)'  % icmp + suffix , self.m2 ) 
+                                           'Py(%d)'  % icmp + suffix , self.yvar ) 
                 cmp = ROOT.RooProdPdf    ( "Pxy%d"   % icmp + suffix ,
                                            "Pxy(%d)" % icmp + suffix , px , py )  
                 self._cmps += [ px,py,cmp]
@@ -890,7 +914,7 @@ class Generic2D_pdf(PDF2) :
     >>> pdf     = Generic2D_pdf ( raw_pdf )
     """
     ## constructor 
-    def __init__ ( self , pdf , varx = None , vary = None , name = None ) :
+    def __init__ ( self , pdf , varx , vary , name = None ) :
         if not name : name = pdf.GetName()
         PDF2  . __init__ ( self , name , varx , vary )
         self.pdf = pdf

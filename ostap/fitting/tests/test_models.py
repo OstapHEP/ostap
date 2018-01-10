@@ -35,17 +35,16 @@ mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 3.0 , 3.2 )
 varset0  = ROOT.RooArgSet  ( mass )
 dataset0 = ROOT.RooDataSet ( dsID() , 'Test Data set-0' , varset0 )  
 
-mmin = mass.getMin()
-mmax = mass.getMax()
+mmin,mmax = mass.minmax()
 
 ## fill it 
 m = VE(3.100,0.015**2)
 for i in xrange(0,5000) :
-    mass.setVal  ( m.gauss () )
+    mass.value = m.gauss () 
     dataset0.add ( varset0    )
 
 for i in xrange(0,500) :
-    mass.setVal  ( random.uniform ( mass.getMin() , mass.getMax() ) ) 
+    mass.value = random.uniform ( mmin , mmax ) 
     dataset0.add ( varset0   )
 
 logger.info ('DATASET %s' % dataset0 )

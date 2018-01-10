@@ -51,9 +51,14 @@ models = []
 class PolyBase(PDF,Phases) :
     """Helper base class to implement various polynomial-like shapes
     """
-    def __init__ ( self , name , power , the_phis = None ) :
-        PDF   .__init__ ( self , name )
+    def __init__ ( self , name , power , xvar = None , the_phis = None ) :
+        xvar = makeVar ( xvar , 'xvar' , 'x-variable' )
+        PDF   .__init__ ( self , name  , xvar      )
         Phases.__init__ ( self , power , the_phis  )
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
+        return self.xvar
         
 # =============================================================================
 ## @class  Bkg_pdf
@@ -78,12 +83,11 @@ class Bkg_pdf(PolyBase) :
                    tau      = None  ,   ## exponential slope 
                    the_phis = None  ) : ## the phis... 
         #
-        PolyBase.__init__  ( self , name , power )
+        PolyBase.__init__  ( self , name , power , mass )
         #                
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
         #
-        mn,mx   = mass.minmax()
+        mn,mx   = self.xminmax
         mc      = 0.5 * ( mn + mx )
         taumax  = 100
         #
@@ -157,9 +161,8 @@ class PSPol_pdf(PolyBase) :
                    power = 1        ) : ## degree of the polynomial
         
         #
-        PolyBase.__init__  ( self , name , power )
+        PolyBase.__init__  ( self , name , power , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
         self.power = power
 
@@ -199,12 +202,11 @@ class TwoExpoPoly_pdf(PolyBase) :
                    power = 0        ,   ## degree of polynomial
                    tau   = None     ) : ##  
         #
-        PolyBase.__init__  ( self , name , power )
+        PolyBase.__init__  ( self , name , power , mass )
         #                
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
         #
-        mn,mx   = mass.minmax()
+        mn,mx   = self.xminmax
         mc      = 0.5 * ( mn + mx )
         taumax  = 100
         #
@@ -294,9 +296,8 @@ class PolyPos_pdf(PolyBase) :
                    mass             ,   ## the varibale 
                    power = 1        ) : ## degree of the polynomial
         #
-        PolyBase.__init__ ( self , name , power )
+        PolyBase.__init__ ( self , name , power , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
 
         ## make PDF
@@ -334,9 +335,8 @@ class PolyEven_pdf(PolyBase) :
                    mass             ,   ## the varibale 
                    power = 1        ) : ## (half)degree of the polynomial
         #
-        PolyBase.__init__ ( self , name , power )
+        PolyBase.__init__ ( self , name , power , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power = power
         
         ## make PDF
@@ -379,9 +379,8 @@ class Monothonic_pdf(PolyBase) :
                    power = 2         ,   ## degree of the polynomial
                    increasing = True ) : ## increasing or decreasing ?
         #
-        PolyBase.__init__ ( self , name , power )
+        PolyBase.__init__ ( self , name , power , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
         self.increasing = increasing
         # 
@@ -432,9 +431,8 @@ class Convex_pdf(PolyBase) :
                    increasing = True ,   ## increasing or decreasing ?
                    convex     = True ) : ## convex or concave ?
         #
-        PolyBase.__init__ ( self , name , power )
+        PolyBase.__init__ ( self , name , power , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
         self.increasing = increasing
         self.convex     = convex  
@@ -476,9 +474,8 @@ class ConvexOnly_pdf(PolyBase) :
                    power = 2         ,   ## degree of the polynomial
                    convex     = True ) : ## convex or concave ?
         #
-        PolyBase.__init__ ( self , name , power )
+        PolyBase.__init__ ( self , name , power , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
         self.convex     = convex
         
@@ -512,9 +509,8 @@ class Sigmoid_pdf(PolyBase) :
                    alpha = None      ,   ##
                    x0    = None      ) :
         #
-        PolyBase.__init__ ( self , name , power )
+        PolyBase.__init__ ( self , name , power , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.power      = power
 
         xmin  = mass.getMin()
@@ -607,9 +603,8 @@ class PSpline_pdf(PolyBase) :
                    mass             ,   ## the variable
                    spline           ) : ## the spline object Ostap::Math::PositiveSpline
         #
-        PolyBase.__init__ ( self , name , spline.npars() )
+        PolyBase.__init__ ( self , name , spline.npars() , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
 
         ## make PDF 
@@ -658,9 +653,8 @@ class MSpline_pdf(PolyBase) :
                    mass             ,   ## the variable
                    spline           ) : ## the spline object Ostap::Math::MonothonicSpline
         #
-        PolyBase .__init__ ( self , name  , spline.npars() )
+        PolyBase .__init__ ( self , name  , spline.npars() , mass )
         #
-        self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline         
         # make PDF
         self.pdf  = Ostap.Models.MonothonicSpline (
@@ -709,9 +703,8 @@ class CSpline_pdf(PolyBase) :
                    mass             ,   ## the variable
                    spline           ) : ## the spline object Ostap::Math::ConvexSpline
         #
-        PolyBase   .__init__ ( self , name  , spline.npars() )
+        PolyBase   .__init__ ( self , name  , spline.npars() , mass )
         #
-        self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
         
         # make PDF 
@@ -758,9 +751,8 @@ class CPSpline_pdf(PolyBase) :
                    mass             ,   ## the variable
                    spline           ) : ## the spline object Ostap::Math::ConvexOnlySpline
         #
-        PolyBase.__init__ ( self , name , spline.npars () )
+        PolyBase.__init__ ( self , name , spline.npars () , mass )
         #
-        self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.spline = spline 
         
         # make PDF 
@@ -801,9 +793,9 @@ class PS2_pdf(PDF) :
                    m2               ) : ## the second mass (constant)
         #
         ## initialize the base 
-        PDF.__init__ ( self , name )
+        mass = makeVar ( mass , 'bmass' , 'background-mass' ) 
+        PDF.__init__ ( self , name , mass )
         #
-        self.mass   = makeVar( mass , 'bmass' , 'background-mass' ) 
 
         if self.mass.getMax() < abs ( m1 ) + abs ( m2 ) :
             logger.error('PS2_pdf(%s): senseless setting of edges/threshold' % self.name ) 
@@ -813,6 +805,12 @@ class PS2_pdf(PDF) :
             'PhaseSpace2(%s)' % name ,
             self.mass            ,
             m1  , m2 )
+        
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
+        return self.xvar
+    
 
 models.append ( PS2_pdf ) 
 # =============================================================================
@@ -841,9 +839,9 @@ class PSLeft_pdf(PDF) :
                    left   = None    ) : 
         #
         ## initialize the base 
-        PDF.__init__ ( self , name )
+        mass = makeVar ( mass , 'bmass' , 'background-mass' ) 
+        PDF.__init__ ( self , name , mass )
         #
-        self.mass= makeVar( mass , 'bmass' , 'background-mass' ) 
         self.__left = makeVar ( left                ,
                               'left_%s'    % name ,
                               'm_left(%s)' % name ,
@@ -859,6 +857,11 @@ class PSLeft_pdf(PDF) :
             self.left ,
             N         ) 
 
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
+        return self.xvar
+    
     @property
     def left( self ) :
         """(Left) threshold for N-body phase space"""
@@ -892,9 +895,9 @@ class PSRight_pdf(PDF) :
                    right   = None   ) : 
         #
         ## initialize the base 
-        PDF.__init__ ( self , name )
+        mass = makeVar ( mass , 'bmass' , 'background-mass' ) 
+        PDF.__init__ ( self , name , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.__right = makeVar ( right ,
                                  'right_%s'      % name ,
                                  'm_{right}(%s)' % name ,
@@ -911,6 +914,11 @@ class PSRight_pdf(PDF) :
             L          , 
             N          )
         
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
+        return self.xvar
+    
     @property
     def right( self ) :
         """(Right) threshold for ``L-from-N''-body phase space"""
@@ -955,9 +963,9 @@ class PSNL_pdf(PDF) :
         ##
         #
         ## initialize the base 
-        PDF.__init__ ( self , name )
+        mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
+        PDF.__init__ ( self , name , mass )
         #
-        self.mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
         #
         mmin = mass.getMin()
         mmax = mass.getMax()
@@ -991,6 +999,11 @@ class PSNL_pdf(PDF) :
             L          , 
             N          )
         
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
+        return self.xvar
+    
     @property
     def left( self ) :
         """(Left) threshold for ``L-from-N''-body phase space"""
@@ -1050,15 +1063,21 @@ class PS23L_pdf(PDF) :
                    l  = 0           ) : ## orbital momentum between 1 and 2
         #
         ## initialize the base 
-        PDF.__init__ ( self , name )
+        mass = makeVar( mass , 'bmass' , 'background-mass' ) 
+        PDF.__init__ ( self , name , mass )
         #
-        self.mass = makeVar( mass , 'bmass' , 'background-mass' ) 
         self.pdf  = Ostap.Models.PhaseSpace23L (
             'ps23l_%s'          % name ,
             'PhaseSpace23L(%s)' % name ,
-            self.mass  ,
+            self.mass                  ,
             m1 , m2 , m3 , m , L , l )
         
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
+        return self.xvar
+    
+
 models.append ( PS23L_pdf ) 
 
 

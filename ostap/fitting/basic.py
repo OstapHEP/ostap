@@ -302,15 +302,53 @@ def fitArgs ( name , dataset = None , *args , **kwargs ) :
 class PDF (object) :
     """Useful helper base class for implementation of PDFs for 1D-fit
     """
-    def __init__ ( self , name ) :
+    def __init__ ( self , name , xvar = None ) :
         self.name         = name
         self._signals     = ROOT.RooArgList ()
         self._backgrounds = ROOT.RooArgList ()
         self._components  = ROOT.RooArgList ()
         ## take care about sPlots 
         self._splots      = []
-        self._properties  = {} 
+        self._properties  = {}
+        
+        if   isinstance ( xvar, ROOT.TH1   ) :
+            xvar = xvar.xminmax()
+        elif isinstance ( xvar , ROOT.TAxis ) :
+            xvar = xvar.GetXmin() , xvar.GetXmax()
 
+        self.__xvar = None 
+        ## create the variable 
+        if isinstance ( xvar , tuple ) and 2 == len(xvar) :  
+            self.__xvar = makeVar ( xvar               , ## var 
+                                    'x'                , ## name 
+                                    'x-variable(mass)' , ## title/comment
+                                    *xvar              , ## min/max 
+                                    fix = None         ) ## fix ? 
+        elif isinstance ( xvar , ROOT.RooAbsReal ) :
+            self.__xvar = makeVar ( xvar               , ## var 
+                                    'x'                , ## name 
+                                    'x-variable/mass'  , ## title/comment
+                                    fix = None         ) ## fix ? 
+        else :
+            ##logger.warning('x-variable is not specified (yet)')
+            self.__xvar = makeVar( xvar , 'x' , 'x-variable' )
+        
+
+    @property 
+    def xvar ( self ) :
+        """``x''-variable for the fit (same as ``x'')"""
+        return self.__xvar
+
+    @property 
+    def x    ( self ) :
+        """``x''-variable for the fit (same as ``xvar'')"""
+        return self.__xvar
+    
+    @property
+    def xminmax ( self ) :
+        """Min/max values for x-variable"""
+        return self.__xvar.minmax()
+        
     ## get all declared components 
     def components  ( self ) : return self._components
     ## get all declared signals 
@@ -1020,14 +1058,10 @@ class MASS(PDF) :
     """
     def __init__ ( self            ,
                    name            ,
-                   ## mn       = None ,
-                   ## mx       = None ,
                    mass     = None ,
                    mean     = None ,
                    sigma    = None ) : 
 
-        ## intialize the base 
-        PDF.__init__ ( self , name )
 
         ##  if not mn is None : logger.warning('Ignore mn-argument')
         ## if not mx is None : logger.warning('Ignore mx-argument')
@@ -1043,19 +1077,22 @@ class MASS(PDF) :
 
         ## create the variable 
         if isinstance ( mass , tuple ) and 2 == len(mass) :  
-            self.mass = makeVar ( mass    , ## var 
-                                  m_name  , ## name 
-                                  m_title , ## title/comment
-                                  *mass   , ## min/max 
-                                  fix = None ) ## fix ? 
+            mass = makeVar ( mass    , ## var 
+                             m_name  , ## name 
+                             m_title , ## title/comment
+                             *mass   , ## min/max 
+                             fix = None ) ## fix ? 
         elif isinstance ( mass , ROOT.RooAbsReal ) :
-            self.mass = makeVar ( mass    , ## var 
-                                  m_name  , ## name 
-                                  m_title , ## title/comment
-                                  fix = None  ) ## fix ? 
+            mass = makeVar ( mass    , ## var 
+                             m_name  , ## name 
+                             m_title , ## title/comment
+                             fix = None  ) ## fix ? 
         else :
             raise AttributeError("Unknown type of ``mass'' parameter %s/%s" % ( type ( mass ) , mass ) ) 
-                
+
+        ## intialize the base 
+        PDF.__init__ ( self , name , xvar = mass )
+        
         
         self._mn = self.mass.getMin ()
         self._mx = self.mass.getMax ()
@@ -1086,7 +1123,12 @@ class MASS(PDF) :
         self.__sigma = makeVar ( sigma              ,
                                  "sigma_%s"  % name ,
                                  "sigma(%s)" % name , sigma , 0.01 * sigma_max , 0 , sigma_max )        
-
+    
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
+        return self.xvar
+    
     @property
     def mean ( self ):
         """This is my doc for property mean"""
@@ -1148,8 +1190,8 @@ class H1D_dset(object) :
         ## use mass-variable
         #
         name = histo.GetName() 
-        if mass : self.mass = mass 
-        else    : self.mass = makeVar ( mass , 'm_%s' % name , 'mass(%s)' % name , None , *(histo.xminmax()) )
+        if mass : self.__haxis = mass 
+        else    : self.__haxis = makeVar ( mass , 'm_%s' % name , 'mass(%s)' % name , None , *(histo.xminmax()) )
 
         self.impDens = density 
         
@@ -1157,14 +1199,18 @@ class H1D_dset(object) :
             
             self.var1    = self.mass
             self.x       = self.mass
-            self.vlst    = ROOT.RooArgList    ( self.mass )
+            self.vlst    = ROOT.RooArgList    ( self.haxis )
             self.vimp    = ROOT.RooFit.Import ( histo     , density )
             self.dset    = ROOT.RooDataHist   (
                 rootID ( 'hds_' ) ,
                 "Data set for histogram '%s'" % histo.GetTitle() ,
                 self.vlst  ,
                 self.vimp  )
-            
+    @property
+    def haxis  (self ):
+        """The histogram axis"""
+        return self.__haxis 
+    
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -1180,12 +1226,12 @@ class H1D_pdf(H1D_dset,PDF) :
                    silent  = False ) :
         
         H1D_dset.__init__ ( self , histo , mass , density , silent )
-        PDF     .__init__ ( self , name  )
+        PDF     .__init__ ( self , name  , self.haxis )
         
         with roo_silent ( silent ) : 
             #
             ## finally create PDF :
-            self.vset  = ROOT.RooArgSet  ( self.mass )        
+            self.vset  = ROOT.RooArgSet  ( self.haxis )        
             self.pdf   = ROOT.RooHistPdf (
                 'hpdf_%s'            % name ,
                 'HistoPDF(%s/%s/%s)' % ( name , histo.GetName() , histo.GetTitle() ) , 
@@ -1276,13 +1322,15 @@ class Fit1D (PDF) :
             elif signal.name            : name = signal.name + '1D' 
             #
             
-        # base class 
-        PDF.__init__ ( self , name + suffix )
         #
         self.extended   = extended 
         self.suffix     = suffix 
         self.signal     =      signal 
         self.mass       = self.signal.mass
+
+        # Init base class 
+        PDF.__init__ ( self , name + suffix , self.mass )
+        
         #
         self.background = makeBkg ( background , 'Background' + suffix , self.mass )
         #
@@ -1646,13 +1694,10 @@ class Generic1D_pdf(PDF) :
     >>> pdf     = Generic1D_pdf ( raw_pdf , varx = x )
     """
     ## constructor 
-    def __init__ ( self , pdf , varx = None , name = None ) :
+    def __init__ ( self , pdf , xvar , name = None ) :
         if not name : name = pdf.GetName()
-        PDF  . __init__ ( self , name )
+        PDF  . __init__ ( self , name , xvar  )
         self.pdf  = pdf
-        self.varx = varx
-        self.mass = varx
-        self.x    = varx
         self.signals().add ( self.pdf )
 
 # =============================================================================
