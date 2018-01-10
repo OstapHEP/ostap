@@ -1327,11 +1327,11 @@ class Fit1D (PDF) :
         self.suffix     = suffix 
         self.signal     =      signal
 
-        self.xvar       = signal.xvar 
-        self.mass       = self.xvar 
         
         # Init base class 
-        PDF.__init__ ( self , name + suffix , self.mass )
+        PDF.__init__ ( self , name + suffix , signal.xvar )
+
+        self.mass       = self.xvar 
 
         #
         self.background = makeBkg ( background , 'Background' + suffix , self.mass )
