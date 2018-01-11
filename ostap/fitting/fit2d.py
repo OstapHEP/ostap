@@ -484,7 +484,7 @@ class Fit2D (PDF2) :
         ## initialize base class
         #
         if not name and signal_1.name and signal_2.name :
-            name = '%s_and_%s_%s' ( signal_1.name , signal_2.name , suffix )
+            name = '%s_and_%s_%s' % ( signal_1.name , signal_2.name , suffix )
             
         PDF2.__init__ ( self , name , signal_1.mass , signal_2.mass ) 
         
@@ -800,7 +800,7 @@ class Fit2DSym (PDF2) :
         ## initialize base class
         #
         if not name and signal_1.name and signal_2.name :
-            name = '%s_and_%s_%s' ( signal_1.name , signal_2.name , suffix )
+            name = '%s_and_%s_%s' % ( signal_1.name , signal_2.name , suffix )
             
         PDF2.__init__ ( self , name , signal_1.mass , signal_2.mass ) 
         
