@@ -39,11 +39,11 @@ m = VE(3.100,0.015**2)
 w = VE(3.100,0.100**2) 
 for i in xrange(0,5000) :
     
-    m_x.setVal ( random.uniform ( *m_x.minmax() )  
-                 m_y.setVal ( random.uniform ( *m_y.minmax() )
+    m_x.value = random.uniform ( *m_x.minmax() )  
+    m_y.value = random.uniform ( *m_y.minmax() )
     
     dataset.add ( varset  )
-
+    
 logger.info ( 'DataSet: %s' % dataset )
 
 models = set() 
