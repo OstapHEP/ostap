@@ -341,16 +341,16 @@ class CB2_pdf(MASS) :
         #
         self.__aL    = makeVar ( alphaL                  ,
                                  "aL_%s"          % name ,
-                                 "#alpha_{L}(%s)" % name , alphaL    , 2.0 , 0 , 10 )
+                                 "#alpha_{L}(%s)" % name , alphaL    , 1.5 , 0.1 , 10 )
         self.__nL    = makeVar ( nL                      ,                     
                                  "nL_%s"          % name ,
-                                 "n_{L}(%s)"      % name , nL        , 1   , 0 , 20 )
+                                 "n_{L}(%s)"      % name , nL        , 1    , 0 , 20 )
         self.__aR    = makeVar ( alphaR ,
                                  "aR_%s"          % name ,
-                                 "#alpha_{R}(%s)" % name , alphaR    , 2.0 , 0 , 10 )
+                                 "#alpha_{R}(%s)" % name , alphaR    , 1.5  , 0.2 , 10 )
         self.__nR    = makeVar ( nR                      ,
                                  "nR_%s"          % name ,
-                                 "n_{R}(%s)"      % name , nR        , 1   , 0 , 20 )
+                                 "n_{R}(%s)"      % name , nR        , 1    , 0 , 20 )
         
         self.pdf = Ostap.Models.CrystalBallDS(
             "cb2_"       + name ,
@@ -369,6 +369,8 @@ class CB2_pdf(MASS) :
         return self.__aL
     @aL.setter
     def aL ( self, value ) :
+        value = float ( value )
+        assert 0.01 < value < 10 , "alpha_L must be between 0.01 and 10" 
         self.__aL.setVal ( value )
         return self.__aL.getVal ()
 
@@ -378,6 +380,8 @@ class CB2_pdf(MASS) :
         return self.__nL
     @nL.setter
     def nL ( self, value ) :
+        value = float ( value )
+        assert 0 < value < 100 , "N_L must be between 0 and 100" 
         self.__nL.setVal ( value )
         return self.__nL.getVal ()
 
@@ -387,6 +391,8 @@ class CB2_pdf(MASS) :
         return self.__aR
     @aR.setter
     def aR ( self, value ) :
+        value = float ( value )
+        assert 0.01 < value < 10 , "alpha_R must be between 0.01 and 10" 
         self.__aR.setVal ( value )
         return self.__aR.getVal ()
 
@@ -396,6 +402,8 @@ class CB2_pdf(MASS) :
         return self.__nR
     @nR.setter
     def nR ( self, value ) :
+        value = float ( value )
+        assert 0 < value < 100 , "N_R must be between 0 and 100" 
         self.__nR.setVal ( value )
         return self.__nR.getVal ()
 

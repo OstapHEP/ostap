@@ -176,16 +176,16 @@ def test_crystalball_DS () :
         background = Models.Bkg_pdf ('BkgCBDS', mass = mass , power = 0 )
         )
 
-    model_cbds.S.setVal(5000)
-    model_cbds.B.setVal( 500)
+    model_cbds.S.value  = 5000
+    model_cbds.B.value  =  500
     
     with rooSilent() : 
         result, frame = model_cbds. fitTo ( dataset0 )
         model_cbds.signal.aL.release()
         model_cbds.signal.aR.release()
         result, frame = model_cbds. fitTo ( dataset0 )
-        model_cbds.signal.aL.fix(5) 
-        model_cbds.signal.aL.fix(5)    
+        model_cbds.signal.aL.fix(1.5) 
+        model_cbds.signal.aR.fix(1.5)    
         result, frame = model_cbds. fitTo ( dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :

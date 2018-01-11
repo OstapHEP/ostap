@@ -466,12 +466,27 @@ class Fit2D (PDF2) :
                    #
                    ## main components :
                    ss         = None  , ## signal    (1) * signal     (2)
-                   sb         = None  , ## signal    (1) * bakcground (2) 
+                   sb         = None  , ## signal    (1) * background (2) 
                    bs         = None  , ## background(1) * signal     (2)
                    bb         = None  , ## background-2D 
                    ## additional components 
                    components = []    ,
                    name       = ''    ) : 
+        
+        ## collect all the arguments 
+        self.__args = {
+            'signal_1'   : signal_1 , 'signal_2' : signal_2 ,
+            'bkg1'       : bkg1     , 'bkg2'     : bkg2     ,
+            'bkgA'       : bkgA     , 'bkgB'     : bkgB     ,
+            'bkg2D'      : bkg2D ,
+            'components' : bkg2D ,
+            ##
+            'ss'         : ss , 'bb'         : bb ,
+            'sb'         : sb ,'bs'         : bs ,
+            ##
+            'suffix'   : suffix   ,
+            'name'     : name     ,
+            }
         
         self.__crossterms1 = ROOT.RooArgSet()
         self.__crossterms2 = ROOT.RooArgSet()
@@ -496,7 +511,6 @@ class Fit2D (PDF2) :
                                           self.signal1.pdf   ,
                                           self.signal2.pdf   )
         
-        self.__arg_bkg1 = bkg1 
         self.__bkg1 = makeBkg ( bkg1   , 'Bkg(1)' + suffix , self.xvar )
         
         #
@@ -507,7 +521,6 @@ class Fit2D (PDF2) :
                                           self.__bkg1.pdf     ,
                                           self.signal2.pdf    )
         
-        self.__arg_bkg2 = bkg2
         self.__bkg2 = makeBkg ( bkg2   , 'Bkg(2)' + suffix , self.yvar )
         
         #
@@ -532,9 +545,6 @@ class Fit2D (PDF2) :
         elif bkg2D and hasattr    ( bkg2D , 'pdf'          ) : self.__bb_pdf = bkg2D.pdf
         else     :            
 
-            self.__arg_bkgA = bkgA 
-            self.__arg_bkgB = bkgB
-            
             if bkgA is None : bkgA = bkg1
             if bkgB is None : bkgB = bkg2
             
@@ -768,7 +778,7 @@ class Fit2DSym (PDF2) :
     >>> r,f = model.fitTo ( dataset ) ## fit dataset 
     >>> print r                       ## get results  
     >>> fx  = model.draw1 ()          ## visualize X-projection
-    >>> fy  = model.draw2 ()          ## visualize X-projection
+    >>> fy  = model.draw2 ()          ## visualize Y-projection
 
     """
     def __init__ ( self               ,

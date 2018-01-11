@@ -83,7 +83,7 @@ class Bkg_pdf(PolyBase) :
                    tau      = None  ,   ## exponential slope 
                    the_phis = None  ) : ## the phis... 
         #
-        PolyBase.__init__  ( self , name , power , mass )
+        PolyBase.__init__  ( self , name , power , mass , the_phis )
         #                
         self.power = power
         #

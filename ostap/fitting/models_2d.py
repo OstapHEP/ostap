@@ -122,7 +122,7 @@ class PolyPos2Dsym_pdf(PolyBase2) :
                             % ( x.getMax() , y.getMax() ) )
             
         num = ( n + 1 ) * ( n + 2 ) / 2 
-        PolyBase2.__init__ ( self , name , x , y , num )  
+        PolyBase2.__init__ ( self , name , x , y , num - 1 )  
 
         ## finally build PDF 
         self.pdf = Ostap.Models.Poly2DSymPositive (

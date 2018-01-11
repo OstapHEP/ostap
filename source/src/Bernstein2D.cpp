@@ -912,6 +912,8 @@ bool Ostap::Math::Positive2DSym::updateBernstein ()
     update = updated || update ; 
   }
   //
+  if ( update ) { m_bernstein /= m_bernstein.integral() ; } 
+  //
   return update ;
 }
 // ============================================================================

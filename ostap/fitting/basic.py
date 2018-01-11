@@ -172,7 +172,7 @@ def makeVar ( var , name , comment , fix = None , *args ) :
 
 # =============================================================================
 ## make a RooArgList of variables/fractions 
-def makeFracs ( N , pname , ptitle , model , fractions = True )  :
+def makeFracs ( N , pname , ptitle , model , fractions = True , recursive = True )  :
     """Make a RooArgList of variables/fractions 
     """
     if not isinstance ( N , (int,long) ) : raise TypeError('Invalid N type %s' % type(N) )
@@ -181,9 +181,18 @@ def makeFracs ( N , pname , ptitle , model , fractions = True )  :
     fracs = ROOT.RooArgList()
     n     = (N-1) if fractions else N
     lst   = []
+
+    NN  = n + 1
+    prod = 1.0
     for i in range(0,n) :
-        if fractions : fi = makeVar ( None , pname  % i , ptitle % i , None , 1.0/N , 0 , 1     )
-        else         : fi = makeVar ( None , pname  % i , ptitle % i , None , 1     , 0 , 1.e+6 )
+        if fractions :            
+            fv = 1.0 / NN
+            if recursive :    
+                fv   /=  prod
+                prod *= ( 1 - fv )
+            fi = makeVar ( None , pname  % i , ptitle % i , None , fv , 0 , 1     )            
+        else         :
+            fi = makeVar ( None , pname  % i , ptitle % i , None , 1     , 0 , 1.e+7 )
         fracs.add  ( fi )
         setattr ( model , '__' + fi.GetName() , fi ) 
     ##    
@@ -197,7 +206,8 @@ def addPdf ( pdflist , name , title , fname , ftitle , model , recursive = True 
     ##
     pdfs  = ROOT.RooArgList() 
     for pdf in pdflist : pdfs.add  ( pdf )
-    fracs = makeFracs ( len ( pdfs ) , fname , ftitle , fractions = True , model = model ) 
+    fracs = makeFracs ( len ( pdfs ) , fname , ftitle , fractions = True , model = model , recursive = recursive )
+    ## create PDF 
     pdf   = ROOT.RooAddPdf ( name , title , pdfs, fracs , recursive )
     ##
     setattr ( model , '__addPdf_'       + name , pdf   )
