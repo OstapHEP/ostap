@@ -1164,7 +1164,7 @@ class SkewGauss_pdf(MASS) :
         #
         ## finally build PDF
         #
-        self.pdf = Ostap.Models.SkewGaussV2 (
+        self.pdf = Ostap.Models.SkewGauss (
             "skew_"         + name ,
             "SkewGauss(%s)" % name ,
             self.mass   ,
@@ -1203,7 +1203,6 @@ class SkewGauss_pdf(MASS) :
         self.__alpha.setVal ( value ) 
         return self.__alpha.getVal ()
     
-
 
 models.append ( SkewGauss_pdf )    
 # =============================================================================

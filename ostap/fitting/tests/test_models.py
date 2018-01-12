@@ -277,13 +277,14 @@ def test_apolonios2() :
         background = Models.Bkg_pdf ('BkgAPO2', mass = mass , power = 0 )
         )
     
-    model_apolonios2.signal.mean.fix( m.value() ) 
-    model_apolonios2.S.setVal(5000)
-    model_apolonios2.B.setVal( 500)
+    model_apolonios2.signal.mean.fix( m.value() )    
+    model_apolonios2.S.value  = 5000
+    model_apolonios2.B.value  =  500
+    model_apolonios2.signal.sigma.release() 
     
-    with rooSilent() : 
+    with rooSilent() :
         result, frame = model_apolonios2. fitTo ( dataset0 )
-        model_apolonios2.signal.asym.release () 
+        model_apolonios2.signal.asym.release ()
         result, frame = model_apolonios2. fitTo ( dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -434,32 +435,32 @@ def test_gengauss_v2 () :
         
     models.add ( model_gauss_gv2  )
 
-## # =============================================================================
-## ## SkewGauss
-## # =============================================================================
-## def test_skewgauss() :
+# =============================================================================
+## SkewGauss
+# =============================================================================
+def test_skewgauss() :
     
-##     logger.info ('Test SkewGauss_pdf: Skew Gaussian function' ) 
-##     model_gauss_skew = Models.Fit1D (
-##         signal = Models.SkewGauss_pdf ( name = 'GSk' , 
-##                                         mass = mass  , mean = signal_gauss.mean ) ,
-##         background = Models.Bkg_pdf ('BkgSkG', mass = mass , power = 0 )) 
+    logger.info ('Test SkewGauss_pdf: Skew Gaussian function' ) 
+    model_gauss_skew = Models.Fit1D (
+        signal = Models.SkewGauss_pdf ( name = 'GSk' , 
+                                        mass = mass  , mean = signal_gauss.mean ) ,
+        background = Models.Bkg_pdf ('BkgSkG', mass = mass , power = 0 )) 
     
-##     model_gauss_skew.signal.alpha.fix(0)
-##     model_gauss_skew.S.setVal(5000)
-##     model_gauss_skew.B.setVal( 500)
+    model_gauss_skew.signal.alpha.fix(0)
+    model_gauss_skew.S.setVal(5000)
+    model_gauss_skew.B.setVal( 500)
     
-##     with rooSilent() : 
-##         result, frame = model_gauss_skew. fitTo ( dataset0 )
-##         result, frame = model_gauss_skew. fitTo ( dataset0 )
+    with rooSilent() : 
+        result, frame = model_gauss_skew. fitTo ( dataset0 )
+        result, frame = model_gauss_skew. fitTo ( dataset0 )
         
-##     if 0 != result.status() or 3 != result.covQual() :
-##         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-##         print result 
-##     else :     
-##         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print result 
+    else :     
+        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
 
-##     models.add ( model_gauss_skew  )
+    models.add ( model_gauss_skew  )
 
 # =============================================================================
 ## Bukin
@@ -763,7 +764,7 @@ def test_voigt () :
     
     signal = model.signal
     signal.sigma.fix ( m.error() )
-    signal.gamma.fix ( 0.010     )
+    signal.gamma.fix ( 0.002     )
     signal.mean .fix() 
     
     model.B.setVal( 500)
@@ -771,7 +772,6 @@ def test_voigt () :
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
-        signal.gamma.release() 
         result, frame = model. fitTo ( dataset0 )
         signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 )
@@ -804,14 +804,13 @@ def test_pvoigt () :
     signal = model.signal
     signal.mean .fix() 
     signal.sigma.fix ( m.error() )
-    signal.gamma.fix ( 0.010     )
+    signal.gamma.fix ( 0.002     )
     
     model.B.setVal( 500)
     model.S.setVal(5000)
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
-        signal.gamma.release() 
         result, frame = model. fitTo ( dataset0 )
         model.signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 )
@@ -905,6 +904,7 @@ if '__main__' == __name__ :
     test_2gauss         () ## double     Gaussian function              + background 
     test_gengauss_v1    () ## generalized Gaussian function V1          + background 
     test_gengauss_v2    () ## generalized Gaussian function V2          + background 
+    test_skewgauss      () ## skew gaussian                             + background 
     test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
     test_studentT       () ## Student-t shape                           + background 
     test_bifstudentT    () ## Bifurcated Student-t shape                + background 

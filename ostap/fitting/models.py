@@ -81,7 +81,7 @@ __all__ = (
     'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
     'GenGaussV2_pdf'         , ## generalized normal v2 
-    ## 'SkewGauss_pdf'          , ## skewed gaussian
+    'SkewGauss_pdf'          , ## skewed gaussian
     'Bukin_pdf'              , ## generic Bukin PDF: skewed gaussian with exponential tails     
     'StudentT_pdf'           , ## Student-T function 
     'BifurcatedStudentT_pdf' , ## bifurcated Student-T function 
