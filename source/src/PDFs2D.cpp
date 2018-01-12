@@ -574,9 +574,9 @@ Int_t Ostap::Models::PS2DPolSym::getAnalyticalIntegral
   RooArgSet&     analVars     ,
   const char* /* rangename */ ) const 
 {
-  // if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
-  // else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
-  // else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
+  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
   //
   return 0 ;
 }

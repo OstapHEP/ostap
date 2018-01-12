@@ -264,16 +264,22 @@ def test_p1xp1_BBs () :
 # =============================================================================
 ## gauss as signal, 1st order polynomial as background 
 # =============================================================================
+##if 1 < 2 :
 def test_p1xp1_BBss () :
+    
     logger.info ('Symmetrised fit model with non-factorized symmetric background:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
-    sb      = ROOT.RooRealVar('sb','SB',0,10000)
+    sb      = ROOT.RooRealVar('sb','SB',2500 , 0,10000)
+    s1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) 
+    s2 = Models.Gauss_pdf ( 'Gy' , mass = m_y , mean = s1.mean , sigma = s1.sigma )
+    b1 = Models.Bkg_pdf  ( 'B1' , mass = m_x , power = 1 )
+    b2 = Models.Bkg_pdf  ( 'B2' , mass = m_y , power = 1 , tau = b1.tau , the_phis = b1 )
     model   = Models.Fit2D (
         suffix   = '_5' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1  , 
-        bkg2   = 1  ,
-        bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2Ds' , m_x , m_y , n = 2 ) ,
+        signal_1 = s1 ,
+        signal_2 = s2 ,
+        bkg1     = b1 , 
+        bkg2     = b2 ,
+        bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2Ds' , m_x , m_y , n = 1 ) ,
         sb       = sb ,
         bs       = sb 
         )
@@ -286,6 +292,10 @@ def test_p1xp1_BBss () :
     model.signal2.mean .fix ( m.value () )
     model.bkg1   .tau  .fix ( 0 )
     model.bkg2   .tau  .fix ( 0 )
+
+    model.S1S2.value = 5000
+    model.B1B2.value = 5000
+    model.S1B2.value = 2500
 
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -491,6 +501,7 @@ def test_pbxpb_BBsym () :
 # =============================================================================
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
+##if 1 < 2 :
 def test_psxps_BBs () :
         
     logger.info ('Non-factorizeable symmetric background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + (PS*P1)**2')

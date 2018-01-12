@@ -193,10 +193,26 @@ double Ostap::Math::PS2DPol::operator ()
   //
   return m_positive ( x , y ) * m_psx ( x ) * m_psy ( y ) ;
 }
-
-
-
-
+// ============================================================================
+// helper function to make calculations
+// ============================================================================
+double Ostap::Math::PS2DPol::calculate
+( const std::vector<double>& fx , 
+  const std::vector<double>& fy ) const 
+{
+  double       result = 0 ;
+  const Ostap::Math::Bernstein2D& b2d = m_positive.bernstein() ;
+  for  ( unsigned short ix = 0 ; ix <= nX()  ; ++ix )
+  {
+    for  ( unsigned short iy = 0 ; iy <= nY() ; ++iy )
+    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; } 
+  }
+  //
+  const double scalex = ( nX () + 1 ) / ( xmax () - xmin () ) ;
+  const double scaley = ( nY () + 1 ) / ( ymax () - ymin () ) ;
+  //
+  return result * scalex * scaley ;
+}
 // ============================================================================
 double Ostap::Math::PS2DPol::integral 
 ( const double xlow , const double xhigh , 
@@ -234,16 +250,7 @@ double Ostap::Math::PS2DPol::integral
   for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
   { fx[i] = _integral_ ( m_psx , b2d.basicX ( i ) , x_low , x_high , m_workspace ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate  ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::PS2DPol::integrateY 
@@ -272,19 +279,11 @@ double Ostap::Math::PS2DPol::integrateY
   { fy[i] = _integral_ ( m_psy , b2d.basicY ( i ) , y_low , y_high , m_workspace ) ; }
   //
   std::vector<double> fx ( nx + 1 , 0 ) ;
+  const double psx = m_psx ( x ) ;
   for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
-  { fx[i] = m_psx ( x ) , b2d.basicX ( i ) ( x ) ; }
+  { fx[i] = psx * b2d.basicX ( i ) ( x ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate  ( fx  , fy )  ;
 }
 // ============================================================================
 double Ostap::Math::PS2DPol::integrateX 
@@ -310,23 +309,15 @@ double Ostap::Math::PS2DPol::integrateX
   const Bernstein2D&   b2d = m_positive.bernstein() ;
   //
   std::vector<double> fy ( ny + 1 , 0 ) ;
+  const double psy = m_psy ( y ) ;
   for ( unsigned short i = 0 ; i <= ny ; ++i ) 
-  { fy[i] = m_psy ( y ) * b2d.basicY ( i ) ( y ) ; }
+  { fy[i] = psy * b2d.basicY ( i ) ( y ) ; }
   //
   std::vector<double> fx ( nx + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
   { fx[i] = _integral_ ( m_psx , b2d.basicX ( i ) , x_low , x_high , m_workspace ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate  ( fx  , fy )  ;
 }
 // ============================================================================
 
@@ -370,6 +361,27 @@ double Ostap::Math::PS2DPolSym::operator ()
   return m_positive ( x , y ) * m_ps ( x ) * m_ps ( y ) ;
 }
 // ============================================================================
+// helper function to make calculations
+// ============================================================================
+double Ostap::Math::PS2DPolSym::calculate
+( const std::vector<double>& fx , 
+  const std::vector<double>& fy ) const 
+{
+  double       result = 0 ;
+  const Ostap::Math::Bernstein2DSym& b2d = m_positive.bernstein() ;
+  for  ( unsigned short ix = 0 ; ix <= nX()  ; ++ix )
+  {
+    result   += b2d.par ( ix , ix ) * fx[ix] * fy[ix] ;
+    for  ( unsigned short iy = 0 ; iy < ix ; ++iy )
+    { result += b2d.par ( ix , iy ) * ( fx[ix] * fy[iy] + fx[iy] * fy[ix] ) ; } 
+  }
+  //
+  const double scalex = ( nX () + 1 ) / ( xmax () - xmin () ) ;
+  const double scaley = scalex ;
+  //
+  return result * scalex * scaley ;
+}
+// ============================================================================
 double Ostap::Math::PS2DPolSym::integral 
 ( const double xlow , const double xhigh , 
   const double ylow , const double yhigh ) const 
@@ -405,19 +417,7 @@ double Ostap::Math::PS2DPolSym::integral
   for  ( unsigned short i = 0 ; i <= n ; ++i ) 
   { fx[i] = _integral_ ( m_ps , b2d.basic( i )  , x_low , x_high , m_workspace ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= n ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= n ; ++iy ) 
-    { 
-      result += 
-        ix == iy ? b2d.par ( ix , iy ) * fx[ix] * fy[iy] :
-        0.5      * b2d.par ( ix , iy ) * fx[ix] * fy[iy] ;
-    }
-  }
-  //
-  const double scale = ( n + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  return result * scale * scale ;
+  return calculate ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::PS2DPolSym::integrateY
@@ -447,21 +447,9 @@ double Ostap::Math::PS2DPolSym::integrateY
   //
   std::vector<double> fx ( n + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= n ; ++i ) 
-  { fx[i] = m_ps ( x ) , b2d.basic( i ) ( x )  ; }
+  { fx[i] = m_ps ( x ) * b2d.basic( i ) ( x )  ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= n ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= n ; ++iy ) 
-    {
-      result += 
-        ix == iy ? b2d.par ( ix , iy ) * fx[ix] * fy[iy] :
-        0.5      * b2d.par ( ix , iy ) * fx[ix] * fy[iy] ;
-    }
-  }  
-  //
-  const double scale = ( n + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  return result * scale * scale ;
+  return calculate ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::PS2DPolSym::integrateX
@@ -477,13 +465,14 @@ Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
   const double                       xmin , 
   const double                       xmax , 
   const unsigned short               Nx   ,
-  const unsigned short               Ny   ) 
+  const unsigned short               Ny   ,
+  const double                       tau  )      
   : m_positive ( Nx , 
                  Ny , 
                  std::min ( xmin , xmax ) , std::max ( xmin , xmax ) ,
                  psy.lowEdge()            , psy.highEdge()           )
   , m_psy ( psy )
-  , m_tau ( 0   ) 
+  , m_tau ( tau ) 
 {}
 // ===========================================================================
 // constructor from the order
@@ -495,14 +484,15 @@ Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
   const unsigned short               Nx   ,
   const unsigned short               Ny   ,
   const double                       ymin , 
-  const double                       ymax ) 
+  const double                       ymax ,
+  const double                       tau  )      
   : m_positive ( Nx , 
                  Ny , 
                  std::min ( xmin , xmax )   , std::max ( xmin , xmax ) ,
                  std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
                  std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) )
   , m_psy ( psy )
-  , m_tau ( 0   ) 
+  , m_tau ( tau ) 
 {}
 // ============================================================================
 // set tau-parameter
@@ -529,6 +519,26 @@ double Ostap::Math::ExpoPS2DPol::operator ()
   else if ( y > m_psy.highEdge  () || y > m_positive.ymax () ) { return 0 ; }
   //
   return m_positive ( x , y ) * my_exp ( m_tau * x ) * m_psy ( y ) ;
+}
+// ============================================================================
+// helper function to make calculations
+// ============================================================================
+double Ostap::Math::ExpoPS2DPol::calculate
+( const std::vector<double>& fx , 
+  const std::vector<double>& fy ) const 
+{
+  double       result = 0 ;
+  const Ostap::Math::Bernstein2D& b2d = m_positive.bernstein() ;
+  for  ( unsigned short ix = 0 ; ix <= nX()  ; ++ix )
+  {
+    for  ( unsigned short iy = 0 ; iy <= nY() ; ++iy )
+    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; } 
+  }
+  //
+  const double scalex = ( nX () + 1 ) / ( xmax () - xmin () ) ;
+  const double scaley = ( nY () + 1 ) / ( ymax () - ymin () ) ;
+  //
+  return result * scalex * scaley ;
 }
 // ============================================================================
 double Ostap::Math::ExpoPS2DPol::integral 
@@ -567,16 +577,7 @@ double Ostap::Math::ExpoPS2DPol::integral
   for  ( unsigned short i = 0 ; i <= nx ; ++i )
   { fx[i] = Ostap::Math::integrate ( b2d.basicX ( i ) , m_tau , x_low , x_high ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::ExpoPS2DPol::integrateY
@@ -609,16 +610,7 @@ double Ostap::Math::ExpoPS2DPol::integrateY
   for  ( unsigned short i = 0 ; i <= nx ; ++i )
   { fx[i] = b2d.basicX ( i ) ( x ) * my_exp (  m_tau * x ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::ExpoPS2DPol::integrateX 
@@ -652,16 +644,7 @@ double Ostap::Math::ExpoPS2DPol::integrateX
   for  ( unsigned short i = 0 ; i <= nx ; ++i )
   { fx[i] = Ostap::Math::integrate ( b2d.basicX ( i ) , m_tau , x_low , x_high ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate ( fx  , fy ) ;
 }
 // ============================================================================
 
@@ -675,12 +658,14 @@ Ostap::Math::Expo2DPol::Expo2DPol
   const double                       ymin , 
   const double                       ymax , 
   const unsigned short               Nx   ,
-  const unsigned short               Ny   )
+  const unsigned short               Ny   ,
+  const double                       taux ,
+  const double                       tauy )
   : m_positive ( Nx , Ny , 
                  std::min ( xmin , xmax ) , std::max ( xmin , xmax ) ,
                  std::min ( ymin , ymax ) , std::max ( ymin , ymax ) ) 
-  , m_tauX ( 0 ) 
-  , m_tauY ( 0 )
+  , m_tauX ( taux ) 
+  , m_tauY ( tauy )
 {}
 // ===========================================================================
 // set tau-parameter
@@ -719,6 +704,26 @@ double Ostap::Math::Expo2DPol::operator ()
   return m_positive ( x , y ) * my_exp ( m_tauX * x ) * my_exp ( m_tauY * y ) ;
 }
 // ============================================================================
+// helper function to make calculations
+// ============================================================================
+double Ostap::Math::Expo2DPol::calculate
+( const std::vector<double>& fx , 
+  const std::vector<double>& fy ) const 
+{
+  double       result = 0 ;
+  const Ostap::Math::Bernstein2D& b2d = m_positive.bernstein() ;
+  for  ( unsigned short ix = 0 ; ix <= nX()  ; ++ix )
+  {
+    for  ( unsigned short iy = 0 ; iy <= nY() ; ++iy )
+    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; } 
+  }
+  //
+  const double scalex = ( nX () + 1 ) / ( xmax () - xmin () ) ;
+  const double scaley = ( nY () + 1 ) / ( ymax () - ymin () ) ;
+  //
+  return result * scalex * scaley ;
+}
+// ============================================================================
 double Ostap::Math::Expo2DPol::integral 
 ( const double xlow , const double xhigh , 
   const double ylow , const double yhigh ) const 
@@ -755,16 +760,7 @@ double Ostap::Math::Expo2DPol::integral
   for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
   { fx[i] =  Ostap::Math::integrate ( b2d.basicX ( i ) , m_tauX , x_low , x_high  ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate  ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::Expo2DPol::integrateY  
@@ -797,16 +793,7 @@ double Ostap::Math::Expo2DPol::integrateY
   for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
   { fx[i] =  my_exp ( m_tauX * x ) * b2d.basicX ( i ) ( x ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate  ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::Expo2DPol::integrateX
@@ -839,16 +826,7 @@ double Ostap::Math::Expo2DPol::integrateX
   for  ( unsigned short i = 0 ; i <= nx ; ++i ) 
   { fx[i] =  Ostap::Math::integrate ( b2d.basicX ( i ) , m_tauX , x_low , x_high  ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { result += b2d.par ( ix , iy ) * fx[ix] * fy[iy] ; }
-  }
-  //
-  const double scalex = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  const double scaley = ( ny + 1 ) / ( m_positive.ymax() - m_positive.ymin() ) ;
-  return result * scalex * scaley ;
+  return calculate  ( fx  , fy ) ;
 }
 // ============================================================================
 
@@ -859,9 +837,10 @@ double Ostap::Math::Expo2DPol::integrateX
 Ostap::Math::Expo2DPolSym::Expo2DPolSym
 ( const double                       xmin , 
   const double                       xmax , 
-  const unsigned short               N    )
+  const unsigned short               N    ,
+  const double                       tau  )      
   : m_positive ( N , std::min ( xmin , xmax ) , std::max ( xmin , xmax ) )
-  , m_tau ( 0 ) 
+  , m_tau ( tau ) 
 {}
 // ===========================================================================
 // set tau-parameter
@@ -886,6 +865,27 @@ double Ostap::Math::Expo2DPolSym::operator ()
   else if ( y < m_positive.ymin () || y > m_positive.ymax () ) { return 0 ; }
   //
   return m_positive ( x , y ) * my_exp ( m_tau * ( x + y ) ) ;
+}
+// ============================================================================
+// helper function to make calculations
+// ============================================================================
+double Ostap::Math::Expo2DPolSym::calculate
+( const std::vector<double>& fx , 
+  const std::vector<double>& fy ) const 
+{
+  double       result = 0 ;
+  const Ostap::Math::Bernstein2DSym& b2d = m_positive.bernstein() ;
+  for  ( unsigned short ix = 0 ; ix <= nX()  ; ++ix )
+  {
+    result   += b2d.par ( ix , ix ) * fx[ix] * fy[ix] ;
+    for  ( unsigned short iy = 0 ; iy < ix ; ++iy )
+    { result += b2d.par ( ix , iy ) * ( fx[ix] * fy[iy] + fx[iy] * fy[ix] ) ; } 
+  }
+  //
+  const double scalex = ( nX () + 1 ) / ( xmax () - xmin () ) ;
+  const double scaley = scalex ;
+  //
+  return result * scalex * scaley ;
 }
 // ============================================================================
 double Ostap::Math::Expo2DPolSym::integral 
@@ -924,20 +924,7 @@ double Ostap::Math::Expo2DPolSym::integral
   for  ( unsigned short i = 0 ; i <= nx ; ++i )
   { fx[i] = Ostap::Math::integrate ( b2d.basic ( i ) , m_tau , x_low , x_high ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    { 
-      result += 
-        ix == iy ? b2d.par ( ix , iy ) * fx[ix] * fy[iy] :
-        0.5      * b2d.par ( ix , iy ) * fx[ix] * fy[iy] ;
-    }
-  }
-  // 
-  // return result ;
-  const double scale = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  return result * scale * scale ;
+  return calculate ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::Expo2DPolSym::integrateY 
@@ -970,19 +957,7 @@ double Ostap::Math::Expo2DPolSym::integrateY
   for  ( unsigned short i = 0 ; i <= nx ; ++i )
   { fx[i] = my_exp ( m_tau * x ) * b2d.basic ( i ) ( x ) ; }
   //
-  double result = 0 ;
-  for  ( unsigned short ix = 0 ; ix <= nx ; ++ix ) 
-  {
-    for  ( unsigned short iy = 0 ; iy <= ny ; ++iy ) 
-    {
-      result += 
-        ix == iy ? b2d.par ( ix , iy ) * fx[ix] * fy[iy] :
-        0.5      * b2d.par ( ix , iy ) * fx[ix] * fy[iy] ;
-    }
-  }
-  //
-  const double scale = ( nx + 1 ) / ( m_positive.xmax() - m_positive.xmin() ) ;
-  return result * scale * scale ;
+  return calculate ( fx  , fy ) ;
 }
 // ============================================================================
 double Ostap::Math::Expo2DPolSym::integrateX

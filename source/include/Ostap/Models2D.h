@@ -78,6 +78,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      double xmin () const { return m_positive.xmin () ; }
+      double xmax () const { return m_positive.xmax () ; }
+      double ymin () const { return m_positive.ymin () ; }
+      double ymax () const { return m_positive.ymax () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /** get the integral over 2D-region
        *  \f[ \int_{x_low}^{x_high}\int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}x\mathrm{d}y\f]
        *  @param xlow  low  edge in x
@@ -117,6 +124,12 @@ namespace Ostap
       const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
       const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
+    private: // helper function to make the calculations
+      // ======================================================================
+      /// helper function to make calculations
+      double calculate ( const std::vector<double>& fx , 
+                         const std::vector<double>& fy ) const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the actual (positive) bernstein polynomial in 2D
@@ -173,6 +186,16 @@ namespace Ostap
       { return m_positive.par ( k ) ; }
       /// get the parameter value
       double  parameter ( const unsigned int k ) const { return par ( k ) ; }
+      /// get nX & nY
+      unsigned short nX () const { return m_positive.nX () ; }
+      unsigned short nY () const { return m_positive.nY () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      double xmin () const { return m_positive.xmin () ; }
+      double xmax () const { return m_positive.xmax () ; }
+      double ymin () const { return m_positive.ymin () ; }
+      double ymax () const { return m_positive.ymax () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -215,6 +238,12 @@ namespace Ostap
       const Ostap::Math::Positive2DSym& positive    () const { return m_positive ; }
       const Ostap::Math::Positive2DSym& polynom     () const { return m_positive ; }
       // ====================================== ===============================
+    private: // helper functions to make the calculations
+      // ======================================================================
+      /// helper function to make calculations
+      double calculate ( const std::vector<double>& fx , 
+                         const std::vector<double>& fy ) const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the actual (positive) bernstein polynomial in 2D
@@ -245,15 +274,17 @@ namespace Ostap
                     const double          xmin = 0 ,
                     const double          xmax = 1 ,
                     const unsigned short  Nx   = 1 ,
-                    const unsigned short  Ny   = 1 ) ;
+                    const unsigned short  Ny   = 1 ,
+                    const double          tau  = 0 ) ;
       /// constructor from the order
-      ExpoPS2DPol ( const PhaseSpaceNL&   psy     ,
-                    const double          xmin    ,
-                    const double          xmax    ,
-                    const unsigned short  Nx      ,
-                    const unsigned short  Ny      ,
-                    const double          ymin    ,
-                    const double          ymax    ) ;
+      ExpoPS2DPol ( const PhaseSpaceNL&   psy      ,
+                    const double          xmin     ,
+                    const double          xmax     ,
+                    const unsigned short  Nx       ,
+                    const unsigned short  Ny       ,
+                    const double          ymin     ,
+                    const double          ymax     ,
+                    const double          tau  = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -278,6 +309,13 @@ namespace Ostap
       /// get nX & nY
       unsigned short nX () const { return m_positive.nX () ; }
       unsigned short nY () const { return m_positive.nY () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      double xmin () const { return m_positive.xmin () ; }
+      double xmax () const { return m_positive.xmax () ; }
+      double ymin () const { return m_positive.ymin () ; }
+      double ymax () const { return m_positive.ymax () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -325,6 +363,12 @@ namespace Ostap
       const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
       const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
+    private: // helper function to make the calculations
+      // ======================================================================
+      /// helper function to make calculations
+      double calculate ( const std::vector<double>& fx , 
+                         const std::vector<double>& fy ) const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the actual (positive) bernstein polynomial in 2D
@@ -357,7 +401,9 @@ namespace Ostap
                   const double          ymin = 0  ,
                   const double          ymax = 1  ,
                   const unsigned short  Nx   =  1 ,
-                  const unsigned short  Ny   =  1 ) ;
+                  const unsigned short  Ny   =  1 ,
+                  const double          taux =  0 ,
+                  const double          tauy =  0 ) ;            
       // ======================================================================
     public:
       // ======================================================================
@@ -382,6 +428,13 @@ namespace Ostap
       /// get nX & nY
       unsigned short nX () const { return m_positive.nX () ; }
       unsigned short nY () const { return m_positive.nY () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      double xmin () const { return m_positive.xmin () ; }
+      double xmax () const { return m_positive.xmax () ; }
+      double ymin () const { return m_positive.ymin () ; }
+      double ymax () const { return m_positive.ymax () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -429,6 +482,12 @@ namespace Ostap
       const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
       const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
+    private: // helper function to make the calculations
+      // ======================================================================
+      /// helper function to make calculations
+      double calculate ( const std::vector<double>& fx , 
+                         const std::vector<double>& fy ) const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the actual (positive) bernstein polynomial in 2D
@@ -452,7 +511,8 @@ namespace Ostap
       /// constructor from the order
       Expo2DPolSym ( const double          xmin = 0 ,
                      const double          xmax = 1 ,
-                     const unsigned short  N    = 1 ) ;
+                     const unsigned short  N    = 1 ,
+                     const double          tau  = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -478,6 +538,13 @@ namespace Ostap
       unsigned short n  () const { return m_positive.nX () ; }
       unsigned short nX () const { return m_positive.nX () ; }
       unsigned short nY () const { return m_positive.nY () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      double xmin () const { return m_positive.xmin () ; }
+      double xmax () const { return m_positive.xmax () ; }
+      double ymin () const { return m_positive.ymin () ; }
+      double ymax () const { return m_positive.ymax () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -519,6 +586,12 @@ namespace Ostap
       const Ostap::Math::Positive2DSym& positive () const { return m_positive ; }
       const Ostap::Math::Positive2DSym& polynom  () const { return m_positive ; }
       // ====================================== ===============================
+    private: // helper function to make the calculations
+      // ======================================================================
+      /// helper function to make calculations
+      double calculate ( const std::vector<double>& fx , 
+                         const std::vector<double>& fy ) const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the actual (positive) bernstein polynomial in 2D
