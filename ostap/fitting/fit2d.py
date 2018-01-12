@@ -412,9 +412,9 @@ for _a in (
     if hasattr ( PDF2 , _a ) :
         def _suppress_ ( self , *args , **kwargs ) :
             raise AttributeError ( "'%s' object has no attribute '%s'" % ( type(self) , _a ) )
-        setattr ( PDF2 , _a , _suppress_ ) 
+        ##setattr ( PDF2 , _a , _suppress_ ) 
+        setattr ( PDF2 , _a , NotImplemented ) 
         logger.verbose ( 'Remove attribute %s from PDF2' ) 
-
 
 # =============================================================================
 ## @class Fit2D
@@ -740,10 +740,11 @@ for _a in (
     'cl_asymm'       ,
     'derivative'     ) :
 
-    if hasattr ( PDF2 , _a ) :
+    if hasattr ( Fit2D , _a ) :
         def _suppress_ ( self , *args , **kwargs ) :
             raise AttributeError ( "'%s' object has no attribute '%s'" % ( type(self) , _a ) )
-        setattr ( PDF2 , _a , _suppress_ ) 
+        ## setattr ( PDF2 , _a , _suppress_ ) 
+        setattr ( Fit2D , _a , NotImplemented  ) 
         logger.verbose ( 'Remove attribute %s from PDF2' ) 
  
 # =============================================================================

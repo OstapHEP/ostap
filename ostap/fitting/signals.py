@@ -128,6 +128,7 @@ class Gauss_pdf(MASS) :
                    mass             ,
                    mean      = None ,
                    sigma     = None ) :
+        
         #
         ## initialize the base
         # 
