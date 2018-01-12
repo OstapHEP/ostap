@@ -1427,6 +1427,30 @@ _new_methods_ += [
     ROOT.RooDataSet .vminmax ,
     ]
 
+
+# =============================================================================
+## clear dataset storage
+if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
+    ROOT.RooDataSet._old_reset_ = ROOT.RooDataSet.reset
+    def _ds_new_reset_ ( self ) :
+        """Clear dataset storage
+        >>> print ds
+        >>> ds.clear()
+        >>> ds.erase() ## ditto
+        >>> ds.reset() ## ditto
+        >>> ds.Reset() ## ditto
+        >>> print ds
+        """
+        s = self.store()
+        if s : s.reset()
+        self._old_reset_()
+        return len(self)
+    ROOT.RooDataSet.reset = _ds_new_reset_
+
+ROOT.RooDataSet.clear = ROOT.RooDataSet.reset
+ROOT.RooDataSet.erase = ROOT.RooDataSet.reset
+ROOT.RooDataSet.Reset = ROOT.RooDataSet.reset
+
 # =============================================================================
 ROOT.RooDataSet.draw        = _ds_draw_
 ROOT.RooDataSet.project     = _ds_project_

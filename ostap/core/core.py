@@ -200,6 +200,25 @@ StatusCode .__str__  = _sc_print_
 SUCCESS = StatusCode(Ostap.StatusCode.SUCCESS)
 FAILURE = StatusCode(Ostap.StatusCode.FAILURE)
 
+
+if not hasattr ( ROOT.TObject , 'draw' ) :
+
+    ## save old method
+    ROOT.TObject._old_draw_ = ROOT.TObject.Draw
+    ##  new draw method: silent draw
+    def _to_draw_ ( obj , *args , **kwargs ) :
+        """ (silent) Draw of ROOT object
+        >>> obj
+        >>> obj.Draw()  ##
+        >>> obj.draw()  ## ditto
+        """
+        from ostap.logger.utils import  rootWarning
+        with rootWarning() :
+            return obj.Draw( *args , **kwargs )
+
+    ROOT.TObject.draw = _to_draw_
+
+
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -105,6 +105,8 @@ def test_reweight ( ) :
 
     from ostap.tools.reweight    import Weight, makeWeights 
     from ostap.fitting.selectors import SelectorWithVars 
+    from ostap.utils.memory      import memory
+    from ostap.utils.timing      import timing
     
     ## read data histogram and MC-tree 
     hdata, mctree = prepare()  
@@ -116,46 +118,45 @@ def test_reweight ( ) :
     
     ## start iterations:
     for iter in range ( 0 , maxIter ) :
-        
-        weighting = [
-            ## variable          address in DB    
-            ( lambda s : s.x , 'x-reweighting'  ) , 
-            ]
-    
-        weighter   = Weight( dbname , weighting )
-        ## variables to be used in MC-dataset 
-        variables  = [
-            ( 'pt_x'   , 'pt_x'   , 0  , 100 , lambda s : s.x ) , 
-            ( 'weight' , 'weight' ,            weighter       )  
-            ]
-        
-        #
-        ## create new "weighted" mcdataset
-        # 
-        selector = SelectorWithVars (
-            variables ,
-            '0<x && x<100 '
-            )
-        
-        mctree.process ( selector )
-        mcds = selector.data             ## new reweighted dataset
-        
-        print 'MC-dataset', mcds 
-        
-        #
-        ## update weights
-        #
-        
-        plots    = [
-            ( 'pt_x'   , 'weight' , 'x-reweighting'  , hdata , hmc )  
-            ]
-        
-        more = makeWeights ( mcds , plots , dbname , delta = 0.001 )
 
-        ## make MC-histogram 
-        mcds .project  ( hmc , 'pt_x' , 'weight'  )
+        with timing() , memory ("Iteration %d" % iter ) :
+            
+            weighting = [
+                ## variable          address in DB    
+                ( lambda s : s.x , 'x-reweighting'  ) , 
+                ]
+            
+            weighter   = Weight( dbname , weighting )
+            ## variables to be used in MC-dataset 
+            variables  = [
+                ( 'pt_x'   , 'pt_x'   , 0  , 100 , lambda s : s.x ) , 
+                ( 'weight' , 'weight' ,            weighter       )  
+            ]
         
-        if 0 == iter % 2 or not more : 
+            #
+            ## create new "weighted" mcdataset
+            # 
+            selector = SelectorWithVars (
+                variables ,
+                '0<x && x<100 '
+                )
+            
+            mctree.process ( selector )
+            mcds = selector.data             ## new reweighted dataset
+        
+            #
+            ## update weights
+            #
+            
+            plots    = [
+                ( 'pt_x'   , 'weight' , 'x-reweighting'  , hdata , hmc )  
+                ]
+            
+            more = makeWeights ( mcds , plots , dbname , delta = 0.001 )
+            
+            ## make MC-histogram 
+            mcds .project  ( hmc , 'pt_x' , 'weight'  )
+            
             logger.info    ( 'Compare DATA and MC for iteration #%d' % iter )
             
             #
@@ -189,22 +190,26 @@ def test_reweight ( ) :
             c2ndf,prob = hmc  .cmp_chi2 ( hdata , rescale = True )
             logger.info ( 'MC/DATA: chi2/ndf (%.4g) and Prob %.5g%% ' % ( c2ndf , prob*100 ) )
             
-        if not more : 
-            logger.info    ( 'No more iterations are needed #%d' % iter )
-            break
+            ## final density on data 
+            data_density = hdata.density()
+            ## final density on mc 
+            mc_density   = hmc.density()
+            data_density.red  ()
+            mc_density  .blue ()
+            data_density.draw ('e1')
+            mc_density  .draw ('e1 same')
+            time.sleep ( 5 ) 
 
-        del    mcds , selector
+            if not more : 
+                logger.info    ( 'No more iterations are needed #%d' % iter )
+                break
 
-    #
-    ## final density on data 
-    data_density = hdata.density()
-    ## final density on mc 
-    mc_density   = hmc.density()
-
-    data_density.red  ()
-    mc_density  .blue ()
+            mcds.clear() 
+            del   mcds , selector
+        
+         
     data_density.draw ('e1')
-    mc_density  .draw ('e1 same')
+    mc_density  .draw ('e1 same')        
     time.sleep ( 60 ) 
 
 # =============================================================================
