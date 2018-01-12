@@ -103,7 +103,7 @@ def test_reweight ( ) :
     """test reweightinng machinery
     """
 
-    from ostap.tools.reweight    import Weight, makeWeights 
+    from ostap.tools.reweight    import Weight, makeWeights, RWEntry 
     from ostap.fitting.selectors import SelectorWithVars 
     from ostap.utils.memory      import memory
     from ostap.utils.timing      import timing
@@ -122,8 +122,8 @@ def test_reweight ( ) :
         with timing() , memory ("Iteration %d" % iter ) :
             
             weighting = [
-                ## variable          address in DB    
-                ( lambda s : s.x , 'x-reweighting'  ) , 
+                ##            variable                     address in DB    
+                RWEntry( function = lambda s : s.x , address = 'x-reweighting'  ) , 
                 ]
             
             weighter   = Weight( dbname , weighting )

@@ -330,7 +330,7 @@ def makeEntry( var , *args ) :
     return var , vdesc , vmin , vmax , vfun
 
 # =============================================================================
-## helper class to decode/keep infomration about the variable in c
+## helper class to decode/keep information about the variable in c
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
 class VEntry(object) :

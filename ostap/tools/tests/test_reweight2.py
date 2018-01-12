@@ -125,7 +125,7 @@ else :
 #
 ## make reweigthing iterations
 # 
-from ostap.tools.reweight     import Weight, makeWeights 
+from ostap.tools.reweight     import Weight, makeWeights, RWEntry 
 from ostap.fitting.selectors  import SelectorWithVars 
 from ostap.utils.memory       import memory
 from ostap.utils.timing       import timing
@@ -139,9 +139,9 @@ def test_reweight2() :
             
             weighting = [
                 ## variable          address in DB    
-                ( lambda s : s.x       , 'x-reweighting'  ) , 
-                ( lambda s : s.y       , 'y-reweighting'  ) , 
-                ( lambda s : (s.x,s.y) , '2D-reweighting' ) , 
+                RWEntry ( function = lambda s : s.x       , address = 'x-reweighting'  ) , 
+                RWEntry ( function = lambda s : s.y       , address = 'y-reweighting'  ) , 
+                RWEntry ( function = lambda s : (s.x,s.y) , address = '2D-reweighting' ) , 
                 ]
     
             weighter   = Weight( dbname , weighting )
@@ -173,7 +173,7 @@ def test_reweight2() :
                 ( 'x:y' , 'weight' , '2D-reweighting' , hdata  , hmc  ) , 
                 ]
             
-            more = makeWeights ( mcds , plots , dbname , delta = 0.001 )
+            more = makeWeights ( mcds , plots , dbname , delta = 0.015 )
             
             ## make MC-histogram 
             mcds .project  ( hmcx , 'x'   , 'weight'  )

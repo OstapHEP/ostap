@@ -17,8 +17,9 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'Weight'      ,
-    'makeWeights' ,
+    'Weight'      , ## the actual Weighter object 
+    'makeWeights' , ## function to populate DB with proper weights 
+    'RWEntry'     , ## helper entry inn DB 
     ) 
 # =============================================================================
 import ROOT
@@ -33,6 +34,23 @@ logger.info ( 'Set of utitilities for re-weigthing')
 from   ostap.core.pyrouts import VE, SE
 from   ostap.math.base    import iszero
 import ostap.io.zipshelve as     DBASE ## needed to store the weights&histos 
+# =============================================================================
+## @class RWEntry
+class RWEntry(object) :
+    ## create the entry object 
+    def __init__ ( self , function , address , merge = True ,  skip = 0 ) :
+        """Create the entry object 
+        """
+        
+        assert callable   ( function      ) , 'Function is not callable'
+        assert isinstance ( address , str ) , 'Address in DB should be string'
+        assert isinstance ( skip    , int ) , 'Skip-parameter is not integer'
+        
+        self.function = function
+        self.address  = address
+        self.merge    = merge
+        self.skip     = skip 
+
 # =============================================================================
 ## @class Weight
 #  helper class for semiautomatic reweighting of data 
@@ -94,6 +112,15 @@ class Weight(object) :
         self.vars = [] 
         if not factors : return
 
+        _factors = [] 
+        for ff in factors :
+
+            f = ff 
+            if   isinstance ( f ,  ( list , tuple ) ) : f = RWEntry( *f )
+            elif isinstance ( f , dict )              : f = RWEntry( **f )  
+            _factors.append ( f )
+        factors = _factors 
+            
         ## open database 
         with DBASE.open ( dbase , 'r' ) as db : ## READONLY
             
@@ -105,8 +132,8 @@ class Weight(object) :
             ## loop over the weighting factors and build the function
             for f in factors :
 
-                funval  = f[0]  ## accessor to the variable 
-                funname = f[1]  ## address  in database 
+                funval  = f.function  ## accessor to the variable 
+                funname = f.address   ## address  in database 
 
                 if isinstance ( funval , str ) :
                     varnam = funval 
@@ -117,16 +144,16 @@ class Weight(object) :
                 if not functions :
                     logger.warning('No reweighting is available for %s, skip it' % funname )
                     continue
-                
-                merge = True
-                if 2 < len ( f ) : merge = f[2] 
 
+                ## merge ?
+                merge = f.merge 
                 
                 if not isinstance (  functions , ( list , tuple ) ) :
                     functions = [ functions ]
-                    
-                skip  = 0
-                if 3 < len ( f ) : skip  = f[3]
+
+                ## skip ? 
+                skip  = f.skip
+                
                 flen = len(functions) 
                 if   0 < skip and skip      < len ( functions ) :
                     logger.info  ('Use only %d first iterations for %s ' % ( skip , funname ) )
@@ -285,7 +312,8 @@ def makeWeights  ( dataset                 ,
         #
         ## make decision based on variance of weights 
         #
-        if wvar.value() <= delta / len ( plots ) : ## small variance? 
+        ##if wvar.value() <= delta / len ( plots ) : ## small variance? 
+        if wvar.value() <= delta : ## small variance? 
             save = False
             logger.info("No more reweighting for %s [%.3f%%]" %  ( address , wvar * 100 ) ) 
         else            :
