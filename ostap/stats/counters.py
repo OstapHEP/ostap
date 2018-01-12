@@ -52,7 +52,7 @@ if not hasattr ( SE , '_orig_mean' ) :
 from ostap.math.ve import VE 
 
 SE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2()       )
-SE. minmax  = lambda s :    ( s.flagMin()     , s.flagMax()    ) 
+SE. minmax  = lambda s :    ( s.min()         , s.max()        ) 
 SE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
 
 # =============================================================================

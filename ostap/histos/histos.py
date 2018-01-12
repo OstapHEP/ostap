@@ -6382,7 +6382,25 @@ for t in  ( ROOT.TH1D             ,
         if not hasattr ( t , method ) :
             setattr ( t , method , dumpHisto )
 
- 
+
+# =============================================================================
+## represent historgam as ``density''
+#  - the function with unit integral over the range
+def _h_density_ ( h1 ) :
+    """Represent historgam as  ``density''
+    - the function with unit integral over the range
+    """
+    ## take into account bin width
+    h  = h1.rescale_bins(1)
+    ##  rescale to unit integral in range
+    h /= h.integrate().value()
+    return h
+
+for t in ( ROOT.TH1F , ROOT.TH1D ,
+           ROOT.TH2F , ROOT.TH2D ,
+           ROOT.TH3F , ROOT.TH3D ) :
+    t.density = _h_density_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1F  ,

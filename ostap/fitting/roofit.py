@@ -25,6 +25,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     'setStorage' , ## define the default storage for  RooDataStore 
+    'useStorage' , ## define (as context) the default storage for  RooDataStore 
     'PDF_fun'    , ## wrapper of PDF to ``simple'' function 
     'SETVAR'     , ## context manager to preserev the current value for RooRealVar
     ) 
@@ -1536,6 +1537,33 @@ def setStorage ( new_type = RAD.Tree ) :
     if   RAD.Tree   == the_type : logger.debug ( 'RooAbsData: Default storage type is Tree'   )
     elif RAD.Vector == the_type : logger.debug ( 'RooAbsData: Default storage type is Vector' )
     else : logger.debug ( 'RooAbsData: Default storage type is %s' % the_type  )
+
+# =============================================================================
+## @class UseStorage context manager to change the storage type
+class UseStorage(object) :
+    """Context manager to change the storage type
+    >>> with UseStorage() :
+    ...
+    """
+    def __init__  ( self , new_storage = RAD.Tree ) :
+        if not new_storage in ( RAD.Tree , RAD.Vector )  :
+            raise AttributeError( 'Invalid storage type %s' % new_storage )
+        self.new_storage = new_storage
+        self.old_storage = RAD.getDefaultStorageType()
+    def __enter__ ( self ) :
+        self.old_storage = RAD.getDefaultStorageType()
+        setStorage (  self.new_storage )
+    def __exit__ (  self , *_ ) :
+        setStorage (  self.old_storage )
+
+# =============================================================================
+## context manager to change the storage type
+def useStorage ( storage = RAD.Tree ) :
+    """Context manager to change the storage type
+    >>> with useStorage() :
+    ...
+    """
+    return UseStorage ( storage )
 
 
 # =============================================================================

@@ -42,42 +42,42 @@ class Weight(object) :
     """Helper class for semi-automatic reweighting of data
 
     It reads various ``weigth components'' from DBASE and calculates
-    the ``global'' event weight via smiple accumulation of weights
+    the ``global'' event weight via simple accumulation of weights
     
     Simplest case: calculate weights for one variable.
     
     factors = [ ( fun , name ) ] 
-    where ``fun'' is a function to get variabel from TTree/RooDataSet 
+    where ``fun'' is a function to get variable from TTree/RooDataSet 
     and   ``name'' is address in data base with reweighting information 
     e.g.
     
-    # factors = [ ( lambda s : s.pt  , 'pt-data' ) ]
+    >>> factors = [ ( lambda s : s.pt  , 'pt-data' ) ]
     
-    It assumes, that DATA base has an entry with name 'pt-data', such
+    It assumes, that DBASE has an entry with name 'pt-data', such
     that
     
-    # funcs = database['pt-data']
+    >>> funcs = database['pt-data']
     
-    Here ``func'' will be function/callable or list of functions/calables
+    Here ``func'' will be function/callable or list of functions/callables 
     with weights:
     
-    # pt = fun ( entry ) 
-    # w  = 1.0    
-    # w *= func ( pt )              ## for the single function/callable
-    # for f in funcs : w*= f ( pt ) ## for list of functions/callables  
+    >>> pt = fun ( entry ) 
+    >>> w  = 1.0    
+    >>> w *= func ( pt )              ## for the single function/callable
+    >>> for f in funcs : w*= f ( pt ) ## for list of functions/callables  
     
     quantity ``w'' will be am event  weight
     
-    if list ``factors'' constains more than one entry.,
+    if list of ``factors'' constains more than one entry,
     to each entry weigth is calculated independently and total weight
-    is a product of individual weights..
+    is a product of individual weights.
 
-    For smiplistic case one can put some storable function or function object
-    # db['pt-data'] = math.exp
-    # db['pt-data'] = [ math.exp , math.cosh ] ## List of object also works:
+    For simplistic case one can put some storable function or function object
+    >>> db['pt-data'] = math.exp
+    >>> db['pt-data'] = [ math.exp , math.cosh ] ## List of object also works
     
-    For realistic case the weights usually stored as (a list of) 1D or 2D historgams
-    # db['pt-data'] = [h1,h2,h3,...,hn]
+    For realistic case the weights usually stored as (a list of) 1D or 2D histograms
+    >>>  db['pt-data'] = [h1,h2,h3,...,hn]
     where h1,...,hn are iteratively obtained histograms with corrections, such as
     the total correction is calculated by the product of them
     """
@@ -116,19 +116,47 @@ class Weight(object) :
                 functions  = db.get ( funname , [] ) ## db[ funname ]
                 if not functions :
                     logger.warning('No reweighting is available for %s, skip it' % funname )
-
+                    continue
+                
                 merge = True
                 if 2 < len ( f ) : merge = f[2] 
+
                 
                 if not isinstance (  functions , ( list , tuple ) ) :
                     functions = [ functions ]
                     
+                skip  = 0
+                if 3 < len ( f ) : skip  = f[3]
+                flen = len(functions) 
+                if   0 < skip and skip      < len ( functions ) :
+                    logger.info  ('Use only %d first iterations for %s ' % ( skip , funname ) )
+                    functions = functions[:skip] 
+                elif 0 > skip and abs(skip) < len(functions) :
+                    logger.info  ('Skip last %d iterations for %s' % ( skip , funname ) )
+                    functions = functions[:-1*skip] 
+                elif 0 == skip :
+                    pass
+                else :
+                    logger.error("Invalid ``skip'' parameter %s/%d for %s" % ( skip , flen , funname ) )
+                    
                 ## merge list of functions into single function 
                 if merge and 1 < len ( functions)  : 
-                
+
+                    if isinstance ( functions[0] , ROOT.TH1 ) :
+                        ## nullify the errors
+                        for i in functions[0] :
+                            v = float ( functions[0][i] ) 
+                            functions[0][i] = VE(v,0)
+                            
                     single_func = functions[0] * functions [1] 
                     
                     for fun in functions [2:] :
+                        ##  nullify  errors
+                        if isinstance ( single_func , ROOT.TH1 ) : 
+                            for i in single_func :
+                                v = float ( single_func[i] )
+                                single_func[i] = VE(v,0)
+                        ## multiply it
                         single_func *= fun
                             
                     functions  = [ single_func ]
@@ -147,10 +175,7 @@ class Weight(object) :
     
     ## calculate the weight for the given "event"
     def __call__ ( self , s ) :
-        """
-        Calculate the weigth for the given ``event''
-        (record in TTree/TChain or RooDataSet)
-        
+        """   Calculate the weigth for the given ``event'' (==record in TTree/TChain or RooDataSet)
         """
 
         ## initialize the weight 
@@ -188,6 +213,8 @@ class Weight(object) :
             
         return vw 
 
+
+
 # =============================================================================
 ## make one re-weighting iteration 
 #  and reweight "MC"-data set to looks as "data"(reference) dataset
@@ -211,22 +238,11 @@ def makeWeights  ( dataset                 ,
         hmc0    = r [4] if 4 < len(r) else hdata0.clone () ## original "MC"   histogram 
 
         #
-        ## black magic to take into account the difference in bins and normalizations
+        # normailze the data
         #
         hdata = hdata0 
-        if hasattr ( hdata , 'rescale_bins' ) : 
-            hdata = hdata.rescale_bins ( 1.0   )
-            
-        ## normalize the data:
-        hmean = None 
-        if hasattr ( hdata , 'mean' ) and hasattr ( hdata , '__idiv__' ) :
-
-            ## normalization point
-            hmean  = hdata.mean()
-            #
-            if isinstance ( hdata , ROOT.TH2 ) : hdata /= hdata ( *hmean )
-            else                               : hdata /= hdata (  hmean )
-
+        if hasattr ( hdata , 'density' ) :  hdata = hdata.density() 
+        
         #
         ## make a plot on (MC) data with the weight
         # 
@@ -238,15 +254,10 @@ def makeWeights  ( dataset                 ,
             logger.warning ( 'Statistic goes to zero %s/"%s"' % ( st , address ) ) 
             
         #
-        ## black magic to take into account the difference in bins and normalizations
-        # 
-        hmc = hmc0.rescale_bins ( 1.0 )
+        ## normalize MC
+        #
+        hmc = hmc0.density() 
         
-        if hmean is None : pass
-        else             :
-            if isinstance ( hmc , ROOT.TH2 ) : hmc /= hmc ( *hmean )
-            else                             : hmc /= hmc (  hmean )
-
         #
         ## calculate  the reweighting factor : a bit conservative (?)
         power = min ( 2.0 , len ( plots ) )                   ## NB!
@@ -266,11 +277,11 @@ def makeWeights  ( dataset                 ,
         cnt  = w.stat()
         #
         wvar = cnt.rms()/cnt.mean()
-        logger.info ( 'Reweighting "%-.15s: Mean/minmax:%s/(%.4f,%.4f) Vars:%s[%%]' %
+        logger.info ( 'Reweighting %20s: mean/(min,max):%20s/(%.3f,%.3f) Vars:%s[%%]' %
                       ( address         ,
-                        cnt.mean()      ,
+                        cnt.mean().toString('(%.3f+-%.3f)') ,
                         cnt.minmax()[0] ,
-                        cnt.minmax()[1] , wvar * 100 ) ) 
+                        cnt.minmax()[1] , (wvar * 100).toString('(%.3f+-%.3f)') ) ) 
         #
         ## make decision based on variance of weights 
         #
@@ -304,7 +315,6 @@ def makeWeights  ( dataset                 ,
         
     return more
 
-# =============================================================================
 ## some simple comparsion 
 def hCompare ( data , mc , title = '' , spline = True ) :
 
@@ -317,7 +327,6 @@ def hCompare ( data , mc , title = '' , spline = True ) :
     hd  = data.rescale_bins ( 1 ) 
     hm  = mc  .rescale_bins ( 1 ) 
 
-        
 # =============================================================================
 if '__main__' == __name__ :
         
