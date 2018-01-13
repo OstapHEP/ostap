@@ -13,19 +13,19 @@ __date__    = "2014-06-02"
 __version__ = ""
 # =============================================================================
 __all__     = (
-    'exp'    , 'expm1'  ,
-    'log'    , 'log10'  , 'log1p'  , 
-    'sqrt'   , 'cbrt'   , 'pow'    ,   
-    'sin'    , 'cos'    , 'tan'    , 
-    'sinh'   , 'cosh'   , 'tanh'   , 'sech'   ,
-    'asin'   , 'acos'   , 'atan'   , 
-    'asinh'  , 'acosh'  , 'atanh'  ,
-    'erf'    , 'erfc'   , 'erfi'   , 'erfcx'  ,
-    'probit' , 
-    'gamma'  , 'tgamma' , 'lgamma' , 'igamma' , 
-    'exp2'   , 'log2'   ,
-    'hypot'  , 'fma'    ,
-    'phi'    , 'Phi'
+    'exp'        , 'expm1'     ,
+    'log'        , 'log10'     , 'log1p'  , 
+    'sqrt'       , 'cbrt'      , 'pow'    ,   
+    'sin'        , 'cos'       , 'tan'    , 
+    'sinh'       , 'cosh'      , 'tanh'   , 'sech'   ,
+    'asin'       , 'acos'      , 'atan'   , 
+    'asinh'      , 'acosh'     , 'atanh'  ,
+    'erf'        , 'erfc'      , 'erfi'   , 'erfcx'  ,
+    'probit'     , 
+    'gamma'      , 'tgamma'    , 'lgamma' , 'igamma' , 
+    'exp2'       , 'log2'      ,
+    'gauss_pdf'  , 'gauss_cdf' ,
+    'hypot'      , 'fma'       ,
     )
 # =============================================================================
 import ROOT,math
@@ -394,95 +394,41 @@ def hypot ( x , y , c = 0 ) :
 
 
 
-_phi_ = cpp.Ostap.Math.phi
+_gauss_pdf_ = cpp.Ostap.Math.gauss_pdf
 # =============================================================================
 ## calculate the standard gaussian PDF
 #  @param x x-value
 #  @param mu mu-parameter (location)
 #  @param sigma sigma-parameter (width)
 #  @return gaussian PDF 
-def phi ( x , mu = 0 , sigma = 1 ) :
+def gauss_pdf( x , mu = 0.0 , sigma = 1.0 ) :
     """Standard gaussian PDF
     >>> x,mu, sigma = ....
-    >>> pdf = phi ( x  , mu , sigma )
+    >>> pdf = gauss_pdf ( x  , mu , sigma )
     """
-    y  = VE ( x     )
-    m  = VE ( mu    ) 
-    s  = VE ( sigma ) 
-    v  = _phi_ ( x , m , s ) 
-    e2 = 0.0
-    
-    if  0 < y.cov2() :
-        xv = y.value()
-        mv = m.value()
-        sv = s.value()
-        dx = xv - mv
-        dd = v * dx / sv 
-        e2 += dd * dd * y.cov2()
-        
-    if 0 < m.cov2() :
-        xv = y.value()
-        mv = m.value()
-        sv = s.value()
-        dx = xv - mv
-        dd = v * dx / sv 
-        e2 += dd * dd * m.cov2()
-        
-    if 0 < s.cov2() :
-        xv = y.value()
-        mv = m.value()
-        sv = s.value()
-        dx = xv - mv 
-        dd = v * ( dx * dx / (sv * sv) - 1 ) / sv    
-        e2 += dd * dd * s.cov2()
-        
-    we = e2>0 or isinstance ( x  , VE ) or isinstance ( mu , VE  ) or isinstance ( sigma , VE ) 
-    return VE ( v , e2 ) if we else v   
+    m =       float ( mu    )
+    s = abs ( float ( sigma ) )  
+    y      = ( VE ( x ) - m ) / s
+    ## 
+    return _gauss_pdf_ ( y ) / s if  0 < y.cov2() else _gauss_pdf_ ( y.value() ) / s
 
-
-_Phi_ = cpp.Ostap.Math.Phi
+_gauss_cdf_ = cpp.Ostap.Math.gauss_cdf
 # =============================================================================
 ## calculate the standard gaussian CDF
 #  @param x x-value
 #  @param mu mu-parameter (location)
 #  @param sigma sigma-parameter (width)
 #  @return gaussian CDF 
-def Phi ( x , mu = 0.0 , sigma = 1.0 ) :
+def gauss_cdf ( x , mu = 0.0 , sigma = 1.0 ) :
     """Standard gaussian CDF
     >>> x,mu, sigma = ....
-    >>> cdf = Phi ( x  , mu , sigma )
+    >>> cdf = gauss_cdf ( x  , mu , sigma )
     """
-    y  = VE ( x     )
-    m  = VE ( mu    ) 
-    s  = VE ( sigma ) 
-    v  = _Phi_ ( x , m , s ) 
-    e2 = 0.0
-    
-    if  0 < y.cov2() :
-        xv = y.value()
-        mv = m.value()
-        sv = s.value()
-        dd = _phi_ ( xv , mv , sv ) 
-        e2 += dd * dd * y.cov2()
-        
-    if 0 < m.cov2() :
-        xv = y.value()
-        mv = m.value()
-        sv = s.value()
-        dd = _phi_ ( xv , mv , sv ) 
-        e2 += dd * dd * m.cov2()
-        
-    if 0 < s.cov2() :
-        xv = y.value()
-        mv = m.value()
-        sv = s.value()
-        dd = _phi_ ( xv , mv , sv ) * ( xv - mv ) / ( sv * sv ) 
-        e2 += dd * dd * s.cov2()
-
-    we = e2>0 or isinstance ( x  , VE ) or isinstance ( mu , VE  ) or isinstance ( sigma , VE ) 
-    return VE ( v , e2 ) if we else v   
-
-
+    m  = float ( mu )
+    s  = abs ( float ( sigma ) )
+    y  = ( VE ( x ) - m ) / s
+    ##
+    return _gauss_cdf_ ( y ) if 0 < y.cov2() else _gauss_cdf_ ( y.value() )
 
         
 # =============================================================================
@@ -514,7 +460,9 @@ if '__main__' == __name__ :
               asinh  , acosh  , atanh  ,
               erf    , erfc   , erfi   , erfcx  ,
               probit ,
-              gamma  , tgamma , lgamma , igamma ]
+              gamma  , tgamma , lgamma , igamma ,
+              gauss_pdf ,
+              gauss_cdf ]
     
     from ostap.math.derivative import EvalVE
     funcs += [ EvalVE ( math.sin , math.cos ) ,
@@ -525,7 +473,7 @@ if '__main__' == __name__ :
     for v in vars :
         logger.info ( 'Var = %s ' % v )
         for f in funcs :
-            logger.info ( "\t%s\t%s = %s " % ( f.__name__ , v ,  f(v) ) )
+            logger.info ( "\t%12s\t%s = %s " % ( f.__name__ , v ,  f(v) ) )
             
     logger.info ( 80*'*')
     

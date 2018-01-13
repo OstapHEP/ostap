@@ -28,25 +28,18 @@ from   ostap.core.core import cpp , WSE
 # =============================================================================
 ## get error-function 
 if  not hasattr ( math , 'erf' ) :
-    try :
-        import scipy.special
-        math.erf = scipy.special.erf
-        logger.debug ( 'scipy.special.erf is added to math' )        
-    except:
-        math.erf = ROOT.TMath.Erf
-        logger.debug ( 'ROOT.TMath.Erf    is added to math' )
+    from ostap.math.math_ve immport erf as  _erf 
+    math.erf = _erf
+    logger.debug ( 'ostap.math.erf       is added to math' )
 # =============================================================================
 ## error function
 #  @see http://en.wikipedia.org/wiki/Error_function
 erf = math.erf
-if not hasattr ( math , 'gauss_cdf' ) :    
-    ## CDF for gaussian distribution 
-    def gauss_cdf ( x ) :
-        """CDF for Gaussian distribution
-        """
-        return 0.5* ( 1.0 + erf ( x ) )
-    math.gauss_cdf = gauss_cdf
-    logger.debug ( 'gauss_cdf         is added to math' )
+## get Gaussian cdf 
+if not hasattr ( math , 'gauss_cdf' ) :
+    from ostap.math.math_ve immport gauss_cdf as _gauss_cdf
+    math.erf = _gauss_cdf
+    logger.debug ( 'ostap.math.gauss_cdf is added to math' )
 # =============================================================================
 gauss_cdf = math.gauss_cdf
 # =============================================================================

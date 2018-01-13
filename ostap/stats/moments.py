@@ -10,8 +10,8 @@
 #  - RMS 
 #  - Skewness
 #  - Kurtosis
-#  For these quantities scipy.integrate is used integration engine, in case scipy
-#  is not available, a hand-made replacement is used
+#  For these quantities numerical integration is used.
+#  In case scipy is not available, a hand-made replacement is in use.
 #
 #  With help of scipy.optimize.brent additional quantities can be calculated
 #  - Median
@@ -44,8 +44,8 @@
 - RMS 
 - Skewness
 - Kurtosis
-For these quantities scipy.integrate is used integration engine, in case scipy
-is not available, a hand-made replacement is used
+For these quantities numerical integration is used. In case scipy
+is not available, a hand-made replacement is in use
 
 Also it calculates with help of scipy.optimize.brent following quantities
 - Median
@@ -908,7 +908,7 @@ def sp_action ( func , actor , xmin = None , xmax = None ) :
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date 2015-07-11
 def moment ( func , N , xmin = None , xmax = None , err = False , x0 = 0 ) :
-    """ Get the moment for the distribution using scipy/numpy
+    """ Get the moment for the distribution
     >>> fun  = ...
     >>> mom5 = moment ( fun , 5 , xmin = 10 , xmax = 50 )
     """
@@ -925,7 +925,7 @@ def moment ( func , N , xmin = None , xmax = None , err = False , x0 = 0 ) :
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date 2015-07-11
 def central_moment ( func , N , xmin = None , xmax = None , err = False ) :
-    """Get the central moment for the distribution using scipy/numpy
+    """Get the central moment for the distribution using 
     >>> fun  = ...
     >>> mom5 = central_moment ( fun , 5 , xmin = 10 , xmax = 50 )
     """
@@ -942,7 +942,7 @@ def central_moment ( func , N , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def mean ( func , xmin = None , xmax = None , err = False ) :
-    """Get the mean-value for the distribution using scipy/numpy
+    """Get the mean-value for the distribution
     >>> fun = ...
     >>> m   = mean( fun , xmin = 10 , xmax = 50 )
     """
@@ -960,7 +960,7 @@ def mean ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def variance ( func , xmin = None , xmax = None , err = False ) :
-    """Get the variance for the distribution using scipy/numpy
+    """Get the variance for the distribution using
     >>> fun = ...
     >>> v   = variance( fun , xmin = 10 , xmax = 50 )
     """
@@ -979,7 +979,7 @@ def variance ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def rms ( func , xmin = None , xmax = None , err = False ) :
-    """Get RMS for the distribution using scipy/numpy
+    """Get RMS for the distribution using
     >>> fun = ...
     >>> v   = rms( fun , xmin = 10 , xmax = 50 )
     """
@@ -998,7 +998,7 @@ def rms ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def skewness ( func , xmin = None , xmax = None , err = False ) :
-    """Get the skewness for the distribution using scipy/numpy
+    """Get the skewness for the distribution using
     >>> fun = ...
     >>> v   = skewness ( fun , xmin = -10 , xmax = 10 )
     """
@@ -1019,7 +1019,7 @@ def skewness ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def kurtosis ( func , xmin = None , xmax = None , err = False ) :
-    """Get the (exessive) kurtosis for the distribution using scipy/numpy
+    """Get the (exessive) kurtosis for the distribution
     >>> fun  = ...
     >>> kurt = kurtosis ( fun , xmin = 10 , xmax = 50 )
     """
@@ -1038,7 +1038,7 @@ def kurtosis ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def median ( func , xmin = None , xmax = None ) :
-    """Get the median for the distribution using scipy/numpy
+    """Get the median for the distribution using
     >>> fun = ...
     >>> v   = median( fun , xmin = 10 , xmax = 50 )
     """
@@ -1056,7 +1056,7 @@ def median ( func , xmin = None , xmax = None ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def quantile ( func , Q , xmin = None , xmax = None , err = False , x0 = 0 ) :
-    """Get quantile for the distribution using scipy/numpy
+    """Get quantile for the distribution
     >>> fun  = ...
     >>> quan = quantile ( fun , 0.1 , xmin = 10 , xmax = 50 )
     """
@@ -1073,7 +1073,7 @@ def quantile ( func , Q , xmin = None , xmax = None , err = False , x0 = 0 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def mode ( func , xmin = None , xmax = None ) :
-    """Get the mode for the distribution using scipy/numpy
+    """Get the mode for the distribution
     >>> fun = ...
     >>> v   = mode( fun ,  xmin = 10 , xmax = 50 )
     """
@@ -1093,7 +1093,7 @@ def mode ( func , xmin = None , xmax = None ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def width ( func , xmin = None , xmax = None , height_factor = 0.5 ) :
-    """ Get the width for the distribution using scipy/numpy
+    """ Get the width for the distribution
     >>> fun   = ...
     >>> x1,x2 = width ( fun ,  xmin = 10 , xmax = 50 )
     >>> fwhm  = x2-x1   

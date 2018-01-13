@@ -886,9 +886,9 @@ double Ostap::Math::gaussian_integral_left
  *  @return the value of gaussian pdf 
  */
 // ============================================================================
-double Ostap::Math::phi ( const double x     ,
-                          const double mu    ,
-                          const double sigma )
+double Ostap::Math::gauss_pdf ( const double x     ,
+                                const double mu    ,
+                                const double sigma )
 {
   static const double s_norm = 1.0/std::sqrt( 2.0 * M_PI ) ;
   const double dx = ( x  - mu ) / std::abs ( sigma ) ;
@@ -902,9 +902,9 @@ double Ostap::Math::phi ( const double x     ,
  *  @return the value of gaussian cdf 
  */
 // ============================================================================
-double Ostap::Math::Phi ( const double x     ,
-                          const double mu    ,
-                          const double sigma )
+double Ostap::Math::gauss_cdf ( const double x     ,
+                                const double mu    ,
+                                const double sigma )
 {
   //
   static const double s_sqrt2 = std::sqrt( 2.0 ) ;

@@ -259,9 +259,9 @@ namespace Ostap
      *  @param sigma sigma (width)  
      *  @return the value of gaussian pdf 
      */
-    double phi ( const double x         ,
-                 const double mu    = 0 ,
-                 const double sigma = 1 ) ;
+    double gauss_pdf ( const double x         ,
+                       const double mu    = 0 ,
+                       const double sigma = 1 ) ;
     // ========================================================================
     /** get the standard gaussian cdf 
      *  @see https://en.wikipedia.org/wiki/Normal_distribution
@@ -271,9 +271,9 @@ namespace Ostap
      *  @param sigma sigma (width)  
      *  @return the value of gaussian cdf 
      */
-    double Phi ( const double x         ,
-                 const double mu    = 0 ,
-                 const double sigma = 1 ) ;
+    double gauss_cdf ( const double x         ,
+                       const double mu    = 0 ,
+                       const double sigma = 1 ) ;
     // ========================================================================
     /** compute Owen's T-function
      *  \f$ f(h,a) = \frac{1}{2\pi}\int_0^a \frac{ e^{ -\frac{1}{2} h^2(1+x^2)}}{1+x^2}dx \f$ 

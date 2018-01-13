@@ -2480,6 +2480,44 @@ Ostap::Math::interpolate
   return rl ;  
 }
 
+// ============================================================================
+/*  evaluate standard Gauss PDF 
+ *  @param x the value 
+ *  @return valeu of the standard gaussian PDF  
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::gauss_pdf  ( const Ostap::Math::ValueWithError& x )
+{
+  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) ) { return gauss_pdf ( x.value() ) ; }
+  // the value  
+  const double v =   gauss_pdf  ( x.value() ) ;
+  // derivative  
+  const double d = - v * x.value() ;
+  // result 
+  return Ostap::Math::ValueWithError ( v  , d  * d * x.cov2() ) ;
+}
+// ============================================================================
+/* evaluate standard Gauss CDF 
+ *  @param x the value 
+ *  @return value of the standard gaussian CDF  
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::gauss_cdf  ( const Ostap::Math::ValueWithError& x )
+{
+  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) ) { return gauss_cdf ( x.value() ) ; }
+  // the value  
+  const double v = gauss_cdf ( x.value() ) ;
+  // derivative  
+  const double d = gauss_pdf ( x.value() )  ;
+  // result 
+  return Ostap::Math::ValueWithError ( v  , d  * d * x.cov2() ) ;
+}
+// ========================================================================    
+ 
+
+
 // =============================================================================
 // The END
 // =============================================================================

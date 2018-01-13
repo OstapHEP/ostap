@@ -825,6 +825,18 @@ namespace Ostap
      */
     ValueWithError igamma
     ( const ValueWithError& b ) ;
+    // ========================================================================
+    /** evaluate standard Gauss PDF 
+     *  @param x the value 
+     *  @return valeu of the standard gaussian PDF  
+     */
+    ValueWithError gauss_pdf ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** evaluate standard Gauss CDF 
+     *  @param x the value 
+     *  @return value of the standard gaussian CDF  
+     */
+    ValueWithError gauss_cdf  ( const ValueWithError& x ) ;    
     // ========================================================================    
     /** evaluate <code>hypot(x,y)</code>
      *  \f$ \sqrt( x^2 + y^2 ) \f$

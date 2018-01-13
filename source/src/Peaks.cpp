@@ -804,13 +804,13 @@ bool Ostap::Math::SkewGauss::setAlpha  ( const double value )
 double Ostap::Math::SkewGauss::pdf ( const double x ) const 
 {
   const double y = ( x - m_xi ) / m_omega ;
-  return 2* phi ( y ) * Phi ( m_alpha * y ) / m_omega ;
+  return 2* gauss_pdf ( y ) * gauss_cdf ( m_alpha * y ) / m_omega ;
 }
 // ============================================================================
 double Ostap::Math::SkewGauss::cdf ( const double x ) const 
 {
   const double y = ( x - m_xi ) / m_omega ;
-  return Phi ( y ) - 2 * owen ( y , m_alpha ) ;
+  return gauss_cdf ( y ) - 2 * owen ( y , m_alpha ) ;
 }
 // ============================================================================
 double Ostap::Math::SkewGauss::integral ( const double low  , 
