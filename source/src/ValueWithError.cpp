@@ -361,6 +361,30 @@ double Ostap::Math::ValueWithError::kullback
   return ( c1 - c2 ) * ( 1.0 / c2 - 1.0 / c1 ) + chi2 ( b ) ;  
 }
 // =============================================================================
+/*  get (squared) Hellinger distance
+ *  @see https://en.wikipedia.org/wiki/Hellinger_distance
+ *  @return heilinger distance for valid arguments, -1 otherwise
+ */
+// =============================================================================
+double Ostap::Math::ValueWithError::hellinger2
+( const ValueWithError& right ) const 
+{
+  const bool n1 = 0 >=       cov2() || s_zero (       cov2() ) ;
+  const bool n2 = 0 >= right.cov2() || s_zero ( right.cov2() ) ;
+  //
+  if       ( n1  && n2  ) { return -1 ; }
+  else if  ( n1  || n2  ) { return  1 ; }
+  //
+  const double m1 =       value() ;
+  const double m2 = right.value() ;
+  const double dm = m1 - m2 ;
+  //
+  const double sq1 =       cov2() ;
+  const double sq2 = right.cov2() ;
+  //
+  return 1 - std::sqrt ( 2.0 *std::sqrt( sq1 * sq2 ) / ( sq1 + sq2 ) ) * std::exp ( -0.25 * dm * dm / ( sq1 + sq2 ) ) ;
+}
+// =============================================================================
 // evaluate residual: signed sqrt(chi2)
 // =============================================================================
 double Ostap::Math::ValueWithError::residual

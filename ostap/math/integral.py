@@ -36,19 +36,26 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-06"
 __all__     = (
     ##
-    "integral"      , ## (1D) numerical integration (as function, using scipy if possible)
-    "integral2"     , ## (2D) numerical integration (as function, using scipy if possible)
-    "integral3"     , ## (3D) numerical integration (as function, using scipy if possible)
+    "integral"       , ## (1D) numerical integration (as function, using scipy if possible)
+    "integral2"      , ## (2D) numerical integration (as function, using scipy if possible)
+    "integral3"      , ## (3D) numerical integration (as function, using scipy if possible)
     ##
-    "Integral"      , ## (1D) numerical integration (as as object, using scipy if possible)
-    "Integral2"     , ## (2D) numerical integration (as as object, using scipy if possible)
-    "Integral3"     , ## (3D) numerical integration (as as object, using scipy if possible)
+    "Integral"       , ## (1D) numerical integration (as as object, using scipy if possible)
+    "Integral2"      , ## (2D) numerical integration (as as object, using scipy if possible)
+    "Integral3"      , ## (3D) numerical integration (as as object, using scipy if possible)
     ##
-    "romberg"       , ## (1D) numerical integration using romberg's method 
-    'genzmalik2'    , ## (2D) numerical integration using Genz&Malik's method
-    'genzmalik3'    , ## (3D) numerical integration using Genz&Malik's method
+    'Integrate2D_X'  , ## partial integrationn of 2D-function over x-range  
+    'Integrate2D_Y'  , ## partial integrationn of 2D-function over y-range
     ##
-    "IntegralCache" , ## (1D) numerical integration (as object, using scipy is if ssible)
+    'Integrate3D_X'  , ## partial integrationn of 2D-function over x-range  
+    'Integrate3D_Y'  , ## partial integrationn of 2D-function over y-range
+    'Integrate3D_Z'  , ## partial integrationn of 2D-function over z-range
+    ##
+    "romberg"        , ## (1D) numerical integration using romberg's method 
+    'genzmalik2'     , ## (2D) numerical integration using Genz&Malik's method
+    'genzmalik3'     , ## (3D) numerical integration using Genz&Malik's method
+    ##
+    "IntegralCache"  , ## (1D) numerical integration (as object, using scipy is if ssible)
     ##    
     ) 
 # =============================================================================
@@ -268,17 +275,17 @@ class Integral(object) :
         >>> func_0 = Integral(func,0)
         >>> value  = func_
         """
-        self._func   = func 
-        self._xmin   = float ( xlow ) 
-        self._err    = err
-        self._args   = args
-        self._kwargs = kwargs
+        self.__func   = func 
+        self.__xmin   = float ( xlow ) 
+        self.___err   = err
+        self.__args   = args
+        self.__kwargs = kwargs
         
     ## Calculate the integral for the 1D-function
     def _integrate_ ( self , xmn , xmx , args = () ) :
-        args   = args if args else self._args
-        return integral ( self._func , xmn , xmx ,
-                          args = args , err = self._err , **self._kwargs )
+        args   = args if args else self.args
+        return integral ( self.func   , xmn , xmx ,
+                          args = args , err = self.err , **self.kwargs )
             
     ## Calculate the integral for the 1D-function 
     def __call__ ( self , x , *args ) :
@@ -288,8 +295,24 @@ class Integral(object) :
         >>> func_0 = Integral(func,0)
         >>> func_0 ( 10 ) 
         """
-        return self._integrate_ ( self._xmin , x , args = args )
+        return self._integrate_ ( self.xmin , x , args = args )
 
+    @property
+    def xmin ( self  ) :
+        """Low-limit of inntegrtaion
+        """
+        return self.__xmin 
+
+    @property
+    def err ( self ) :
+        """Flag to evaluate the integration uncnertainnties"""
+        return self.__err
+
+    @property
+    def func ( self ) :
+        """The integrand"""
+        return self.__func
+    
 # =============================================================================
 ## @class IntegralCache
 #  Calculate the integral (from x0 to x) for the 1D-function 
@@ -325,9 +348,9 @@ class IntegralCache(Integral) :
         >>> func_0 ( 10 ) 
         """
         x      = float ( x ) 
-        args   = args if args else self._args
+        args   = args if args else self.args
         
-        xmn    = self._xmin
+        xmn    = self.xmin
         delta  = 0
         
         _x     = float ( x )
@@ -346,7 +369,7 @@ class IntegralCache(Integral) :
                     return prev_result                                 ## RETURN
                 
                 ## old point is good 
-                if abs ( prev_x - _x ) <= abs ( self._xmin - _x ) :
+                if abs ( prev_x - _x ) <= abs ( self.xmin - _x ) :
                     xmn   = prev_x
                     delta = prev_result
                     
@@ -824,6 +847,283 @@ except ImportError :
 
 
 # =============================================================================
+## @class Integrate2D_Y
+# helper class to perform (partial) integration of 2D function
+# \f$  f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy \f$ 
+# @code
+# fun2d  = ... ## 2D-function
+# fx     = Integral2D_Y( fun2d , ymin = 0 , ymax = 1 )
+# print fx ( 1 ) 
+# @endcode 
+class Integrate2D_Y(Integral) :
+    """Helper class to perform (partial) integration of 2D function
+    
+    f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy
+    
+    >>> fun2d  = ... ## 2D-function
+    >>> fx     = Integral2D_Y( fun2d , ymin = 0 , ymax = 1 )
+    >>> print fx ( 1 )
+    """
+
+    ## construct the integration object 
+    def __init__  ( self , fun2d , ymin , ymax , args = () , err = False , **kwargs ) :
+        """Construct the integration object
+        
+        f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy
+        
+        >>> fun2d  = ... ## 2D-function
+        >>> fx     = Integral2D_Y( fun2d , ymin = 0 , ymax = 1 )
+        >>> print fx ( 1 )
+        """
+        self.__ymax = ymax 
+        Integral.__init__ ( self , fun2d , ymin , args , err , **kwargs )
+
+    ##  evaluat the funcntion (perform y-integration) 
+    def __call__ ( self , x  , *args ) :
+        """Evaluat the function (perform y-integration)
+        >>> fun2d  = ... ## 2D-function
+        >>> fx     = Integral2D_Y( fun2d , ymin = 0 , ymax = 1 )
+        >>> print fx ( 1 )        
+        """
+        
+        args = args if  args else self.args
+
+        ## create the helper function 
+        _funy_ = lambda y , *_ : self.func ( x , y , *_ )
+        
+        return intergal ( _funy_ , self.ymin , self.ymax , 
+                          args = args  , err  = self.err , **self.kwargs )
+    
+    @property 
+    def ymin ( self ) :
+        """Low integration limit (the same as xmin)"""
+        return self.xmin
+    
+    @property 
+    def ymax ( self ) :
+        """High integration limit"""
+        return self.__ymax
+
+
+# =============================================================================
+## @class Integrate2D_X
+# helper class to perform (partial) integration of 2D function
+# \f$  f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx \f$ 
+# @code
+# fun2d  = ... ## 2D-function
+# fy     = Integral2D_X( fun2d , xmin = 0 , xmax = 1 )
+# print fy ( 1 ) 
+# @endcode 
+class Integrate2D_X(Integral) :
+    """Helper class to perform (partial) integration of 2D function
+    
+    f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx
+    
+    >>> fun2d  = ... ## 2D-function
+    >>> fy     = Integral2D_X( fun2d , xmin = 0 , xmax = 1 )
+    >>> print fy ( 1 )
+    """
+
+    ## construct the integration object 
+    def __init__  ( self , fun2d , xmin , xmax , args = () , err = False , **kwargs ) :
+        """Construct the integration object
+        
+        f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx
+        
+        >>> fun2d  = ... ## 2D-function
+        >>> fy     = Integral2D_X( fun2d , xmin = 0 , xmax = 1 )
+        >>> print fy ( 1 )
+        """
+        self.__xmax = xmax 
+        Integral.__init__ ( self , fun2d , xmin , args , err , **kwargs )
+
+    ##  evaluat the funcntion (perform y-integration) 
+    def __call__ ( self , y  , *args ) :
+        """Evaluat the function (perform y-integration)
+        >>> fun2d  = ... ## 2D-function
+        >>> fy     = Integral2D_X( fun2d , xmin = 0 , xmax = 1 )
+        >>> print fy ( 1 )        
+        """
+        
+        args = args if  args else self.args
+
+        ## create the helper function 
+        _funx_ = lambda x , *_ : self.func ( x , y , *_ )
+        
+        return intergal ( _funx_ , self.xmin , self.xmax , 
+                          args = args  , err  = self.err , **self.kwargs )
+    
+    @property 
+    def xmax ( self ) :
+        """High integration limit"""
+        return self.__xmax
+
+
+# =============================================================================
+## @class Integrate3D_Y
+# helper class to perform (partial) integration of 3D function
+# \f$  f(x,z) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y,z) dy \f$ 
+# @code
+# fun3d  = ... ## 2D-function
+# fxy     = Integral2D_Y( fun3d , ymin = 0 , ymax = 1 )
+# print fxy ( 1 , 2 ) 
+# @endcode 
+class Integrate3D_Y(Integrate2D_Y) :
+    """Helper class to perform (partial) integration of 3D function
+    
+    f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
+    
+    >>> fun3d  = ... ## 3D-function
+    >>> fxy     = Integral3D_Y( fun3d , ymin = 0 , ymax = 1 )
+    >>> print fxy ( 1 , 2 )
+    """
+
+    ## construct the integration object 
+    def __init__  ( self , fun3d , ymin , ymax , args = () , err = False , **kwargs ) :
+        """Construct the integration object
+        
+        f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
+        
+        >>> fun3d  = ... ## 3D-function
+        >>> fxy     = Integral3D_Y( fun3d , ymin = 0 , ymax = 1 )
+        >>> print fxy ( 1 , 2 )
+        """
+        Integrate2D_Y.__init__ ( self , fun3d , ymin , ymax , args , err , **kwargs )
+        
+    ##  evaluat the funcntion (perform y-integration) 
+    def __call__ ( self , x  , z , *args ) :
+        """Evaluate the function (perform y-integration)
+        
+        f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
+        
+        >>> fun3d  = ... ## 3D-function
+        >>> fxy     = Integral3D_Y( fun3d , ymin = 0 , ymax = 1 )
+        >>> print fxy ( 1 , 2 )
+        """
+        args = args if  args else self.args
+
+        ## create the helper function 
+        _funy_ = lambda y , *_ : self.func ( x , y , z , *_ )
+        
+        return intergal ( _funy_ , self.ymin , self.ymax , 
+                          args = args  , err  = self.err , **self.kwargs )
+
+
+# =============================================================================
+## @class Integrate3D_X
+# helper class to perform (partial) integration of 3D function
+# \f$  f(y,z) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y,z) dx \f$ 
+# @code
+# fun3d  = ... ## 2D-function
+# fyz     = Integral2D_X( fun3d , xmin = 0 , xmax = 1 )
+# print fyz ( 1 , 2 ) 
+# @endcode 
+class Integrate3D_X(Integrate2D_X) :
+    """Helper class to perform (partial) integration of 3D function
+    
+    f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
+    
+    >>> fun3d  = ... ## 3D-function
+    >>> fyz     = Integral3D_X( fun3d , xmin = 0 , xmax = 1 )
+    >>> print fyz ( 1 , 2 )
+    """
+
+    ## construct the integration object 
+    def __init__  ( self , fun3d , xmin , xmax , args = () , err = False , **kwargs ) :
+        """Construct the integration object
+        
+        f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
+        
+        >>> fun3d  = ... ## 3D-function
+        >>> fyz     = Integral3D_X( fun3d , xmin = 0 , xmax = 1 )
+        >>> print fyz ( 1 , 2 )
+        """
+        Integrate2D_X.__init__ ( self , fun3d , xmin , xmax , args , err , **kwargs )
+        
+    ##  evaluat the funcntion (perform y-integration) 
+    def __call__ ( self , y  , z , *args ) :
+        """Evaluate the function (perform y-integration)
+        
+        f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
+        
+        >>> fun3d  = ... ## 3D-function
+        >>> fyz     = Integral3D_X( fun3d , xmin = 0 , xmax = 1 )
+        >>> print fyz ( 1 , 2 )
+        """
+        args = args if  args else self.args
+
+        ## create the helper function 
+        _funx_ = lambda x , *_ : self.func ( x , y , z , *_ )
+        
+        return intergal ( _funx_ , self.xmin , self.xmax , 
+                          args = args  , err  = self.err , **self.kwargs )
+    
+
+# =============================================================================
+## @class Integrate3D_Z
+# helper class to perform (partial) integration of 3D function
+# \f$  f(x,y) = \int_{z_{min}}^{z_{max}} f_{2D}(x,y,z) dz \f$ 
+# @code
+# fun3d  = ... ## 2D-function
+# fxy     = Integral2D_Z( fun3d , zmin = 0 , zmax = 1 )
+# print fxy ( 1 , 2 ) 
+# @endcode 
+class Integrate3D_Z(Integrate2D_X) :
+    """Helper class to perform (partial) integration of 3D function
+    
+    f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
+    
+    >>> fun3d  = ... ## 3D-function
+    >>> fxy     = Integral3D_Z( fun3d , zmin = 0 , zmax = 1 )
+    >>> print fxy ( 1 , 2 )
+    """
+
+    ## construct the integration object 
+    def __init__  ( self , fun3d , zmin , zmax , args = () , err = False , **kwargs ) :
+        """Construct the integration object
+        
+        f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
+        
+        >>> fun3d  = ... ## 3D-function
+        >>> fxy     = Integral3D_Z( fun3d , zmin = 0 , zmax = 1 )
+        >>> print fxy ( 1 , 2 )
+        """
+        Integrate3D_X.__init__ ( self , fun3d , xmin , xmax , args , err , **kwargs )
+        
+    ##  evaluat the funcntion (perform y-integration) 
+    def __call__ ( self , x  , y , *args ) :
+        """Evaluate the function (perform z-integration)
+        
+        f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
+        
+        >>> fun3d  = ... ## 3D-function
+        >>> fxy     = Integral3D_Z( fun3d , zmin = 0 , zmax = 1 )
+        >>> print fxy ( 1 , 2 )        
+        """
+        args = args if  args else self.args
+
+        ## create the helper function 
+        _funx_ = lambda z , *_ : self.func ( x , y , z , *_ )
+        
+        return intergal ( _funx_ , self.zmin , self.zmax , 
+                          args = args  , err  = self.err , **self.kwargs )
+    
+    @property 
+    def zmin ( self ) :
+        """Low integration limit"""
+        return self.xmin
+    @property 
+    def zmax ( self ) :
+        """High integration limit"""
+        return self.xmax
+
+
+    
+# =============================================================================
+## 2D-integration
+# =============================================================================
+
+# =============================================================================
 ## @class Integral2
 #  Calculate the integral (from x0 to x and y0 to  y ) for the 2D-function 
 #  @code 
@@ -857,11 +1157,11 @@ class Integral2(Integral) :
     ## Calculate the integral for the 2D-function 
     def _integrate_ ( self , xmn , xmx , ymn , ymx , args = () ) :
         args = args if  args else self._args 
-        return integral2 ( self._func ,
+        return integral2 ( self.func ,
                            xmn  , xmx ,
                            ymn  , ymx ,
                            args       , 
-                           self._err  , **self._kwargs )
+                           self.err  , **self.kwargs )
     
     ## Calculate the integral for the 2D-function 
     def __call__ ( self , x , y , *args ) :
@@ -871,7 +1171,7 @@ class Integral2(Integral) :
         >>> func_0 = Integral(func,0,0)
         >>> func_0 ( 10 ,  20 ) 
         """
-        return self._integrate_ ( self._xmin , x ,
+        return self._integrate_ ( self.xmin , x ,
                                   self._ymin , y , args = args )
 
 
@@ -914,12 +1214,12 @@ class Integral3(Integral2) :
                       zmn , zmx ,
                       args = () ) :
         args = args if  args else self._args 
-        return integral3 ( self._func ,
+        return integral3 ( self.func  ,
                            xmn , xmx  ,
                            ymn , ymx  ,
                            zmn , zmx  ,
                            args       , 
-                           self._err  , **self._kwargs )
+                           self.err  , **self.kwargs )
     
     ## Calculate the integral for the 3D-function 
     def __call__ ( self , x , y , z , *args ) :
@@ -929,9 +1229,9 @@ class Integral3(Integral2) :
         >>> func_0 = Integral(func,0,0,0)
         >>> func_0 ( 10 ,  20 ,   30 ) 
         """
-        return self._integrate_ ( self._xmin , x ,
-                                  self._ymin , y ,
-                                  self._zmin , z , args = args )
+        return self._integrate_ ( self.xmin , x ,
+                                  self.ymin , y ,
+                                  self.zmin , z , args = args )
 
 
 

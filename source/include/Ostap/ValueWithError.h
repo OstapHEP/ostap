@@ -145,7 +145,12 @@ namespace Ostap
       /** get Kullback-Liebler divergency 
        *  @return KL-divergency for valid arguments, -1 otherwise
        */
-      double kullback ( const ValueWithError& right ) const ;
+      double kullback   ( const ValueWithError& right ) const ;
+      /** get (squared) Hellinger distance
+       *  @see https://en.wikipedia.org/wiki/Hellinger_distance
+       *  @return heilinger distance for valid arguments, -1 otherwise
+       */
+      double hellinger2 ( const ValueWithError& right ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -399,6 +404,14 @@ namespace Ostap
     inline double kullback 
     ( const ValueWithError& a , 
       const ValueWithError& b ) { return a.kullback ( b ) ; }
+    // ========================================================================
+    /** get (squared) Hellinger distance for two (gaussian) varibales 
+     *  @see https://en.wikipedia.org/wiki/Hellinger_distance
+     *  return Hellinger distance for two (gaussian) varibales 
+     */
+    inline double hellinger2
+    ( const ValueWithError& a ,
+      const ValueWithError& b ) { return a.hellinger2 ( b ) ; }
     // ========================================================================
     /// evaluate the "fraction"  a/(a+b)
     inline ValueWithError frac 
