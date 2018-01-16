@@ -1255,7 +1255,7 @@ class Integrate3D_Z(IntegralBase) :
         >>> fxy     = Integral3D_Z( fun3d , zmin = 0 , zmax = 1 )
         >>> print fxy ( 1 , 2 )
         """
-        IntegralBase_X.__init__ ( self , func = fun3d , args =  args , err = err , **kwargs )
+        IntegralBase.__init__ ( self , func = fun3d , args =  args , err = err , **kwargs )
         self.__zmin = zmin
         self.__zmax = zmax
         
@@ -1381,8 +1381,8 @@ class Integrate3D_XZ(Integrate3D_X) :
         >>> print fy ( 1 )
         """
         Integrate3D_X.__init__ ( self , fun3d , xmin , xmax , args , err , **kwargs )
-        self.__zmin = ymin
-        self.__zmax = ymax
+        self.__zmin = zmin
+        self.__zmax = zmax
         
         
     ##  evaluate the function (perform xz-integration) 
@@ -1441,9 +1441,9 @@ class Integrate3D_YZ(Integrate3D_Y) :
     >>> fx     = Integral3D_YZ( fun3d , ymin = 0 , ymax = 1 , zmin = 0 , zmax = 1 )
     >>> print fx ( 1 )
         """
-        Integrate3D_X.__init__ ( self , fun3d , xmin , xmax , args , err , **kwargs )
-        self.__zmin = ymin
-        self.__zmax = ymax
+        Integrate3D_Y.__init__ ( self , fun3d , xmin , xmax , args , err , **kwargs )
+        self.__zmin = zmin
+        self.__zmax = zmax
         
         
     ##  evaluate the function (perform yz-integration) 

@@ -9,7 +9,7 @@
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_bernstein' ) 
+if '__main__' ==  __name__ : logger = getLogger ( 'test_models_2D' ) 
 else                       : logger = getLogger ( __name__         )
 # ============================================================================= 
 import ROOT, random  
