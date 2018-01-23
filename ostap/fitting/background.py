@@ -43,7 +43,6 @@ from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_bkg' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-logger.debug ( __doc__ )
 models = []
 # =============================================================================
 ##  @class PolyBase
@@ -52,15 +51,11 @@ class PolyBase(PDF,Phases) :
     """Helper base class to implement various polynomial-like shapes
     """
     def __init__ ( self , name , power , xvar = None , the_phis = None ) :
-        xvar = makeVar ( xvar , 'xvar' , 'x-variable' )
+        ## check  the arguments 
+        xvar = makeVar  ( xvar , 'xvar' , 'x-variable' )
         PDF   .__init__ ( self , name  , xvar      )
         Phases.__init__ ( self , power , the_phis  )
-    @property 
-    def mass ( self ) :
-        """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
-        return self.xvar
-        
-# =============================================================================
+# =============================================================================        
 ## @class  Bkg_pdf
 #  The exponential modified with the positive polynomial 
 #  @see Ostap::Models::ExpoPositive
@@ -78,202 +73,65 @@ class Bkg_pdf(PolyBase) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the variable
+                   xvar             ,   ## the variable
                    power    = 0     ,   ## degree of polynomial
                    tau      = None  ,   ## exponential slope 
-                   the_phis = None  ) : ## the phis... 
-        #
-        PolyBase.__init__  ( self , name , power , mass , the_phis )
+                   the_phis = None  ) : ## the phis...
+        
+        ##            
+        PolyBase.__init__  ( self , name , power , xvar , the_phis )
         #                
-        self.power = power
+        self.__power = power
         #
-        mn,mx   = self.xminmax ()
-        mc      = 0.5 * ( mn + mx )
-        taumax  = 100
-        #
-        if not iszero ( mn ) : taumax =                100.0 / abs ( mn ) 
-        if not iszero ( mc ) : taumax = min ( taumax , 100.0 / abs ( mc ) )
-        if not iszero ( mx ) : taumax = min ( taumax , 100.0 / abs ( mx ) )
+        limits_tau = () 
+        if self.xminmax() : 
+            mn , mx     = self.xminmax()
+            mmax        = max ( abs ( mn ) , abs ( mx ) )
+            limits_tau  = -500. / mmax ,  500. / mmax             
         # 
         ## the exponential slope
         #
         self.__tau  = makeVar ( tau              ,
                                 "tau_%s"  % name ,
-                                "tau(%s)" % name , tau , 0 , -taumax, taumax )
-        #
-            
-        if 0 >= self.power :
-            
-            while self.phis :
-                del self.phis[-1] 
-            self.phi_list.removeAll()
-            
-            self.pdf      = ROOT.RooExponential (
-                'exp_%s' % name  , 'exp(%s)' % name , mass , self.tau )
-            
-        else :
-            
-            self.pdf  = Ostap.Models.ExpoPositive (
-                'expopos_%s'  % name ,
-                'expopos(%s)' % name ,
-                mass                 ,
-                self.tau             ,
-                self.phi_list        ,
-                mass.getMin()        ,
-                mass.getMax()        )
+                                "tau(%s)" % name , tau , 0 , *limits_tau  )
+        
+        self.pdf  = Ostap.Models.ExpoPositive (
+            'expopos_%s'  % name ,
+            'expopos(%s)' % name ,
+            self.xvar            ,
+            self.tau             ,
+            self.phi_list        ,
+            *self.xminmax ()     )
 
+        ## save configuration 
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'power'    : self.power ,            
+            'tau'      : self.tau   ,            
+            'the_phis' : self.phis  ,            
+            }
+        
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for expo*pol function"""
+        return self.__power
     @property
     def tau ( self ) :
-        """Tau-parameter (exponential slope) for expo*pol function"""
+        """``tau''-parameter (exponential slope) for expo*pol function"""
         return self.__tau
     @tau.setter
     def tau ( self , value ) :
         value = float ( value  )
+        if self.xminmax() : 
+            mn , mx     = self.xminmax()
+            mmax        = max ( abs ( mn ) , abs ( mx ) )
+            assert -500./mmax <= value <=  500/mmax, "``tau''-parameter is too large"                              
         self.__tau.setVal ( value  ) 
         return self.__tau.getVal() 
-    
+           
 models.append ( Bkg_pdf ) 
-# =============================================================================
-## @class  PSPol_pdf
-#  Phase space function modulated with the positive polynomial 
-#  @see Ostap::Models::PhaseSpacePol
-#  @see Ostap::Math::PhaseSpacePol
-#  @see Ostap::Math::PhaseSpaceNL 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2011-07-25
-class PSPol_pdf(PolyBase) :
-    """The phase space function modified with positive polynomial 
-    
-    f(x) ~ PS( x ) * Pol_n(x)
-    where
-    - PS       is a phase-space function
-    - Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
 
-    >>>  mass = ROOT.RooRealVar( ... )
-    >>>  ps   = Ostap.Math.PhaseSpaceNL ( low , high , 3 , 4 )  
-    >>>  bkg  = PSPol_pdf ( 'B' , mass , ps , power = 2 )    
-    """
-    ## constructor
-    def __init__ ( self             ,
-                   name             ,   ## the name 
-                   mass             ,   ## the varibale 
-                   phasespace       ,   ## Ostap::Math::PhaseSpaceNL 
-                   power = 1        ) : ## degree of the polynomial
-        
-        #
-        PolyBase.__init__  ( self , name , power , mass )
-        #
-        self.ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
-        self.power = power
-
-        ## make PDF 
-        self.pdf  = Ostap.Models.PhaseSpacePol (
-            'pspol_%s'          % name ,
-            'PhaseSpacePol(%s)' % name ,
-            self.mass            ,
-            self.ps              ,  ## Ostap::Math::PhaseSpaceNL 
-            self.phi_list        )
-
-models.append ( PSPol_pdf ) 
-# =============================================================================
-## @class  TwoExpoPoly_pdf
-#  Difference of two exponents, modulated by positive polynomial 
-#  @see Ostap::Models::TwoExpoPositive
-#  @see Ostap::Math::TwoExpoPositive
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2015-03-26
-class TwoExpoPoly_pdf(PolyBase) :
-    """Difference of two exponential function, modulated by the positive polynomial:
-    
-    f(x) ~ ( exp(-alpha*x) - exp(-(alpha+delta)*x) *  Pol_n(x)
-    where Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
-    
-    >>>  mass = ROOT.RooRealVar( ... ) 
-    >>>  bkg  = TwoExpoPolu_pdf ( 'B' , mass , alpah = 1 , delta = 1 , x0 = 0 , power = 3 )
-    
-    """
-    ## constructor
-    def __init__ ( self             ,
-                   name             ,   ## the name 
-                   mass             ,   ## the variable
-                   alpha = None     ,   ## the slope of the first exponent 
-                   delta = None     ,   ## (alpha+delta) is the slope of the first exponent
-                   x0    = 0        ,   ## f(x)=0 for x<x0 
-                   power = 0        ,   ## degree of polynomial
-                   tau   = None     ) : ##  
-        #
-        PolyBase.__init__  ( self , name , power , mass )
-        #                
-        self.power = power
-        #
-        mn,mx   = self.xminmax()
-        mc      = 0.5 * ( mn + mx )
-        taumax  = 100
-        #
-        if not iszero ( mn ) : taumax =                100.0 / abs ( mn ) 
-        if not iszero ( mc ) : taumax = min ( taumax , 100.0 / abs ( mc ) )
-        if not iszero ( mx ) : taumax = min ( taumax , 100.0 / abs ( mx ) )
-        # 
-        ## the exponential slope
-        #
-        self.__alpha  = makeVar ( alpha               ,
-                                  "alpha_%s"   % name ,
-                                  "#alpha(%s)" % name , alpha , 1 , 0 , taumax )
-        
-        self.__delta  = makeVar ( delta               ,
-                                  "delta_%s"   % name ,
-                                  "#delta(%s)" % name , delta , 1 , 0 , taumax )
-        
-        self.__x0     = makeVar ( x0                 ,
-                                  "x0_%s"     % name ,
-                                  "x_{0}(%s)" % name , x0  ,
-                                  mn , mn-0.5*(mx-mn) , mx+0.5*(mx-mn) ) 
-        #
-        self.pdf  = Ostap.Models.TwoExpoPositive (
-            '2expopos_%s'  % name ,
-            '2expopos(%s)' % name ,
-            mass                  ,
-            self.alpha            ,
-            self.delta            ,
-            self.x0               ,
-            self.phi_list         ,
-            mass.getMin()         ,
-            mass.getMax()         )
-        
-    @property
-    def alpha ( self ) :
-        """Alpha-parameter (slope of leading exponnet) of the TwoExpo function"""
-        return self.__alpha
-    @alpha.setter
-    def alpha ( self , value ) :
-        value = float ( value )
-        assert 0 <= value, 'Alpha-parameter must be non-negative'
-        self.alpha.setVal ( value ) 
-        return self.__alpha.getVal()
-    
-    @property
-    def delta ( self ) :
-        """Delta-parameter (second exponent slope is ``alpha+delta'') of the TwoExpo function"""
-        return self.__delta
-    @delta.setter
-    def delta ( self , value ) :
-        value = float ( value )
-        assert 0 <= value, 'Delta-parameter must be non-negative'
-        self.delta.setVal ( value ) 
-        return self.__delta.getVal()
-    
-    @property
-    def x0 ( self ) :
-        """x0-parameter of the TwoExpo function  (f(x)=0 for x<x0)"""
-        return self.__x0
-    @x0.setter
-    def x0 ( self , value ) :
-        value = float ( value )
-        self.x0.setVal ( value ) 
-        return self.__x0.getVal()
-    
-
-models.append ( TwoExpoPoly_pdf ) 
 # =============================================================================
 ## @class  PolyPos_pdf
 #  A positive polynomial 
@@ -292,23 +150,38 @@ class PolyPos_pdf(PolyBase) :
     """
     ## constructor
     def __init__ ( self             ,
-                   name             ,   ## the name 
-                   mass             ,   ## the varibale 
-                   power = 1        ) : ## degree of the polynomial
+                   name             ,  ## the name 
+                   xvar             ,  ## the varibale 
+                   power = 1        ,  ## degree of the polynomial
+                   the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , power , mass )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis )
         #
-        self.power = power
-
-        ## make PDF
-        self.pdf  = Ostap.Models.PolyPositive (
+        self.__power = power
+        #
+        xmin, xmax = self.xminmax () 
+        self.pdf   = Ostap.Models.PolyPositive (
             'pp_%s'            % name ,
             'PolyPositive(%s)' % name ,
-            self.mass            ,
+            self.xvar            ,
             self.phi_list        ,
-            self.mass.getMin()   ,
-            self.mass.getMax()   ) 
+            xmin , xmax )
         
+        ## save configuration 
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'power'    : self.power ,            
+            'the_phis' : self.phis  ,            
+            }
+                
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for PolyPos function"""
+        return self.__power
+
+
+
 models.append ( PolyPos_pdf ) 
 
 # =============================================================================
@@ -331,24 +204,37 @@ class PolyEven_pdf(PolyBase) :
     """
     ## constructor
     def __init__ ( self             ,
-                   name             ,   ## the name 
-                   mass             ,   ## the varibale 
-                   power = 1        ) : ## (half)degree of the polynomial
+                   name             , ## the name 
+                   xvar             , ## the varibale 
+                   power = 1        , ## (half)degree of the polynomial
+                   the_phis = None  ) :
         #
-        PolyBase.__init__ ( self , name , power , mass )
-        #
-        self.power = power
-        
-        ## make PDF
+        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        self.__power = power
+        ##
+        xmin , xmax = self.xminmax() 
         self.pdf  = Ostap.Models.PolyPositiveEven (
             'ppe_%s'               % name ,
             'PolyPositiveEven(%s)' % name ,
-            self.mass            ,
-            self.phi_list        ,
-            self.mass.getMin()   ,
-            self.mass.getMax()   ) 
+            self.xvar                     ,
+            self.phi_list                 ,
+            xmin ,
+            xmax )
         
-models.append ( PolyPos_pdf ) 
+        ## save configuration 
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'power'    : self.power ,            
+            'the_phis' : self.phis  ,            
+            }
+                
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for PolyEven function"""
+        return self.__power
+        
+models.append ( PolyEven_pdf ) 
 
 # =============================================================================
 ## @class  Monothonic_pdf
@@ -375,24 +261,50 @@ class Monothonic_pdf(PolyBase) :
     ## constructor
     def __init__ ( self              ,
                    name              ,   ## the name 
-                   mass              ,   ## the variable
-                   power = 2         ,   ## degree of the polynomial
-                   increasing = True ) : ## increasing or decreasing ?
+                   xvar              ,   ## the variable
+                   power      = 2    ,   ## degree of the polynomial
+                   increasing = True ,   ## increasing or decreasing ?
+                   the_phis   = None ) : 
         #
-        PolyBase.__init__ ( self , name , power , mass )
+        PolyBase.__init__ ( self , name , power , xvar )
         #
-        self.power      = power
-        self.increasing = increasing
-        # 
+        self.__power      = power
+        self.__increasing = True if increasing else False 
+        #
+        xmin,  xmax = self.xminmax() 
         self.pdf  = Ostap.Models.PolyMonothonic (
             'pp_%s'              % name ,
             'PolyMonothonic(%s)' % name ,
-            self.mass            ,
+            self.xvar            ,
             self.phi_list        ,
-            self.mass.getMin()   ,
-            self.mass.getMax()   ,
+            xmin                 ,
+            xmax                 ,           
             self.increasing      )
         
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'power'      : self.power      ,            
+            'increasing' : self.increasing , 
+            'the_phis'   : self.phis       ,            
+            }
+
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for Monothonic function"""
+        return self.__power
+
+    @property
+    def increasing ( self ) :
+        """``increasing''-parameter for Monothonic function"""
+        return self.__increasing
+
+    @property
+    def decreasing ( self ) :
+        """``decreasing''-parameter for Monothonic function"""
+        return not self.increasing
+    
         
 models.append ( Monothonic_pdf ) 
 # =============================================================================
@@ -426,26 +338,65 @@ class Convex_pdf(PolyBase) :
     ## constructor
     def __init__ ( self              ,
                    name              ,   ## the name 
-                   mass              ,   ## the variable
+                   xvar              ,   ## the variable
                    power = 2         ,   ## degree of the polynomial
                    increasing = True ,   ## increasing or decreasing ?
-                   convex     = True ) : ## convex or concave ?
+                   convex     = True ,   ## convex or concave ?
+                   the_phis   = None ) : ## 
         #
-        PolyBase.__init__ ( self , name , power , mass )
+        PolyBase.__init__ ( self , name , power , xvar )
         #
-        self.power      = power
-        self.increasing = increasing
-        self.convex     = convex  
-        ## make PDF 
+        self.__power      = power
+        self.__increasing = True if increasing else False 
+        self.__convex     = True if convex     else False 
+        #
+        xmin,xmax = self.xminmax()
+        
         self.pdf  = Ostap.Models.PolyConvex (
             'pp_%s'          % name ,
             'PolyConvex(%s)' % name ,
-            self.mass            ,
+            self.xvar            ,
             self.phi_list        ,
-            self.mass.getMin()   ,
-            self.mass.getMax()   ,
+            xmin ,
+            xmax , 
             self.increasing      ,
             self.convex          )
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'power'      : self.power      ,            
+            'increasing' : self.increasing , 
+            'convex'     : self.convex     , 
+            'the_phis'   : self.phis       ,            
+            }
+
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for Convex function"""
+        return self.__power
+
+    @property
+    def increasing ( self ) :
+        """``increasing''-parameter for Convex function"""
+        return self.__increasing
+
+    @property
+    def decreasing ( self ) :
+        """``decreasing''-parameter for Convex function"""
+        return not self.increasing
+    
+    @property
+    def convex ( self ) :
+        """``convex''-parameter for Convex function"""
+        return self.__convex
+    
+    @property
+    def concave ( self ) :
+        """``concave''-parameter for Convex function"""
+        return not self.convex
+
 
 models.append ( Convex_pdf ) 
 # =============================================================================
@@ -456,7 +407,7 @@ models.append ( Convex_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class ConvexOnly_pdf(PolyBase) :
-    """ Positive (Bernstein) polynomial with fixed-sign second derivative:
+    """Positive (Bernstein) polynomial with fixed-sign second derivative:
     
     f(x) = Pol_n(x)
     with f(x)>= 0 over the whole range and
@@ -468,28 +419,239 @@ class ConvexOnly_pdf(PolyBase) :
     >>>  bkg  = ConvexOnly_pdf ( 'B1' , mass , power = 2 , convex = False  )
     """
     ## constructor
-    def __init__ ( self              ,
-                   name              ,   ## the name 
-                   mass              ,   ## the variable
-                   power = 2         ,   ## degree of the polynomial
-                   convex     = True ) : ## convex or concave ?
+    def __init__ ( self             ,
+                   name             ,   ## the name 
+                   xvar             ,   ## the variable
+                   power    = 2     ,   ## degree of the polynomial
+                   convex   = True  ,   ## convex or concave ?
+                   the_phis = None  ) :
         #
-        PolyBase.__init__ ( self , name , power , mass )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis )
         #
-        self.power      = power
-        self.convex     = convex
-        
-        ## make PDF 
+        self.__power      = power
+        self.__convex     = True if convex else False 
+        #
+        xmin,xmax = self.xminmax() 
         self.pdf  = Ostap.Models.PolyConvexOnly (
             'pp_%s'          % name ,
             'PolyConvex(%s)' % name ,
-            self.mass            ,
+            self.xvar            ,
             self.phi_list        ,
-            self.mass.getMin()   ,
-            self.mass.getMax()   ,
+            xmin                 ,
+            xmax                 ,
             self.convex          )
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'power'      : self.power      ,            
+            'convex'     : self.convex     , 
+            'the_phis'   : self.phis       ,            
+            }
+    
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for ConvexOnly function"""
+        return self.__power
+
+    @property
+    def convex ( self ) :
+        """``convex''-parameter for ConvexOnly function"""
+        return self.__convex
+    
+    @property
+    def concave ( self ) :
+        """``concave''-parameter for ConvexOnly function"""
+        return not self.convex
+
 
 models.append ( ConvexOnly_pdf ) 
+
+# =============================================================================
+## @class  PSPol_pdf
+#  Phase space function modulated with the positive polynomial 
+#  @see Ostap::Models::PhaseSpacePol
+#  @see Ostap::Math::PhaseSpacePol
+#  @see Ostap::Math::PhaseSpaceNL 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-07-25
+class PSPol_pdf(PolyBase) :
+    """The phase space function modified with positive polynomial 
+    
+    f(x) ~ PS( x ) * Pol_n(x)
+    where
+    - PS       is a phase-space function
+    - Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
+
+    >>>  mass = ROOT.RooRealVar( ... )
+    >>>  ps   = Ostap.Math.PhaseSpaceNL ( low , high , 3 , 4 )  
+    >>>  bkg  = PSPol_pdf ( 'B' , mass , ps , power = 2 )    
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,   ## the name 
+                   xvar             ,   ## the varibale 
+                   phasespace       ,   ## Ostap::Math::PhaseSpaceNL 
+                   power    = 1     ,   ## degree of the polynomial
+                   the_phis = None  ) : 
+        
+        #
+        #
+        PolyBase.__init__  ( self , name , power , xvar , the_phis )
+        #
+        self.__ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
+        self.__power = power
+        # 
+        self.pdf  = Ostap.Models.PhaseSpacePol (
+            'pspol_%s'          % name ,
+            'PhaseSpacePol(%s)' % name ,
+            self.xvar            ,
+            self.phasespace      ,  ## Ostap::Math::PhaseSpaceNL 
+            self.phi_list        )
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'phasespace' : self.phasespace ,            
+            'power'      : self.power      ,            
+            'the_phis'   : self.phis       ,            
+            }
+
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for PS*pol function"""
+        return self.__power
+    @property
+    def phasespace ( self ) :
+        """``phasespace''-function for PS*pol function"""
+        return self.__ps 
+
+models.append ( PSPol_pdf ) 
+# =============================================================================
+## @class  TwoExpoPoly_pdf
+#  Difference of two exponents, modulated by positive polynomial 
+#  @see Ostap::Models::TwoExpoPositive
+#  @see Ostap::Math::TwoExpoPositive
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-03-26
+class TwoExpoPoly_pdf(PolyBase) :
+    """Difference of two exponential function, modulated by the positive polynomial:
+    
+    f(x) ~ ( exp(-alpha*x) - exp(-(alpha_delta)*x) *  Pol_n(x)
+    where Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
+    
+    >>>  mass = ROOT.RooRealVar( ... ) 
+    >>>  bkg  = TwoExpoPolu_pdf ( 'B' , mass , alpah = 1 , delta = 1 , x0 = 0 , power = 3 )
+    
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,   ## the name 
+                   xvar             ,   ## the variable
+                   alpha = None     ,   ## the slope of the first exponent 
+                   delta = None     ,   ## (alpha+delta) is the slope of the first exponent
+                   x0    = 0        ,   ## f(x)=0 for x<x0 
+                   power = 0        ,   ## degree of polynomial
+                   the_phis = None  ) : 
+        #
+        PolyBase.__init__  ( self , name , power , xvar , the_phis )
+        #                
+        self.__power = power
+        #
+        ## the exponential slope
+        #
+        limits_alpha = () 
+        limits_delta = ()
+        limits_x0    = ()
+        if self.xminmax() : 
+            mn , mx      = self.xminmax()
+            dm           = mx - mn 
+            mmax         = max ( abs ( mn ) , abs ( mx ) )
+            limits_alpha = 1.e-6 , 1.e-16 , 300. / mmax             
+            limits_delta = 1.e-6 , 1.e-16 , 300. / mmax             
+            limits_x0    = mn , mn - 10 * dm , mx + 10 * dm 
+
+        self.__alpha  = makeVar ( alpha               ,
+                                  "alpha_%s"   % name ,
+                                  "#alpha(%s)" % name , alpha , *limits_alpha ) 
+        
+        self.__delta  = makeVar ( delta               ,
+                                  "delta_%s"   % name ,
+                                  "#delta(%s)" % name , delta , *limits_delta )
+        
+        self.__x0     = makeVar ( x0                  ,
+                                  "x0_%s"     % name  ,
+                                  "x_{0}(%s)" % name  , x0    ,  *limits_x0 )
+
+        #
+        xmin , xmax = self.xminmax() 
+        self.pdf  = Ostap.Models.TwoExpoPositive (
+            '2expopos_%s'  % name ,
+            '2expopos(%s)' % name ,
+            self.xvar             ,
+            self.alpha            ,
+            self.delta            ,
+            self.x0               ,
+            self.phi_list         ,
+            xmin , xmax )
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'alpha'      : self.alpha      , 
+            'delta'      : self.delta      , 
+            'x0'         : self.x0         , 
+            'power'      : self.power      ,            
+            'the_phis'   : self.phis       ,            
+            }
+        
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for TwoExpo function"""
+        return self.__power
+
+    @property
+    def alpha ( self ) :
+        """``alpha''-parameter (slope of the leading exponenet) of the TwoExpo function"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0 < value, "``alpha''-parameter must be positive "
+        self.alpha.setVal ( value ) 
+        return self.__alpha.getVal()
+    
+    @property
+    def delta ( self ) :
+        """``delta''-parameter (second exponent slope is ``alpha+delta'') of the TwoExpo function"""
+        return self.__delta
+    @delta.setter
+    def delta ( self , value ) :
+        value = float ( value )
+        assert 0 < value, "``delta''-parameter must be positive"
+        self.delta.setVal ( value ) 
+        return self.__delta.getVal()
+    
+    @property
+    def x0 ( self ) :
+        """``x0''-parameter (shift) of the TwoExpo function  (f(x)=0 for x<x0)"""
+        return self.__x0
+    @x0.setter
+    def x0 ( self , value ) :
+        value = float ( value )
+        self.x0.setVal ( value ) 
+        return self.__x0.getVal()
+ 
+models.append ( TwoExpoPoly_pdf ) 
+
+
 # =============================================================================
 ## @class  Sigmoid_pdf
 #  Sigmoid function modulated wit hpositive polynomial
@@ -498,52 +660,69 @@ models.append ( ConvexOnly_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Sigmoid_pdf(PolyBase) :
-    """A sigmoid function modulated by positive (Bernstein) polynomial 
+    """A ``sigmoid'' function modulated by the positive (Bernstein) polynomial 
     f(x) = 0.5*(1+tahn(alpha*(x-x0))*Pol_n(x)
     """
     ## constructor
-    def __init__ ( self              ,
-                   name              ,   ## the name 
-                   mass              ,   ## the variable
-                   power = 2         ,   ## degree of the polynomial
-                   alpha = None      ,   ##
-                   x0    = None      ) :
+    def __init__ ( self             ,
+                   name             ,   ## the name 
+                   xvar             ,   ## the variable
+                   power    = 2     ,   ## degree of the polynomial
+                   alpha    = None  ,   ## 
+                   x0       = None  ,
+                   the_phis = None  ) :
         #
-        PolyBase.__init__ ( self , name , power , mass )
         #
-        self.power      = power
+        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        #
+        self.__power      = power
 
-        xmin  = mass.getMin()
-        xmax  = mass.getMax()
-        dx    = xmax - xmin 
-        alpmx = 2000.0/dx 
-        
+        limits_alpha = ()
+        limits_x0    = ()
+        if self.xminmax() :
+            mn, mx       = self.xminmax() 
+            dx           = mx - mn 
+            alpmx        = 20
+            limits_alpha = -1000./dx, +1000./dx
+            limits_x0    = 0.5 * ( mn + mx ) , mn - 0.2 *  dx , mx + 0.2 * dx
+            
         self.__alpha  = makeVar ( alpha               ,
                                   'alpha_%s'  % name  ,
-                                  'alpha(%s)' % name  ,
-                                  alpha               , 0 , -alpmx , alpmx ) 
+                                  'alpha(%s)' % name  , alpha , *limits_alpha )
         
-        self.__x0    = makeVar  ( x0               ,
-                                'x0_%s'  % name  ,
-                                'x0(%s)' % name  ,
-                                x0               ,
-                                0.5*(xmax+xmin)  ,
-                                xmin - 0.1 * dx  ,
-                                xmax + 0.1 * dx  ) 
-            
+        self.__x0    = makeVar  ( x0                  ,
+                                  'x0_%s'     % name  ,
+                                  'x0(%s)'    % name  , x0    , *limits_x0    )
+
+        xmin,xmax = self.xminmax() 
         self.pdf  = Ostap.Models.PolySigmoid (
             'ps_%s'           % name ,
             'PolySigmoid(%s)' % name ,
-            self.mass            ,
+            self.xvar            ,
             self.phi_list        ,
-            self.mass.getMin()   ,
-            self.mass.getMax()   ,
+            xmin                 ,
+            xmax                 ,
             self.alpha           ,
             self.x0              )
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'power'      : self.power      ,            
+            'alpha'      : self.alpha      , 
+            'x0'         : self.x0         , 
+            'the_phis'   : self.phis       ,            
+            }
+
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for Sigmoid function"""
+        return self.__power
 
     @property
     def alpha ( self ) :
-        """Alpha-parameter for Sigmoid function"""
+        """``alpha''-parameter for Sigmoid function"""
         return self.__alpha
     @alpha.setter
     def alpha ( self , value ) :
@@ -553,14 +732,14 @@ class Sigmoid_pdf(PolyBase) :
     
     @property
     def x0 ( self ) :
-        """x0-parameter for Sigmoid fuction"""
+        """``x0''-parameter for Sigmoid fuction"""
         return self.__x0
     @x0.setter
     def x0 ( self , value ) :
         value = float ( value )
         self.x0.setVal ( value ) 
         return self.__x0.getVal()
-    
+      
         
 models.append ( Sigmoid_pdf ) 
 # =============================================================================
@@ -578,43 +757,56 @@ models.append ( Sigmoid_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PSpline_pdf(PolyBase) :
-    """A positive spline, a composion of M-splines with non-negative coefficients
+    """A positive spline, a compositon of M-splines with non-negative coefficients
 
     >>> mass   = ... ## the variable
     >>> order  = 3   ## spline order
     
     ## create uniform spline 
     >>> inner  = 3   ## number of inner knots between min and max 
-    >>> spline = Gaudi.Math.PositiveSpline( mass.xmin() , mass.xmax() , inner , order )
+    >>> spline = Ostap.Math.PositiveSpline( mass.xmin() , mass.xmax() , inner , order )
 
     ## create non-uniform spline with
     >>> knots = std.vector('double)()
     >>> knots.push_back ( mass.xmin() )
     >>> knots.push_back ( mass.xmax() )
     >>> knots.push_back ( ... )
-    >>> spline = Gaudi.Math.PositiveSpline( knots , order )
+    >>> spline = Ostap.Math.PositiveSpline( knots , order )
 
     >>> bkg = PSpline_pdf ( 'Spline' , mass , spline ) 
     
     """
     ## constructor
     def __init__ ( self             ,
-                   name             ,   ## the name 
-                   mass             ,   ## the variable
-                   spline           ) : ## the spline object Ostap::Math::PositiveSpline
+                   name             , ## the name 
+                   xvar             , ## the variable
+                   spline           , ## the spline object Ostap::Math::PositiveSpline
+                   the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , spline.npars() , mass )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
         #
-        self.spline = spline 
-
-        ## make PDF 
+        self.__spline = spline
+        # 
         self.pdf  = Ostap.Models.PositiveSpline (
             'ps_%s'              % name ,
             'PositiveSpline(%s)' % name ,
-            self.mass            ,
+            self.xvar            ,
             self.spline          , 
             self.phi_list        )
 
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'spline'     : self.spline     ,            
+            'the_phis'   : self.phis       ,            
+            }
+
+    @property
+    def spline( self ) :
+        """``spline''-function for PSpline PDF"""
+        return self.__spline
+        
 models.append ( PSpline_pdf ) 
 # =============================================================================
 ## @class  MSpline_pdf
@@ -635,14 +827,14 @@ class MSpline_pdf(PolyBase) :
     
     ## create uniform spline 
     >>> inner  = 3   ## number of inner knots between min and max 
-    >>> spline = Gaudi.Math.MonothonicSpline( mass.xmin() , mass.xmax() , inner , order , True )
+    >>> spline = Ostap.Math.MonothonicSpline( mass.xmin() , mass.xmax() , inner , order , True )
 
     ## create non-uniform spline with
     >>> knots = std.vector('double)()
     >>> knots.push_back ( mass.xmin() )
     >>> knots.push_back ( mass.xmax() )
     >>> knots.push_back ( ... )
-    >>> spline = Gaudi.Math.MonothonicSpline( knots , order , True )
+    >>> spline = Ostap.Math.MonothonicSpline( knots , order , True )
 
     >>> bkg = MSpline_pdf ( 'Spline' , mass , spline ) 
     
@@ -650,22 +842,35 @@ class MSpline_pdf(PolyBase) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the variable
-                   spline           ) : ## the spline object Ostap::Math::MonothonicSpline
+                   xvar             ,   ## the variable
+                   spline           ,   ## the spline object Ostap::Math::MonothonicSpline
+                   the_phis = None  ) : 
         #
-        PolyBase .__init__ ( self , name  , spline.npars() , mass )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
         #
-        self.spline = spline         
-        # make PDF
+        self.__spline = spline
+        # 
         self.pdf  = Ostap.Models.MonothonicSpline (
             'is_%s'                % name ,
             'MonothonicSpline(%s)' % name ,
-            self.mass                     ,
+            self.xvar                     ,
             self.spline                   , 
             self.phi_list                 )
 
-models.append ( MSpline_pdf )
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'spline'     : self.spline     ,            
+            'the_phis'   : self.phis       ,            
+            }
 
+    @property
+    def spline( self ) :
+        """``spline''-function for MSpline PDF"""
+        return self.__spline
+
+models.append ( MSpline_pdf )
 # =============================================================================
 ## @class  CSpline_pdf
 #  The special spline for non-negative monothonic convex/concave function
@@ -685,35 +890,47 @@ class CSpline_pdf(PolyBase) :
     
     ## create uniform spline 
     >>> inner  = 3   ## number of inner knots between min and max 
-    >>> spline = Gaudi.Math.ConvexSpline( mass.xmin() , mass.xmax() , inner , order , True , True )
+    >>> spline = Ostap.Math.ConvexSpline( mass.xmin() , mass.xmax() , inner , order , True , True )
 
     ## create non-uniform spline with
     >>> knots = std.vector('double)()
     >>> knots.push_back ( mass.xmin() )
     >>> knots.push_back ( mass.xmax() )
     >>> knots.push_back ( ... )
-    >>> spline = Gaudi.Math.ConvexSpline( knots , order, True  , True )
+    >>> spline = Ostap.Math.ConvexSpline( knots , order, True  , True )
 
-    >>> bkg = MSpline_pdf ( 'Spline' , mass , spline ) 
+    >>> bkg = CSpline_pdf ( 'Spline' , mass , spline ) 
     
     """
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the variable
-                   spline           ) : ## the spline object Ostap::Math::ConvexSpline
+                   xvar             ,   ## the variable
+                   spline           ,   ## the spline object Ostap::Math::ConvexSpline
+                   the_phis = None  ) : ##
         #
-        PolyBase   .__init__ ( self , name  , spline.npars() , mass )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
+        self.__spline = spline
         #
-        self.spline = spline 
-        
-        # make PDF 
         self.pdf  = Ostap.Models.ConvexSpline (
             'is_%s'            % name ,
             'ConvexSpline(%s)' % name ,
-            self.mass                ,
+            self.xvar                ,
             self.spline              , 
             self.phi_list            )
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'spline'     : self.spline     ,            
+            'the_phis'   : self.phis       ,            
+            }
+
+    @property
+    def spline( self ) :
+        """``spline''-function for CSpline PDF"""
+        return self.__spline
 
 models.append ( CSpline_pdf ) 
 
@@ -733,14 +950,14 @@ class CPSpline_pdf(PolyBase) :
     
     ## create uniform spline 
     >>> inner  = 3   ## number of inner knots between min and max 
-    >>> spline = Gaudi.Math.ConvexOnlySpline( mass.xmin() , mass.xmax() , inner , order , True )
+    >>> spline = Ostap.Math.ConvexOnlySpline( mass.xmin() , mass.xmax() , inner , order , True )
 
     ## create non-uniform spline with
     >>> knots = std.vector('double)()
     >>> knots.push_back ( mass.xmin() )
     >>> knots.push_back ( mass.xmax() )
     >>> knots.push_back ( ... )
-    >>> spline = Gaudi.Math.ConvexonlySpline( knots , order, True )
+    >>> spline = Ostap.Math.ConvexonlySpline( knots , order, True )
 
     >>> bkg = CPSpline_pdf ( 'Spline' , mass , spline ) 
     
@@ -748,20 +965,32 @@ class CPSpline_pdf(PolyBase) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the variable
-                   spline           ) : ## the spline object Ostap::Math::ConvexOnlySpline
+                   xvar             ,   ## the variable
+                   spline           ,   ## the spline object Ostap::Math::ConvexOnlySpline
+                   the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , spline.npars () , mass )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
+        self.__spline = spline
         #
-        self.spline = spline 
-        
-        # make PDF 
         self.pdf  = Ostap.Models.ConvexOnlySpline (
             'is_%s'                % name ,
             'ConvexOnlySpline(%s)' % name ,
-            self.mass                ,
+            self.xvar                ,
             self.spline              , 
             self.phi_list            )
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'spline'     : self.spline     ,            
+            'the_phis'   : self.phis       ,            
+            }
+
+    @property
+    def spline( self ) :
+        """``spline''-function for CPSpline PDF"""
+        return self.__spline
 
 models.append ( CPSpline_pdf ) 
 
@@ -788,30 +1017,50 @@ class PS2_pdf(PDF) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the varibale
+                   xvar             ,   ## the variable
                    m1               ,   ## the first  mass (constant)
                    m2               ) : ## the second mass (constant)
-        #
+        
         ## initialize the base 
-        mass = makeVar ( mass , 'bmass' , 'background-mass' ) 
-        PDF.__init__ ( self , name , mass )
+        PDF.__init__ ( self , name , xvar )
         #
+        self.__am1 = abs ( float ( m1 ) )
+        self.__am2 = abs ( float ( m2 ) )
 
-        if self.mass.getMax() < abs ( m1 ) + abs ( m2 ) :
-            logger.error('PS2_pdf(%s): senseless setting of edges/threshold' % self.name ) 
-
+        am1 = self.m1
+        am2 = self.m2
+        
+        if self.xminmax() :
+            mn, mx =  self.xminmax()
+            assert am1  + am2 < mx , 'PS2: senseless setting of edges/threshold %s,%s vs %s' % ( mn , mx , am1+am2 )   
+            
         self.pdf  = Ostap.Models.PhaseSpace2 (
             'ps2_%s'          % name ,
             'PhaseSpace2(%s)' % name ,
-            self.mass            ,
-            m1  , m2 )
+            self.xvar                , self.m1  , self.m2 )
         
+        ## save configuration 
+        self.config = {
+            'name'       : self.name ,
+            'xvar'       : self.xvar ,
+            'm1'         : self.m1   ,            
+            'm2'         : self.m2   ,            
+            }
+    
     @property 
     def mass ( self ) :
         """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
         return self.xvar
-    
 
+    @property
+    def m1 ( self ) :
+        """Tthe mass of the first particle for PS2 function"""
+        return self.__am1
+    @property
+    def m2 ( self ) :
+        """Tthe mass of the first particle for PS2 function"""
+        return self.__am2
+        
 models.append ( PS2_pdf ) 
 # =============================================================================
 ## @class  PSLeft_pdf
@@ -834,28 +1083,38 @@ class PSLeft_pdf(PDF) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the variable
+                   xvar             ,   ## the variable
                    N                ,   ## N 
                    left   = None    ) : 
         #
         ## initialize the base 
-        mass = makeVar ( mass , 'bmass' , 'background-mass' ) 
-        PDF.__init__ ( self , name , mass )
+        PDF.__init__ ( self , name , xvar )
         #
+        self.__N    = N
         self.__left = makeVar ( left                ,
-                              'left_%s'    % name ,
-                              'm_left(%s)' % name ,
-                              None , mass.getMin() , mass.getMax() )
+                                'left_%s'    % name ,
+                                'm_left(%s)' % name ,
+                                None , *self.xminmax() ) 
 
-        if self.left.getMin() >= self.mass.getMax() :
-            logger.error('PSLeft_pdf(%s): invalid setting!' % name )
-            
+        if  self.xminmax() and self.left.minmax() : 
+            mn  , mx  = self.xminmax()
+            lmn , lmx = self.left.minmax()            
+            assert lmn <= mx, "PSLeft_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , lmn, lmx ) 
+
         self.pdf  = Ostap.Models.PhaseSpaceLeft (
             'psl_%s'             % name ,
             'PhaseSpaceLeft(%s)' % name ,
-            self.mass ,
+            self.xvar ,
             self.left ,
-            N         ) 
+            self.N    ) 
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name ,
+            'xvar'       : self.xvar ,
+            'N'          : self.N    ,            
+            'left'       : self.left ,            
+            }
 
     @property 
     def mass ( self ) :
@@ -863,15 +1122,19 @@ class PSLeft_pdf(PDF) :
         return self.xvar
     
     @property
+    def N( self ) :
+        """define N-body phase space"""
+        return self.__N
+    @property
     def left( self ) :
-        """(Left) threshold for N-body phase space"""
+        """(left) threshold for N-body phase space"""
         return self.__left
     @left.setter
     def left ( self , value ) :
         value = float ( value )
         self.__left.setVal ( value  )
         return self.__left.getVal()
-    
+
 models.append ( PSLeft_pdf ) 
 # =============================================================================
 ## @class  PSRight_pdf
@@ -889,36 +1152,56 @@ class PSRight_pdf(PDF) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the variable
+                   xvar             ,   ## the variable
                    L                ,   ## L  
                    N                ,   ## N
                    right   = None   ) : 
         #
-        ## initialize the base 
-        mass = makeVar ( mass , 'bmass' , 'background-mass' ) 
-        PDF.__init__ ( self , name , mass )
+        PDF.__init__ ( self , name , xvar )
         #
+        self.__L = L 
+        self.__N = N 
         self.__right = makeVar ( right ,
                                  'right_%s'      % name ,
                                  'm_{right}(%s)' % name ,
-                                 None , mass.getMin() , mass.getMax() )
+                                 None , self.xminmax() )
         
-        if self.right.getMax() <= self.mass.getMax() :
-            logger.error('PSRight_pdf(%s): invalid setting!' % name )
+        if self.xminmax() and self.right.minmax() :
+            mn  , mx  = self       .xminmax()
+            rmn , rmx = self.rright. minmax()            
+            assert rmn <= mx, "PSRight_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , rmn, rmx ) 
             
         self.pdf  = Ostap.Models.PhaseSpaceRight (
             'psr_%s'              % name ,
             'PhaseSpaceRight(%s)' % name ,
-            self.mass  ,
+            self.xvar  ,
             self.right ,
-            L          , 
-            N          )
-        
+            self.L     , 
+            self.N     ) 
+
+        ## save configuration 
+        self.config = {
+            'name'       : self.name  ,
+            'xvar'       : self.xvar  ,
+            'L'          : self.L     ,            
+            'N'          : self.N     ,            
+            'right'      : self.right ,            
+            }
+
     @property 
     def mass ( self ) :
         """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
         return self.xvar
     
+    @property
+    def N ( self ) :
+        """define ``L-from-N''phase space"""
+        return self.__N
+    @property
+    def L ( self ) :
+        """define ``L-from-N''phase space"""
+        return self.__L
+
     @property
     def right( self ) :
         """(Right) threshold for ``L-from-N''-body phase space"""
@@ -928,7 +1211,7 @@ class PSRight_pdf(PDF) :
         value = float ( value )
         self.__right.setVal ( value  )
         return self.__right.getVal()
-
+    
 models.append ( PSRight_pdf ) 
 # =============================================================================
 ## @class  PSNL_pdf
@@ -955,55 +1238,69 @@ class PSNL_pdf(PDF) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the variable 
+                   xvar             ,   ## the variable 
                    L                ,   ## L  
                    N                ,   ## N
                    left  = None     , 
                    right = None     ) : 
-        ##
-        #
+
         ## initialize the base 
-        mass  = makeVar( mass , 'bmass' , 'background-mass' ) 
-        PDF.__init__ ( self , name , mass )
+        PDF.__init__ ( self , name , xvar )
         #
+        self.__L = L
+        self.__N = N
         #
-        mmin = mass.getMin()
-        mmax = mass.getMax()
-        #
+        limits_left  = ()
+        limits_right = ()
+        if self.xminmax() :
+            mn, mx = self.xminmax()
+            dx     = mx - mn 
+            limits_left  = 0.95 * mn + 0.05 * mx , mn - dx , mx + dx 
+            limits_right = 0.05 * mn + 0.95 * mx , mn - dx , mx + dx 
+            
         self.__left  = makeVar ( left ,
-                               'left_%s'        % name ,
-                               'm_{left}(%s)'   % name , left  , 
-                               0.9 * mmin + 0.1 * mmax ,
-                               mmin ,
-                               mmax ) 
+                                 'left_%s'        % name ,
+                                 'm_{left}(%s)'   % name , left  , *limits_left )
         
         self.__right = makeVar ( right ,
-                               'right_%s'       % name ,
-                               'm_{right}(%s)'  % name , right , 
-                               0.1 * mmin + 0.9 * mmax ,
-                               mmin ,
-                               mmax ) 
-        
-        if self.left.getMin()  >= self.mass.getMax() :
-            logger.error('PSNL_pdf(%s): invalid setting!' % name )
-            
-        if self.right.getMax() <= self.mass.getMax() :
-            logger.error('PSNL_pdf(%):  invalid setting!' % name )
+                                 'right_%s'       % name ,
+                                 'm_{right}(%s)'  % name , right , *limits_right )
 
+        ## pdf 
         self.pdf  = Ostap.Models.PhaseSpaceNL (
             'psnl_%s'          % name ,
             'PhaseSpaceNL(%s)' % name ,
-            self.mass  ,
+            self.xvar  ,
             self.left  ,
             self.right ,
-            L          , 
-            N          )
-        
+            self.L     , 
+            self.N     )
+       
+        ## save configuration 
+        self.config = {
+            'name'       : self.name  ,
+            'xvar'       : self.xvar  ,
+            'L'          : self.L     ,            
+            'N'          : self.N     ,            
+            'left'       : self.left  ,            
+            'right'      : self.right ,            
+            }
+
     @property 
     def mass ( self ) :
         """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
         return self.xvar
     
+    @property
+    def N ( self ) :
+        """define ``L-from-N''phase space"""
+        return self.__N
+    @property
+    def L ( self ) :
+        """define ``L-from-N''phase space"""
+        return self.__L
+
+    @property
     @property
     def left( self ) :
         """(Left) threshold for ``L-from-N''-body phase space"""
@@ -1023,6 +1320,7 @@ class PSNL_pdf(PDF) :
         self.__right.setVal ( value  )
         return self.__right.getVal()
 
+      
 
 models.append ( PSNL_pdf ) 
 # =============================================================================
@@ -1054,32 +1352,95 @@ class PS23L_pdf(PDF) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   mass             ,   ## the variable
+                   xvar             ,   ## the variable
                    m1               ,   ## mass the first particle  (const)
                    m2               ,   ## mass the second particle (const)
                    m3               ,   ## mass the third particle  (const)
-                   m                ,   ## mass of the whole system (const)
+                   mm               ,   ## mass of the whole system (const)
                    L                ,   ## orbital momenutm between (1,2) and 3
                    l  = 0           ) : ## orbital momentum between 1 and 2
         #
         ## initialize the base 
-        mass = makeVar( mass , 'bmass' , 'background-mass' ) 
-        PDF.__init__ ( self , name , mass )
+        PDF.__init__ ( self , name , xvar )
         #
+        am1 = float ( m1 )
+        am2 = float ( m2 )
+        am3 = float ( m3 )
+        amm = float ( mm )
+        
+        assert 0 <= am1          , "The first mass ``m1'' must be non-negative"
+        assert 0 <= am2          , "The second mass ``m2'' must be non-negative"
+        assert 0 <= am3          , "The third mass ``m3'' must be non-negative"
+        assert am1+am2+am3 < amm , "The total mass ``mm'' is too low"
+
+        assert  isinstance ( L , (int,long) ) and 0 <= L < 10 , "Invalid ``L'' for the phase space function"
+        assert  isinstance ( l , (int,long) ) and 0 <= l < 10 , "Invalid ``l'' for the phase space function"
+        self.__m1 = am1
+        self.__m2 = am2
+        self.__m3 = am3
+        self.__mm = amm
+        self.__L  = L
+        self.__l  = l
+        
         self.pdf  = Ostap.Models.PhaseSpace23L (
             'ps23l_%s'          % name ,
             'PhaseSpace23L(%s)' % name ,
-            self.mass                  ,
-            m1 , m2 , m3 , m , L , l )
+            self.xvar  ,
+            self.m1    ,
+            self.m2    ,
+            self.m3    ,
+            self.mm    ,
+            self.L     ,
+            self.l     )
         
+        ## save configuration 
+        self.config = {
+            'name'       : self.name  ,
+            'xvar'       : self.xvar  ,
+            'm1'         : self.m1    ,
+            'm2'         : self.m2    ,
+            'm3'         : self.m3    ,
+            'mm'         : self.mm    ,            
+            'L'          : self.L     ,            
+            'l'          : self.l     ,            
+            }
+
     @property 
     def mass ( self ) :
         """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
         return self.xvar
-    
 
+    @property
+    def m1 ( self ) :
+        """``m1''-parameter, the mass of the first particle ``(1)'' """
+        return self.__m1
+
+    @property
+    def m2 ( self ) :
+        """``m2''-parameter, the mass of the second particle ``(2)''"""
+        return self.__m2
+
+    @property
+    def m3 ( self ) :
+        """``m3''-parameter, the mass of the third particle ``(3)''"""
+        return self.__m3
+
+    @property
+    def mm ( self ) :
+        """``mm''-parameter, the mass of the mother particle"""
+        return self.__mm
+
+    @property
+    def l  ( self ) :
+        """``l''-parameter, the orbital momentum between particles ``(1)'' and ``(2)''"""
+        return self.__l
+
+    @property
+    def L  ( self ) :
+        """``L''-parameter, the orbital momentum between particles ``(1,2)'' and ``3''"""
+        return self.__L
+        
 models.append ( PS23L_pdf ) 
-
 
 
 # =============================================================================

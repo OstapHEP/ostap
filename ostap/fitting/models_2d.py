@@ -35,6 +35,8 @@ from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_2d' )
 else                       : logger = getLogger ( __name__                  )
 # =============================================================================
+models = []
+# =============================================================================
 ##  @class PolyBase2
 #   helper base class to implement various polynomial-like shapes
 class PolyBase2(PDF2,Phases) :
@@ -44,14 +46,12 @@ class PolyBase2(PDF2,Phases) :
         PDF2  .__init__ ( self , name  , xvar , yvar )
         Phases.__init__ ( self , power , the_phis  )
 # =============================================================================
-models = []
-# =============================================================================
 ## @class PolyPos2D_pdf
 #  positive polynomial in 2D:
-#  \f[  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y) \f],
+#  \f$  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{\ij} B^n_i(x) B^k_j(y) \f$,
 #  where \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial 
 #  @see Ostap::Models::Poly2DPositive
-#  @see Gaudi::Math::Poly2DPositive
+#  @see Ostap::Math::Poly2DPositive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PolyPos2D_pdf(PolyBase2) :
@@ -67,32 +67,61 @@ class PolyPos2D_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   x                ,   ##  the first  dimension  
-                   y                ,   ##  the second dimension
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
                    nx = 2           ,   ##  polynomial degree in X 
-                   ny = 2           ) : ##  polynomial degree in Y 
+                   ny = 2           ,   ##  polynomial degree in Y 
+                   the_phis = None  ) : 
 
-        PolyBase2.__init__ ( self , name , x , y , ( nx + 1 ) * ( ny + 1 ) - 1 ) 
-            
+        ## check arguments 
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx 
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
+        ## 
+        PolyBase2.__init__ ( self , name , xvar , yvar ,  ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis )
+
+        self.__nx = nx 
+        self.__ny = ny
+        #
         ## finally build PDF 
-        self.pdf = cpp.Ostap.Models.Poly2DPositive (
+        #
+        self.pdf = Ostap.Models.Poly2DPositive (
             'p2Dp_%s'            % name ,
             'Poly2DPositive(%s)' % name ,
-            self.x        ,
-            self.y        ,
-            nx            ,
-            ny            , 
+            self.xvar     ,
+            self.yvar     ,
+            self.nx       ,
+            self.ny       , 
             self.phi_list )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'nx'       : self.nx   ,            
+            'ny'       : self.ny   ,
+            'the_phis' : self.phis ,
+            }
+
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__nx
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__ny
+    
         
 models.append ( PolyPos2D_pdf ) 
 # =============================================================================
 ## @class PolyPos2Dsym_pdf
 #  Positive symetric polynomial in 2D:
-#  \f[  f(x,y) = \sum^{i=n}_{i=0}\sum{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y) \f],
+#  \f$  f(x,y) = \sum^{i=n}_{i=0}\sum{j=n}_{j=0} a^2_{\ij} B^n_i(x) B^n_j(y) \f$,
 #  where \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial and
 #  \f$a_{ij} = a_{ji}\f$
 #  @see Ostap::Models::Poly2DSymPositive
-#  @see Gaudi::Math::Poly2DSymPositive
+#  @see Ostap::Math::Poly2DSymPositive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PolyPos2Dsym_pdf(PolyBase2) :
@@ -110,30 +139,52 @@ class PolyPos2Dsym_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   x                ,   ##  the first  dimension  
-                   y                ,   ##  the second dimension
-                   n  = 2           ) : ##  polynomial degree 
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
+                   n  = 2           ,   ##  polynomial degree
+                   the_phis = None  ) : 
+        
+        ## check arguments 
+        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
+        ## 
+        self.__n = n 
+        PolyBase2.__init__ ( self , name , xvar , yvar , ( n + 1 ) * ( n + 2 ) / 2 , the_phis )
 
-        if x.getMin() != y.getMin() :
-            logger.warning( 'PolyPos2Dsym: x&y have different low  edges %s vs %s'
-                            % ( x.getMin() , y.getMin() ) )
-        if x.getMax() != y.getMax() :
-            logger.warning( 'PolyPos2Dsym: x&y have different high edges %s vs %s'
-                            % ( x.getMax() , y.getMax() ) )
-            
-        num = ( n + 1 ) * ( n + 2 ) / 2 
-        PolyBase2.__init__ ( self , name , x , y , num - 1 )  
+        if self.xminmax() != self.yminmax() :
+            logger.warning( 'PolyPos2Dsym: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )
 
+        
         ## finally build PDF 
         self.pdf = Ostap.Models.Poly2DSymPositive (
             'p2Dsp_%s'              % name ,
             'Poly2DSymPositive(%s)' % name ,
             self.x        ,
             self.y        ,
-            n             ,
+            self.n        ,
             self.phi_list )
-
-
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'n'        : self.n    ,            
+            'the_phis' : self.phis ,
+            }
+    
+    @property
+    def n  ( self ) :
+        """``n''-parameter - order/degree of 2D-polynom in x&y-directions"""
+        return self.__n
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__n
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__n
+       
 models.append ( PolyPos2Dsym_pdf ) 
 # =============================================================================
 ## @class PSPol2D_pdf
@@ -141,7 +192,7 @@ models.append ( PolyPos2Dsym_pdf )
 #  \f$  f(x,y) = \Phi_1(x) \times \Phi_2(y) \times P^+(x,y) \f$,
 #  where \f$ P^+(x,y)\f$ denotes the positive polynomial,
 #  @see Ostap::Models::PS2DPol
-#  @see Gaudi::Math::PS2DPol
+#  @see Ostap::Math::PS2DPol
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PSPol2D_pdf(PolyBase2) :
@@ -164,31 +215,85 @@ class PSPol2D_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   x                ,   ##  the first  dimension  
-                   y                ,   ##  the second dimension
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
                    psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
                    psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
                    nx  = 2          ,   ##  polynomial degree in X 
-                   ny  = 2          ) : ##  polynomial degree in Y 
-        
-        num = ( nx + 1 ) * ( ny + 1 )  - 1 
-        PolyBase2.__init__ ( self , name , x , y , num )  
+                   ny  = 2          ,   ##  polynomial degree in Y 
+                   the_phis = None  ) : 
 
-        self.psx = psx  
-        self.psy = psy
+
+        ## check arguments 
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
+
+        ## the base 
+        PolyBase2.__init__ ( self , name , xvar , yvar ,
+                             ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis )
+        
+        self.__phasespacex = psx  
+        self.__phasespacey = psy
+        
+        self.__nx          =  nx
+        self.__ny          =  ny
+        
                         
+        #
         ## finally build PDF 
+        #
         self.pdf = Ostap.Models.PS2DPol (
             'ps2D_%s'     % name ,
             'PS2DPol(%s)' % name ,
-            self.x        ,
-            self.y        ,
-            psx           ,
-            psy           ,
-            nx            ,
-            ny            , 
-            self.phi_list )
+            self.x           ,
+            self.y           ,
+            self.phasespacex ,
+            self.phasespacey ,
+            self.nx          ,
+            self.ny          , 
+            self.phi_list    )
         
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'psx'      : self.phasespacex , 
+            'psy'      : self.phasespacey ,
+            'nx'       : self.nx   , 
+            'ny'       : self.ny   , 
+            'the_phis' : self.phis , 
+            }
+    
+    @property 
+    def mass1 ( self ) :
+        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    
+    @property 
+    def mass2 ( self ) :
+        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        return self.yvar
+
+    @property
+    def phasespacex( self ) :
+        """``x-phasespace''-function for  PSPol2D-function"""
+        return self.__phasespacex
+    
+    @property
+    def phasespacey( self ) :
+        """``y-phasespace''-function for  PSPol2D-function"""
+        return self.__phasespacey 
+    
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__nx
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__ny
+
 models.append ( PSPol2D_pdf ) 
 # =============================================================================
 ## @class PSPol2Dsym_pdf
@@ -222,27 +327,28 @@ class PSPol2Dsym_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   x                ,   ##  the first  dimension  
-                   y                ,   ##  the second dimension
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
                    ps               ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
-                   n   = 2          ) : ##  polynomial degree in Y 
+                   n   = 2          ,   ##  polynomial degree in Y
+                   the_phis = None  ) :
         
-        if x.getMin() != y.getMin() :
-            logger.warning( 'PSPos2Dsym: x&y have different low  edges %s vs %s'
-                            % ( x.getMin() , y.getMin() ) )
-            
-        if x.getMax() != y.getMax() :
-            logger.warning( 'PSPos2Dsym: x&y have different high edges %s vs %s'
-                            % ( x.getMax() , y.getMax() ) )
-                
-        num = ( n + 1 ) * ( n + 2 ) / 2  - 1 
-        PolyBase2.__init__ ( self , name , x , y , num )  
+        ## check arguments 
+        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
+        ## 
+        ## the base 
+        PolyBase2.__init__ ( self , name , xvar , yvar , ( n + 1 ) * ( n + 2 ) / 2  - 1 , the_phis )
 
-        self.ps  = ps
-        self.psx = ps
-        self.psy = ps
-            
+        if self.xminmax() != self.yminmax() :
+            logger.warning( 'PSPol2Dsym_pdf: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )
+
+        
+        self.__phasespace = ps  
+
+        self.__n = n 
+        #
         ## finally build PDF 
+        #
         self.pdf = Ostap.Models.PS2DPolSym (
             'ps2Ds_%s'       % name ,
             'PS2DPolSym(%s)' % name ,
@@ -251,6 +357,54 @@ class PSPol2Dsym_pdf(PolyBase2) :
             ps            ,
             n             ,
             self.phi_list )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'ps'       : self.phasespace  , 
+            'n'        : self.n    , 
+            'the_phis' : self.phis , 
+            }
+        
+    @property 
+    def mass1 ( self ) :
+        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    
+    @property 
+    def mass2 ( self ) :
+        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        return self.yvar
+
+    @property
+    def phasespace ( self ) :
+        """``phasespace''-function for PSPol2DSym-function"""
+        return self.__phasespace
+    
+    @property
+    def phasespacex( self ) :
+        """``x-phasespace''-function for PSPol2Dsym-function"""
+        return self.__phasespace
+    
+    @property
+    def phasespacey( self ) :
+        """``y-phasespace''-function for PSPol2Dsym-function"""
+        return self.__phasespace 
+
+    @property
+    def n  ( self ) :
+        """``n''-parameter  - order/degree of 2D-polynom in x&y-directions"""
+        return self.__n
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__n
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__n
         
 models.append ( PSPol2Dsym_pdf ) 
 # =============================================================================
@@ -280,48 +434,102 @@ class ExpoPSPol2D_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   x                ,   ##  the first  dimension  
-                   y                ,   ##  the second dimension
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
                    psy = None       ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
                    nx  = 2          ,   ##  polynomial degree in X 
                    ny  = 2          ,   ##  polynomial degree in Y 
                    tau = None       ) : ##  the exponent 
         
-        num = ( nx + 1 ) * ( ny + 1 ) - 1 
-        PolyBase2.__init__ ( self , name , x , y , num )  
+        ## check arguments 
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
 
-        #
-        ## get tau
-        taumax  = 100
-        mn,mx   = x.minmax()
-        mc      = 0.5 * ( mn + mx )
-        #
-        if not iszero ( mn ) : taumax =                100.0 / abs ( mn ) 
-        if not iszero ( mc ) : taumax = min ( taumax , 100.0 / abs ( mc ) )
-        if not iszero ( mx ) : taumax = min ( taumax , 100.0 / abs ( mx ) )
+        ## the base 
+        PolyBase2.__init__ ( self , name , xvar , yvar , ( nx + 1 ) * ( ny + 1 ) - 1 )
         
-        #
+        limits_tau = () 
+        if self.xminmax() : 
+            mn , mx     = self.xminmax()
+            mmax        = max ( abs ( mn ) , abs ( mx ) )
+            limits_tau  = -500. / mmax ,  500. / mmax
+            
         ## the exponential slope
+        self.__tau  = makeVar ( tau              ,
+                                "tau_%s"  % name ,
+                                "tau(%s)" % name , tau , 0 , *limits_tau )
         #
-        self.tau  = makeVar ( tau              ,
-                              "tau_%s"  % name ,
-                              "tau(%s)" % name , tau , 0 , -taumax , taumax )
-        #
+        self.__phasespace = psy
+
+        self.__nx = nx
+        self.__ny = ny
         
-        self.psy = psy
-                        
+        #
         ## finally build PDF 
+        #
         self.pdf = Ostap.Models.ExpoPS2DPol (
             'ps2D_%s'     % name ,
             'PS2DPol(%s)' % name ,
-            self.x        ,
-            self.y        ,
-            self.tau      ,
-            self.psy      , 
-            nx            ,
-            ny            , 
-            self.phi_list )
+            self.x           ,
+            self.y           ,
+            self.tau         ,
+            self.phasespacey , 
+            self.nx          ,
+            self.ny          , 
+            self.phi_list    )
         
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'psy'      : self.phasespacey , 
+            'nx'       : self.nx   , 
+            'ny'       : self.ny   , 
+            'tau'      : self.tau  , 
+            'the_phis' : self.phis ,
+            }
+
+    @property 
+    def mass1 ( self ) :
+        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    
+    @property 
+    def mass2 ( self ) :
+        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        return self.yvar
+
+    @property
+    def tau ( self ) :
+        """``tau''-parameters, the exponential slope for  x-dimension"""
+        return   self.__tau 
+    @tau.setter
+    def tau ( self , value ) :
+        value = float ( value )
+        self.__tau.setVal ( value )
+        return self.__tau.getVal ()
+    
+    @property
+    def phasespace ( self ) :
+        """``phasespace''-function for PSPol2DSym-function"""
+        return self.__phasespace
+        
+    @property
+    def phasespacey( self ) :
+        """``y-phasespace''-function for PSPol2Dsym-function"""
+        return self.phasespace
+    
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__nx
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__ny
+    
+
 models.append ( ExpoPSPol2D_pdf ) 
 # =============================================================================
 ## @class ExpoPol2D_pdf
@@ -350,52 +558,49 @@ class ExpoPol2D_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   x                ,   ##  the first  dimension  
-                   y                ,   ##  the second dimension
-                   nx  = 2          ,   ##  polynomial degree in X 
-                   ny  = 2          ,   ##  polynomial degree in Y
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
+                   nx   = 2         ,   ##  polynomial degree in X 
+                   ny   = 2         ,   ##  polynomial degree in Y
                    taux = None      ,   ##  the exponent in X 
-                   tauy = None      ) : ##  the exponent in Y
+                   tauy = None      ,   ##  the exponent in Y
+                   the_phis = None  ) : 
         
-        #
-        num = ( nx + 1 ) * ( ny + 1 ) - 1 
-        PolyBase2.__init__ ( self , name , x , y , num )  
+        ## check arguments 
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
 
-        #
-        ## get tau_x
-        #
-        xtaumax = 100
-        mn,mx   = x.minmax()
-        mc      = 0.5 * ( mn + mx )
-        #
-        if not iszero ( mn ) : xtaumax =                 100.0 / abs ( mn ) 
-        if not iszero ( mc ) : xtaumax = min ( xtaumax , 100.0 / abs ( mc ) )
-        if not iszero ( mx ) : xtaumax = min ( xtaumax , 100.0 / abs ( mx ) )
+        PolyBase2.__init__ ( self , name , xvar , yvar ,
+                             ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis )
         
-        ytaumax = 100
-        mn,mx   = y.minmax()
-        mc      = 0.5 * ( mn + mx )
-        #
-        if not iszero ( mn ) : ytaumax =                 100.0 / abs ( mn ) 
-        if not iszero ( mc ) : ytaumax = min ( ytaumax , 100.0 / abs ( mc ) )
-        if not iszero ( mx ) : ytaumax = min ( ytaumax , 100.0 / abs ( mx ) )
+        limits_taux = () 
+        if self.xminmax() : 
+            mn , mx     = self.xminmax()
+            mmax        = max ( abs ( mn ) , abs ( mx ) )
+            limits_taux = -500. / mmax ,  500. / mmax
 
+        limits_tauy = () 
+        if self.yminmax() : 
+            mn , mx     = self.yminmax()
+            mmax        = max ( abs ( mn ) , abs ( mx ) )
+            limits_tauy = -500. / mmax ,  500. / mmax
+
+        self.__nx = nx 
+        self.__ny = ny
         #
         ## the exponential slopes
         #
-        self.taux  = makeVar ( taux              ,
-                               "taux_%s"  % name ,
-                               "taux(%s)" % name , taux , 0 , -xtaumax , xtaumax )
+        self.__taux  = makeVar ( taux              ,
+                                 "taux_%s"  % name ,
+                                 "taux(%s)" % name , taux , 0 , *limits_taux )
         #
-        self.tauy  = makeVar ( tauy              ,
-                               "tauy_%s"  % name ,
-                               "tauy(%s)" % name , tauy , 0 , -ytaumax , ytaumax )
+        self.__tauy  = makeVar ( tauy              ,
+                                 "tauy_%s"  % name ,
+                                 "tauy(%s)" % name , tauy , 0 , *limits_tauy )
+            
         #
-        
-        self.m1  = x ## ditto 
-        self.m2  = y ## ditto
-
         ## finally build PDF 
+        #
         self.pdf = Ostap.Models.Expo2DPol (
             'exp2D_%s'      % name ,
             'Expo2DPol(%s)' % name ,
@@ -406,6 +611,48 @@ class ExpoPol2D_pdf(PolyBase2) :
             nx            ,
             ny            , 
             self.phi_list )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'nx'       : self.nx   , 
+            'ny'       : self.ny   , 
+            'taux'     : self.taux , 
+            'tauy'     : self.tauy , 
+            'the_phis' : self.phis ,
+            }
+
+    @property
+    def taux ( self ) :
+        """``tau-x''-parameters, the exponential slope for x-dimension"""
+        return   self.__taux 
+    @taux.setter
+    def taux ( self , value ) :
+        value = float ( value )
+        self.__taux.setVal ( value )
+        return self.__taux.getVal ()
+
+    @property
+    def tauy ( self ) :
+        """``tau-y''-parameters, the exponential slope for y-dimension"""
+        return   self.__tauy
+    @tauy.setter
+    def tauy ( self , value ) :
+        value = float ( value )
+        self.__tauy.setVal ( value )
+        return self.__tauy.getVal ()
+    
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__nx
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__ny
+    
         
 models.append ( ExpoPol2D_pdf ) 
 # =============================================================================
@@ -435,60 +682,116 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   x                ,   ## the first  dimension  
-                   y                ,   ## the second dimension
+                   xvar             ,   ## the first  dimension  
+                   yvar             ,   ## the second dimension
                    n    = 2         ,   ## polynomial degree in X and Y
-                   tau  = None      ) : ## the exponent 
+                   tau  = None      ,   ## the exponent 
+                   the_phis = None  ) : 
         
-        if x.getMin() != y.getMin() :
-            logger.warning( 'PSPos2Dsym: x&y have different low  edges %s vs %s'
-                            % ( x.getMin() , y.getMin() ) )
-            
-        if x.getMax() != y.getMax() :
-            logger.warning( 'PSPos2Dsym: x&y have different high edges %s vs %s'
-                            % ( x.getMax() , y.getMax() ) )
-                
-        #
-        num = ( n + 1 ) * ( n + 2 ) / 2 - 1 
-        PolyBase2.__init__ ( self , name , x , y , num )  
+        ## check arguments 
+        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
+        ## 
+        PolyBase2.__init__ ( self , name , xvar , yvar ,
+                             ( n + 1 ) * ( n + 2 ) / 2 - 1 , the_phis )
+        
+        if self.xminmax() != self.yminmax() :
+            logger.warning( 'PSPol2Dsym_pdf: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )
 
-        #
-        ## get tau
-        # 
-        taumax  = 100
-        mn,mx   = x.minmax()
-        mc      = 0.5 * ( mn + mx )
-        #
-        if not iszero ( mn ) : taumax =                100.0 / abs ( mn ) 
-        if not iszero ( mc ) : taumax = min ( taumax , 100.0 / abs ( mc ) )
-        if not iszero ( mx ) : taumax = min ( taumax , 100.0 / abs ( mx ) )
+             
+        limits_tau = () 
+        if self.xminmax() : 
+            mn , mx    = self.xminmax()
+            mmax       = max ( abs ( mn ) , abs ( mx ) )
+            limits_tau = -500. / mmax ,  500. / mmax
 
+        self.__n = n 
         #
         ## the exponential slopes
         #
-        self.tau  = makeVar ( tau              ,
-                              "tau_%s"  % name ,
-                              "tau(%s)" % name , tau , 0 , -taumax , taumax )
-        #
-        self.m1  = x ## ditto 
-        self.m2  = y ## ditto
+        self.__tau  = makeVar ( tau              ,
+                                "tau_%s"  % name ,
+                                "tau(%s)" % name , tau , 0 , *limits_tau )
             
+        #
         ## finally build PDF 
+        #
         self.pdf = Ostap.Models.Expo2DPolSym (
             'exp2Ds_%s'        % name ,
             'Expo2DPolSym(%s)' % name ,
             self.x        ,
             self.y        ,
             self.tau      ,
-            n             ,
+            self.n        ,
             self.phi_list )
         
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'n'        : self.n    , 
+            'tau'      : self.tau  , 
+            'the_phis' : self.phis 
+            }
+        
+    @property
+    def tau ( self ) :
+        """``tau''-parameter, the exponential slope for x&y-dimensions"""
+        return   self.__tau 
+    @tau.setter
+    def tau ( self , value ) :
+        value = float ( value )
+        self.__tau.setVal ( value )
+        return self.__tau.getVal ()
+
+    @property
+    def tau ( self ) :
+        """``tau-x''-parameters, the exponential slope for x-dimension"""
+        return   self.__tau
+    @tau.setter
+    def taux ( self , value ) :
+        value = float ( value )
+        self.__tau.setVal ( value )
+
+    @property
+    def taux ( self ) :
+        """``tau-x''-parameters, the exponential slope for x-dimension"""
+        return   self.__tau
+    @taux.setter
+    def taux ( self , value ) :
+        value = float ( value )
+        self.__tau.setVal ( value )
+        return self.__tau.getVal ()
+
+    @property
+    def tauy ( self ) :
+        """``tau-y''-parameters, the exponential slope for y-dimension"""
+        return   self.__tau
+    @tauy.setter
+    def tauy ( self , value ) :
+        value = float ( value )
+        self.__tau.setVal ( value )
+        return self.__tau.getVal ()
+    
+    @property
+    def n  ( self ) :
+        """``n''-parameter - order/degree of 2D-polynom in x&y-directions"""
+        return self.__n
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__n
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__n
+    
 
 models.append ( ExpoPol2Dsym_pdf ) 
 # =============================================================================
 ## @class Spline2D_pdf
 #  positive spline in 2D:
-#  \f[  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{ij} M^n_i(x) M^k_j(y) \f],
+#  \f$  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{\ij} M^n_i(x) M^k_j(y) \f$,
 #  where \f$ B^n_i(x)\f$ denotes the M-splines  
 #  @see Ostap::Models::Spline2D
 #  @see Ostap::Math::Spline2D
@@ -506,16 +809,18 @@ class Spline2D_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   x                ,   ##  the first  dimension  
-                   y                ,   ##  the second dimension
-                   spline           ) : ## the spline: Gaudi.Math.Spline2D 
-
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
+                   spline           ,
+                   the_phis = None  ) : ## the spline: Ostap.Math.Spline2D 
         
-        PolyBase2.__init__ ( self , name , x , y , spline.npars() )
+        PolyBase2.__init__ ( self , name , xvar , yvar , spline.npars() , the_phis ) 
         
-        self.spline = spline
+        self.__spline = spline
 
+        #
         ## finally build PDF 
+        #
         self.pdf = Ostap.Models.Spline2D (
             's2Dp_%s'      % name ,
             'Spline2D(%s)' % name ,
@@ -523,12 +828,26 @@ class Spline2D_pdf(PolyBase2) :
             self.y        ,
             self.spline   ,
             self.phi_list )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name   ,            
+            'xvar'     : self.xvar   ,
+            'yvar'     : self.yvar   ,
+            'spline'   : self.spline , 
+            'the_phis' : self.phis   
+            }
+
+    @property
+    def spline ( self ) :
+        """``spline''-function for Spline2D PDF"""
+        return self.__spline
 
 models.append ( Spline2D_pdf ) 
 # =============================================================================
 ## @class Spline2Dsym_pdf
 #  symmetric positive spline in 2D:
-#  \f[ f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{ij} M^n_i(x) M^k_j(y) \f],
+#  \f$  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{\ij} M^n_i(x) M^k_j(y) \f$,
 #  where \f$ B^n_i(x)\f$ denotes the M-splines  
 #  @see Ostap::Models::Spline2DSym
 #  @see Ostap::Math::Spline2DSym
@@ -545,17 +864,22 @@ class Spline2Dsym_pdf(PolyBase2) :
     - f(x,y)>=0     for whole 2D-range
     - f(x,y)=f(y,x) for whole 2D-range 
     """
-    def __init__ ( self             ,
-                   name             ,
-                   x                ,   ##  the first  dimension  
-                   y                ,   ##  the second dimension
-                   spline           ) : ## the spline: Gaudi.Math.Spline2DSym 
+    def __init__ ( self              ,
+                   name              ,
+                   xvar              ,   ## the first  dimension  
+                   yvar              ,   ## the second dimension
+                   spline            ,   ## the spline: Ostap.Math.Spline2DSym
+                   the_phis = None ) :
 
-        PolyBase2.__init__ ( self , name , x , y , spline.npars() )
-        
-        self.spline = spline
+        PolyBase2.__init__ ( self , name , xvar , yvar , spline.npars() , the_phis )        
 
+        if self.xminmax() != self.yminmax() :
+            logger.warning( 'Spline2Dsym_pdf: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )
+             
+        self.__spline = spline
+        #
         ## finally build PDF 
+        #
         self.pdf = Ostap.Models.Spline2DSym (
             's2Dp_%s'         % name ,
             'Spline2DSym(%s)' % name ,
@@ -563,6 +887,20 @@ class Spline2Dsym_pdf(PolyBase2) :
             self.y        ,
             self.spline   ,
             self.phi_list )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name   ,            
+            'xvar'     : self.xvar   ,
+            'yvar'     : self.yvar   ,
+            'spline'   : self.spline , 
+            'the_phis' : self.phis   
+            }
+        
+    @property
+    def spline ( self ) :
+        """``spline''-function for Spline2Dsym PDF"""
+        return self.__spline
 
 models.append ( Spline2Dsym_pdf ) 
 # =============================================================================
@@ -570,7 +908,8 @@ models.append ( Spline2Dsym_pdf )
 # =============================================================================
 _rv = ROOT.gROOT.GetVersionInt() // 10000
 def _2d_get_pars_ ( self ) :
-    """Get parameters of underlying positive Berstein polynomial
+    """
+    Get parameters of underlying positive Berstein polynomial
     """
     if   hasattr ( self , 'pdf'      ) :
         return _2d_get_pars_ ( self.pdf         )        
@@ -603,8 +942,7 @@ for t in ( PolyPos2D_pdf    ,
            ExpoPol2Dsym_pdf ) :
 
     t.pars = _2d_get_pars_ 
-
-           
+        
 # =============================================================================
 if '__main__' == __name__ : 
          

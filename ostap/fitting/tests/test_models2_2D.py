@@ -36,7 +36,7 @@ dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )
 
 m = VE(3.100,0.015**2)
 
-N_ss =  5000
+N_ss = 10000
 N_sb =  2500
 N_bs =  2500
 N_bb =  5000
@@ -76,6 +76,16 @@ models = set()
 # =============================================================================
 
 
+signal1  = Models.Gauss_pdf ( 'Gx'  , xvar = m_x ) 
+signal2  = Models.Gauss_pdf ( 'Gy'  , xvar = m_y )
+signal2s = signal1.clone ( name = 'GyS' , xvar = m_y )
+
+signal1.mean  = m.value ()
+signal1.sigma = m.error ()
+signal2.mean  = m.value ()
+signal2.sigma = m.error ()
+
+
 # =============================================================================
 ## gauss as signal, const as background 
 # =============================================================================
@@ -83,21 +93,10 @@ def test_const () :
     
     logger.info ('Simplest (factorized) fit model:  ( Gauss + const ) x ( Gauss + const ) ' )
     model   = Models.Fit2D (
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y )
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
         )
 
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
-    model.bkgA   .tau  .fix ( 0 )
-    model.bkgB   .tau  .fix ( 0 )
-    
     ## fit with fixed mass and sigma
     with rooSilent() : 
         result, frame = model. fitTo ( dataset )
@@ -113,10 +112,10 @@ def test_const () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0] )
 
     models.add ( model ) 
 
@@ -124,28 +123,17 @@ def test_const () :
 ## gauss as signal, second order polynomial as background 
 # =============================================================================
 def test_p2xp2 () : 
-    logger.info ('Simple (factorized) fit model:  ( Gauss + P2 ) (x) ( Gauss + P2 ) ' )
+    logger.info ('Simple (factorized) fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) ' )
     model   = Models.Fit2D (
         suffix   = '_2' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 2 , 
-        bkg2   = 2 ,
-        bkgA   = 2 ,
-        bkgB   = 2 , 
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
+        bkg2     = -1 ,
+        bkgA     = -1 ,
+        bkgB     = -1 , 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
-    model.bkgA   .tau  .fix ( 0 )
-    model.bkgB   .tau  .fix ( 0 )
-    
+
     ## fit with fixed mass and sigma
     with rooSilent() : 
         result, frame = model. fitTo ( dataset )
@@ -161,10 +149,10 @@ def test_p2xp2 () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0] )
 
     models.add ( model ) 
 
@@ -176,21 +164,12 @@ def test_p1xp1_BB () :
     logger.info ('Simplest non-factorized fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BB' )
     model   = Models.Fit2D (
         suffix   = '_3' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1 , 
-        bkg2   = 1 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
+        bkg2     = -1 ,
         bkg2D    = Models.PolyPos2D_pdf ( 'P2D' , m_x , m_y , nx = 2 , ny = 2 ) 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
     
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -207,10 +186,10 @@ def test_p1xp1_BB () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0] )
 
     models.add ( model ) 
 
@@ -223,21 +202,12 @@ def test_p1xp1_BBs () :
     logger.info ('Non-factorized symmetric background fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
     model   = Models.Fit2D (
         suffix   = '_4' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1 , 
-        bkg2   = 1 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
+        bkg2     = -1 ,
         bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2Ds' , m_x , m_y , n = 2 ) 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
     
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -254,10 +224,10 @@ def test_p1xp1_BBs () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0] )
 
     models.add ( model ) 
 
@@ -269,33 +239,19 @@ def test_p1xp1_BBss () :
     
     logger.info ('Symmetrised fit model with non-factorized symmetric background:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
     sb      = ROOT.RooRealVar('sb','SB',2500 , 0,10000)
-    s1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) 
-    s2 = Models.Gauss_pdf ( 'Gy' , mass = m_y , mean = s1.mean , sigma = s1.sigma )
-    b1 = Models.Bkg_pdf  ( 'B1' , mass = m_x , power = 1 )
-    b2 = Models.Bkg_pdf  ( 'B2' , mass = m_y , power = 1 , tau = b1.tau , the_phis = b1 )
     model   = Models.Fit2D (
         suffix   = '_5' , 
-        signal_1 = s1 ,
-        signal_2 = s2 ,
-        bkg1     = b1 , 
-        bkg2     = b2 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1     , 
         bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2Ds' , m_x , m_y , n = 1 ) ,
         sb       = sb ,
         bs       = sb 
         )
 
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
-
-    model.S1S2.value = 5000
-    model.B1B2.value = 5000
-    model.S1B2.value = 2500
+    model.SS = N_ss
+    model.BB = N_bb
+    model.SB = 2500
 
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -312,10 +268,10 @@ def test_p1xp1_BBss () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0] )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0] )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0] )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0] )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0] )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0] )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0] )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0] )
 
     models.add ( model ) 
 
@@ -327,21 +283,12 @@ def test_p1xp1_BBsym () :
     sb      = ROOT.RooRealVar('sb','SB',0,10000)
     model   = Models.Fit2DSym (
         suffix   = '_6' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1     = 1 , 
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
         bkg2D    = Models.PolyPos2Dsym_pdf ( 'P2D5' , m_x , m_y , n = 2 ) ,
         )
     
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
-
     ## fit with fixed mass and sigma
     with rooSilent() : 
         result, frame = model. fitTo ( dataset )
@@ -356,10 +303,10 @@ def test_p1xp1_BBsym () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' %   result ( model.S1S2 ) [0]      )
-        logger.info ('S1xB2 : %20s' % ( result ( model.S1B2 ) [0] /2 ) ) 
-        logger.info ('B1xS2 : %20s' % ( result ( model.B1S2 ) [0] /2 ) ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.B1B2 ) [0]      )
+        logger.info ('S1xS2 : %20s' %   result ( model.SS ) [0]      )
+        logger.info ('S1xB2 : %20s' % ( result ( model.SB ) [0] /2 ) ) 
+        logger.info ('B1xS2 : %20s' % ( result ( model.BS ) [0] /2 ) ) 
+        logger.info ('B1xB2 : %20s' %   result ( model.BB ) [0]      )
 
     models.add ( model ) 
 
@@ -371,19 +318,13 @@ def test_pbxpb_BB  () :
     logger.info ('Non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + (expo*P1)**2')
     model   = Models.Fit2D (
         suffix   = '_7' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1 , 
-        bkg2   = 1 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = 1 , 
+        bkg2     = 1 ,
         bkg2D    = Models.ExpoPol2D_pdf ( 'P2D7' , m_x , m_y , nx = 1 , ny = 1 ) 
         )
     
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
     model.bkg1   .tau  .fix ( 0 )
     model.bkg2   .tau  .fix ( 0 )
 
@@ -401,10 +342,10 @@ def test_pbxpb_BB  () :
                        % ( result.status() , result.covQual()  ) )
         print result 
     else :
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]    )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]    )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]    )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]    )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]    )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]    )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]    )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]    )
 
     models.add ( model ) 
 
@@ -416,19 +357,13 @@ def test_pbxpb_BBs () :
     logger.info ('Non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + Sym(expo*P1)**2')
     model   = Models.Fit2D (
         suffix   = '_8' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1 , 
-        bkg2   = 1 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = 1 , 
+        bkg2     = 1 ,
         bkg2D    = Models.ExpoPol2Dsym_pdf ( 'P2D8' , m_x , m_y , n = 1 ) 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
+
     model.bkg1   .tau  .fix ( 0 )
     model.bkg2   .tau  .fix ( 0 )
 
@@ -447,10 +382,10 @@ def test_pbxpb_BBs () :
         print result 
     else :
 
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]    )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]    )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]    )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]    )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]    )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]    )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]    )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]    )
 
 
     models.add ( model ) 
@@ -459,23 +394,15 @@ def test_pbxpb_BBs () :
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
 def test_pbxpb_BBsym () :
-    logger.info ('Symmetric fit model with non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + Sym(expo*P1)**2')
+    logger.info ('Symmetric fit model with non-factorizeable background component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + Sym(expo*P1)**2')
     model   = Models.Fit2DSym (
         suffix   = '_9' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1     = 1 , 
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1   , 
         bkg2D    = Models.ExpoPol2Dsym_pdf ( 'P2D9' , m_x , m_y , n = 1 ) 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    
+
     ## fit with fixed mass and sigma
     with rooSilent() : 
         result, frame = model. fitTo ( dataset )
@@ -491,10 +418,10 @@ def test_pbxpb_BBsym () :
         print result 
     else :
 
-        logger.info ('S1xS2 : %20s' %   result ( model.S1S2 ) [0]       )
-        logger.info ('S1xB2 : %20s' % ( result ( model.S1B2 ) [0] /2  ) )
-        logger.info ('B1xS2 : %20s' % ( result ( model.B1S2 ) [0] /2  ) )
-        logger.info ('B1xB2 : %20s' %   result ( model.B1B2 ) [0]       )
+        logger.info ('S1xS2 : %20s' %   result ( model.SS ) [0]       )
+        logger.info ('S1xB2 : %20s' % ( result ( model.SB ) [0] /2  ) )
+        logger.info ('B1xS2 : %20s' % ( result ( model.BS ) [0] /2  ) )
+        logger.info ('B1xB2 : %20s' %   result ( model.BB ) [0]       )
 
     models.add ( model ) 
                      
@@ -504,25 +431,16 @@ def test_pbxpb_BBsym () :
 ##if 1 < 2 :
 def test_psxps_BBs () :
         
-    logger.info ('Non-factorizeable symmetric background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + (PS*P1)**2')
+    logger.info ('Non-factorizeable symmetric background component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (PS*P1)**2')
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
     model   = Models.Fit2D (
         suffix   = '_11' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1 , 
-        bkg2   = 1 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
+        bkg2     = -1 ,
         bkg2D    = Models.PSPol2Dsym_pdf ( 'P2D11' , m_x , m_y , ps = PS , n = 1 ) 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
 
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -539,10 +457,10 @@ def test_psxps_BBs () :
         print result 
     else :
 
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]     )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]     )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]     )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]     )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]     )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]     )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]     )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]     )
 
     models.add ( model ) 
 
@@ -550,24 +468,16 @@ def test_psxps_BBs () :
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
 def test_psxps_BBsym () :
-    logger.info ('Simmetric fit model with non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + (PS*P1)**2')
+    logger.info ('Simmetric fit model with non-factorizeable background component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (PS*P1)**2')
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
     model   = Models.Fit2DSym (
         suffix   = '_12' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1     = 1 , 
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
         bkg2D    = Models.PSPol2Dsym_pdf ( 'P2D12' , m_x , m_y , ps = PS , n = 1 ) 
         )
     
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
     
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -584,10 +494,10 @@ def test_psxps_BBsym () :
         print result 
     else :
 
-        logger.info ('S1xS2 : %20s' %   result ( model.S1S2 ) [0]       )
-        logger.info ('S1xB2 : %20s' % ( result ( model.S1B2 ) [0]  /2 ) )
-        logger.info ('B1xS2 : %20s' % ( result ( model.B1S2 ) [0]  /2 ) ) 
-        logger.info ('B1xB2 : %20s' %   result ( model.B1B2 ) [0]       )
+        logger.info ('S1xS2 : %20s' %   result ( model.SS ) [0]       )
+        logger.info ('S1xB2 : %20s' % ( result ( model.SB ) [0]  /2 ) )
+        logger.info ('B1xS2 : %20s' % ( result ( model.BS ) [0]  /2 ) ) 
+        logger.info ('B1xB2 : %20s' %   result ( model.BB ) [0]       )
 
     models.add ( model ) 
     
@@ -596,25 +506,16 @@ def test_psxps_BBsym () :
 # =============================================================================
 def test_model_13 () :
     
-    logger.info ('Non-factorizeable fit component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + (Expo*PS)**2')
+    logger.info ('Non-factorizeable fit component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (Expo*PS)**2')
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
     model   = Models.Fit2D (
         suffix   = '_13' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1 , 
-        bkg2   = 1 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
+        bkg2     = -1 ,
         bkg2D    = Models.ExpoPSPol2D_pdf ( 'P2D13' , m_x , m_y , psy = PS , nx = 1 , ny = 1 ) 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
 
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -631,10 +532,10 @@ def test_model_13 () :
         print result 
     else :
 
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]     )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]     )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]     )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]     )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]     )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]     )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]     )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]     )
 
     models.add ( model ) 
 
@@ -652,26 +553,17 @@ spline1 = Ostap.Math.BSpline( knots , 2 )
 # =============================================================================
 def test_model_14 () :
     
-    logger.info ('Non-factorazeable background component (spline):  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + Spline2D')
+    logger.info ('Non-factorazeable background component (spline):  ( Gauss + P1 ) (x) ( Gauss + P1 ) + Spline2D')
     SPLINE  = Ostap.Math.Spline2D ( spline1 , spline1 ) 
     model   = Models.Fit2D (
         suffix   = '_14' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1 , 
-        bkg2   = 1 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
+        bkg2     = -1 ,
         bkg2D    = Models.Spline2D_pdf ( 'P2D14' , m_x , m_y , spline = SPLINE ) 
         )
     
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
-
     ## fit with fixed mass and sigma
     with rooSilent() : 
         result, frame = model. fitTo ( dataset )
@@ -687,10 +579,10 @@ def test_model_14 () :
         print result 
     else :
 
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]     )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]     )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]     )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]     )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]     )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]     )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]     )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]     )
 
     models.add ( model )
     
@@ -703,21 +595,12 @@ def test_model_15 () :
     SPLINES = Ostap.Math.Spline2DSym ( spline1 ) 
     model   = Models.Fit2D (
         suffix   = '_15' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-        bkg1   = 1 , 
-        bkg2   = 1 ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
+        bkg1     = -1 , 
+        bkg2     = -1 ,
         bkg2D    = Models.Spline2Dsym_pdf ( 'P2D15' , m_x , m_y , spline = SPLINES ) 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
-    model.bkg2   .tau  .fix ( 0 )
 
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -735,10 +618,10 @@ def test_model_15 () :
     else :
 
 
-        logger.info ('S1xS2 : %20s' % result ( model.S1S2 ) [0]     )
-        logger.info ('S1xB2 : %20s' % result ( model.S1B2 ) [0]     )
-        logger.info ('B1xS2 : %20s' % result ( model.B1S2 ) [0]     )
-        logger.info ('B1xB2 : %20s' % result ( model.B1B2 ) [0]     )
+        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]     )
+        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]     )
+        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]     )
+        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]     )
 
     models.add ( model )
 
@@ -751,19 +634,11 @@ def test_model_16() :
     SPLINES = Ostap.Math.Spline2DSym ( spline1 ) 
     model   = Models.Fit2DSym (
         suffix   = '_16' , 
-        signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-        signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
+        signal_1 = signal1  ,
+        signal_2 = signal2s ,
         bkg1     = 1 , 
         bkg2D    = Models.Spline2Dsym_pdf ( 'P2D16' , m_x , m_y , spline = SPLINES ) 
         )
-    
-    model.signal1.sigma.fix ( m.error () )
-    model.signal2.sigma.fix ( m.error () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.signal1.mean .fix ( m.value () )
-    model.signal2.mean .fix ( m.value () )
-    model.bkg1   .tau  .fix ( 0 )
 
     ## fit with fixed mass and sigma
     with rooSilent() : 
@@ -780,10 +655,10 @@ def test_model_16() :
         print result 
     else :
         
-        logger.info ('S1xS2 : %20s' %   result ( model.S1S2 ) [0]       )
-        logger.info ('S1xB2 : %20s' % ( result ( model.S1B2 ) [0] /2  ) )
-        logger.info ('B1xS2 : %20s' % ( result ( model.B1S2 ) [0] /2  ) )
-        logger.info ('B1xB2 : %20s' %   result ( model.B1B2 ) [0]       )
+        logger.info ('S1xS2 : %20s' %   result ( model.SS ) [0]       )
+        logger.info ('S1xB2 : %20s' % ( result ( model.SB ) [0] /2  ) )
+        logger.info ('B1xS2 : %20s' % ( result ( model.BS ) [0] /2  ) )
+        logger.info ('B1xB2 : %20s' %   result ( model.BB ) [0]       )
 
     models.add ( model )
 

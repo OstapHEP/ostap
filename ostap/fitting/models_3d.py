@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file models_3d.py
-#
 #  Smooth non-factorizable 3D-models to describe background distribtions
-#
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2017-11-20
 # =============================================================================
@@ -30,6 +28,8 @@ from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_3d' )
 else                       : logger = getLogger ( __name__                  )
 # =============================================================================
+models = []
+# =============================================================================
 ##  @class PolyBase3
 #   helper base class to implement various polynomial-like shapes
 class PolyBase3(PDF3,Phases) :
@@ -38,8 +38,6 @@ class PolyBase3(PDF3,Phases) :
     def __init__ ( self , name , xvar , yvar , zvar , power , the_phis = None ) :
         PDF3  .__init__ ( self , name  , xvar , yvar , zvar )
         Phases.__init__ ( self , power , the_phis  )
-# =============================================================================
-models = []
 # =============================================================================
 ## @class PolyPos3D_pdf
 #  The 3D-polynomial of order Nx*Ny*Nz, that is constrained 
@@ -65,41 +63,67 @@ class PolyPos3D_pdf(PolyBase3) :
     - non-negative: 0<=a_{ijk}
     
     """
-    def __init__ ( self   ,
-                   name   ,
-                   x      ,   ## the first  dimension  
-                   y      ,   ## the second dimension
-                   z      ,   ## the third  dimension
-                   nx = 1 ,   ## polynomial degree in X 
-                   ny = 1 ,   ## polynomial degree in Y
-                   nz = 1 ) : ## polynomial degree in Z
-
+    def __init__ ( self            ,
+                   name            ,
+                   xvar            ,   ## the first  dimension  
+                   yvar            ,   ## the second dimension
+                   zvar            ,   ## the third  dimension
+                   nx = 1          ,   ## polynomial degree in X 
+                   ny = 1          ,   ## polynomial degree in Y
+                   nz = 1          ,   ## polynomial degree in Z
+                   the_phis = None ) : 
+        
+        ## check arguments 
+        assert isinstance ( nx , int ) and 0 <= nx < 50 , "``nx''-parameter is illegal: %s" % nx 
+        assert isinstance ( ny , int ) and 0 <= ny < 50 , "``ny''-parameter is illegal: %s" % ny
+        assert isinstance ( nz , int ) and 0 <= nz < 50 , "``nz''-parameter is illegal: %s" % nz
+        
         ##   inialize the base :
-        num = ( nx + 1 ) * ( ny + 1 ) *  ( nz + 1 ) 
-        PolyBase3.__init__ ( self , name , x , y , z , num - 1 ) 
+        PolyBase3.__init__ ( self , name , xvar , yvar , zvar ,
+                             ( nx + 1 ) * ( ny + 1 ) *  ( nz + 1 ) - 1 , the_phis )
         #
-        if 0 > nx : raise ValueError('PolyPos3D_pdf: Invalid nx=%s' % nx )
-        if 0 > ny : raise ValueError('PolyPos3D_pdf: Invalid ny=%s' % ny )
-        if 0 > nz : raise ValueError('PolyPos3D_pdf: Invalid nz=%s' % nz )
-
-        #
-        ## create parameters
-        #
-            
+        self.__nx = nx
+        self.__ny = ny
+        self.__nz = nz
         #
         ## finally build PDF 
         #
-        self.pdf = cpp.Ostap.Models.Poly3DPositive (
+        self.pdf = Ostap.Models.Poly3DPositive (
             'p3Dp_%s'            % name ,
             'Poly3DPositive(%s)' % name ,
             self.x        ,
             self.y        ,
             self.z        ,
-            nx            ,
-            ny            , 
-            nz            , 
+            self.nx       ,
+            self.ny       , 
+            self.nz       , 
             self.phi_list )
         
+        ## save  the configurtaion
+        self.config = {
+            'name'     : self.name ,
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'zvar'     : self.zvar ,
+            'nx'       : self.nx   ,
+            'ny'       : self.ny   ,
+            'nz'       : self.nz   ,
+            'the_phis' : self.phis ,
+            }
+
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 3D-polynom in x-direction"""
+        return self.__nx
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 3D-polynom in z-direction"""
+        return self.__ny
+    @property
+    def nz ( self ) :
+        """``nz''-parameter - order/degree of 3D-polynom in z-direction"""
+        return self.__nz
+    
 models.append ( PolyPos3D_pdf ) 
 
 # =============================================================================
@@ -113,8 +137,8 @@ models.append ( PolyPos3D_pdf )
 # - constrainted: \f$ \sum_{i,j,k} a_{ijk}=1 \f$ 
 #  @author Vanya BELYAEV Ivan.Belayev@itep.ru
 #  @date 2017-11-14
-#  @see Analysis::Models::Poly3DSymPositive
-#  @see Gaudi::Math::Positive3DSym
+#  @see Ostap::Models::Poly3DSymPositive
+#  @see Ostap::Math::Positive3DSym
 class PolyPos3Dsym_pdf(PolyBase3) :
     """Positive (non-factorizable!) symmetric polynomial in 3D:
     
@@ -132,35 +156,69 @@ class PolyPos3Dsym_pdf(PolyBase3) :
     
     - 0<=P(x,y,x) for whole 3D-range
     """
-    def __init__ ( self   ,
-                   name   ,
-                   x      ,   ## the first  dimension  
-                   y      ,   ## the second dimension
-                   z      ,   ## the third  dimension
-                   n  = 1 ) : ## polynomial degree in X,Y,Z
-
+    def __init__ ( self            ,
+                   name            ,
+                   xvar            ,   ## the first  dimension  
+                   yvar            ,   ## the second dimension
+                   zvar            ,   ## the third  dimension
+                   n  = 1          ,  ## polynomial degree in X,Y,Z
+                   the_phis = None ) :
+        
+        ## check arguments 
+        assert isinstance ( n , int ) and 0 <= n < 50 , "``n''-parameter is illegal: %s" % n 
+        
         ##   inialize the base :
-        num = ( n + 1 ) * ( n + 2 ) *  ( n + 3 ) / 6
-        PolyBase3.__init__ ( self , name , x , y , z , num  - 1 ) 
-        #
-        if 0 > n : raise ValueError('PolyPos3Dsym_pdf: Invalid n=%s' % n )
-
-        if self.x.getMin() != self.y.getMin() or self.y.getMin() != self.z.getMin() or \
-           self.x.getMax() != self.y.getMax() or self.y.getMax() != self.z.getMax() :
-            logger.warning("PolyPos3Dsym_pdf: non-equal ranges for 3D-symmetric model")  
+        PolyBase3.__init__ ( self , name , xvar , yvar , zvar ,
+                             ( n + 1 ) * ( n + 2 ) *  ( n + 3 ) / 6 - 1 ,   the_phis )
+        
+        if self.xminmax() != self.yminmax() : 
+            logger.warning ( 'PolyPos3Dsym: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )
+        if self.xminmax() != self.zminmax() : 
+            logger.warning ( 'PolyPos3Dsym: x&z have different edges %s vs %s' % ( self.xminmax() , self.zminmax() ) )
+        if self.yminmax() != self.zminmax() : 
+            logger.warning ( 'PolyPos3Dsym: y&z have different edges %s vs %s' % ( self.yminmax() , self.zminmax() ) )
             
+        self.__n = n 
+        #
         ## finally build PDF 
-        self.pdf = cpp.Ostap.Models.Poly3DSymPositive (
+        #
+        self.pdf = Ostap.Models.Poly3DSymPositive (
             'p3Ds_%s'               % name ,
             'Poly3DSymPositive(%s)' % name ,
             self.x        ,
             self.y        ,
             self.z        ,
-            n             ,
+            self.n        ,
             self.phi_list )
         
+        ## save  the configurtaion
+        self.config = {
+            'name'     : self.name ,
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'zvar'     : self.zvar ,
+            'n'        : self.n    ,
+            'the_phis' : self.phis ,
+            }
+        
+    @property
+    def n  ( self ) :
+        """``n''-parameter - order/degree of 3D-polynom in x,y&z-directions"""
+        return self.__n
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 3D-polynom in x-direction"""
+        return self.__n
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 3D-polynom in z-direction"""
+        return self.__n
+    @property
+    def nz ( self ) :
+        """``nz''-parameter - order/degree of 3D-polynom in z-direction"""
+        return self.__n
+ 
 models.append ( PolyPos3Dsym_pdf ) 
-
 
 # =============================================================================
 ## @class PolyPos3Dmix_pdf
@@ -173,8 +231,8 @@ models.append ( PolyPos3Dsym_pdf )
 # - constrainted: \f$ \sum_{i,j,k} a_{ijk}=1 \f$ 
 #  @author Vanya BELYAEV Ivan.Belayev@itep.ru
 #  @date 2017-11-14
-#  @see Analysis::Models::Poly3DMixPositive
-#  @see Gaudi::Math::Positive3DMix
+#  @see Ostap::Models::Poly3DMixPositive
+#  @see Ostap::Math::Positive3DMix
 class PolyPos3Dmix_pdf(PolyBase3) :
     """Positive (non-factorizable!)  x<-->y symmetric polynomial in 3D:
     
@@ -188,38 +246,70 @@ class PolyPos3Dmix_pdf(PolyBase3) :
     - partly symmetric:      a_{ijk}=a_{jik}
         
     """
-    def __init__ ( self   ,
-                   name   ,
-                   x      ,   ## the first  dimension  
-                   y      ,   ## the second dimension
-                   z      ,   ## the third  dimension
-                   n  = 1 ,   ## polynomial degree in X,Y
-                   nz = 1 ) : ## polynomial degree in Z
-
-        ##   inialize the base :
-        num = ( n + 1 ) * ( n + 2 ) *  ( nz + 1 ) / 2 
-        PolyBase3.__init__ ( self , name , x , y , z , num - 1 ) 
-        #
-        if 0 > n  : raise ValueError('PolyPos3Dmix_pdf: Invalid n=%s'  % n )
-        if 0 > nz : raise ValueError('PolyPos3Dmix_pdf: Invalid nz=%s' % nz )
+    def __init__ ( self            ,
+                   name            ,
+                   xvar            ,   ## the first  dimension  
+                   yvar            ,   ## the second dimension
+                   zvar            ,   ## the third  dimension
+                   n  = 1          ,   ## polynomial degree in X,Y
+                   nz = 1          , ## polynomial degree in Z
+                   the_phis = None ) :
         
-        if self.x.getMin() != self.y.getMin() or self.x.getMax() != self.y.getMax() :
-            logger.warning("PolyPos3Dmix_pdf: non-equal ranges for 3D-(x<-->y) symmetric model")  
-            
+        ## check arguments 
+        assert isinstance ( n  , int ) and 0 <= n  < 50 , "``n''-parameter is illegal: %s"  % n
+        assert isinstance ( nz , int ) and 0 <= nz < 50 , "``nz''-parameter is illegal: %s" % nz
+        
+        ##   inialize the base :
+        PolyBase3.__init__ ( self , name , xvar , yvar , zvar ,
+                             ( n + 1 ) * ( n + 2 ) *  ( nz + 1 ) / 2 - 1 , the_phis )
+        #
+        if self.xminmax() != self.yminmax() : 
+            logger.warning( 'PolyPos3Dmix: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )
+        
+        self.__n = n
+        self.__nz = nz
         #
         ## finally build PDF 
-        self.pdf = cpp.Ostap.Models.Poly3DMixPositive (
+        #
+        self.pdf = Ostap.Models.Poly3DMixPositive (
             'p3Dm_%s'               % name ,
             'Poly3DMixPositive(%s)' % name ,
             self.x        ,
             self.y        ,
             self.z        ,
-            n             ,
-            nz            ,
+            self.n        ,
+            self.nz       ,
             self.phi_list )
         
-models.append ( PolyPos3Dmix_pdf ) 
+        ## save  the configurtaion
+        self.config = {
+            'name'     : self.name ,
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'zvar'     : self.zvar ,
+            'n'        : self.n    ,
+            'nz'       : self.nz   ,
+            'the_phis' : self.phis ,
+            }
+       
+    @property
+    def n  ( self ) :
+        """``n''-parameter - order/degree of 3D-polynom in x&y-directions"""
+        return self.__n
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 3D-polynom in x-direction"""
+        return self.__n
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 3D-polynom in z-direction"""
+        return self.__n
+    @property
+    def nz ( self ) :
+        """``nz''-parameter - order/degree of 3D-polynom in z-direction"""
+        return self.__nz
 
+models.append ( PolyPos3Dmix_pdf ) 
            
 # =============================================================================
 if '__main__' == __name__ : 

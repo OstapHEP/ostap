@@ -31,7 +31,7 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT
-from   ostap.core.core import cpp, VE, hID, dsID   
+from   ostap.core.core import cpp, Ostap, VE, hID, dsID   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -109,7 +109,7 @@ def _ras_iter_ ( self ) :
     >>> arg_set = ...
     >>> for i in arg_set : print i    
     """    
-    it  = cpp.Ostap.Utils.Iterator ( self )
+    it  = Ostap.Utils.Iterator ( self )
     val = it.Next()
     while val :
         yield val 
@@ -324,7 +324,7 @@ def _rp_print_ ( obj , opts = 'vv' , *style ) :
     >>> o = ...
     >>> print o 
     """
-    return cpp.Ostap.Utils.print_printable ( obj , opts , *style )
+    return Ostap.Utils.print_printable ( obj , opts , *style )
 
 ROOT.RooPrintable.print_printable = _rp_print_ 
 ROOT.RooPrintable.__str__         = _rp_print_
@@ -487,7 +487,7 @@ def _rfr_sum_ ( self , var1 , var2 ) :
     _v1  = self.param ( var1 )[0]
     _v2  = self.param ( var2 )[0]
     _cor = self.corr  ( var1 , var2 ) 
-    return cpp.Ostap.Math.sum ( _v1 , _v2 , _cor ) 
+    return Ostap.Math.sum ( _v1 , _v2 , _cor ) 
    
 # ===========================================================================
 ## get correct estimate of product of two variables,
@@ -506,7 +506,7 @@ def _rfr_multiply_ ( self , var1 , var2 ) :
     _v1  = self.param ( var1 )[0]
     _v2  = self.param ( var2 )[0]
     _cor = self.corr  ( var1 , var2 ) 
-    return cpp.Ostap.Math.multiply ( _v1 , _v2 , _cor ) 
+    return Ostap.Math.multiply ( _v1 , _v2 , _cor ) 
     
 # ===========================================================================
 ## get correct estimate of division  of two variables,
@@ -525,7 +525,7 @@ def _rfr_divide_ ( self , var1 , var2 ) :
     _v1  = self.param ( var1 )[0]
     _v2  = self.param ( var2 )[0]
     _cor = self.corr  ( var1 , var2 ) 
-    return cpp.Ostap.Math.divide ( _v1 , _v2 , _cor ) 
+    return Ostap.Math.divide ( _v1 , _v2 , _cor ) 
 
 # ===========================================================================
 ## get correct estimate of subtraction of two variables,
@@ -544,7 +544,7 @@ def _rfr_subtract_ ( self , var1 , var2 ) :
     _v1  = self.param ( var1 )[0]
     _v2  = self.param ( var2 )[0]
     _cor = self.corr  ( var1 , var2 ) 
-    return cpp.Ostap.Math.subtract ( _v1 , _v2 , _cor ) 
+    return Ostap.Math.subtract ( _v1 , _v2 , _cor ) 
 
 # ===========================================================================
 ## get correct estimate of fraction  of two variables,
@@ -573,7 +573,7 @@ def _rfr_fraction_ ( self , var1 , var2 ) :
 #  res   = fit_results.results( 'A', 'B' , 'C' )
 #  print res, res.cov2() 
 #  @endcode
-#  @see Gaudi::Math::SVectorWithError
+#  @see Ostap::Math::SVectorWithError
 def _rfr_results_( self , *vars ) :
     """Get the required results in form of SVectorWithError object
     >>> fit_resuts = ...
@@ -581,7 +581,7 @@ def _rfr_results_( self , *vars ) :
     >>> print res, res.cov2() 
     """
     _n = len ( vars )
-    _r = cpp.Gaudi.Math.SVectorWithError(_n,'double')()
+    _r = Ostap.Math.SVectorWithError(_n,'double')()
     _i = 0 
     for _i1 in range( 0 , _n ) :
         _v1                = vars[_i1]
@@ -1147,7 +1147,7 @@ def _pdf_mul_ ( pdf1 , pdf2 ) :
     
     >>> product = pdf1 * pdf2 
     """
-    return cpp.Ostap.Models.Product ( '%s*%s'             % ( pdf1.GetName  () ,
+    return Ostap.Models.Product ( '%s*%s'             % ( pdf1.GetName  () ,
                                                               pdf2.GetName  () ) ,
                                       'Product: %s & %s ' % ( pdf1.GetTitle () ,
                                                               pdf2.GetTitle () ) ,
@@ -1277,18 +1277,18 @@ def _ds_project_  ( dataset , histo , what , cuts = '' , *args ) :
         return _ds_project_ ( dataset , histo , what , cuts0 , *args )
 
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len(what)  :
-        return cpp.Ostap.HistoProject.project3 ( dataset ,
+        return Ostap.HistoProject.project3 ( dataset ,
                                                 histo   , 
                                                 what[0] ,
                                                 what[1] ,
                                                 what[2] , cuts , *args) 
     elif isinstance ( histo , ROOT.TH2 ) and 2 == len(what)  :
-        return cpp.Ostap.HistoProject.project2 ( dataset ,
+        return Ostap.HistoProject.project2 ( dataset ,
                                                  histo   , 
                                                  what[0] ,
                                                  what[1] , cuts , *args )
     elif isinstance ( histo , ROOT.TH1 ) and 1 == len(what)  :
-        return cpp.Ostap.HistoProject.project  ( dataset ,
+        return Ostap.HistoProject.project  ( dataset ,
                                                  histo   , 
                                                  what[0] , cuts , *args )
     

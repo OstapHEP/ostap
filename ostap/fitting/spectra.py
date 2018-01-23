@@ -2,13 +2,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file spectra.py
-#
-# A set of predefined ready-to-use
-# functions and shapes for fitting of pt-spectra 
-#
+#  A set of predefined ready-to-use
+#  functions and shapes for fitting of pt-spectra 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
-# 
 # =============================================================================
 """A set of predefined ready-to-use shapes and PDFs
 for fitting pT-spectra"""
@@ -41,26 +38,24 @@ else                       : logger = getLogger ( __name__           )
 from   ostap.core.core  import cpp, Ostap, VE , funID 
 # =============================================================================
 models = [] 
-# =============================================================================
 from ostap.fitting.distributions import   Tsallis_pdf
 models.append (   Tsallis_pdf )
 from ostap.fitting.distributions import   QGSM_pdf
 models.append (      QGSM_pdf )
 from ostap.fitting.distributions import   GammaDist_pdf
 models.append ( GammaDist_pdf )
-
 # ==============================================================================
 ## @class PtFitBase
 #  helper object  
 class PtFitBase(object) :
-    """Helper class fro fitting pT-spectra
-    """
+    """Helper class to implement spetra fitter"""
     def __init__ ( self , ptmax , ptmin = 0 ) :
         self._integral = -1
+        ptmax = float ( ptmax ) 
+        ptmin = float ( ptmin ) 
+        assert ptmin < ptmax , "PtFitBase: wrong ptmin/ptmax: %s/%s" % ( ptmin ,ptmax )
         self._ptmin    = ptmin
         self._ptmax    = ptmax
-        if ptmax <= ptmin :
-            raise ArrtibuteError("PtFitBase: wrong ptmin/ptmax: %s/%s" % ( ptmin ,ptmax ) )
 
     ## get the mean-value 
     def mean     ( self ) : return self._fun.mean     ( self._ptmin , self._ptmax )
@@ -77,12 +72,13 @@ class PtFitBase(object) :
             
         return norm * self._fun ( pt ) / self._integral 
     
+
 # ==============================================================================
 ## @class TsallisFun
-#  helper object  
+#  Tsallis'  function for fitting pt-spectra 
 class TsallisFun(PtFitBase) :
-    """Helper object  to wrap Tsallis function
-    """ 
+    """Tsallis'  function for fitting pt-spectra 
+    """
     def __init__ ( self , ptmax , ptmin = 0 ) :        
         ## initialize the base 
         PtFitBase.__init__ ( self , ptmax , ptmin ) 
@@ -105,11 +101,12 @@ class TsallisFun(PtFitBase) :
 
         return self.result ( pt , norm , changed ) 
 
+
 # ==============================================================================
 ## @class QGSMFun
-#  helper object  
+#  QGSM function for fitting pt-spectra 
 class QGSMFun(PtFitBase) :
-    """Helper object  to wrap QGSM-function
+    """QGSM function for fitting pt-spectra
     """
     def __init__ ( self , ptmax , ptmin = 0 ) :
         ## initialize the base 
@@ -137,10 +134,10 @@ class QGSMFun(PtFitBase) :
 
 # ==============================================================================
 ## @class GammaDistFun
-#  helper object  
+#  Gamma  distribution as  fit-fuction
 class GammaDistFun(PtFitBase) :
-    """Helper object  to wrap Gamma-distribution
-    """ 
+    """Gamma  distribution as  fit-fuction
+    """
     def __init__ ( self , ptmax , ptmin = 0 ) :
         ## initialize the base 
         PtFitBase.__init__ ( self , ptmax , ptmin ) 
@@ -149,7 +146,7 @@ class GammaDistFun(PtFitBase) :
         
     def __call__ ( self , x , pars ) :
         
-        pt = x    [ 0 ]
+        pt    = x    [ 0 ]
         
         norm  = pars [ 0 ]  ## normalization (almost arbitrary) 
         k     = pars [ 1 ]  ## 
@@ -160,7 +157,6 @@ class GammaDistFun(PtFitBase) :
         if self._fun.setTheta ( theta ) : changed = True 
         
         return self.result ( pt , norm , changed ) 
-
 
 # =============================================================================
 ## create Tsallis function (as TF1) for fitting pT-spectra
@@ -246,8 +242,7 @@ def qgsmTF1 ( ptmax , ptmin = 0 , mass = None , name = '') :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def gammaDistTF1 ( ptmax , ptmin = 0 , mass = None , name = '' ) :
-    """Create GammaDist function (as TF1) for fitting pt-spectra
-    
+    """ Create GammaDist function (as TF1) for fitting pt-spectra
     >>> histo =
     >>> fun   = gammaDistTF1 ( ptmax = 50 )
     >>> histo.Fit( fun , 'SI' )
@@ -270,7 +265,7 @@ def gammaDistTF1 ( ptmax , ptmin = 0 , mass = None , name = '' ) :
     ##
     return func
 
-    
+
 # =============================================================================
 if '__main__' == __name__ :
     

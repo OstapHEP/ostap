@@ -45,14 +45,18 @@ models = set()
 class ResoGauss(RESOLUTION) :
     """Trivial single gaussian resolution model
     """
-    def __init__ ( self      ,
-                   name      ,   ## the  name 
-                   mass      ,   ## the variable 
-                   sigma     ,   ## the first sigma 
-                   mean  = 0 ) : ## mean-value
-        ## initialize the base  
+    def __init__ ( self         ,
+                   name         ,   ## the  name 
+                   xvar         ,   ## the variable 
+                   sigma        ,   ## the first sigma 
+                   mean  = None ) : ## mean-value
+        ## initialize the base
+        if mean is None :
+            mean = ROOT.RooConstVar(
+                'mean_ResoGauss'     + name ,
+                'mean_ResoGauss(%s)' % name , 0 )                 
         super(ResoGauss,self).__init__( name  = name  ,
-                                        mass  = mass  ,
+                                        xvar  = xvar  ,
                                         sigma = sigma ,
                                         mean  = mean  )
         
@@ -60,12 +64,19 @@ class ResoGauss(RESOLUTION) :
         self.gauss = ROOT.RooGaussModel(
             'ResoGauss_'    + name ,
             'ResoGauss(%s)' % name ,
-            self.mass            ,
+            self.xvar            ,
             self.mean            , 
             self.sigma           )
         
-        ## the final PDF 
         self.pdf = self.gauss
+
+        ##  save   the configuration
+        self.config = {
+            'name'  : self.name ,
+            'xvar'  : self.xvar ,
+            'mean'  : self.mean ,
+            'sigma' : self.sigma ,
+            }
 
 models.add ( ResoGauss ) 
 # =============================================================================
@@ -77,16 +88,21 @@ class ResoGauss2(RESOLUTION) :
     - ratio of wide/core widths
     - fraction of core component
     """        
-    def __init__ ( self           ,
-                   name           ,   ## the name 
-                   mass           ,   ## the variable 
-                   sigma          ,   ## the core sigma
-                   scale    = 1.2 ,   ## sigma2/sigma1 ratio 
-                   fraction = 0.5 ,   ## fraction of
-                   mean     = 0.0 ) : ## the mean value
+    def __init__ ( self            ,
+                   name            ,   ## the name 
+                   xvar            ,   ## the variable 
+                   sigma           ,   ## the core sigma
+                   scale    = 1.2  ,   ## sigma2/sigma1 ratio 
+                   fraction = 0.5  ,   ## fraction of
+                   mean     = None ) : ## the mean value
+        
+        if mean is None :
+            mean = ROOT.RooConstVar(
+                'mean_ResoGauss2'     + name ,
+                'mean_ResoGauss2(%s)' % name , 0 )                 
         ## initialize the base 
         super(ResoGauss2,self). __init__ ( name  = name  ,
-                                           mass  = mass  ,
+                                           xvar  = xvar  ,
                                            sigma = sigma ,
                                            mean  = mean  )
         ## fraction of sigma1-component 
@@ -101,20 +117,30 @@ class ResoGauss2(RESOLUTION) :
             'SigmaScale_'       + name ,
             'SigmaScale(%s)'    % name , scale    , 1 , 10 ) 
         
-        from ostap.core.core import Ostap
-        self.pdf = Ostap.Models.DoubleGauss (           
+        from Ostap.Core import cpp
+        self.pdf = cpp.Analysis.Models.DoubleGauss (
             "Reso2Gauss_"       + name ,
             "Reso2Gauss(%s)"    % name ,
-            self.mass     ,
+            self.xvar     ,
             self.sigma    ,
             self.fraction ,
             self.scale    ,
             self.mean    
             )
+        
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'mean'     : self.mean     ,
+            'sigma'    : self.sigma    ,
+            'scale'    : self.scale    ,
+            'fraction' : self.fraction ,
+            }
 
     @property
     def fraction ( self  ) :
-        """``Fraction'' parameter for double Gaussian resolution function
+        """``fraction'' parameter for double Gaussian resolution function
         """
         return self.__fraction
     @fraction.setter
@@ -122,50 +148,54 @@ class ResoGauss2(RESOLUTION) :
         value = float ( value )
         assert 0<= value <= 1, "``Fraction'' must be in  (0,1) range"
         self.__fraction.setVal ( value )
-        return self.__fraction.getVal()
 
     @property
     def scale ( self  ) :
-        """``Scale'' parameter for double Gaussian resolution function
+        """``scale'' parameter for double Gaussian resolution function
         """
         return self.__scale
     @scale.setter
     def scale ( self , value ) :
         value = float ( value )
-        assert 0 < value, "``Value'' must be >1"
+        assert 1 < value, "``scale''-parameter must be >1"
         self.__scale.setVal ( value )
-        return self.__scale.getVal()
-    
+  
+            
 models.add ( ResoGauss2 ) 
 # =============================================================================
 ## @class ResoApo2
 #  Symmetrical  Apolonios  model for resolution
 class ResoApo2(RESOLUTION) :
-    """Symmetric  Apolonios model for resolution
+    """Symmetric variant of Apolonios model for the resolution function
     """
-    def __init__ ( self      ,
-                   name      ,   ## the  name 
-                   mass      ,   ## the variable 
-                   sigma     ,
-                   beta  = 1 ,   ## the first sigma
-                   mean  = 0 ) : ## the mean value 
+    def __init__ ( self         ,
+                   name         ,   ## the  name 
+                   xvar         ,   ## the variable 
+                   sigma        ,   ## the sigma
+                   beta  = 1    ,   ## beta parameter 
+                   mean  = None ) : ## the mean value 
 
+        if mean is None :
+            mean = ROOT.RooConstVar(
+                'mean_ResoApo2'     + name ,
+                'mean_ResoApo2(%s)' % name , 0 )
+            
         ##  initlialize the base 
         super(ResoApo2,self).__init__ ( name  = name  ,
-                                        mass  = mass  ,
+                                        xvar  = xvar  ,
                                         sigma = sigma ,
                                         mean  = mean  )
         self.__beta    = makeVar (
             beta ,
             'ResoBeta_%s'  % name  ,
-            'ResoBeta(%s)' % name  , beta , 1.e-6  , 10000 )
+            'ResoBeta(%s)' % name  , beta , 0.0001 , 10000 )
         
-        ## build (symmetric) resoltuion model
-        from ostap.core.core import Ostap
-        self.apo2  = Ostap.Models.Apolonios2 (
+        ## build resolution model
+        from Ostap.Core import cpp
+        self.apo2  = cpp.Analysis.Models.Apolonios2 (
             "ResoApolonious_"   + name ,
             "ResoApolonios(%s)" % name ,
-            self.mass   ,
+            self.xvar   ,
             self.mean   ,
             self.sigma  ,
             self.sigma  ,
@@ -173,20 +203,26 @@ class ResoApo2(RESOLUTION) :
 
         self.pdf = self.apo2
 
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'mean'     : self.mean     ,
+            'sigma'    : self.sigma    ,
+            'beta'     : self.beta     ,
+            }
+        
     @property
     def beta ( self  ) :
-        """``Beta'' parameter for Apolonious resolution function
-        """
+        """``beta'' parameter for Apolonious resolution function"""
         return self.__beta
     @beta.setter
     def beta ( self , value ) :
         value = float ( value )
-        assert 0<= value , "``Beta'' must be non-negative"
+        assert 0< value , "``beta''-parameter must be positive"
         self.__beta.setVal ( value )
-        return self.__beta.getVal()
 
-        
-        ## 
+    
 models.add ( ResoApo2 ) 
 # =============================================================================
 ## @class ResoCB2
@@ -194,36 +230,41 @@ models.add ( ResoApo2 )
 class ResoCB2(RESOLUTION) :
     """Symmetric double-sided Crystal Ball model for resolution
     """
-    def __init__ ( self        ,
-                   name        ,   ## the  name 
-                   mass        ,   ## the  variable 
-                   sigma       ,   ## core r esolution
-                   alpha = 1.5 ,   ## alpha  
-                   n     = 5   ,   ## power-law exponent
-                   mean  = 0   ) : ## the mean value
+    def __init__ ( self         , 
+                   name         ,   ## the  name 
+                   xvar         ,   ## the  variable 
+                   sigma        ,   ## core r esolution
+                   alpha = 1.5  ,   ## alpha  
+                   n     = 5    ,   ## power-law exponent
+                   mean  = None ) : ## the mean value
 
+        if mean is None :
+            mean = ROOT.RooConstVar(
+                'mean_ResoCB2'     + name ,
+                'mean_ResoCB2(%s)' % name , 0 )
+            
         ## initialize the base 
         super(ResoCB2,self).__init__ ( name  = name  ,
-                                       mass  = mass  ,
+                                       xvar  = xvar  ,
                                        sigma = sigma ,
                                        mean  = mean  )
-            
+        
         self.__alpha = makeVar (
             alpha                  ,
             'ResoAlpha_'    + name ,
-            'ResoAlpha(%s)' % name , alpha , 0.5   ,  5)
+            'ResoAlpha(%s)' % name , alpha , 0.1   , 10 )
         
         self.__n     = makeVar (
             n                  ,
             'ResoN_'        + name ,
             'ResoN(%s)'     % name , n     , 1.e-6 , 50 )
         
-        ## 
-        from ostap.core.core import Ostap
-        self.cb2 = Ostap.Models.CrystalBallDS (  
+        ## gaussian 
+        from Ostap.Core import cpp
+        self.cb2 = cpp.Analysis.Models.CrystalBallDS (
             'ResoCB2_'   + name ,
             'ResoCB2(%s' % name ,
-            self.mass           ,
+            self.xvar           ,
             self.mean           , 
             self.sigma          ,
             self.alpha          ,
@@ -234,32 +275,41 @@ class ResoCB2(RESOLUTION) :
         ## the final PDF 
         self.pdf = self.cb2
 
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'mean'     : self.mean  ,
+            'sigma'    : self.sigma ,
+            'alpha'    : self.alpha ,
+            'n'        : self.n      ,
+            }
+
     @property
     def alpha ( self  ) :
-        """``Alpha'' parameter for Doubble-sided symmetric resolution function
+        """``alpha'' parameter for double-sided symmetric resolution function
         """
         return self.__alpha
     @alpha.setter
     def alpha ( self , value ) :
         value = float ( value )
-        assert 0.1<= value<=10 , "``Alpha'' must be in [0.1,10] interval"
+        assert 0.2<= value<=5 , "``alpha''-parameter must be in 0.2,10 interval"
         self.__alpha.setVal ( value )
         return self.__alpha.getVal()
 
     @property
     def n ( self  ) :
-        """``n'' parameter for Doubble-sided symmetric resolution function
-        """
+        """``n'' parameter for double-sided symmetric resolution function"""
         return self.__n
     @n.setter
     def n ( self , value ) :
         value = float ( value )
-        assert 1.e-6 <= value <= 100 , "``n'' must be in [1.e-6,100] interval"
+        assert 1.e-4 <= value <= 40 , "``n'' must be in [1.e-4,40] interval"
         self.__n.setVal ( value )
         return self.__n.getVal()
 
-        
 models.add ( ResoCB2 ) 
+
 # =============================================================================
 if '__main__' == __name__ :
     
