@@ -54,7 +54,7 @@ models = set()
 
 ## signal component 
 signal_gauss = Models.Gauss_pdf ( name  = 'Gauss'    , ## the name 
-                                  mass  = mass       , ## the variable 
+                                  xvar  = mass       , ## the variable 
                                   mean  = m.value () , ## mean value (fixed)
                                   sigma = m.error () ) ## sigma      (fixed)
 
@@ -100,7 +100,7 @@ def test_crystalball () :
     ## composite model: signal + background 
     model_cb = Models.Fit1D (
         signal     = Models.CrystalBall_pdf ( name  = 'CB'     , ## the name 
-                                              mass  = mass     , ## the variable   
+                                              xvar  = mass     , ## the variable   
                                               alpha = (2,1,5)  , ## tail parameter
                                               n     = (3,1,9)  , ## tail parameter 
                                               sigma = signal_gauss.sigma ,   ## reuse sigma from gauss
@@ -132,7 +132,7 @@ def test_crystalball_RS () :
     logger.info ('Test CrystalBallRS_pdf:  right-side Crystal Ball function' )
     model_cbrs = Models.Fit1D (
         signal = Models.CrystalBallRS_pdf ( name  = 'CBRS' , 
-                                            mass  = mass               ,
+                                            xvar  = mass               ,
                                             sigma = signal_gauss.sigma ,
                                             alpha = (1.5, 0.5 , 3.0)   ,
                                             n     = (5,1,10)           , 
@@ -205,7 +205,7 @@ def test_needham() :
     logger.info ('Test Needham_pdf: Crystal Ball with alpha=f(sigma)' )
     model_matt = Models.Fit1D (
         signal = Models.Needham_pdf ( name  = 'Matt'             , 
-                                      mass  = mass               ,
+                                      xvar  = mass               ,
                                       sigma = signal_gauss.sigma ,  
                                       mean  = signal_gauss.mean  ) ,
         background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 )
@@ -236,7 +236,7 @@ def test_apolonios () :
     logger.info ('Test Apolonios_pdf: Modified gaussian with power-law and exponential tails' ) 
     model_apolonios = Models.Fit1D (
         signal = Models.Apolonios_pdf ( name  = 'APO', 
-                                        mass  = mass ,
+                                        xvar  = mass ,
                                         mean  = signal_gauss.mean    ,
                                         sigma = signal_gauss.sigma ,
                                         b     =  1 ,
@@ -309,7 +309,7 @@ def test_bifurcated () :
     signal_bifurcated = Models.BifurcatedGauss_pdf ( name = 'BfGau' ,
                                                      mean  = signal_gauss.mean  ,
                                                      sigma = signal_gauss.sigma ,
-                                                     mass  = mass    )
+                                                     xvar  = mass    )
     signal_bifurcated . asym  . setVal ( 0          )
     
     model_bifurcated = Models.Fit1D(
@@ -342,7 +342,7 @@ def test_2gauss () :
     signal_2gauss = Models.DoubleGauss_pdf ( name = 'Gau2' ,
                                              mean  = signal_gauss.mean  ,
                                              sigma = signal_gauss.sigma ,
-                                             mass  = mass               ,
+                                             xvar  = mass               ,
                                              fraction = 0.9             ,
                                              scale    = 1.2             )
     
@@ -471,7 +471,7 @@ def test_bukin() :
     logger.info ('Test Bukin_pdf: Bukin function: skew gaussian core + exponenial/gaussian  tails' ) 
     model_bukin = Models.Fit1D (
         signal = Models.Bukin_pdf ( name  = 'Bukin' ,
-                                    mass  = mass    ,
+                                    xvar  = mass    ,
                                     xi    = 0    ,
                                     rhoL  = 0    ,
                                     rhoR  = 0    , 
@@ -542,7 +542,7 @@ def test_bifstudentT():
     logger.info ('Test bifurcated StudentT_pdf: bifurcated Student-t' ) 
     model = Models.Fit1D (
         signal = Models.BifurcatedStudentT_pdf ( name  = 'BfST' , 
-                                                 mass  = mass   ,
+                                                 xvar  = mass   ,
                                                  nL    = 25     ,
                                                  nR    = 25     ,                                                 
                                                  mean  = signal_gauss.mean   , 
@@ -758,7 +758,7 @@ def test_voigt () :
     logger.info ('Test Voigt_pdf: Breit-Wigner convoluted with Gauss' )
     model = Models.Fit1D (
         signal = Models.Voigt_pdf ( 'V' , 
-                                    mass  = mass                ,
+                                    xvar  = mass                ,
                                     mean  = signal_gauss.mean   , 
                                     sigma = signal_gauss.sigma  ) , 
         background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 )) 
@@ -797,7 +797,7 @@ def test_pvoigt () :
     logger.info ('Test PSeudoVoigt_pdf: fast approximation to Voigt profile' )
     model = Models.Fit1D (
         signal = Models.PseudoVoigt_pdf ( 'PV' , 
-                                          mass  = mass                ,
+                                          xvar  = mass                ,
                                           mean  = signal_gauss.mean   , 
                                           sigma = signal_gauss.sigma  ) , 
         background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 )) 

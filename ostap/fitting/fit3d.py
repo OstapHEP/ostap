@@ -25,7 +25,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
-from   ostap.fitting.basic import makeVar, makeBkg
+from   ostap.fitting.basic import makeVar, makeBkg, H3D_dset
 from   ostap.fitting.fit2d import PDF2
 from   ostap.logger.utils  import roo_silent 
 # =============================================================================

@@ -203,21 +203,21 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
 from ostap.fitting.basic         import *
-logger.debug ('Import signal     (peaking) models from FitSignalModels')
+logger.debug ("Import signal     (peaking) models from ``signals''"    )
 from ostap.fitting.signals       import * 
-logger.debug ('Import background (smooth)  models from FitBkgModels'   )
+logger.debug ("Import background (smooth)  models from ``background''" )
 from ostap.fitting.background    import *
-logger.debug ('Import specialized models from FitSpecificModels'       )
+logger.debug ("Import specialized models from ``specific''"            )
 from ostap.fitting.specific      import * 
-logger.debug ('Import ``other''   models from FitOtherModels'          )
+logger.debug ("Import ``other''   models from ``distributions''"       )
 from ostap.fitting.distributions import *
-logger.debug ('Import 2D-fit machinery            from Fit2D'          )
+logger.debug ("Import 2D-fit machinery            from ``fit2d''"      )
 from ostap.fitting.fit2d         import *
-logger.debug ('Import 2D background        models from Fit2DModels'    )
+logger.debug ("Import 2D background        models from ``models_2d''"  )
 from ostap.fitting.models_2d     import *  
-logger.debug ('Import 3D-fit machinery            from Fit2D'          )
+logger.debug ("Import 3D-fit machinery            from ``fit3d''"      )
 from ostap.fitting.fit3d         import *
-logger.debug ('Import 3D background        models from Fit2DModels'    )
+logger.debug ("Import 3D background        models from ``models_3d''"  )
 from ostap.fitting.models_3d     import *  
 
 models = []

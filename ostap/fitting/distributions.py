@@ -34,7 +34,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.distributions' )
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
-from   ostap.core.core     import cpp, Ostap, VE 
+from   ostap.core.core     import Ostap, VE 
 from   ostap.fitting.basic import makeVar, PDF
 # =============================================================================
 models = []
@@ -91,7 +91,7 @@ class GammaDist_pdf(PDF) :
         self.__theta = makeVar ( theta   ,
                                  'theta_%s'            % name ,
                                  '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-3 , 100 )
-        self.pdf  = cpp.Analysis.Models.GammaDist (
+        self.pdf  = Ostap.Models.GammaDist (
             'gd_%s'         % name ,
             'GammaDist(%s)' % name ,
             self.x                 ,
@@ -184,7 +184,7 @@ class GenGammaDist_pdf(PDF) :
                                  'low_%s'         % name ,
                                  'l_{#Gamma}(%s)' % name , low , *limits_low )
         
-        self.pdf  = cpp.Analysis.Models.GenGammaDist (
+        self.pdf  = Ostap.Models.GenGammaDist (
             'ggd_%s'           % name ,
             'GenGammaDist(%s)' % name ,
             self.x         ,
@@ -281,7 +281,7 @@ class Amoroso_pdf(PDF) :
                                  'a_%s'                 % name ,
                                  'a_{Amoroso}(%s)'      % name , a     , 1 , -10   ,  10  )
         
-        self.pdf  = cpp.Analysis.Models.Amoroso (
+        self.pdf  = Ostap.Models.Amoroso (
             'amo_%s'      % name ,
             'Amoroso(%s)' % name ,
             self.x         ,
@@ -372,7 +372,7 @@ class LogGammaDist_pdf(PDF) :
                                  'theta_%s'               % name ,
                                  '#theta_{log#Gamma}(%s)' % name , theta , 1 , 1.e-5 , 1000 )
 
-        self.pdf  = cpp.Analysis.Models.LogGammaDist (
+        self.pdf  = Ostap.Models.LogGammaDist (
             'lgd_%s'           % name ,
             'LogGammaDist(%s)' % name ,
             self.x                 ,
@@ -440,7 +440,7 @@ class Log10GammaDist_pdf(PDF) :
                                'theta_%s'                 % name ,
                                '#theta_{log10#Gamma}(%s)' % name , theta , 1 , 1.e-4 , 10000 )
 
-        self.pdf  = cpp.Analysis.Models.Log10GammaDist (
+        self.pdf  = Ostap.Models.Log10GammaDist (
             'lgd10_%s'           % name ,
             'Log10GammaDist(%s)' % name ,
             self.x                 ,
@@ -529,7 +529,7 @@ class LogGamma_pdf(PDF) :
                                   'alpha_%s'                 % name ,
                                   '#alpha_{#log#Gamma}(%s)'  % name , alpha , 1 , 1.e-3 , 1000 )
         
-        self.pdf  = cpp.Analysis.Models.LogGamma (
+        self.pdf  = Ostap.Models.LogGamma (
             'lg_%s'        % name ,
             'LogGamma(%s)' % name ,
             self.x     ,
@@ -623,7 +623,7 @@ class BetaPrime_pdf(PDF) :
                                   '#delta_{#beta#prime}(%s)' % name , delta ,
                                   0 , *limits_delta )
             
-        self.pdf  = cpp.Analysis.Models.BetaPrime (
+        self.pdf  = Ostap.Models.BetaPrime (
             'bp_%s'         % name ,
             'BetaPrime(%s)' % name ,
             self.x     ,
@@ -717,7 +717,7 @@ class Landau_pdf(PDF) :
                                   'delta_%s'            % name ,
                                   '#delta_{Landau}(%s)' % name , delta ,
                                   0 , *limits_delta )
-        self.pdf  = cpp.Analysis.Models.Landau (
+        self.pdf  = Ostap.Models.Landau (
             'land_%s'    % name ,
             'Landau(%s)' % name ,
             self.x     ,
@@ -802,7 +802,7 @@ class Argus_pdf(PDF) :
                                  'low_%s'           % name ,
                                  'low_{Argus}(%s)'  % name , low , *limits_low )
         
-        self.pdf  = cpp.Analysis.Models.Argus (
+        self.pdf  = Ostap.Models.Argus (
             'arg_%s'    % name ,
             'Argus(%s)' % name ,
             self.x     ,
@@ -917,7 +917,7 @@ class TwoExpos_pdf(PDF) :
                                   'x0_%s'       % name ,
                                   'x0_{2e}(%s)' % name , x0 , *limits_x0 )
         
-        self.pdf  = cpp.Analysis.Models.TwoExpos (
+        self.pdf  = Ostap.Models.TwoExpos (
             'exp2_%s'    % name ,
             '2Expos(%s)' % name ,
             self.x     ,
@@ -1007,7 +1007,7 @@ class Gumbel_pdf(PDF) :
                                  'beta_%s'                % name ,
                                  'beta_{Gumbel}(%s)'      % name , beta ) 
         
-        self.pdf  = cpp.Analysis.Models.Gumbel (
+        self.pdf  = Ostap.Models.Gumbel (
             'gumbel_%s'  % name ,
             'Gumbel(%s)' % name ,
             self.x              ,
@@ -1101,7 +1101,7 @@ class Tsallis_pdf(PDF) :
                                 'n_%s'   % name , 
                                 'n(%s) ' % name , n    , 1.e-3 , 1e+6 )
         
-        self.pdf  = cpp.Analysis.Models.Tsallis (
+        self.pdf  = Ostap.Models.Tsallis (
             'tsallis_'    + name  ,
             'Tsallis(%s)' % name  ,
             self.pt               ,
@@ -1203,7 +1203,7 @@ class QGSM_pdf(PDF) :
                                 'b_%s'   % name , 
                                 'b(%s) ' % name , b    , 0.    , 1e+6 )  
         
-        self.pdf  = cpp.Analysis.Models.QGSM (
+        self.pdf  = Ostap.Models.QGSM (
             'qgsm_'    + name  ,
             'QGSM(%s)' % name  ,
             self.pt               ,

@@ -741,14 +741,14 @@ class IntegralBase(object) :
         
     ## Calculate the integral for the 1D-function
     def _integrate_1D_ ( self , func , xmn , xmx , args = () ) :
-        args   = args if args else self.args
+        args = args if args else self.args
         return integral  ( func       ,
                            xmn , xmx  ,
-                          args = args , err = self.err , **self.kwargs )
+                           args = args , err = self.err , **self.kwargs )
 
     ## Calculate the integral for the 2D-function
     def _integrate_2D_ ( self , func , xmn , xmx , ymn , ymx , args = () ) :
-        args   = args if args else self.args
+        args = args if args else self.args
         return integral2 ( func        ,
                            xmn , xmx   ,
                            ymn , ymx   ,
@@ -756,7 +756,7 @@ class IntegralBase(object) :
     
     ## Calculate the integral for the 3D-function
     def _integrate_3D_ ( self , func , xmn , xmx , ymn , ymx , zmn , zmx , args = () ) :
-        args   = args if args else self.args
+        args = args if args else self.args
         return integral3 ( func        ,
                            xmn , xmx   ,
                            ymn , ymx   ,
@@ -850,7 +850,7 @@ class IntegralCache(Integral) :
         >>> func = ...
         >>> func_0 = Integral(func,0)
         """
-        super(IntegralCache,self).__init__ ( self , func , xlow , args , err , **kwargs )
+        super(IntegralCache,self).__init__ ( func , xlow , args , err , **kwargs )
         self.__prev   = None 
         
     ## Calculate the numerical integral for the 1D-function
@@ -863,37 +863,36 @@ class IntegralCache(Integral) :
         """
         x      = float ( x )         
         xmn    = self.xmin
-        delta  = 0
+        delta  = 0.0
         
-        _x     = float ( x )
-        
-        ## is there a previos calculation ?
-        if self._prev :
+        ## Is there a good ``previos'' calculation ?
+        if self.__prev :
             ##
-            prev_args   = self.__prev[0]
-            prev_x      = self.__prev[1]
-            prev_result = self.__prev[2]
+            prev_args , prev_x , prev_result = self.__prev
             ##
             if prev_args == args : ## the same extra arguments                
                 
                 ## the point is good! 
-                if prev_x == _x or isequal ( _x , prev_x ) :
+                if prev_x == x or isequal ( x , prev_x ) :
                     return prev_result                                 ## RETURN
                 
-                ## old point is good 
-                if abs ( prev_x - _x ) <= abs ( self.xmin - _x ) :
+                ## old point is good, take it as xmin  
+                if abs ( prev_x - x ) <= abs ( self.xmin - x ) :
                     xmn   = prev_x
                     delta = prev_result
                     
-        result  = self._integrate_1D_ ( self.func , xmn , _x , args = args )
+        result  = self._integrate_1D_ ( self.func , xmn , x , args = args )
         result += delta 
         
         ## fill the cache 
-        self.__prev = args , _x , result 
+        self.__prev = args , x , result 
             
         return result 
 
-
+    @property
+    def prev ( self ) :
+        """``prev'': result of the previos integral evaluation"""
+        return self.__prev 
 
 # =============================================================================
 ## 2D-integration

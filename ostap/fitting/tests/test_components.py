@@ -36,9 +36,7 @@ mass    = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 10 )
 varset  = ROOT.RooArgSet  ( mass )
 dataset = ROOT.RooDataSet ( dsID() , 'Test Data set' , varset )  
 
-mmin = mass.getMin()
-mmax = mass.getMin()
-
+mmin, mmax = mass.minmax()
 
 m1 = VE(3,0.500**2)
 m2 = VE(5,0.250**2)
@@ -47,13 +45,13 @@ m3 = VE(7,0.125**2)
 ## fill it with three gausissians, 5k events each
 for i in xrange(0,5000) :
     for m in (m1,m2,m3) : 
-        mass.setVal ( m.gauss () )
+        mass.value = m.gauss () 
         dataset.add ( varset     )
 
 
 ## add 5k events of uniform background
 for i in xrange(0,5000) :
-    mass.setVal  ( random.uniform ( mass.getMin() , mass.getMax() ) ) 
+    mass.value = random.uniform ( *mass.minmax() )
     dataset.add ( varset   )
 
 ## make background less trivial:
@@ -66,7 +64,7 @@ for i in xrange(1000) :
     for w in ( w1 , w2 , n1 , n2 ) :
         v = w.gauss()
         if v in mass :
-            mass.setVal( v )
+            mass.value =  v 
             dataset.add(varset)            
 
 logger.info ('Dataset: %s' % dataset )  
@@ -75,15 +73,15 @@ logger.info ('Dataset: %s' % dataset )
 
 ## various fit components
 
-signal_1 = Models.Gauss_pdf ( 'G1' , mass = mass  , mean = m1.value() , sigma = m1.error() )  
-signal_2 = Models.Gauss_pdf ( 'G2' , mass = mass  , mean = m2.value() , sigma = m2.error() ) 
-signal_3 = Models.Gauss_pdf ( 'G3' , mass = mass  , mean = m3.value() , sigma = m3.error() )
+signal_1 = Models.Gauss_pdf ( 'G1' , xvar = mass  , mean = m1.value() , sigma = m1.error() )  
+signal_2 = Models.Gauss_pdf ( 'G2' , xvar = mass  , mean = m2.value() , sigma = m2.error() ) 
+signal_3 = Models.Gauss_pdf ( 'G3' , xvar = mass  , mean = m3.value() , sigma = m3.error() )
 
-wide_1   = Models.Gauss_pdf ( 'GW1', mass = mass  , mean = 4.0  , sigma = 4 )
-wide_2   = Models.Gauss_pdf ( 'GW2', mass = mass  , mean = 6.0  , sigma = 4 )
+wide_1   = Models.Gauss_pdf ( 'GW1', xvar = mass  , mean = 4.0  , sigma = 4 )
+wide_2   = Models.Gauss_pdf ( 'GW2', xvar = mass  , mean = 6.0  , sigma = 4 )
 
-narrow_1 = Models.Gauss_pdf ( 'GN1' , mass = mass , mean = 2.0  , sigma =  1 )
-narrow_2 = Models.Gauss_pdf ( 'GN2' , mass = mass , mean = 4.0  , sigma =  1 )
+narrow_1 = Models.Gauss_pdf ( 'GN1' , xvar = mass , mean = 2.0  , sigma =  1 )
+narrow_2 = Models.Gauss_pdf ( 'GN2' , xvar = mass , mean = 4.0  , sigma =  1 )
 
 
 # =============================================================================
@@ -96,7 +94,7 @@ def test_extended1 () :
         name             = 'E1'                    , 
         signal           = signal_1                , 
         othersignals     = [ signal_2 , signal_3 ] ,
-        background       = Models.Bkg_pdf ('P1' , mass = mass , power = 0 , tau = 0 ) ,
+        background       = Models.Bkg_pdf ('P1' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds = [ wide_1   , wide_2   ] ,
         others           = [ narrow_1 , narrow_2 ] , 
         )
@@ -113,8 +111,8 @@ def test_extended1 () :
         model.B[2].setVal ( 1000 )
         
         ## "components"
-        model.C[0].fix    ( 1000 )
-        model.C[1].setVal ( 1000 )
+        model.C[0].value = 1000
+        model.C[1].value =  500
         
         r, f = model.fitTo ( dataset , draw = False )
 
@@ -144,7 +142,7 @@ def test_extended2 () :
         name                = 'E2'                    , 
         signal              = signal_1                , 
         othersignals        = [ signal_2 , signal_3 ] ,
-        background          = Models.Bkg_pdf ('P1' , mass = mass , power = 0 , tau = 0 ) ,
+        background          = Models.Bkg_pdf ('P1' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds    = [ wide_1   , wide_2   ] ,
         others              = [ narrow_1 , narrow_2 ] ,
         combine_signals     =  True  , ## ATTENTION!
@@ -152,16 +150,16 @@ def test_extended2 () :
         combine_backgrounds =  True  , ## ATTENTION!   
         )
     
-    
+
     with rooSilent() :
         model.S.fix ( 15000 )
         model.B.fix (  7000 )
-        model.C[0].fix (  2000 )
+        model.C.fix (  2000 )
         r, f = model.fitTo ( dataset , draw = False , silent = True )
         
-    model.S   .release() 
-    model.B   .release() 
-    model.C[0].release() 
+    model.S.release() 
+    model.B.release() 
+    model.C.release() 
     r, f = model.fitTo ( dataset , draw = False , silent = True )
     
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
@@ -176,7 +174,7 @@ def test_nonextended1 () :
         name                = 'N1'                    , 
         signal              = signal_1                , 
         othersignals        = [ signal_2 , signal_3 ] ,
-        background          = Models.Bkg_pdf ('P2' , mass = mass , power = 0 , tau = 0 ) ,
+        background          = Models.Bkg_pdf ('P2' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds    = [ wide_1 , wide_2 ] ,
         others              = [ narrow_1 , narrow_2 ] , 
         extended            = False  ## ATTENTION! 
@@ -204,7 +202,7 @@ def test_nonextended2 () :
         name                = 'N2'                    , 
         signal              = signal_1                , 
         othersignals        = [ signal_2 , signal_3 ] ,
-        background          = Models.Bkg_pdf ('P3' , mass = mass , power = 0 , tau = 0 ) ,
+        background          = Models.Bkg_pdf ('P3' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds    = [ wide_1 , wide_2 ] ,
         others              = [ narrow_1 , narrow_2   ] , 
         combine_signals     =  True  , ## ATTENTION!
@@ -252,7 +250,7 @@ def test_nonextended3 () :
         name                = 'N3'                    , 
         signal              = signal_1                , 
         othersignals        = [ signal_2 , signal_3 ] ,
-        background          = Models.Bkg_pdf ('P2' , mass = mass , power = 0 , tau = 0 ) ,
+        background          = Models.Bkg_pdf ('P2' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds    = [ wide_1 , wide_2 ] ,
         others              = [ narrow_1 , narrow_2  ] , 
         extended            = False , ## ATTENTION!

@@ -43,7 +43,7 @@ from   ostap.core.core           import cpp, Ostap, VE
 # =============================================================================
 from   ostap.fitting.basic   import PDF, makeVar, makeBkg
 from   ostap.fitting.fit2d   import PDF2 
-from   ostap.fitting.signals import CB2_pdf
+from   ostap.fitting.signals import CB2_pdf, Needham_pdf, Bukin_pdf
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -219,8 +219,6 @@ class Bc_pdf(CB2_pdf) :
 models.append ( Bc_pdf ) 
 # =============================================================================
 # Specializations for Bukin function
-# =============================================================================
-from   Ostap.FitSignalModels   import Bukin_pdf 
 # =============================================================================
 ## @class D0_pdf
 #  simple wrapper over Bukin-pdf
@@ -418,9 +416,6 @@ class Manca_pdf (PDF) :
         dm_y3s = 10.3552      * gev_ - m_y1s
 
         # =====================================================================
-        from   Ostap.FitBasic            import makeVar
-        from   Ostap.FitSignalModels     import Needham_pdf
-        # =====================================================================
         ## Y(1S)
         # =====================================================================
         
@@ -544,7 +539,6 @@ class Manca_pdf (PDF) :
 
         self.__power = power 
         ## use helper function to create background  
-        from Ostap.FitBkgModels import makeBkg
         self.background = makeBkg ( power , 'Bkg%s' % name , self.mass )
 
         self.__n1s = makeVar ( None ,
@@ -780,8 +774,6 @@ class Manca2_pdf (PDF) :
         dm_y3s = 10.3552      * gev_ - m_y1s
 
         # =====================================================================
-        from   Ostap.FitBasic            import makeVar
-        from   Ostap.FitSignalModels     import CB2_pdf
                 
         # =====================================================================
         ## Y(1S)
@@ -902,7 +894,6 @@ class Manca2_pdf (PDF) :
         
         
         ## use helper function to create background  
-        from Ostap.FitBkgModels import makeBkg
         self.background = makeBkg ( power , 'Bkg%s' % name , self.mass )
 
         
@@ -1150,8 +1141,6 @@ class MancaX_pdf(PDF2) :
         self.signal1 = manca  
         self.signal2 = charm
 
-        ## use helper function to create background  
-        from Ostap.FitBkgModels import makeBkg
         #
         ## background components
         #
@@ -1181,7 +1170,6 @@ class MancaX_pdf(PDF2) :
         self.bb_pdf  = RPP ( 'BB'   + suffix , 'Bkg(x)Bkg'     , self.b_A.pdf , self.b_B.pdf ) 
         
         ## coefficients
-        from Ostap.FitBasic import makeVar 
         self.s1s = makeVar ( None , 'NY1C' + suffix , 'N(Y1S+C)' + suffix , None , 200 , 0 , 1.e+5 )
         self.s2s = makeVar ( None , 'NY2C' + suffix , 'N(Y2S+C)' + suffix , None , 100 , 0 , 1.e+4 )
         self.s3s = makeVar ( None , 'NY3C' + suffix , 'N(Y3S+C)' + suffix , None ,  20 , 0 , 1.e+4 )

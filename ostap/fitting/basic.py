@@ -1711,9 +1711,9 @@ class Fit1D (PDF) :
         
         ## combine signal components into single signal  (if needed)
         self.__signal_fractions = ()  
-        if combine_signals and 1 < len( self.signals() ) :
+        if combine_signals and 1 < len( self.signals ) :
             
-            sig , fracs , sigs = addPdf ( self.signals()        ,
+            sig , fracs , sigs = addPdf ( self.signals          ,
                                           'signal_'    + suffix ,
                                           'signal(%s)' % suffix ,
                                           'fS_%%d%s'   % suffix ,
@@ -1727,15 +1727,15 @@ class Fit1D (PDF) :
 
         ## combine background components into single backhround (if needed ) 
         self.__background_fractions = () 
-        if combine_backgrounds and 1 < len( self.backgrounds() ) :
+        if combine_backgrounds and 1 < len( self.backgrounds ) :
             
-            bkg , fracs , bkgs = addPdf ( self.backgrounds()        ,
+            bkg , fracs , bkgs = addPdf ( self.backgrounds          ,
                                           'background_'    + suffix ,
                                           'background(%s)' % suffix ,
                                           'fB_%%d%s'       % suffix ,
                                           'fB(%%d)%s'      % suffix , recursive = True , model = self )
             ## new background
-            self.__background      = Generic1D_pdf   ( bkg , self.mass , 'BACKGROUND_' + suffix )
+            self.__background      = Generic1D_pdf   ( bkg , self.xvar , 'BACKGROUND_' + suffix )
             self.__all_backgrounds = ROOT.RooArgList ( bkg )
             self.__bkgs            = bkgs 
             self.__background_fractions = fracs 
@@ -1743,15 +1743,15 @@ class Fit1D (PDF) :
 
         ## combine other components into single component (if needed ) 
         self.__components_fractions = () 
-        if combine_others and 1 < len( self.components() ) :
+        if combine_others and 1 < len( self.components ) :
             
-            cmp , fracs , cmps = addPdf ( self.components()    ,
+            cmp , fracs , cmps = addPdf ( self.components      ,
                                           'other_'    + suffix ,
                                           'other(%s)' % suffix ,
                                           'fC_%%d%s'  % suffix ,
                                           'fC(%%d)%s' % suffix , recursive = True , model = self )
             ## save old background
-            self.__other          = Generic1D_pdf   ( cmp , self.mass , 'COMPONENT_' + suffix )
+            self.__other          = Generic1D_pdf   ( cmp , self.xvar , 'COMPONENT_' + suffix )
             self.__all_components = ROOT.RooArgList ( cmp )
             self.__components_fractions = fracs 
             logger.verbose('Fit1D(%s): %2d components  are combined into single COMPONENT'    % ( self.name , len ( cmps ) ) )
@@ -1760,6 +1760,7 @@ class Fit1D (PDF) :
         self.__nums_signals     = [] 
         self.__nums_backgrounds = [] 
         self.__nums_components  = []
+        self.__nums_fractions   = []
         
         ## build models 
         if self.extended :
@@ -1788,11 +1789,11 @@ class Fit1D (PDF) :
             if 1 == nc :
                 cf = makeVar ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
                 self.alist1.add  ( self.__all_components[0]  )
-                self.__num_components.append ( cf ) 
+                self.__nums_components.append ( cf ) 
             elif 2 <= nc : 
                 fic = makeFracs ( nc , 'C_%%d%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False , model = self )
                 for c in self.__all_components : self.alist1.add ( c )
-                for f in fic                   : self.__num_components.append ( f )
+                for f in fic                   : self.__nums_components.append ( f )
 
             for s in self.__nums_signals     : self.alist2.add ( s ) 
             for b in self.__nums_backgrounds : self.alist2.add ( b ) 
@@ -1810,11 +1811,15 @@ class Fit1D (PDF) :
             
             fic = makeFracs ( ns + nb + nc , 'f_%%d%s' % suffix , 'f(%%d)%s'  % suffix ,
                               fractions  = True , recursive = self.recursive ,  model = self )
-            for f in fic : self.alist2.add ( f )
+            
+            for f in fic                    : self.__nums_fractions.append ( f )   
+            for f in self.__nums_fractions  : self.alist2.add ( f ) 
+
 
         self.__nums_signals     = tuple ( self.__nums_signals     )
         self.__nums_backgrounds = tuple ( self.__nums_backgrounds ) 
         self.__nums_components  = tuple ( self.__nums_components  ) 
+        self.__nums_fractions   = tuple ( self.__nums_fractions   ) 
 
         #
         ## The final PDF

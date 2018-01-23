@@ -34,7 +34,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.resolution' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
-from ostap.fitting.basic import RESOLUTION, makeVar
+from ostap.fitting.basic import Ostap, RESOLUTION, makeVar
 # =============================================================================    
 models = set() 
 # =============================================================================
@@ -51,10 +51,9 @@ class ResoGauss(RESOLUTION) :
                    sigma        ,   ## the first sigma 
                    mean  = None ) : ## mean-value
         ## initialize the base
-        if mean is None :
-            mean = ROOT.RooConstVar(
-                'mean_ResoGauss'     + name ,
-                'mean_ResoGauss(%s)' % name , 0 )                 
+        if mean is None : mean = ROOT.RooConstVar(
+            'mean_ResoGauss'     + name ,
+            'mean_ResoGauss(%s)' % name , 0 )                 
         super(ResoGauss,self).__init__( name  = name  ,
                                         xvar  = xvar  ,
                                         sigma = sigma ,
@@ -96,10 +95,9 @@ class ResoGauss2(RESOLUTION) :
                    fraction = 0.5  ,   ## fraction of
                    mean     = None ) : ## the mean value
         
-        if mean is None :
-            mean = ROOT.RooConstVar(
-                'mean_ResoGauss2'     + name ,
-                'mean_ResoGauss2(%s)' % name , 0 )                 
+        if mean is None : mean = ROOT.RooConstVar(
+            'mean_ResoGauss2'     + name ,
+            'mean_ResoGauss2(%s)' % name , 0 )                 
         ## initialize the base 
         super(ResoGauss2,self). __init__ ( name  = name  ,
                                            xvar  = xvar  ,
@@ -117,8 +115,7 @@ class ResoGauss2(RESOLUTION) :
             'SigmaScale_'       + name ,
             'SigmaScale(%s)'    % name , scale    , 1 , 10 ) 
         
-        from Ostap.Core import cpp
-        self.pdf = cpp.Analysis.Models.DoubleGauss (
+        self.pdf = Ostap.Models.DoubleGauss (
             "Reso2Gauss_"       + name ,
             "Reso2Gauss(%s)"    % name ,
             self.xvar     ,
@@ -175,10 +172,9 @@ class ResoApo2(RESOLUTION) :
                    beta  = 1    ,   ## beta parameter 
                    mean  = None ) : ## the mean value 
 
-        if mean is None :
-            mean = ROOT.RooConstVar(
-                'mean_ResoApo2'     + name ,
-                'mean_ResoApo2(%s)' % name , 0 )
+        if mean is None :  mean = ROOT.RooConstVar(
+            'mean_ResoApo2'     + name ,
+            'mean_ResoApo2(%s)' % name , 0 )
             
         ##  initlialize the base 
         super(ResoApo2,self).__init__ ( name  = name  ,
@@ -191,8 +187,7 @@ class ResoApo2(RESOLUTION) :
             'ResoBeta(%s)' % name  , beta , 0.0001 , 10000 )
         
         ## build resolution model
-        from Ostap.Core import cpp
-        self.apo2  = cpp.Analysis.Models.Apolonios2 (
+        self.apo2  = Ostap.Models.Apolonios2 (
             "ResoApolonious_"   + name ,
             "ResoApolonios(%s)" % name ,
             self.xvar   ,
@@ -238,11 +233,10 @@ class ResoCB2(RESOLUTION) :
                    n     = 5    ,   ## power-law exponent
                    mean  = None ) : ## the mean value
 
-        if mean is None :
-            mean = ROOT.RooConstVar(
-                'mean_ResoCB2'     + name ,
-                'mean_ResoCB2(%s)' % name , 0 )
-            
+        if mean is None : mean = ROOT.RooConstVar(
+            'mean_ResoCB2'     + name ,
+            'mean_ResoCB2(%s)' % name , 0 )
+        
         ## initialize the base 
         super(ResoCB2,self).__init__ ( name  = name  ,
                                        xvar  = xvar  ,
@@ -260,8 +254,7 @@ class ResoCB2(RESOLUTION) :
             'ResoN(%s)'     % name , n     , 1.e-6 , 50 )
         
         ## gaussian 
-        from Ostap.Core import cpp
-        self.cb2 = cpp.Analysis.Models.CrystalBallDS (
+        self.cb2 = Ostap.Models.CrystalBallDS (
             'ResoCB2_'   + name ,
             'ResoCB2(%s' % name ,
             self.xvar           ,
