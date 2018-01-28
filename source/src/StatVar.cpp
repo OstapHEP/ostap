@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 // Include files
 // ============================================================================
@@ -24,10 +23,6 @@
  *  Implementation file for class Analysis::StatVar
  *  @date 2013-10-13 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- * 
- *                    $Revision$
- *  Last modification $Date$
- *                 by $Author$
  */
 // ============================================================================
 namespace 
@@ -238,7 +233,9 @@ Ostap::StatVar::statVar
     if ( 0 > ievent ) { return result ; }                // RETURN 
     //
     const double w = selection.evaluate() ;
-    const double v = !w ? 0.0 : formula.evaluate() ;
+    if   (  !w ) { continue ; }                          // ATTENTION
+    //
+    const double v = formula.evaluate() ;
     //
     result.add ( v , w ) ;
     //
@@ -405,8 +402,10 @@ Ostap::StatVar::statCov
     //
     const double w = selection.evaluate() ;
     //
-    const double v1 = !w ? 0.0 : formula1.evaluate() ;
-    const double v2 = !w ? 0.0 : formula2.evaluate() ;
+    if  ( !w ) { continue ; }                                  //  RETURN
+    //
+    const double v1 = formula1.evaluate() ;
+    const double v2 = formula2.evaluate() ;
     //
     stat1.add ( v1 , w ) ;
     stat2.add ( v2 , w ) ;
@@ -501,8 +500,7 @@ Ostap::StatVar::statVar
     else 
     {
       const double w = data->weight() ;
-      const double v = !w ? 0.0 : formula.getVal () ;
-      result.add ( v , w ) ;
+      if ( w ) { result.add ( formula.getVal () , w ) ; }    //  ATTENTION
     } 
   }
   //
@@ -562,7 +560,9 @@ Ostap::StatVar::statVar
       selection.getVal () * data->weight() :
       selection.getVal ()                  ;
     //
-    const double v = !w ? 0.0 : formula.getVal () ;
+    if  ( !w ) { continue ; }                                  // ATTENTION
+    //
+    const double v = formula.getVal () ;
     //
     result.add ( v , w ) ;
   }
@@ -627,8 +627,10 @@ Ostap::StatVar::statCov
     //    
     const double w  = weighted ? data->weight() : 1.0 ;
     //
-    const double v1 = !w ? formula1.getVal() : 0.0 ;
-    const double v2 = !w ? formula2.getVal() : 0.0 ;
+    if ( !w ) { continue ; }                                     //  ATTENTION
+    //
+    const double v1 = formula1.getVal() ;
+    const double v2 = formula2.getVal() ;
     //
     stat1.add ( v1 , w ) ;
     stat2.add ( v2 , w ) ;
@@ -717,8 +719,10 @@ Ostap::StatVar::statCov
       selection.getVal () * data->weight() :
       selection.getVal ()                  ;
     //
-    const double v1 = !w ? formula1.getVal() : 0.0 ;
-    const double v2 = !w ? formula2.getVal() : 0.0 ;
+    if ( !w ) { continue ; }                                    // ATTENTION
+    //
+    const double v1 = formula1.getVal() ;
+    const double v2 = formula2.getVal() ;
     //
     stat1.add ( v1 , w ) ;
     stat2.add ( v2 , w ) ;
@@ -816,10 +820,12 @@ unsigned long Ostap::StatVar::_statCov
     //
     const double w = selection.evaluate() ;
     //
-    // fill satisticst and covarinaces:
+    if  ( !w ) { continue ; }                                  // ATTENTION!
+    //
+    // fill satistics and covarinaces:
     for ( unsigned short i = 0 ; i < l ; ++i ) 
     {
-      const double vi = !w ? 0.0 : _vars[i]->evaluate() ;
+      const double vi = _vars[i]->evaluate() ;
       vals [i] = vi ;
       stats[i].add ( vi , w ) ;  
       for ( unsigned short j = 0 ; j <= i ; ++j ) 
@@ -1026,10 +1032,12 @@ unsigned long Ostap::StatVar::_statCov
       selection.getVal () * data->weight() :
       selection.getVal ()                  ;
     //
+    if   ( !w ) {  continue ; }                                   // ATTENTION!
+    //
     // fill satisticst and covarinaces:
     for ( unsigned short i = 0 ; i < l ; ++i ) 
     {
-      const double vi = !w ? 0.0 : _vars[i]->getVal() ;
+      const double vi = _vars[i]->getVal() ;
       vals [i] = vi ;
       stats[i].add ( vi , w ) ;  
       for ( unsigned short j = 0 ; j <= i ; ++j ) 
@@ -1117,10 +1125,12 @@ unsigned long Ostap::StatVar::_statCov
     //    
     const double w = weighted ? data->weight() : 1.0 ;
     //
+    if  ( !w ) { continue ; }                                     // ATTENTION
+    //
     // fill satisticst and covarinaces:
     for ( unsigned short i = 0 ; i < l ; ++i ) 
     {
-      const double vi = !w ? 0.0 : _vars[i]->getVal() ;
+      const double vi = _vars[i]->getVal() ;
       vals [i] = vi ;
       stats[i].add ( vi , w ) ;  
       for ( unsigned short j = 0 ; j <= i ; ++j ) 

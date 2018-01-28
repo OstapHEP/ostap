@@ -6,10 +6,6 @@
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
-#  
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """Module with utilities for reweighting"""
 # =============================================================================

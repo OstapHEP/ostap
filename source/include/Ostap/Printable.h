@@ -50,6 +50,43 @@ namespace Ostap
                                     const std::string&  opts      ,
                                     const int           style     ) 
     { return toString ( obj , opts , style ) ; }
+
+    // ==========================================================================
+    /** helper function to print printable object into string (needed for python)
+     *  @param object the object
+     *  @param verbose flag 
+     *  @param indent indent 
+     *  @return string
+     *  @see RooPrintable::printMultiline 
+     */
+    std::string  print_printable1 
+    ( const RooPrintable&  object          , 
+      const int            content         , 
+      const bool           verbose = false , 
+      std::string          indent  = ""    ) ;
+    // ==========================================================================
+    /** helper function to prin=t printable object into string (needed for python)
+     *  @param object  the object
+     *  @param content the content 
+     *  @param style  the style  
+     *  @param indent indent 
+     *  @return string 
+     *  @see RooPrintable::printSstream
+     */
+    std::string  print_printable2 
+    ( const RooPrintable&  objbect      , 
+      const int            content      , 
+      const short          style        , 
+      std::string          indent  = "" ) ;
+    // ==========================================================================
+    /** helper function to print printable object into tree 
+     *  @param object  the object
+     *  @param indent indent 
+     *  @return string 
+     */
+    std::string  print_printable_tree 
+    ( const RooPrintable&  object  , 
+      std::string          indent  = "" ) ;
     // ========================================================================
   } //                                            end of namespace Ostap::Utils 
   // ==========================================================================

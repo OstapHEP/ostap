@@ -37,7 +37,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core     import cpp , Ostap , VE , hID , rootID
+from   ostap.core.core     import cpp , Ostap , VE , hID , rootID, valid_pointer
 from   ostap.histos.histos import h1_axis , h2_axes
 from   ostap.logger.utils  import roo_silent 
 # =============================================================================
@@ -571,21 +571,25 @@ class PDF (object) :
             result =  self.pdf.fitTo ( dataset , ROOT.RooFit.Save () , *opts ) 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
+        if not valid_pointer (  result ) :
+            logger.fatal ( "PDF(%s).fitTo: RooFitResult is invalid. Check model&data" )
+            return None , None
+        
         st = result.status()
         if 0 != st and silent :
-            logger.warning ( 'PDF(%s).fitTo: status is %s. Refit in non-silent regime ' % ( self.name , st  ) )    
+            logger.warning ( 'PDF(%s).fitTo: status is %s. Refit in non-silent regime ' % ( self.name , fit_status ( st )  ) )    
             return self.fitTo ( dataset , draw , nbins , False , refit , *args , **kwargs )
         
         for_refit = False
         if 0 != st   :
             for_refit = 'status' 
-            logger.warning ( 'PDF(%s).fitTo: Fit status is %s ' % ( self.name , st   ) )
+            logger.warning ( 'PDF(%s).fitTo: Fit status is %s ' % ( self.name , fit_status ( st ) ) )
         #
         qual = result.covQual()
         if   -1 == qual and dataset.isWeighted() : pass
         elif  3 != qual :
             for_refit = 'covariance' 
-            logger.warning ( 'PDF(%s).fitTo: covQual    is %s ' % ( self.name , qual ) ) 
+            logger.warning ( 'PDF(%s).fitTo: covQual    is %s ' % ( self.name , cov_qual ( qual ) ) ) 
 
         #
         ## check the integrals (when possible)

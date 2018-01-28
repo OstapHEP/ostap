@@ -1,8 +1,7 @@
-3#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ==========================================================================================
-## @file py.py
-#
+## @file tmva.py
 #  Python interface to basic TMVA functionality: Trainer and Reader 
 #
 #  Actually for the Trainer, it is a bit simplified version of Albert's code 
@@ -31,8 +30,9 @@
 #
 # =============================================================================
 """ Python interface to two major TMVA classes
--  Trainer
--  Reader 
+- Trainer
+- Reader
+
 Actually for the Trainer, it is a bit simplified version of Albert's code [thanks Albert Puig],
 inspired from
 http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py
@@ -60,46 +60,48 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
-import ROOT
+import ROOT, os
+# logging 
 # =============================================================================
-from   ostap.logger.logger  import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.tmva' )
-else                       : logger = getLogger( __name__ )
+from ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.tmva' )
+else                       : logger = getLogger ( __name__           )
 # =============================================================================
-    
-pattern_XML   = "%s/weights/%s*.weights.xml"
-pattern_CLASS = "%s/weights/%s*.class.C" 
 
 # =============================================================================
-## @class TMVATrainer
+pattern_XML   = "%s/weights/%s*.weights.xml"
+pattern_CLASS = "%s/weights/%s*.class.C" 
+# =============================================================================
+## @class Trainer
 #  Helper class to train TMVA
-#
+# 
+#  - Book the trainer: 
 #  @code
-#
-#  from ostap.tools.tmva import Trainer 
-#  t = Trainer( methods =  [
-#  ## type, name, configuration 
-#  ( ROOT.TMVA.Types.kMLP ,
-#    "MLP",
-#    "H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator"
-#  ) ] )
-#
-#  varlist = [
-#    'dtfchi2' , 
-#    'ctau'    , 
-#    'ptb'     , 
-#    'vchi2'   
-#  ]
-#
-#  t.train ( var_list                              ,
-#            signal          = treeSignal          ,
-#            background      = treeBackgrund       ,
-#            outputfile      = 'output.root'       ,
-#            signal_cuts     = cuts_for_signal     ,
-#            background_cuts = cuts_for_background ,
-#            spectators      = []                  ) 
-#
+#  >>> from ostap.tools.tmva import Trainer
+#  >>> t = Trainer(
+#  ...   ## TMVA methods  
+#  ...   methods =  [ ( ROOT.TMVA.Types.kMLP ,
+#  ...                'MLP',
+#  ...                'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator' ) ] , 
+#  ...   variables = [ 'dtfchi2' , 'ctau', 'ptb' , 'vchi2' ] , ## list  of variables 
+#  ...   signal          = treeSignal            ,  ## TTree for ``signal'' sample  
+#  ...   background      = treeBackgrund         ,  ## TTree for ``background''  sample 
+#  ...   signal_cuts     = cuts_for_signal       ,
+#  ...   background_cuts = cuts_for_background   )
 #  @endcode 
+#
+#  - Use the trainer: 
+#  @code 
+#  >>> t.train()     ## Use the trainer
+#  @endcode 
+#
+#  - Get the results from the trainer:
+#  @code
+#  >>> xml      = t.weights_files ## get the weights XML   files 
+#  >>> classes  = t.class_files   ## get the classes (C++) files
+#  >>> output   = t.output_file   ## get the output ROOT file  
+#  >>> tar_file = t.tar_file      ## get the tar-file with XML&C++
+#  @endcode
 #
 #  For more detailes
 #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py
@@ -109,295 +111,586 @@ pattern_CLASS = "%s/weights/%s*.class.C"
 #  @thanks Albert PUIG
 class Trainer(object):
     """Helper class to train TMVA:  
-    #
-    #  from ostap.tools.tmva import Trainer 
-    #  t = Trainer( methods =  [
-    #  ## type, name, configuration 
-    #  ( ROOT.TMVA.Types.kMLP ,
-    #    'MLP',
-    #    'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator'
-    #  ) ] )
-    #
-    #  varlist = [
-    #    'dtfchi2' , 
-    #    'ctau'    , 
-    #    'ptb'     , 
-    #    'vchi2'   
-    #  ]
-    #
-    #  ## start the actual training 
-    #  t.train ( var_list                              ,
-    #            signal          = treeSignal          ,
-    #            background      = treeBackgrund       ,
-    #            outputfile      = 'output.root'       ,
-    #            signal_cuts     = cuts_for_signal     ,
-    #            background_cuts = cuts_for_background ,
-    #            spectators      = []                  ) 
-    #
+    
+    >>> from ostap.tools.tmva import Trainer
+    >>> t = Trainer(
+    ...   ## TMVA methods  
+    ...   methods =  [ ( ROOT.TMVA.Types.kMLP ,
+    ...                'MLP',
+    ...                'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator' ) ] , 
+    ...   variables = [ 'dtfchi2' , 'ctau', 'ptb' , 'vchi2' ] , ## list  of variables 
+    ...   signal          = treeSignal            ,  ## TTree for ``signal'' sample  
+    ...   background      = treeBackgrund         ,  ## TTree for ``background''  sample 
+    ...   signal_cuts     = cuts_for_signal       ,
+    ...   background_cuts = cuts_for_background   )
+
+    Use the trainer: 
+    >>> t.train()     ## Use the trainer
+
+    Get the results:
+    >>> xml      = t.weights_files ## get the weights XML   files 
+    >>> classes  = t.class_files   ## get the classes (C++) files
+    >>> output   = t.output_file   ## get the output ROOT file  
+    >>> tar_file = t.tar_file      ## get the tar-file with XML&C++
+    
     Actuially it is a bit simplified version of the original code by Albert PUIG,
     inspired from
     http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py
     """
     # =========================================================================
     ## constructor
-    #  @code
-    # 
-    #  from ostap.tools.tmva import Trainer 
-    #  t = Trainer( methods = [
-    #  ## type                   name   configuration 
-    #  ( ROOT.TMVA.Types.kMLP , "MLP", "H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator" ) 
-    #  ] )
     #
-    #  @endcode
+    #  - Book the trainer: 
+    #  @code
+    #  >>> from ostap.tools.tmva import Trainer
+    #  >>> t = Trainer(
+    #  ...   ## TMVA methods  
+    #  ...   methods =  [ ( ROOT.TMVA.Types.kMLP ,
+    #  ...                'MLP',
+    #  ...                'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator' ) ] , 
+    #  ...   variables = [ 'dtfchi2' , 'ctau', 'ptb' , 'vchi2' ] , ## list  of variables 
+    #  ...   signal          = treeSignal            ,  ## TTree for ``signal'' sample  
+    #  ...   background      = treeBackgrund         ,  ## TTree for ``background''  sample 
+    #  ...   signal_cuts     = cuts_for_signal       ,
+    #  ...   background_cuts = cuts_for_background   )
+    #  @endcode 
     #  For more detailes
     #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
-    def __init__(self, methods , verbose = True ,  name = 'TMVA' ):
-        """Constructor with list of methoods
+    def __init__(  self                       ,
+                   methods                    ,
+                   variables                  ,  ## list of variables 
+                   signal                     ,  ## signal sample/tree
+                   background                 ,  ## background sample/tree 
+                   signal_cuts       = ''     ,  ## signal cuts 
+                   background_cuts   = ''     ,  ## background cuts 
+                   spectators        = []     ,
+                   bookingoptions    = "Transformations=I;D;P;G,D" , 
+                   configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents" ,
+                   signal_weight     = None   ,                
+                   background_weight = None   ,
+                   ##
+                   output_file       = ''     ,  ## the name of output file 
+                   verbose           = True   ,
+                   name              = 'TMVA' ) :
+        """Constructor with list of methods
+        
         >>> from ostap.tools.tmva import Trainer
-        >>> methods = ....
-        >>> trainer = Trainer ( methods )        
-        For more detailes
+        >>> t = Trainer(
+        ...   ## TMVA methods  
+        ...   methods =  [ ( ROOT.TMVA.Types.kMLP ,
+        ...                'MLP',
+        ...                'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator' ) ] , 
+        ...   variables = [ 'dtfchi2' , 'ctau', 'ptb' , 'vchi2' ] , ## list  of variables 
+        ...   signal          = treeSignal            ,  ## TTree for ``signal'' sample  
+        ...   background      = treeBackgrund         ,  ## TTree for ``background''  sample 
+        ...   signal_cuts     = cuts_for_signal       ,
+        ...   background_cuts = cuts_for_background   )        
+        - For more detailes
         see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
         """
-        self.name    = name 
-        self.methods = methods
-        self.verbose = verbose 
-
-        ROOT.TMVA.Tools.Instance()
         
-    ## define the verbosity 
-    def setVerbose(self, verbosity ): self.verbose =  bool( verbosity )
+        self.__methods           = tuple ( methods    )
+        self.__variables         = tuple ( variables  )
 
-    # =========================================================================
-    ## train TMVA 
-    #  @code  
-    #  varlist = [
-    #    'dtfchi2'       , 
-    #    'ctau'          ,
-    #    'ptb'           , 
-    #    'vchi2'         , 
-    #  ]
-    #
-    #  trainer.train ( var_list                       ,
-    #          signal          = treeSignal          ,
-    #          background      = treeBackgrund       ,
-    #          outputfile      = 'output.root'       ,
-    #          signal_cuts     = cuts_for_signal     ,
-    #          background_cuts = cuts_for_background ,
-    #          spectators      = []                  ) 
-    #  @endcode  
-    #  @return the name of output XML file with weights 
-    def train ( self   , var_list               ,
-                signal , background             ,
-                output_file       = ''          ,
-                signal_cuts       = ''          ,
-                background_cuts   = ''          ,
-                spectators        = []          ,
-                bookingoptions    = "Transformations=I;D;P;G,D" , 
-                configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ,
-                signal_weight     = None        ,                
-                background_weight = None        ,
-                ) :
-        """Train the TMVA:
-        >>> trainer.train ( var_list , ... ) 
-        """
-        #
-        ## get the logger
-        #
-        import os
-        name = self.name
-        if not output_file : output_file = '%s.root'  % name 
+        self.__signal            = signal
+        self.__signal_cuts       = signal_cuts  
+        self.__signal_weight     = signal_weight
         
+        self.__background        = background
+        self.__background_cuts   = background_cuts 
+        self.__background_weight = background_weight
+        
+        self.__spectators        = [] 
+
+        
+        self.__verbose = True if verbose else False 
+        self.__name    = name 
+
+        self.__bookingoptions   = bookingoptions
+        self.__configuration    = configuration
+        
+        ## outputs 
+        self.__weights_files = []
+        self.__class_files   = []
+        self.__output_file   = output_file if output_file else '%s.root' % self.name
+        self.__tar_file      = None 
+        #
+        ## minor adjustment
+        #
+        opts = self.__bookingoptions
+        if      self.verbose and 0 <= opts.find ('!V:')   : opts.replace('!V:', 'V:')
+        if not  self.verbose and 0 > opts.find ('Silent') : opts+= ':Silent'
+        
+        if 0 > opts.find ( "AnalysisType=" ) :
+            opts += ":AnalysisType=Classification"
+            logger.debug('Trainer(%s): booking options are appended with ":AnalysisType=Classification"' % name )
+            
+        if  self.verbose :
+            
+            if   0 <= opts.find ( '!V:' ) : opts.replace ('!V:','V:')
+            elif 0 <= opts.find (  'V:' ) : pass 
+            else                          : opts += ':V:'
+
+            if   0 <= opts.find ( '!Silent:' ) : pass
+            elif 0 <= opts.find (  'Silent:' ) : opts.replace ('Silent:' , '!Silent:')
+            else                               : opts += ':!Silent:'
+            
+        else :
+            
+            if   0 <= opts.find ( '!V:'      ) : pass
+            elif 0 <= opts.find (  'V:'      ) : opts.replace ('V:','!V:')
+            else                               : opts += ':!V:'
+            
+            if   0 <= opts.find ( '!Silent:' ) : opts.replace ('!Silent:' , 'Silent:')
+            elif 0 <= opts.find (  'Silent:' ) : pass
+            else                               : opts += ':Silent:'
+
+
+        from ostap.utils.basic import isatty 
+        if isatty()  :
+            
+            if   0 <= opts.find ( '!DrawProgressBar' ) : opts.replace ('!DrawProgressBar', 'DrawProgressBar' )
+            elif 0 <= opts.find (  'DrawProgressBar' ) : pass
+            else                                       : opts += ':DrawProgressBar:'
+            
+            if   0 <= opts.find ( '!Color' )           : opts.replace ('!Color', 'Color' )
+            elif 0 <= opts.find (  'Color' )           : pass
+            else                                       : opts += ':Color:'
+            
+        else :
+            
+            if   0 <= opts.find ( '!DrawProgressBar' ) : pass  
+            elif 0 <= opts.find (  'DrawProgressBar' ) : opts.replace ('DrawProgressBar', '!DrawProgressBar' ) 
+            else                                       : opts += ':!DrawProgressBar:'
+            
+            if   0 <= opts.find ( '!Color' )           : pass 
+            elif 0 <= opts.find (  'Color' )           : opts.replace ('Color', '!Color' )
+            else                                       : opts += ':!Color:'
+
+
+
+        self.__bookingoptions = opts
+
+        ## clean-up 
         dirname    = str(self.name)
         for s in ( ' ' , '%' , '!' , '>' , '<' , '\n' , '?' ) :  
             while s in dirname : dirname = dirname.replace ( ' ' , '_' )
             
         pattern_xml = pattern_XML   % ( dirname ,  dirname )
         pattern_C   = pattern_CLASS % ( dirname ,  dirname )
-        
+
+        rf = []
         import glob,os
         for f in glob.glob ( pattern_xml ) :
-            logger.debug ( 'Remove existing weight-file %s' % dirname ) 
+            rf.append ( f ) 
             os.remove ( f ) 
         for f in glob.glob ( pattern_C   ) :
-            logger.debug ( 'Remove existing class-file  %s' % dirname ) 
-            os.remove ( f ) 
-
-        outFile = ROOT.TFile.Open   ( output_file, 'RECREATE' )
-        logger.info ( 'Trainer(%s): output ROOT file: %s ' % ( name , output_file  ) )
-
-        if self.verbose and 0 > bookingoptions.find ('Silent') : bookingoptions+= ':Silent'
-        #
-        if 0 > bookingoptions.find( "AnalysisType=" ) :
-            bookingoptions += ":AnalysisType=Classification"
-            logger.info('Trainer(%s): booking options are appended with ":AnalysisType=Classification"' % name )
-            
-        if self.verbose and 0 <= bookingoptions.find ('!V:') :
-            bookingoptions.replace('!V:', 'V')
-
-        if   0 <= bookingoptions.find ('!V:') : pass 
-        elif 0 <= bookingoptions.find ( 'V:') : pass 
-        elif self.verbose : bookingoptions +=  ':V:'
-        else              : bookingoptions += ':!V:'
-
-
-        if   0 <= bookingoptions.find ('!Silent') : pass 
-        elif 0 <= bookingoptions.find ( 'Silent') : pass 
-        elif self.verbose : bookingoptions += ':!Silent'
-        else              : bookingoptions +=  ':Silent'
+            rf.append ( f ) 
+            os.remove ( f )
+        if rf : logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
         
-        if   0 <= bookingoptions.find ('!Color') : pass 
-        elif 0 <= bookingoptions.find ( 'Color') : pass 
-        elif self.verbose : bookingoptions +=  ':Color'
-        else              : bookingoptions += ':!Color'
+        self.__dirname     = dirname
+        self.__pattern_xml = pattern_xml 
+        self.__pattern_C   = pattern_C 
+        
+    @property
+    def name    ( self ) :
+        """``name''    : the name of TMVA trainer"""
+        return self.__name
+    
+    @property
+    def methods ( self ) :
+        """``methods'' : the list of TMVA methods to be used"""
+        return tuple(self.__methods)
+    
+    @property
+    def variables ( self ) :
+        """``variables'' : the list of variables  to be used for training"""
+        return tuple(self.__variables)
 
-        if   0 <= bookingoptions.find ('!DrawProgressBar') : pass 
-        elif 0 <= bookingoptions.find ( 'DrawProgressBar') : pass 
-        elif self.verbose : bookingoptions +=  ':DrawProgressBar'
-        else              : bookingoptions += ':!DrawProgressBar'
+    @property
+    def spectators ( self ) :
+        """``spectators'' : the list of spectators to be used"""
+        return tuple(self.__spectators)
 
+    @property
+    def signal ( self ) :
+        """``signal'' :  TTree for signal events"""
+        return self.__signal
+    
+    @property
+    def signal_cuts ( self ) :
+        """``signal_cuts'' :  cuts to be applied for ``signal'' sample"""
+        return str(self.__signal_cuts)
+
+    @property
+    def signal_weight ( self ) :
+        """``signal_weight'' : weight to be applied for ``signal'' sample"""
+        return self.__signal_weight
+    
+
+    @property
+    def background ( self ) :
+        """``background'' :  TTree for background events"""
+        return self.__background
+    
+    @property
+    def background_cuts ( self ) :
+        """``background_cuts'' :  cuts to be applied for ``backgroud'' sample """
+        return str(self.__background_cuts)
+
+    @property
+    def background_weight ( self ) :
+        """``background_weight'' : weight to be applied for ``background'' sample"""
+        return self.__background_weight
+    
+    @property
+    def bookingoptions ( self ) :
+        """``bookingoptions'' : options used to book TMVA::Factory"""
+        return str(self.__bookingoptions)
+
+    @property
+    def configuration ( self ) :
+        """``configuration'' : options used to book TMVA"""
+        return str(self.__configuration)
+    
+    @property
+    def verbose ( self ) :
+        """``verbose'' : verbosity  flag"""
+        return self.__verbose
+
+    @property
+    def dirname  ( self ) :
+        """``dirname''  : the output directiory name"""
+        return str(self.__dirname) 
+
+    @property
+    def weights_files ( self ) :
+        """``weights_files'' : the list/tuple of final files with TMVA weights"""
+        return tuple(self.__weights_files)
+    @property
+    def class_files ( self ) :
+        """``class_files'' : the list/tuple of final files with TMVA classes"""
+        return tuple(self.__class_files)
+    @property
+    def output_file ( self ) :
+        """``output_file''  : the output file (if any)"""
+        return str(self.__output_file) if  self.__output_file else None
+    
+    @property
+    def tar_file ( self ) :
+        """``tar_file''  : the compressed (gz) tar file with results"""
+        return str(self.__tar_file) if self.__tar_file else None 
+
+    # =========================================================================
+    ## train TMVA 
+    #  @code
+    #  trainer.train ()
+    #  @endcode  
+    #  @return the name of output XML file with the weights 
+    def train ( self ) :
+        """Train the TMVA:
+        - returns the names of output XML file with the weights 
+        >>> trainer.train () 
+        """
+        
+        import glob,os
+        rf = [] 
+        for f in glob.glob ( self.__pattern_xml ) :
+            rf.append ( f ) 
+            os.remove ( f ) 
+        for f in glob.glob ( self.__pattern_C   ) :
+            rf.append ( f )
+            os.remove ( f )
+        if rf : logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
+        
+        ROOT.TMVA.Tools.Instance()
+
+        outFile = ROOT.TFile.Open   ( self.output_file, 'RECREATE' )        
+        logger.debug ( 'Trainer(%s): output ROOT file: %s ' % ( self.name , outFile.GetName() ) )
 
         factory = ROOT.TMVA.Factory (
             self.name             ,
             outFile               ,
-            bookingoptions        )
-        logger.info ( 'Trainer(%s): book TMVA-factory %s ' % ( name , bookingoptions ) )
-
-
-        dataloader = ROOT.TMVA.DataLoader ( dirname ) 
+            self.bookingoptions   )
+        logger.debug ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , self.bookingoptions ) )
+        factory.SetVerbose( self.verbose )
         
-        factory.SetVerbose(self.verbose)
+        ## 
+        dataloader = ROOT.TMVA.DataLoader ( self.dirname )
+        
         #
-        for v in var_list :
+        for v in self.variables :
             vv = v
             if isinstance ( vv , str ) : vv = ( vv , 'F' )
             dataloader.AddVariable  ( *vv )
             
-        for v in spectators :
+        for v in self.spectators :
             vv = v
             if isinstance ( vv , str ) : vv = ( vv , 'F' )             
             dataloader.AddSpectator ( *vv )
         #
-        signalWeight     = 1.0
-        backgroundWeight = 1.0
-        #
-        if signal_cuts :
-            logger.info ( 'Trainer(%s): Signal       cuts: "%s" ' % ( name ,     signal_cuts ) ) 
-        if background_cuts :
-            logger.info ( 'Trainer(%s): Background   cuts: "%s" ' % ( name , background_cuts ) )
+        if self.signal_cuts :
+            logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) ) 
+        if self.background_cuts :
+            logger.info ( "Trainer(%s): Background   cuts:``%s''" % ( self.name , self.background_cuts ) )
         # 
-        dataloader.AddTree ( signal     , 'Signal'     ,     signalWeight ,
-                             ROOT.TCut (      signal_cuts ) )
-        dataloader.AddTree ( background , 'Background' , backgroundWeight ,
-                             ROOT.TCut (  background_cuts ) )
+        dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
+        dataloader.AddTree ( self.background , 'Background' , 1.0 , ROOT.TCut ( self.background_cuts ) )
         #
-        if signal_weight :
-            dataloader.SetSignalWeightExpression     ( signalweight     )
-            logger.info ( 'Trainer(%s): Signal     weight: "%s" ' % ( name ,     signal_weight ) )
+        if self.signal_weight :
+            dataloader.SetSignalWeightExpression     ( self.signal_weight     )
+            logger.info ( "Trainer(%s): Signal     weight:``%s''" % ( self.name ,     self.signal_weight ) )            
+        if self.background_weight :
+            dataloader.SetBackgroundWeightExpression ( self.background_weight )
+            logger.info ( "Trainer(%s): Background weight:``%s''" % ( self.name , self.background_weight ) )
             
-        if background_weight :
-            dataloader.SetBackgroundWeightExpression ( backgroundweight )
-            logger.info ( 'Trainer(%s): Background weight: "%s" ' % ( name , background_weight ) )
-            
-        logger.info ( 'Trainer(%s): Configuration  : "%s" ' % ( name , configuration ) )
+        logger.info     ( "Trainer(%s): Configuration    :``%s''" % ( self.name , self.configuration ) )
         dataloader.PrepareTrainingAndTestTree(
-            ROOT.TCut ( signal_cuts     ) ,
-            ROOT.TCut ( background_cuts ) ,
-            configuration                 )
+            ROOT.TCut ( self.signal_cuts     ) ,
+            ROOT.TCut ( self.background_cuts ) ,
+            self.configuration            )
         #
         for m in self.methods :
             factory.BookMethod ( dataloader , *m )
 
         # Train MVAs
         ms = tuple( i[1] for i in  self.methods )
-        logger.info  ( "Trainer(%s): Train    all Methods %s " % ( name , ms ) )
+        logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
         factory.TrainAllMethods    ()
         # Test MVAs
-        logger.info  ( "Trainer(%s): Test     all Methods %s " % ( name , ms ) )
+        logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
         factory.TestAllMethods     ()
         # Evaluate MVAs
-        logger.info  ( "Trainer(%s): Evaluate all Methods %s " % ( name , ms ) )
+        logger.info  ( "Trainer(%s): Evaluate all methods %s " % ( self.name , ms ) )
         factory.EvaluateAllMethods ()
         # Save the output.
-        logger.debug ( "Trainer(%s): Output ROOT file %s is closed" % ( name , output_file ) )  
+        logger.debug ( "Trainer(%s): Output ROOT file %s is closed" % ( self.name , outFile.GetName() ) )  
         outFile.Close()
-        
-        # get the weights files
-        import glob, os
-        
-        self.weight_files = [ f for f in glob.glob ( pattern_xml ) ]
-        self.class_files  = [ f for f in glob.glob ( pattern_C   ) ]
-        self.output_file  = output_file
-        
-        logger.info  ( "Trainer(%s): Weights files : %s" % ( name , self.weight_files ) )
-        logger.info  ( "Trainer(%s): Output  file  : %s" % ( name , self.output_file  ) ) 
-        logger.debug ( "Trainer(%s): Class   files : %s" % ( name , self.class_files  ) ) 
+
+        import glob, os 
+        self.__weights_files = [ f for f in glob.glob ( self.__pattern_xml ) ]
+        self.__class_files   = [ f for f in glob.glob ( self.__pattern_C   ) ]
         
         del dataloader
         del factory 
 
-        return self.weight_files[:]
+        tfile = self.name + '.tgz'
+        if os.path.exists ( tfile ) :
+            logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
+
+        import tarfile
+        with tarfile.open ( tfile , 'w:gz' ) as tar :
+            for x in self.weights_files : tar.add ( x )
+            for x in self.  class_files : tar.add ( x )
+            logger.info  ( "Trainer(%s): Tar/gz  file  : %s" % ( self.name , tfile ) ) 
+            if self.verbose : tar.list ()
+
+        ## finally set tar-file 
+        if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
+            self.__tar_file = tfile 
+
+        logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
+        logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.class_files   ) ) 
+        logger.info  ( "Trainer(%s): Output  file  : %s" % ( self.name , self.output_file   ) ) 
+            
+        return self.weights_files
     
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader
-#  @attention It is *not* CPU-efficient
-#  Ugly tricks with arrays are required to bypass some technical limitations
-#
-#  @code
-#
-#  r = Reader ( 'MyTMVA' ,
-#       variables = [
-#       ## name      accessor  
-#       ( 'pt'   , lambda s : s.pt ) ,
-#       ## name      accessor  
-#       ( 'ip'   , lambda s : s.ip ) ,
-#       ## name     
-#         'var1'                     , ## use s.var1 
-#       ## name     
-#         'var2'                     , ## use s.var2 
-#       ] ,
-#       weights_file = 'my_weights.xml'
-#      )
-#  
+#  @code 
+#  from ostap.tools.tmva import Reader
+#  >>> reader = Reader ( 'MyTMVA' ,
+#  ... variables = [ ## name      accessor  
+#  ...              ( 'pt'   , lambda s : s.pt ) ,
+#  ...              ( 'ip'   , lambda s : s.ip ) ,
+#  ...                'var1'                     ,   ## s.var1 will be used 
+#  ...                'var2'                     ] , ## s.var2 will be used 
+#  ... weights_files = 'my_weights.xml' )
 #  @endcode
+#  <code>weights_fiels</code> can be :
+#  - single xml-file with weights for the given method
+#  - single tar/tgz/tar.gz-file with weights files
+#  - list of xml-files with weights
+#  If the xml-filenames follow TMVA Trainer convention, the training method will be
+#  extracted frmo the file name, otherwise it needs to be specified as dictionary   
+#  with the key being the method name: 
+#  @code
+#  weights_files = { 'MPL' : 'my_weights.xml', 'BDTG' : 'weights2.xml' } 
+#  @endcode
+#  A list of 2-element tuples is also supported :
+#  @code
+#  weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ] 
+#  @endcode
+#
+#  Use the reader
+#  @code
+#  >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+#  >>> for entry in tree :
+#  ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
+#  ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
+#  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+#  @endcode
+#
+#  A bit more efficient form is :
+#  @code
+#  >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+#  >>> mlp_fun  =  reader.MLP
+#  >>> bdgt_fun =  reader.BDTG
+#  >>> for entry in tree :
+#  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
+#  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
+#  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+#  @endcode
+#
+#  - It it natually merges with Ostap's SelectorWithVars utility
+#
 #  @see TMVA::Reader
 #  @date   2013-10-02
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 #  @thanks Alexander BARANOV
 class Reader(object)  :
     """ Rather generic python interface to TMVA-reader
-    #
-    #  r = Reader ( 'MyTMVA' ,
-    #       variables = [
-    #       ## name      accessor  
-    #       ( 'pt'   , lambda s : s.pt ) ,
-    #       ## name      accessor  
-    #       ( 'ip'   , lambda s : s.ip ) ,
-    #       ## name     
-    #         'var1'                     , ## use s.var1 
-    #       ## name     
-    #         'var2'                     , ## use s.var2 
-    #       ] ,
-    #       weights_file = 'my_weights.xml'
-    #      )
-    """
+
+    >>> from ostap.tools.tmva import Reader
+    >>> r = Reader ( 'MyTMVA' ,
+    ... variables = [ ## name      accessor  
+    ...              ( 'pt'   , lambda s : s.pt ) ,
+    ...              ( 'ip'   , lambda s : s.ip ) ,
+    ...                'var1'                     ,   ## s.var1 will be used 
+    ...                'var2'                     ] , ## s.var2 will be used 
+    ... weights_files = 'my_weights.xml' )
+
+    - attention: It is *not* CPU-efficient:
+    Ugly tricks with arrays are required to bypass some technical limitations
+
+    ``weights_files'' can be :
+    - single xml-file with weights for the given method
+    - single tar/tgz/tar.gz-file with weights files  (output of ``Trainer.tar_file'')
+    - list of xml-files with weights                 (output of ``Trainer.weights_files'')
+
+    If the xml-filenames follow TMVA Trainer convention, the training method will be
+    extracted from the file name, otherwise it needs to be specified as dictionary
+    with the key being the method name, or list of 2-element tuples :
+    
+    >>> weights_files = {  'MPL':'my_weights.xml'  ,  'BDTG':'weights2.xml'  } 
+    >>> weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ]
+    
+    - Use the reader
+    >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+    >>> for entry in tree :
+    ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
+    ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
+    ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+
+    - A bit more efficient form is :
+    >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+    >>> mlp_fun  =  reader.MLP
+    >>> bdgt_fun =  reader.BDTG
+    >>> for entry in tree :
+    ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
+    ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
+    ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    
+    It it natually merges with Ostap's SelectorWithVars utility 
+    """    
+    ## constructor
+    #  @code 
+    #  from ostap.tools.tmva import Reader
+    #  >>> r = Reader ( 'MyTMVA' ,
+    #  ... variables = [ ## name      accessor  
+    #  ...              ( 'pt'   , lambda s : s.pt ) ,
+    #  ...              ( 'ip'   , lambda s : s.ip ) ,
+    #  ...                'var1'                     ,   ## s.var1 will be used 
+    #  ...                'var2'                     ] , ## s.var2 will be used 
+    #  ... weights_files = 'my_weights.xml' )
+    #  @endcode
+    #  <code>weights_fiels</code> can be :
+    #  - single xml-file with weights for the given method
+    #  - single tar/tgz/tar.gz-file with weights files
+    #  - list of xml-files with weights
+    #  If the xml-filenames follow TMVA Trainer convention, the training method will be
+    #  extracted from the file name, otherwise it needs to be specified as dictionary   
+    #  with the key being the method name: 
+    #  @code
+    #  weights_files = { 'MPL' : 'my_weights.xml', 'BDTG' : 'weights2.xml' } 
+    #  @endcode
+    #  A list of 2-element tuples is also supported :
+    #  @code
+    #  weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ] 
+    #  @endcode
     def __init__ ( self          ,
                    name          , 
                    variables     ,
                    weights_files ) :
+        """Constrct the reader         
+        >>> from ostap.tools.tmva import Reader
+        >>> r = Reader ( 'MyTMVA' ,
+        ... variables = [ ## name      accessor  
+        ...              ( 'pt'   , lambda s : s.pt ) ,
+        ...              ( 'ip'   , lambda s : s.ip ) ,
+        ...                'var1'                     ,   ## s.var1 will be used 
+        ...                'var2'                     ] , ## s.var2 will be used 
+        ... weights_files = 'my_weights.xml' )
+        
+        - attention: It is *not* CPU-efficient:
+        Ugly tricks with arrays are required to bypass some technical limitations
+        
+        weights_fiels can be :
+        - single xml-file with weights for the given method
+        - single tar/tgz/tar.gz-file with weights files
+        - list of xml-files with weights
+        
+        If the xml-filenames follow TMVA Trainer convention, the training method will be
+        extracted from the file name, otherwise it needs to be specified as dictionary
+        with the key being the method name, or list of 2-element tuples :
+        
+        >>> weights_files = {  'MPL':'my_weights.xml'  ,  'BDTG':'weights2.xml'  } 
+        >>> weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ]
+        
+        """            
         
         ROOT.TMVA.Tools.Instance()
         
-        self.reader = ROOT.TMVA.Reader()
-        self.name   = name
+        self.__reader = ROOT.TMVA.Reader()
+        self.__name   = name
+
+        ## treat weigths files
+        
+        if isinstance ( weights_files , dict ) :
+            
+            weights_files = [ (k,v) for k,v in weights_files.iteritems() ]
+        
+        elif   isinstance ( weights_files , str  ) :
+
+            import tarfile, os  
+            assert os.path.exists  ( weights_files ) , \
+                   "Non-existing ``weights_file''  %s"   %  weights_files 
+            
+            if tarfile.is_tarfile ( weights_files ) :
+                def xml_files ( archive ) :
+                    for tarinfo in archive:
+                        if os.path.splitext(tarinfo.name)[1] == ".xml":
+                            yield tarinfo
+                            
+                with tarfile.open ( weights_files , 'r' ) as tar :
+                    ## tar.list() 
+                    xmls = [ f for f in xml_files ( tar ) ] 
+                    import tempfile 
+                    tmpdir = tempfile.gettempdir() 
+                    tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
+                    weights_files = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
+            else :
+                weights_files = [ weights_files ]
+
 
         ##  book the variables:
         #   dirty trick with arrays is needed due to a bit strange reader interface.
         #   [TMVA reader needs the address of ``float''(in C++ sense) variable]
         from array import array
 
-        self._variables = []
+        self.__variables = []
         
         for v in variables : 
 
@@ -419,26 +712,23 @@ class Reader(object)  :
                 raise AttributeError, 'Invalid variable description!'
 
             ##                     name    accessor   address 
-            self._variables += [ ( vname , vfun     , vfield  ) ] 
+            self.__variables += [ ( vname , vfun     , vfield  ) ] 
 
 
+        self.__variables = tuple ( self.__variables )
+        
         ## declare all variables to TMVA.Reader 
-        for v in self._variables :
-            self.reader.AddVariable ( v[0] , v[2] )            
+        for v in self.__variables :
+            self.__reader.AddVariable ( v[0] , v[2] )            
 
-        import os
         
-        if   isinstance ( weights_files , str  ) : weights_files = [ weights_file ]
-        elif isinstance ( weights_files , dict ) :
-            weights_files = [ (k,v) for k,v in weights_files.iteritems() ]
-        
-        self.methods = []
-        
+        self.__methods = []
         for wf in  weights_files :
             
             if isinstance ( wf , str ) : method , xml = None, wf 
             else                       : method , xml =       wf
-            
+
+            import os 
             if not os.path.exists ( xml ) or not os.path.isfile ( xml ) : 
                 raise IOError("No weights file '%s'"  %  xml )
 
@@ -451,14 +741,39 @@ class Reader(object)  :
                 if not s : raise AttributeError("Can't extract method name from %s" % xml )
                 
                 
-            self.reader.BookMVA ( method , xml )
-            self.methods.append ( method ) 
-            logger.info ('TMVA Reader(%s) is booked for method:%s xml: %s' % (  self.name ,
-                                                                                method    ,
-                                                                                xml       ) )
-        logger.info ('TMVA Reader(%s) booked methods are %s' %  ( self.name , self.methods ) )
-        self.methods = tuple ( self.methods )
+            self.__reader.BookMVA ( method , xml )
+            self.__methods.append ( method ) 
+            logger.debug ('TMVA Reader(%s) is booked for method:%s xml: %s' % (  self.__name ,
+                                                                                 method      ,
+                                                                                 xml         ) )
+        logger.info ('TMVA Reader(%s) booked methods are %s' %  ( self.__name , self.__methods ) )
+        self.__methods = tuple ( self.__methods )
 
+    @property
+    def name ( self ) :
+        """``name'' - the name of the reader"""
+        return self.__name
+
+    @property
+    def reader ( self ) :
+        """``reader'' - the  actual TMVA.Reader object"""
+        return self.__reader
+    
+    @property
+    def methods ( self ) :
+        """``methods'' - the  list/tuple of booked TMVA methods"""
+        return tuple (self.__methods)
+
+    @property
+    def variables ( self ) :
+        """``variables'' - helper structure to access TMVA variables
+        >>> variables = [ ## name      accessor  
+        ...              ( 'pt'   , lambda s : s.pt ) ,
+        ...              ( 'ip'   , lambda s : s.ip ) ,
+        ...                'var1'                     ,   ## s.var1 will be used 
+        ...                'var2'                     ] , ## s.var2 will be used 
+        """        
+        return self.__variables 
 
     # =========================================================================
     ## helper class to get TMVA decision for certain method 
@@ -469,53 +784,102 @@ class Reader(object)  :
         >>>  val = var ( entry )
         """
         def __init__ ( self , reader , method ) :
-            self.reader = reader
-            self.method = method
+            self.__reader = reader
+            self.__method = str(method)
         def __call__ ( self , entry , cut_efficiency = 0.9 ) :
-            return self.reader( self.method , entry , cut_efficiency )
-            ##v   =  self.reader( self.method , entry , cut_efficiency )
-            ## print v 
-            ##return v 
+            return self.__reader( self.__method , entry , cut_efficiency )
 
-    ## =======================================================================
+    # ========================================================================
+    ## helper utility to  get the correspondig function from the  reader:
+    #  @code 
+    #  >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+    #  >>> mlp_fun  =  reader['MLP']  ## <-- here!
+    #  >>> bdgt_fun =  reader['BDTG'] ## <-- here!
+    #  >>> for entry in tree :
+    #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
+    #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
+    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    # @encode        
     def __getitem__ ( self , method ) :
-        if not method in self.methods :
+        """Helper utility to  get the correspondig function from the  reader:
+        - Use the reader
+        >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+        >>> mlp_fun  =  reader['MLP']  ## <-- here! 
+        >>> bdgt_fun =  reader['BDTG'] ## <-- here!
+        >>> for entry in tree :
+        ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
+        ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
+        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+        """
+        if not method in self.__methods :
             return KeyError( 'No method %s is booked!' %  method )
         return Reader.Var  ( self , method )
     
-    ## =======================================================================
+    # ========================================================================
+    ## helper utility to  get the correspondig function from the  reader:
+    #  @code 
+    #  >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+    #  >>> mlp_fun  =  reader.MLP  ## <-- here! 
+    #  >>> bdgt_fun =  reader.BDTG ## <-- here!
+    #  >>> for entry in tree :
+    #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
+    #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
+    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    # @encode        
     def __getattr__ ( self , method ) :
-        if not method in self.methods :
+        """Helper utility to  get the correspondig function from the  reader:
+        - Use the reader
+        >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+        >>> mlp_fun  =  reader.MLP  ## <-- here! 
+        >>> bdgt_fun =  reader.BDTG ## <-- here!
+        >>> for entry in tree :
+        ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
+        ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
+        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+        """        
+        if not method in self.__methods :
             return AttributeError( 'No method %s is booked!' %  method )
         return Reader.Var  ( self , method ) 
 
     # =========================================================================
     ## evaluate TMVA
+    #  - Use the reader
+    #  @code 
+    #  >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+    #  >>> for entry in tree :
+    #  ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
+    #  ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
+    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+    #  @endcode 
     #  @attention it is *not* CPU efficient
     #  Ugly trick with arrays is needed due to some technical problems
     #  (actually TMVA reader needs the address of ``float''(in C++ sense) variable
     def __call__ ( self , method , entry , cut_efficiency = 0.90 ) :
         """Evaluate TMVA
+        - Use the reader
+        >>> tree =  ....  ## TTree/TChain/RooDataSet with data
+        >>> for entry in tree :
+        ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
+        ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
+        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
         - It is not CPU efficient :-( 
         - Ugly trick with arrays is needed due to some pure technical problem
         [actually TMVA reader needs the address of ``float''(in C++ sense) variable]
         """
         
         ## loop over all variables 
-        for v in self._variables :
+        for v in self.__variables :
             vfun    = v[1]           ## accessor function 
             v[2][0] = vfun ( entry ) ## fill variable from the tree/chain 
             
         ## evaluate TMVA 
-        return self.reader.EvaluateMVA ( method , cut_efficiency ) 
-
+        return self.__reader.EvaluateMVA ( method , cut_efficiency ) 
 
 _canvas = []
 # =============================================================================
 ## start TMVA gui 
 def tmvaGUI ( filename , new_canvas = True ) :
-    """
-    Start TMVA-GUI
+    """Start TMVA-GUI
     """
     ## ROOT.gROOT.LoadMacro('TMVAGui.C')
     if new_canvas :
@@ -527,13 +891,14 @@ def tmvaGUI ( filename , new_canvas = True ) :
     return ROOT.TMVA.TMVAGui( filename )
 
 
-
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+
+    
 # =============================================================================
 # The END 
 # =============================================================================

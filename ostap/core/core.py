@@ -44,6 +44,8 @@ __all__     = (
     'natural_entry'    ,  ## natual entry?   @see Gaudi::Math::natural_entry 
     'natural_number'   ,  ## natual numnber? @see Gaudi::Math::natural_number
     ##
+    'valid_pointer'    ,  ## Is it a valid C++ pointer?
+    ##
     'StatusCode'       ,  ## status code
     'SUCCESS'          ,  ## status code SUCCESS 
     'FAILURE'          ,  ## status code FAILURE 
@@ -201,6 +203,27 @@ SUCCESS = StatusCode(Ostap.StatusCode.SUCCESS)
 FAILURE = StatusCode(Ostap.StatusCode.FAILURE)
 
 
+
+_valid_pointer_ = Ostap.Utils.valid_pointer
+# =============================================================================
+## Is it a valid C++ pointer?
+#  @code
+#  ptr = ...
+#  print 'Is the pointer valid? %s'  % valid_pointer ( prt ) 
+#  @endcode 
+#  @see Ostap::Utils::valid_pointer 
+def valid_pointer ( obj ) :
+    """Is it a valid C++ pointer?
+    - see Ostap::Utils::valid_pointer 
+    >>> ptr = ...
+    >>> print 'Is the C++ pointer valid? %s'  % valid_pointer ( ptr ) 
+    """
+    r = _valid_pointer_ ( obj )
+    return True if r else False
+
+# =============================================================================
+## Silent draw 
+# =============================================================================
 if not hasattr ( ROOT.TObject , 'draw' ) :
 
     ## save old method

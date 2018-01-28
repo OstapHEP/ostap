@@ -2350,15 +2350,15 @@ class BreitWigner_pdf(MASS) :
             self.gamma       ,
             self.breitwigner )
 
-
+        
         self.__convolution = convolution  
         self.__useFFT      =  useFFT 
         if  None is convolution : self.pdf = self.__breit
         else :
-            from Ostap.FitBasic import Convolution 
-            self.conv = Convolution ( name         ,
-                                      self.__breit , self.xvar ,
-                                      convolution  , useFFT    ) 
+            from ostap.fitting.basic import Convolution            
+            self.conv = Convolution ( 'RBW' + name  ,
+                                      self.__breit  , self.xvar ,
+                                      convolution   , useFFT    ) 
             self.pdf  = self.conv.pdf
             
         ## save the configuration

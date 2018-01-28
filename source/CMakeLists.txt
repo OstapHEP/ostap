@@ -85,6 +85,7 @@ add_library(ostap SHARED src/format.cpp
                          src/StatusCode.cpp
                          src/Tee.cpp
                          src/UStat.cpp
+                         src/Valid.cpp
                          src/ValueWithError.cpp
                          src/Vector3DWithError.cpp
                          src/Workspace.cpp    

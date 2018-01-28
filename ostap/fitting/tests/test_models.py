@@ -166,7 +166,7 @@ def test_crystalball_DS () :
     logger.info ('Test CrystalBallDS_pdf: double-sided Crystal Ball function' )
     model_cbds = Models.Fit1D (
         signal = Models.CB2_pdf ( name   = 'CB2'              , 
-                                  mass   = mass               ,
+                                  xvar   = mass               ,
                                   nL     = 10                 , 
                                   nR     = 10                 , 
                                   alphaL = (1.5,0.5,3)        , 
@@ -270,7 +270,7 @@ def test_apolonios2() :
     logger.info ('Test Apolonios2_pdf: modified Gaussian with exponential tails' ) 
     model_apolonios2 = Models.Fit1D (
         signal = Models.Apolonios2_pdf ( name = 'AP2' , 
-                                         mass      = mass ,
+                                         xvar      = mass ,
                                          mean      = signal_gauss.mean  ,
                                          sigma     = signal_gauss.sigma ,
                                          beta      =  ( 0.5 , 2 )       ,
@@ -375,7 +375,7 @@ def test_gengauss_v1 () :
     logger.info ('Test GenGaussV1_pdf: Generalized Gaussian V1' ) 
     model_gauss_gv1 = Models.Fit1D (
         signal = Models.GenGaussV1_pdf ( name = 'Gv1' , 
-                                         mass = mass  ,
+                                         xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgGGV1', xvar = mass , power = 0 )) 
     
@@ -407,7 +407,7 @@ def test_gengauss_v2 () :
     logger.info ('Test GenGaussV2_pdf: Generalized Gaussian function V2' ) 
     model_gauss_gv2 = Models.Fit1D (
         signal = Models.GenGaussV2_pdf ( name = 'Gv2' , 
-                                         mass = mass  ,
+                                         xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgGGV2', xvar = mass , power = 0 )) 
     
@@ -444,7 +444,7 @@ def test_skewgauss() :
     logger.info ('Test SkewGauss_pdf: Skew Gaussian function' ) 
     model_gauss_skew = Models.Fit1D (
         signal = Models.SkewGauss_pdf ( name = 'GSk' , 
-                                        mass = mass  , mean = signal_gauss.mean ) ,
+                                        xvar = mass  , mean = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgSkG', xvar = mass , power = 0 )) 
     
     model_gauss_skew.signal.alpha.fix(0)
@@ -513,7 +513,7 @@ def test_studentT () :
     logger.info ('Test StudentT_pdf: Student-t distribution' ) 
     model_student = Models.Fit1D (
         signal = Models.StudentT_pdf ( name = 'ST' , 
-                                       mass = mass ,
+                                       xvar = mass ,
                                        mean = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgST', xvar = mass , power = 0 )) 
     
@@ -581,7 +581,7 @@ def test_sinhasinh() :
     logger.info("Test  SinhAsinh-Distribution")
     model = Models.Fit1D (
         signal = Models.SinhAsinh_pdf( 'SASH'                   ,
-                                       mass = mass              , 
+                                       xvar = mass              , 
                                        mean = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgSAS', xvar = mass , power = 0 )) 
     
@@ -624,7 +624,7 @@ def test_johnsonSU () :
     logger.info("Test  JohnsonSU-Distribution")
     model = Models.Fit1D (
         signal = Models.JohnsonSU_pdf( 'JSU'                    ,
-                                       mass = mass              , 
+                                       xvar = mass              , 
                                        xi   = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgJSU', xvar = mass , power = 0 )) 
     
@@ -660,7 +660,7 @@ def test_atlas () :
     logger.info("Test  ATLAS: Modified Gaussian, used by ATLAS/Zeus")
     model = Models.Fit1D (
         signal = Models.Atlas_pdf( 'ATLAS'                  ,
-                                   mass = mass              , 
+                                   xvar = mass              , 
                                    mean = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgATLAS', xvar = mass , power = 0 )) 
     
@@ -693,7 +693,7 @@ def test_sech() :
     logger.info("Test  SECH:  Sech(1/cosh) distribution")
     model = Models.Fit1D (
         signal = Models.Sech_pdf( 'SECH'                    ,
-                                  mass = mass              , 
+                                  xvar = mass              , 
                                   mean = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgSECH', xvar = mass , power = 0 )) 
     
@@ -726,7 +726,7 @@ def test_logistic () :
     logger.info("Test  LOGISTIC: Logistic distribution")
     model = Models.Fit1D (
         signal = Models.Logistic_pdf( 'LOGI'                    ,
-                                      mass = mass              , 
+                                      xvar = mass              , 
                                       mean = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgLOGI', xvar = mass , power = 0 )) 
     
@@ -849,7 +849,7 @@ def test_bw () :
         signal = Models.BreitWigner_pdf
         ( name        = 'BW'              ,
           breitwigner = bw                ,     
-          mass        = mass              ,
+          xvar        = mass              ,
           mean        = signal_gauss.mean ,
           convolution = 0.010             ) , ## CONVOLUTION! 
         background = Models.Bkg_pdf ('BkgBW', xvar = mass , power = 0 )) 

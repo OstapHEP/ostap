@@ -281,7 +281,6 @@ def _tt_project_ ( tree , histo , what , cuts = '' , *args ) :
         hh.Delete()
         del hh, h1 
         return rr , histo
-
     ## the basic case 
     from ostap.core.core import ROOTCWD
     with ROOTCWD() :

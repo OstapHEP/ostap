@@ -31,7 +31,7 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT
-from   ostap.core.core import cpp, Ostap, VE, hID, dsID   
+from   ostap.core.core import cpp, Ostap, VE, hID, dsID , valid_pointer  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -40,6 +40,55 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.rootfit' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug( 'Some useful decorations for RooFit objects')
+# =============================================================================\
+_new_methods_ = []
+# =============================================================================\
+##  Use RooPrintable::printMultiline function
+def print_multiline ( o , content = 1 , verbose = False , indent = '' ) :
+    """ Use RooPrintable::printMultiline function
+    """
+    if not valid_pointer ( o ) : return 'Invalid object'
+    return Ostap.Utils.print_printable1 ( o , content , verbose , indent )
+# =============================================================================
+##  Use RooPrintable::printStream function
+def print_stream  ( o , content = 1 , style = 3 , indent = '' ) :
+    """ Use RooPrintable::printStream function
+    """
+    if not valid_pointer ( o ) : return 'Invalid object'
+    return Ostap.Utils.print_printable2 ( o , content , style , indent )
+# =============================================================================
+##  Use RooPrintable::printTree function
+def print_tree ( o , indent = '' ) :
+    """ Use RooPrintable::printTree function
+    """
+    if not valid_pointer ( o ) : return 'Invalid object'
+    return Ostap.Utils.print_printable_tree ( o , indent )
+
+# =============================================================================
+## make easy print for RooPrintable 
+def _rp_print_ ( obj , opts = 'vv' , *style ) :
+    """Make easy print for RooPrintable
+    >>> o = ...
+    >>> print o 
+    """
+    return Ostap.Utils.print_printable ( obj , opts , *style )
+
+ROOT.RooPrintable.print_multiline = print_multiline
+ROOT.RooPrintable.print_stream    = print_stream 
+ROOT.RooPrintable.print_tree      = print_tree 
+ROOT.RooPrintable.print_printable = _rp_print_ 
+ROOT.RooPrintable.__str__         = _rp_print_
+ROOT.RooPrintable.__repr__        = _rp_print_
+
+_new_methods_ += [
+    ROOT.RooPrintable.print_printable ,
+    ROOT.RooPrintable.print_multiline ,
+    ROOT.RooPrintable.print_stream    ,
+    ROOT.RooPrintable.print_tree      ,
+    ROOT.RooPrintable.__str__         ,
+    ROOT.RooPrintable.__repr__        ,
+    ]
+
 # =============================================================================
 ## iterator for RooArgList 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -75,6 +124,15 @@ ROOT.RooArgList . __iter__      = _ral_iter_
 ROOT.RooArgList . __nonzero__   = lambda s   : 0 != len ( s ) 
 ROOT.RooArgList . __getitem__   = _ral_getitem_
 ROOT.RooArgList . __setitem__   = lambda s,*_ : NotImplemented 
+
+_new_methods_ += [
+    ROOT.RooArgList. __len__       ,
+    ROOT.RooArgList. __contains__  ,
+    ROOT.RooArgList. __iter__      ,
+    ROOT.RooArgList. __nonzero__   ,
+    ROOT.RooArgList. __getitem__   ,
+    ROOT.RooArgList. __setitem__   ,
+]    
 
 #
 # =============================================================================
@@ -162,6 +220,26 @@ ROOT.RooArgSet     . __repr__  = lambda s : str ( tuple ( _rs_list_ ( s ) ) )
 ROOT.RooLinkedList . __repr__  = lambda s : str (  _rs_list_ ( s ) )
 ROOT.RooLinkedList . __iter__  = _ras_iter_ 
 
+_new_methods_ += [
+    ROOT.RooArgSet . __len__      ,
+    ROOT.RooArgSet . __iter__     ,
+    ROOT.RooArgSet . __getattr__  , 
+    ROOT.RooArgSet . __setattr__  ,
+    ROOT.RooArgSet . __contains__ ,
+    ROOT.RooArgSet . __nonzero__  ,
+    ROOT.RooArgSet . __str__      ,
+    ROOT.RooArgSet . __repr__     ,
+    ]
+
+ROOT.RooLinkedList.add = ROOT.RooLinkedList.Add
+
+_new_methods_ += [
+    ROOT.RooLinkedList . __len__  ,
+    ROOT.RooLinkedList . __repr__ ,
+    ROOT.RooLinkedList . __iter__ ,
+    ROOT.RooLinkedList . add 
+    ]
+    
 
 # =============================================================================
 ## add more data into list/set
@@ -214,7 +292,6 @@ def _ral_radd_ ( self , other ) :
 def _ral_clone_  ( self , name = '' ) :
     return self.Clone(name)
 
-ROOT.RooLinkedList.add = ROOT.RooLinkedList.Add
 
 # =============================================================================
 for t in ( ROOT.RooArgList , ROOT.RooArgSet , ROOT.RooLinkedList ) :
@@ -222,7 +299,25 @@ for t in ( ROOT.RooArgList , ROOT.RooArgSet , ROOT.RooLinkedList ) :
     t. __add__  =  _ral_add_
     t.__iadd__  = _ral_iadd_
     t.__radd__  = _ral_radd_
+    t.append    = _ral_iadd_
 
+_new_methods_ += [
+    ROOT.RooArgList    . clone    ,
+    ROOT.RooArgSet     . clone    ,
+    ROOT.RooLinkedList . clone    ,
+    ROOT.RooArgList    . __add__  ,
+    ROOT.RooArgSet     . __add__  ,
+    ROOT.RooLinkedList . __add__  ,
+    ROOT.RooArgList    . __iadd__ ,
+    ROOT.RooArgSet     . __iadd__ ,
+    ROOT.RooLinkedList . __iadd__ ,
+    ROOT.RooArgList    . __radd__ ,
+    ROOT.RooArgSet     . __radd__ ,
+    ROOT.RooLinkedList . __radd__ ,
+    ROOT.RooArgList    . append   ,
+    ROOT.RooArgSet     . append   ,
+    ROOT.RooLinkedList . append   ,
+    ]
 
     
 # =============================================================================
@@ -296,7 +391,7 @@ ROOT.RooAbsData . statVar       = _stat_var_
 ROOT.RooAbsData . statCov       = _stat_cov_ 
 ROOT.RooAbsData . statCovs      = _stat_covs_ 
 
-_new_methods_ = [
+_new_methods_ += [
    ROOT.RooAbsData . varlist       ,
    ROOT.RooAbsData . varlst        ,
    ROOT.RooAbsData . vlist         ,
@@ -318,26 +413,6 @@ _new_methods_ = [
    ]
 
 # =============================================================================
-## make easy print for RooPrintable 
-def _rp_print_ ( obj , opts = 'vv' , *style ) :
-    """Make easy print for RooPrintable
-    >>> o = ...
-    >>> print o 
-    """
-    return Ostap.Utils.print_printable ( obj , opts , *style )
-
-ROOT.RooPrintable.print_printable = _rp_print_ 
-ROOT.RooPrintable.__str__         = _rp_print_
-ROOT.RooPrintable.__repr__        = _rp_print_
-
-_new_methods_ += [
-    ROOT.RooPrintable.print_printable ,
-    ROOT.RooPrintable.__str__         ,
-    ROOT.RooPrintable.__repr__        ,
-    ]
-
-
-# =============================================================================
 ## ``easy'' print of RooFitResult
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -346,14 +421,14 @@ def _rfr_print_ ( self , opts = 'v' ) :
     >>> result = ...
     >>> print result    
     """
-    if self : return _rp_print_( self )
-    return 'Invalid RooFitResult'
+    if not valid_pointer ( self ) : return 'Invalid RooFitResult'
+    return self.print_multiline ( content = 1 , verbose = True )
 
 # =============================================================================
 ## get parameters from RooFitResult
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _rfr_params_ ( self , float_only = True ) :
+def _rfr_params_ (self , float_only = True ) :
     """GetParameters from RooFitResult:
     >>> result = ...
     >>> params = results
@@ -1147,12 +1222,10 @@ def _pdf_mul_ ( pdf1 , pdf2 ) :
     
     >>> product = pdf1 * pdf2 
     """
-    return Ostap.Models.Product ( '%s*%s'             % ( pdf1.GetName  () ,
-                                                              pdf2.GetName  () ) ,
-                                      'Product: %s & %s ' % ( pdf1.GetTitle () ,
-                                                              pdf2.GetTitle () ) ,
-                                      pdf1 , pdf2 )
-
+    return Ostap.Models.Product (
+        '%s*%s'             % ( pdf1.GetName  () , pdf2.GetName  () ) ,
+        'Product: %s & %s ' % ( pdf1.GetTitle () , pdf2.GetTitle () ) ,
+        pdf1 , pdf2 )
 # ============================================================================
 ROOT.RooAbsPdf . __mul__  = _pdf_mul_ 
 
@@ -1279,14 +1352,14 @@ def _ds_project_  ( dataset , histo , what , cuts = '' , *args ) :
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len(what)  :
         return Ostap.HistoProject.project3 ( dataset ,
                                                 histo   , 
-                                                what[0] ,
+                                                what[2] ,
                                                 what[1] ,
-                                                what[2] , cuts , *args) 
+                                                what[0] , cuts , *args) 
     elif isinstance ( histo , ROOT.TH2 ) and 2 == len(what)  :
         return Ostap.HistoProject.project2 ( dataset ,
                                                  histo   , 
-                                                 what[0] ,
-                                                 what[1] , cuts , *args )
+                                                 what[1] ,
+                                                 what[0] , cuts , *args )
     elif isinstance ( histo , ROOT.TH1 ) and 1 == len(what)  :
         return Ostap.HistoProject.project  ( dataset ,
                                                  histo   , 
@@ -1458,6 +1531,33 @@ ROOT.RooDataSet.__getattr__ = _ds_getattr_
 
 ROOT.RooDataHist.__len__    = lambda s : s.numEntries() 
 
+
+# =============================================================================
+## print method for RooDataSet
+#  @code
+#
+#   >>> print dataset
+#
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-07-06
+def _ds_print_ ( dataset ) :
+    """Helper print method:    
+    >>> print dataset 
+    """
+    if not  valid_pointer ( dataset ) : return 'Invalid dataset'
+    return dataset.print_multiline ( verbose = True ) 
+
+ROOT.RooDataSet.draw        = _ds_draw_
+ROOT.RooDataSet.project     = _ds_project_
+ROOT.RooDataSet.__getattr__ = _ds_getattr_
+
+for d in ( ROOT.RooAbsData  ,
+           ROOT.RooDataSet  ,
+           ROOT.RooDataHist ) :
+    d.__repr__    = _ds_print_
+    d.__str__     = _ds_print_
+    d.__len__     = lambda s : s.numEntries() 
 
 _new_methods_ += [
     ROOT.RooDataSet .draw         ,
@@ -1886,6 +1986,7 @@ _decorated_classes_ = (
     ROOT.RooDataHist   ,
     ROOT.RooPrintable  ,
     )
+
 _new_methods_ = tuple ( _new_methods_ ) 
 # =============================================================================
 if '__main__' == __name__ :

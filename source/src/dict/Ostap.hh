@@ -71,6 +71,7 @@
 #include "Ostap/Tee.h"
 #include "Ostap/ToStream.h"
 #include "Ostap/TypeWrapper.h"
+#include "Ostap/Valid.h"
 #include "Ostap/ValueWithError.h"
 #include "Ostap/Vector3DTypes.h"
 #include "Ostap/Vector3DWithError.h"

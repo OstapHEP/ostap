@@ -16,7 +16,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-import ROOT, random, os
+import ROOT, os
 import ostap.io.root_file 
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
@@ -29,11 +29,12 @@ if '__main__' == __name__  or '__builtin__'  == __name__ :
     logger = getLogger ( 'test_tmva' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================    
-data_file = 'tmva_data.root'
+# =============================================================================
+import tempfile
+data_file = os.path.join ( tempfile.gettempdir() , 'tmva_data.root') 
 
 if not os.path.exists( data_file ) :
-
+    import random 
     nB = 10000
     nS = 10000
     logger.info('Prepare input ROOT file with data')
@@ -100,26 +101,30 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     from ostap.tools.tmva import Trainer 
     trainer = Trainer (
         name    = 'TestTMVA' ,   
-        methods = [
-        # type                   name   configuration
+        methods = [ # type               name   configuration
         ( ROOT.TMVA.Types.kMLP        , "MLP"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator" ) ,
         ( ROOT.TMVA.Types.kBDT        , "BDTG"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
         ( ROOT.TMVA.Types.kCuts       , "Cuts"       , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
         ( ROOT.TMVA.Types.kFisher     , "Fisher"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
         ( ROOT.TMVA.Types.kLikelihood , "Likelihood" , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" )
         ] ,
-        verbose = False )
-
+        variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
+        signal         = tSignal                  , ## ``Signal'' sample
+        background     = tBkg                     , ## ``Background'' sample         
+        verbose        = False    )
+    
     from ostap.utils.timing import timing
     with timing ( 'for TMVA training' , logger ) : 
-        weights_files = trainer.train (
-            [ 'var1' , 'var2' ,  'var3' ] , 
-            signal         = tSignal ,
-            background     = tBkg    )
+        weights_files = trainer.train ()
+        tar_file      = trainer.tar_file
         
-# ================================================================================================
+# =============================================================================
+if os.path.exists ( trainer.output_file ) :
+    os.remove ( trainer.output_file )
+
+# =============================================================================
 ## Use trained TMVA
-# ================================================================================================
+# =============================================================================
 
 
 ## 1) create TMVA reader
@@ -128,7 +133,7 @@ reader = Reader( 'MyMLP' ,
                  variables     = [ ('var1' , lambda s : s.var1 )   ,
                                    ('var2' , lambda s : s.var2 )   ,
                                    ('var3' , lambda s : s.var3 ) ] ,
-                 weights_files = weights_files  )
+                 weights_files = tar_file   )
 
 methods = reader.methods[:]
 
