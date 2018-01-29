@@ -36,7 +36,7 @@ Ostap = cpp.Ostap
 _RM = ROOT.ROOT.Math
 
 a   = Ostap.Math.ValueWithError()
-from ostap.math.base import isequal
+from ostap.math.base import isequal,iszero
 # =============================================================================
 ## try to pickup the vector
 @staticmethod
@@ -176,7 +176,7 @@ def _get_mult_op_ ( klass1 , klass2 ) :
 # =============================================================================
 ## equailty operators 
 _eq_ops_ = {}
-## get the proper multiplication operator 
+## get the proper equality operator 
 def _get_eq_op_ ( klass1 , klass2 ) :
     """Get the proper equality operator
     """
@@ -447,6 +447,7 @@ def _mg_str_ ( self , fmt = ' %+11.4g') :
         if ( _rows - 1 )  != _irow : _line += '\n'
     return _line
 
+# =============================================================================
 ## self-printout of symmetrical matrices
 def _ms_str_ ( self , fmt = ' %+11.4g' , width = 12 ) :
     """Self-printout of symmetrical matrices
@@ -474,16 +475,34 @@ def _ms_corr_ ( self ) :
     """
     from math import sqrt
 
-    _t = type ( self )
-    _c = _t   ()
+    _t    = type ( self )
+    _c    = _t   ()
     _rows = self.kRows
+    _ok1  = True 
+    _ok2  = True 
     for i in range ( 0 , _rows ) :
-        _dI = sqrt ( self ( i , i ) )
-        for j in range ( i + 1 , _rows ) :
-            _dJ = sqrt ( self ( j , j ) )
-            _c [ i , j ] = self ( i , j ) /  (  _dI * _dJ )
-        _c[ i , i ] = 1.0
-
+        
+        ii  = self  ( i , i )
+        if 0 > ii or iszero ( ii ) :
+            _ok1  = False 
+            _nan = float('nan')
+            for j in range ( i , _rows ) : _c [ i , j ] = _nan 
+            continue
+        
+        sii = sqrt ( ii )
+        _c[ i , i ] = 1
+        
+        for j in range ( i + 1 , _rows ) :            
+            jj  = self ( j , j ) 
+            sjj = sqrt ( jj )
+            ij  = self ( i , j )
+            eij = ij / ( sii * sjj )
+            if  1 < abs ( eij ) : _ok2 = False  
+            _c [ i , j ] = eij 
+            
+    if not _ok1 : logger.error ( "correlations: zero or negative diagonal element" ) 
+    if not _ok2 : logger.error ( "correlations: invalid non-diagonal element"      ) 
+        
     return _c
 
 # =============================================================================
@@ -523,7 +542,7 @@ def _mg_increment_ ( m , o ) :
 
 
 # =============================================================================
-## add some matrix-like object to the matrix
+## add some matrix-like object to symmetric matrix, preserving the symmetry 
 #  @code
 #  m = ...
 #  o = ...
@@ -540,7 +559,6 @@ def _ms_increment_ ( m , o ) :
             m[i,j] = m(i,j) + 0.5 * ( _m_get_ ( o , i , j ) + _m_get_ ( o , j , i ) )  
                     
     return m
-
 
 # =============================================================================
 ## iterator for SMatrix
