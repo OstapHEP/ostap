@@ -522,17 +522,22 @@ for t in ( Ostap.Math.BSpline          ,
 # =============================================================================
 ## decorate 2D-models/functions 
 # =============================================================================
-for model in ( Ostap.Math.Spline2D       ,
-               Ostap.Math.Spline2DSym    , 
-               Ostap.Math.Bernstein2D    ,
-               Ostap.Math.Positive2D     ,
-               Ostap.Math.Bernstein2DSym ,
-               Ostap.Math.Positive2DSym  ,
-               Ostap.Math.PS2DPol        ,
-               Ostap.Math.PS2DPolSym     ,
-               Ostap.Math.ExpoPS2DPol    ,
-               Ostap.Math.Expo2DPol      ,
-               Ostap.Math.Expo2DPolSym   ) :
+Ostap.Math.Spline2D    = Ostap.Math.PositiveSpline2D   
+Ostap.Math.Spline2DSym = Ostap.Math.PositiveSpline2DSym
+
+for model in ( Ostap.Math.BSpline2D           ,
+               Ostap.Math.BSpline2DSym        , 
+               Ostap.Math.PositiveSpline2D    ,
+               Ostap.Math.PositiveSpline2DSym , 
+               Ostap.Math.Bernstein2D         ,
+               Ostap.Math.Positive2D          ,
+               Ostap.Math.Bernstein2DSym      ,
+               Ostap.Math.Positive2DSym       ,
+               Ostap.Math.PS2DPol             ,
+               Ostap.Math.PS2DPolSym          ,
+               Ostap.Math.ExpoPS2DPol         ,
+               Ostap.Math.Expo2DPol           ,
+               Ostap.Math.Expo2DPolSym        ) :
     
     model . tf2 = _tf2_ 
     model . tf  = _tf2_ 
@@ -660,8 +665,10 @@ for f in ( Ostap.Math.Bernstein2D    ,
            Ostap.Math.Positive2DSym  ,
            ##
            ##
-           Ostap.Math.Spline2D       ,
-           Ostap.Math.Spline2DSym    ,
+           Ostap.Math.BSpline2D           ,
+           Ostap.Math.BSpline2DSym        ,
+           Ostap.Math.PositiveSpline2D    ,
+           Ostap.Math.PositiveSpline2DSym ,
            ##
            Ostap.Math.Bernstein3D    ,
            Ostap.Math.Bernstein3DSym ,
@@ -965,8 +972,10 @@ _decorated_classes_ = set( [
     Ostap.Math.FourierSum    ,
     Ostap.Math.CosineSum     ,
     ##
-    Ostap.Math.Spline2D       ,
-    Ostap.Math.Spline2DSym    , 
+    Ostap.Math.BSpline2D       ,
+    Ostap.Math.BSpline2DSym    , 
+    Ostap.Math.PositiveSpline2D    ,
+    Ostap.Math.PositiveSpline2DSym , 
     Ostap.Math.Bernstein2D    ,
     Ostap.Math.Positive2D     ,
     Ostap.Math.Bernstein2DSym ,

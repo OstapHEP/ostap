@@ -634,7 +634,7 @@ namespace Ostap
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2011-05-25
      */
-    class  Spline2D: public RooAbsPdf
+    class Spline2D: public RooAbsPdf
     {
       // ======================================================================
     public :
@@ -645,16 +645,16 @@ namespace Ostap
       // ======================================================================
       /// linear
       Spline2D
-        ( const char*                  name      ,
-          const char*                  title     ,
-          RooRealVar&                  x         ,
-          RooRealVar&                  y         ,
-          const Ostap::Math::Spline2D& spline    ,
-          RooArgList&                  phis      ) ;
+      ( const char*                          name      ,
+        const char*                          title     ,
+        RooRealVar&                          x         ,
+        RooRealVar&                          y         ,
+        const Ostap::Math::PositiveSpline2D& spline    ,
+        RooArgList&                          phis      ) ;
       /// copy
       Spline2D
-        ( const Spline2D&      right     ,
-          const char*          name = 0  ) ;
+      ( const Spline2D&      right     ,
+        const char*          name = 0  ) ;
       /// destructor
       virtual ~Spline2D() ;
       /// clone
@@ -688,8 +688,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Spline2D& function() const { return m_spline ; }
-      const Ostap::Math::Spline2D& spline  () const { return m_spline ; }
+      const Ostap::Math::PositiveSpline2D& function() const { return m_spline ; }
+      const Ostap::Math::PositiveSpline2D& spline  () const { return m_spline ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -700,7 +700,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Spline2D m_spline ;                 // the function
+      mutable Ostap::Math::PositiveSpline2D m_spline ;         // the function
       // ======================================================================
     } ;
     // ========================================================================
@@ -710,7 +710,7 @@ namespace Ostap
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2011-05-25
      */
-    class  Spline2DSym: public RooAbsPdf
+    class Spline2DSym: public RooAbsPdf
     {
       // ======================================================================
     public :
@@ -721,16 +721,16 @@ namespace Ostap
       // ======================================================================
       /// linear
       Spline2DSym
-        ( const char*                     name      ,
-          const char*                     title     ,
-          RooRealVar&                     x         ,
-          RooRealVar&                     y         ,
-          const Ostap::Math::Spline2DSym& spline    ,
-          RooArgList&                     phis      ) ;
+      ( const char*                             name      ,
+        const char*                             title     ,
+        RooRealVar&                             x         ,
+        RooRealVar&                             y         ,
+        const Ostap::Math::PositiveSpline2DSym& spline    ,
+        RooArgList&                             phis      ) ;
       /// copy
       Spline2DSym
-        ( const Spline2DSym&   right     ,
-          const char*          name = 0  ) ;
+      ( const Spline2DSym&   right     ,
+        const char*          name = 0  ) ;
       /// destructor
       virtual ~Spline2DSym() ;
       /// clone
@@ -764,8 +764,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Spline2DSym& function() const { return m_spline ; }
-      const Ostap::Math::Spline2DSym& spline  () const { return m_spline ; }
+      const Ostap::Math::PositiveSpline2DSym& function() const { return m_spline ; }
+      const Ostap::Math::PositiveSpline2DSym& spline  () const { return m_spline ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -776,7 +776,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Spline2DSym m_spline ;               // the function
+      mutable Ostap::Math::PositiveSpline2DSym m_spline ;       // the function
       // ======================================================================
     } ;
     // ========================================================================

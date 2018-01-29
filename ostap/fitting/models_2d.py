@@ -812,7 +812,7 @@ class Spline2D_pdf(PolyBase2) :
                    xvar             ,   ##  the first  dimension  
                    yvar             ,   ##  the second dimension
                    spline           ,
-                   the_phis = None  ) : ## the spline: Ostap.Math.Spline2D 
+                   the_phis = None  ) : ## the spline: Ostap.Math.PositiveSpline2D 
         
         PolyBase2.__init__ ( self , name , xvar , yvar , spline.npars() , the_phis ) 
         
@@ -868,7 +868,7 @@ class Spline2Dsym_pdf(PolyBase2) :
                    name              ,
                    xvar              ,   ## the first  dimension  
                    yvar              ,   ## the second dimension
-                   spline            ,   ## the spline: Ostap.Math.Spline2DSym
+                   spline            ,   ## the spline: Ostap.Math.PositiveSpline2DSym
                    the_phis = None ) :
 
         PolyBase2.__init__ ( self , name , xvar , yvar , spline.npars() , the_phis )        

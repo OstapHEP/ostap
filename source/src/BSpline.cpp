@@ -1696,202 +1696,226 @@ bool Ostap::Math::ConvexSpline::updateCoefficients  ()
   //
   return update ;
 }
+
+
 // ============================================================================
+// 2D-objects 
 // ============================================================================
-// 2D-spline 
+
+
+
+
+
+
 // ============================================================================
+// Generic2D-spline
 // ============================================================================
-Ostap::Math::Spline2D::Spline2D
-( const Ostap::Math::BSpline& xspline , 
-  const Ostap::Math::BSpline& yspline ) 
-  : m_xspline ( xspline        ) 
-  , m_yspline ( yspline        ) 
-  , m_sphere  ( xspline.npars() * yspline.npars() - 1 ) 
-  , m_xcache  ( xspline.npars() , 0 ) 
-  , m_ycache  ( yspline.npars() , 0 ) 
+Ostap::Math::BSpline2D::BSpline2D
+( const Ostap::Math::BSpline& xspline ,
+  const Ostap::Math::BSpline& yspline )
+  : m_xspline ( xspline        )
+  , m_yspline ( yspline        )
+  , m_pars    ( xspline.npars() * yspline.npars() )
 {
   for ( unsigned i = 0 ; i < m_xspline.npars() ; ++i ) { m_xspline.setPar ( i , 0 ) ; }
   for ( unsigned i = 0 ; i < m_yspline.npars() ; ++i ) { m_yspline.setPar ( i , 0 ) ; }
 }
 // ===========================================================================
+// set k-parameter
+// ===========================================================================
+bool Ostap::Math::BSpline2D::setParameter
+( const unsigned int k , const double value ) 
+{
+  if ( k >= m_pars.size() )    { return false  ; }
+  const double v = m_pars[k] ;
+  if ( s_equal ( v , value ) ) { return false ; }
+  //
+  m_pars[k] = value ;
+  return true ;
+}
+// ===========================================================================
+// make the calcualtions 
+// ===========================================================================
+double Ostap::Math::BSpline2D::calculate
+( const std::vector<double>& fx , 
+  const std::vector<double>& fy ) const 
+{
+  const unsigned int NX = fx.size() ;
+  const unsigned int NY = fy.size() ;
+  //
+  double result = 0.0 ;
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix ) 
+  {
+    const double vx = fx[ix] ;
+    for ( unsigned short iy = 0 ; iy < NY ; ++iy ) 
+    {
+      const double vy = fy[iy] ;
+      const double p  = par ( ix , iy ) ;
+      result += p *vx * vy ;  
+    }
+  }
+  return result * ( m_xspline.order() + 1 ) * ( m_yspline.order() + 1 ) ;
+}
+// ===========================================================================
 // get the value
 // ============================================================================
-double Ostap::Math::Spline2D::operator () ( const double x , const double y ) const 
+double Ostap::Math::BSpline2D::evaluate 
+  ( const double x , const double y ) const
 {
   //
   if ( x < xmin() || y < ymin() || x > xmax() || y > ymax() ) { return 0 ; }
   //
-  const double xarg =  
+  const double xarg =
     !s_equal ( x , xmax ()) ? x :
     Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  const double yarg =  
+  const double yarg =
     !s_equal ( y , ymax ()) ? y :
     Ostap::Math::next_double ( ymax() , -s_ulps ) ;
   //
-  // fill x-cache 
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix )
+  const unsigned short NX = m_xspline.npars() ;
+  const unsigned short NY = m_yspline.npars() ;
+  //
+  std::vector<double>  fx ( NX , 0 ) ;
+  std::vector<double>  fy ( NY , 0 ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
     m_xspline.setPar ( ix , 1.0 ) ;
     //
     double resx  = m_xspline ( xarg ) ;
-    if ( 0 < resx ) 
+    if ( 0 < resx )
     {
       const double ti  = knot ( m_xspline.knots() , ix                         ) ;
       const double tip = knot ( m_xspline.knots() , ix + m_xspline.order() + 1 ) ;
-      resx /= ( tip - ti ) ; 
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[ix] = resx ;
+    fx[ix] = resx ;
     //
     m_xspline.setPar ( ix , 0.0 ) ;
   }
   //
-  // fill y-cache 
-  for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy )
+  // fill y-cache
+  for ( unsigned short iy = 0 ; iy < NY ; ++iy )
   {
     m_yspline.setPar ( iy , 1.0 ) ;
     //
     double resy  = m_yspline ( yarg ) ;
-    if ( 0 < resy ) 
+    if ( 0 < resy )
     {
       const double ti  = knot ( m_yspline.knots() , iy                         ) ;
       const double tip = knot ( m_yspline.knots() , iy + m_yspline.order() + 1 ) ;
-      resy /= ( tip - ti ) ; 
+      resy /= ( tip - ti ) ;
     }
     //
-    m_ycache[iy] = resy ;
+    fy[iy] = resy ;
     //
     m_yspline.setPar ( iy , 0.0 ) ;
   }
   //
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
-  {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
-    //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
-    {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned k = ix * m_ycache.size() + iy ;
-      result += m_sphere.x2 ( k ) * vx * vy ;
-    }
-  }
-  //
-  return result * ( m_xspline.order() + 1 ) * ( m_yspline.order() + 1 ) ;
+  return calculate ( fx , fy ) ;
 }
 // ============================================================================
-/*  get the integral over 2D-region 
- *  @param xlow  low  edge in x 
- *  @param xhigh high edge in x 
- *  @param ylow  low  edge in y 
- *  @param yhigh high edge in y 
+/*  get the integral over 2D-region
+ *  @param xlow  low  edge in x
+ *  @param xhigh high edge in x
+ *  @param ylow  low  edge in y
+ *  @param yhigh high edge in y
  */
 // ============================================================================
-double Ostap::Math::Spline2D::integral 
-( const double xlow  , 
-  const double xhigh , 
-  const double ylow  , 
-  const double yhigh ) const 
+double Ostap::Math::BSpline2D::integral
+( const double xlow  ,
+  const double xhigh ,
+  const double ylow  ,
+  const double yhigh ) const
 {
   //
   if      ( xhigh < xlow ) { return - integral ( xhigh , xlow  , ylow  , yhigh ) ; }
   else if ( yhigh < ylow ) { return - integral ( xlow  , xhigh , yhigh , ylow  ) ; }
-  // boundaries 
+  // boundaries
   else if ( xhigh < xmin () || yhigh < ymin () ) { return 0 ; }
   else if ( xlow  > xmax () || ylow  > ymax () ) { return 0 ; }
   else if ( s_equal ( xlow , xhigh ) || s_equal ( ylow , yhigh ) ) { return 0 ; }
   //
-  else if ( s_equal ( xlow  , xmin() ) &&  
-            s_equal ( xhigh , xmax() ) &&  
-            s_equal ( ylow  , ymin() ) &&  
+  else if ( s_equal ( xlow  , xmin() ) &&
+            s_equal ( xhigh , xmax() ) &&
+            s_equal ( ylow  , ymin() ) &&
             s_equal ( yhigh , ymax() ) ) { return integral() ; }
-  // adjust 
+  // adjust
   else if ( xlow  < xmin () ) { return integral ( xmin() , xhigh   , ylow   , yhigh  ) ; }
   else if ( xhigh > xmax () ) { return integral ( xlow   , xmax () , ylow   , yhigh  ) ; }
   else if ( ylow  < ymin () ) { return integral ( xlow   , xhigh   , ymin() , yhigh  ) ; }
   else if ( yhigh > ymax () ) { return integral ( xlow   , xhigh   , ylow   , ymax() ) ; }
   //
-  //  
-  const double xarg =  
+  //
+  const double xarg =
     !s_equal ( xhigh , xmax ()) ? xhigh :
     Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  const double yarg =  
+  const double yarg =
     !s_equal ( yhigh , ymax ()) ? yhigh :
     Ostap::Math::next_double ( ymax() , -s_ulps ) ;
   //
-  // fill x-cache 
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix )
+  const unsigned short NX = m_xspline.npars() ;
+  const unsigned short NY = m_yspline.npars() ;
+  //
+  std::vector<double>  fx ( NX , 0 ) ;
+  std::vector<double>  fy ( NY , 0 ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
     m_xspline.setPar ( ix , 1.0 ) ;
     //
     double resx  = m_xspline.integral ( xlow , xarg ) ;
-    if ( 0 < resx ) 
+    if ( 0 < resx )
     {
       const double ti  = knot ( m_xspline.knots() , ix                         ) ;
       const double tip = knot ( m_xspline.knots() , ix + m_xspline.order() + 1 ) ;
-      resx /= ( tip - ti ) ; 
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[ix] = resx ;
+    fx[ix] = resx ;
     //
     m_xspline.setPar ( ix , 0.0 ) ;
   }
   //
-  // fill y-cache 
-  for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy )
+  // fill y-cache
+  for ( unsigned short iy = 0 ; iy < NY ; ++iy )
   {
     m_yspline.setPar ( iy , 1.0 ) ;
     //
     double resy  = m_yspline.integral ( ylow ,  yarg ) ;
-    if ( 0 < resy ) 
+    if ( 0 < resy )
     {
       const double ti  = knot ( m_yspline.knots() , iy                         ) ;
       const double tip = knot ( m_yspline.knots() , iy + m_yspline.order() + 1 ) ;
-      resy /= ( tip - ti ) ; 
+      resy /= ( tip - ti ) ;
     }
     //
-    m_ycache[iy] = resy ;
+    fy[iy] = resy ;
     //
     m_yspline.setPar ( iy , 0.0 ) ;
   }
   //
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
-  {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
-    //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
-    {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned k = ix * m_ycache.size () + iy ;
-      result += m_sphere.x2 ( k ) * vx * vy ;
-    }
-  }
-  //
-  return result * ( m_xspline.order() + 1 ) * ( m_yspline.order() + 1 ) ;
+  return calculate ( fx , fy ) ;
 }
 // ============================================================================
-/*  get the integral over X  for given Y
- *  @param x  (INPUT) x-value 
- *  @param ylow  low  edge in y 
- *  @param yhigh high edge in y 
- */  
+/*  get the integral over Y  for given X
+ *  @param x  (INPUT) x-value
+ *  @param ylow  low  edge in y
+ *  @param yhigh high edge in y
+ */
 // ============================================================================
-double Ostap::Math::Spline2D::integrateY 
-( const double x    , 
-  const double ylow , const double yhigh ) const 
+double Ostap::Math::BSpline2D::integrateY
+( const double x    ,
+  const double ylow , const double yhigh ) const
 {
   //
   if      ( x < xmin() || x > xmax()           ) { return 0 ; }
-  else if ( s_equal ( ylow  , ymin() ) && 
+  else if ( s_equal ( ylow  , ymin() ) &&
             s_equal ( yhigh , ymax() ) ) { return integrateY ( x ) ; }
   else if ( yhigh <  ylow ) { return - integrateY ( x , yhigh , ylow ) ; }
   else if ( s_equal ( ylow , yhigh )           ) { return 0 ; }
@@ -1899,82 +1923,72 @@ double Ostap::Math::Spline2D::integrateY
   else if ( ylow  <  ymin() ) { return integrateY ( x , ymin() , yhigh  ) ; }
   else if ( yhigh >  ymax() ) { return integrateY ( x , ylow   , ymax() ) ; }
   //
-  const double xarg =  
+  const double xarg =
     !s_equal ( x     , xmax ()) ? x :
     Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  const double yarg =  
+  const double yarg =
     !s_equal ( yhigh , ymax ()) ? yhigh :
     Ostap::Math::next_double ( ymax() , -s_ulps ) ;
   //
-  // fill x-cache 
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix )
+  const unsigned short NX = m_xspline.npars() ;
+  const unsigned short NY = m_yspline.npars() ;
+  //
+  std::vector<double>  fx ( NX , 0 ) ;
+  std::vector<double>  fy ( NY , 0 ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
     m_xspline.setPar ( ix , 1.0 ) ;
     //
     double resx  = m_xspline ( xarg ) ;
-    if ( 0 < resx ) 
+    if ( 0 < resx )
     {
       const double ti  = knot ( m_xspline.knots() , ix                         ) ;
       const double tip = knot ( m_xspline.knots() , ix + m_xspline.order() + 1 ) ;
-      resx /= ( tip - ti ) ; 
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[ix] = resx ;
+    fx[ix] = resx ;
     //
     m_xspline.setPar ( ix , 0.0 ) ;
   }
   //
-  // fill y-cache 
-  for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy )
+  // fill y-cache
+  for ( unsigned short iy = 0 ; iy < NY ; ++iy )
   {
     m_yspline.setPar ( iy , 1.0 ) ;
     //
     double resy  = m_yspline.integral ( ylow ,  yarg ) ;
-    if ( 0 < resy ) 
+    if ( 0 < resy )
     {
       const double ti  = knot ( m_yspline.knots() , iy                         ) ;
       const double tip = knot ( m_yspline.knots() , iy + m_yspline.order() + 1 ) ;
-      resy /= ( tip - ti ) ; 
+      resy /= ( tip - ti ) ;
     }
     //
-    m_ycache[iy] = resy ;
+    fy[iy] = resy ;
     //
     m_yspline.setPar ( iy , 0.0 ) ;
   }
   //
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
-  {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
-    //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
-    {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned k = ix * m_ycache.size () + iy ;
-      result += m_sphere.x2 ( k ) * vx * vy ;
-    }
-  }
-  //
-  return result * ( m_xspline.order() + 1 ) * ( m_yspline.order() + 1 ) ;
+  return calculate ( fx , fy ) ;
 }
 // ============================================================================
-/*  get the integral over Y  for given C
- *  @param y  (INPUT) y-value 
- *  @param xlow  low  eadge in x 
- *  @param xhigh high edge in x 
- */  
+/*  get the integral over X for the given Y
+ *  @param y  (INPUT) y-value
+ *  @param xlow  low  eadge in x
+ *  @param xhigh high edge in x
+ */
 // ============================================================================
-double Ostap::Math::Spline2D::integrateX
-( const double y    , 
-  const double xlow , const double xhigh ) const 
+double Ostap::Math::BSpline2D::integrateX
+( const double y    ,
+  const double xlow , const double xhigh ) const
 {
   //
   if      ( y < ymin() || y > ymax()           ) { return 0 ; }
-  else if ( s_equal ( xlow  , xmin() ) && 
+  else if ( s_equal ( xlow  , xmin() ) &&
             s_equal ( xhigh , xmax() ) ) { return integrateX ( y ) ; }
   else if ( xhigh <  xlow ) { return - integrateX ( y , xhigh , xlow ) ; }
   else if ( s_equal ( xlow , xhigh )           ) { return 0 ; }
@@ -1982,502 +1996,744 @@ double Ostap::Math::Spline2D::integrateX
   else if ( xlow  <  xmin() ) { return integrateX ( y , xmin() , xhigh  ) ; }
   else if ( xhigh >  xmax() ) { return integrateX ( y , xlow   , xmax() ) ; }
   //
-  const double xarg =  
+  const double xarg =
     !s_equal ( xhigh , xmax ()) ? xhigh :
     Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  const double yarg =  
+  const double yarg =
     !s_equal ( y     , ymax ()) ? y     :
     Ostap::Math::next_double ( ymax() , -s_ulps ) ;
   //
-  // fill x-cache 
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix )
+  const unsigned short NX = m_xspline.npars() ;
+  const unsigned short NY = m_yspline.npars() ;
+  //
+  std::vector<double>  fx ( NX , 0 ) ;
+  std::vector<double>  fy ( NY , 0 ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
     m_xspline.setPar ( ix , 1.0 ) ;
     //
     double resx  = m_xspline.integral ( xlow , xarg ) ;
-    if ( 0 < resx ) 
+    if ( 0 < resx )
     {
       const double ti  = knot ( m_xspline.knots() , ix                         ) ;
       const double tip = knot ( m_xspline.knots() , ix + m_xspline.order() + 1 ) ;
-      resx /= ( tip - ti ) ; 
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[ix] = resx ;
+    fx [ix] = resx ;
     //
     m_xspline.setPar ( ix , 0.0 ) ;
   }
   //
-  // fill y-cache 
-  for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy )
+  // fill y-cache
+  for ( unsigned short iy = 0 ; iy < NY ; ++iy )
   {
     m_yspline.setPar ( iy , 1.0 ) ;
     //
     double resy  = m_yspline( yarg ) ;
-    if ( 0 < resy ) 
+    if ( 0 < resy )
     {
       const double ti  = knot ( m_yspline.knots() , iy                         ) ;
       const double tip = knot ( m_yspline.knots() , iy + m_yspline.order() + 1 ) ;
-      resy /= ( tip - ti ) ; 
+      resy /= ( tip - ti ) ;
     }
     //
-    m_ycache[iy] = resy ;
+    fy [iy] = resy ;
     //
     m_yspline.setPar ( iy , 0.0 ) ;
   }
   //
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
-  {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
-    //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
-    {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned k = ix * m_ycache.size () + iy ;
-      result += m_sphere.x2 ( k ) * vx * vy ;
-    }
-  }
-  //
-  return result * ( m_xspline.order() + 1 ) * ( m_yspline.order() + 1 ) ;
+  return calculate ( fx , fy ) ;
 }
 // ============================================================================
-/*  get the integral over 2D-region 
- *  \f[ x_{min}<x<x_{max}, y_{min}<y<y_{max}\f] 
- *  @param xlow  low  edge in x 
- *  @param xhigh high edge in x 
- *  @param ylow  low  edge in y 
- *  @param yhigh high edge in y 
+/*  get the integral over 2D-region
+ *  \f[ x_{min}<x<x_{max}, y_{min}<y<y_{max}\f]
+ *  @param xlow  low  edge in x
+ *  @param xhigh high edge in x
+ *  @param ylow  low  edge in y
+ *  @param yhigh high edge in y
  */
 // ============================================================================
-double Ostap::Math::Spline2D::integral   () const { return 1 ; }
+double Ostap::Math::BSpline2D::integral   () const 
+{ return std::accumulate ( m_pars.begin() , m_pars.end() ,  0.0 ) ; }
 // ============================================================================
 /*  get the integral over X  for given Y
- *  @param x  (INPUT) x-value 
- */  
+ *  @param x  (INPUT) x-value
+ */
 // ============================================================================
-double Ostap::Math::Spline2D::integrateY 
-( const double x ) const 
+double Ostap::Math::BSpline2D::integrateY ( const double x ) const
 {
   //
   if      ( x < xmin() || x > xmax()           ) { return 0 ; }
   //
-  const double xarg =  
+  const double xarg =
     !s_equal ( x     , xmax ()) ? x :
-    0 <= xmax ()                ? 
-    Ostap::Math::next_double ( xmax() , -s_ulps ) :
-    Ostap::Math::next_double ( xmax() ,  s_ulps ) ;
+    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  // fill x-cache 
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix )
+  const unsigned short NX = m_xspline.npars() ;
+  const unsigned short NY = m_yspline.npars() ;
+  //
+  std::vector<double>  fx ( NX ,  0 ) ;
+  std::vector<double>  fy ( NY ,  1.0 / ( m_yspline.order() + 1 ) ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
     m_xspline.setPar ( ix , 1.0 ) ;
     //
     double resx  = m_xspline ( xarg ) ;
-    if ( 0 < resx ) 
+    if ( 0 < resx )
     {
       const double ti  = knot ( m_xspline.knots() , ix                         ) ;
       const double tip = knot ( m_xspline.knots() , ix + m_xspline.order() + 1 ) ;
-      resx /= ( tip - ti ) ; 
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[ix] = resx ;
+    fx [ix] = resx ;
     //
     m_xspline.setPar ( ix , 0.0 ) ;
   }
   //
-  // fill y-cache 
-  //
-  std::fill ( m_ycache.begin() , m_ycache.end() , 1 ) ;
-  //
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
-  {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
-    //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
-    {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned k = ix * m_ycache.size () + iy ;
-      result += m_sphere.x2 ( k ) * vx * vy ;
-    }
-  }
-  //
-  return result * ( m_xspline.order() + 1 ) ;
+  return calculate ( fx , fy ) ;
 }
 // ============================================================================
 /*  get the integral over X  for given Y
- *  @param y  (INPUT) y-value 
- */  
+ *  @param y  (INPUT) y-value
+ */
 // ============================================================================
-double Ostap::Math::Spline2D::integrateX
-( const double y    ) const 
+double Ostap::Math::BSpline2D::integrateX
+( const double y    ) const
 {
   //
   if      ( y < ymin() || y > ymax()           ) { return 0 ; }
   //
-  const double yarg =  
+  const double yarg =
     !s_equal ( y     , ymax ()) ? y     :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;  
+    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
   //
-  // fill x-cache 
-  std::fill ( m_xcache.begin() , m_xcache.end() , 1 ) ;
+  const unsigned short NX = m_xspline.npars() ;
+  const unsigned short NY = m_yspline.npars() ;
   //
-  // fill y-cache 
-  for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy )
+  // fill x-cache
+  std::vector<double>  fx ( NX ,  1.0 / ( m_xspline.order() +  1 ) ) ;
+  std::vector<double>  fy ( NY ,  0.0 ) ;
+  //
+  // fill y-cache
+  for ( unsigned short iy = 0 ; iy < NY ; ++iy )
   {
     m_yspline.setPar ( iy , 1.0 ) ;
     //
     double resy  = m_yspline( yarg ) ;
-    if ( 0 < resy ) 
+    if ( 0 < resy )
     {
       const double ti  = knot ( m_yspline.knots() , iy                         ) ;
       const double tip = knot ( m_yspline.knots() , iy + m_yspline.order() + 1 ) ;
-      resy /= ( tip - ti ) ; 
+      resy /= ( tip - ti ) ;
     }
     //
-    m_ycache[iy] = resy ;
+    fy[iy] = resy ;
     //
     m_yspline.setPar ( iy , 0.0 ) ;
   }
   //
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
-  {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
-    //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
-    {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned k = ix * m_ycache.size () + iy ;
-      result += m_sphere.x2 ( k ) * vx * vy ;
-    }
-  }
-  //
-  return result * ( m_yspline.order() + 1 ) ;
+  return calculate ( fx , fy ) ;
 }
+// ============================================================================
+Ostap::Math::BSpline2D&
+Ostap::Math::BSpline2D::operator += ( const double a ) 
+{ 
+  if   ( s_zero ( a ) ) { return *this ; }
+  Ostap::Math::shift ( m_pars , a ) ;
+  return *this ; 
+}
+// ============================================================================
+Ostap::Math::BSpline2D&
+Ostap::Math::BSpline2D::operator -= ( const double a ) 
+{ 
+  if   ( s_zero ( a ) ) { return *this ; }
+  Ostap::Math::shift ( m_pars , -a ) ;
+  return *this ; 
+}
+// ============================================================================
+Ostap::Math::BSpline2D&
+Ostap::Math::BSpline2D::operator *= ( const double a ) 
+{ 
+  if      ( s_equal ( a , 1 ) ) { return *this ; }
+  else if ( s_zero  ( a     ) ) { std::fill ( m_pars.begin() , m_pars.end() , 0 ) ; }
+  Ostap::Math::scale ( m_pars , a ) ;
+  return *this ;
+}
+// ============================================================================
+Ostap::Math::BSpline2D&
+Ostap::Math::BSpline2D::operator /= ( const double a ) 
+{ 
+  if   ( s_equal ( a , 1 ) ) { return *this ; }
+  Ostap::Math::scale ( m_pars , 1/a ) ;
+  return *this ;
+}
+// ============================================================================
+// negate it 
+// ============================================================================
+Ostap::Math::BSpline2D
+Ostap::Math::BSpline2D::operator-() const 
+{
+  BSpline2D b ( *this ) ;
+  Ostap::Math::negate ( b.m_pars ) ;
+  return b ;
+}
+// ============================================================================
+// Sum of BSpline polynomial and a constant
+// ============================================================================
+Ostap::Math::BSpline2D 
+Ostap::Math::BSpline2D::__add__   ( const double value ) const 
+{ return  (*this) + value ; }
+// ============================================================================
+// Sum of BSpline polynomial and a constant
+// ============================================================================
+Ostap::Math::BSpline2D 
+Ostap::Math::BSpline2D::__radd__ ( const double value ) const 
+{ return  (*this) + value ; }
+// ============================================================================
+// Subtract a constant from Benrstein polynomial
+// ============================================================================
+Ostap::Math::BSpline2D 
+Ostap::Math::BSpline2D::__sub__   ( const double value ) const 
+{ return  (*this) - value ; }
+// ============================================================================
+// Constant minus BSpline polynomial
+// ============================================================================
+Ostap::Math::BSpline2D 
+Ostap::Math::BSpline2D::__rsub__  ( const double value ) const 
+{ return  value - (*this) ; }
+// ============================================================================
+// Product of BSpline polynomial and a constant
+// ============================================================================
+Ostap::Math::BSpline2D 
+Ostap::Math::BSpline2D::__mul__  ( const double value ) const 
+{ return  (*this) * value ; }
+// ============================================================================
+// Product of BSpline polynomial and a constant
+// ============================================================================
+Ostap::Math::BSpline2D 
+Ostap::Math::BSpline2D::__rmul__ ( const double value ) const 
+{ return  (*this) * value ; }
+// ============================================================================
+// Divide Benrstein polynomial by a constant
+// ============================================================================
+Ostap::Math::BSpline2D 
+Ostap::Math::BSpline2D::__div__  ( const double value ) const 
+{ return  (*this) / value ; }
+// ============================================================================
+// Negate BSpline polynomial
+// ============================================================================
+Ostap::Math::BSpline2D 
+Ostap::Math::BSpline2D::__neg__  () const { return  -(*this) ; }
+// ============================================================================
+
+
+// ============================================================================
+// Symmetric 
 // ============================================================================
 
 // ============================================================================
-// symmetric  2D-spline 
+// Generic2DSym-spline
 // ============================================================================
-Ostap::Math::Spline2DSym::Spline2DSym
-( const Ostap::Math::BSpline&  spline )
-  : m_spline ( spline             ) 
-  , m_sphere ( spline.npars() * ( spline.npars()  + 1 ) / 2 - 1  ) 
-  , m_xcache ( spline.npars() , 0 ) 
-  , m_ycache ( spline.npars() , 0 ) 
+Ostap::Math::BSpline2DSym::BSpline2DSym
+( const Ostap::Math::BSpline& spline )
+  : m_spline ( spline        )
+  , m_pars   ( spline.npars() * ( spline.npars() + 1 ) / 2 )
 {
   for ( unsigned i = 0 ; i < m_spline.npars() ; ++i ) { m_spline.setPar ( i , 0 ) ; }
 }
 // ===========================================================================
+// set k-parameter
+// ===========================================================================
+bool Ostap::Math::BSpline2DSym::setParameter
+( const unsigned int k , const double value ) 
+{
+  if ( k >= m_pars.size() )    { return false  ; }
+  const double v = m_pars[k] ;
+  if ( s_equal ( v , value ) ) { return false ; }
+  //
+  m_pars[k] = value ;
+  return true ;
+}
+// ===========================================================================
+// make the calcualtions 
+// ===========================================================================
+double Ostap::Math::BSpline2DSym::calculate
+( const std::vector<double>& fx , 
+  const std::vector<double>& fy ) const 
+{
+  //
+  const unsigned int NX = fx.size() ;
+  // const unsigned int NY = fy.size() ;
+  //
+  double result = 0.0 ;
+  for  ( unsigned short ix = 0 ; ix < NX  ; ++ix )
+  {
+    result   += par ( ix , ix ) * fx[ix] * fy[ix] ;
+    for  ( unsigned short iy = 0 ; iy < ix ; ++iy )
+    { result += par ( ix , iy ) * ( fx[ix] * fy[iy] + fx[iy] * fy[ix] ) ; } 
+  }
+  //
+  const unsigned int scale = ( m_spline.order() + 1 ) ;
+  //
+  return result * scale * scale ;
+}
+// ===========================================================================
 // get the value
 // ============================================================================
-double Ostap::Math::Spline2DSym::operator () ( const double x , const double y ) const 
+double Ostap::Math::BSpline2DSym::evaluate 
+( const double x , const double y ) const
 {
   //
   if ( x < xmin() || y < ymin() || x > xmax() || y > ymax() ) { return 0 ; }
   //
-  const double xarg =  
+  const double xarg =
     !s_equal ( x , xmax ()) ? x :
     Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  const double yarg =  
+  const double yarg =
     !s_equal ( y , ymax ()) ? y :
     Ostap::Math::next_double ( ymax() , -s_ulps ) ;
   //
-  // fill x&y-caches  
-  for ( unsigned short i = 0 ; i < m_xcache.size() ; ++i )
+  const unsigned short NX = m_spline.npars() ;
+  const unsigned short NY = m_spline.npars() ;
+  //
+  std::vector<double>  fx ( NX , 0 ) ;
+  std::vector<double>  fy ( NY , 0 ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
-    m_spline.setPar ( i , 1.0 ) ;
+    m_spline.setPar ( ix , 1.0 ) ;
     //
     double resx  = m_spline ( xarg ) ;
-    double resy  = m_spline ( yarg ) ;
-    //
-    if ( 0 < resx || 0 < resy ) 
+    if ( 0 < resx )
     {
-      const double ti  = knot ( m_spline.knots() , i                        ) ;
-      const double tip = knot ( m_spline.knots() , i + m_spline.order() + 1 ) ;
-      //
-      if ( 0 < resx ) { resx /= ( tip - ti ) ; }
-      if ( 0 < resy ) { resy /= ( tip - ti ) ; }
-      //
+      const double ti  = knot ( m_spline.knots() , ix                        ) ;
+      const double tip = knot ( m_spline.knots() , ix + m_spline.order() + 1 ) ;
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[i] = resx ;
-    m_ycache[i] = resy ;
+    fx[ix] = resx ;
     //
-    m_spline.setPar ( i , 0.0 ) ;
+    m_spline.setPar ( ix , 0.0 ) ;
   }
   //
-  // get the final value 
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
+  // fill y-cache
+  for ( unsigned short iy = 0 ; iy < NY ; ++iy )
   {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
+    m_spline.setPar ( iy , 1.0 ) ;
     //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
+    double resy  = m_spline ( yarg ) ;
+    if ( 0 < resy )
     {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned int k = 
-        ( ix < iy ) ? ( iy * ( iy + 1 ) / 2 + ix ) : ( ix * ( ix + 1 ) / 2 + iy ) ;
-      //
-      result += ( ix == iy ) ? 
-        m_sphere.x2 ( k ) * vx * vy       : 
-        m_sphere.x2 ( k ) * vx * vy * 0.5 ;
+      const double ti  = knot ( m_spline.knots() , iy                        ) ;
+      const double tip = knot ( m_spline.knots() , iy + m_spline.order() + 1 ) ;
+      resy /= ( tip - ti ) ;
     }
+    //
+    fy[iy] = resy ;
+    //
+    m_spline.setPar ( iy , 0.0 ) ;
   }
   //
-  return result * ( ( m_spline.order() + 1 ) * ( m_spline.order() + 1 ) ) ;
+  return calculate ( fx , fy ) ;
 }
 // ============================================================================
-/*  get the integral over 2D-region 
- *  @param xlow  low  edge in x 
- *  @param xhigh high edge in x 
- *  @param ylow  low  edge in y 
- *  @param yhigh high edge in y 
+/*  get the integral over 2D-region
+ *  @param xlow  low  edge in x
+ *  @param xhigh high edge in x
+ *  @param ylow  low  edge in y
+ *  @param yhigh high edge in y
  */
 // ============================================================================
-double Ostap::Math::Spline2DSym::integral 
-( const double xlow  , 
-  const double xhigh , 
-  const double ylow  , 
-  const double yhigh ) const 
+double Ostap::Math::BSpline2DSym::integral
+( const double xlow  ,
+  const double xhigh ,
+  const double ylow  ,
+  const double yhigh ) const
 {
   //
   if      ( xhigh < xlow ) { return - integral ( xhigh , xlow  , ylow  , yhigh ) ; }
   else if ( yhigh < ylow ) { return - integral ( xlow  , xhigh , yhigh , ylow  ) ; }
-  // boundaries 
+  // boundaries
   else if ( xhigh < xmin () || yhigh < ymin () ) { return 0 ; }
   else if ( xlow  > xmax () || ylow  > ymax () ) { return 0 ; }
   else if ( s_equal ( xlow , xhigh ) || s_equal ( ylow , yhigh ) ) { return 0 ; }
-  // adjust 
+  //
+  else if ( s_equal ( xlow  , xmin() ) &&
+            s_equal ( xhigh , xmax() ) &&
+            s_equal ( ylow  , ymin() ) &&
+            s_equal ( yhigh , ymax() ) ) { return integral() ; }
+  // adjust
   else if ( xlow  < xmin () ) { return integral ( xmin() , xhigh   , ylow   , yhigh  ) ; }
   else if ( xhigh > xmax () ) { return integral ( xlow   , xmax () , ylow   , yhigh  ) ; }
   else if ( ylow  < ymin () ) { return integral ( xlow   , xhigh   , ymin() , yhigh  ) ; }
   else if ( yhigh > ymax () ) { return integral ( xlow   , xhigh   , ylow   , ymax() ) ; }
-  //  
-  const double xarg =  
+  //
+  //
+  const double xarg =
     !s_equal ( xhigh , xmax ()) ? xhigh :
     Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  const double yarg =  
+  const double yarg =
     !s_equal ( yhigh , ymax ()) ? yhigh :
     Ostap::Math::next_double ( ymax() , -s_ulps ) ;
   //
-  // fill x&y-caches 
-  for ( unsigned short i = 0 ; i < m_xcache.size() ; ++i )
+  const unsigned short NX = m_spline.npars() ;
+  const unsigned short NY = m_spline.npars() ;
+  //
+  std::vector<double>  fx ( NX , 0 ) ;
+  std::vector<double>  fy ( NY , 0 ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
-    m_spline.setPar ( i , 1.0 ) ;
+    m_spline.setPar ( ix , 1.0 ) ;
     //
     double resx  = m_spline.integral ( xlow , xarg ) ;
-    double resy  = m_spline.integral ( ylow , yarg ) ;
-    //
-    if ( 0 < resx || 0 < resy ) 
+    if ( 0 < resx )
     {
-      //
-      const double ti  = knot ( m_spline.knots() , i                        ) ;
-      const double tip = knot ( m_spline.knots() , i + m_spline.order() + 1 ) ;
-      //
-      if ( 0 < resx ) { resx /= ( tip - ti ) ; }
-      if ( 0 < resy ) { resy /= ( tip - ti ) ; }
+      const double ti  = knot ( m_spline.knots() , ix                        ) ;
+      const double tip = knot ( m_spline.knots() , ix + m_spline.order() + 1 ) ;
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[i] = resx ;
-    m_ycache[i] = resy ;
+    fx[ix] = resx ;
     //
-    m_spline.setPar ( i , 0.0 ) ;
+    m_spline.setPar ( ix , 0.0 ) ;
   }
   //
-  // get the final value 
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
+  // fill y-cache
+  for ( unsigned short iy = 0 ; iy < NY ; ++iy )
   {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
+    m_spline.setPar ( iy , 1.0 ) ;
     //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
+    double resy  = m_spline.integral ( ylow ,  yarg ) ;
+    if ( 0 < resy )
     {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned int k = 
-        ( ix < iy ) ? ( iy * ( iy + 1 ) / 2 + ix ) : ( ix * ( ix + 1 ) / 2 + iy ) ;
-      //
-      result += ( ix == iy ) ? 
-        m_sphere.x2 ( k ) * vx * vy       : 
-        m_sphere.x2 ( k ) * vx * vy * 0.5 ;
+      const double ti  = knot ( m_spline.knots() , iy                        ) ;
+      const double tip = knot ( m_spline.knots() , iy + m_spline.order() + 1 ) ;
+      resy /= ( tip - ti ) ;
     }
+    //
+    fy[iy] = resy ;
+    //
+    m_spline.setPar ( iy , 0.0 ) ;
   }
   //
-  return result * ( ( m_spline.order() + 1 ) * ( m_spline.order() + 1 ) )  ;
+  return calculate ( fx , fy ) ;
 }
 // ============================================================================
-/*  get the integral over X  for given Y
- *  @param x  (INPUT) x-value 
- *  @param ylow  low  edge in y 
- *  @param yhigh high edge in y 
- */  
+/*  get the integral over Y  for given X
+ *  @param x  (INPUT) x-value
+ *  @param ylow  low  edge in y
+ *  @param yhigh high edge in y
+ */
 // ============================================================================
-double Ostap::Math::Spline2DSym::integrateY 
-( const double x    , 
-  const double ylow , const double yhigh ) const 
+double Ostap::Math::BSpline2DSym::integrateY
+( const double x    ,
+  const double ylow , const double yhigh ) const
 {
   //
   if      ( x < xmin() || x > xmax()           ) { return 0 ; }
+  else if ( s_equal ( ylow  , ymin() ) &&
+            s_equal ( yhigh , ymax() ) ) { return integrateY ( x ) ; }
   else if ( yhigh <  ylow ) { return - integrateY ( x , yhigh , ylow ) ; }
   else if ( s_equal ( ylow , yhigh )           ) { return 0 ; }
-  else if ( yhigh <= ymin() ||  ylow > ymax()  ) { return 0 ; }
+  else if ( yhigh <  ymin() ||  ylow >  ymax() ) { return 0 ; }
   else if ( ylow  <  ymin() ) { return integrateY ( x , ymin() , yhigh  ) ; }
   else if ( yhigh >  ymax() ) { return integrateY ( x , ylow   , ymax() ) ; }
   //
-  const double xarg =  
+  const double xarg =
     !s_equal ( x     , xmax ()) ? x :
     Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  const double yarg =  
+  const double yarg =
     !s_equal ( yhigh , ymax ()) ? yhigh :
     Ostap::Math::next_double ( ymax() , -s_ulps ) ;
   //
-  // fill x&y-caches 
-  for ( unsigned short i = 0 ; i < m_xcache.size() ; ++i )
+  const unsigned short NX = m_spline.npars() ;
+  const unsigned short NY = m_spline.npars() ;
+  //
+  std::vector<double>  fx ( NX , 0 ) ;
+  std::vector<double>  fy ( NY , 0 ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
-    m_spline.setPar ( i , 1.0 ) ;
+    m_spline.setPar ( ix , 1.0 ) ;
     //
-    double resx  = m_spline          (        xarg ) ;
-    double resy  = m_spline.integral ( ylow , yarg ) ;
-    if ( 0 < resx || 0 < resy ) 
+    double resx  = m_spline ( xarg ) ;
+    if ( 0 < resx )
     {
-      const double ti  = knot ( m_spline.knots() , i                        ) ;
-      const double tip = knot ( m_spline.knots() , i + m_spline.order() + 1 ) ;
-      if ( 0 < resx ) { resx /= ( tip - ti ) ; }
-      if ( 0 < resy ) { resy /= ( tip - ti ) ; }
+      const double ti  = knot ( m_spline.knots() , ix                        ) ;
+      const double tip = knot ( m_spline.knots() , ix + m_spline.order() + 1 ) ;
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[i] = resx ;
-    m_ycache[i] = resy ;
+    fx[ix] = resx ;
     //
-    m_spline.setPar ( i , 0.0 ) ;
+    m_spline.setPar ( ix , 0.0 ) ;
   }
   //
-  //
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
+  // fill y-cache
+  for ( unsigned short iy = 0 ; iy < NY ; ++iy )
   {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
+    m_spline.setPar ( iy , 1.0 ) ;
     //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
+    double resy  = m_spline.integral ( ylow ,  yarg ) ;
+    if ( 0 < resy )
     {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned int k = 
-        ( ix < iy ) ? ( iy * ( iy + 1 ) / 2 + ix ) : ( ix * ( ix + 1 ) / 2 + iy ) ;
-      //
-      result += ( ix == iy ) ? 
-        m_sphere.x2 ( k ) * vx * vy       : 
-        m_sphere.x2 ( k ) * vx * vy * 0.5 ;
+      const double ti  = knot ( m_spline.knots() , iy                        ) ;
+      const double tip = knot ( m_spline.knots() , iy + m_spline.order() + 1 ) ;
+      resy /= ( tip - ti ) ;
     }
+    //
+    fy[iy] = resy ;
+    //
+    m_spline.setPar ( iy , 0.0 ) ;
   }
   //
-  return result * ( m_spline.order() + 1 ) * ( m_spline.order() + 1 ) ;
+  return calculate ( fx , fy ) ;
+}
+
+// ============================================================================
+/*  get the integral over X for the given Y
+ *  @param y  (INPUT) y-value
+ *  @param xlow  low  eadge in x
+ *  @param xhigh high edge in x
+ */
+// ============================================================================
+double Ostap::Math::BSpline2DSym::integrateX
+( const double y    ,
+  const double xlow , const double xhigh ) const
+{ return  integrateY ( y , xlow , xhigh ) ; }
+// ============================================================================
+/*  get the integral over 2D-region
+ *  \f[ x_{min}<x<x_{max}, y_{min}<y<y_{max}\f]
+ *  @param xlow  low  edge in x
+ *  @param xhigh high edge in x
+ *  @param ylow  low  edge in y
+ *  @param yhigh high edge in y
+ */
+// ============================================================================
+double Ostap::Math::BSpline2DSym::integral   () const 
+{ 
+  const unsigned short  NX = m_spline.npars() ;
+  double result = 0 ;
+  for  ( unsigned short ix = 0 ; ix < NX ; ++ix )
+  {
+    result   += par ( ix , ix ) ;
+    for  ( unsigned short iy = 0 ; iy < ix ; ++iy )
+    { result += 2 * par ( ix , iy ) ; } 
+  }
+  //
+  return result ;
 }
 // ============================================================================
-/*  get the integral over Y  for given Y
- *  @param y  (INPUT) y-value 
- *  @param xlow  low  eadge in x 
- *  @param xhigh high edge in x 
- */  
+/*  get the integral over X  for given Y
+ *  @param x  (INPUT) x-value
+ */
 // ============================================================================
-double Ostap::Math::Spline2DSym::integrateX
-( const double y    , 
-  const double xlow , const double xhigh ) const 
-{ return integrateY ( y , xlow , xhigh ) ; }
-// ============================================================================
-//  get the integral over 2D-region 
-// ============================================================================
-double Ostap::Math::Spline2DSym::integral () const { return 1 ; }
-// ============================================================================
-
-
-// ============================================================================
-/*  get the integral over Y  for given X
- *  @param x  (INPUT) x-value 
- */  
-// ============================================================================
-double Ostap::Math::Spline2DSym::integrateY 
-( const double x ) const 
+double Ostap::Math::BSpline2DSym::integrateY ( const double x ) const
 {
   //
   if      ( x < xmin() || x > xmax()           ) { return 0 ; }
   //
-  const double xarg =  
+  const double xarg =
     !s_equal ( x     , xmax ()) ? x :
     Ostap::Math::next_double ( xmax() , -s_ulps ) ;
   //
-  // fill x&y-caches 
-  for ( unsigned short i = 0 ; i < m_xcache.size() ; ++i )
+  const unsigned short NX = m_spline.npars() ;
+  const unsigned short NY = m_spline.npars() ;
+  //
+  std::vector<double>  fx ( NX ,  0 ) ;
+  std::vector<double>  fy ( NY ,  1.0 / ( m_spline.order() + 1 ) ) ;
+  //
+  // fill x-cache
+  for ( unsigned short ix = 0 ; ix < NX ; ++ix )
   {
-    m_spline.setPar ( i , 1.0 ) ;
+    m_spline.setPar ( ix , 1.0 ) ;
     //
-    double resx  = m_spline          (        xarg ) ;
-    if ( 0 < resx ) 
+    double resx  = m_spline ( xarg ) ;
+    if ( 0 < resx )
     {
-      const double ti  = knot ( m_spline.knots() , i                        ) ;
-      const double tip = knot ( m_spline.knots() , i + m_spline.order() + 1 ) ;
-      if ( 0 < resx ) { resx /= ( tip - ti ) ; }
+      const double ti  = knot ( m_spline.knots() , ix                        ) ;
+      const double tip = knot ( m_spline.knots() , ix + m_spline.order() + 1 ) ;
+      resx /= ( tip - ti ) ;
     }
     //
-    m_xcache[i] = resx ;
-    m_ycache[i] = 1    ;
+    fx [ix] = resx ;
     //
-    m_spline.setPar ( i , 0.0 ) ;
+    m_spline.setPar ( ix , 0.0 ) ;
   }
   //
-  //
-  double         result = 0 ;
-  for ( unsigned short ix = 0 ; ix < m_xcache.size() ; ++ix ) 
-  {
-    const double vx   = m_xcache[ix] ;
-    if ( s_zero ( vx ) ) { continue ; }       // CONTINUE 
-    //
-    for ( unsigned short iy = 0 ; iy < m_ycache.size() ; ++iy ) 
-    {
-      const double vy = m_ycache[iy] ;
-      if ( s_zero ( vy ) ) { continue ; }     // CONTINUE 
-      //
-      const unsigned int k = 
-        ( ix < iy ) ? ( iy * ( iy + 1 ) / 2 + ix ) : ( ix * ( ix + 1 ) / 2 + iy ) ;
-      //
-      result += ( ix == iy ) ? 
-        m_sphere.x2 ( k ) * vx * vy       : 
-        m_sphere.x2 ( k ) * vx * vy * 0.5 ;
-    }
-  }
-  //
-  return result * ( m_spline.order() + 1 ) ;
+  return calculate ( fx , fy ) ;
 }
 // ============================================================================
 /*  get the integral over X  for given Y
- *  @param x  (INPUT) x-value 
- */  
+ *  @param y  (INPUT) y-value
+ */
 // ============================================================================
-double Ostap::Math::Spline2DSym::integrateX ( const double y ) const 
-{ return integrateY ( y ) ; }
+double Ostap::Math::BSpline2DSym::integrateX
+( const double y    ) const { return integrateY (  y ) ; }
+
 // ============================================================================
+Ostap::Math::BSpline2DSym&
+Ostap::Math::BSpline2DSym::operator += ( const double a ) 
+{ 
+  if   ( s_zero ( a ) ) { return *this ; }
+  Ostap::Math::shift ( m_pars , a ) ;
+  return *this ; 
+}
+// ============================================================================
+Ostap::Math::BSpline2DSym&
+Ostap::Math::BSpline2DSym::operator -= ( const double a ) 
+{ 
+  if   ( s_zero ( a ) ) { return *this ; }
+  Ostap::Math::shift ( m_pars , -a ) ;
+  return *this ; 
+}
+// ============================================================================
+Ostap::Math::BSpline2DSym&
+Ostap::Math::BSpline2DSym::operator *= ( const double a ) 
+{ 
+  if      ( s_equal ( a , 1 ) ) { return *this ; }
+  else if ( s_zero  ( a     ) ) { std::fill ( m_pars.begin() , m_pars.end() , 0 ) ; }
+  Ostap::Math::scale ( m_pars , a ) ;
+  return *this ;
+}
+// ============================================================================
+Ostap::Math::BSpline2DSym&
+Ostap::Math::BSpline2DSym::operator /= ( const double a ) 
+{ 
+  if   ( s_equal ( a , 1 ) ) { return *this ; }
+  Ostap::Math::scale ( m_pars , 1/a ) ;
+  return *this ;
+}
+// ============================================================================
+// negate it 
+// ============================================================================
+Ostap::Math::BSpline2DSym
+Ostap::Math::BSpline2DSym::operator-() const 
+{
+  BSpline2DSym b ( *this ) ;
+  Ostap::Math::negate ( b.m_pars ) ;
+  return b ;
+}
+// ============================================================================
+// Sum of BSpline2D polynomial and a constant
+// ============================================================================
+Ostap::Math::BSpline2DSym 
+Ostap::Math::BSpline2DSym::__add__   ( const double value ) const 
+{ return  (*this) + value ; }
+// ============================================================================
+// Sum of BSpline2D polynomial and a constant
+// ============================================================================
+Ostap::Math::BSpline2DSym 
+Ostap::Math::BSpline2DSym::__radd__ ( const double value ) const 
+{ return  (*this) + value ; }
+// ============================================================================
+// Subtract a constant from Benrstein polynomial
+// ============================================================================
+Ostap::Math::BSpline2DSym 
+Ostap::Math::BSpline2DSym::__sub__   ( const double value ) const 
+{ return  (*this) - value ; }
+// ============================================================================
+// Constant minus BSpline2D polynomial
+// ============================================================================
+Ostap::Math::BSpline2DSym 
+Ostap::Math::BSpline2DSym::__rsub__  ( const double value ) const 
+{ return  value - (*this) ; }
+// ============================================================================
+// Product of BSpline2D polynomial and a constant
+// ============================================================================
+Ostap::Math::BSpline2DSym 
+Ostap::Math::BSpline2DSym::__mul__  ( const double value ) const 
+{ return  (*this) * value ; }
+// ============================================================================
+// Product of BSpline2D polynomial and a constant
+// ============================================================================
+Ostap::Math::BSpline2DSym 
+Ostap::Math::BSpline2DSym::__rmul__ ( const double value ) const 
+{ return  (*this) * value ; }
+// ============================================================================
+// Divide Benrstein polynomial by a constant
+// ============================================================================
+Ostap::Math::BSpline2DSym 
+Ostap::Math::BSpline2DSym::__div__  ( const double value ) const 
+{ return  (*this) / value ; }
+// ============================================================================
+// Negate BSpline2D polynomial
+// ============================================================================
+Ostap::Math::BSpline2DSym 
+Ostap::Math::BSpline2DSym::__neg__  () const { return  -(*this) ; }
+// ============================================================================
+
+// ============================================================================
+// Positive 2D spline 
+// ============================================================================
+Ostap::Math::PositiveSpline2D::PositiveSpline2D 
+( const Ostap::Math::BSpline& xspline ,
+  const Ostap::Math::BSpline& yspline ) 
+  : m_spline  ( xspline , yspline ) 
+  , m_sphere  ( xspline.npars() * yspline.npars() - 1 ) 
+{
+  updateSpline() ;
+}
+// =============================================================================
+// update spline coefficients
+// =============================================================================
+bool Ostap::Math::PositiveSpline2D::updateSpline()  
+{
+  //
+  bool update = false ;
+  for ( unsigned int ix = 0 ; ix < m_sphere.nX() ; ++ix )
+  {
+    const bool updated = m_spline.setPar ( ix , m_sphere.x2 ( ix ) ) ;
+    update = updated || update ;
+  }
+  //
+  return update ;
+}
+// ============================================================================
+// Positive symmetric 2D spline 
+// ============================================================================
+Ostap::Math::PositiveSpline2DSym::PositiveSpline2DSym 
+( const Ostap::Math::BSpline&  spline )
+  : m_spline ( spline ) 
+  , m_sphere ( spline.npars() * ( spline.npars() + 1 ) / 2 - 1  )
+{
+  updateSpline() ;
+}
+// =============================================================================
+// update spline coefficients
+// =============================================================================
+bool Ostap::Math::PositiveSpline2DSym::updateSpline()  
+{
+  //
+  bool update = false ;
+  for ( unsigned int ix = 0 ; ix < m_sphere.nX() ; ++ix )
+  {
+    const bool updated = m_spline.setPar ( ix , m_sphere.x2 ( ix ) ) ;
+    update = updated || update ;
+  }
+  // 
+  if ( update ) { m_spline /= m_spline.integral() ; }
+  //
+  return update ;
+}
+// ============================================================================
+
+
+
 
 // ============================================================================
 // Berstein polynomials 

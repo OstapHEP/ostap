@@ -1052,11 +1052,11 @@ Double_t Ostap::Models::Expo2DPolSym::analyticalIntegral
 // generic 2D-spline
 // ============================================================================
 Ostap::Models::Spline2D::Spline2D
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const Ostap::Math::Spline2D& spline, 
+( const char*                          name      , 
+  const char*                          title     ,
+  RooRealVar&                          x         ,
+  RooRealVar&                          y         ,
+  const Ostap::Math::PositiveSpline2D& spline, 
   RooArgList&          phis      ) 
   : RooAbsPdf  ( name , title ) 
   , m_x        ( "x"       , "Observable-X" , this , x ) 
@@ -1176,11 +1176,11 @@ Double_t Ostap::Models::Spline2D::analyticalIntegral
 // generic 2D symmetric spline
 // ============================================================================
 Ostap::Models::Spline2DSym::Spline2DSym
-( const char*          name      , 
-  const char*          title     ,
-  RooRealVar&          x         ,
-  RooRealVar&          y         ,
-  const Ostap::Math::Spline2DSym& spline, 
+( const char*                             name      , 
+  const char*                             title     ,
+  RooRealVar&                             x         ,
+  RooRealVar&                             y         ,
+  const Ostap::Math::PositiveSpline2DSym& spline, 
   RooArgList&          phis      ) 
   : RooAbsPdf  ( name , title ) 
   , m_x        ( "x"       , "Observable-X" , this , x ) 
