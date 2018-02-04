@@ -38,7 +38,9 @@ Empricial PDFs to describe narrow peaks
   - bifurcated Student-T
   - SinhAsinh_pdf   
   - JohnsonSU_pdf   
-  - Atlas_pdf   
+  - Atlas_pdf
+  - Slash_pdf
+  - AsymmetricLaplace_pdf  
   - Sech_pdf   
   - Logistic_pdf   
   
@@ -84,6 +86,8 @@ __all__ = (
     'SinhAsinh_pdf'          , ## "Sinh-arcsinh distributions". Biometrika 96 (4): 761
     'JohnsonSU_pdf'          , ## JonhsonSU-distribution 
     'Atlas_pdf'              , ## modified gaussian with exponenital tails 
+    'Slash_pdf'              , ## symmetric peakk wot very heavy tails 
+    'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperboilic secant  (inverse-cosh) 
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
     #
@@ -721,10 +725,9 @@ class Apolonios2_pdf(MASS) :
         MASS.__init__  ( self , name , xvar , mean , sigma  )
 
         
-        self.__asym = makeVar ( asymmetry                  ,
-                                'asym_%s'           % name ,
-                                '#asym_{Apo2}(%s)' % name ,
-                                asymmetry , -1 , 1  ) 
+        self.__asym = makeVar ( asymmetry                 ,
+                                'asym_%s'          % name ,
+                                '#asym_{Apo2}(%s)' % name , asymmetry , 0, -1 , 1  ) 
         
         self.__lst_R = ROOT.RooArgList ( self.sigma , self.asym ) 
         self.__sigmaR = ROOT.RooFormulaVar (
@@ -882,7 +885,6 @@ class BifurcatedGauss_pdf(MASS) :
         value = float ( value ) 
         assert -1 <= value <= 1, "``asymmetry''-parameter is out of range -1,1"
         self.__asym.setVal ( value )
-        return self.__asym.getVal ()
 
     @property
     def sigmaL ( self ) :
@@ -1998,6 +2000,196 @@ class Atlas_pdf(MASS) :
 
 models.append ( Atlas_pdf )      
 
+# =============================================================================
+## @class Slash_pdf
+#  Symmetric function with very heavy tails.
+#  @see https://en.wikipedia.org/wiki/Slash_distribution
+#  The tails  are so heavy that moments does not exists
+#  @see Ostap::Math::Slash
+#  @see Ostap::Models::Slash
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-004
+class Slash_pdf(MASS) :
+    """Symmetric function with very heavy tails.
+    - see https://en.wikipedia.org/wiki/Slash_distribution
+    The tails  are so heavy that moments does not exists
+    - see Ostap::Math::Slash
+    - see Ostap::Models::Slash
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean    = None ,   ## related to mean 
+                   scale   = None ) : ## related to scale
+
+        ## initialize the base
+        MASS.__init__  ( self , name , xvar , mean, scale )
+        
+        self.__scale = self.sigma
+        if self.scale != scale : 
+            sname  = self.scale.GetName  ()
+            stitle = self.scale.GetTitle ()
+            gname  = sname .replace ( 'sigma' , 'scale' )
+            gtitle = stitle.replace ( 'sigma' , 'scale' )
+            self.scale.SetName  ( gname  ) 
+            self.scale.SetTitle ( gtitle )
+
+
+        ## finally build pdf
+        self.pdf = Ostap.Models.Slash (
+            "slash_"    + name ,
+            "Slash(%s)" % name ,
+            self.xvar      ,
+            self.mean      ,
+            self.scale     )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'scale'     : self.scale ,
+            }
+    @property
+    def mu ( self ) :
+        """``mu''  - location parameter, the same as ``mean'' or ``location''"""
+        return self.mean
+    @property
+    def location ( self ) :
+        """``location''  - location parameter, the same as ``mean'' or ``mu''"""
+        return self.mean
+    @property
+    def scale ( self ) :
+        """``scale''  - scale parameter, the same as ``sigma''"""
+        return self.__scale
+    @scale.setter
+    def scale ( self , value ) :
+        value =  float ( value )
+        assert 0 < scale , "``scale''-parameter must be positive"
+        self.__scale.setVal ( value ) 
+    
+models.append ( Slash_pdf )      
+
+
+# =============================================================================
+## @class AsymmetricLaplace_pdf
+#  Asymmetric version of Laplace distribution
+#  @see https://en.wikipedia.org/wiki/Asymmetric_Laplace_distribution
+#  @see Ostap::Math::AsymmetricLaplace
+#  @see Ostap::Models::Laplace
+#  \f$  f(x) \propto \exp ( \pm \frac{x-\mu}{ \lambda_{L,R}} ) \f$ 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-004
+class AsymmetricLaplace_pdf(MASS) :
+    r"""Asymmetric version of Laplace distribution:
+    
+    f(x) \propto \exp ( \pm \frac { x- \mu } { \lambda_{ L , R } } )
+    
+    - see https://en.wikipedia.org/wiki/Asymmetric_Laplace_distribution
+    - see Ostap::Math::AsymmetricLaplace
+    - see Ostap::Models::Laplace
+    
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean      = None ,   ## related to mean
+                   slope     = None ,
+                   asymmetry = 0    ) : ## 0 corresponds to symmetric laplace 
+
+        ## initialize the base
+        MASS.__init__  ( self , name , xvar , mean , slope )
+        
+        self.__asym = makeVar ( asymmetry               ,
+                                'asym_%s'        % name ,
+                                '#asym_{AL}(%s)' % name , asymmetry , 0 , -1 , 1  ) 
+
+        self.__slope = self.sigma
+
+        ## rename it if needed 
+        if self.__slope != slope :
+            sname  = self.slope.GetName  ()
+            stitle = self.slope.GetTitle ()
+            gname  = sname .replace ( 'sigma' , 'slope' )
+            gtitle = stitle.replace ( 'sigma' , 'slope' )
+            self.slope.SetName  ( gname  ) 
+            self.slope.SetTitle ( gtitle )          
+            
+        ## Right-side lambda 
+        self.__lst_R   = ROOT.RooArgList ( self.slope , self.asym )
+        self.__lambdaR = ROOT.RooFormulaVar (
+            "lambdaR_%s"     % name   ,
+            "lambda_{R}(%s)" % name   ,
+            "%s*(1.0+%s)"    % ( self.slope.GetName() , self.asym.GetName() ) ,
+            self.__lst_R   )
+        
+        ## Left-side lambda 
+        self.__lst_L   = ROOT.RooArgList ( self.slope , self.asym ) 
+        self.__lambdaL = ROOT.RooFormulaVar (
+            "lambdaL_%s"     % name   ,
+            "lambda_{L}(%s)" % name   ,
+            "%s*(1.0-%s)"   % ( self.slope.GetName() , self.asym.GetName() ) ,
+            self.__lst_L   )
+        
+        ## finally build pdf
+        self.pdf = Ostap.Models.AsymmetricLaplace (
+            "alaplace_"    + name ,
+            "ALaplace(%s)" % name ,
+            self.xvar      ,
+            self.mean      ,
+            self.lambdaL   ,
+            self.lambdaR   )                   
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'slope'     : self.slope ,
+            'asymmetry' : self.asym  
+            }
+        
+    @property
+    def mu ( self ) :
+        """``mu''  - location parameter, the same as ``mean'' or ``location''"""
+        return self.mean
+    @property
+    def location ( self ) :
+        """``location''  - location parameter, the same as ``mean'' or ``mu''"""
+        return self.mean
+
+    @property
+    def slope ( self ) :
+        """``slope''-parameter the mean exponential slope,  the same as ``sigma''"""
+        return self.__slope
+    @slope.setter
+    def slope ( self, value ) :
+        value = float ( value ) 
+        assert 0 < value , "``slope''-parameter must be positive"
+        self.__slope.setVal ( value )
+    
+    @property
+    def asym ( self ) :
+        """``asymmetry''-parameter for Asymmetric Laplace"""
+        return self.__asym
+    @asym.setter
+    def asym ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <= 1, "``asymmetry''-parameter is out of range -1,1"
+        self.__asym.setVal ( value )
+
+    @property
+    def lambdaL ( self ) :
+        """(left)``lambda''-parameter (exponential slope) for Asymmetric Laplace"""
+        return self.__lambdaL
+    
+    @property
+    def lambdaR ( self ) :
+        """(right)``lambda''-parameter (exponential slope) for Asymmetric Laplace"""
+        return self.__lambdaR
+    
+
+models.append ( AsymmetricLaplace_pdf )      
 # =============================================================================
 ## @class Sech_pdf
 #  Hyperbolic secant distribution or "inverse-cosh" distribution

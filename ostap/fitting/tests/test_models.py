@@ -879,6 +879,76 @@ def test_bw () :
 
 
 # =============================================================================
+## Slash
+# =============================================================================
+def test_slash(): 
+    logger.info ('Test Slash shape' ) 
+    model = Models.Fit1D (
+        signal = Models.Slash_pdf ( name  = 'Slash' , 
+                                    xvar  = mass   ,
+                                    mean  = signal_gauss.mean   , 
+                                    scale = signal_gauss.sigma  ) ,
+        background = None  )   
+    
+    signal = model.signal
+    signal.scale.release() 
+    signal.mean.fix()
+    
+    model.S.setVal(5000)
+    model.B.setVal( 500)
+    
+    with rooSilent() : 
+        result, frame = model. fitTo ( dataset0 )
+        result, frame = model. fitTo ( dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print result 
+    else :     
+        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Scale                is: %-28s ' %  result ( signal.scale )[0] )
+        
+    models.add ( model )
+
+
+# =============================================================================
+## Asymmetric Laplace 
+# =============================================================================
+##def test_laplace(): 
+if 1 < 2 : 
+    logger.info ('Test Asymmetric Laplace shape' ) 
+    model = Models.Fit1D (
+        signal = Models.AsymmetricLaplace_pdf ( name  = 'AL' , 
+                                                xvar  = mass   ,
+                                                mean  = signal_gauss.mean   , 
+                                                slope = signal_gauss.sigma  ) ,
+        background = None  )
+    
+    signal = model.signal
+    signal.slope.release() 
+    signal.mean.fix()
+    
+    model.S.setVal(5000)
+    model.B.setVal( 500)
+    
+    with rooSilent() : 
+        result, frame = model. fitTo ( dataset0 )
+        result, frame = model. fitTo ( dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print result 
+    else :     
+        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Slope                is: %-28s ' %  result ( signal.slope )[0] )
+        logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  )[0] )
+        
+    models.add ( model )
+
+
+# =============================================================================
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
@@ -895,28 +965,30 @@ def test_db() :
 if '__main__' == __name__ :
 
     test_gauss          () ## simple Gaussian PDF                       + background 
-    test_crystalball    () ## Crystal Ball                              + background
-    test_crystalball_RS () ## right-side Crystal Ball                   + background  
-    test_crystalball_DS () ## double side Crystal Ball                  + background 
-    test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
-    test_apolonios      () ## Apolonios function                        + background 
-    test_apolonios2     () ## modified Apolonios function               + background 
-    test_bifurcated     () ## bifurcated Gaussian function              + background 
-    test_2gauss         () ## double     Gaussian function              + background 
-    test_gengauss_v1    () ## generalized Gaussian function V1          + background 
-    test_gengauss_v2    () ## generalized Gaussian function V2          + background 
-    test_skewgauss      () ## skew gaussian                             + background 
-    test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
-    test_studentT       () ## Student-t shape                           + background 
-    test_bifstudentT    () ## Bifurcated Student-t shape                + background 
-    test_sinhasinh      () ## Sinh-Asinh distribution                   + background 
-    test_johnsonSU      () ## Johnson-SU distribution                   + background 
-    test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
-    test_sech           () ## Sech (1/cosh)  distribution               + background 
-    test_logistic       () ## Logistic distribution                     + background 
-    test_voigt          () ## Voigt profile                             + background 
-    test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 
-    test_bw             () ## Breit-Wigner(+resolution)                 + background 
+    ## test_crystalball    () ## Crystal Ball                              + background
+    ## test_crystalball_RS () ## right-side Crystal Ball                   + background  
+    ## test_crystalball_DS () ## double side Crystal Ball                  + background 
+    ## test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
+    ## test_apolonios      () ## Apolonios function                        + background 
+    ## test_apolonios2     () ## modified Apolonios function               + background 
+    ## test_bifurcated     () ## bifurcated Gaussian function              + background 
+    ## test_2gauss         () ## double     Gaussian function              + background 
+    ## test_gengauss_v1    () ## generalized Gaussian function V1          + background 
+    ## test_gengauss_v2    () ## generalized Gaussian function V2          + background 
+    ## test_skewgauss      () ## skew gaussian                             + background 
+    ## test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
+    ## test_studentT       () ## Student-t shape                           + background 
+    ## test_bifstudentT    () ## Bifurcated Student-t shape                + background 
+    ## test_sinhasinh      () ## Sinh-Asinh distribution                   + background 
+    ## test_johnsonSU      () ## Johnson-SU distribution                   + background 
+    ## test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
+    ## test_sech           () ## Sech (1/cosh)  distribution               + background 
+    ## test_logistic       () ## Logistic distribution                     + background 
+    ## test_voigt          () ## Voigt profile                             + background 
+    ## test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 
+    ## test_bw             () ## Breit-Wigner(+resolution)                 + background 
+    test_slash           () ## Slash-function                            + background 
+    ## test_laplace         () ## Laplace-function                            + background 
 
     ## check finally that everything is serializeable:
     test_db ()          

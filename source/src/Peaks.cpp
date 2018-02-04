@@ -2984,7 +2984,160 @@ double Ostap::Math::JohnsonSU::integral
 
 
 
+// ============================================================================
+/*  Constructor from location and mean 
+ *  @param mu location 
+ *  @param scale the scale, scale>0
+ */
+// ============================================================================
+Ostap::Math::Slash::Slash
+( const double mu    , // location 
+  const double scale ) // scale 
+  : m_mu    ( mu ) 
+  , m_scale ( std::abs ( scale ) ) 
+{}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Math::Slash::~Slash(){}
+// ============================================================================
+bool Ostap::Math::Slash::setMu    ( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Slash::setScale ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_scale ) ) { return false ; }
+  m_scale = v;
+  return true ;
+}
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  const long double s_slash = 0.5L / std::sqrt( 2.0L * M_PI );
+  // ==========================================================================
+  //  (phi(0)-phi(x))/x^2
+  inline long double _slash_pdf_ ( const long double x ) 
+  {
+    if        ( s_zero ( x ) ) { return s_slash ; }
+    else if   ( 0.1 < std::abs ( x ) ) 
+    { return  ( 2 * s_slash -  Ostap::Math::gauss_pdf ( x ) ) / ( x * x ) ; }
+    //
+    const long double z = - 0.5L * x * x ;
+    return  s_slash * ( std::expm1 ( z ) / z ) ;
+  }
+  // ==========================================================================
+  //  Phi(x) - (phi(0)-phi(x))/x
+  inline long double _slash_cdf_ ( const long double x ) 
+  {
+    return 
+      s_equal ( x , 0 ) ? 0.5 : 
+      Ostap::Math::gauss_cdf ( x ) - x * _slash_pdf_ ( x ) ;
+  }
+}
+// ============================================================================
+// evaluate slash function
+// ============================================================================
+double Ostap::Math::Slash::pdf ( const double x ) const
+{
+  const double y = ( x - m_mu ) / m_scale ;
+  return _slash_pdf_ ( y ) / m_scale ;
+}
+// ============================================================================
+// evaluate slash CDF 
+// ============================================================================
+double Ostap::Math::Slash::cdf ( const double x ) const
+{
+  const double y = ( x - m_mu ) / m_scale ;
+  return _slash_cdf_ ( y ) ;
+}
+// ============================================================================
+// get integral from low to high
+// ============================================================================
+double Ostap::Math::Slash::integral
+( const double low  ,
+  const double high ) const 
+{ return s_equal ( low ,  high ) ? 0.0 : cdf ( high ) - cdf ( low ) ; }
 
+
+
+// ============================================================================
+/*  constructor from all parameters 
+ *  @param mu  peak location
+ *  @param lambdaL ``left''  exponential slope  (lambdaL>0)
+ *  @param lambdaR ``right'' exponential slope  (lambdaR>0)
+ */
+// ============================================================================
+Ostap::Math::AsymmetricLaplace::AsymmetricLaplace 
+( const double mu      , // location 
+  const double lambdaL , // left  exponential slope 
+  const double lambdaR ) // right exponential slope 
+  : m_mu ( mu ) 
+  , m_lambdaL ( std::abs ( lambdaL ) ) 
+  , m_lambdaR ( std::abs ( lambdaR ) ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Math::AsymmetricLaplace::~AsymmetricLaplace(){}
+// ============================================================================
+bool Ostap::Math::AsymmetricLaplace::setMu    ( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::AsymmetricLaplace::setLambdaL ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_lambdaL ) ) { return false ; }
+  m_lambdaL = v;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::AsymmetricLaplace::setLambdaR ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_lambdaR ) ) { return false ; }
+  m_lambdaR = v;
+  return true ;
+}
+// ============================================================================
+// evaluate asymmetic laplace function
+// ============================================================================
+double  Ostap::Math::AsymmetricLaplace::pdf ( const double x ) const 
+{
+  const long double l = 1.0L / ( m_lambdaL + m_lambdaR ) ;
+  return 
+    x < m_mu ? 
+    l * std::exp (   ( x - m_mu ) / m_lambdaL ) :
+    l * std::exp ( - ( x - m_mu ) / m_lambdaR ) ;
+}
+// ============================================================================
+// evaluate CDF
+// ============================================================================
+double  Ostap::Math::AsymmetricLaplace::cdf ( const double x ) const 
+{
+  const long double l = 1.0L / ( m_lambdaL + m_lambdaR ) ;
+  return 
+    x < m_mu ? 
+    m_lambdaR     * l * std::exp (   ( x - m_mu ) / m_lambdaL ) :
+    1 - m_lambdaL * l * std::exp ( - ( x - m_mu ) / m_lambdaR ) ;
+}
+// ============================================================================
+// get integral from low to high
+// ============================================================================
+double Ostap::Math::AsymmetricLaplace::integral
+( const double low  ,
+  const double high ) const 
+{ return s_equal ( low ,  high ) ? 0.0 : cdf ( high ) - cdf ( low ) ; }
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END 

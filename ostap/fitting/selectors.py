@@ -34,7 +34,6 @@
 #           if not 1 <= tree.pt  <=  10.0  : return 0               ## RETURN
 #
 #           return 1
-#
 # 
 # selector = MySelector()
 #

@@ -4455,7 +4455,7 @@ namespace Ostap
      *  http://en.wikipedia.org/wiki/ARGUS_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2014-06-07
-     *  @see Ostap::Math::Landau
+     *  @see Ostap::Math::Argus
      */
     class  Argus : public RooAbsPdf
     {
@@ -4526,6 +4526,152 @@ namespace Ostap
       mutable Ostap::Math::Argus m_argus ; // the actual function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class  Slash 
+     *  ``Slash''-distribution -  symmetric peak with veyr heavy tail
+     *  @see https://en.wikipedia.org/wiki/Slash_distribution
+     *  Tails arew so heavy that moments (e.g. variance) do not exist 
+     *  @see Ostap::Math::Slash
+     */
+    class Slash : public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::Slash, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Slash
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           mu        ,
+        RooAbsReal&           scale     ) ;
+      /// "copy constructor"
+      Slash
+      ( const Slash&          right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~Slash  () ;
+      /// clone
+      Slash* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Slash () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Slash& function () const { return m_slash ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x     ;
+      RooRealProxy m_mu    ;
+      RooRealProxy m_scale ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Slash m_slash ; // the actual function
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class AsymmetricLaplace
+     *  @see https://en.wikipedia.org/wiki/Asymmetric_Laplace_distribution
+     *  @see  Ostap::Math::AsymmetricLaplace
+     */
+    class AsymmetricLaplace: public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::AsymmetricLaplace, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      AsymmetricLaplace
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           mu        ,
+        RooAbsReal&           lambdaL   ,
+        RooAbsReal&           lambdaR   ) ;
+      /// "copy constructor"
+      AsymmetricLaplace
+      ( const AsymmetricLaplace& right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~AsymmetricLaplace  () ;
+      /// clone
+      AsymmetricLaplace* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      AsymmetricLaplace () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::AsymmetricLaplace& function () const { return m_laplace ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x       ;
+      RooRealProxy m_mu      ;
+      RooRealProxy m_lambdaL ;
+      RooRealProxy m_lambdaR ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::AsymmetricLaplace m_laplace ; // the actual function
+      // ======================================================================
+    } ;   
     // ========================================================================
     /** @class Tsallis
      *  Useful function to describe pT-spectra of particles

@@ -1711,6 +1711,145 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class  Slash 
+     *  ``Slash''-distribution -  symmetric peak with veyr heavy tail
+     *  @see https://en.wikipedia.org/wiki/Slash_distribution
+     *  Tails arew so heavy that moments (e.g. variance) do not exist 
+     */
+    class Slash 
+    {
+    public :
+      // ======================================================================
+      /** Constructor from location and mean 
+       *  @param mu location 
+       *  @param scale the scale, scale>0
+       */
+      Slash ( const double mu    = 0 ,   // location 
+              const double scale = 1 ) ; // scale ;      
+      /// destructor
+      ~Slash() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate slash function
+      double pdf        ( const double x ) const ;
+      /// evaluate slash function
+      double operator() ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public: // direct getters
+      // ======================================================================
+      double mu       () const { return m_mu    ; }
+      /// get parameters "scale"
+      double scale    () const { return m_scale ; }
+      // ======================================================================
+    public: //   derived getters  
+      // ======================================================================
+      double mean     () const { return mu ()   ; }
+      double location () const { return mu ()   ; }
+      // ======================================================================
+    public: // direct setters
+      // ======================================================================
+      bool setMu       ( const double value ) ;
+      bool setScale    ( const double value ) ;
+      // ======================================================================      
+      bool setMean     ( const double value ) { return setMu ( value ) ; }
+      bool setLocation ( const double value ) { return setMu ( value ) ; }
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// get integral from low to high
+      double integral ( const double low  ,
+                        const double high ) const ;
+      /// integral from -infinity to +infinity
+      double integral () const { return 1 ; }
+      /// evaluate sslash CDF function
+      double cdf      ( const double x ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      ///  peak location
+      double m_mu    ; //  peak location
+      /// the scale
+      double m_scale ; // the scale 
+      // ======================================================================      
+    } ;  
+    // ========================================================================
+    /** @class AsymmetricLaplace
+     *  @see https://en.wikipedia.org/wiki/Asymmetric_Laplace_distribution
+     *  Here we use the ``inversed'' slopes
+     *  \f$ f(x) \propto e^{ \pm\frac {x-\mu} { \lambda_{L,R}}} \f$ 
+     */ 
+    class AsymmetricLaplace
+    {
+    public:
+      // ======================================================================
+      /** constructor from all parameters 
+       *  @param mu  peak location
+       *  @param lambdaL ``left''  exponential slope  (lambdaL>0)
+       *  @param lambdaR ``right'' exponential slope  (lambdaR>0)
+       */
+      AsymmetricLaplace ( const double mu      = 0 ,   // location 
+                          const double lambdaL = 1 ,   // left  exponential slope 
+                          const double lambdaR = 1 ) ; // right exponential slope 
+      ///  destructor 
+      ~AsymmetricLaplace() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate asymmetic laplace function
+      double pdf        ( const double x ) const ;
+      /// evaluate asymmetric laplace function
+      double operator() ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public: // direct getters
+      // ======================================================================
+      double mu       () const { return m_mu      ; }
+      /// get ``left'' lambda parameter 
+      double lambdaL  () const { return m_lambdaL ; }
+      /// get ``right'' lambda parameter 
+      double lambdaR  () const { return m_lambdaR ; }
+      // ======================================================================
+    public: //   derived getters  
+      // ======================================================================
+      double mean     () const { return mu ()   ; }
+      double location () const { return mu ()   ; }
+      // ======================================================================
+    public: // the standard parameterization (slopes are inverse)
+      // ======================================================================
+      double lambda   () const { return 1.0 / std::sqrt ( m_lambdaL * m_lambdaR ) ; }
+      /// get the ``asymmetry''   0<k<+inf 
+      double k        () const { return       std::sqrt ( m_lambdaR / m_lambdaL ) ; }
+      // ======================================================================
+    public: // direct setters
+      // ======================================================================
+      bool   setMu       ( const double value ) ;
+      bool   setLambdaL  ( const double value ) ;
+      bool   setLambdaR  ( const double value ) ;
+      // ======================================================================      
+      bool   setMean     ( const double value ) { return setMu ( value ) ; }
+      bool   setLocation ( const double value ) { return setMu ( value ) ; }
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// get integral from low to high
+      double integral ( const double low  ,
+                        const double high ) const ;
+      /// integral from -infinity to +infinity
+      double integral () const {  return  1 ; }
+      /// evaluate CDF function
+      double cdf      ( const double x ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      ///  peak location
+      double m_mu      ; //  peak location
+      /// ``left''  exponential slope 
+      double m_lambdaL ; /// ``left''  exponential slope 
+      /// ``right''  exponential slope 
+      double m_lambdaR ; /// ``right''  exponential slope      
+      // ======================================================================
+    } ;
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

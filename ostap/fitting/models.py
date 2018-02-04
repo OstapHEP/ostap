@@ -39,6 +39,8 @@ Empricial PDFs to describe narrow peaks :
   - sinh-asinh shape
   - Johnson-SU shape
   - Atlas shape
+  - Slash shape
+  - Asymmetric Laplace shape
   - Sech  shape
   - Logistic, aka ``sech-squared'' shape
   
@@ -88,6 +90,8 @@ __all__ = (
     'SinhAsinh_pdf'          , ## "Sinh-arcsinh distributions". Biometrika 96 (4): 761
     'JohnsonSU_pdf'          , ## Johnson-SU distributon
     'Atlas_pdf'              , ## modified gaussian wiht exponential tails 
+    'Slash_pdf'              , ## Symmetie peak with vey heavy tails 
+    'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
     'Logistic_pdf'           , ## Logistic aka ``sech-squared'' PDF
     #
@@ -123,17 +127,17 @@ __all__ = (
     #
     ## "Other" distributions 
     #
-    'GammaDist_pdf'       , ## Gamma-distributuon in shape/scale parameterization
-    'GenGammaDist_pdf'    , ## Generalized Gamma-distribution
-    'Amoroso_pdf'         , ## another view of generalized Gamma distribution
-    'LogGammaDist_pdf'    , ## Gamma-distributuon in shape/scale parameterization
-    'Log10GammaDist_pdf'  , ## Gamma-distributuon in shape/scale parameterization
-    'LogGamma_pdf'        , ## 
-    'BetaPrime_pdf'       , ## Beta-prime distribution 
-    'Landau_pdf'          , ## Landau distribution 
-    'Argus_pdf'           , ## Argus distribution 
-    'TwoExpos_pdf'        , ## Difference of two exponents
-    'SinhAsinh_pdf'       , ## "Sinh-asinh" distribution
+    'GammaDist_pdf'         , ## Gamma-distributuon in shape/scale parameterization
+    'GenGammaDist_pdf'      , ## Generalized Gamma-distribution
+    'Amoroso_pdf'           , ## another view of generalized Gamma distribution
+    'LogGammaDist_pdf'      , ## Gamma-distributuon in shape/scale parameterization
+    'Log10GammaDist_pdf'    , ## Gamma-distributuon in shape/scale parameterization
+    'LogGamma_pdf'          , ## 
+    'BetaPrime_pdf'         , ## Beta-prime distribution 
+    'Landau_pdf'            , ## Landau distribution 
+    'Argus_pdf'             , ## Argus distribution 
+    'TwoExpos_pdf'          , ## Difference of two exponents
+    'SinhAsinh_pdf'         , ## "Sinh-asinh" distribution
     #
     ## 1D-background models
     # 

@@ -6187,6 +6187,173 @@ Double_t Ostap::Models::Argus::analyticalIntegral
 }
 // ============================================================================
 
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Slash::Slash
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          mu     ,
+  RooAbsReal&          scale  ) 
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x       ( "x"      , "Observable" , this , x      ) 
+  , m_mu      ( "mu"     , "location"   , this , mu     ) 
+  , m_scale   ( "scale"  , "scale"      , this , scale  ) 
+    //
+  , m_slash   ( 0 , 1 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Slash::Slash
+( const Ostap::Models::Slash&  right ,
+  const char*                     name  ) 
+  : RooAbsPdf ( right , name ) 
+//
+  , m_x      ( "x"      , this , right.m_x      ) 
+  , m_mu     ( "mu"     , this , right.m_mu     )
+  , m_scale  ( "scale"  , this , right.m_scale  )
+//
+  , m_slash  (                   right.m_slash  ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Slash::~Slash () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Slash*
+Ostap::Models::Slash::clone( const char* name ) const 
+{ return new Ostap::Models::Slash( *this , name) ; }
+// // ============================================================================
+void Ostap::Models::Slash::setPars () const 
+{  
+  m_slash.setMu    ( m_mu    ) ;
+  m_slash.setScale ( m_scale ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Slash::evaluate() const 
+{
+  setPars () ;
+  return m_slash ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Slash::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Slash::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  //
+  return m_slash.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::AsymmetricLaplace::AsymmetricLaplace
+( const char*          name    , 
+  const char*          title   ,
+  RooAbsReal&          x       ,
+  RooAbsReal&          mu      ,
+  RooAbsReal&          lambdaL ,
+  RooAbsReal&          lambdaR )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x       ( "x"       , "Observable"                  , this , x       ) 
+  , m_mu      ( "mu"      , "location"                    , this , mu      ) 
+  , m_lambdaL ( "lambdaL" , "``left'' exponential slope"  , this , lambdaL ) 
+  , m_lambdaR ( "lambdaR" , "``right'' exponential slope" , this , lambdaR ) 
+    //
+  , m_laplace ( 0 , 1 , 1 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::AsymmetricLaplace::AsymmetricLaplace
+( const Ostap::Models::AsymmetricLaplace&  right ,
+  const char*                     name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x        ( "x"       , this , right.m_x       ) 
+  , m_mu       ( "mu"      , this , right.m_mu      )
+  , m_lambdaL  ( "lambdaL" , this , right.m_lambdaL )
+  , m_lambdaR  ( "lambdaR" , this , right.m_lambdaR )
+    //
+  , m_laplace  ( right.m_laplace ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::AsymmetricLaplace::~AsymmetricLaplace(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::AsymmetricLaplace*
+Ostap::Models::AsymmetricLaplace::clone( const char* name ) const 
+{ return new Ostap::Models::AsymmetricLaplace( *this , name) ; }
+// ============================================================================
+void Ostap::Models::AsymmetricLaplace::setPars () const 
+{
+  m_laplace.setMu      ( m_mu      ) ;
+  m_laplace.setLambdaL ( m_lambdaL ) ;
+  m_laplace.setLambdaR ( m_lambdaR ) ;  
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::AsymmetricLaplace::evaluate() const 
+{
+  setPars () ;
+  return m_laplace( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::AsymmetricLaplace::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::AsymmetricLaplace::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  //
+  return m_laplace.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
 
 
 // ============================================================================
@@ -6709,6 +6876,8 @@ ClassImp(Ostap::Models::Atlas              )
 ClassImp(Ostap::Models::Sech               ) 
 ClassImp(Ostap::Models::Logistic           ) 
 ClassImp(Ostap::Models::Argus              ) 
+ClassImp(Ostap::Models::Slash              ) 
+ClassImp(Ostap::Models::AsymmetricLaplace  ) 
 ClassImp(Ostap::Models::Tsallis            ) 
 ClassImp(Ostap::Models::QGSM               ) 
 ClassImp(Ostap::Models::TwoExpos           ) 

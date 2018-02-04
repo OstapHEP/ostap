@@ -39,7 +39,7 @@ __all__     = (
 import ROOT, math
 from   ostap.core.core     import cpp , Ostap , VE , hID , rootID, valid_pointer
 from   ostap.histos.histos import h1_axis , h2_axes
-from   ostap.logger.utils  import roo_silent 
+from   ostap.logger.utils  import roo_silent , rootWarning 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -794,7 +794,6 @@ class PDF (object) :
             #
             if not ROOT.gROOT.IsBatch() :
                 with rootWarning (): frame.draw()
-
             
             residual =  kwargs.pop ( 'residual' , False )
             if residual and not  dataset :

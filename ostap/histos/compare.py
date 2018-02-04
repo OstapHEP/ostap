@@ -34,17 +34,17 @@ import ostap.histos.param
 #  histo = ...
 #  print 'Is constant? %s ' % histo.is_constant( prob = 0.01 )
 #  @endcode 
-def _h1_constant_ ( h1 , prob = 0.10 , opts = '0Q' , rescale = False ) :
+def _h1_constant_ ( h1 , prob = 0.10 , opts = '0Q' , density = False ) :
     """Can  1D-histogram be considered as constant ?
     >>> histo = ...
     >>> print 'Is constant? %s ' % histo.is_constant( prob = 0.01 ) 
     """
     #
-    if rescale :
-        h1_ = h1.rescale_bins(1)
-        res = _h1_constant_ ( h1_ , prob , opts , rescale = False )
+    if density :
+        h1_ = h1.density() 
+        cmp = _h1_constant_ ( h1_ , prob , opts , density = False )
         del h1_
-        return res
+        return cmp
     
     if not isinstance ( h1 , ( ROOT.TH1D , ROOT.TH1F ) ) : return False 
     #
@@ -63,7 +63,7 @@ ROOT.TH1F.is_constant = _h1_constant_
 ## compare the 1D-histograms trying to fit one with other
 def _h1_cmp_fit_ ( h1              ,
                    h2              ,
-                   rescale = False ,  
+                   density = False ,  
                    opts    = '0Q'  ) :
     """Compare histograms by refit of the first with functions,
     extracted from the second one
@@ -73,12 +73,13 @@ def _h1_cmp_fit_ ( h1              ,
     >>> r  = h1.cmp_fit ( h2 )
     >>> if r : print r.Prob()    
     """    
-    if rescale :
-        h1_ = h1.rescale_bins   ( 1.0 )
-        h2_ = h2.rescale_bins   ( 1.0 )
-        res = _h1_cmp_fit_ ( h1_ , h2_ ,  rescale = False , opts = opts )
-        del h1_, h2_
-        return res 
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h1_cmp_fit_ ( h1_ , h2_ ,  density = False , opts = opts )
+        del h1_
+        del h2_
+        return cmp
     
     f2 = h2.asTF () 
     f2.ReleaseParameter ( 0 ) 
@@ -98,8 +99,7 @@ ROOT.TH1F.cmp_fit = _h1_cmp_fit_
 ## compare the 1D-histograms trying to fit one 
 def _h1_cmp_pdf_ ( h1               ,
                    h2               ,
-                   rescale1 = False , 
-                   rescale2 = False , 
+                   density  = False , 
                    draw     = True  ,
                    silent   = True  ) :
     """Compare histograms by refit of the first with functions,
@@ -109,22 +109,17 @@ def _h1_cmp_pdf_ ( h1               ,
     >>> h2 = ... ## the second histo
     >>> r  = h1.cmp_fit ( h2 )
     >>> if r : print r.Prob()    
-    """    
-    if rescale1 :
-        h1_    = h1.rescale_bins   ( 1.0 )
-        result = _h1_cmp_pdf_ ( h1_ , h2 , False   , rescale2 , draw , silent )
+    """
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h1_cmp_pdf_ ( h1_ , h2_ , density = False ,draw =  draw , silent = silent )
         del h1_
-        return result
-    
-    if rescale2 :
-        h2_    = h2.rescale_bins   ( 1.0 )
-        result = _h1_cmp_pdf_ ( h1 , h2_ , rescale1 , False   , draw , silent )
         del h2_
-        return result
-        
+        return cmp
+    
     from ostap.fitting.basic      import H1D_pdf, Fit1D
     from ostap.fitting.background import Bkg_pdf 
-
 
     pdf2   = H1D_pdf    ( '_H1', h2 , density   = True , silent = True )
     model2 = Fit1D ( signal = pdf2 , background = Bkg_pdf( '_B2' , mass = pdf2.mass , power = 0 , tau = 0 ) ) 
@@ -143,21 +138,19 @@ ROOT.TH1F.cmp_pdf = _h1_cmp_pdf_
 ## compare the 1D-histograms by chi2 
 def _h1_cmp_chi2_ ( h1              ,
                     h2              ,
-                    rescale = False ) :
+                    density = False ) :
     """Compare histograms by chi2
     >>> h1 = ... ## the first histo
     >>> h2 = ... ## the second histo (or function or anything else) 
     >>> chi2ndf,prob  = h1.cmp_chi2 ( h2 )    
     """
-    if rescale :
-        h1_    = h1.rescale_bins   ( 1.0 )
-        h2_    = h2.rescale_bins   ( 1.0 )
-        hmean  = h1_.mean()             ## normalization point        
-        h1    /= h1_( hmean )
-        h2    /= h2_( hmean )
-        res = _h1_cmp_chi2_ ( h1_ , h2_ ,  rescale = False )
-        del h1_, h2_
-        return res 
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h1_cmp_chi2_ ( h1_ , h2_ , density = False )
+        del h1_
+        del h2_
+        return cmp
 
     c2  = 0
     ndf = 0  
@@ -231,7 +224,7 @@ ROOT.TH1F.chi2_cmp = _h1_chi2_cmp_
 # \f$cos \theta = \frac{ f_1 \cdot f_2 } { \left|f_1\right|\left|f_2\right| }\f$
 def _h1_cmp_costheta_ ( h1              ,
                         h2              ,
-                        rescale = False ) :  
+                        density = False ) :  
     """Compare the 1D-historgams (as functions)
     Calculate scalar product and get ``the angle'' from it
     
@@ -240,12 +233,13 @@ def _h1_cmp_costheta_ ( h1              ,
     >>> cos_theta  = h1.cmp_costheta ( h2 )
     
     """
-    if rescale :
-        h1_ = h1.rescale_bins   ( 1.0 )
-        h2_ = h2.rescale_bins   ( 1.0 )
-        res = _h1_cmp_costheta_ ( h1_ , h2_ , rescale = False )
-        del h1_, h2_
-        return res 
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h1_cmp_costheta_ ( h1_ , h2_ , density  = False )
+        del h1_
+        del h2_
+        return cmp
         
     f1 = h1.asFunc   ()
     f2 = h2.asFunc   ()
@@ -268,7 +262,7 @@ ROOT.TH1F.cmp_cos = _h1_cmp_costheta_
 #  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
 def _h1_cmp_dist_ ( h1              ,
                     h2              ,
-                    rescale = False ) : 
+                    density = False ) : 
     """Calculate the norm of difference of scaled histograms/functions 
     |f1-f2|, such |f1|=1 and |f2|=1
     
@@ -277,12 +271,13 @@ def _h1_cmp_dist_ ( h1              ,
     >>> diff = h1.cmp_dist ( h2 )
     
     """
-    if rescale :
-        h1_ = h1.rescale_bins   ( 1.0 )
-        h2_ = h2.rescale_bins   ( 1.0 )
-        res = _h1_cmp_dist_ ( h1_ , h2_ , rescale = False )
-        del h1_, h2_
-        return res 
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h1_cmp_dist_ ( h1_ , h2_ , density = False )
+        del h1_
+        del h2_
+        return cmp
     
     f1 = h1.asFunc   ()
     f2 = h2.asFunc   ()
@@ -311,7 +306,7 @@ ROOT.TH1F.cmp_dist = _h1_cmp_dist_
 #  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
 def _h1_cmp_dist2_ ( h1              ,
                      h2              ,
-                     rescale = False ) :   
+                     density = False ) :   
     """Calculate the norm of difference of scaled histograms/functions 
     |(f1-f2)*2/(f1*f2)|, such |f1|=1 and |f2|=1
 
@@ -320,12 +315,13 @@ def _h1_cmp_dist2_ ( h1              ,
     >>> diff = h1.cmp_dist2 ( h2 )
     
     """
-    if rescale :
-        h1_ = h1.rescale_bins   ( 1.0 )
-        h2_ = h2.rescale_bins   ( 1.0 )
-        res = _h1_cmp_dist2_ ( h1_ , h2_ , rescale = False )
-        del h1_, h2_
-        return res 
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h1_cmp_dist2_ ( h1_ , h2_ , density = False )
+        del h1_
+        del h2_
+        return cmp
 
     f1 = h1.asFunc   ()
     f2 = h2.asFunc   ()
@@ -365,18 +361,19 @@ def _h1_cmp_prnt_ ( h1              ,
                     head1   = ''    ,
                     head2   = ''    ,
                     title   = ''    ,
-                    rescale = False ) : 
+                    density = False ) : 
     """ Calculate and print some statistic information for two histos
     >>> h1 , h2 = ...
     >>> h1.cmp_prnt ( h2 ) 
     """
-    if rescale :
-        h1_ = h1.rescale_bins   ( 1.0 )
-        h2_ = h2.rescale_bins   ( 1.0 )
-        res = _h1_cmp_prnt_ ( h1_ , h2_ , head1 , head2 , title , rescale = False )
-        del h1_, h2_
-        return res 
-    
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h1_cmp_prnt_ ( h1_ , h2_ , head1 = head1 , head2 = head2 , title = title , density = False )
+        del h1_
+        del h2_
+        return cmp
+
     if not head1 : head1 = h1.GetName() 
     if not head2 : head2 = h1.GetName()
     
@@ -403,6 +400,108 @@ def _h1_cmp_prnt_ ( h1              ,
 ROOT.TH1D.cmp_prnt = _h1_cmp_prnt_
 ROOT.TH1F.cmp_prnt = _h1_cmp_prnt_ 
 
+
+# =============================================================================
+## compare two historgams and find the largest difference
+#  @code
+#  h1 = ...
+#  h2 = ...
+#  (x1_min,dy1_min),(x1_max,dy1_max) = h1.cmp_minmax ( h2 )
+#  (x2_min,dy2_min),(x2_max,dy2_max) = h2.cmp_minmax ( h1 )
+#  @endcode 
+def _h1_cmp_minmax_ ( h1                         ,
+                      h2                         ,                      
+                      density = False            ,
+                      diff    = lambda a,b : b-a , **kwargs ) :
+    """Compare two historgams and find the largest difference
+    >>> h1 = ...
+    >>> h2 = ...
+    >>> (x1_min,dy1_min),(x1_max,dy1_max) = h1.cmp_minmax ( h2 )
+    >>> (x2_min,dy2_min),(x2_max,dy2_max) = h2.cmp_minmax ( h1 )
+    """
+    
+    if density :
+        h1_ = h1.density () 
+        h2_ = h2.density ()
+        cmp = _h1_cmp_minmax_ ( h1_ , h2_ , density = False , diff = diff , **kwargs )
+        del h1_
+        del h2_
+        return cmp
+
+    mn_x   = None
+    mx_x   = None 
+    mn_val = None
+    mx_val = None
+    
+    for i , x , y in h1.iteritems() :
+        
+        dy = diff ( y , h2 ( x , **kwargs ) )
+        if mn_val is None or dy.value() < mn_val.value() :
+            mn_val = dy
+            mn_x   = x.value()
+        if mx_val is None or dy.value() > mx_val.value() :
+            mx_val = dy
+            mx_x   = x.value() 
+            
+    return ( mn_x , mn_val) , ( mx_x , mx_val )
+                
+ROOT.TH1D.cmp_minmax = _h1_cmp_minmax_
+ROOT.TH1F.cmp_minmax = _h1_cmp_minmax_ 
+        
+# =============================================================================
+## compare two historgams and find the largest difference
+#  @code
+#  h1 = ...
+#  h2 = ...
+#  (x1_min,y1_min,dz1_min),(x1_max,y1_min,dz1_max) = h1.cmp_minmax ( h2 )
+#  (x2_min,y2_min,dz2_min),(x2_max,y2_min,dz2_max) = h2.cmp_minmax ( h1 )
+#  @endcode 
+def _h2_cmp_minmax_ ( h1                         ,
+                      h2                         ,
+                      density = False            ,
+                      diff    = lambda a,b : b-a , **kwargs ) :
+    """Compare two historgams and find the largest difference
+    >>> h1 = ...
+    >>> h2 = ...
+    (x1_min,y1_min,dz1_min),(x1_max,y1_min,dz1_max) = h1.cmp_minmax ( h2 )
+    (x2_min,y2_min,dz2_min),(x2_max,y2_min,dz2_max) = h2.cmp_minmax ( h1 )
+    """
+    
+    if density : 
+        _h1 =  h1.density () 
+        _h2 =  h2.density ()
+        r   = _h2_cmp_minmax_  ( _h1  , _h2 , density = False , diff = diff , **kwargs )
+        del _h1
+        del _h2
+        return r 
+
+    mn_x   = None
+    mx_x   = None
+    mn_y   = None 
+    mx_y   = None 
+    mn_val = None
+    mx_val = None
+    
+    for ix , iy , x , y , z in h1.iteritems() :
+        
+        dz = diff ( z , h2 ( x , y , **kwargs ) )
+        if mn_val is None or dz.value() < mn_val.value() :
+            mn_val = dz
+            mn_x   = x.value() 
+            mn_y   = y.value() 
+        if mx_val is None or dz.value() > mx_val.value() :
+            mx_val = dz
+            mx_x   = x.value()
+            mx_y   = y.value() 
+
+    return ( mn_x , mn_y , mn_val) , ( mx_x , mx_y , mx_val )
+                
+ROOT.TH2D.cmp_minmax = _h2_cmp_minmax_
+ROOT.TH2F.cmp_minmax = _h2_cmp_minmax_ 
+        
+
+
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1  , 
@@ -418,6 +517,8 @@ _new_methods_       = (
     _h1_cmp_dist_     ,
     _h1_cmp_dist2_    ,
     _h1_cmp_prnt_     ,
+    _h1_cmp_minmax_   ,
+    _h2_cmp_minmax_   ,
     )
 # =============================================================================
 if '__main__' == __name__ :
