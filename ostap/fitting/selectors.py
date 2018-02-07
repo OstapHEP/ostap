@@ -95,14 +95,15 @@ __date__    = "2010-04-30"
 __version__ = "$Revision$" 
 # =============================================================================
 __all__ = (
-'Selector'         ,        ## The ``fixed'' TPySelector
-'Selector2'        ,        ## The ``fixed'' TPySelector
-'SelectorWithCuts' ,        ## The ``fixed'' TPySelector with TTree-formula 
-'SelectorWithVars' ,        ## Generic selctor to fill RooDataSet form TTree/TChain       
-'SelectorWithVarsCached'    ## Generic selector with cache   
+    'Selector'         ,        ## The ``fixed'' TPySelector
+    'Selector2'        ,        ## The ``fixed'' TPySelector
+    'SelectorWithCuts' ,        ## The ``fixed'' TPySelector with TTree-formula 
+    'SelectorWithVars' ,        ## Generic selctor to fill RooDataSet form TTree/TChain
+    'Variable'         ,        ## helper class to define variable 
+    'SelectorWithVarsCached'    ## Generic selector with cache   
 )
 # =============================================================================
-import ROOT, cppyy, math
+import ROOT, cppyy, math, sys 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -110,7 +111,8 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-from ostap.core.core import cpp, Ostap 
+from   ostap.core.core     import cpp, Ostap
+import ostap.fitting.roofit 
 # =============================================================================
 ## C++ Selector 
 Selector  = Ostap.Selector
@@ -167,11 +169,17 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
     def __init__ ( self , selection ) :
         """ Standart constructor
         """
-        ## initialize the base 
+        ## initialize the base
+        self.__selection = selection 
         Ostap.SelectorWithCuts.__init__ ( self , selection , None , self )
         if not self.cuts() :
             raise RuntimeError ("__init__:  Invalid Formula %s " % self.cuts() )
         
+    @property
+    def selection ( self ) :
+        """``selection'' -  selection to be used to preprocess TTree/TChain"""
+        return self.__selection
+    
     def Notify         ( self               ) : return True
     def Terminate      ( self               ) : pass 
     def SlaveTerminate ( self               ) : pass 
@@ -259,119 +267,105 @@ _process_. __doc__ += '\n' + Ostap.Process.process.__doc__
 ## finally: decorate TTree/TChain
 for t in ( ROOT.TTree , ROOT.TChain ) : t.process  = _process_ 
 
-# =============================================================================
-## helper function to decode information about the variable
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2010-04-30
-def makeEntry( var , *args ) :
-    """Helper function to decode information about the variable
-    >>> e = makeEntry( 'a' , 'description' , -1000 , 1000 ,  lambda s : s.pt/2 )
-    >>> e = makeEntry( 'a' , 'description' , -1000 ,         lambda s : s.pt/2 )
-    >>> e = makeEntry( 'a' , 'description'                   lambda s : s.pt/2 )
-    >>> e = makeEntry( 'a' , 'description' , -1000 , 1000 )
-    >>> e = makeEntry( 'a' , 'description' , -1000 )
-    >>> e = makeEntry( 'a' , 'description' )
-    """
 
-    if   isinstance ( var , str ) :      ## just the name of variable
 
-        vname = var            ## name
-
-        a = list ( args )
-
-        ## accessor function
-        if a and callable ( a[-1] )    : vfun  = a.pop(-1)
-        else                           : vfun  = lambda s : getattr ( s , vname )
-
-        if   not a                     : vdesc = 'Variable: %s'   % vname
-        elif isinstance ( a[0] , str ) : vdesc = a.pop(0)
-        else                           : vdesc = 'Variable:   %s' % vname
-
-        import sys
-        _f  =  sys.float_info
-        _fs = float,int,long
-
-        if   not a                     : vmin = - _f.max
-        elif isinstance ( a[0] , _fs ) : vmin =    float(a.pop(0))
-        else : raise AttributeError (" Invalid min-value specification %s %s " % ( var , list ( args ) ) )
-
-        if   not a                     : vmax =   _f.max
-        elif isinstance ( a[0] , _fs ) : vmax =    float(a.pop(0))
-        else : raise AttributeError (" Invalid max-value specification %s %s " % ( var , list ( args ) ) )
-
-        if vmax <= vmin :
-            raise AttributeError (" Invalid min/max specification %s %s "      % ( var , list ( args ) ) )
-
-        var = ROOT.RooRealVar ( vname , vdesc , vmin , vmax )
-
-    elif isinstance ( var , ROOT.RooRealVar ) : # variable itself
-
-        vname = var.GetName  () ## name
-        vdesc = var.GetTitle () ## description
-        vmin  = var.getMin   () ## min-value
-        vmax  = var.getMax   () ## max-value
-        #
-
-        a = list (  args )
-
-        ## accessor function
-        if a and callable ( a[-1] )    : vfun  = a.pop(-1)
-        else                           : vfun  = lambda s : getattr ( s , vname )
-
-    else :
-
-        raise AttributeError ( 'Invalid variable description  %s %s' % (  var , list   ( args ) ) )
-
-    ## unprocessed aruments ?
-    if a : raise AttributeError ( "Can't recognize all arguments %s  %s "  % ( var , list ( args ) ) )
-
-    ## finally the entry
-    return var , vdesc , vmin , vmax , vfun
+_maxv =  0.95 * sys.float_info.max
+_minv = -0.95 * sys.float_info.max
 
 # =============================================================================
-## helper class to decode/keep information about the variable in c
-# @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-# @date   2010-04-30
-class VEntry(object) :
-    """ Helper class to decode/keep infomration about the variable 
+## @class Variable
+#  Helper   structure to manage/keep/create the variable for   SelectorWithVars
+#  @see SelectorWithVars
+class Variable(object) :
+    """Helper   structure to manage/keep/create the variable for   SelectorWithVars
+    
+    - Get a variable 'my_name1' from the tree/chain:
+    
+    >>> v = Variable ( 'my_name1' , 'my_description1' , -100 , 100 ) ]
+    
+    - Get a variable 'my_name' from the tree/chain using the explicit accessor function, making some on-fly transforomation:
+    
+    >>> v = Variable ( 'my_name2' , 'my_description2' , -100 , 100 , lambda s : s.my_name2/1000 ) ]
+    
+    - Use less    trivial expressions:
+    
+    >>> v = Variable ( 'my_name3' , 'my_description3' , -1  , 2 , lambda s : s.var1+s.var2 ) ]
+    
+    - Any callable that gets TChain/Tree and evaluates to double( useful case - e.g. it could be TMVAReader)
+    
+    >>> def myvar ( chain ) : ...
+    >>> v = Variable ( 'my_name4' , 'my_description4' , accessor = myvar )  ]
+
+    - Use already booked variables:
+
+    >>> v5 = ROOT.RooRealVar( .... ) 
+    >>> v  = Variable ( v5 , accessor = lambda s : s.var5 ) ]
+
+    - Use already booked variables:
+    
+    >>> v6 = ROOT.RooRealVal( 'my_name6' )
+    >>> variables += [  Variable ( v6 ) ] ## get variable 'my_name6'
+
     """
-    def __init__ ( self , var , *args ) :
-        """Add declared variable to RooDataSet 
-        """
-        if   isinstance ( var , str ) :      ## just the name of variable   
+    def __init__ ( self                ,
+                   var                 ,
+                   description = ''    ,
+                   vmin        = _minv , 
+                   vmax        = _maxv , 
+                   accessor    = None  ) :
+        
+        assert var and isinstance ( var ,  ( str , ROOT.RooRealVar ) ) , \
+               "Variable: invalid type for ``var''  %s/%s"      % ( var         , type (  var        ) ) 
+        assert accessor is None or callable ( accessor ) , \
+               "Variable: illegal type for ``accessor'' %s/%s"  % ( accessor    , type ( accessor    ) )
+
+        if isinstance ( var , str ) :
             
-            self.vname = var            ## name 
-            self.vdesc = args[0]        ## description 
-            self.vmin  = args[1]        ## min-value 
-            self.vmax  = args[2]        ## max-value 
-            #
-            ## accessor function
-            #
-            if 3 < len ( args ) : self.vfun = args[3]
-            else                : self.vfun = lambda s : getattr( s , self.vname )
-            # 
-            self.var = ROOT.RooRealVar ( self.vname , self.vdesc , self.vmin , self.vmax )
+            assert isinstance ( description , str ) , \
+                   "Variable: illegal type for ``description''"     % ( description , type ( desctiption ) ) 
+            assert isinstance ( vmin ,  ( int,long,float) ) , \
+                   "Variable: illegal type for ``vmin'' %s/%s"      % ( vmin        , type ( vmin        ) )
+            assert isinstance ( vmax ,  ( int,long,float) ) , \
+                   "Variable: illegal type for ``vmax'' %s/%s"      % ( vmax        , type ( vmax        ) )
+            assert vmin < vmax, \
+                   "Variable: invalid ``minmax'' range (%g,%g)"     % ( vmin , vmax ) 
+            
+            description = description if description else "``%s''-variable" % var
+            description = description.replace('\n',' ')
 
-        elif isinstance ( var , ROOT.RooRealVar ) : # variable itself 
+            ## create the variable
+            var = ROOT.RooRealVar ( var , description , vmin , vmax ) 
 
-            self.vname = var.GetName  () ## name 
-            self.vdesc = var.GetTitle () ## description
-            self.vmin  = var.getMin   () ## min-value 
-            self.vmax  = var.getMax   () ## max-value 
-            #
-            ## accessor function
-            #
-            if 0 < len ( args ) : self.vfun = args[0]
-            else                : self.vfun = lambda s : getattr( s , self.vname )
+        if accessor is None :
+            varname = var.getName()
+            ## create the accessor 
+            accessor = lambda s : getattr ( s , varname )
 
-        else :
-
-            self._logger.error   ( 'Invalid variable description!' )
-            raise AttributeError,  'Invalid variable description!'
-
-        ## finally the entry
-        self.entry = ( self.var , self.vdesc , self.vmin , self.vmax , self.vfun )
-         
+        self.__var         = var
+        self.__minmax      = var.minmax()
+        self.__accessor    = accessor
+        
+    @property
+    def var         ( self ) :
+        """``var'' - the variable itself/ROOT.RooRealVar"""
+        return self.__var
+    @property
+    def name        ( self ) :
+        """``name'' - the name of the variable"""
+        return self.__var.GetName() 
+    @property
+    def description ( self ) :
+        """``description'' - the variable description/title"""
+        return self.__var.GetTitle()
+    @property
+    def minmax      (  self ) :
+        """``minmax'' - the range for the variable """
+        return self.__minmax 
+    @property
+    def accessor    ( self ) :
+        """``accessor'' - the actual callable to get the value from TTree/TChain"""
+        return self.__accessor
+ 
 # ==============================================================================
 ## Define generic selector to fill RooDataSet from TChain
 #
@@ -382,19 +376,19 @@ class VEntry(object) :
 #  ## add a variable 'my_name1' from the tree/chain 
 #  variables += [ 
 #   #  name       descriptor           min-value , max-value  
-#   ( 'my_name1' , 'my_description1' , low       , high     )
+#   Variable ( 'my_name1' , 'my_description1' , low       , high     )
 #   ]
 # 
 #  ## get a variable 'my_name' from the tree/chain with accessor function, e.g. rescale it on-fligh
 #  variables += [ 
 #   #  name       descriptor           min-value , max-value , access function   
-#   ( 'my_name2' , 'my_description2' , low       , high      , lambda s : s.my_name2/1000 )
+#   Variable ( 'my_name2' , 'my_description2' , low       , high      , lambda s : s.my_name2/1000 )
 #   ]
 #   
 #  ## get  less trivial expression
 #  variables += [ 
 #   #  name       descriptor           min-value , max-value , access function   
-#   ( 'my_name3' , 'my_description3' , low       , high      , lambda s : s.var1+s.var2 ) 
+#   Variable ( 'my_name3' , 'my_description3' , low       , high      , lambda s : s.var1+s.var2 ) 
 #  ]
 #
 #  ## any function that gets TChain/Tree entry and evaluates to double.
@@ -402,18 +396,18 @@ class VEntry(object) :
 #  def myvar ( chain ) : ....
 #  variables += [ 
 #   #  name       descriptor           min-value , max-value , access function   
-#   ( 'my_name4' , 'my_description4' , low       , high      , myvar ) 
+#   Variable ( 'my_name4' , 'my_description4' , low       , high      , myvar ) 
 #  ]
 #
 #
 #  ## add already booked variables: 
 #  v5 = ROOT.RooRealVal( 'my_name5' )
-#  variables += [  ( v5 , lambda s : s.var5 ) ]
+#  variables += [  Variable ( v5 , accessor = lambda s : s.var5 ) ]
 #
 #  
 #  ## add already booked variables: 
 #  v6 = ROOT.RooRealVal( 'my_name6' )
-#  variables += [  ( v6                     ) ] ## get variable "my_name6"
+#  variables += [  Variable ( v6                     ) ] ## get variable "my_name6"
 #
 #
 #  #
@@ -428,64 +422,60 @@ class VEntry(object) :
 #  dataset = selector.dataset
 # 
 #  @endcode
-#
 #  @date   2014-03-02
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  - thanks to  Alexander BARANOV 
 class SelectorWithVars(SelectorWithCuts) :
-    """ Create and fill the basic dataset for RooFit
-    # 
-    #  variables = [ ... ]
-    #
-    #  ## add a variable 'my_name1' from the tree/chain 
-    #  variables += [ 
-    #   #  name       descriptor           min-value , max-value  
-    #   ( 'my_name1' , 'my_description1' , low       , high     )
-    #   ]
-    # 
-    #  ## get a variable 'my_name' from the tree/chain with accessor function,
-    #  ## e.g. rescale it on-fligh
-    #  variables += [ 
-    #   #  name       descriptor           min-value , max-value , access function   
-    #   ( 'my_name2' , 'my_description2' , low       , high      , lambda s : s.my_name2/1000 )
-    #   ]
-    #   
-    #  ## get  less trivial expression
-    #  variables += [ 
-    #   #  name       descriptor           min-value , max-value , access function   
-    #   ( 'my_name3' , 'my_description3' , low       , high      , lambda s : s.var1+s.var2 ) 
-    #  ]
-    #
-    #  ## any function that gets Tchain/Tree and avaluated to double.
-    #  #  e.g. it coudl be TMVAReader
-    #  def myvar ( chain ) : ....
-    #  variables += [ 
-    #   #  name       descriptor           min-value , max-value , access function   
-    #   ( 'my_name4' , 'my_description4' , low       , high      , myvar ) 
-    #  ]
-    #
-    #
-    #  ## add already booked variables: 
-    #  v5 = ROOT.RooRealVal( 'my_name5' )
-    #  variables += [  ( v5 , lambda s : s.var5 ) ]
-    #
-    #  
-    #  ## add already booked variables: 
-    #  v6 = ROOT.RooRealVal( 'my_name6' )
-    #  variables += [  ( v6                     ) ] ## get variable 'my_name6'
-    #
-    #
-    #  #
-    #  ## finally create selector
-    #  # 
-    #  selector = SelectorWithVars (
-    #             variables                             ,
-    #             selection = ' chi2vx<30 && pt>2*GeV ' ,  ## filtering
-    #            )
-    #  chain = ...
-    #  chain.process ( selector )
-    #  dataset = selector.dataset
-    # 
+    """Create and fill the basic dataset for RooFit
+    
+    - Define the list of ``variables'' for selector:
+    
+    >>> variables = [ ... ]
+    
+    Add a variable 'my_name1' from the tree/chain:
+    
+    >>> variables += [ # name       descriptor         min-value , max-value  
+    ...    Variable ( 'my_name1' , 'my_description1' , low       , high     ) ]
+    
+    Get a variable 'my_name' from the tree/chain using the accessor function, e.g. rescale it on-fligh:
+    
+    >>> variables += [ #  name       descriptor        min-value , max-value , access function   
+    ...    Variable ( 'my_name2' , 'my_description2' , low       , high      , lambda s : s.my_name2/1000 ) ]
+    
+    Use less trivial expression:
+    
+    >>> variables += [ #  name       descriptor        min-value , max-value , access function   
+    ...    Variable ( 'my_name3' , 'my_description3' , low       , high      , lambda s : s.var1+s.var2 ) ]
+    
+    Any callable that gets TChain/Tree and evaluates to double.
+    ( useful case - e.g. it could be TMVAReader)
+    
+    >>> def myvar ( chain ) : ...
+    >>> variables += [ #  name       descriptor        min-value , max-value , access function   
+    ...    Variable ( 'my_name4' , 'my_description4' , low       , high      , myvar )  ]
+
+    Use already booked variables:
+    
+    >>> v5 = ROOT.RooRealVal( 'my_name5' )
+    >>> variables += [  Variable ( v5 , accessor = lambda s : s.var5 ) ]
+
+    Add already booked variables:
+    
+    >>> v6 = ROOT.RooRealVal( 'my_name6' )
+    >>> variables += [  Variable ( v6 ) ] ## get variable 'my_name6'
+
+    - Finally create selector
+
+    >>> selector = SelectorWithVars (
+    ...       variables                             ,
+    ...       selection = ' chi2vx<30 && pt>2*GeV ' ) ## filtering
+
+    - Use selector to fill RooDataSet 
+    >>> tree  = ...
+    >>> chain.process ( selector )
+
+    - Get dataset  from the selector 
+    >>> dataset = selector.data   
     """
     ## constructor 
     def __init__ ( self                           ,
@@ -505,15 +495,10 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         ## create the logger 
         #
-        from  ostap.logger.logger           import getLogger
-        self._logger = getLogger ( fullname ) 
+        from ostap.logger.logger  import getLogger
+        self.__logger = getLogger ( fullname ) 
         #
-
-        self._events   = 0
-        self._progress = None 
-        self._total    = 1
-        self._skip     = 0 
-        self._silence  = silence
+        self.__silence  = silence
 
         #
         ## instantiate the base class
@@ -523,53 +508,65 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         ## keep the cuts
         # 
-        self._cuts   = cuts
-
+        self.__cuts       = cuts
+        
         #
         ## variables
         # 
-        self.varset      = ROOT.RooArgSet()
-        self._variables  = []
+        self.__varset     = ROOT.RooArgSet()
+        self.__variables  = []
         
         #
         ## add the variables one by one 
         #
-        for v in variables : self.addVariable ( *v )
+        for v in variables :
+            self.__addVariable ( v )
 
+        self.__variables = tuple ( self.__variables ) 
+            
         #
         ## Book dataset
         # 
-        self.data    = ROOT.RooDataSet (
+        self.__data = ROOT.RooDataSet (
             ##
             name      ,
             fullname  , 
             ##
-            self.varset
+            self.__varset
             )
         
         #
         ## it is still very puzzling for me: should this line be here at all??
-        ROOT.SetOwnership ( self.data  , False )
+        ROOT.SetOwnership ( self.__data  , False )
         
+        self.__events   = 0
+        self.__progress = None 
+        self.__total    = 1
+        self.__skip     = 0 
 
-    ## ## delete the selector, try to clear and delete the dataset 
-    ## def __del__    ( self  )  :
-    ##     #
-    ##     if hasattr ( self , 'data' ) and self.data : 
-    ##         self.data.Clear()
-    ##         self.data.reset()
-    ##         #
-    ##         del self.data
-        
+
+    @property 
+    def data ( self ) :
+        """``data''  - the dataset"""
+        return self.__data
+    @property
+    def variables ( self ) :
+        """``variables'' - the list/tuple of variables (cleared in Terminate)"""
+        return self.__variables
+
+    @property
+    def morecuts ( self ) :
+        """``morecuts'' -   additional cust ot be applied in selection"""
+        return self.__cuts
+    
     ## get the dataset 
     def dataset   ( self  ) :
         """ Get the data-set """ 
-        return self.data
-    
+        return self.__data
+ 
     ## the only one actually important method 
     def Process ( self, entry ):
-        """
-        Fills data set 
+        """ Fill data set 
         """
         #
         ## == getting the next entry from the tree
@@ -577,19 +574,20 @@ class SelectorWithVars(SelectorWithCuts) :
         if self.GetEntry ( entry ) <=  0 : return 0             ## RETURN 
         #
         
-        if not self._progress and not self._silence :
-            self._total =  self.fChain.GetEntries()
-            self._logger.info ( "Processing TChain('%s') #entries: %d" % ( self.fChain.GetName() , self._total ) )
+        if not self.__progress and not self.__silence :
+            self.__total =  self.fChain.GetEntries()
+            self.__logger.info ( "Processing TChain('%s') #entries: %d" % ( self.fChain.GetName() , self.__total ) )
             ## decoration:
             from ostap.utils.progress_bar import ProgressBar
-            self._progress = ProgressBar ( max_value = self._total   ,
-                                           silent    = self._silence )
+            self.__progress = ProgressBar ( max_value = self.__total   ,
+                                            silent    = self.__silence )
             
-        if not self._silence :
-            if 0 == self._events % 1000 or 0 == entry % 1000 : 
-                self._progress.update_amount ( self.event () )
-            
-        self._events += 1
+        if not self.__silence :
+            if 0 == self.__events % 1000 or 0 == entry % 1000 : 
+                self.__progress.update_amount ( self.event () )
+                
+        self.__events += 1
+        
         #
         ## == for more convenience
         #
@@ -598,100 +596,105 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         ## apply cuts (if needed) 
         # 
-        if not self . _cuts ( bamboo )  : return 0 
+        if not self. __cuts ( bamboo )  : return 0 
 
         #
-        ## loop over all varibales
+        ## loop over all variables
         # 
-        for v in self._variables :
+        for v in self.__variables :
 
-            var    =  v[0]  ## variable 
-            vmin   =  v[2]  ## min-value 
-            vmax   =  v[3]  ## max-value 
-            vfun   =  v[4]  ## accessor-function 
+            var       = v.var                ## The variable
+            vmin,vmax = v.minmax             ## min/max range 
+            vfun      = v.accessor           ## accessor function
 
-            value  = vfun ( bamboo )
-            if not vmin <= value <= vmax :       ## MUST BE IN RANGE!
-                self._skip += 1 
-                return 0                         ## RETURN 
+            ## use the accessor function 
+            value     = vfun ( bamboo )
+            if not vmin <= value <= vmax :   ## MUST BE IN RANGE!
+                self.__skip += 1             ## SKIP EVENT 
+                return 0                     ## RETURN 
 
             var.setVal ( value ) 
 
 
-        self.data .add ( self.varset )
+        self.__data .add ( self.__varset )
         
         return 1 
 
     ## add declared variable to RooDataSet 
-    def addVariable ( self , var , *args ) :
+    def __addVariable ( self , variable  ) :
+        """Add declared variable to RooDataSet 
         """
-        Add decared variable to RooDataSet 
-        """
-        
-        entry = makeEntry  ( var , *args )
+        if   isinstance ( variable , tuple ) : variable = Variable (  *variable )
+        elif isinstance ( variable , dict  ) : variable = Variable ( **variable )
 
-        self.varset.add        ( entry[0] )
-        self._variables.append ( entry    )
-        if not self._silence:
-            self._logger.info ( 'Add variable name/desc/min/max %s/%s/%.2g/%.2g' % ( entry[0].GetName() ,
-                                                                                     entry[1] ,
-                                                                                     entry[2] ,
-                                                                                     entry[3] ) )
-     #
+        assert isinstance ( variable , Variable ), \
+               "Invalid type of ``variable'' %s/%s" % (  variable , type ( variable ) )
+        
+        self.__varset.add       ( variable.var ) 
+        self.__variables.append ( variable     )
+        if not self.__silence: 
+            self.__logger.info ( "Add variable name/desc/(min,max): ``%s''/``%s''/(%.3g,%.3g)" % (
+                variable.name         ,
+                variable.description  , 
+                variable.minmax[0]    , 
+                variable.minmax[1]    ) )
+            
+    ## termination 
     def Terminate ( self  ) :
         #
-        if self._progress :
-            self._progress.end() 
+        if self.__progress :
+            self.__progress.end() 
         #
-        if not self._silence : 
-            self._logger.info (
+        if not self.__silence : 
+            self.__logger.info (
                 'Events Processed/Total/Skept %d/%d/%d\nCUTS: "%s"' % (
-                self._events ,
-                self._total  ,
-                self._skip   , 
-                self.cuts () ) ) 
-            self.data.Print('v')
+                self.__events ,
+                self.__total  ,
+                self.__skip   , 
+                self.cuts () ) )
+            self.__logger.info ( 'Dataset created:%s' %  self.__data ) 
             
-        if not len ( self.data ) :
-            self._logger.warning("Empty dataset!")
+        if not len ( self.__data ) :
+            self.__logger.warning("Empty dataset!")
         ##
         if 0 != self.GetAbort() :
-            self._logger.error('Process has been aborted!')
+            self.__logger.error('Process has been aborted!')
 
-        ##
-        logger.debug('Terminate: DELETE all variables')
-        del self._variables
+        ## attention: delete these
+
+        del self.__varset
+        del self.__variables
         
-    # 
+        self.__varset     =  ()
+        self.__variables  =  ()
+
     def Init    ( self, chain ) :
         # 
-        if self._progress and not self._silence :
-            self._progress.update_amount ( self.event () )
+        if self.__progress and not self.__silence :
+            self.__progress.update_amount ( self.event () )
         #
         return SelectorWithCuts.Init ( self , chain ) 
 
     def Begin          ( self , tree = None ) :
         ## 
-        if self._progress and not self._silence :
-            self._progress.update_amount ( self.event () )
+        if self.__progress and not self.__silence :
+            self.__progress.update_amount ( self.event () )
     #
     def SlaveBegin     ( self , tree        ) :
         # 
-        if self._progress and not self._silence :
-            self._progress.update_amount ( self.event () )
+        if self.__progress and not self.__silence :
+            self.__progress.update_amount ( self.event () )
     #
     def Notify         ( self ) :
         #
-        if self._progress and not self._silence :
-            self._progress.update_amount ( self.event () )
+        if self.__progress and not self.__silence :
+            self.__progress.update_amount ( self.event () )
             
     def SlaveTerminate ( self               ) :
         # 
-        if self._progress and not self._silence :
-            self._progress.update_amount ( self.event () )
+        if self.__progress and not self.__silence :
+            self.__progress.update_amount ( self.event () )
         #
- 
-
 
 # =============================================================================
 import os
@@ -717,10 +720,6 @@ class SelectorWithVarsCached(SelectorWithVars) :
                    fullname     = ''              ) : 
 
         SelectorWithVars.__init__(self, variables, selection, cuts, name, fullname)
-
-        self.__selection = selection
-        self.__cuts      = cuts
-        self.__filelist  = files
 
         # Try load from cache
         self._loaded_from_cache = False
@@ -749,13 +748,13 @@ class SelectorWithVarsCached(SelectorWithVars) :
     def _compute_cache_name(self):
         " Computes dataset cache path(SHA512) "
         h =  self._get_files_str()
-        h += self._l_internals(self.__cuts)
+        h += self._l_internals(self.morecuts)
 
         for var , vdesc , vmin , vmax , vfun in self._variables:
             h += var.GetName() + vdesc + str(vmin) + str(vmax)
             h += self._l_internals(vfun)
 
-        h += str(self.__selection)
+        h += str(self.selection)
 
         import hashlib 
         filename = hashlib.sha512(h).hexdigest() + ".shelve"

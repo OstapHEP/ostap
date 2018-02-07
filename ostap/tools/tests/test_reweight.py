@@ -101,7 +101,7 @@ else :
 ## make reweighting iterations
 # 
 from ostap.tools.reweight     import Weight, makeWeights, WeightingPlot
-from ostap.fitting.selectors  import SelectorWithVars 
+from ostap.fitting.selectors  import SelectorWithVars, Variable 
 
 ## start iterations:
 for iter in range ( 0 , maxIter ) :
@@ -114,8 +114,8 @@ for iter in range ( 0 , maxIter ) :
     weighter   = Weight( dbname , weighting )
     ## variables to be used in MC-dataset 
     variables  = [
-        ( 'pt_x'   , 'pt_x'   , 0  , 100 , lambda s : s.x ) , 
-        ( 'weight' , 'weight' ,            weighter       )  
+        Variable ( 'pt_x'   , 'pt_x'   , 0  , 100 , lambda s : s.x ) , 
+        Variable ( 'weight' , 'weight' , accessor =  weighter       )  
         ]
     
     #

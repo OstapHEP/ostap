@@ -108,26 +108,26 @@ h5u = h4u.rescale_bins(1)
 h5e = h4e.rescale_bins(1)
 
 ## compare two histograms 
-def compare ( h1 , h2 , rescale = False ) :
+def compare ( h1 , h2 , density = False ) :
     
-    r1  = h1.cmp_fit       ( h2 , opts = 'WL0Q' , rescale = rescale )
+    r1  = h1.cmp_fit       ( h2 , opts = 'WL0Q' , density = density )
     if r1 : logger.info    ( 'h1 vs h2 : fit probability is %.5f%% ' % ( r1.Prob()*100 ) )
     else  : logger.warning ( 'h1 vs h2 : fit problems ')
     
-    r2  = h2.cmp_fit       ( h1 , opts = 'WL0Q' , rescale = rescale )
+    r2  = h2.cmp_fit       ( h1 , opts = 'WL0Q' , density = density )
     if r2 : logger.info    ( 'h2 vs h1 : fit probability is %.5f%% ' % ( r2.Prob()*100 ) )
     else  : logger.warning ( 'h2 vs h1 : fit problems ')
 
-    ct  = h1.cmp_cos      ( h2 , rescale = rescale ) 
+    ct  = h1.cmp_cos      ( h2 , density = density ) 
     logger.info           ( 'h1 vs h2 : cos(theta)      is %s ' % ct  )
     
-    dd1 = h1.cmp_dist     ( h2 , rescale = rescale ) 
+    dd1 = h1.cmp_dist     ( h2 , density = density ) 
     logger.info           ( 'h1 vs h2 : distance        is %s ' % dd1 )
     
-    dd2 = h1.cmp_dist2    ( h2 , rescale = rescale ) 
+    dd2 = h1.cmp_dist2    ( h2 , density = density ) 
     logger.info           ( 'h1 vs h2 : distance2       is %s ' % dd2 )
     
-    h1.cmp_prnt ( h2 , 'h1 vs h2 ' , rescale = rescale ) 
+    h1.cmp_prnt ( h2 , 'h1 vs h2 ' , density = density ) 
 
 # =============================================================================
 ## compare gaussians 

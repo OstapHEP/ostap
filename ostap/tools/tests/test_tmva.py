@@ -137,25 +137,25 @@ reader = Reader( 'MyMLP' ,
 
 methods = reader.methods[:]
 
+from ostap.fitting.selectors import SelectorWithVars, Variable     
 ## 2) Book RooDataset                 
 variables = [
-    ( 'var1' , 'variable#1' , lambda s : s.var1 ) ,
-    ( 'var2' , 'variable#2' , lambda s : s.var2 ) ,
-    ( 'var3' , 'variable#2' , lambda s : s.var2 ) ,
+    Variable( 'var1' , 'variable#1' , accessor = lambda s : s.var1 ) ,
+    Variable( 'var2' , 'variable#2' , accessor = lambda s : s.var2 ) ,
+    Variable( 'var3' , 'variable#2' , accessor = lambda s : s.var2 ) ,
     ]
 
 ## 3) declare/add TMVA  variables 
 for m in methods :
-    variables += [ ( 'tmva_%s' % m , 'TMVA(%s)' % m , reader[m] ) ]
+    variables += [ Variable( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
     
 ## 4)  Run Ostap to   fill   RooDataSet 
-from ostap.fitting.selectors import SelectorWithVars     
 dsS = SelectorWithVars (
-    variables = variables + [ ( 'signal' , 'signal' , -1 , 3 , lambda s : 1 ) ] ,
+    variables = variables + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 1 ) ] ,
     selection = "var1 < 100" , 
     )
 dsB = SelectorWithVars (
-    variables = variables + [ ( 'signal' , 'signal' , -1 , 3 , lambda s : 0 ) ] ,
+    variables = variables + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 0 ) ] ,
     selection = "var1 < 100" ,
     )
 

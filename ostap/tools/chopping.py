@@ -263,11 +263,13 @@ class Trainer(object) :
 
         for i in range ( N ) : 
             nam       =  '%s_%03d' % ( self.name , i )
-            scuts     = str ( self.    signal_cuts )
-            bcuts     = str ( self.background_cuts )
+            scuts     = self.    signal_cuts 
+            bcuts     = self.background_cuts 
             icategory = "(%s)!=%d" % ( cat , i ) 
-            if self.chop_signal     : scuts = icategory * self._signal_cuts
-            if self.chop_background : bcuts = icategory * self.background_cuts 
+            if self.chop_signal     :
+                scuts = icategory * scuts if scuts else icategory
+            if self.chop_background :
+                bcuts = icategory * bcuts if bcuts else icategory
 
             t = TMVATrainer ( methods           = self.methods           ,
                               variables         = self.variables         ,

@@ -46,14 +46,11 @@ def _tc_strip_ ( self ) :
     >>> cut = ...
     >>> cut.strip() 
     """
-    ## 1. remove  starting and trailing spaces 
-    t = self.GetTitle().strip()
-    ## 2. remove excessive internal spaces 
+    t = self.GetTitle().strip() 
     while 0 <= t.find ( '  ' ) : t = t.replace ( '  ' , ' ' )
-    ## 3. treat empty expressions 
     if t in  ( '()' , '( )' )  : t = ''
-    ## ...
-    self.SetTitle ( t ) 
+    self.SetTitle ( t )
+    ##
     return self
 
 # =============================================================================
@@ -99,10 +96,9 @@ def _tc_iand_ ( self , other ) :
     if   other and self : 
         self.SetTitle("(%s)&&(%s)" % ( self , other ) )
         return self
-    elif other :
-        self.SetTitle ( "%s" % other )
-        return self
+    elif other : self.SetTitle ( "%s" % other )
     ## 
+    logger.debug ('(&=) empty argument is ignored, the result is "%s"' % self) 
     return self 
 
 # =============================================================================
@@ -128,10 +124,9 @@ def _tc_ior_ ( self , other ) :
     if   other and self : 
         self.SetTitle("(%s)||(%s)" % ( self , other ) )
         return self
-    elif other :
-        self.SetTitle ( "%s" % other )
-        return self
+    elif other : self.SetTitle ( "%s" % other )
     ## 
+    logger.debug ('(|=) empty argument is ignored, the result is "%s"' % self) 
     return self 
 
 # =============================================================================
@@ -149,19 +144,23 @@ def _tc_imul_ ( self , other ) :
     >>> cut   *= other 
     """
     ## 
-    self.strip()
-    if not self : return NotImplemented 
+    self.strip()        
     ##
     if   isinstance ( other , ( float , int , long ) ) :
-        self.SetTitle( "(%s)*%s"  %  ( self , other ) ) 
+        if self : self.SetTitle ( "(%s)*%s"  %  ( self , other ) )
+        else    : self.SetTitle ( "%s"       %           other   )
         return self
     elif isinstance ( other , ( str , ROOT.TCut ) ) :
         other = ROOT.TCut ( other.strip() )
-        if not other : return NotImplemented 
     else :
         return NotImplemented 
-                
-    self.SetTitle("(%s)*(%s)" % ( self , other ) )
+
+    if other and self  :
+        self.SetTitle("(%s)*(%s)" % ( self , other ) )
+        return self    
+    elif other : self.SetTitle ( "%s" % other )
+    ## 
+    logger.debug ('(*=) empty argument is ignored, the result is "%s"' % self)
     return self
 
 # =============================================================================
@@ -180,18 +179,91 @@ def _tc_idiv_ ( self , other ) :
     """
     ## 
     self.strip()
-    if not self : return NotImplemented 
     ##
     if   isinstance ( other , ( float , int , long ) ) :
-        self.SetTitle( "(%s)/%s"  %  ( self , other ) ) 
-        return self
+        if self : self.SetTitle ( "(%s)/%s"  %  ( self , other ) )
+        else    : self.SetTitle ( "%s"       %  ( 1.0  / other ) )
+        return self    
     elif isinstance ( other , ( str , ROOT.TCut ) ) :
         other = ROOT.TCut ( other.strip() )
-        if not other : return NotImplemented 
     else :
         return NotImplemented 
                 
-    self.SetTitle("(%s)/(%s)" % ( self , other ) )
+    if   other and self  :
+        self.SetTitle("(%s)/(%s)" % ( self , other ) )
+        return self    
+    elif other :
+        self.SetTitle("1.0/(%s)"  % other )
+    ## 
+    logger.debug ('(/=) empty argument is ignored, the result is "%s"' % self)
+    return self 
+
+# =============================================================================
+## Addition for TCut objects 
+#  @see ROOT::TCut
+#  cut       = ...
+#  other_cut = ...
+#  cut      += other_cut
+#  @author Vanya BELYAEV Ivan.Belyaev
+#  @date   2014-08-31
+def _tc_iadd_ ( self , other ) :
+    """Addition for TCut objects 
+    >>> cut    = ...
+    >>> other  = ... 
+    >>> cut   += other 
+    """
+    ## 
+    self.strip()
+    ##
+    if   isinstance ( other , ( float , int , long ) ) :
+        if self : self.SetTitle ( "(%s)+%s"  %  ( self , other ) )
+        else    : self.SetTitle ( "%s"       %           other   )
+        return self
+    elif isinstance ( other , ( str , ROOT.TCut ) ) :
+        other = ROOT.TCut ( other.strip() )
+    else :
+        return NotImplemented 
+
+    if other and self  :
+        self.SetTitle("(%s)+(%s)" % ( self , other ) )
+        return self    
+    elif other : self.SetTitle ( "%s" % other )
+    ## 
+    logger.debug ('(+=) empty argument is ignored, the result is "%s"' % self)
+    return self
+
+# =============================================================================
+## Subtraction for TCut objects 
+#  @see ROOT::TCut
+#  cut       = ...
+#  other_cut = ...
+#  cut      -= other_cut
+#  @author Vanya BELYAEV Ivan.Belyaev
+#  @date   2014-08-31
+def _tc_isub_ ( self , other ) :
+    """Subtraction for TCut objects 
+    >>> cut    = ...
+    >>> other  = ... 
+    >>> cut   -= other 
+    """
+    ## 
+    self.strip()
+    ##
+    if   isinstance ( other , ( float , int , long ) ) :
+        if self : self.SetTitle ( "(%s)-%s"  %  ( self , other ) )
+        else    : self.SetTitle ( "%s"       %      -1 * other   )
+        return self
+    elif isinstance ( other , ( str , ROOT.TCut ) ) :
+        other = ROOT.TCut ( other.strip() )
+    else :
+        return NotImplemented 
+
+    if other and self  :
+        self.SetTitle("(%s)-(%s)" % ( self , other ) )
+        return self    
+    elif other : self.SetTitle ( "(-1)*(%s)" % other )
+    ## 
+    logger.debug ('(-=) empty argument is ignored, the result is "%s"' % self)
     return self
 
 # =============================================================================
@@ -235,6 +307,8 @@ def _tc_or_ ( self , other ) :
     new_cut  = ROOT.TCut ( self )
     new_cut |= other 
     return new_cut
+
+
 # =============================================================================
 ## Multiplication for TCut objects 
 #  @see ROOT::TCut
@@ -280,6 +354,50 @@ def _tc_div_ ( self , other ) :
     return new_cut
 
 # =============================================================================
+## Addition for TCut objects 
+#  @see ROOT::TCut
+#  cut       =
+#  other_cut = 
+#  new_cut   = cut + other_cut
+#  @author Vanya BELYAEV Ivan.Belyaev
+#  @date   2014-08-31
+def _tc_add_ ( self , other ) :
+    """Addtion for TCut objects 
+    >>> cut        = ...
+    >>> other_cut  = ... 
+    >>> new_cut    = cut + other_cut 
+    """
+    ##
+    if not isinstance ( other , ( str , ROOT.TCut , float , int , long  ) ) :
+        return NotImplemented
+    ## 
+    new_cut  = ROOT.TCut ( self )
+    new_cut += other 
+    return new_cut
+
+# =============================================================================
+## Subtraction for TCut objects 
+#  @see ROOT::TCut
+#  cut       =
+#  other_cut = 
+#  new_cut   = cut - other_cut
+#  @author Vanya BELYAEV Ivan.Belyaev
+#  @date   2014-08-31
+def _tc_sub_ ( self , other ) :
+    """Subtraction for TCut objects 
+    >>> cut        = ...
+    >>> other_cut  = ... 
+    >>> new_cut    = cut - other_cut 
+    """
+    ##
+    if not isinstance ( other , ( str , ROOT.TCut , float , int , long  ) ) :
+        return NotImplemented
+    ## 
+    new_cut  = ROOT.TCut ( self )
+    new_cut -= other 
+    return new_cut
+
+# =============================================================================
 ## minor extension for TCut
 #  @see ROOT::TCut
 #  cut       = ...
@@ -308,12 +426,14 @@ def _tc_ror_ ( self , other ) :
     """
     if not isinstance ( other , ( str , ROOT.TCut ) ) : return NotImplemented
     return ROOT.TCut(other) | self  
+
+
 # =============================================================================
 ## Multiplication for TCut objects 
 #  @see ROOT::TCut
 #  cut       =
 #  other_cut = 
-#  new_cut   = cut * other_cut
+#  new_cut   = other_cut   *  cut
 #  @author Vanya BELYAEV Ivan.Belyaev
 #  @date   2014-08-31
 def _tc_rmul_ ( self , other ) :
@@ -324,16 +444,70 @@ def _tc_rmul_ ( self , other ) :
     """
     ##
     if isinstance ( other , ( str , ROOT.TCut ) ) :
-        other = ROOT.TCut( other.strip() )
+        another = ROOT.TCut( other.strip() )
     elif isinstance ( other ,  ( float , int, long ) ) :
-        other = ROOT.TCut ("%s"   % other )
+        if self : another = ROOT.TCut ("%s*(%s)"   % ( other , self ) )
+        else    : another = ROOT.TCut ("%s"        %   other          )
+        return another 
     else :
         return NotImplemented
 
-    if not other : return NotImplemented 
-    if not self  : return NotImplemented
-    
-    return other * self 
+    another *= self    
+    return another
+
+# =============================================================================
+## Addition for TCut objects 
+#  @see ROOT::TCut
+#  cut       =
+#  other_cut = 
+#  new_cut   = other_cut + cut
+#  @author Vanya BELYAEV Ivan.Belyaev
+#  @date   2014-08-31
+def _tc_radd_ ( self , other ) :
+    """Addtition for TCut objects 
+    >>> cut        = ...
+    >>> other_cut  = ... 
+    >>> new_cut    = other_cut + cut
+    """
+    ##
+    if isinstance ( other , ( str , ROOT.TCut ) ) :
+        another = ROOT.TCut ( other.strip() )
+    elif isinstance ( other ,  ( float , int, long ) ) :
+        if self : another = ROOT.TCut ("%s+(%s)"   % ( other , self ) )
+        else    : another = ROOT.TCut ("%s"        %   other          )
+        return another 
+    else :
+        return NotImplemented
+
+    another += self    
+    return another
+
+# =============================================================================
+## Subtraction for TCut objects 
+#  @see ROOT::TCut
+#  cut       =
+#  other_cut = 
+#  new_cut   = other_cut -  cut 
+#  @author Vanya BELYAEV Ivan.Belyaev
+#  @date   2014-08-31
+def _tc_rsub_ ( self , other ) :
+    """Subtraction for TCut objects 
+    >>> cut        = ...
+    >>> other_cut  = ... 
+    >>> new_cut    = other_cut - cut
+    """
+    ##
+    if isinstance ( other , ( str , ROOT.TCut ) ) :
+        another = ROOT.TCut ( other.strip() )
+    elif isinstance ( other ,  ( float , int, long ) ) :
+        if self : another = ROOT.TCut ("%s-(%s)" % ( other , self ) )
+        else    : another = ROOT.TCut ("%s"      %   other          )
+        return another 
+    else :
+        return NotImplemented
+
+    another -= self    
+    return another
 
 # =============================================================================
 ## Division for TCut objects 
@@ -350,17 +524,18 @@ def _tc_rdiv_ ( self , other ) :
     >>> new_cut    = other_cut / cut
     """
     ##
+    ##
     if isinstance ( other , ( str , ROOT.TCut ) ) :
-        other = ROOT.TCut( other.strip() )
+        another = ROOT.TCut ( other.strip() )
     elif isinstance ( other ,  ( float , int, long ) ) :
-        other = ROOT.TCut ("%s"   % other )
+        if self : another = ROOT.TCut ("%s/(%s)" % ( other , self ) )
+        else    : another = ROOT.TCut ("%s"      %   other          )
+        return another 
     else :
         return NotImplemented
-    
-    if not other : return NotImplemented 
-    if not self  : return NotImplemented
-    
-    return other / self 
+
+    another /= self    
+    return another
 
 # =============================================================================
 ## minor extension for TCut
@@ -394,7 +569,16 @@ ROOT.TCut.__rmul__    = _tc_rmul_
 ROOT.TCut. __div__    = _tc_div_
 ROOT.TCut.__idiv__    = _tc_idiv_
 ROOT.TCut.__rdiv__    = _tc_rdiv_
+ROOT.TCut. __add__    = _tc_add_
+ROOT.TCut.__iadd__    = _tc_iadd_
+ROOT.TCut.__radd__    = _tc_radd_
+ROOT.TCut. __sub__    = _tc_sub_
+ROOT.TCut.__isub__    = _tc_isub_
+ROOT.TCut.__rsub__    = _tc_rsub_
+
 ROOT.TCut.__invert__  = _tc_invert_
+
+
 
 
 # =============================================================================
@@ -403,10 +587,30 @@ _decorated_classes_ = (
     )
 _new_methods_       = (
     #
-    ROOT.TCut . __add__    ,
-    ROOT.TCut . __and__    ,
-    ROOT.TCut . __or__     ,
-    ROOT.TCut . __mul__    ,
+    ROOT.TCut .  __and__  ,
+    ROOT.TCut . __iand__  ,
+    ROOT.TCut . __rand__  ,
+    #
+    ROOT.TCut .  __or__   ,
+    ROOT.TCut . __ior__   ,
+    ROOT.TCut . __ror__   ,
+    #
+    ROOT.TCut .  __add__  ,
+    ROOT.TCut . __iadd__  ,
+    ROOT.TCut . __radd__  ,
+    #
+    ROOT.TCut .  __sub__  ,
+    ROOT.TCut . __isub__  ,
+    ROOT.TCut . __rsub__  ,
+    #
+    ROOT.TCut .  __mul__  ,
+    ROOT.TCut . __imul__  ,
+    ROOT.TCut . __rmul__  ,
+    #
+    ROOT.TCut .  __div__  ,
+    ROOT.TCut . __idiv__  ,
+    ROOT.TCut . __rdiv__  ,
+    #
     ROOT.TCut . __invert__ ,
     #
     ROOT.TCut . strip      ,

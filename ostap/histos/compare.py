@@ -271,6 +271,11 @@ def _h1_cmp_dist_ ( h1              ,
     >>> diff = h1.cmp_dist ( h2 )
     
     """
+    assert isinstance ( h1 , ROOT.TH1 ) and not isinstance ( h1 , ROOT.TH2 ) , \
+           "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
+    assert isinstance ( h2 , ROOT.TH1 ) and not isinstance ( h2 , ROOT.TH2 ) , \
+           "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
+    
     if density : 
         h1_ = h1.density() 
         h2_ = h2.density() 
@@ -295,12 +300,146 @@ def _h1_cmp_dist_ ( h1              ,
     
     d12  = _integral_ ( lambda x : (sf1*f1(x)-sf2*f2(x))**2 , lims[0] , lims[1] , limit = 200 , err = True )
 
-    return d12 
+    volume =  ( lims[1] - lims[0] )
+    
+    return d12 / volume
 
 ROOT.TH1D.cmp_dist = _h1_cmp_dist_
 ROOT.TH1F.cmp_dist = _h1_cmp_dist_ 
 
 # =============================================================================
+## calculate the norm of difference of scaled histograms/functions 
+#  \f$ d = \left| f_1^{*} - f_2^{*}\right| \f$,
+#  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
+def _h2_cmp_dist_ ( h1              ,
+                    h2              ,
+                    density = False ) : 
+    """Calculate the norm of difference of scaled histograms/functions 
+    |f1-f2|, such |f1|=1 and |f2|=1
+    
+    >>> h1 = ... ## the first histo
+    >>> h2 = ... ## the second histo
+    >>> diff = h1.cmp_dist ( h2 )
+    
+    """
+    assert isinstance ( h1 , ROOT.TH2 ) and not isinstance ( h1 , ROOT.TH3 ) , \
+           "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
+    assert isinstance ( h2 , ROOT.TH2 ) and not isinstance ( h2 , ROOT.TH3 ) , \
+           "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
+    
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h2_cmp_dist_ ( h1_ , h2_ , density = False )
+        del h1_
+        del h2_
+        return cmp
+
+    
+
+    xlims = h1.xminmax()
+    ylims = h1.yminmax()
+    
+    f1 = lambda x,y : h1(x,y).value() 
+    f2 = lambda x,y : h2(x,y).value()
+    
+    from ostap.math.integral import integral2 as _integral2_
+    r1   = _integral2_ ( lambda x,y : f1 ( x , y )**2    ,
+                         xlims[0] , xlims[1] ,
+                         ylims[0] , ylims[1] , err = True )
+    r2   = _integral2_ ( lambda x,y : f2 ( x , y )**2    ,
+                         xlims[0] , xlims[1] ,
+                         ylims[0] , ylims[1] , err = True )
+    
+    import math 
+    
+    sf1  = 1.0 / math.sqrt ( r1.value() ) 
+    sf2  = 1.0 / math.sqrt ( r2.value() ) 
+    
+    d12  = _integral2_ ( lambda x,y : (sf1*f1(x,y)-sf2*f2(x,y))**2 ,
+                         xlims[0] , xlims[1] ,
+                         ylims[0] , ylims[1] , err = True )
+    
+    volume = ( xlims[1] - xlims[0] ) * ( ylims[1] - ylims[0] ) 
+        
+    return d12 / volume 
+
+
+ROOT.TH2D.cmp_dist = _h2_cmp_dist_
+ROOT.TH2F.cmp_dist = _h2_cmp_dist_ 
+
+
+# =============================================================================
+## calculate the norm of difference of scaled histograms/functions 
+#  \f$ d = \left| f_1^{*} - f_2^{*}\right| \f$,
+#  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
+def _h3_cmp_dist_ ( h1              ,
+                    h2              ,
+                    density = False ) : 
+    """Calculate the norm of difference of scaled histograms/functions 
+    |f1-f2|, such |f1|=1 and |f2|=1
+    
+    >>> h1 = ... ## the first histo
+    >>> h2 = ... ## the second histo
+    >>> diff = h1.cmp_dist ( h2 )
+    
+    """
+    assert isinstance ( h3 , ROOT.TH3 ) , \
+           "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
+    assert isinstance ( h2 , ROOT.TH3 ) , \
+           "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
+    
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h3_cmp_dist_ ( h1_ , h2_ , density = False )
+        del h1_
+        del h2_
+        return cmp
+
+    
+    xlims = h1.xminmax()
+    ylims = h1.yminmax()
+    zlims = h1.zminmax()
+    
+    f1 = lambda x,y,z : h1(x,y,z).value() 
+    f2 = lambda x,y,z : h2(x,y,z).value()
+    
+    from ostap.math.integral import integral3 as _integral3_
+    r1   = _integral3_ ( lambda x,y,z : f1 ( x , y , z )**2    ,
+                         xlims[0] , xlims[1] ,
+                         ylims[0] , ylims[1] ,
+                         zlims[0] , zlims[1] , err = True )
+    r2   = _integral3_ ( lambda x,y,z : f2 ( x , y , z )**2    ,
+                         xlims[0] , xlims[1] ,
+                         ylims[0] , ylims[1] ,
+                         zlims[0] , zlims[1] , err = True )
+    import math 
+    
+    sf1  = 1.0 / math.sqrt ( r1.value() ) 
+    sf2  = 1.0 / math.sqrt ( r2.value() ) 
+    
+    d12  = _integral3_ ( lambda x,y,z : (sf1*f1(x,y,z)-sf2*f2(x,y,z))**2 ,
+                         xlims[0] , xlims[1] ,
+                         ylims[0] , ylims[1] ,
+                         zlims[0] , zlims[1] , err = True )
+    
+    volume = ( xlims[1] - xlims[0] ) * ( ylims[1] - ylims[0] ) * ( zlims[1] - zlims[0] ) 
+    
+    return d12 / volume 
+
+
+ROOT.TH3D.cmp_dist = _h3_cmp_dist_
+ROOT.TH3F.cmp_dist = _h3_cmp_dist_ 
+
+
+# =============================================================================
+
+
+
+# =============================================================================
+
+
 ## calculate the norm of difference of scaled histograms/functions 
 #  \f$ d = \left| (f_1^{*}-f_2^{*})^2/(f_1^{*}f_2^*(x))\right| \f$,
 #  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
@@ -308,7 +447,7 @@ def _h1_cmp_dist2_ ( h1              ,
                      h2              ,
                      density = False ) :   
     """Calculate the norm of difference of scaled histograms/functions 
-    |(f1-f2)*2/(f1*f2)|, such |f1|=1 and |f2|=1
+    |(f1-f2)**2/(f1*f2)|, such |f1|=1 and |f2|=1
 
     >>> h1 = ... ## the first histo
     >>> h2 = ... ## the second histo

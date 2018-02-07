@@ -37,9 +37,10 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core     import cpp , Ostap , VE , hID , rootID, valid_pointer
-from   ostap.histos.histos import h1_axis , h2_axes
-from   ostap.logger.utils  import roo_silent , rootWarning 
+from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
+from   ostap.histos.histos  import h1_axis , h2_axes
+from   ostap.logger.utils   import roo_silent , rootWarning
+import ostap.fitting.roofit 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -139,7 +140,6 @@ def makeVar ( var , name , comment , fix = None , *args ) :
     v = makeVar ( v    , 'myvar' , 'mycomment' , 10 )
     
     """
-    #
     # var = ( value )
     # var = ( min , max )
     # var = ( value , min , max ) 
@@ -332,8 +332,8 @@ class PDF (object) :
             self.__xvar = makeVar ( xvar               , ## var 
                                     'x'                , ## name 
                                     'x-variable(mass)' , ## title/comment
-                                    *xvar              , ## min/max 
-                                    fix = None         ) ## fix ? 
+                                    None               , ## fix ? 
+                                    *xvar              ) ## min/max 
         elif isinstance ( xvar , ROOT.RooAbsReal ) :
             self.__xvar = makeVar ( xvar               , ## var 
                                     'x'                , ## name 
@@ -932,7 +932,43 @@ class PDF (object) :
         
             self.__splots += [ splot ]            
             return splot 
+    # =========================================================================
+    ## generate toy-sample according to PDF
+    #  @code
+    #  model  = ....
+    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  varset = ....
+    #  data   = model.generate ( 100000 , varset )
+    #  data   = model.generate ( 100000 , varset , extended = True )     
+    #  @endcode
+    def generate ( self ,  nEvents , varset = None , extended = False ,  *args ) :
+        """Generate toy-sample according to PDF
+        >>> model  = ....
+        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        
+        >>> varset = ....
+        >>> data   = model.generate ( 100000 , varset )
+        >>> data   = model.generate ( 100000 , varset , extended =  =   True )
+        """
+        from ostap.core.core import dsID 
+        args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
+        if  extended :
+            args = args + ( ROOT.RooFit.Extended () , )
+        if   not varset :
+            varset = ROOT.RooArgSet( self.xvar )
+        elif isinstance ( varset , ROOT.RooAbsReal ) :
+            varset = ROOT.RooArgSet( varser )
 
+        if not self.xvar in varset :
+            vs = ROOT.RooArgSet()
+            vs . add ( self.xvar )
+            for  v in varset : vs.add ( v )
+            varset = vs  
+
+        return self.pdf.generate (  varset , *args )
+
+
+    # =========================================================================
     ## simple 'function-like' interface 
     def __call__ ( self , x ) :
         """ PDF as a ``function''
@@ -1210,12 +1246,12 @@ class MASS(PDF) :
             xvar    = xvar.GetXmin() , mass.GetXmax()
 
         ## create the variable 
-        if isinstance ( xvar , tuple ) and 2 == len(mass) :  
+        if isinstance ( xvar , tuple ) and 2 == len(xvar) :  
             xvar = makeVar ( xvar       , ## var 
                              m_name     , ## name 
                              m_title    , ## title/comment
-                             *mass      , ## min/max 
-                             fix = None ) ## fix ? 
+                             None       , ## fix ? 
+                             *xvar      ) ## min/max 
         elif isinstance ( xvar , ROOT.RooAbsReal ) :
             xvar = makeVar ( xvar       , ## var 
                              m_name     , ## name 

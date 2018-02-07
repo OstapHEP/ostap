@@ -49,8 +49,8 @@ class PDF2 (PDF) :
             self.__yvar = makeVar ( yvar         , ## var 
                                     'y'          , ## name 
                                     'y-variable' , ## title/comment
-                                    *yvar        , ## min/max 
-                                    fix = None   ) ## fix ? 
+                                    None         , ## fix?
+                                    *yvar        ) ## min/max 
         elif isinstance ( yvar , ROOT.RooAbsReal ) :
             self.__yvar = makeVar ( yvar         , ## var 
                                     'y'          , ## name 
@@ -388,6 +388,48 @@ class PDF2 (PDF) :
         self.__adjustment = Adjust2D ( self.name , self.xvar , self.yvar , self.pdf , value )
         ## replace original PDF  with  adjusted one:
         self.pdf          = self.__adjustment.pdf
+
+        
+    # =========================================================================
+    ## generate toy-sample according to PDF
+    #  @code
+    #  model  = ....
+    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  varset = ....
+    #  data   = model.generate ( 100000 , varset )
+    #  data   = model.generate ( 100000 , varset , extended = True )     
+    #  @endcode
+    def generate ( self ,  nEvents , varset = None , extended = False ,  *args ) :
+        """Generate toy-sample according to PDF
+        >>> model  = ....
+        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        
+        >>> varset = ....
+        >>> data   = model.generate ( 100000 , varset )
+        >>> data   = model.generate ( 100000 , varset , extended =  =   True )
+        """
+        from ostap.core.core import dsID
+        args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
+        if  extended :
+            args = args + ( ROOT.RooFit.Extended () , )
+        if   not varset :
+            varset = ROOT.RooArgSet( self.xvar , self.yvar )
+        elif isinstance ( varset , ROOT.RooAbsReal ) :
+            varset = ROOT.RooArgSet( varser )
+
+        if not self.xvar in varset :
+            vs = ROOT.RooArgSet()
+            vs . add ( self.xvar )
+            for  v in varset : vs.add ( v )
+            varset = vs
+
+        if not self.yvar in varset :
+            vs = ROOT.RooArgSet()
+            vs . add ( self.yvar )
+            for  v in varset : vs.add ( v )
+            varset = vs
+            
+        return self.pdf.generate ( varset , *args )
 
     # =========================================================================
     ## simple 'function-like' interface 
