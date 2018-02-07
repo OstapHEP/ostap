@@ -784,7 +784,7 @@ namespace Ostap
       // get all parameters
       const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
-    private:
+    public :
       // ======================================================================
       unsigned int index ( const unsigned short i , 
                            const unsigned short j ) const 
@@ -979,7 +979,7 @@ namespace Ostap
       // get all parameters
       const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
-    private : 
+    public : 
       // ======================================================================
       ///  convert (l,m)-index into single k-index
       unsigned int index ( const unsigned short l , 
