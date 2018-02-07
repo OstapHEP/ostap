@@ -2,12 +2,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file models.py
-#
 #  Module with some useful utilities for simple functions and fit models.
-#
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-12-01
-#
 # =============================================================================
 """Module with some useful fit-models"""
 # =============================================================================
@@ -64,6 +61,11 @@ def _tf1_ ( self                 ,
     if hasattr ( self , 'xmax'  ) : xmax  = min ( xmax  , self.xmax () )
     if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
     #
+    assert xmin > neg_infinity, \
+          "``xmin''-parameter needs to be specified %s" % xmin
+    assert xmax < pos_infinity, \
+          "``xmax''-parameter needs to be specified %s" % xmax
+    
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
     fun.SetNpx ( 500 ) 
@@ -92,7 +94,16 @@ def _tf2_ ( self ,
     if hasattr ( self , 'ymin'  ) : ymin  = max ( ymin  , self.ymin () )
     if hasattr ( self , 'ymax'  ) : ymax  = min ( ymax  , self.ymax () )
     if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
-    #
+    ##
+    assert xmin > neg_infinity, \
+           "``xmin''-parameter needs to be specified %s" % xmin
+    assert xmax < pos_infinity, \
+           "``xmax''-parameter needs to be specified %s" % xmax
+    assert ymin > neg_infinity, \
+           "``ymin''-parameter needs to be specified %s" % ymin
+    assert ymax < pos_infinity, \
+           "``ymax''-parameter needs to be specified %s" % ymax
+    ##
     _wo = self._wo2
     fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
     fun.SetNpx ( 100 ) 
@@ -127,6 +138,19 @@ def _tf3_ ( self ,
     if hasattr ( self , 'zmax'  ) : zmax  = min ( zmax  , self.zmax () )
     if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
     #
+    assert xmin > neg_infinity, \
+           "``xmin''-parameter needs to be specified %s" % xmin
+    assert xmax < pos_infinity, \
+           "``xmax''-parameter needs to be specified %s" % xmax
+    assert ymin > neg_infinity, \
+           "``ymin''-parameter needs to be specified %s" % ymin
+    assert ymax < pos_infinity, \
+           "``ymax''-parameter needs to be specified %s" % ymax
+    assert zmin > neg_infinity, \
+           "``zmin''-parameter needs to be specified %s" % zmin
+    assert zmax < pos_infinity, \
+           "``zmax''-parameter needs to be specified %s" % zmax
+    #
     _wo = self._wo3
     fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , npars , *args )
     fun.SetNpx ( 40 ) 
@@ -137,14 +161,17 @@ def _tf3_ ( self ,
 
 # =============================================================================
 ## draw the function 
-def _f1_draw_ ( self , *opts ) :
+def _f1_draw_ ( self , opts ='' , *args , **kwargs ) :
     """Drawing the function object through conversion to ROOT.TF1    
     >>> fun = ...
     >>> fun.draw()    
     """
     if not hasattr ( self , '_tf1'  ) :
 
-        self._tf1 = _tf1_ ( self )
+        self._tf1        = _tf1_ ( self , *args , **kwargs )
+        self._tf1_args   = tuple ( args   ) 
+        self._tf1_kwargs = dict  ( kwargs ) 
+        
         if type(self) in ( Ostap.Math.Positive          ,
                            Ostap.Math.PositiveEven      , 
                            Ostap.Math.Monothonic        , 
@@ -295,8 +322,7 @@ def _tf1_getattr_ ( self , attr ) :
     >>> f.SetLineColor(4) ## delegate to TF1
     >>> f.SetLineWidth(2) ## delegate to TF1
     """
-    if  hasattr ( ROOT.TF1 , attr ) :
-        if not hasattr  ( self      , '_tf1' ) : self._tf1 = self.tf1 ( ) 
+    if  hasattr ( ROOT.TF1 , attr ) and hasattr  ( self , '_tf1' ) :
         return getattr  ( self._tf1 , attr   )
     
     raise AttributeError
@@ -314,8 +340,7 @@ def _tf2_getattr_ ( self , attr ) :
     >>> f.SetLineColor(4) ## delegate to TF2
     >>> f.SetLineWidth(2) ## delegate to TF2
     """
-    if  hasattr ( ROOT.TF2 , attr ) :
-        if not hasattr  ( self      , '_tf2' ) : self._tf2 = self.tf2 ( ) 
+    if  hasattr ( ROOT.TF2 , attr ) and hasattr  ( self , '_tf2' ) :
         return getattr  ( self._tf2 , attr   )
     
     raise AttributeError
@@ -333,8 +358,7 @@ def _tf3_getattr_ ( self , attr ) :
     >>> f.SetLineColor(4) ## delegate to TF2
     >>> f.SetLineWidth(2) ## delegate to TF2
     """
-    if  hasattr ( ROOT.TF3 , attr ) :
-        if not hasattr  ( self      , '_tf3' ) : self._tf3 = self.tf3 ( ) 
+    if  hasattr ( ROOT.TF3 , attr ) and hasattr  ( self , '_tf3' ) :
         return getattr  ( self._tf3 , attr   )
     
     raise AttributeError
@@ -427,6 +451,7 @@ for model in ( Ostap.Math.Chebyshev              ,
     model.tf1          = _tf1_ 
     model.sp_integrate = sp_integrate_1D
     model.__getattr__  = _tf1_getattr_
+    model.draw         = _f1_draw_
     
     if not hasattr ( model , 'mean'     ) : model.mean     = sp_mean 
     if not hasattr ( model , 'variance' ) : model.variance = sp_variance 

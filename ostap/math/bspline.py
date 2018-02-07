@@ -578,13 +578,31 @@ for  p in ( Ostap.Math.BSpline          ,
         p.__init__ = _p_new_init_ 
 
 
+
+for  p in ( Ostap.Math.BSpline2D           ,
+            Ostap.Math.BSpline2DSym        ,
+            Ostap.Math.PositiveSpline2D    ,
+            Ostap.Math.PositiveSpline2DSym ) :
+
+    p.__setitem__  = _p_set_par_
+    p.__getitem__  = _p_get_par_
+    p.__len__      = lambda s     : s.npars() 
+    p.__iter__     = _p_iter_
+    p.__contains__ = lambda s , i : 0<=i<len(s)
+
+
 # =============================================================================
 _decorated_classes_ = set( [
-    Ostap.Math.BSpline          ,
-    Ostap.Math.PositiveSpline   ,
-    Ostap.Math.ConvexOnlySpline ,
-    Ostap.Math.MonothonicSpline ,
-    Ostap.Math.ConvexSpline  ] ) 
+    Ostap.Math.BSpline              ,
+    Ostap.Math.PositiveSpline       ,
+    Ostap.Math.ConvexOnlySpline     ,
+    Ostap.Math.MonothonicSpline     ,
+    Ostap.Math.ConvexSpline         ,  
+    Ostap.Math.BSpline2D            ,
+    Ostap.Math.BSpline2DSym         ,
+    Ostap.Math.PositiveSpline2D     ,
+    Ostap.Math.PositiveSpline2DSym  ,
+    ])
 # =============================================================================
 if '__main__' == __name__ :
     

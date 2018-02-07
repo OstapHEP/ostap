@@ -1085,16 +1085,206 @@ for  p in ( Ostap.Math.Bernstein     ,
         _p_new_init_.__doc__ += '\n' +   _new_init_.__doc__ 
         _p_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
         p.__init__ = _p_new_init_ 
+
+
+# =============================================================================
+# 2D & 3D stuff 
+# =============================================================================    
+
+for p in ( Ostap.Math.Positive2D     ,
+           Ostap.Math.Positive2DSym  ,
+           Ostap.Math.Positive3D     ,
+           Ostap.Math.Positive3DSym  ,
+           Ostap.Math.Positive3DMix  ) :
     
+    p.__setitem__  = _p_set_par_
+    p.__getitem__  = _p_get_par_
+    p.__len__      = lambda s     : s.npars() 
+    p.__iter__     = _p_iter_
+    p.__contains__ = lambda s , i : 0<=i<len(s)
+
+# =============================================================================
+## set parameter for polynomial/spline functions
+#  @code
+#  fun = ...
+#  fun[1] = 10.0
+#  @endcode 
+def _p2_set_par_ ( o , index , value ) :
+    """Set parameter for polynomial/spline function
+    >>> fun = ...
+    >>> fun[1]   = 10.0
+    >>> fun[1,2] = 15.0
+    """
+    if isinstance ( index , ( int , long ) ) :                  
+        n = o.npars() 
+        if   index <  0 :  index += n
+        if not 0 <= index < n :
+            raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
+        return o.setPar ( index , value )
+
+    try :        
+        ix , iy = index
+    except :
+        raise IndexError('Invalid index %s/%s' % ( index  , type(index) ) )
+    
+    if o.index ( ix , iy ) not in o :
+        raise IndexError('Invalid index (%s,%s)' % ( ix , iy ) )
+    return o.setPar ( ix , iy , value )
+    
+
+# =============================================================================
+## get parameter from polynomial/spline functions
+#  @code
+#  fun = ...
+#  print fun[1], fun[-1], fun[3,4] 
+#  @endcode 
+#  Slice  semantic is also supported:
+#  @code
+#  fun = ...
+#  print fun[:3] , fun[4:], fun[2:8] ,  fun [2::2] 
+#  @endcode 
+def _p2_get_par_ ( o , index ) :
+    """Get parameter from polynomial/spline function
+    >>> fun = ...
+    >>> print fun[ 1], fun[2,4]
+    >>> print fun[-1]
+    Slice  semantic is also supported:
+    >>> print fun[:3]
+    >>> print fun[2::3]
+    """
+    if isinstance ( index , ( int , long ) ) :                      
+        n = o.npars() 
+        if  isinstance ( index , slice ) :
+            return tuple ( o.par(i) for i in range( *index.indices ( n ) ) )
+        #
+        if  index <  0 :  index += n
+        if not 0 <= index < n :
+            raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
+        return o.par ( index )
+
+    try:
+        ix , iy = index
+    except :        
+        raise IndexError('Invalid index %s/%s' % ( index  , type(index) ) )
+    
+    if o.index ( ix , iy ) not in o :
+        raise IndexError('Invalid index (%s,%s)' % ( ix , iy ) )
+    return o.par ( ix , iy )
+        
+
+# =============================================================================    
+for  p in ( Ostap.Math.Bernstein2D    ,
+            Ostap.Math.Bernstein2DSym ) :
+    
+    p.__setitem__  = _p2_set_par_
+    p.__getitem__  = _p2_get_par_
+    p.__iter__     = _p_iter_
+    p.__contains__ = lambda s , i : 0<=i<len(s)
+    p.__len__      = lambda s     : s.npars() 
+
+
+# =============================================================================
+## set parameter for polynomial/spline functions
+#  @code
+#  fun = ...
+#  fun[1] = 10.0
+#  @endcode 
+def _p3_set_par_ ( o , index , value ) :
+    """Set parameter for polynomial/spline function
+    >>> fun = ...
+    >>> fun[1]   = 10.0
+    >>> fun[1,2,4] = 15.0
+    """
+    if isinstance ( index , ( int , long ) ) :                  
+        n = o.npars() 
+        if   index <  0 :  index += n
+        if not 0 <= index < n :
+            raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
+        return o.setPar ( index , value )
+
+    try :
+        ix , iy , iz = index
+    except :
+        raise IndexError('Invalid index %s/%s' % ( index  , type(index) ) )
+    
+    if o.index ( ix , iy , iz ) not in o :
+        raise IndexError('Invalid index (%s,%s,%s)' % ( ix , iy , iz ) )
+    return o.setPar ( ix , iy , iz , value )
+
+        
+# =============================================================================
+## get parameter from polynomial/spline functions
+#  @code
+#  fun = ...
+#  print fun[1], fun[-1], fun[3,4,2] 
+#  @endcode 
+#  Slice  semantic is also supported:
+#  @code
+#  fun = ...
+#  print fun[:3] , fun[4:], fun[2:8] ,  fun [2::2] 
+#  @endcode 
+def _p3_get_par_ ( o , index ) :
+    """Get parameter from polynomial/spline function
+    >>> fun = ...
+    >>> print fun[ 1], fun[2,4,5]
+    >>> print fun[-1]
+    Slice  semantic is also supported:
+    >>> print fun[:3]
+    >>> print fun[2::3]
+    """
+    if isinstance ( index , ( int , long ) ) :                      
+        n = o.npars() 
+        if  isinstance ( index , slice ) :
+            return tuple ( o.par(i) for i in range( *index.indices ( n ) ) )
+        #
+        if  index <  0 :  index += n
+        if not 0 <= index < n :
+            raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
+        return o.par ( index )
+
+    try :
+        ix , iy , iz = index
+    except :
+        raise IndexError('Invalid index %s/%s' % ( index  , type(index) ) )
+
+    if o.index ( ix , iy , iz ) not in o :
+        raise IndexError('Invalid index (%s,%s,%s)' % ( ix , iy , iz ) )
+    return o.par ( ix , iy , iz )
+
+
+# =============================================================================    
+for  p in ( Ostap.Math.Bernstein3D     ,
+            Ostap.Math.Bernstein3DSym  , 
+            Ostap.Math.Bernstein3DMix ) :
+    
+    p.__setitem__  = _p3_set_par_
+    p.__getitem__  = _p3_get_par_
+    p.__iter__     = _p_iter_
+    p.__contains__ = lambda s , i : 0<=i<len(s)
+    p.__len__      = lambda s     : s.npars() 
+
 # =============================================================================
 _decorated_classes_ = set( [
-    Ostap.Math.Bernstein     ,
-    Ostap.Math.BernsteinEven ,
-    Ostap.Math.Positive      ,
-    Ostap.Math.PositiveEven  ,
-    Ostap.Math.Monothonic    ,
-    Ostap.Math.Convex        ,
-    Ostap.Math.ConvexOnly    ] )
+    Ostap.Math.Bernstein      ,
+    Ostap.Math.BernsteinEven  ,
+    Ostap.Math.Positive       ,
+    Ostap.Math.PositiveEven   ,
+    Ostap.Math.Monothonic     ,
+    Ostap.Math.Convex         ,
+    Ostap.Math.ConvexOnly     ,
+    ##
+    Ostap.Math.Bernstein2D    ,
+    Ostap.Math.Bernstein2DSym ,
+    Ostap.Math.Positive2D     ,
+    Ostap.Math.Positive2DSym  ,
+    ##
+    Ostap.Math.Bernstein3D    ,
+    Ostap.Math.Bernstein3DSym ,
+    Ostap.Math.Bernstein3DMix ,
+    Ostap.Math.Positive3D     ,
+    Ostap.Math.Positive3DSym  ,
+    Ostap.Math.Positive3DMix  ,
+    ] )
 # =============================================================================
 if '__main__' == __name__ :
     

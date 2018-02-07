@@ -115,7 +115,7 @@ namespace Ostap
       /// get all parameters at once
       const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
-    private : // convert (l,m,n) into single index k
+    public: // convert (l,m,n) into single index k
       // ======================================================================
       /// convert (l,m,n)-index into single index k  
       unsigned int index ( const unsigned short l , 
@@ -508,7 +508,7 @@ namespace Ostap
       /// get all parameters at once
       const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
-    private: // convert (i,j,k) into single index 
+    public : // convert (i,j,k) into single index 
       // ======================================================================
       /// convert (l,m,n)-index into single index k  
       unsigned int index ( const unsigned short l , 
@@ -894,7 +894,7 @@ namespace Ostap
       const std::vector<double>& pars() const 
       { return m_pars ; }
       // ======================================================================
-    private: // convert (i,j,k) into single index 
+    public:  // convert (i,j,k) into single index 
       // ======================================================================
       /// convert (l,m,n)-index into single index k  
       unsigned int index ( const unsigned short l , 
