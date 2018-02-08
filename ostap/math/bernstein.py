@@ -1103,6 +1103,51 @@ for p in ( Ostap.Math.Positive2D     ,
     p.__iter__     = _p_iter_
     p.__contains__ = lambda s , i : 0<=i<len(s)
 
+
+
+# =============================================================================
+## generate random numbers from bernstein-like distribuitions
+#  @code
+#  >>> func = ...
+#  >>> for x,y in func.generate( 1000 ) : print x,y 
+#  @endcode
+def generate2( fun , num ) :
+    """Generate random numbers from bernstein-like distribuitions
+    >>> func = ...
+    >>> for x,y in func.generate( 1000 ) : print x,y 
+    """
+    b   = fun.bernstein() 
+    xmn = b.xmin ()
+    xmx = b.xmax ()
+    ymn = b.ymin ()
+    ymx = b.ymax ()
+    vmx = max ( b.pars() )
+    i   = 0 
+    from random import uniform as _uniform_
+    while i < num : 
+        x = _uniform_ ( xmn , xmx ) 
+        y = _uniform_ ( ymn , ymx ) 
+        v = _uniform_ (   0 , vmx )
+        f = fun ( x , y )
+        if f >= v :
+            i+= 1 
+            yield x,y
+
+# =============================================================================
+## Get random number from bernstein-like distribuitions
+#  @code
+#  >>> func = ...
+#  >>> print fun.shoot() 
+#  @endcode
+def shoot2 ( fun ) :
+    """Get random number from bernstein-like distribuitions
+    >>> func = ...
+    >>> print func.shoot()  
+    """
+    for x in generate2 ( fun , 1 ) :
+        return x
+
+
 # =============================================================================
 ## set parameter for polynomial/spline functions
 #  @code
@@ -1181,6 +1226,60 @@ for  p in ( Ostap.Math.Bernstein2D    ,
     p.__iter__     = _p_iter_
     p.__contains__ = lambda s , i : 0<=i<len(s)
     p.__len__      = lambda s     : s.npars() 
+
+for  p in ( Ostap.Math.Bernstein2D    ,
+            Ostap.Math.Bernstein2DSym , 
+            Ostap.Math.Positive2D     ,
+            Ostap.Math.Positive2DSym  ) :
+    p.generate = generate2
+    p.shoot    = shoot2
+    
+
+
+# =============================================================================
+## generate random numbers from bernstein-like distribuitions
+#  @code
+#  >>> func = ...
+#  >>> for x,y,z in func.generate( 1000 ) : print x,y,z 
+#  @endcode
+def generate3( fun , num ) :
+    """Generate random numbers from bernstein-like distribuitions
+    >>> func = ...
+    >>> for x,y,z in func.generate( 1000 ) : print x,y,z 
+    """
+    b   = fun.bernstein() 
+    xmn = b.xmin ()
+    xmx = b.xmax ()
+    ymn = b.ymin ()
+    ymx = b.ymax ()
+    zmn = b.ymin ()
+    zmx = b.ymax ()
+    vmx = max ( b.pars() )
+    i   = 0 
+    from random import uniform as _uniform_
+    while i < num : 
+        x = _uniform_ ( xmn , xmx ) 
+        y = _uniform_ ( ymn , ymx ) 
+        z = _uniform_ ( zmn , zmx ) 
+        v = _uniform_ (   0 , vmx )
+        f = fun ( x , y , z ) 
+        if f >= v :
+            i+= 1 
+            yield x,y,z
+
+# =============================================================================
+## Get random number from bernstein-like distribuitions
+#  @code
+#  >>> func = ...
+#  >>> print fun.shoot() 
+#  @endcode
+def shoot3 ( fun ) :
+    """Get random number from bernstein-like distribuitions
+    >>> func = ...
+    >>> print func.shoot()  
+    """
+    for x in generate3 ( fun , 1 ) :
+        return x
 
 
 # =============================================================================
@@ -1263,6 +1362,17 @@ for  p in ( Ostap.Math.Bernstein3D     ,
     p.__contains__ = lambda s , i : 0<=i<len(s)
     p.__len__      = lambda s     : s.npars() 
 
+
+for  p in ( Ostap.Math.Bernstein3D    ,
+            Ostap.Math.Bernstein3DSym , 
+            Ostap.Math.Bernstein3DMix , 
+            Ostap.Math.Positive3D     ,
+            Ostap.Math.Positive3DSym  ,
+            Ostap.Math.Positive3DMix  ) :
+    
+    p.generate = generate3
+    p.shoot    = shoot3
+    
 # =============================================================================
 _decorated_classes_ = set( [
     Ostap.Math.Bernstein      ,

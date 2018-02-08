@@ -590,6 +590,80 @@ for  p in ( Ostap.Math.BSpline2D           ,
     p.__iter__     = _p_iter_
     p.__contains__ = lambda s , i : 0<=i<len(s)
 
+# =============================================================================
+## set parameter for polynomial/spline functions
+#  @code
+#  fun = ...
+#  fun[1] = 10.0
+#  @endcode 
+def _p2_set_par_ ( o , index , value ) :
+    """Set parameter for polynomial/spline function
+    >>> fun = ...
+    >>> fun[1]   = 10.0
+    >>> fun[1,2] = 15.0
+    """
+    if isinstance ( index , ( int , long ) ) :                  
+        n = o.npars() 
+        if   index <  0 :  index += n
+        if not 0 <= index < n :
+            raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
+        return o.setPar ( index , value )
+
+    try :        
+        ix , iy = index
+    except :
+        raise IndexError('Invalid index %s/%s' % ( index  , type(index) ) )
+    
+    if o.index ( ix , iy ) not in o :
+        raise IndexError('Invalid index (%s,%s)' % ( ix , iy ) )
+    return o.setPar ( ix , iy , value )
+    
+
+# =============================================================================
+## get parameter from polynomial/spline functions
+#  @code
+#  fun = ...
+#  print fun[1], fun[-1], fun[3,4] 
+#  @endcode 
+#  Slice  semantic is also supported:
+#  @code
+#  fun = ...
+#  print fun[:3] , fun[4:], fun[2:8] ,  fun [2::2] 
+#  @endcode 
+def _p2_get_par_ ( o , index ) :
+    """Get parameter from polynomial/spline function
+    >>> fun = ...
+    >>> print fun[ 1], fun[2,4]
+    >>> print fun[-1]
+    Slice  semantic is also supported:
+    >>> print fun[:3]
+    >>> print fun[2::3]
+    """
+    if isinstance ( index , ( int , long ) ) :                      
+        n = o.npars() 
+        if  isinstance ( index , slice ) :
+            return tuple ( o.par(i) for i in range( *index.indices ( n ) ) )
+        #
+        if  index <  0 :  index += n
+        if not 0 <= index < n :
+            raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
+        return o.par ( index )
+
+    try:
+        ix , iy = index
+    except :        
+        raise IndexError('Invalid index %s/%s' % ( index  , type(index) ) )
+    
+    if o.index ( ix , iy ) not in o :
+        raise IndexError('Invalid index (%s,%s)' % ( ix , iy ) )
+    return o.par ( ix , iy )
+        
+
+for  p in ( Ostap.Math.BSpline2D           ,
+            Ostap.Math.BSpline2DSym        ) :
+    
+    p.__setitem__  = _p2_set_par_
+    p.__getitem__  = _p2_get_par_
 
 # =============================================================================
 _decorated_classes_ = set( [
