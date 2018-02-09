@@ -228,9 +228,9 @@ bool Ostap::Math::Positive::updateBernstein ()
   //
   // get the parameters of "global" parabola 
   //
-  const double a0     = m_sphere.x2 ( 0 ) ;
-  const double a1_    = m_sphere.x2 ( 1 ) ;
-  const double a2     = m_sphere.x2 ( 2 ) ;
+  const double a0     =     m_sphere.x2 ( 0 ) ;
+  const double a1_    = 2 * m_sphere.x2 ( 1 ) ; // NB! factor 2 is here! 
+  const double a2     =     m_sphere.x2 ( 2 ) ;
   //
   const double a1_min = - std::sqrt ( a0 * a2 ) ; //
   const double a1     = a1_min + a1_ ;            // positivity constraint 
