@@ -22,6 +22,7 @@ __date__    = "2013-02-10"
 __all__     = (
     'with_ipython'  , ## do we run IPython ? 
     'isatty'        , ## is the stream ``isatty'' ?
+    'terminal_size' , ## get the size of terminal cosole 
     )
 # =============================================================================
 import sys,os 
@@ -58,6 +59,21 @@ def with_ipython()  :
     except NameError :
         return False
 
+# ============================================================================
+## Get the terminal console size
+def terminal_size():
+    """Get the terminal console size
+    >>> height , width = terminal_size() 
+    """
+    try :
+        import fcntl, termios, struct
+        th, tw, hp, wp = struct.unpack(
+            'HHHH',fcntl.ioctl(0, termios.TIOCGWINSZ,
+                               struct.pack('HHHH', 0, 0, 0, 0)))
+        return th , tw  
+    except :
+        return 20 , 80
+    
 
 # =============================================================================
 if __name__ == '__main__' :

@@ -43,6 +43,8 @@ __all__     = (
     ## convert ROOT Errors into C++/python exceptions 
     'rootException'      , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception', ## context manager to perform ROOT Error -> C++/Python exception
+    ##
+    'multicolumn'        , ## format the list of strings into multicolumn block
     )
 # =============================================================================
 import ROOT,cppyy, time, os,sys ## attention here!!
@@ -597,6 +599,47 @@ def rootWarning ( level = 1 ) :
     >>> with rootWarning () : some_ROOT_code_here()
     """
     return ROOTIgnore ( ROOT.kWarning + level )
+
+# =============================================================================
+## format list of strings into multicolumn string
+#  @code 
+#  >>> strings =  ....
+#  >>> table   = multicolumn (  strings , indent = 2 )
+#  >>> print table
+#  @endcode 
+def multicolumn ( lines , term_width=None , indent = 0 , pad = 2 ):
+    """Format list of strings into multicolumn string
+    >>> strings =  ....
+    >>> table   = multicolumn (  strings , indent = 2 )
+    >>> print table 
+    """
+    n_lines = len(lines)
+    if n_lines == 0:
+        return
+    
+    if not term_width :
+        from ostap.utils.basic import terminal_size 
+        h , term_width = terminal_size()
+        
+    col_width = max(len(line) for line in lines)
+    n_cols = int((term_width + pad - indent)/(col_width + pad))
+    n_cols = min(n_lines, max(1, n_cols))
+    
+    col_len = int(n_lines/n_cols) + (0 if n_lines % n_cols == 0 else 1)
+    if (n_cols - 1) * col_len >= n_lines:
+        n_cols -= 1
+        
+    cols = [lines[i*col_len : i*col_len + col_len] for i in range(n_cols)]
+    
+    rows = list(zip(*cols))
+    rows_missed = zip(*[col[len(rows):] for col in cols[:-1]])
+    rows.extend(rows_missed)
+
+    result = []
+    for row in rows:
+        line = " "*indent + (" "*pad).join(line.ljust(col_width) for line in row)
+        result.append ( line )
+    return '\n'.join ( result )
 
     
 # =============================================================================

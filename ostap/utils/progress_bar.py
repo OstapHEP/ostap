@@ -111,32 +111,9 @@ import sys,os
 def columns () :
     """Get number of columns for xterm
     """
-    ## get shell variable
-    def _resize_ ( var ) :        
-        lvar    = len( var ) 
-        from subprocess import Popen, PIPE
-        p       = Popen( 'resize' , stdout = PIPE , stderr = PIPE )
-        out,err = p.communicate()
-        if err or not out : return -1  ## RETURN 
-        for line in out.splitlines() :
-            l = line.strip() 
-            p = l.find( var )
-            if 0 != p : continue
-            try :
-                ## accounts:            '='  ';'
-                nc = int ( l[ p + lvar + 1 : -1 ] )
-                return nc 
-            except :
-                pass
-            
-        return -1
-
-    try :
-        return _resize_ ( 'COLUMNS' )
-    except:
-        pass
-    
-    return -1 
+    from ostap.utils.basic import terminal_size 
+    height , width = terminal_size()
+    return width
 
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
@@ -234,8 +211,8 @@ class ProgressBar(object):
         self.span     = max(max_value - min_value,1) 
         ##
 
-        ncols         = columns ()  - 7
-        self.width    = min ( ncols , width ) if ncols > 0 else width
+        ncols         = columns () - 12
+        self.width    = ncols if ncols > 5 else width
         
         self.prefix   = kwargs.get('description','' )  ## description
         self.width    = self.width - len(self.prefix)
