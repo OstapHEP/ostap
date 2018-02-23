@@ -58,13 +58,13 @@ if not os.path.exists( data_file ) :
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
         treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
         treeSignal.Branch ( 'evt'  , vevt , 'evt/I'  )
-        treeSignal.Branch ( 'run'  , vrun , 'run/DI' )
+        treeSignal.Branch ( 'run'  , vrun , 'run/I'  )
         
         treeBkg   .Branch ( 'var1' , var1 , 'var1/D' )
         treeBkg   .Branch ( 'var2' , var2 , 'var2/D' )
         treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
         treeBkg   .Branch ( 'evt'  , vevt , 'evt/I'  )
-        treeBkg   .Branch ( 'run'  , vrun , 'run/DI' )
+        treeBkg   .Branch ( 'run'  , vrun , 'run/I'  )
         
         ievt = 0
         irun = 1 
