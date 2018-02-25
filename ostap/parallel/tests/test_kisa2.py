@@ -57,6 +57,18 @@ variables = [
     Variable ( 'mass3' , 'mass(mu+mu-)' , 50 , 120 , MASS() ) 
     ]
 
+class MASS (object):
+    def __call__ (  self , s ) :
+        return s.mass
+def MASS1  ( s ) : return s.mass
+
+from ostap.fitting.selectors import SelectorWithVars, Variable  
+variables = [
+    ## Variable ( 'mass1' , 'mass(mu+mu-)' , 50 , 120 , lambda s : s.mass ) , 
+    Variable ( 'mass2' , 'mass(mu+mu-)' , 50 , 120 , MASS1  ) , 
+    Variable ( 'mass3' , 'mass(mu+mu-)' , 50 , 120 , MASS() ) 
+    ]
+
 import ostap.parallel.kisa as kisa
 
 ppservers = () ## 'lxplus051' , )
