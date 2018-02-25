@@ -383,7 +383,7 @@ class  FillTask(Parallel.Task) :
         with logWarning() : 
             
             import ostap.core.pyrouts
-            from   ostap.roofit.selectors import SelectorWithVars
+            from   ostap.fitting.selectors import SelectorWithVars
             
         selector = SelectorWithVars ( self.variables ,
                                       self.selection ,
@@ -393,11 +393,14 @@ class  FillTask(Parallel.Task) :
         tree = ROOT.TChain( tree )
         tree.Add ( fname )
 
-        tree.process ( selector , 1000 )
-        self.output =  selector.data
+        num =  tree.process ( selector )
+        self.output =  selector.data, num  
+
+        if  num < 0 :
+            logger.warning ("Processing status %s"  % num )
         
-        del selector.data
-        del      selector
+        ##del selector.data
+        ##del      selector
         
         logger.debug ( 'Processed %s chain and filled %d entries ' % ( fname , len( self.output ) ) ) 
 
@@ -407,15 +410,20 @@ class  FillTask(Parallel.Task) :
     ## methge resulsts/datasets 
     def _mergeResults(self, result) :
         #
-        if not isinstance ( self.output , ROOT.RooDataSet ) :  
-            self.output = result
+        if result :
+            ds , st = result            
+            if not self.output or not self.output[0] :
+                self.output = ds , st 
+            else :
+                ds_ , st_ = self.output
+                ds_.append ( ds )
+                st_ += st
+                self.output = ds_ , st_
+                ds.clear () 
+            del result            
+            logger.debug ( 'Merging: %d entries ' % len( self.output[0] ) )
         else :
-            self.output.append ( result )
-            result.Delete () 
-            if result : del result
-            
-        logger.debug ( 'Merging: %d entries ' % len( self.output ) )
-
+            logger.error("No valid results for merging")
 
 # ==============================================================================
 ## Fill dataset from looooong TChain using per-file parallelisation
@@ -430,16 +438,16 @@ class  FillTask(Parallel.Task) :
 #  For 12-core machine, clear speed-up factor of about 8 is achieved 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23 
-def  fillDataSet ( chain , variables , selection , ppservers = () ) :
+def  fillDataSet ( chain , variables , selection , ppservers = () , silent = False ) :
     """Fill dataset from loooong TChain using per-file parallelisation
     >>> chain =
     >>> vars  = ...
     >>> dset  = fillDataSet ( chain , vars , 'pt>10' )
     - for 12-core machine, clear speed-up factor of about 8 is achieved 
     """
-        
+
     task  = FillTask ( variables , selection )
-    wmgr  = Parallel.WorkManager( ppservers = ppservers )
+    wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
     
     cname = chain.GetName() 
     files = chain.files() 
@@ -448,6 +456,31 @@ def  fillDataSet ( chain , variables , selection , ppservers = () ) :
     wmgr.process( task, pairs )
 
     return task.output
+
+
+# ===================================================================================
+## parallel processing of loooong chain
+#  @code
+#  chain    = ...
+#  selector =  ...
+#  chain.pprocess ( selector )
+#  @endcode 
+def _pprocess_ ( chain , selector , ppservers = () , silent = False ) :
+    
+    if not isinstance ( chain , ROOT.TChain ) :
+        logger.warning ('pprocess method is TChain-specific, skip parallelization') 
+        return chain.process ( selector )  
+    
+    selection = selector.selection
+    variables = selector.variables
+
+    dataset, status = fillDataSet ( chain , variables ,  selection , ppservers , silent )
+    selector.data = dataset
+    
+    return status 
+
+    
+ROOT.TChain.pprocess =  _pprocess_ 
 
 # =============================================================================
 if '__main__' == __name__ :

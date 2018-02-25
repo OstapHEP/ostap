@@ -247,7 +247,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
 #
-def _process_ ( self , selector , *args ) :
+def _process_ ( self , selector , events = -1 , silent = False  ) :
     """ ``Process'' the tree/chain with proper TPySelector :
     
     >>> from Ostap.Selectors import Selector    
@@ -258,7 +258,11 @@ def _process_ ( self , selector , *args ) :
     >>> chain.process ( selector )  ## NB: note lowercase ``process'' here !!!    
     """
     import ostap.fitting.roofit
-    return Ostap.Process.process ( self , selector , *args )
+    if 0 < events : 
+        return Ostap.Process.process ( self , selector , events  )
+    else :
+        return Ostap.Process.process ( self , selector ) 
+    
 
 _process_. __doc__ += '\n' + Ostap.Process.process.__doc__
 
@@ -267,11 +271,8 @@ _process_. __doc__ += '\n' + Ostap.Process.process.__doc__
 ## finally: decorate TTree/TChain
 for t in ( ROOT.TTree , ROOT.TChain ) : t.process  = _process_ 
 
-
-
 _maxv =  0.95 * sys.float_info.max
 _minv = -0.95 * sys.float_info.max
-
 # =============================================================================
 ## @class Variable
 #  Helper   structure to manage/keep/create the variable for   SelectorWithVars
@@ -492,14 +493,17 @@ class SelectorWithVars(SelectorWithCuts) :
             
         if not fullname : fullname = "%s/%s " % ( __name__ , name )
 
+        self.__name = name 
         #
         ## create the logger 
         #
         from ostap.logger.logger  import getLogger
-        self.__logger = getLogger ( fullname ) 
+        self.__logger = logger ## getLogger ( fullname ) 
         #
         self.__silence  = silence
 
+        ##
+        assert 0 < len(variables) , "Empty list of variables"
         #
         ## instantiate the base class
         # 
@@ -529,7 +533,7 @@ class SelectorWithVars(SelectorWithCuts) :
         # 
         self.__data = ROOT.RooDataSet (
             ##
-            name      ,
+            self.name ,
             fullname  , 
             ##
             self.__varset
@@ -544,12 +548,29 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__total    = 1
         self.__skip     = 0 
 
-
+    @property 
+    def name ( self ) :
+        """``name''  - the name of selector/dataset"""
+        return self.__name 
+    
     @property 
     def data ( self ) :
         """``data''  - the dataset"""
         return self.__data
-    @property
+    @data.setter
+    def data ( self , dataset ) :
+        assert isinstance ( dataset , ROOT.RooAbsData ), \
+               "Incorrect type of data %s/%s " % ( dataset ,   type ( dataset ) )
+        self.__logger.debug ("Selector(%s), add dataset %s" % (  self.__name , dataset ) )
+        self.__data = dataset 
+##     @data.deleter
+##     def data ( self ) :
+##         if self.__data :
+##             self.__data.clear()
+##         del self.__data 
+##         self.__data = None
+        
+    @property 
     def variables ( self ) :
         """``variables'' - the list/tuple of variables (cleared in Terminate)"""
         return self.__variables
@@ -576,7 +597,7 @@ class SelectorWithVars(SelectorWithCuts) :
         
         if not self.__progress and not self.__silence :
             self.__total =  self.fChain.GetEntries()
-            self.__logger.info ( "Processing TChain('%s') #entries: %d" % ( self.fChain.GetName() , self.__total ) )
+            self.__logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , self.fChain.GetName() , self.__total ) )
             ## decoration:
             from ostap.utils.progress_bar import ProgressBar
             self.__progress = ProgressBar ( max_value = self.__total   ,
@@ -633,7 +654,8 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__varset.add       ( variable.var ) 
         self.__variables.append ( variable     )
         if not self.__silence: 
-            self.__logger.info ( "Add variable name/desc/(min,max): ``%s''/``%s''/(%.3g,%.3g)" % (
+            self.__logger.info ( "Selector(%s): add variable name/desc/(min,max): ``%s''/``%s''/(%.3g,%.3g)" % (
+                self.name             , 
                 variable.name         ,
                 variable.description  , 
                 variable.minmax[0]    , 
@@ -647,18 +669,21 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         if not self.__silence : 
             self.__logger.info (
-                'Events Processed/Total/Skept %d/%d/%d\nCUTS: "%s"' % (
+                'Selector(%s): Events Processed/Total/Skept %d/%d/%d\nCUTS: "%s"' % (
+                self.__name   ,
                 self.__events ,
                 self.__total  ,
                 self.__skip   , 
                 self.cuts () ) )
-            self.__logger.info ( 'Dataset created:%s' %  self.__data ) 
-            
+            self.__logger.info ( 'Selector(%s): dataset created:%s' %  ( self.__name ,  self.__data ) )
+        
         if not len ( self.__data ) :
-            self.__logger.warning("Empty dataset!")
+            self.__logger.warning("Selector(%s): empty dataset! Processed/Total/Skept %d/%d/%d"
+                                  % ( self.__name  , self.__events , self.__total , self.__skip   ) ) 
+            
         ##
         if 0 != self.GetAbort() :
-            self.__logger.error('Process has been aborted!')
+            self.__logger.error('Selector(%s): process has been aborted!' % self.__name )
 
         ## attention: delete these
 
