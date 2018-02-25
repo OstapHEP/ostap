@@ -103,7 +103,7 @@ class WorkManager(object) :
         the workers. They can be local (using other cores) or remote
         using other nodes in the local cluster """
 
-    def __init__( self, ncpus='autodetect', ppservers=None) :
+    def __init__( self, ncpus='autodetect', ppservers=None , silent = False ) :
         if ncpus == 'autodetect' : self.ncpus = multiprocessing.cpu_count()
         else :                     self.ncpus = ncpus
         if ppservers :
@@ -116,6 +116,7 @@ class WorkManager(object) :
             self.pool = multiprocessing.Pool(self.ncpus)
             self.mode = 'multicore'
         self.stats = {}
+        self.silent = True if silent  else False 
 
     def __del__(self):
         if hasattr(self,'server') : self.server.destroy()
@@ -141,8 +142,9 @@ class WorkManager(object) :
                 task._mergeResults(result)
                 self._mergeStatistics(stat)
             end = time.time()
-            self._printStatistics()
-            print 'Time elapsed since server creation %f' %(end-start)
+            if not self.silent : 
+                self._printStatistics()
+                print 'Time elapsed since server creation %f' %(end-start)
         # --- Call the Local Finalize
         task.finalize()
     def _printStatistics(self):

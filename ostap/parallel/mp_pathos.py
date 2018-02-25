@@ -202,7 +202,7 @@ class WorkManager(object) :
             self.pool = MPPool(self.ncpus)
             self.mode = 'multicore'
         self.stats  = {}
-        self.silent = silent
+        self.silent = True if silent else  False 
         
     def __del__(self):
         del self.pool
@@ -248,6 +248,7 @@ class WorkManager(object) :
         # --- Call the Local Finalize
         task.finalize()
     def _printStatistics(self):
+        if self.silent : return 
         njobs = 0
         for stat in self.stats.values():
             njobs += stat.njob

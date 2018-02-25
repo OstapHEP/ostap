@@ -28,19 +28,21 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'pstap.parallel.parallel')
 else                      : logger = getLogger ( __name__         ) 
 # =============================================================================
-try:
+## try:
+         
+##     from ostap.parallel.mp_pathos import Task, WorkManager 
+##     logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
     
-    ## 
-    from ostap.parallel.mp_pathos import Task, WorkManager 
-    logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
+## except ImportErorr :
     
-except:
+##     logger.error ("Can't import ostap.parallel.mp_pathos:" )  ## , exc_info = True )
+##     from ostap.parallel.mp_gaudi import Task, WorkManager 
+##     logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
+
+
+from ostap.parallel.mp_gaudi import Task, WorkManager 
+logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
     
-    ## 
-    ## logger.error ("Can't import ostap.parallel.mp_pathos:" , exc_info = True )
-    logger.error ("Can't import ostap.parallel.mp_pathos" )
-    from ostap.parallel.mp_gaudi import Task, WorkManager 
-    logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
     
     
 # =============================================================================

@@ -26,7 +26,7 @@ from   array                    import array
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'test_tmva' )
+    logger = getLogger ( 'test_chopping' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    

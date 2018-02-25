@@ -143,7 +143,7 @@ class ProjectTask(Parallel.Task) :
 #  For 12-core machine, clear speedup factor of about 8 is achieved 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
-def  cproject ( chain , histo , what , cuts ) :
+def  cproject ( chain , histo , what , cuts , silent = False ) :
     """Make a projection of the loooong chain into histogram
     >>> chain = ... ## large chain
     >>> histo = ... ## histogram template 
@@ -181,7 +181,7 @@ def  cproject ( chain , histo , what , cuts ) :
     params = [ ( f , cname , str(w) , cuts ) for f in files for w in what ] 
 
     task  = ProjectTask          ( histo )
-    wmgr  = Parallel.WorkManager ()
+    wmgr  = Parallel.WorkManager ( silent = silent )
     wmgr.process( task, params )
 
     filtered   = task.output[0] 
@@ -220,7 +220,8 @@ def  tproject ( tree                 ,   ## the tree
                 cuts       = ''      ,   ## selection/weighting criteria 
                 nentries   = -1      ,   ## number of entries 
                 first      =  0      ,   ## the first entry 
-                maxentries = 1000000 ) : ## chunk size 
+                maxentries = 1000000 ,   ## chunk size 
+                silent     = False   ) : ## silent processing 
     """Make a projection of the loooong tree into histogram
     >>> tree  = ... ## large chain
     >>> histo = ... ## histogram template 
@@ -333,7 +334,7 @@ def  tproject ( tree                 ,   ## the tree
             params.append ( ( fname , tname , str(w) , cuts , first + nchunks * csize , rest  ) )
 
     task  = ProjectTask          ( histo )
-    wmgr  = Parallel.WorkManager ()
+    wmgr  = Parallel.WorkManager ( silent = silent )
     wmgr.process( task, params )
 
     filtered   = task.output[0] 

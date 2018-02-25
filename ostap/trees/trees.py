@@ -29,6 +29,21 @@ import ostap.trees.cuts
 # =============================================================================
 _large = 2**64
 # =============================================================================
+from ostap.core.core import valid_pointer
+# =============================================================================
+## check validity/emptiness  of TTree/TChain
+#  require non-zero poniter and non-empty Tree/Chain
+def _tt_nonzero_ ( tree ) :
+    """Check validity/emptiness  of TTree/TChain
+    - require non-zero poniter and non-empty Tree/Chain
+    """
+    return valid_pointer ( tree ) and 0 < len ( tree )
+ROOT.TTree .__nonzero__ = _tt_nonzero_
+ROOT.TChain.__nonzero__ = _tt_nonzero_
+ROOT.TTree .__bool__    = _tt_nonzero_
+ROOT.TChain.__bool__    = _tt_nonzero_
+
+# =============================================================================
 ## Iterator over ``good events'' in TTree/TChain:
 #  @code 
 #    >>> tree = ... # get the tree
@@ -64,7 +79,7 @@ def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False ) :
         
         _t = pit.tree()
         _o = _t 
-        while _t :
+        while valid_pointer ( _t ) :
 
             yield _t
             _t      = pit.next()             ## advance to the next entry  
@@ -103,7 +118,7 @@ ROOT.TTree. __len__   = lambda s : s.GetEntries()
 #  @see Ostap::Formula
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _tc_call_ ( self , first = 0 , last = _large , cuts = None , progress = False ) :
+def _tc_call_ ( self , first = 0 , last = -1  , cuts = None , progress = False ) :
     """Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
@@ -111,6 +126,8 @@ def _tc_call_ ( self , first = 0 , last = _large , cuts = None , progress = Fals
     
     """
     #
+    if last < 0 : last = ROOT.Tree.kMaxEntries
+    
     last = min ( last , len ( self )  )
 
     from ostap.utils.progress_bar import ProgressBar 
@@ -129,7 +146,7 @@ def _tc_call_ ( self , first = 0 , last = _large , cuts = None , progress = Fals
             
             _t = pit.tree()
             _o = _t 
-            while _t :
+            while valid_pointer ( _t ) :
                 
                 yield _t                         ## YIELD 
                 _t      = pit.next()             ## advance to the next entry  
@@ -203,7 +220,7 @@ ROOT.TChain.__call__  = _tc_call_
 #  @see TTree::Project
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def _tt_project_ ( tree , histo , what , cuts = '' , *args ) :
+def _tt_project_ ( tree , histo , what , cuts = '' , options = '' , nentries = -1 , firstentry = 0 , silent = False ) :
     """Helper project method
     
     >>> tree = ...
@@ -229,6 +246,11 @@ def _tt_project_ ( tree , histo , what , cuts = '' , *args ) :
     - cuts  : selection criteria/weights 
     """
     #
+    if nentries <= 0 :
+        nentries = ROOT.TTree.kMaxEntries
+        
+    args = options , nentries , firstentry, silent
+    ## 
     hname = histo 
     if   hasattr    ( histo , 'GetName' ) : hname = histo.GetName()
     ## elif isinstance ( histo , str       ) : 
@@ -262,7 +284,7 @@ def _tt_project_ ( tree , histo , what , cuts = '' , *args ) :
         rr = 0 
         hh = histo.clone()
         for v in what :
-            r , h  = _tt_project_ ( tree , hh , v , cuts , *args )
+            r , h  = _tt_project_ ( tree , hh , v , cuts , options , *args )
             rr    += r
             histo += h
         hh.Delete()
@@ -286,7 +308,7 @@ def _tt_project_ ( tree , histo , what , cuts = '' , *args ) :
     with ROOTCWD() :
         ROOT.gROOT.cd ()
         ## make projection 
-        result = tree.Project ( hname , what , cuts , *args )
+        result = tree.Project ( hname , what , cuts , *args[:-1] )
         if   isinstance ( histo , ROOT.TH1 ) : return result, histo
         elif isinstance ( histo , str      ) :
             h = ROOT.gROOT.FindObject ( hname )
