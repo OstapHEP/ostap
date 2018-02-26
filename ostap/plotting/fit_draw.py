@@ -64,6 +64,12 @@ keys = (
     ##
     'signal_options'        ,
     'base_signal_color'     ,
+    ##
+    'background_step_color' , 
+    'crossterm1_step_color' ,
+    'crossterm2_step_color' ,
+    'component_step_color'  ,
+    'signal_step_color'     ,   
     )
 # =============================================================================
 ## get draw options:

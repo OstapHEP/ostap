@@ -659,7 +659,7 @@ class PDF (object) :
 
     
     ## helper method to draw set of components 
-    def _draw ( self , what , frame , options , base_color ) :
+    def _draw ( self , what , frame , options , base_color , step_color = 1 ) :
         """ Helper method to draw set of components
         """
         i = 0 
@@ -669,7 +669,7 @@ class PDF (object) :
                 self.pdf .plotOn (
                     frame ,
                     ROOT.RooFit.Components ( cmps                        ) ,
-                    ROOT.RooFit.LineColor  ( base_color + i ) , *options )
+                    ROOT.RooFit.LineColor  ( base_color + i * step_color ) , *options )
             else :
                 self.pdf .plotOn (
                     frame ,
@@ -753,30 +753,35 @@ class PDF (object) :
             
             ## draw various ``background'' terms
             boptions = kwargs.pop (     'background_options' , FD.   background_options )
-            bbcolor  = kwargs.pop (  'base_background_color' , FD.base_background_color ) 
-            self._draw( self.backgrounds , frame , boptions , bbcolor )
+            bbcolor  = kwargs.pop (  'base_background_color' , FD.base_background_color )
+            bbcstep  = kwargs.pop (  'background_step_color' , 1 )
+            self._draw( self.backgrounds , frame , boptions , bbcolor , bbcstep )
                 
             ## ugly :-(
             ct1options = kwargs.pop (     'crossterm1_options' , FD.   crossterm1_options )
             ct1bcolor  = kwargs.pop (  'base_crossterm1_color' , FD.base_crossterm1_color ) 
+            ct1cstep   = kwargs.pop (  'crossterm1_step_color' , 1 )
             if hasattr ( self , 'crossterms1' ) and self.crossterms1 : 
-                self._draw( self.crossterms1 , frame , ct1options , ct1bcolor )
+                self._draw( self.crossterms1 , frame , ct1options , ct1bcolor , ct1cstep )
 
             ## ugly :-(
             ct2options = kwargs.pop (     'crossterm2_options' , FD.   crossterm1_options )
-            ct2bcolor  = kwargs.pop (  'base_crossterm2_color' , FD.base_crossterm1_color )                 
+            ct2bcolor  = kwargs.pop (  'base_crossterm2_color' , FD.base_crossterm1_color )
+            ct1cstep   = kwargs.pop (  'crossterm2_step_color' , 1 )         
             if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
-                self._draw( self.crossterms2 , frame , ct2options , ct2bcolor )
+                self._draw( self.crossterms2 , frame , ct2options , ct2bcolor , ct2cstep )
 
             ## draw ``other'' components
             coptions   = kwargs.pop (      'component_options' , FD.    component_options  )
             cbcolor    = kwargs.pop (   'base_component_color' , FD. base_component_color  ) 
-            self._draw( self.components , frame , coptions , cbcolor )
+            ccstep     = kwargs.pop (   'component_step_color' , 1 )         
+            self._draw( self.components , frame , coptions , cbcolor , ccstep )
 
             ## draw ``signal'' components
             soptions   = kwargs.pop (         'signal_options' , FD.      signal_options  )
             sbcolor    = kwargs.pop (      'base_signal_color' , FD.   base_signal_color  ) 
-            self._draw( self.signals , frame , soptions , sbcolor )
+            scstep     = kwargs.pop (      'signal_step_color' , 1 )         
+            self._draw( self.signals , frame , soptions , sbcolor , scstep )
 
             #
             ## the total fit curve
