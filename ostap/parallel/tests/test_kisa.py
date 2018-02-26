@@ -52,9 +52,9 @@ def prepare_data ( nfiles =  100 ,  nentries = 100000 ) :
 
             for i in xrange ( nentries ) : 
                 
-                m  = random.gauss   ( 3.1 ,  0.015 )
-                c2 = random.uniform ( 0   ,  5.1   )
-                pt = random.uniform ( 0   , 10     )
+                m  = random.gauss        ( 3.1 ,  0.015 )
+                c2 = random.gammavariate ( 2.5 , 0.5    ) / 5 
+                pt = random.uniform      ( 0   , 10     )
                 
                 var1[0] = m
                 var2[0] = c2 
@@ -77,7 +77,7 @@ def cleanup () :
 while not patterns :
     with timing('Prepare data') :
         logger.info('Prepare data, it could take some time') 
-        prepare_data ( 500 , 20000 )
+        prepare_data ( 1000 , 20000 )
     data = Data  ( 'S' , patterns    )
     logger.info  ( 'DATA %s' % data  )
     
@@ -119,7 +119,7 @@ def test_kisa2 () :
     ppservers = () ## 'lxplus051' , )
 
     nf   = len ( data.files )
-    nf //= 20
+    nf //= 40
     nf  += 1 
     
     with timing('%d files in sequence %s' % ( nf , len( data.chain )  ) ) :

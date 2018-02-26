@@ -85,7 +85,7 @@ _fit_status_ = {
     3    : ' 3/Edm is above max',
     4    : ' 4/Reached call limit',
     5    : ' 5/Any other failure',
-       }
+    }
 # =============================================================================
 ## Miniut::minimize status code
 # - status = 1    : Covariance was made pos defined
@@ -94,6 +94,13 @@ _fit_status_ = {
 # - status = 4    : Reached call limit
 # - status = 5    : Any other failure
 def fit_status ( status ) : return _fit_status_.get( status ,"%s" % status )
+# =============================================================================
+## Get number of cores/CPUs
+def  numcpu () :
+    """Get number of cores/CPUs
+    """
+    import multiprocessing
+    return multiprocessing.cpu_count()
 # =============================================================================
 ## prepare "NumCPU" argument with reasonable choice of #cpu, depending on
 #  number of events in dataset 
@@ -107,8 +114,7 @@ def ncpu (  events ) :
     n  = events // _nemax
     if n       <= 1 : return ROOT.RooFit.Save () ## fake!!! 
     # 
-    import multiprocessing
-    n_cores = multiprocessing.cpu_count()
+    n_cores = numcpu() 
     if n_cores <= 1 : return ROOT.RooFit.Save () ## fake!!! 
     #
     num = min ( n , n_cores , _ncmax )
@@ -909,6 +915,77 @@ class PDF (object) :
  
         return result, self.draw ( hdataset , nbins = None , silent = silent , **draw_opts )
 
+    # =========================================================================
+    ## draw NLL or LL-profiles for selected variable
+    #  @code
+    #  model.fitTo ( dataset , ... )
+    #  nll  , f1 = model.draw_nll ( 'B' ,  dataset )
+    #  prof , f2 = model.draw_nll ( 'B' ,  dataset , profile = True )
+    #  @endcode    
+    def draw_nll ( self            ,
+                   var             ,
+                   dataset         ,
+                   profile = False ,
+                   *args           ,
+                   **kwargs        ) :
+
+        ## get all parametrs
+        pars = self.pdf.getParameters ( dataset ) 
+        assert var in pars , "Variable %s is not a parameter"   % var
+        if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
+        del pars 
+        ##
+        fargs = []
+        ##
+        bins  = kwargs.pop ( 'nbins' , 100 )
+        if bins   : fargs.append ( ROOT.RooFit.Bins      ( bins  ) ) 
+        ## 
+        rng   = kwargs.pop ( 'range' , None )
+        if rng    : fargs.append ( ROOT.RooFit.Range     ( *rng  ) ) 
+        ##
+        fargs = tuple ( fargs )
+        ##
+        largs = [ i for i in  args ] 
+        color = kwargs.pop ( 'color' , None )
+        if color  : largs.append ( ROOT.RooFit.LineColor ( color ) ) 
+        ##
+        style = kwargs.pop ( 'style' , None )
+        if style  : largs.append ( ROOT.RooFit.LineStyle ( style ) )
+        ##
+        width = kwargs.pop ( 'width' , None )        
+        if width  : largs.append ( ROOT.RooFit.LineWidth ( width ) ) 
+        ##
+        if kwargs : logger.warning("Unknown parameters, ignore: %s"    % kwargs)
+        ##
+        largs.append  ( ROOT.RooFit.ShiftToZero() ) 
+        largs = tuple ( largs ) 
+    
+        nll    = self.pdf.createNLL ( dataset , ROOT.RooFit.NumCPU (  numcpu() ) ) 
+        result = nll
+
+        ## make profile? 
+        if profile :
+            avar    = ROOT.RooArgSet ( var ) 
+            profile = nll.createProfile ( avar )
+            result  = profile
+            
+        ## prepare the  frame & plot 
+        frame  = var.frame ( *fargs )
+        result.plotOn ( frame , *largs  )
+
+        frame.SetMinimum ( 0  ) 
+        frame.SetXTitle  ( '' )
+        frame.SetYTitle  ( '' )
+        frame.SetZTitle  ( '' )
+        
+        ## draw it! 
+        if not ROOT.gROOT.IsBatch() :
+            from Ostap.Utils import  rootWarning
+            with rootWarning ():
+                frame.Draw ()
+                        
+        return result , frame
+    
     # =========================================================================
     ## perform sPlot-analysis 
     #  @code
