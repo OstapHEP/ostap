@@ -55,7 +55,7 @@
 namespace
 {
   // ==========================================================================
-
+  
 
   // ==========================================================================
   /** helper function for itegration of Sigmoid function
@@ -131,11 +131,6 @@ namespace
   // ==========================================================================
 } //                                                 end of anonymous namespace
 // ============================================================================
-
-
-
-
-
 
 
 // ============================================================================
@@ -1535,26 +1530,120 @@ double Ostap::Math::Landau::integral ( const double low  ,
   return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
-
-
+// Weibull
 // ============================================================================
-namespace 
+/*  constructor from all parameters    
+ *  @param scale the scale parameter "lambda"  >0 
+ *  @param shape the shape parameter "k"       >0
+ *  @param shift the shift parameter "x0"
+ */
+// ============================================================================
+Ostap::Math::Weibull::Weibull
+(  const double scale ,  
+   const double shape ,  
+   const double shift )
+  : m_scale (  std::abs ( scale ) ) 
+  , m_shape (  std::abs ( shape ) ) 
+  , m_shift (             shift   )
+{}
+// ============================================================================
+// evaluate Weibull-distributions
+// ============================================================================
+double Ostap::Math::Weibull::pdf ( const double x ) const 
 {
-  //
-  inline double shash ( const double x   , 
-                        const double eps , 
-                        const double dlt ) 
-  {
-    const double y = eps + dlt * std::asinh ( x ) ;
-    return 
-      (     GSL_LOG_DBL_MAX < y ) ?    s_INFINITY :
-      ( -1* GSL_LOG_DBL_MAX > y ) ? -1*s_INFINITY : std::sinh ( y ) ;
-  }
-  //
+  if ( x <= m_shift ) {  return 0 ; }
+  const double y = ( x - m_shift ) / m_scale ;
+  return ( m_shape / m_scale ) * 
+    std::pow (  y , m_shape - 1 ) *
+    std::exp ( - std::pow ( y , m_shape ) ) ;  
 }
+// ============================================================================
+bool Ostap::Math::Weibull::setScale  ( const double value ) 
+{
+  const double v = std::abs ( value ) ;  
+  if ( s_equal ( v , m_scale  ) ) { return false ; }
+  m_scale  = v ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Weibull::setShape  ( const double value ) 
+{
+  const double v = std::abs ( value ) ;  
+  if ( s_equal ( v , m_shape  ) ) { return false ; }
+  m_shape  = v ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Weibull::setShift  ( const double value ) 
+{
+  if ( s_equal ( value , m_shift  ) ) { return false ; }
+  m_shift  = value ;
+  return true ;
+}
+// ============================================================================
+double Ostap::Math::Weibull::cdf ( const double x ) const 
+{
+  if ( x <= m_shift ) {  return 0 ; }
+  const double y = ( x - m_shift ) / m_scale ;
+  return 1 - std::exp ( - std::pow ( y  , m_shape ) ) ;
+}
+// ============================================================================
+double Ostap::Math::Weibull::integral 
+( const double low  , const double high ) const 
+{
+  if ( s_equal ( low , high ) ) { return 0 ; }
+  if ( high < low  ) { return -integral ( high, low ) ; }
+  //
+  return high <= m_shift ? 0.0 : cdf ( high ) - cdf ( low ) ;  
+}
+// ============================================================================
+// the mean 
+// ============================================================================
+double Ostap::Math::Weibull::mean () const 
+{ return m_shift + m_scale * std::tgamma ( 1  + 1/m_shape ) ; }
+// ============================================================================
+// the mode 
+// ============================================================================
+double Ostap::Math::Weibull::mode () const 
+{  
+  return 
+    1 < m_shape ? m_shift : 
+    m_shift + m_scale * std::pow ( ( m_shape - 1 ) / m_shape , 1/m_shape ) ;
+}
+// ============================================================================
+// the median 
+// ============================================================================
+double Ostap::Math::Weibull::median () const 
+{ return m_shift + m_scale * std::pow ( std::log ( 2.0 ) , 1/m_shape ) ; }
+// ============================================================================
+// variance 
+// ============================================================================
+double Ostap::Math::Weibull::variance () const 
+{ 
+  const double g1 = std::tgamma ( 1 + 2. / m_shape ) ;
+  const double g2 = std::tgamma ( 1 + 1. / m_shape ) ;  
+  return m_scale * m_scale * ( g1  - g2  * g2 ) ;
+}
+// ============================================================================
+// rms  
+// ============================================================================
+double Ostap::Math::Weibull::rms () const { return  std::sqrt ( variance () ) ; }
 
 
-
+// namespace 
+// {
+//   //
+//   inline double shash ( const double x   , 
+//                         const double eps , 
+//                         const double dlt ) 
+//   {
+//     const double y = eps + dlt * std::asinh ( x ) ;
+//     return 
+//       (     GSL_LOG_DBL_MAX < y ) ?    s_INFINITY :
+//       ( -1* GSL_LOG_DBL_MAX > y ) ? -1*s_INFINITY : std::sinh ( y ) ;
+//   }
+//   //
+// }
 // ============================================================================
 // Argus
 // ============================================================================

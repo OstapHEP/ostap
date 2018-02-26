@@ -848,6 +848,83 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Weibull 
+     *  3-parameter  Weibull distribution 
+     *  \f$ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f$, where 
+     *  \f$ y \equiv \frac{x-x_0}{\lambda}\f$
+     *  @see https://en.wikipedia.org/wiki/Weibull_distribution
+     *  @@date 2018-02-26
+     */
+    class   Weibull
+    {
+    public:
+      // ======================================================================
+      /** constructor from all parameters    
+       *  @param scale the scale parameter "lambda"  >0 
+       *  @param shape the shape parameter "k"       >0
+       *  @param shift the shift parameter "x0"
+       */
+      Weibull (  const double scale = 1 ,  
+                 const double shape = 1 ,  
+                 const double shift = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate Weibull-distributions
+      double pdf        ( const double x ) const ;
+      /// evaluate Weibull-distributions
+      double operator() ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public: //  direct & derived getters 
+      // ======================================================================
+      double scale () const { return m_scale ; }
+      double shape () const { return m_shape ; }
+      double shift () const { return m_shift ; }
+      // ======================================================================
+      double lambd () const { return scale () ; }
+      double k     () const { return shape () ; }
+      double x0    () const { return shift () ; }      
+      // ======================================================================
+    public: //  setters  
+      // ======================================================================
+      bool setScale  ( const double value ) ;
+      bool setShape  ( const double value ) ;
+      bool setShift  ( const double value ) ;
+      // ======================================================================
+      bool setLambda ( const double value ) { return setScale ( value ) ; }
+      bool setK      ( const double value ) { return setShape ( value ) ; }
+      bool setX0     ( const double value ) { return setShift ( value ) ; }
+      // ======================================================================
+    public: // various derived  quantities 
+      // ======================================================================
+      /// the mean value 
+      double mean     () const ;
+      /// the mode 
+      double mode     () const ;
+      /// the median
+      double median   () const ;
+      /// variance
+      double variance () const ;
+      /// rms 
+      double rms      () const ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      double cdf      ( const double x    ) const ;
+      double integral ( const double low  ,
+                        const double high ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      ///  scale 
+      double m_scale  ; //  scale 
+      ///    shape  
+      double m_shape  ; // shape
+      ///  shift 
+      double m_shift  ; // shift 
+      // ======================================================================
+    };    
+    // ========================================================================
     /** @class Argus
      *  http://en.wikipedia.org/wiki/ARGUS_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -987,7 +1064,7 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    /** @class GenSigmoid
+    /** @class Sigmoid
      *  Sigmoid function, modulated by the positive polynomial
      *  \f$ f(x) = ( 1 + tanh( \alpha ( x  - x_0) ) \times P_{pos} (x) \f$
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
