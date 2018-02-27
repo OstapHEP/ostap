@@ -43,6 +43,7 @@ Empricial PDFs to describe narrow peaks
   - AsymmetricLaplace_pdf  
   - Sech_pdf   
   - Logistic_pdf   
+  - RaisingCosine_pdf
   
 PDF to describe ``wide'' peaks
 
@@ -87,6 +88,7 @@ __all__ = (
     'JohnsonSU_pdf'          , ## JonhsonSU-distribution 
     'Atlas_pdf'              , ## modified gaussian with exponenital tails 
     'Slash_pdf'              , ## symmetric peakk wot very heavy tails 
+    'RaisingCosine_pdf'      , ## Raising  Cosine distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperboilic secant  (inverse-cosh) 
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
@@ -250,7 +252,6 @@ class CrystalBall_pdf(MASS) :
         value = float ( value )
         assert 0.1 <= value <= 5 , "``alpha'' must be between 0.1 and 5.0"
         self.__alpha.setVal ( value )
-        return self.__alpha.getVal ()
     
     @property
     def n ( self ) :
@@ -261,7 +262,6 @@ class CrystalBall_pdf(MASS) :
         value = float ( value )
         assert 1.e-6 <= value <= 40 , "``n'' must be between 1.e-6 and 40"        
         self.__n.setVal ( value )
-        return self.__n.getVal ()
 
 models.append ( CrystalBall_pdf )    
 # =============================================================================
@@ -391,7 +391,6 @@ class CB2_pdf(MASS) :
         value = float ( value )
         assert 0.01 < value < 5 , "alpha_L must be between 0.01 and 5" 
         self.__aL.setVal ( value )
-        return self.__aL.getVal ()
 
     @property
     def nL ( self ) :
@@ -402,7 +401,6 @@ class CB2_pdf(MASS) :
         value = float ( value )
         assert 1.e-6 < value < 40 , "N_L must be between 1.e-6 and 40" 
         self.__nL.setVal ( value )
-        return self.__nL.getVal ()
 
     @property
     def aR ( self ) :
@@ -413,7 +411,6 @@ class CB2_pdf(MASS) :
         value = float ( value )
         assert 0.01 < value < 5 , "alpha_R must be between 0.01 and 5" 
         self.__aR.setVal ( value )
-        return self.__aR.getVal ()
 
     @property
     def nR ( self ) :
@@ -424,7 +421,6 @@ class CB2_pdf(MASS) :
         value = float ( value )
         assert 1.e-6 < value < 40 , "N_R must be between 1.e-6 and 40" 
         self.__nR.setVal ( value )
-        return self.__nR.getVal ()
 
         
 models.append ( CB2_pdf )    
@@ -519,7 +515,6 @@ class Needham_pdf(MASS) :
     def a0 ( self, value ) :
         value = float ( value ) 
         self.__a0.setVal ( value )
-        return self.__a0.getVal ()
 
     @property
     def a1 ( self ) :
@@ -529,7 +524,6 @@ class Needham_pdf(MASS) :
     def a1 ( self, value ) :
         value = float ( value ) 
         self.__a1.setVal ( value )
-        return self.__a1.getVal ()
 
     @property
     def a2 ( self ) :
@@ -539,7 +533,6 @@ class Needham_pdf(MASS) :
     def a2 ( self, value ) :
         value = float ( value ) 
         self.__a2.setVal ( value )
-        return self.__a2.getVal ()
 
             
 models.append ( Needham_pdf )    
@@ -645,7 +638,6 @@ class Apolonios_pdf(MASS) :
         value = float ( value )
         assert 0.01 <=  value <= 5 , "``alpha''-parameter must be in 0.01,5 interval"
         self.__alpha.setVal ( value )        
-        return self.__alpha.getVal ()
     
     @property
     def n ( self ) :
@@ -656,7 +648,6 @@ class Apolonios_pdf(MASS) :
         value = float ( value ) 
         assert 1.e-6 < value < 50 , "``n''-parameter must be in 1.e-6,50 interval"
         self.__n.setVal ( value )
-        return self.__n.getVal ()
 
     @property
     def b ( self ) :
@@ -667,7 +658,6 @@ class Apolonios_pdf(MASS) :
         value = float ( value )
         assert 0 < value , "``b''-parameter must be positive"
         self.__b.setVal ( value )
-        return self.__b.getVal ()
 
 
 models.append ( Apolonios_pdf )    
@@ -778,7 +768,6 @@ class Apolonios2_pdf(MASS) :
         value = float ( value ) 
         assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
         self.__asym.setVal ( value )
-        return self.__asym.getVal ()
 
     @property
     def beta ( self ) :
@@ -789,7 +778,6 @@ class Apolonios2_pdf(MASS) :
         value =   float ( value )
         assert 0 < value , "``beta'' parameter must be positive"        
         self.__beta.setVal ( value )
-        return self.__beta.getVal ()
 
     @property
     def sigmaL ( self ) :
@@ -1093,7 +1081,6 @@ class GenGaussV1_pdf(MASS) :
         value  = float ( value )
         assert 0 < value , "``alpha''-parameter must be positive!"
         self.__alpha.setVal ( abs ( value ) ) 
-        return self.__alpha.getVal ()
 
     @property
     def beta ( self ) :
@@ -1104,7 +1091,6 @@ class GenGaussV1_pdf(MASS) :
         value  = float ( value )
         assert 0 < value , "``Beta''-parameter must be positive!"
         self.__beta.setVal ( abs ( value ) ) 
-        return self.__beta.getVal ()
         
 models.append ( GenGaussV1_pdf )    
 # =============================================================================
@@ -1189,7 +1175,6 @@ class GenGaussV2_pdf(MASS) :
         value  = float ( value )
         if value  <= 0 : raise AttributeError ( "Alpha parameter must be positive!") 
         self.__alpha.setVal ( abs ( value ) ) 
-        return self.__alpha.getVal ()
 
     @property
     def kappa ( self ) :
@@ -1197,8 +1182,8 @@ class GenGaussV2_pdf(MASS) :
         return self.__kappa
     @kappa.setter
     def kappa ( self, value ) :
+        value  = float ( value )        
         self.__kappa.setVal ( value ) 
-        return self.__kappa.getVal ()
     
     @property
     def xi ( self ) :
@@ -1285,7 +1270,6 @@ class SkewGauss_pdf(MASS) :
     def xi ( self, value ) :
         value  = float ( value )
         self.__xi.setVal ( abs ( value ) ) 
-        return self.__xi.getVal ()
 
     @property
     def omega ( self ) :
@@ -1296,7 +1280,6 @@ class SkewGauss_pdf(MASS) :
         value  = float ( value )
         assert 0 < omega, 'Omega-parameter must be positive!'
         self.__omega.setVal ( value ) 
-        return self.__omega.getVal ()
 
     @property
     def alpha( self ) :
@@ -1422,7 +1405,6 @@ class Bukin_pdf(MASS) :
         value  = float ( value )
         assert -1 <= value <=1 , "Asymmetry must be in range  -1,1"
         self.__xi.setVal ( value ) 
-        return self.__xi.getVal ()
 
     @property
     def rhoL ( self ) :
@@ -1433,7 +1415,6 @@ class Bukin_pdf(MASS) :
         value  = float ( value )
         assert 0 <= value , "(left)``rho''-parameter must be non-negative"
         self.__rhoL.setVal ( value ) 
-        return self.__rhoL.getVal ()
 
     @property
     def rhoR ( self ) :
@@ -1444,7 +1425,6 @@ class Bukin_pdf(MASS) :
         value  = float ( value )
         assert 0 <= value , "(right)``rho''-parameter must be non-negative"
         self.__rhoR.setVal ( value ) 
-        return self.__rhoR.getVal ()
 
 
 models.append ( Bukin_pdf )      
@@ -1523,7 +1503,6 @@ class StudentT_pdf(MASS) :
         value  = float ( value )
         assert 1.e-6 < value , "``n''-parameter must be larger then 1.e-6"
         self.__n.setVal ( value ) 
-        return self.__n.getVal ()
     
 
 models.append ( StudentT_pdf )      
@@ -1629,7 +1608,6 @@ class BifurcatedStudentT_pdf(MASS) :
         value  = float ( value )
         assert 1.e-6 < value , "(left)``n''-parameter must be lager than 1.e-6"
         self.__nL.setVal ( value ) 
-        return self.__nL.getVal ()
 
     @property
     def nR ( self ) :
@@ -1640,7 +1618,6 @@ class BifurcatedStudentT_pdf(MASS) :
         value  = float ( value )
         assert 1.e-6 < value , "(right)``n''-parameter must be lager than 1.e-6"
         self.__nR.setVal ( value ) 
-        return self.__nR.getVal ()
         
     @property
     def asym ( self ) :
@@ -1651,7 +1628,6 @@ class BifurcatedStudentT_pdf(MASS) :
         value  = float ( value )
         assert -1<= value <=1 , "Asymmetry must be in he  range -1,1" 
         self.__asym.setVal ( value ) 
-        return self.__asym.getVal ()
 
     @property
     def sigmaL( self ) :
@@ -1753,8 +1729,8 @@ class SinhAsinh_pdf(MASS) :
         return self.__epsilon
     @epsilon.setter
     def epsilon ( self, value ) :
+        value = float ( vaalue ) 
         self.__epsilon.setVal ( value ) 
-        return self.__epsilon.getVal ()
 
     @property
     def delta ( self ) :
@@ -1765,7 +1741,6 @@ class SinhAsinh_pdf(MASS) :
         value = float ( value )
         assert 0  < value, "``delta''-parameter must be positive"         
         self.__delta.setVal ( value ) 
-        return self.__delta.getVal ()
         
     @property
     def mu ( self ) :
@@ -1775,7 +1750,6 @@ class SinhAsinh_pdf(MASS) :
     def mu (  self , value ) :
         value = float ( value )
         self.__mu.setVal ( value )
-        return self.__mu.getVal ()
                 
 models.append ( SinhAsinh_pdf )      
 
@@ -1911,7 +1885,6 @@ class JohnsonSU_pdf(MASS) :
         value = float ( value )
         assert   0 < value, "``delta''-parameter must be positive"
         self.__delta.setVal ( value ) 
-        return self.__delta.getVal ()
 
     @property
     def gamma ( self ) :
@@ -1921,7 +1894,6 @@ class JohnsonSU_pdf(MASS) :
     def gamma ( self, value ) :
         value = float ( value )
         self.__gamma.setVal ( value ) 
-        return self.__gamma.getVal ()
         
     @property
     def xi ( self ) :
@@ -1931,7 +1903,6 @@ class JohnsonSU_pdf(MASS) :
     def xi ( self, value ) :
         value = float ( value )
         self.__xi.setVal ( value ) 
-        return self.__xi.getVal ()
 
     @property
     def lambd ( self ) :
@@ -1942,9 +1913,6 @@ class JohnsonSU_pdf(MASS) :
         value = float ( value )
         assert   0 < value, "``lambda''-parameter must be positive"        
         self.__lambd.setVal ( value ) 
-        return self.__lambd.getVal ()
-  
-        
 
 models.append ( JohnsonSU_pdf )      
 # =============================================================================
@@ -2312,6 +2280,77 @@ class Logistic_pdf(MASS) :
 
     
 models.append ( Logistic_pdf )      
+
+# =============================================================================
+## @class RaisingCosine_pdf 
+#  "Raising cosine" distribution
+#  \f$ f(x,\mu,s) = \frac{1}{2s}   \left( 1   +\cos \pi y \right)  \f$, 
+#  where \f$  y  \equiv = \frac{x-\mu}{s}\f$ 
+#  @see https://en.wikipedia.org/wiki/Raised_cosine_distribution
+#  @see Ostap::Models::RaisingCosine 
+#  @see Ostap::Math::RaisingCosine 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-27
+class RaisingCosine_pdf(MASS) :
+    r"""``Raising cosine'' distribution
+    \f$ f(x,\mu,s) = \frac{1}{2s}   \left( 1   +\cos \pi y \right)  \f$, 
+    where \f$  y  \equiv = \frac{x-\mu}{s}\f$ 
+    - see https://en.wikipedia.org/wiki/Raised_cosine_distribution
+    - see Ostap::Models::RaisnCosine 
+    - see Ostap::Math::RaisnCosine
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean      = None ,   ## related to mean 
+                   scale     = None ) : ## related to sigma 
+
+        #
+        ## initialize the base
+        #
+        
+        MASS.__init__  ( self , name , xvar , mean , scale  )
+        
+        self.__scale = self.sigma
+        if self.__scale != scale : 
+            sname  = self.sigma.GetName  ()
+            stitle = self.sigma.GetTitle ()
+            gname  = sname .replace ( 'sigma' , 'scale' )
+            gtitle = stitle.replace ( 'sigma' , 'scale' )
+            self.__scale.SetName  ( gname  ) 
+            self.__scale.SetTitle ( gtitle )
+
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.RaisingCosine (
+            "rcos_"    + name ,
+            "RCos(%s)" % name ,
+            self.xvar      ,
+            self.mean      ,
+            self.scale     ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'scale'     : self.scale ,
+            }
+        
+    @property
+    def scale ( self ) :
+        """``scale''-parameter, the same as ``sigma''"""
+        return self.__scale
+    @scale.setter
+    def scale ( self, value ) :
+        value = float ( value ) 
+        assert 0 < value , "``scale''-parameter must be positive"
+        self.__scale.setVal ( value ) 
+    
+models.append ( RaisingCosine_pdf )      
+
+
 # =============================================================================
 ## @class Voigt_pdf
 #  Voigt-pdf distribution
@@ -2547,7 +2586,7 @@ class BreitWigner_pdf(MASS) :
         self.__useFFT      =  useFFT 
         if  None is convolution : self.pdf = self.__breit
         else :
-            from ostap.fitting.basic import Convolution            
+            from ostap.fitting.convolution import Convolution            
             self.conv = Convolution ( 'RBW' + name  ,
                                       self.__breit  , self.xvar ,
                                       convolution   , useFFT    ) 
@@ -2646,7 +2685,6 @@ class BW23L_pdf(MASS) :
         value = float ( value )
         assert 0 < gamma , "``gamma'' must be positive"
         self.__gamma.setVal ( value ) 
-        return self.__gamma.getVal ()
 
     @property
     def breitwigner ( self ) :
@@ -2934,7 +2972,6 @@ class LASS_pdf(MASS) :
     def gamma ( self, value ) :
         value = float ( value )
         self.__gamma.setVal ( value ) 
-        return self.__gamma.getVal ()
 
     @property
     def g0_1430 ( self ) :
@@ -2944,7 +2981,6 @@ class LASS_pdf(MASS) :
     def g0_1430 ( self, value ) :
         value = float ( value )
         self.__gamma.setVal ( value ) 
-        return self.__gamma.getVal ()
 
     @property
     def m0_1430 ( self ) :
@@ -2954,7 +2990,6 @@ class LASS_pdf(MASS) :
     def m0_1430 ( self, value ) :
         value = float ( value )
         self.__m0_1430.setVal ( value ) 
-        return self.__m0_1430.getVal ()
 
     @property
     def a ( self ) :
@@ -2964,7 +2999,6 @@ class LASS_pdf(MASS) :
     def a ( self, value ) :
         value = float ( value )
         self.__a_lass.setVal ( value ) 
-        return self.__a_lass.getVal ()
 
     @property
     def r ( self ) :
@@ -2984,7 +3018,6 @@ class LASS_pdf(MASS) :
     def e ( self, value ) :
         value = float ( value )
         self.__e_lass.setVal ( value ) 
-        return self.__e_lass.getVal ()
 
 models.append ( LASS_pdf )                          
 # =============================================================================
@@ -3104,7 +3137,6 @@ class Bugg_pdf(MASS) :
     def gamma ( self, value ) :
         value = float ( value )
         self.__gamma.setVal ( value ) 
-        return self.__gamma.getVal ()
 
     @property
     def g2 ( self ) :
@@ -3114,7 +3146,6 @@ class Bugg_pdf(MASS) :
     def g2 ( self, value ) :
         value = float ( value )
         self.__bugg_g2.setVal ( value ) 
-        return self.__bugg_g2.getVal ()    
 
     @property
     def b1 ( self ) :
@@ -3124,7 +3155,6 @@ class Bugg_pdf(MASS) :
     def b1 ( self, value ) :
         value = float ( value )
         self.__bugg_b1.setVal ( value ) 
-        return self.__bugg_b1.getVal ()    
 
     @property
     def b2 ( self ) :
@@ -3134,7 +3164,6 @@ class Bugg_pdf(MASS) :
     def b1 ( self, value ) :
         value = float ( value )
         self.__bugg_b2.setVal ( value ) 
-        return self.__bugg_b2.getVal ()    
 
     @property
     def a ( self ) :
@@ -3144,7 +3173,6 @@ class Bugg_pdf(MASS) :
     def a ( self, value ) :
         value = float ( value )
         self.__bugg_a.setVal ( value ) 
-        return self.__bugg_a.getVal ()    
 
     @property
     def s1 ( self ) :
@@ -3154,7 +3182,6 @@ class Bugg_pdf(MASS) :
     def s1 ( self, value ) :
         value = float ( value )
         self.__bugg_s1.setVal ( value ) 
-        return self.__bugg_s1.getVal ()    
 
     @property
     def s2 ( self ) :
@@ -3164,7 +3191,6 @@ class Bugg_pdf(MASS) :
     def s2 ( self, value ) :
         value = float ( value )
         self.__bugg_s2.setVal ( value ) 
-        return self.__bugg_s2.getVal ()    
 
         
 models.append ( Bugg_pdf )
@@ -3248,7 +3274,6 @@ class Swanson_pdf(PDF) :
     def beta0 ( self, value ) :
         value = float ( value )
         self.__beta0.setVal ( value ) 
-        return self.__beta0.getVal ()    
 
     @property
     def swanson ( self ) :

@@ -147,8 +147,6 @@ Double_t Ostap::Models::BreitWigner::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  
-  //
   return m_bw.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -424,7 +422,6 @@ Double_t Ostap::Models::BW23L::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_bw.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -516,7 +513,6 @@ Double_t Ostap::Models::Flatte::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_flatte.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ===========================================================================
@@ -617,7 +613,6 @@ Double_t Ostap::Models::Flatte2::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_flatte2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ===========================================================================
@@ -733,7 +728,6 @@ Double_t Ostap::Models::LASS::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_lass.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ===========================================================================
@@ -850,7 +844,6 @@ Double_t Ostap::Models::LASS23L::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_lass.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ===========================================================================
@@ -965,7 +958,6 @@ Double_t Ostap::Models::Bugg::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_bugg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ===========================================================================
@@ -1083,7 +1075,6 @@ Double_t Ostap::Models::Bugg23L::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_bugg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ===========================================================================
@@ -1188,7 +1179,6 @@ Double_t Ostap::Models::Voigt::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_voigt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -1282,7 +1272,6 @@ Double_t Ostap::Models::PseudoVoigt::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_voigt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -1393,7 +1382,6 @@ Double_t Ostap::Models::Swanson::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_swanson.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -1490,7 +1478,6 @@ Double_t Ostap::Models::CrystalBall::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars ();
-  //
   return m_cb.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -1590,7 +1577,6 @@ Double_t Ostap::Models::CrystalBallRS::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_cb.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -1695,7 +1681,6 @@ Double_t Ostap::Models::CrystalBallDS::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_cb2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -1799,7 +1784,6 @@ Double_t Ostap::Models::Needham::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_needham.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -1913,7 +1897,6 @@ Double_t Ostap::Models::Apolonios::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_apo.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2011,7 +1994,6 @@ Double_t Ostap::Models::Apolonios2::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_apo2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2106,7 +2088,6 @@ Double_t Ostap::Models::BifurcatedGauss::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_bg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2201,7 +2182,6 @@ Double_t Ostap::Models::GenGaussV1::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_ggv1.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2297,7 +2277,6 @@ Double_t Ostap::Models::GenGaussV2::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_ggv2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2394,7 +2373,6 @@ Double_t Ostap::Models::SkewGauss::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_sg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2496,7 +2474,6 @@ Double_t Ostap::Models::Bukin::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_bukin.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2587,7 +2564,6 @@ Double_t Ostap::Models::StudentT::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_stt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2686,7 +2662,6 @@ Double_t Ostap::Models::BifurcatedStudentT::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_stt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2786,7 +2761,6 @@ Double_t Ostap::Models::GramCharlierA::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_gca.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -2935,7 +2909,6 @@ Double_t Ostap::Models::PhaseSpaceLeft::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_left.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -3021,7 +2994,6 @@ Double_t Ostap::Models::PhaseSpaceRight::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_right.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -3108,7 +3080,6 @@ Double_t Ostap::Models::PhaseSpaceNL::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_ps.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -3521,7 +3492,6 @@ Double_t Ostap::Models::PhaseSpacePol::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_ps.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -3632,7 +3602,6 @@ Double_t Ostap::Models::PolyPositive::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -3743,7 +3712,6 @@ Double_t Ostap::Models::PolyPositiveEven::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_even.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -3853,7 +3821,6 @@ Double_t Ostap::Models::PolyMonothonic::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_monothonic.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -3965,7 +3932,6 @@ Double_t Ostap::Models::PolyConvex::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_convex.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -4076,7 +4042,6 @@ Double_t Ostap::Models::PolyConvexOnly::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_convex.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -4195,7 +4160,6 @@ Double_t Ostap::Models::PolySigmoid::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_sigmoid.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -4312,7 +4276,6 @@ Double_t Ostap::Models::PositiveSpline::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -4431,7 +4394,6 @@ Double_t Ostap::Models::MonothonicSpline::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -4661,7 +4623,6 @@ Double_t Ostap::Models::ConvexOnlySpline::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -4780,7 +4741,6 @@ Double_t Ostap::Models::ExpoPositive::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -4905,7 +4865,6 @@ Double_t Ostap::Models::TwoExpoPositive::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_2expopos.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -4992,7 +4951,6 @@ Double_t Ostap::Models::GammaDist::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  // 
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5088,7 +5046,6 @@ Double_t Ostap::Models::GenGammaDist::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_ggamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5186,7 +5143,6 @@ Double_t Ostap::Models::Amoroso::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_amoroso.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5276,7 +5232,6 @@ Double_t Ostap::Models::LogGammaDist::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5364,7 +5319,6 @@ Double_t Ostap::Models::Log10GammaDist::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5455,7 +5409,6 @@ Double_t Ostap::Models::LogGamma::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  //
   return m_lgamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5550,7 +5503,6 @@ Double_t Ostap::Models::BetaPrime::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_betap.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5645,7 +5597,6 @@ Double_t Ostap::Models::SinhAsinh::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_sinhasinh.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5740,7 +5691,6 @@ Double_t Ostap::Models::JohnsonSU::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_johnsonSU.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5827,7 +5777,6 @@ Double_t Ostap::Models::Landau::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_landau.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -5914,7 +5863,6 @@ Double_t Ostap::Models::Atlas::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_atlas.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
 }
 // ============================================================================
@@ -6002,7 +5950,6 @@ Double_t Ostap::Models::Sech::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_sech.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
 }
 // ============================================================================
@@ -6090,7 +6037,6 @@ Double_t Ostap::Models::Logistic::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_logistic.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
 }
 // ============================================================================
@@ -6182,7 +6128,6 @@ Double_t Ostap::Models::Argus::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_argus.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -6264,7 +6209,6 @@ Double_t Ostap::Models::Slash::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_slash.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -6350,7 +6294,6 @@ Double_t Ostap::Models::AsymmetricLaplace::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_laplace.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -6441,7 +6384,6 @@ Double_t Ostap::Models::Tsallis::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_tsallis.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -6529,7 +6471,6 @@ Double_t Ostap::Models::QGSM::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_qgsm.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
@@ -6622,11 +6563,12 @@ Double_t Ostap::Models::TwoExpos::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  //
   return m_2expos.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
 
+
+// ============================================================================
 // constructor from all parameters 
 // ============================================================================
 Ostap::Models::DoubleGauss::DoubleGauss
@@ -6644,7 +6586,10 @@ Ostap::Models::DoubleGauss::DoubleGauss
   , m_fraction ( "fraction"  , "Fraction"            , this , fraction ) 
   , m_scale    ( "scale"     , "Scale"               , this , scale    ) 
   , m_mean     ( "mean"      , "Mean"                , this , mean     ) 
-{}
+  , m_2gauss  () 
+{
+  setPars() ;
+}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -6658,7 +6603,10 @@ Ostap::Models::DoubleGauss::DoubleGauss
   , m_fraction ( "fraction" , this , right.m_fraction )
   , m_scale    ( "scale"    , this , right.m_scale    )
   , m_mean     ( "mean"     , this , right.m_mean    )
-{}
+  , m_2gauss   ( right.m_2gauss ) 
+{
+  setPars() ;
+}
 // ============================================================================
 // clone it!
 // ============================================================================
@@ -6666,30 +6614,21 @@ Ostap::Models::DoubleGauss*
 Ostap::Models::DoubleGauss::clone( const char* name ) const 
 { return new Ostap::Models::DoubleGauss ( *this , name ) ; }
 // ============================================================================
+void Ostap::Models::DoubleGauss::setPars () const 
+{
+  m_2gauss.setPeak      ( m_mean     ) ;
+  m_2gauss.setSigma     ( m_sigma    ) ;
+  m_2gauss.setScale     ( m_scale    ) ;
+  m_2gauss.setFraction  ( m_fraction ) ;
+}
+// ============================================================================
 // the actual evaluation of function 
 // ============================================================================
 Double_t Ostap::Models::DoubleGauss::evaluate() const 
 {
   //
-  const double x        = m_x        ;
-  const double mu       = m_mean     ;
-  const double sigma    = m_sigma    ;
-  const double scale    = m_scale    ;
-  const double fraction = m_fraction ;
-  //
-  const double sigma2   =  scale *  sigma ;
-  //
-  const double dx1      = ( x - mu ) / sigma  ;
-  const double dx2      = ( x - mu ) / sigma2 ;
-  //
-  const double  f1 =  std::max ( 0.0 , std::min ( fraction , 1.0 ) ) ;
-  const double  f2 =  1 - f1 ;
-  //
-  static const double s_norm = 1.0 / std::sqrt ( 2.0 * M_PI  ) ;
-  //
-  return 
-    s_norm * ( f1 * std::exp ( -0.5 * dx1 * dx1 ) / sigma  +
-               f2 * std::exp ( -0.5 * dx2 * dx2 ) / sigma2 ) ;
+  setPars() ;
+  return m_2gauss ( m_x ) ;
 }
 // ============================================================================
 Int_t Ostap::Models::DoubleGauss::getAnalyticalIntegral
@@ -6707,35 +6646,15 @@ Double_t Ostap::Models::DoubleGauss::analyticalIntegral
 {
   assert( code == 1 ) ;
   if ( 1 != code ){}
-
-  const double mu       = m_mean     ;
-  const double sigma    = m_sigma    ;
-  const double scale    = m_scale    ;
-  const double fraction = m_fraction ;
-  //
-  const double sigma2   =  scale *  sigma ;
-  //
-  const double  f1 =  std::max ( 0.0 , std::min ( fraction , 1.0 ) ) ;
-  const double  f2 =  1 - f1 ;
   //
   const double  xmax = m_x.max ( rangeName )  ;
   const double  xmin = m_x.min ( rangeName )  ;
   //
-  static const double s_isqrt2 = 1.0 / std::sqrt ( 2.0 ) ;
-  //
-  const double ixscale1 = s_isqrt2 / sigma  ;
-  const double ixscale2 = s_isqrt2 / sigma2 ;
-  //
-  const double r1 = 
-    std::erf ( ( xmax - mu ) * ixscale1 ) - 
-    std::erf ( ( xmin - mu ) * ixscale1 ) ;
-  //
-  const double r2 = 
-    std::erf ( ( xmax - mu ) * ixscale2 ) - 
-    std::erf ( ( xmin - mu ) * ixscale2 ) ;
-  //
-  return 0.5 * ( f1 * r1 + f2 * r2  ) ;  
+  setPars() ;
+  return m_2gauss.integral ( xmin , xmax ) ;
 }
+// ============================================================================
+
 // ============================================================================
 /*  constructor from all parameters
  *  @param  z    the  variable 
@@ -6754,7 +6673,10 @@ Ostap::Models::Gumbel::Gumbel
   , m_x        ( "x"     , "Observable"           , this , x    ) 
   , m_mu       ( "mu"    , "Shift parameter/mode" , this , mu   ) 
   , m_beta     ( "beta"  , "Scale parameter"      , this , beta ) 
-{}
+  , m_gumbel   () 
+{
+  setPars() ;
+}
 // ============================================================================
 // copy constructor
 // ============================================================================
@@ -6762,11 +6684,13 @@ Ostap::Models::Gumbel::Gumbel
 ( const Ostap::Models::Gumbel& right ,
   const char*                     name  ) 
   : RooAbsPdf  ( right , name ) 
-    //
   , m_x        ( "x"    , this , right.m_x    ) 
   , m_mu       ( "mu"   , this , right.m_mu   ) 
   , m_beta     ( "beta" , this , right.m_beta ) 
-{}
+  , m_gumbel   ( right.m_gumbel ) 
+{
+  setPars() ;
+}
 // ============================================================================
 // clone 
 // ============================================================================
@@ -6774,17 +6698,19 @@ Ostap::Models::Gumbel*
 Ostap::Models::Gumbel::clone( const char* name ) const 
 { return new Ostap::Models::Gumbel(*this,name) ; }
 // ============================================================================
+void Ostap::Models::Gumbel::setPars () const 
+{
+  m_gumbel.setMu   ( m_mu   ) ;
+  m_gumbel.setBeta ( m_beta ) ;
+}
+// ============================================================================
 // the actual evaluation of function 
 // ============================================================================
 Double_t Ostap::Models::Gumbel::evaluate() const 
 {
   //
-  const double x    = m_x    ;
-  const double mu   = m_mu   ;
-  const double beta = m_beta ;
-  // 
-  const double dx =  ( x - mu ) / beta ;
-  return std::exp ( -( dx + std::exp ( -dx ) ) ) / std::abs ( beta ) ;
+  setPars ();
+  return m_gumbel ( m_x ) ;
 }
 // ============================================================================
 Int_t Ostap::Models::Gumbel::getAnalyticalIntegral
@@ -6806,17 +6732,180 @@ Double_t Ostap::Models::Gumbel::analyticalIntegral
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
   //
-  const double mu   = m_mu   ;
-  const double beta = m_beta ;
-  //
-  const double dxmin = ( xmin - mu ) / beta ;
-  const double dxmax = ( xmax - mu ) / beta ;
-  //
-  return  
-    0 < beta ? 
-    std::exp ( -std::exp ( -dxmax ) ) - std::exp ( -std::exp ( -dxmin ) ) :
-    std::exp ( -std::exp ( -dxmin ) ) - std::exp ( -std::exp ( -dxmax ) ) ;
+  setPars() ;
+  return m_gumbel.integral ( xmin , xmax ) ;
 }
+// ============================================================================
+
+
+// ============================================================================
+/* constructor from all parameters
+ *  @param  x    the  variable 
+ *  @param  scale the scale parameter
+ *  @param  shape the shape parameter 
+ *  @param  shift the shift parameter 
+ */
+// ============================================================================
+Ostap::Models::Weibull::Weibull 
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , // observable 
+  RooAbsReal&          scale     , // scale/lambda 
+  RooAbsReal&          shape     , // shape/k 
+  RooAbsReal&          shift     ) // shift/x0 
+  : RooAbsPdf  ( name , title ) 
+  , m_x        ( "x"      , "Observable"             , this , x     ) 
+  , m_scale    ( "scale"  , "Scale parameter/lambda" , this , scale ) 
+  , m_shape    ( "shape"  , "Shape parameter/k"      , this , shape ) 
+  , m_shift    ( "shift"  , "Shift parameter/x0"     , this , shift ) 
+  , m_weibull  ()  
+{
+  setPars () ;  
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Weibull::Weibull 
+( const Ostap::Models::Weibull& right ,
+  const char*                     name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"     , this , right.m_x     ) 
+  , m_scale    ( "scale" , this , right.m_scale ) 
+  , m_shape    ( "shape" , this , right.m_shape ) 
+  , m_shift    ( "shift" , this , right.m_shift ) 
+  , m_weibull  ( right.m_weibull ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Weibull*
+Ostap::Models::Weibull::clone( const char* name ) const 
+{ return new Ostap::Models::Weibull(*this,name) ; }
+// ============================================================================
+void Ostap::Models::Weibull::setPars () const 
+{
+  m_weibull.setScale ( m_scale ) ;
+  m_weibull.setShape ( m_shape ) ;
+  m_weibull.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Weibull::evaluate() const 
+{
+  setPars() ;
+  return m_weibull ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Weibull::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Weibull::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_weibull.integral ( xmin , xmax ) ;
+}
+
+
+
+// ============================================================================
+/*  constructor from all parameters
+ *  @param  x      the variable 
+ *  @param  mean   the mean/mode/median/location 
+ *  @param  scale  the scale parameter 
+ */
+// ============================================================================
+Ostap::Models::RaisingCosine::RaisingCosine 
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , // observable 
+  RooAbsReal&          mean      , // mean
+  RooAbsReal&          scale     ) // scale
+  : RooAbsPdf  ( name , title ) 
+  , m_x        ( "x"      , "Observable"               , this , x    ) 
+  , m_mean     ( "mean"   , "Mean/location parameter"  , this , mean ) 
+  , m_scale    ( "scale"  , "Scale parameter"          , this , scale ) 
+  , m_rcos  ()  
+{
+  setPars () ;  
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::RaisingCosine::RaisingCosine 
+( const Ostap::Models::RaisingCosine& right ,
+  const char*                     name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"     , this , right.m_x     ) 
+  , m_mean     ( "mean"  , this , right.m_mean  ) 
+  , m_scale    ( "scale" , this , right.m_scale ) 
+  , m_rcos     ( right.m_rcos ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::RaisingCosine*
+Ostap::Models::RaisingCosine::clone( const char* name ) const 
+{ return new Ostap::Models::RaisingCosine(*this,name) ; }
+// ============================================================================
+void Ostap::Models::RaisingCosine::setPars () const 
+{
+  m_rcos.setMean  ( m_mean  ) ;
+  m_rcos.setScale ( m_scale ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::RaisingCosine::evaluate() const 
+{
+  setPars() ;
+  return m_rcos ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::RaisingCosine::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::RaisingCosine::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_rcos.integral ( xmin , xmax ) ;
+}
+
+
 
 
 // ============================================================================
@@ -6883,6 +6972,8 @@ ClassImp(Ostap::Models::QGSM               )
 ClassImp(Ostap::Models::TwoExpos           ) 
 ClassImp(Ostap::Models::DoubleGauss        ) 
 ClassImp(Ostap::Models::Gumbel             )
+ClassImp(Ostap::Models::Weibull            )
+ClassImp(Ostap::Models::RaisingCosine      )
 ClassImp(Ostap::Models::PositiveSpline     ) 
 ClassImp(Ostap::Models::MonothonicSpline   ) 
 ClassImp(Ostap::Models::ConvexOnlySpline   )

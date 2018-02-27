@@ -4746,7 +4746,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Tsallis& function() const { return m_tsallis ; }
+      const Ostap::Math::Tsallis& function () const { return m_tsallis ; }
+      const Ostap::Math::Tsallis& tsallis  () const { return m_tsallis ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4834,6 +4835,7 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::QGSM& function() const { return m_qgsm ; }
+      const Ostap::Math::QGSM& qgsm    () const { return m_qgsm ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4911,6 +4913,7 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::TwoExpos& function() const { return m_2expos ; }
+      const Ostap::Math::TwoExpos& twoexpos() const { return m_2expos ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4959,6 +4962,11 @@ namespace Ostap
       DoubleGauss () {} ;
       // =====================================================================
     public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
       // =====================================================================
       Int_t    getAnalyticalIntegral 
       ( RooArgSet&  allVars       , 
@@ -4973,6 +4981,11 @@ namespace Ostap
       // the actual evaluation of function 
       Double_t evaluate() const override ;
       // =====================================================================
+    public:
+      // =====================================================================
+      /// access to underlying function
+      const Ostap::Math::DoubleGauss& function () const { return m_2gauss ; }
+      // =====================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x         ;
@@ -4980,6 +4993,10 @@ namespace Ostap
       RooRealProxy m_fraction  ;
       RooRealProxy m_scale     ;
       RooRealProxy m_mean      ;
+      // ======================================================================
+    protected: // the function
+      // ======================================================================
+      mutable Ostap::Math::DoubleGauss  m_2gauss ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -4993,6 +5010,7 @@ namespace Ostap
      *  - \f$ z \equiv -\log(x)\f$, then \f$ F(z) = E(x) = G(z, -log(\tau) , 1 ) \f$.
      *  As a direct sequence,  a sum of exponential componets is transformed to 
      *  a sum of ``peak-like'' Gumbel  stuctures
+     *  @seee Ostap::Math::Gumbel
      */
     class  Gumbel : public RooAbsPdf 
     {
@@ -5024,6 +5042,81 @@ namespace Ostap
       Gumbel () {} ;
       // =====================================================================
     public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // =====================================================================
+      Int_t    getAnalyticalIntegral 
+      ( RooArgSet&  allVars       , 
+        RooArgSet&  analVars      , 
+        const char* rangeName = 0 ) const override ;
+      Double_t analyticalIntegral
+      ( Int_t       code          , 
+        const char* rangeName = 0 ) const override ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      // the actual evaluation of function 
+      Double_t evaluate() const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Gumbel& function () const { return m_gumbel ; }
+      const Ostap::Math::Gumbel& gumbel   () const { return m_gumbel ; }
+      // ======================================================================
+    protected:
+      // =====================================================================
+      RooRealProxy m_x    ;
+      RooRealProxy m_mu   ;
+      RooRealProxy m_beta ;
+      // =====================================================================
+    protected : // the function itself 
+      // =====================================================================
+      mutable Ostap::Math::Gumbel m_gumbel ;
+      // =====================================================================
+    } ;
+    // ========================================================================
+    /** @class Weibull
+     *  3-parameter  Weibull distribution 
+     *  \f$ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f$, where 
+     *  \f$ y \equiv \frac{x-x_0}{\lambda}\f$
+     *  @see https://en.wikipedia.org/wiki/Weibull_distribution
+     *  @seee Ostap::Math::Weibull
+     */
+    class Weibull : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::Weibull, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param  x    the  variable 
+       *  @param  scale the scale parameter
+       *  @param  shape the shape parameter 
+       *  @param  shift the shift parameter 
+       */
+      Weibull ( const char*          name      , 
+                const char*          title     ,
+                RooAbsReal&          x         ,   // observable 
+                RooAbsReal&          scale     ,   // scale/lambda 
+                RooAbsReal&          shape     ,   // shape/k 
+                RooAbsReal&          shift     ) ; // shift/x0 
+      /// "copy" constructor 
+      Weibull ( const Weibull& , const char* name = 0 ) ;
+      /// clone 
+      Weibull* clone ( const char* name ) const override ; 
+      // =====================================================================
+    public: // some fake functionality
+      // =====================================================================
+      // fake default contructor, needed just for proper (de)serialization 
+      Weibull () {} ;
+      // =====================================================================
+    public:
       // =====================================================================
       Int_t    getAnalyticalIntegral 
         ( RooArgSet&  allVars       , 
@@ -5034,18 +5127,109 @@ namespace Ostap
           const char* rangeName = 0 ) const override ;
       // =====================================================================
     public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
       // =====================================================================
       // the actual evaluation of function 
       Double_t evaluate() const override ;
       // =====================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Weibull& function () const { return m_weibull ; }
+      const Ostap::Math::Weibull& weibull  () const { return m_weibull ; }
+      // ======================================================================
     protected:
       // =====================================================================
-      RooRealProxy m_x    ;
-      RooRealProxy m_mu   ;
-      RooRealProxy m_beta ;
+      RooRealProxy m_x     ;
+      RooRealProxy m_scale ;
+      RooRealProxy m_shape ;
+      RooRealProxy m_shift ;
+      // =====================================================================
+    protected : // the function itself 
+      // =====================================================================
+      mutable Ostap::Math::Weibull m_weibull ;
       // =====================================================================
     } ;
+    // ========================================================================
+    /** @class RaisingCosine
+     *  "Raising cosine" distribution
+     *  \f$ f(x,\mu,s) = \frac{1}{2s}   \left( 1   +\cos \pi y \right)  \f$, 
+     *  where \f$  y  \equiv = \frac{x-\mu}{s}\f$ 
+     *  @see https://en.wikipedia.org/wiki/Raised_cosine_distribution
+     *  @see Ostap::Math::RaisngCosine 
+     */
+    class RaisingCosine: public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::RaisingCosine, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param  x      the variable 
+       *  @param  mean   the mean/mode/median/location 
+       *  @param  scale  the scale parameter 
+       */
+      RaisingCosine ( const char*          name      , 
+                      const char*          title     ,
+                      RooAbsReal&          x         ,   // observable 
+                      RooAbsReal&          mean      ,   // mean/mode/location
+                      RooAbsReal&          scale     ) ; // scale parameter 
+      /// "copy" constructor 
+      RaisingCosine ( const RaisingCosine& , const char* name = 0 ) ;
+      /// clone 
+      RaisingCosine* clone ( const char* name ) const override ; 
+      // =====================================================================
+    public: // some fake functionality
+      // =====================================================================
+      // fake default contructor, needed just for proper (de)serialization 
+      RaisingCosine () {} ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      Int_t    getAnalyticalIntegral 
+        ( RooArgSet&  allVars       , 
+          RooArgSet&  analVars      , 
+          const char* rangeName = 0 ) const override ;
+      Double_t analyticalIntegral
+        ( Int_t       code          , 
+          const char* rangeName = 0 ) const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // =====================================================================
+      // the actual evaluation of function 
+      Double_t evaluate() const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::RaisingCosine& function () const { return m_rcos ; }
+      // ======================================================================
+    protected:
+      // =====================================================================
+      RooRealProxy m_x     ;
+      RooRealProxy m_mean  ;
+      RooRealProxy m_scale ;
+      // =====================================================================
+    protected : // the function itself 
+      // =====================================================================
+      mutable Ostap::Math::RaisingCosine m_rcos ;
+      // =====================================================================
+    } ;
+    // ========================================================================
     
+
+
     // ========================================================================
     // 1D-splines
     // ========================================================================

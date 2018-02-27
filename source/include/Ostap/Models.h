@@ -39,11 +39,11 @@ namespace Ostap
      *  where \f$z= \frac{x-\mu}{\beta}\f$
      *  
      *  Very useful important case:
-     *  If  x is distributed accrofing  to \f$ f(x) \propto e^{-\tau x} \f$, 
+     *  If  x is distributed accroding  to \f$ f(x) \propto e^{-\tau x} \f$, 
      *  then z, \f$ z  =   log(x) \f$, is distributed accoring to 
      *  \f$ F(z) = G(x, -\log(\tau), 1 ) \f$ 
      * 
-     *  As a   result, if    x is distributes as sum of exponentilcomponents 
+     *  As a   result, if    x is distributes as sum of exponential components 
      *  with different slopes, the transforomation \f$ z=log(x) \f$ will convert each 
      *  exponential components into bump-like structure
      */  
@@ -855,7 +855,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Weibull_distribution
      *  @@date 2018-02-26
      */
-    class   Weibull
+    class Weibull
     {
     public:
       // ======================================================================
@@ -864,9 +864,9 @@ namespace Ostap
        *  @param shape the shape parameter "k"       >0
        *  @param shift the shift parameter "x0"
        */
-      Weibull (  const double scale = 1 ,  
-                 const double shape = 1 ,  
-                 const double shift = 0 ) ;
+      Weibull ( const double scale = 1 ,  
+                const double shape = 1 ,  
+                const double shift = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -883,7 +883,8 @@ namespace Ostap
       // ======================================================================
       double lambd () const { return scale () ; }
       double k     () const { return shape () ; }
-      double x0    () const { return shift () ; }      
+      double x0    () const { return shift () ; }
+      double xmin  () const { return x0    () ; }      
       // ======================================================================
     public: //  setters  
       // ======================================================================

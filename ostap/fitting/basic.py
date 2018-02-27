@@ -29,7 +29,6 @@ __all__     = (
     'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf 
     ##
     'Adjust'        , ## addjust PDF to avoid zeroes (sometimes useful)
-    'Convolution'   , ## helper utility to build convolution
     'Phases'        , ## helper utility to build/keep list of phases 
     'Flat1D'        , ## trivial 1D-pdf: constant 
     ##
@@ -2278,127 +2277,6 @@ class Adjust(object) :
     def old_pdf ( self ) :
         """``old'' (non-adjusted) PDF"""
         return self.__old_pdf
-    
-# =============================================================================
-## @class Convolution
-#  Helper class to perform convolution
-#  @code
-#  >>> pdf  = .... ##  original PDF (the one from Ostap or bare ROOT.RooAbsPdf) 
-#  >>> resolution = 3 * MeV                                     ## fixed number ``sigma''
-#  >>> # resolution = ROOT.RooRealVar( 'sigma','',2*MeV,4*MeV)  ## ``sigma'' as ROOT.RooAbsReal 
-#  >>> # resolution = ResoGauss_pdf ( ... )                     ## pdf from Ostap
-#  >>> # resolution = ...                                       ## bare ROOT.RooAbsPdf
-#  >>> cnv = Convolution ('CNV' , pdf , xvar  =  xvar , resolution = resolution )
-#  >>> cnv_pdf = cnv.pdf 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2014-07-13
-class Convolution(object):
-    """Helper class to make a convolution PDF:
-    
-    >>> pdf  = .... ##  original PDF (the one from Ostap or bare ROOT.RooAbsPdf) 
-    >>> resolution = 3 * MeV                                     ## fixed number ``sigma''
-    >>> # resolution = ROOT.RooRealVar( 'sigma','',2*MeV,4*MeV)  ## ``sigma'' as ROOT.RooAbsReal 
-    >>> # resolution = ResoGauss_pdf ( ... )                     ## pdf from Ostap
-    >>> # resolution = ...                                       ## bare ROOT.RooAbsPdf
-    >>> cnv = Convolution ('CNV' , pdf , xvar  =  xvar , resolution = resolution )
-    >>> cnv_pdf = cnv.pdf 
-    """
-    def __init__ ( self           ,
-                   name           ,
-                   pdf            ,  ## the PDF to be convoluted 
-                   xvar           ,  ## the axis varable
-                   resolution     ,  ## the    resolution
-                   useFFT  = True ) :
-
-        ## the axis 
-        assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
-        self.__xvar   = xvar
-        self.__useFFT = True if  useFFT else False
-        
-        ## pdf itself 
-        if   isinstance ( pdf , PDF            ) : self.__old_pdf = pdf
-        elif isinstance ( pdf , ROOT.RooAbsPdf ) :
-            self.__old_pdf = Generic1D_pdf ( pdf , xvar = self.__xvar )
-        else :
-            raise AttributeError("Convolution: invalid ``pdf'' %s/%s"  % ( pdf , type ( pdf ) ) )
-        
-        ## resolution  function 
-        if   isinstance ( resolution , PDF            ) : self.__resolution = resolution
-        elif isinstance ( resolution , ROOT.RooAbsPdf ) :
-            self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar ) 
-        else :
-            ## use   Gaussial resolution
-            import ostap.fitting.resolution as OFR 
-            self.__resolution = OFR.ResoGauss ( 'ResoGauss' + name ,
-                                                self.__xvar        ,
-                                                sigma = resolution ,
-                                                mean  = None       )
-            
-        self.__nbins = 100000
-        if self.useFFT : ## Use Fast Fourier transform  (fast)
-            
-            if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() : 
-                mn , mx = xvar.minmax()
-                dm  = mx - mn
-                sv  = self.__resolution.sigma.getVal() 
-                dm /= sv 
-                self.__nbins  = max ( self.__nbins , 100 * int ( dm ) )               
-                logger.debug('Convolution: choose #bins %d' % self.__nbins ) 
-                
-            self.__xvar.setBins ( self.__nbins , 'cache' )
-            
-            self.__pdf = ROOT.RooFFTConvPdf (
-                'FFT'     + name       , 
-                'FFT(%s)' % name       ,
-                self.__xvar            ,
-                self.__old_pdf    .pdf ,
-                self.__resolution .pdf )            
-            self.__pdf.setBufferFraction ( 0.25 )
-            
-        else :           ##  Use plain numerical integration (could be slow)
-            
-            self.__pdf = ROOT.RooNumConvPdf (
-                'CNV'     + name       ,
-                'CNV(%s)' % name       ,
-                self.__xvar            ,
-                self.__old_pdf    .pdf ,
-                self.__resolution .pdf )
-            
-            if hasattr ( self.__resolution , 'sigma' ) :                
-                if hasattr ( self.__resolution , 'mean' ) :
-                    self.__pdf.setConvolutionWindow ( self.__resolution.mean  ,
-                                                      self.__resolution.sigma , 6 )
-
-    @property
-    def xvar (self ) :
-        """The axis variable for  convolution"""
-        return self.__xvar
-
-    @property
-    def useFFT  ( self ) :
-        """``useFFT'' :    use Fast Fourier Transform?"""
-        return self.__useFFT
-
-    @property
-    def nbinsFFT ( self ) :
-        """number of cache bins for Fast Fourier Transform"""
-        return self.__nbins 
-        
-    @property
-    def resolution ( self  ) :
-        """``resoltuion'': pdf for resolution function"""
-        return self.__resolution 
-    
-    @property
-    def old_pdf ( self ) :
-        """``old'' - the original pdf before convolution"""
-        return self.__old_pdf
-
-    @property
-    def pdf ( self ) :
-        """``new'' (convoluted) PDF"""
-        return self.__pdf
     
 # =============================================================================
 ## @class Phases

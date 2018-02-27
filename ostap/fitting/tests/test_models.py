@@ -915,8 +915,7 @@ def test_slash():
 # =============================================================================
 ## Asymmetric Laplace 
 # =============================================================================
-##def test_laplace(): 
-if 1 < 2 : 
+def test_laplace(): 
     logger.info ('Test Asymmetric Laplace shape' ) 
     model = Models.Fit1D (
         signal = Models.AsymmetricLaplace_pdf ( name  = 'AL' , 
@@ -947,6 +946,39 @@ if 1 < 2 :
         
     models.add ( model )
 
+# =============================================================================
+## Test Rasing cosine 
+# =============================================================================
+def test_rasingcosine () :
+    
+    logger.info("Test RaisingCosine")
+    model = Models.Fit1D (
+        signal = Models.RaisingCosine_pdf( 'RC'                     ,
+                                           xvar = mass              , 
+                                           mean = signal_gauss.mean ) ,
+        background = 1 ) 
+    
+    signal = model.signal
+    model.S.setVal(5000)
+    model.B.setVal( 500)
+    
+    with rooSilent() : 
+        result,f  = model.fitTo ( dataset0 )  
+        result,f  = model.fitTo ( dataset0 )  
+        signal.mean  .release()
+        signal.scale .release()
+        result,f  = model.fitTo ( dataset0 )  
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
+        print result
+    else :
+        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Scale                is: %-28s ' %  result ( signal.scale )[0] )
+
+    models.add ( model )
+
 
 # =============================================================================
 ## check that everything is serializable
@@ -965,31 +997,32 @@ def test_db() :
 if '__main__' == __name__ :
 
     test_gauss          () ## simple Gaussian PDF                       + background 
-    ## test_crystalball    () ## Crystal Ball                              + background
-    ## test_crystalball_RS () ## right-side Crystal Ball                   + background  
-    ## test_crystalball_DS () ## double side Crystal Ball                  + background 
-    ## test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
-    ## test_apolonios      () ## Apolonios function                        + background 
-    ## test_apolonios2     () ## modified Apolonios function               + background 
-    ## test_bifurcated     () ## bifurcated Gaussian function              + background 
-    ## test_2gauss         () ## double     Gaussian function              + background 
-    ## test_gengauss_v1    () ## generalized Gaussian function V1          + background 
-    ## test_gengauss_v2    () ## generalized Gaussian function V2          + background 
-    ## test_skewgauss      () ## skew gaussian                             + background 
-    ## test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
-    ## test_studentT       () ## Student-t shape                           + background 
-    ## test_bifstudentT    () ## Bifurcated Student-t shape                + background 
-    ## test_sinhasinh      () ## Sinh-Asinh distribution                   + background 
-    ## test_johnsonSU      () ## Johnson-SU distribution                   + background 
-    ## test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
-    ## test_sech           () ## Sech (1/cosh)  distribution               + background 
-    ## test_logistic       () ## Logistic distribution                     + background 
-    ## test_voigt          () ## Voigt profile                             + background 
-    ## test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 
-    ## test_bw             () ## Breit-Wigner(+resolution)                 + background 
-    test_slash           () ## Slash-function                            + background 
-    ## test_laplace         () ## Laplace-function                            + background 
-
+    test_crystalball    () ## Crystal Ball                              + background
+    test_crystalball_RS () ## right-side Crystal Ball                   + background  
+    test_crystalball_DS () ## double side Crystal Ball                  + background 
+    test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
+    test_apolonios      () ## Apolonios function                        + background 
+    test_apolonios2     () ## modified Apolonios function               + background 
+    test_bifurcated     () ## bifurcated Gaussian function              + background 
+    test_2gauss         () ## double     Gaussian function              + background 
+    test_gengauss_v1    () ## generalized Gaussian function V1          + background 
+    test_gengauss_v2    () ## generalized Gaussian function V2          + background 
+    test_skewgauss      () ## skew gaussian                             + background 
+    test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
+    test_studentT       () ## Student-t shape                           + background 
+    test_bifstudentT    () ## Bifurcated Student-t shape                + background 
+    test_sinhasinh      () ## Sinh-Asinh distribution                   + background 
+    test_johnsonSU      () ## Johnson-SU distribution                   + background 
+    test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
+    test_sech           () ## Sech (1/cosh)  distribution               + background 
+    test_logistic       () ## Logistic distribution                     + background 
+    test_voigt          () ## Voigt profile                             + background 
+    test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 
+    test_bw             () ## Breit-Wigner(+resolution)                 + background 
+    test_slash          () ## Slash-function                            + background 
+    test_rasingcosine   () ## Raising Cosine                            + background 
+    test_laplace        () ## Laplace-function                            + background 
+    
     ## check finally that everything is serializeable:
     test_db ()          
 

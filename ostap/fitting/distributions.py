@@ -7,7 +7,24 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""A set of various smooth shapes and PDFs"""
+"""A set of various smooth shapes and PDFs
+
+- GammaDist_pdf      : Gamma-distributuon in shape/scale parameterization
+- GenGammaDist_pdf   : Generalized Gamma-distribution
+- Amoroso_pdf        : another view of generalized Gamma distribution
+- LogGammaDist_pdf   : Gamma-distributuon in shape/scale parameterization
+- Log10GammaDist_pdf : Gamma-distributuon in shape/scale parameterization
+- LogGamma_pdf       : Log-Gamma distribution  
+- BetaPrime_pdf      : Beta-prime distribution 
+- Landau_pdf         : Landau distribution 
+- Argus_pdf          : ARGUS distribution 
+- TwoExpos_pdf       : Difference of two exponents
+- Gumbel_pdf         : Gumbel distributions
+- Weibull_pdf        : Weibull distributions
+- Tsallis_pdf        : Tsallis PDF 
+- QGSM_pdf           : QGSM PDF 
+
+"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -24,6 +41,7 @@ __all__     = (
     'Argus_pdf'          , ## ARGUS distribution 
     'TwoExpos_pdf'       , ## difference of two exponents
     'Gumbel_pdf'         , ## Gumbel distributions
+    'Weibull_pdf'        , ## Weibull distributions
     'Tsallis_pdf'        , ## Tsallis PDF 
     'QGSM_pdf'           , ## QGSM PDF 
     )
@@ -1041,6 +1059,123 @@ class Gumbel_pdf(PDF) :
         self.__beta.setVal ( value ) 
   
 models.append ( Gumbel_pdf ) 
+
+
+
+
+# =============================================================================
+## @class Weibull_pdf 
+#  3-parameter  Weibull distribution 
+#  \f$ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f$, where 
+#  \f$ y \equiv \frac{x-x_0}{\lambda}\f$
+#  @see https://en.wikipedia.org/wiki/Weibull_distribution
+#  Shape parameter:
+#  - for k>2 is has peak-like, 'signal'-like shape
+#  - for 1<k<2 is has smooth shape, 'threshold'-like
+#  - for k<1 is is smooth decreasing shape
+#  @see Ostap::Models::Weibull 
+#  @see Ostap::Math::Weibull 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-27
+class Weibull_pdf(PDF) :
+    r"""3-parameter  Weibull distribution 
+    \f$ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f$, where 
+    \f$ y \equiv \frac{x-x_0}{\lambda}\f$
+    
+    Shape parameter:
+    
+    - for k>2 is has peak-like, signal-like shape
+    - for 1<k<2 is has smooth shape,  'threshold'-like
+    - for k<1 is is smooth decreasing shape
+    
+    - see https://en.wikipedia.org/wiki/Weibull_distribution
+    - see Ostap::Models::Weibull 
+    - see Ostap::Math::Weibull 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   scale = 1        ,   ## scale/lambda 
+                   shape = 1        ,   ## shape/k 
+                   shift = None     ) : ## shift/x0      
+        #
+        ## initialize the base
+        #
+        
+        PDF.__init__  ( self , name , xvar )
+        
+        self.__scale = makeVar ( scale                   ,
+                                 'scale_%s'              % name ,
+                                 'scale_{Weibull}(%s)'   % name , scale , 1 , 1.e-8 , 1.e+6 )
+        self.__shape = makeVar ( shape                   ,
+                                 'shape_%s'              % name ,
+                                 'shape_{Weibull}(%s)'   % name , shape , 1 , 1.e-8 , 1.e+6 )
+
+        limits_shift = () 
+        if self.xminmax() :
+            mn , mx = self.xminmax()
+            dx = ( mx -  mn )
+            limits_shift = mn + 0.01 * dx , mn , mx
+            
+        self.__shift = makeVar ( shift                   ,
+                                 'shift_%s'              % name ,
+                                 'shift_{Weibull}(%s)'   % name , shift , *limits_shift )
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Weibull (
+            "weibull_"    + name ,
+            "Weibull(%s)" % name ,
+            self.xvar  ,
+            self.scale ,
+            self.shape ,
+            self.shift )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'scale'     : self.scale ,
+            'shape'     : self.shape ,
+            'shift'     : self.shift ,
+            }
+
+    @property
+    def scale ( self ) :
+        """``scale''-parameter, scale>0"""
+        return self.__scale
+    @scale.setter
+    def scale ( self, value ) :
+        value = float ( value ) 
+        assert 0 < value , "``scale''-parameter must be positive"
+        self.__scale.setVal ( value )
+        
+    @property
+    def shape ( self ) :
+        """``shape''-parameter, shape>0
+        - for ``shape''>2   : peak-like, signal-like shape
+        - for 1<``shape'<2  : 'threshold'-like
+        - for ``shape''k<1  : smooth decreasing         
+        """
+        return self.__shape    
+    @shape.setter
+    def shape ( self, value ) :
+        value = float ( value ) 
+        assert 0 < value , "``shape''-parameter must be positive"
+        self.__shape.setVal ( value )         
+
+    @property
+    def shift ( self ) :
+        """``shift''-parameter, function is   zero for x<``shift''"""
+        return self.__shift
+    @shift.setter
+    def scale ( self, value ) :
+        value = float ( value )
+        if self.xminmax() :
+            mn , mx = self.xminmax() 
+            assert value <= mx, "``shift''-parameter must be smaller ``xmax''"
+        self.__shift.setVal ( value )
+        
+models.append ( Weibull_pdf )      
 
 # =============================================================================
 ## @class Tsallis_pdf

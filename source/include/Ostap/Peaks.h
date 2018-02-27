@@ -106,9 +106,9 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor from all parameters
-       *  @param peak     the peak posiion
-       *  @param sigmaL   the sigma for first component
-       *  @param fraction the fraction of first component 
+       *  @param peak     the peak position
+       *  @param sigma    the sigma for first component
+       *  @param fraction the fraction of the first component 
        *  @param scale    the ratio of sigmas for second and first components
        */
       DoubleGauss
@@ -1850,6 +1850,79 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class  RaisingCosine 
+     *  "Raising cosine" distribution
+     *  \f$ f(x,\mu,s) = \frac{1}{2s}   \left( 1   +\cos \pi y \right)  \f$, 
+     *  where \f$  y  \equiv = \frac{x-\mu}{s}\f$ 
+     *  @see https://en.wikipedia.org/wiki/Raised_cosine_distribution
+     */
+    class RaisingCosine 
+    {
+    public:
+      // ======================================================================
+      /** constructor with all arguments 
+       *  @param mu  the mean/mode/median of the distribution
+       *  @param s   the width-parameteter
+       */
+      RaisingCosine ( const double mu = 0 , 
+                      const double s  = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate raising cosine distribution
+      double pdf (  const double x ) const ;
+      /// evaluate raising cosine distribution
+      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      // ======================================================================
+    public: // main getters 
+      // ======================================================================
+      double mu    () const { return  m_mu ; }
+      double s     () const { return  m_s  ; }
+      // ======================================================================
+    public: // derived getters 
+      // ======================================================================
+      double location () const { return mu () ; }
+      double scale    () const { return s  () ; }
+      // ======================================================================
+    public: //  setters 
+      // ======================================================================
+      bool setMu       ( const double value ) ;
+      bool setS        ( const double value ) ;
+      bool setScale    ( const double value ) { return setS  ( value ) ; }
+      bool setLocation ( const double value ) { return setMu ( value ) ; }      
+      bool setMean     ( const double value ) { return setMu ( value ) ; }      
+      // ======================================================================
+    public: // derived getters & stats 
+      // ======================================================================
+      double mean     () const {  return  mu() ; }
+      double mode     () const {  return  mu() ; }
+      double median   () const {  return  mu() ; }
+      ///  variance  
+      double variance () const ;
+      ///  rms   
+      double rms      () const ;
+      /// skewness
+      double skewness () const { return 0 ; }
+      /// kurtosis
+      double kurtosis () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get CDF 
+      double cdf      ( const double x ) const ;
+      /// evaluate the integral
+      double integral ( const double low  , 
+                        const double high ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// mean/mode/median
+      double m_mu ; // mean/mode/median
+      /// width-parameter   
+      double m_s  ; // width-parameter   
+      // ======================================================================      
+    } ;
+    // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

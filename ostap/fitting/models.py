@@ -40,6 +40,7 @@ Empricial PDFs to describe narrow peaks :
   - Johnson-SU shape
   - Atlas shape
   - Slash shape
+  - RasingCosine shape
   - Asymmetric Laplace shape
   - Sech  shape
   - Logistic, aka ``sech-squared'' shape
@@ -61,7 +62,9 @@ PDF to describe ``wide'' peaks :
   - ...
   
 - set of smooth non-facrorizeable models for 2D fits 
-- ...  
+- ...
+
+- generic convolution PDF 
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -91,6 +94,7 @@ __all__ = (
     'JohnsonSU_pdf'          , ## Johnson-SU distributon
     'Atlas_pdf'              , ## modified gaussian wiht exponential tails 
     'Slash_pdf'              , ## Symmetie peak with vey heavy tails 
+    'RaisingCosine_pdf'      , ## Raising cosine distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
     'Logistic_pdf'           , ## Logistic aka ``sech-squared'' PDF
@@ -138,6 +142,9 @@ __all__ = (
     'Argus_pdf'             , ## Argus distribution 
     'TwoExpos_pdf'          , ## Difference of two exponents
     'SinhAsinh_pdf'         , ## "Sinh-asinh" distribution
+    'Gumbel_pdf'            , ## Gumber distribution
+    'Weibull_pdf'           , ## Weibull distribution
+    'Argus_pdf'             , ## Argus distribution 
     #
     ## 1D-background models
     # 
@@ -190,14 +197,20 @@ __all__ = (
     'Adjust'          , ## adjust PDF to avoid zeroes (well, actually add a flat component)
     'Convolution'     , ## helper uitlity to build convolution 
     # 
-    'Fit1D'           , ## generic model for             1D-fit
-    'Fit2D'           , ## generic model for             2D-fit
-    'Fit2DSym'        , ## generic model for (symmetric) 2D-fit
+    'Fit1D'           , ## generic model for                1D-fit
+    'Fit2D'           , ## generic model for                2D-fit
+    'Fit2DSym'        , ## generic model for (symmetric)    2D-fit
+    'Fit3D'           , ## generic model for                3D-fit
+    'Fit3DSym'        , ## generic model for (symmetric)    3D-fit
+    'Fit3DMix'        , ## generic model for (mix-symmetry) 3D-fit
     ##
     'Generic1D_pdf'   , ## wrapper over imported RooFit (1D)-pdf  
     'Generic2D_pdf'   , ## wrapper over imported RooFit (2D)-pdf
+    'Generic3D_pdf'   , ## wrapper over imported RooFit (2D)-pdf
     ##
-    'makeBkg'         , ## helper function to create "background" PDF  
+    'makeBkg'         , ## helper function to create "background" PDF
+    ##
+    'Convolution_pdf' , ## generic convolution PDF 
     )
 # =============================================================================
 import ROOT, math
@@ -207,22 +220,24 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
 from ostap.fitting.basic         import *
-logger.debug ("Import signal     (peaking) models from ``signals''"    )
+logger.debug ("Import signal     (peaking) models from ``signals''"      )
 from ostap.fitting.signals       import * 
-logger.debug ("Import background (smooth)  models from ``background''" )
+logger.debug ("Import background (smooth)  models from ``background''"   )
 from ostap.fitting.background    import *
-logger.debug ("Import specialized models from ``specific''"            )
+logger.debug ("Import specialized models from ``specific''"              )
 from ostap.fitting.specific      import * 
-logger.debug ("Import ``other''   models from ``distributions''"       )
+logger.debug ("Import ``other''   models from ``distributions''"         )
 from ostap.fitting.distributions import *
-logger.debug ("Import 2D-fit machinery            from ``fit2d''"      )
+logger.debug ("Import 2D-fit machinery            from ``fit2d''"        )
 from ostap.fitting.fit2d         import *
-logger.debug ("Import 2D background        models from ``models_2d''"  )
+logger.debug ("Import 2D background        models from ``models_2d''"    )
 from ostap.fitting.models_2d     import *  
-logger.debug ("Import 3D-fit machinery            from ``fit3d''"      )
+logger.debug ("Import 3D-fit machinery            from ``fit3d''"        )
 from ostap.fitting.fit3d         import *
-logger.debug ("Import 3D background        models from ``models_3d''"  )
+logger.debug ("Import 3D background        models from ``models_3d''"    )
 from ostap.fitting.models_3d     import *  
+logger.debug ("Import convolution          models from ``convoltuion''"  )
+from ostap.fitting.convolution   import *  
 
 models = []
 from ostap.fitting.signals       import models as _models 

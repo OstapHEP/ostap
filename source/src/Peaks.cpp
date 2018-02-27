@@ -3063,6 +3063,101 @@ double Ostap::Math::Slash::integral
 ( const double low  ,
   const double high ) const 
 { return s_equal ( low ,  high ) ? 0.0 : cdf ( high ) - cdf ( low ) ; }
+// ============================================================================
+
+
+
+
+// ============================================================================
+/*  constructor with all arguments 
+ *  @param mu  the mean/mode/median of the distribution
+ *  @param s   the width-parameteter
+ */
+// ============================================================================
+Ostap::Math::RaisingCosine::RaisingCosine
+( const double mu , 
+  const double s  ) 
+  : m_mu ( mu ) 
+  , m_s  ( std::abs ( s ) ) 
+{}
+// ============================================================================
+bool Ostap::Math::RaisingCosine::setS ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_s ) ) { return false ; }
+  m_s = v;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::RaisingCosine::setMu ( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+// evaluate raising cosine distribution
+// ============================================================================
+double Ostap::Math::RaisingCosine::pdf ( const double x ) const 
+{
+  return 
+    x <= m_mu - m_s ? 0.0 : 
+    x >= m_mu + m_s ? 0.0 : 
+    ( 1  + std::cos ( M_PI * ( x  - m_mu ) / m_s ) ) / ( 2 * m_s )  ;
+}
+// ============================================================================
+// variance  
+// ============================================================================
+double Ostap::Math::RaisingCosine::variance () const 
+{
+  static const double s_c1 = ( 1./3 - 2 / ( M_PI * M_PI ) ) ;
+  return m_s * m_s * s_c1 ;
+}
+// ============================================================================
+// rms
+// ============================================================================
+double Ostap::Math::RaisingCosine::rms () const 
+{
+  static const double s_c2 = std::sqrt ( 1./3 - 2 / ( M_PI * M_PI ) ) ;
+  return m_s * s_c2 ;
+}
+// ============================================================================
+// kurtosis
+// ============================================================================
+double Ostap::Math::RaisingCosine::kurtosis () const 
+{
+  static const double s_k = 
+    1.2 * ( 90. - std::pow ( M_PI , 4 ) ) / std::pow ( M_PI*M_PI  - 6. , 2 ) ;
+  return  s_k ;
+}
+// ============================================================================
+// get CDF 
+// ============================================================================
+double Ostap::Math::RaisingCosine::cdf      ( const double x ) const 
+{
+  if      ( x <= m_mu - m_s ) { return 0 ; }
+  else if ( x >= m_mu - m_s ) { return 1 ; }
+  //
+  const double y = ( x - m_mu ) / m_s ;
+  return 0.5 * ( 1 + y + std::sin ( y  * M_PI ) / M_PI ) ;
+}
+// ============================================================================
+// evaluate the integral
+// ============================================================================
+double Ostap::Math::RaisingCosine::integral
+( const double low  , 
+  const double high ) const 
+{
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( low > high             ) { return -integral ( high , low ) ; }
+  else if ( high <  m_mu - m_s     ) { return 0 ; }
+  else if ( low  >  m_mu + m_s     ) { return 0 ; }
+  //                                            
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+
+
 
 
 
