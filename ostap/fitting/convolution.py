@@ -128,6 +128,7 @@ class Convolution(object):
                 if hasattr ( self.__resolution , 'mean' ) :
                     self.__pdf.setConvolutionWindow ( self.__resolution.mean  ,
                                                       self.__resolution.sigma , self.__nsigmas  )
+                    logger.debug('Convolution: choose window of %s' % self.__nsigmas ) 
     @property
     def xvar (self ) :
         """The axis variable for  convolution"""
@@ -173,7 +174,7 @@ class Convolution(object):
 #  Helper class to simplify the convolutions
 #  @code
 #  pdf = ...
-#  pdfc = Cnv_pdf(  'C' , pdf  , xvar = ... , resolution = ... , useFFT = True )
+#  pdfc = Convolution_pdf(  'C' , pdf  , xvar = ... , resolution = ... , useFFT = True )
 #  @endcode
 class Convolution_pdf(PDF) :
     """Helper class/PDF to simplify the convolution:
