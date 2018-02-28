@@ -40,9 +40,9 @@ else                       : logger = getLogger ( __name__              )
 class PDF3 (PDF2) :
     """ Useful helper base class for implementation of PDFs for 3D-fit
     """
-    def __init__ ( self , name , xvar = None , yvar = None , zvar  = None ) : 
+    def __init__ ( self , name , xvar = None , yvar = None , zvar  = None , special = False ) : 
         
-        PDF2.__init__ ( self , name , xvar , yvar ) 
+        PDF2.__init__ ( self , name , xvar , yvar , special = special ) 
         
         ## create the variable 
         if isinstance ( zvar , tuple ) and 2 == len(zvar) :  
@@ -483,28 +483,48 @@ class Generic3D_pdf(PDF3) :
     >>> pdf     = Generic3D_pdf ( raw_pdf ,  xvar = x ,   yvar = y , zvar =  z) 
     """
     ## constructor 
-    def __init__ ( self , pdf , xvar , yvar , zvar , name = None ) :
-
-        assert isinstance ( pdf  , ROOT.RooAbsPdf  ) , "``pdf'' must be ROOT.RooAbsPdf"
+    def __init__ ( self , pdf , xvar , yvar , zvar ,
+                   name           = None  ,
+                   special        = False ,
+                   add_to_signals = True  ) :
+        
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert isinstance ( yvar , ROOT.RooAbsReal ) , "``yvar'' must be ROOT.RooAbsReal"
         assert isinstance ( zvar , ROOT.RooAbsReal ) , "``zvar'' must be ROOT.RooAbsReal"
+        assert isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf''  must be ROOT.RooAbsReal"
         
         if not name : name = pdf.GetName()
-        PDF3  . __init__ ( self , name , xvar , yvar , zvar )
+        PDF3  . __init__ ( self , name , xvar , yvar , zvar , special = special )
+
+        if not self.special : 
+            assert isinstance ( pdf  , ROOT.RooAbsPdf  ) , "``pdf'' must be ROOT.RooAbsPdf"
+
+        ## PDF! 
         self.pdf = pdf
+
+        ## add it to the list of signal components ?
+        self.__add_to_signals = True if add_to_signals else False
         
-        self.signals.add ( self.pdf )
-        
+        if self.add_to_signals :
+            self.signals.add ( self.pdf )
+
         ## save the configuration
         self.config = {
-            'pdf'  : self.pdf  ,
-            'xvar' : self.xvar ,
-            'yvar' : self.yvar ,
-            'zvar' : self.zvar ,
-            'name' : self.name 
+            'pdf'            : self.pdf            ,
+            'xvar'           : self.xvar           ,
+            'yvar'           : self.yvar           ,
+            'zvar'           : self.zvar           ,
+            'name'           : self.name           ,
+            'special'        : self.special        ,  
+            'add_to_signals' : self.add_to_signals , 
+ 
             }
         
+    @property
+    def add_to_signals ( self ) :
+        """``add_to_signals'' : shodul PDF be added into list of signal components?"""
+        return self.__add_to_signals 
+    
     ## redefine the clone method, allowing only the name to be changed
     #  @attention redefinition of parameters and variables is disabled,
     #             since it can't be done in a safe way                  

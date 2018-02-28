@@ -318,7 +318,7 @@ def fitArgs ( name , dataset = None , *args , **kwargs ) :
 class PDF (object) :
     """Useful helper base class for implementation of PDFs for 1D-fit
     """
-    def __init__ ( self , name ,  xvar = None ) :
+    def __init__ ( self , name ,  xvar = None , special = False ) :
         self.__name        = name
         self.__signals     = ROOT.RooArgList ()
         self.__backgrounds = ROOT.RooArgList ()
@@ -327,6 +327,7 @@ class PDF (object) :
         self.__splots      = []
         self.__histo_data  = None
         self.__draw_var    = None
+        self.__special     = True if special else False 
         
         if   isinstance ( xvar, ROOT.TH1    ) : xvar = xvar.xminmax()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
@@ -383,14 +384,22 @@ class PDF (object) :
         self.__config = conf
 
     @property
+    def special ( self ) :
+        """``special'' : is this PDF ``special''   (does nor conform some requirements)?"""
+        return self.__special
+    
+    @property
     def pdf  ( self ) :
         """The actual PDF (ROOT.RooAbsPdf)"""
         return self.__pdf
     @pdf.setter
     def pdf  ( self , value ) :
-        assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
+        assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
+        if not self.special :
+            assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
         self.__pdf = value 
-        
+
+
     @property
     def name ( self ) :
         """The name of the PDF"""
@@ -661,7 +670,7 @@ class PDF (object) :
     def _draw ( self , what , frame , options , base_color , step_color = 1 ) :
         """ Helper method to draw set of components
         """
-        i = 0 
+        i = 0
         for cmp in what : 
             cmps = ROOT.RooArgSet( cmp )
             if 0 <= base_color : 
@@ -1069,6 +1078,36 @@ class PDF (object) :
             
         raise AttributeError, 'something wrong goes here'
 
+    # ========================================================================
+    ## check minmax of the PDF using the random shoots
+    #  @code
+    #  pdf     = ....
+    #  mn , mx = pdf.minmax()            
+    #  @endcode 
+    def minmax ( self , nshoots =  50000 ) :
+        """Check min/max for the PDF using  random shoots 
+        >>> pdf     = ....
+        >>> mn , mx = pdf.minmax()        
+        """
+        mn , mx = -1 , -10 
+        if hasattr ( self.pdf , 'min' ) : mn = self.pdf.min()
+        if hasattr ( self.pdf , 'max' ) : mx = self.pdf.max()
+        if 0 <= mx and 0 < mx : return mn , mx
+        
+        if not self.xminmax() : return ()
+        
+        xmn , xmx = self.xminmax()
+        from ostap.fitting.roofit import SETVAR
+        import random
+        for i in xrange ( nshoots ) : 
+            xx = random.uniform ( xmn , xmx )
+            with SETVAR ( self.xvar ) :
+                self.xvar.setVal ( xx )
+                vv = self.pdf.getVal()
+                if mn < 0 or vv < mn : mn = vv
+                if mx < 0 or vv > mx : mx = vv 
+        return mn , mx 
+        
     ## clean some stuff 
     def clean ( self ) :
         self.__splots     = []
@@ -2372,26 +2411,47 @@ class Generic1D_pdf(PDF) :
     >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
     """
     ## constructor 
-    def __init__ ( self , pdf , xvar , name = None ) :
+    def __init__ ( self , pdf , xvar ,
+                   name           = None  ,
+                   special        = False ,
+                   add_to_signals = True  ) :
         """Wrapper for generic RooFit pdf        
         >>> raw_pdf = RooGaussian   ( ...     )
         >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
         """
-        assert isinstance ( pdf  , ROOT.RooAbsPdf  ) , "``pdf'' must be ROOT.RooAbsPdf"
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
-        
+        assert isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf'' must be ROOT.RooAbsReal"
         if not name : name = pdf.GetName()
-        PDF  . __init__ ( self , name , xvar )
+        
+        ## initialize the base 
+        PDF . __init__ ( self , name , xvar , special = special )
+        ##
+        if not self.special :
+            assert isinstance ( pdf  , ROOT.RooAbsPdf ) , "``pdf'' must be ROOT.RooAbsPdf"
 
+        ## PDF itself 
         self.pdf  = pdf
-        self.signals.add ( self.pdf )
+
+        ## add it to the list of signal components ?
+        self.__add_to_signals = True if add_to_signals else False
+        
+        if self.add_to_signals :
+            self.signals.add ( self.pdf )
         
         ## save the configuration
         self.config = {
-            'pdf'  : self.pdf  ,
-            'xvar' : self.xvar ,
-            'name' : self.name 
+            'pdf'            : self.pdf            ,
+            'xvar'           : self.xvar           ,
+            'name'           : self.name           , 
+            'special'        : self.special        , 
+            'add_to_signals' : self.add_to_signals , 
             }
+        
+    @property
+    def add_to_signals ( self ) :
+        """``add_to_signals'' : shodul PDF be added into list of signal components?"""
+        return self.__add_to_signals 
+        
     ## redefine the clone method, allowing only the name to be changed
     #  @attention redefinition of parameters and variables is disabled,
     #             since it can't be done in a safe way                  
@@ -2485,16 +2545,9 @@ def makeBkg ( bkg , name , xvar , **kwargs ) :
 # =============================================================================
 if '__main__' == __name__ :
     
-    from Ostap.Line import line 
-    logger.info ( __file__ + '\n' + line  )
-    logger.info ( 80*'*' )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+
 
 # =============================================================================
 # The END 

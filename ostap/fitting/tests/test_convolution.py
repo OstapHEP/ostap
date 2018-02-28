@@ -3,12 +3,10 @@
 # =============================================================================
 # Copyright (c) Ostap developers.
 # ============================================================================= 
-# @file test_models.py
-# Test module for ostap/fitting/models.py
-# - It tests various ``signal-like''/``peak-like'' shapes
+# @file test_convolution.py
+# Test module for ostap/fitting/convolution.py
 # ============================================================================= 
-""" Test module for ostap/fitting/models.py
-- It tests various ``signal-like''/``peak-like'' shapes 
+""" Test module for ostap/fitting/convolution.py
 """
 # ============================================================================= 
 __author__ = "Ostap developers"
@@ -24,7 +22,7 @@ from   ostap.logger.utils   import rooSilent
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_models' )
+    logger = getLogger ( 'test_convolution' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
