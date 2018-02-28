@@ -337,8 +337,7 @@ class Efficiency1D (Efficiency) :
         """
         from ostap.fitting.roofit import SETVAR
         xx = float ( x ) 
-        mn , mx = self.xminmax()
-        if mn <= xx <= mx :
+        if xx in self.xvar : 
             with  SETVAR ( self.xvar ) :
                 self.xvar.setVal ( xx )
                 return self.eff_fun.getVal ()

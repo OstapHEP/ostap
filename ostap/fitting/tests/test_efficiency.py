@@ -52,6 +52,7 @@ for i in range ( 10000 ) :
 
 from ostap.fitting.efficiency import Efficiency1D
 
+points =  [ 0.1 * i for i in range (10) ]
 # =============================================================================
 # use RooFormulaVar to parameterise efficiency:
 def test_formula () :
@@ -64,7 +65,10 @@ def test_formula () :
     eff1 = Efficiency1D( 'E1' , effFunc , cut  = acc , xvar = x )
     r1 = eff1.fitTo ( ds )
     f1 = eff1.draw  ( ds )
-    
+    print r1
+    for p in points :
+        print ' Point/Eff %.1f %.2f'   % ( p , eff1 ( p ) )
+
     
 # =============================================================================
 # use some PDF to parameterize efficiciency
@@ -74,6 +78,10 @@ def test_pdf () :
     eff2 = Efficiency1D( 'E2' , effPdf , cut = acc  )
     r2 = eff2.fitTo ( ds )
     f2 = eff2.draw  (  ds )
+    print r2
+    for p in points :
+        print ' Point/Eff %.1f %.2f'   % ( p , eff2 ( p ) )
+
     
 # =============================================================================
 if '__main__' == __name__ :
