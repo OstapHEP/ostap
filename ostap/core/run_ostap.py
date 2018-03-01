@@ -303,15 +303,15 @@ if ROOT.gROOT.IsBatch() : logger.info ('Batch processing is activated')
 import ostap.fixes.fixes 
 
 # =============================================================================
-## Ostap startup: history, readlines, etc... 
+## ostap startup: history, readlines, etc... 
 # =============================================================================
 import ostap.core.startup
 
 # =============================================================================
-## import everything from Ostap
+## import everything from ostap
 # =============================================================================
 if arguments.Quiet :
-    from Ostap.Utils import mute
+    from ostap.logger.utils import mute
     with mute () : 
         from   ostap.core.load_ostap import *
     del mute
@@ -382,7 +382,7 @@ def _load_macro_ ( macro , silent = True ) :
     """Load ROOT macro"""
     logger.debug  ("Try to load macro '%s'" % macro )
     if silent :
-        from Ostap.Utils import rootError
+        from ostap.logger.utils import rootError
         with rootError() : sc = ROOT.gROOT.LoadMacro ( macro )
     else :
         sc = ROOT.gROOT.LoadMacro ( macro )
@@ -416,7 +416,7 @@ def load_macro ( pattern ) :
     import glob
     _glob   = False 
     _loaded = 0
-    from  Ostap.Utils import rootError
+    from  ostap.logger.utils import rootError
     
     for pat,ext in patterns :
         
@@ -447,7 +447,7 @@ def treat_file ( f ) :
         
         logger.debug  ("Try  to open file '%s'" % f )
         try :
-            from Ostap.TFileDeco import ROOTCWD 
+            from ostap.core.core import ROOTCWD 
             with ROOTCWD() :
                 _f = ROOT.TFile.Open(  f , 'READ')
                 root_files [ name ] = _f 
@@ -498,7 +498,7 @@ def treat_file ( f ) :
             else :
                 logger.error       ("No macros are loaded for '%s' pattern" % f )
 
-    ## execute Ostap-script 
+    ## execute ostap-script 
     elif fok and name and dot and ext in ( 'ost' , 'ostp' , 'ostap' ) :
         
         logger.debug  ("Try    to execute '%s'" % f )
@@ -587,8 +587,8 @@ if PARAMETERS :
     logger.info ('PARAMETERS    : %s' % PARAMETERS )
 
 # =============================================================================
-if '__main__' == __name__ : logger.info ( 'Ostap is ready'  ) 
-else                      : logger.info ( 'Ostap is loaded' )
+if '__main__' == __name__ : logger.info ( 'ostap is ready'  ) 
+else                      : logger.info ( 'ostap is loaded' )
 
 # =============================================================================
 # The END 

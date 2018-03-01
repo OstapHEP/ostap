@@ -710,7 +710,7 @@ class PDF (object) :
     #  @param base_background_color base color for background components
     #  @param base_component_color  base color for other components 
     #  @param data_overlay          draw points atop of fitting curves?  
-    #  @see Ostap.FitDraw 
+    #  @see ostap.plotting.fit_draw 
     def draw ( self ,
                dataset               = None  ,
                nbins                 = 100   ,   ## Frame binning
@@ -746,7 +746,7 @@ class PDF (object) :
         -  residual               ## make also residual frame
         -  pull                   ## make also residual frame
         
-        For default values see Ostap.FitDraw 
+        For default values see ostap.plotting.fit_draw 
         """
         #
         import ostap.plotting.fit_draw as FD
@@ -1003,7 +1003,7 @@ class PDF (object) :
         
         ## draw it! 
         if not ROOT.gROOT.IsBatch() :
-            from Ostap.Utils import  rootWarning
+            from ostap.logger.utils import  rootWarning
             with rootWarning ():
                 frame.Draw ()
                         
@@ -1121,6 +1121,15 @@ class PDF (object) :
                     if 0 < mx : return 0 , mx
                 except :
                     pass
+            if hasattr ( f , 'mode' ) :
+                try :
+                    mode = f.mode()
+                    if mode in self.xvar :
+                        mx = f ( mode ) 
+                        if 0 < mx : return 0 , mx
+                except :
+                    pass 
+                    
 
         ## check RooAbsReal functionality
         code = self.pdf.getMaxVal( ROOT.RooArgSet ( self.xvar ) )
@@ -1154,7 +1163,7 @@ class PDF (object) :
     def clean ( self ) :
         self.__splots     = []
         self.__histo_data = None 
-        
+        self.__fit_result = None 
     # ========================================================================
     # some generic stuff 
     # ========================================================================
@@ -1189,10 +1198,10 @@ class PDF (object) :
         elif hasattr ( pdf , 'function'       ) :
             
             fun = pdf.function()
-            if   hasattr ( pdf  , 'setPars'   ) : pdf.setPars() 
+            if   hasattr ( pdf , 'setPars'    ) : pdf.setPars() 
             if   hasattr ( fun , 'rms'        ) : return fun.rms()
             elif hasattr ( fun , 'variance'   ) : return fun.variance   ()**0.5  
-            elif hasattr ( fun , 'dispersion' ) : return fun.dispersion () **5 
+            elif hasattr ( fun , 'dispersion' ) : return fun.dispersion ()**0.5 
             
         from ostap.stats.moments import rms as _rms
         return  self._get_stat_ ( _rms )
@@ -2522,7 +2531,7 @@ def makeBkg ( bkg , name , xvar , **kwargs ) :
     >>> pdf   = RooPolynomial( ... )
     >>> bkg2  = makeBkg ( pdf    , 'B2' , x ) ## use Generic1D_pdf ( pdf , x , 'B2' )
     
-    ## some Ostap-based model, use it as it is  
+    ## some ostap-based model, use it as it is  
     >>> model = Convex_pdf ( ... )
     >>> bkg3  = makeBkg ( models , 'B3' , x )  
     
@@ -2557,7 +2566,7 @@ def makeBkg ( bkg , name , xvar , **kwargs ) :
         logger.debug ( 'Generic1D_pdf(%s,%s) model is  created' % ( model.name , bkg ) ) 
         return model
 
-    ## some Ostap-based background model ?
+    ## some ostap-based background model ?
     elif isinstance ( bkg , PDF ) and not kwargs : 
         
         ## return the same model/PDF 
@@ -2571,7 +2580,7 @@ def makeBkg ( bkg , name , xvar , **kwargs ) :
             logger.debug ('%s(%s) model is cloned to %s(%s)' % ( type(bkg).__name__ , bkg.name , type(model).__name__ , model.name ) ) 
             return model 
         else :
-            raise TypeError("Do not now how to clone the background model from Ostap PDF")
+            raise TypeError("Do not now how to clone the background model from ostap PDF")
         
     ## interprete it as exponential slope for Bkg-pdf 
     elif isinstance ( bkg , ROOT.RooAbsReal ) :

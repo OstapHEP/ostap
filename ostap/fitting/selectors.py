@@ -14,7 +14,7 @@
 #
 # @code
 #
-# from Ostap.Selectors import Selector
+# from ostap.fitting.selectors import Selector
 #
 # class MySelector ( Selector ) :
 #
@@ -55,7 +55,7 @@ TTree/TChain.Process and TPySelector.
 In PyROOT some of original C++ methods are disable.
 The module provides the 'recovery' for missing methods
 
-# from Ostap.Selectors import Selector
+# from ostap.fitting.selectors import Selector
 #
 # class MySelector ( Selector ) :
 #
@@ -210,7 +210,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
 #
 # @code
 #
-# from Ostap.PySelector import Selector
+# from ostap.fitting.selectors import Selector
 #
 # class MySelector ( Selector ) :
 #
@@ -250,7 +250,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
 def _process_ ( self , selector , events = -1 , silent = False  ) :
     """ ``Process'' the tree/chain with proper TPySelector :
     
-    >>> from Ostap.Selectors import Selector    
+    >>> from ostap.fitting.selectors import Selector    
     >>> class MySelector ( Selector ) : ... 
     ...
     >>> selector = MySelector()    

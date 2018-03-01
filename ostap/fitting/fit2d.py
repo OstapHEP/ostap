@@ -231,7 +231,7 @@ class PDF2 (PDF) :
         self.pdf.fillHistogram  ( hpdf , _lst )
         
         if not ROOT.gROOT.IsBatch() :
-            from Ostap.Utils import  rootWarning
+            from ostap.logger.utils import  rootWarning
             with rootWarning ():
                 hdata.lego ()
                 hpdf .Draw ( 'same surf')
@@ -260,7 +260,7 @@ class PDF2 (PDF) :
         ## copy arguments:
         args = kwargs.copy ()
         
-        import Ostap.FitDraw as FD
+        import ostap.plotting.fit_draw as FD
         if not isinstance ( in_range , (list,tuple) ) : in_range = in_range ,  
         if in_range :
             data_options        = args.pop (       'data_options' , FD.         data_options )
@@ -1590,7 +1590,6 @@ class H2D_pdf(H2D_dset,PDF2) :
         #
         ## finally create PDF :
         #
-        from   Ostap.Utils      import roo_silent 
         with roo_silent ( silent ) : 
             self.pdf    = ROOT.RooHistPdf (
                 'hpdf_%s'            % name ,

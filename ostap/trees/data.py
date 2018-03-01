@@ -604,7 +604,7 @@ class Data2(Data):
         """Add the file to TChain
         """
         ## suppress Warning/Error messages from ROOT 
-        from Ostap.Utils import rootError
+        from ostap.logger.utils import rootError
         with rootError() :
             tmp1 = ROOT.TChain ( self.chain .GetName() )
             tmp1.Add ( the_file )            

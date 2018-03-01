@@ -1146,7 +1146,7 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
     ##
     func = pdf.pdf.function()
     ##
-    from Ostap.RooFitDeco import PDF_fun
+    from ostap.fitting.roofit import PDF_fun
     pdf_fun = PDF_fun( pdf.pdf , h1.xvar , *h1.xminmax() )
     ##
     norm = VE(  h1.integrate().value() , 0 ) 
@@ -1179,7 +1179,7 @@ def _h1_pdf_positive_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    from Ostap.FitBkgModels import PolyPos_pdf
+    from ostap.fitting.background import PolyPos_pdf
     return _h1_pdf_ ( h1 , PolyPos_pdf , (degree,) , *args , **kwargs )
 
 
@@ -1214,7 +1214,7 @@ def _h1_pdf_even_ ( h1 , halfdegree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    from Ostap.FitBkgModels import PolyEven_pdf
+    from ostap.fitting.background import PolyEven_pdf
     return _h1_pdf_ ( h1 , PolyEven_pdf , (halfdegree,) , *args , **kwargs )
 
 
@@ -1245,7 +1245,7 @@ def _h1_pdf_monothonic_ ( h1 , degree , increasing , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    from Ostap.FitBkgModels import Monothonic_pdf
+    from ostap.fitting.background import Monothonic_pdf
     return _h1_pdf_ ( h1 , Monothonic_pdf , (degree,increasing) , *args , **kwargs )
 
 # =============================================================================
@@ -1333,7 +1333,7 @@ def _h1_pdf_convex_ ( h1 , degree , increasing , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    from Ostap.FitBkgModels import Convex_pdf
+    from ostap.fitting.background import Convex_pdf
     return _h1_pdf_ ( h1 , Convex_pdf , (degree,increasing,True) , *args , **kwargs )
 
 # =============================================================================
@@ -1421,7 +1421,7 @@ def _h1_pdf_concave_ ( h1 , degree , increasing , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    from Ostap.FitBkgModels import Convex_pdf
+    from ostap.fitting.background import Convex_pdf
     return _h1_pdf_ ( h1 , Convex_pdf , (degree,increasing,False) , *args , **kwargs )
 
 # =============================================================================
@@ -1509,7 +1509,7 @@ def _h1_pdf_convexpoly_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    from Ostap.FitBkgModels import ConvexOnly_pdf
+    from ostap.fitting.background import ConvexOnly_pdf
     return _h1_pdf_ ( h1 , ConvexOnly_pdf , (degree,True) , *args , **kwargs )
 
 # =============================================================================
@@ -1539,7 +1539,7 @@ def _h1_pdf_concavepoly_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    from Ostap.FitBkgModels import ConvexOnly_pdf
+    from ostap.fitting.background import ConvexOnly_pdf
     return _h1_pdf_ ( h1 , ConvexOnly_pdf , (degree,False) , *args , **kwargs )
 
 # =============================================================================
@@ -1602,7 +1602,7 @@ def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
         PS     = cpp.Ostap.Math.PositiveSpline
         spline = PS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] )
     #
-    from Ostap.FitBkgModels import PSpline_pdf
+    from ostap.fitting.background import PSpline_pdf
     return _h1_pdf_ ( h1 , PSpline_pdf , ( spline , ) , *args , **kwargs )
 
 
@@ -1633,7 +1633,7 @@ def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
         MS     = cpp.Ostap.Math.MonothonicSpline
         spline = MS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] )
         #
-    from Ostap.FitBkgModels import MSpline_pdf
+    from ostap.fitting.background import MSpline_pdf
     return _h1_pdf_ ( h1 , MSpline_pdf , ( spline , ) , *args , **kwargs )
 
 # =============================================================================
@@ -1663,7 +1663,7 @@ def _h1_pdf_cspline_ ( h1 , spline , *args , **kwargs ) :
         CS     = cpp.Ostap.Math.ConvexSpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] , spline[3] )
     #
-    from Ostap.FitBkgModels import CSpline_pdf
+    from ostap.fitting.background import CSpline_pdf
     return _h1_pdf_ ( h1 , CSpline_pdf , ( spline , ) , *args , **kwargs )
 
 
@@ -1694,7 +1694,7 @@ def _h1_pdf_convexSpline_ ( h1 , spline , *args , **kwargs ) :
         CS     = cpp.Ostap.Math.ConvexOnlySpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , True )
         #
-    from Ostap.FitBkgModels import CPSpline_pdf
+    from ostap.fitting.background import CPSpline_pdf
     return _h1_pdf_ ( h1 , CPSpline_pdf , ( spline , ) , *args , **kwargs )
 
 
@@ -1725,7 +1725,7 @@ def _h1_pdf_concaveSpline_ ( h1 , spline , *args , **kwargs ) :
         CS     = cpp.Ostap.Math.ConvexOnlySpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , False )
         #
-    from Ostap.FitBkgModels import CPSpline_pdf
+    from ostap.fitting.background import CPSpline_pdf
     return _h1_pdf_ ( h1 , CPSpline_pdf , ( spline , ) , *args , **kwargs )
 
 

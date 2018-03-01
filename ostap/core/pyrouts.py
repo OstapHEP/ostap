@@ -90,7 +90,7 @@ from ostap.core.core import ( cpp      , Ostap     ,
 
 
 ## ## silently load RooFit library trick...
-## from Ostap.logger.utils import mute
+## from ostap.logger.utils import mute
 ## with mute() : _tmp = ROOT.RooRealVar
 ## del mute
 

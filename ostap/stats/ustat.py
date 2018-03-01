@@ -16,7 +16,7 @@
 #   >>> data = ...               ## dataset
 #   >>> pdf.fitTo( data , ... )  ## fit it!
 #
-#   >>> import Ostap.uStat as uStat
+#   >>> import ostap.stats.ustat as uStat
 #
 #   >>> r,histo = uStat.uPlot ( pdf , data ) 
 #   >>> print r                  ## print fit results
@@ -39,7 +39,7 @@ Usage is fairly trivial:
    >>> data = ...               ## dataset
    >>> pdf.fitTo( data , ... )  ## fit it!
 
-   >>> import Ostap.uStat as uStat
+   >>> import ostap.stats.ustat as uStat
 
    >>> r,histo = uStat.uPlot ( pdf , data ) 
    >>> print r                  ## print fit results
@@ -180,7 +180,7 @@ def uCalc ( pdf            ,
 #    >>> pdf.fitTo( data , ... )  ## fit it!
 #    >>> vars = ...               ## get variables
 #    
-#    >>> import Ostap.uStat as uStat
+#    >>> import ostap.stats.ustat as uStat
 #    
 #    >>> r,histo = uStat.uPlot ( pdf , data ) 
 #    >>> print r                  ## print fit results
@@ -204,7 +204,7 @@ def uPlot ( pdf            ,
     >>> data = ...               ## dataset
     >>> pdf.fitTo( data , ... )  ## fit it!
     
-    >>> import Ostap.uStat as uStat
+    >>> import ostap.stats.ustat as uStat
     
     >>> r,histo = uStat.uPlot ( pdf , data ) 
     >>> print r                  ## print fit results

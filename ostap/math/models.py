@@ -207,6 +207,147 @@ Ostap.Math.Flatte23L   . amp = _amp_
 Ostap.Math.BreitWigner . amp = _amp_
 Ostap.Math.Swanson     . amp = _amp_
 
+
+# =============================================================================
+## get min/max values for bernstein polynomials
+#  @code
+#  p = ...
+#  mn,mx = p.minmax()
+#  @endcode
+#  The values are guaranteed that
+#  mn <= p(x) <= mx for all   xmin <= x <= xmax 
+def _b_minmax_ ( bp ) :
+    """Get min/max values for bernstein polynomials
+    
+    >>> p = ...
+    >>> mn,mx = p.minmax()
+
+    The values are such that: mn <= p(x) <= mx for all x_min<=x<x_max
+    """
+    b    = bp.bernstein() 
+    pars = b .pars()
+    mn   = min ( pars )
+    mx   = max ( pars )
+    return mn , mx 
+
+# ==============================================================================
+## get the maximal value for bernstein polynomial:
+#  @code
+#  p  = ...
+#  mx = p.max()
+#  @endcode
+#  The values are guaranteed that
+#  p(x) <= mx for all   xmin <= x <= xmax 
+def _b_max_ ( bp ) :
+    """Get max values for bernstein polynomials
+    
+    >>> p = ...
+    >>> mx = p.max()
+
+    The value is such that: p(x) <= mx  for all x_min<=x<x_max
+    """
+    b    = bp.bernstein() 
+    pars = b .pars()
+    return max ( pars )
+
+# ==============================================================================
+## get the minimal value for bernstein polynomial:
+#  @code
+#  p  = ...
+#  mn = p.min()
+#  @endcode
+#  The values are guaranteed that
+#  mn <= p(x) for all   xmin <= x <= xmax 
+def _b_min_ ( bp ) :
+    """Get min values for bernstein polynomials
+    
+    >>> p  = ...
+    >>> mn = p.min()
+
+    The  value is such that: mn <= p(x)  for all x_min<=x<x_max
+    """
+    b    = bp.bernstein() 
+    pars = b .pars()
+    return min ( pars )
+
+for t in ( Ostap.Math.Bernstein     ,
+           Ostap.Math.BernsteinEven ) :
+    if not hasattr ( t , 'min'    ) : t.min    = _b_min_
+    if not hasattr ( t , 'max'    ) : t.max    = _b_max_ 
+    if not hasattr ( t , 'minmax' ) : t.minmax = _b_minmax_
+
+# =============================================================================
+
+# =============================================================================
+## get min/max values for derived bernstein polynomials
+#  @code
+#  p = ...
+#  mn,mx = p.minmax()
+#  @endcode
+#  The values are guaranteed that
+#  mn <= p(x) <= mx for all   xmin <= x <= xmax 
+def _p_minmax_ ( p ) :
+    """Get min/max values for derived bernstein polynomials
+    
+    >>> p = ...
+    >>> mn,mx = p.minmax()
+
+    The values are such that: mn <= p(x) <= mx  for all x_min<=x<x_max
+    """
+    b    = p .bernstein() 
+    pars = b .pars()
+    mn   = min ( pars )
+    mx   = max ( pars )
+    return  max ( mn , 0 ) , mx 
+
+
+# ==============================================================================
+## get the minimal value for derived bernstein polynomial:
+#  @code
+#  p  = ...
+#  mn = p.min()
+#  @endcode
+#  The values are guaranteed that
+#  mn <= p(x) for all   xmin <= x <= xmax 
+def _p_min_ ( bp ) :
+    """Get min values for derived bernstein polynomials
+    
+    >>> p  = ...
+    >>> mn = p.min()
+
+    The  value is such that: mn <= p(x)  for all x_min<=x<x_max
+    """
+    b    = bp.bernstein() 
+    pars = b .pars()
+    return max ( min ( pars ) , 0 )
+
+for t in ( Ostap.Math.Positive      ,
+           Ostap.Math.Monothonic    ,
+           Ostap.Math.Convex        ,
+           Ostap.Math.ConvexOnly    ) :
+    
+    if not hasattr ( t , 'min'    ) : t.min    = _p_min_
+    if not hasattr ( t , 'max'    ) : t.max    = _b_max_   ## ATTENTION: "b" is here
+    if not hasattr ( t , 'minmax' ) : t.minmax = _p_minmax_
+
+
+# =============================================================================
+## try to get max-value using exisint mode function
+#  @code
+#  f = ...
+#  mx = f.max()
+#  @endcode
+def _f_max_mode_ ( f ) :
+    """Get the max-value (using exising mode function)
+    >>> f = ...
+    >>> mx = f.max()    
+    """
+    return f ( f.mode() ) 
+ 
+
+
+
+
 # =============================================================================
 ## make 1D- numerical integration
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -455,6 +596,10 @@ for model in ( Ostap.Math.Chebyshev              ,
     model.__getattr__  = _tf1_getattr_
     model.draw         = _f1_draw_
     
+    if not hasattr ( model , 'max' ) : 
+        if hasattr ( model , 'mode' ) :
+            model.max = _f_max_mode_ 
+
     if not hasattr ( model , 'mean'     ) : model.mean     = sp_mean 
     if not hasattr ( model , 'variance' ) : model.variance = sp_variance 
     if not hasattr ( model , 'rms'      ) : model.rms      = sp_rms  
