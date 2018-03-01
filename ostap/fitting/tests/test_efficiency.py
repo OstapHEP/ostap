@@ -67,8 +67,8 @@ def test_formula () :
     f1 = eff1.draw  ( ds )
     print r1
     for p in points :
-        print ' Point/Eff %.1f %.2f'   % ( p , eff1 ( p ) )
-
+        print ' Point/Eff %.1f %s%%'   % ( p , (100*eff1 ( p , error = True )).toString ( '(%5.2f+-%4.2f)' ) )
+        
     
 # =============================================================================
 # use some PDF to parameterize efficiciency
@@ -80,7 +80,7 @@ def test_pdf () :
     f2 = eff2.draw  (  ds )
     print r2
     for p in points :
-        print ' Point/Eff %.1f %.2f'   % ( p , eff2 ( p ) )
+        print ' Point/Eff %.1f %s%%'   % ( p , (100*eff2 ( p , error = True )).toString ( '(%5.2f+-%4.2f)' ) )
 
     
 # =============================================================================

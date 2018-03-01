@@ -328,6 +328,7 @@ class PDF (object) :
         self.__histo_data  = None
         self.__draw_var    = None
         self.__special     = True if special else False 
+        self.__fit_result  = None
         
         if   isinstance ( xvar, ROOT.TH1    ) : xvar = xvar.xminmax()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
@@ -399,7 +400,11 @@ class PDF (object) :
             assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
         self.__pdf = value 
 
-
+    @property
+    def fit_result ( self ) :
+        """``fit_result'' : (the latest) fit resut (TFitResult)"""
+        return self.__fit_result
+    
     @property
     def name ( self ) :
         """The name of the PDF"""
@@ -587,6 +592,7 @@ class PDF (object) :
 
         if not valid_pointer (  result ) :
             logger.fatal ( "PDF(%s).fitTo: RooFitResult is invalid. Check model&data" )
+            self.__fit_result = None 
             return None , None
         
         st = result.status()
@@ -663,6 +669,7 @@ class PDF (object) :
             if hasattr ( s , 'setPars' ) : s.setPars() 
 
         ## 
+        self.__fit_result = result 
         return result, frame 
 
     
@@ -918,14 +925,17 @@ class PDF (object) :
             m.migrad   () 
             m.hesse    ()
             result = m.save ()
-            
+
+        ## safe fit results 
+        self.__fit_result = result 
+
         if not draw :
             return result, None 
         
         from ostap.plotting.fit_draw import draw_options         
         draw_opts = draw_options ( **kwargs )
         if isinstance ( draw , dict ) : draw_opts.update( draw )
- 
+
         return result, self.draw ( hdataset , nbins = None , silent = silent , **draw_opts )
 
     # =========================================================================
@@ -1060,7 +1070,7 @@ class PDF (object) :
 
     # =========================================================================
     ## simple 'function-like' interface 
-    def __call__ ( self , x ) :
+    def __call__ ( self , x , error = False ) :
         """ PDF as a ``function''
         >>> pdf  = ...
         >>> x = 1
@@ -1068,11 +1078,16 @@ class PDF (object) :
         """
         if isinstance ( self.xvar , ROOT.RooRealVar ) :
             from ostap.fitting.roofit import SETVAR
+            from ostap.math.ve        import VE
             mn,mx = self.xminmax()
             if mn <= x <= mx :
                 with SETVAR( self.xvar ) :
                     self.xvar.setVal ( x )
-                    return self.pdf.getVal()  ## RETURN 
+                    v = self.pdf.getVal()
+                    if error and self.fit_result :
+                        e = self.eff_fun.getPropagatedError ( self.fit_result )
+                        if 0<= e : return  VE ( v ,  e * e )
+                    return v 
             else :
                 return 0.0                    ## RETURN 
             
@@ -1089,13 +1104,40 @@ class PDF (object) :
         >>> pdf     = ....
         >>> mn , mx = pdf.minmax()        
         """
-        mn , mx = -1 , -10 
+        ## try to get minmax directly from pdf/function 
+        if hasattr ( self.pdf , 'function' ) :
+            if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
+            f = self.pdf.function()
+            if hasattr ( f , 'minmax' ) :
+                try :
+                    mn , mx = f.minmax()
+                    if  0<= mn and mn <= mx and 0 < mx :   
+                        return mn , mx
+                except :
+                    pass
+            if hasattr ( f , 'max' ) :
+                try :
+                    mx = f.max()
+                    if 0 < mx : return 0 , mx
+                except :
+                    pass
+
+        ## check RooAbsReal functionality
+        code = self.pdf.getMaxVal( ROOT.RooArgSet ( self.xvar ) )
+        if 0 < code :
+            mx = self.pdf.maxVal ( code )
+            if 0 < mx : return 0 , mx
+            
+                 
+        mn , mx = -1 , -10
         if hasattr ( self.pdf , 'min' ) : mn = self.pdf.min()
         if hasattr ( self.pdf , 'max' ) : mx = self.pdf.max()
-        if 0 <= mx and 0 < mx : return mn , mx
+        if 0 <= mn and mn <= mx and 0 < mx : return mn , mx
         
+        ## now try to use brute force and random shoots 
         if not self.xminmax() : return ()
         
+        mn  , mx = -1 , -10
         xmn , xmx = self.xminmax()
         from ostap.fitting.roofit import SETVAR
         import random

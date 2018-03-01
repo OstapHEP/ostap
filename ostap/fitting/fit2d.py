@@ -433,7 +433,7 @@ class PDF2 (PDF) :
 
     # =========================================================================
     ## simple 'function-like' interface 
-    def __call__ ( self , x , y ) :
+    def __call__ ( self , x , y , erorr = False ) :
         """ Simple  function-like interface
         >>>  pdf = ...
         >>>  print pdf(0.1,0.5) 
@@ -441,16 +441,85 @@ class PDF2 (PDF) :
         if     isinstance ( self.xvar , ROOT.RooRealVar ) and \
                isinstance ( self.yvar , ROOT.RooRealVar ) :
             
-            from Ostap.RooFitDeco import SETVAR
+            from ostap.fitting.roofit import SETVAR
+            from ostap.math.ve        import VE
             if x in self.xvar and y in self.yvar : 
                 with SETVAR ( self.xvar ) , SETVAR( self.yvar ) :
                     self.xvar.setVal ( x )
                     self.yvar.setVal ( y )
-                    return self.pdf.getVal()
+                    if error and self.fit_result :
+                        e = self.eff_fun.getPropagatedError ( self.fit_result )
+                        if 0<= e : return  VE ( v ,  e * e )
+                    return v 
             else :
                 return 0.0
             
         raise AttributeError, 'something wrong goes here'
+
+
+    # ========================================================================
+    ## check minmax of the PDF using the random shoots
+    #  @code
+    #  pdf     = ....
+    #  mn , mx = pdf.minmax()            
+    #  @endcode 
+    def minmax ( self , nshoots =  100000 ) :
+        """Check min/max for the PDF using  random shoots 
+        >>> pdf     = ....
+        >>> mn , mx = pdf.minmax()        
+        """
+        ## try to get minmax directly from pdf/function 
+        if hasattr ( self.pdf , 'function' ) :
+            if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
+            f = self.pdf.function()
+            if hasattr ( f , 'minmax' ) :
+                try :
+                    mn , mx = f.minmax()
+                    if  0<= mn and mn <= mx and 0 < mx :   
+                        return mn , mx
+                except :
+                    pass
+            if hasattr ( f , 'max' ) :
+                try :
+                    mx = f.max()
+                    if 0 < mx : return 0 , mx
+                except :
+                    pass
+
+        ## check RooAbsReal functionality
+        code = self.pdf.getMaxVal( ROOT.RooArgSet ( self.xvar , self.yvar ) )
+        if 0 < code :
+            mx = self.pdf.maxVal ( code )
+            if 0 < mx : return 0 , mx
+            
+        ## not try  to use random
+                
+        mn , mx = -1 , -10
+        if hasattr ( self.pdf , 'min' ) : mn = self.pdf.min()
+        if hasattr ( self.pdf , 'max' ) : mx = self.pdf.max()
+        if 0 <= mn and mn <= mx and 0 < mx : return mn , mx
+        
+        if not self.xminmax() : return ()
+        if not self.yminmax() : return ()
+        
+        mn  , mx = -1 , -10
+        xmn , xmx = self.xminmax()
+        ymn , ymx = self.yminmax()
+        from ostap.fitting.roofit import SETVAR
+        import random
+        for i in xrange ( nshoots ) : 
+            xx = random.uniform ( xmn , xmx )
+            yy = random.uniform ( ymn , ymx )
+            with SETVAR ( self.xvar ) :
+                with SETVAR ( self.yvar ) :
+                    self.xvar.setVal ( xx )
+                    self.yvar.setVal ( yy )
+                    vv = self.pdf.getVal()
+                    if mn < 0 or vv < mn : mn = vv
+                    if mx < 0 or vv > mx : mx = vv
+                    
+        return mn , mx 
+        
 
     # =========================================================================
     ## get integral over (xmin,xmax,ymin,ymax) region

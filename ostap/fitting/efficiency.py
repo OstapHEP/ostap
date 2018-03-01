@@ -327,7 +327,7 @@ class Efficiency1D (Efficiency) :
     #  x = 0.15
     #  value =  eff(x) 
     #  @endcode     
-    def __call__ (  self , x ) :
+    def __call__ (  self , x , error = False ) :
         """Get the efficiency
         >>> dataset = ... 
         >>> eff = Efficiency1D( ... )
@@ -336,11 +336,16 @@ class Efficiency1D (Efficiency) :
         >>> value = eff(x) 
         """
         from ostap.fitting.roofit import SETVAR
+        from ostap.math.ve        import VE 
         xx = float ( x ) 
         if xx in self.xvar : 
             with  SETVAR ( self.xvar ) :
-                self.xvar.setVal ( xx )
-                return self.eff_fun.getVal ()
+                self.xvar.setVal ( xx )                
+                v = self.eff_fun.getVal ()
+                if error and self.fit_result :
+                    e = self.eff_fun.getPropagatedError ( self.fit_result )
+                    if 0<= e : return  VE ( v ,  e * e )
+                return v 
         logger.error ('Invalid efficiency, return -1 ') 
         return -1 
 
@@ -481,7 +486,7 @@ class Efficiency2D (Efficiency) :
     #  x = 0.15, y = 90. 
     #  value =  eff(x,y) 
     #  @endcode     
-    def __call__ (  self , x , y ) :
+    def __call__ (  self , x , y , error = False ) :
         """Get the efficiency
         >>> dataset = ... 
         >>> eff     = ... 
@@ -490,6 +495,7 @@ class Efficiency2D (Efficiency) :
         >>> value = eff(x,y) 
         """
         from ostap.fitting.roofit import SETVAR
+        from ostap.math.ve        import VE 
         xx = float ( x ) 
         yy = float ( y ) 
         if xx in self.xvar and yy in self.yvar : 
@@ -497,7 +503,11 @@ class Efficiency2D (Efficiency) :
                 with SETVAR ( self.yvar ) :
                     self.xvar.setVal ( xx )
                     self.yvar.setVal ( yy )
-                    return self.eff_fun.getVal ()
+                    v = self.eff_fun.getVal ()
+                    if error and self.fit_result :
+                        e = self.eff_fun.getPropagatedError ( self.fit_result )
+                        if 0<= e : return  VE ( v ,  e * e )
+                    return v 
         logger.error ('Invalid efficiency, return -1 ') 
         return -1 
 
@@ -692,7 +702,7 @@ class Efficiency3D (Efficiency) :
     #  z = 12 
     #  value =  eff(x,y,z) 
     #  @endcode      
-    def __call__ (  self , x , y , z) :
+    def __call__ (  self , x , y , z , error = False ) :
         """Get the efficiency
         >>> dataset = ... 
         >>> eff     = ... 
@@ -703,6 +713,7 @@ class Efficiency3D (Efficiency) :
         >>> value = eff(x,y,z) 
         """
         from ostap.fitting.roofit import SETVAR
+        from ostap.math.ve        import VE 
         xx = float ( x ) 
         yy = float ( y ) 
         zz = float ( z ) 
@@ -713,7 +724,10 @@ class Efficiency3D (Efficiency) :
                         self.xvar.setVal ( xx )
                         self.yvar.setVal ( yy )
                         self.zvar.setVal ( zz )
-                    return self.eff_fun.getVal ()
+                        if error and self.fit_result :
+                            e = self.eff_fun.getPropagatedError ( self.fit_result )
+                            if 0<= e : return  VE ( v ,  e * e )
+                        return v 
         logger.error ('Invalid efficiency, return -1 ') 
         return -1 
                         
