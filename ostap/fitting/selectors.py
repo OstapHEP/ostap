@@ -257,19 +257,36 @@ def _process_ ( self , selector , events = -1 , silent = False  ) :
     >>> chain = ...
     >>> chain.process ( selector )  ## NB: note lowercase ``process'' here !!!    
     """
-    import ostap.fitting.roofit
-    if 0 < events : 
-        return Ostap.Process.process ( self , selector , events  )
-    else :
-        return Ostap.Process.process ( self , selector ) 
+    import ostap.fitting.roofit 
     
+    if   isinstance ( self , ROOT.TTree ) : 
+        if 0 < events : return Ostap.Process.process ( self , selector , events  )
+        else          : return Ostap.Process.process ( self , selector )
 
+    assert not self.isWeighted() , \
+           'Processing of the weighted dataset is not possible (yet?)'
+    
+    store = self.store()
+    if store and store.tree() :
+        tree = store.tree()
+        return _process_ ( tree , selector , events ,   silent = silent )
+
+    from ostap.fitting.roofit import useStorage
+    with useStorage() :
+        logger.info ('Prepare the cloned dataset with TTree-storage type')
+        from ostap.core.core import dsID            
+        cloned = self.Clone ( dsID() )
+    result = _process_ ( cloned , selector , events , silent = silent )
+    cloned.reset()
+    del cloned
+    return result
+            
 _process_. __doc__ += '\n' + Ostap.Process.process.__doc__
 
 
 # =============================================================================
 ## finally: decorate TTree/TChain
-for t in ( ROOT.TTree , ROOT.TChain ) : t.process  = _process_ 
+for t in ( ROOT.TTree , ROOT.TChain , ROOT.RooAbsData ) : t.process  = _process_ 
 
 _maxv =  0.95 * sys.float_info.max
 _minv = -0.95 * sys.float_info.max

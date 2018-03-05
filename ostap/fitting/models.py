@@ -41,6 +41,7 @@ Empricial PDFs to describe narrow peaks :
   - Atlas shape
   - Slash shape
   - RasingCosine shape
+  - Q-Gaussian shape
   - Asymmetric Laplace shape
   - Sech  shape
   - Logistic, aka ``sech-squared'' shape
@@ -95,6 +96,7 @@ __all__ = (
     'Atlas_pdf'              , ## modified gaussian wiht exponential tails 
     'Slash_pdf'              , ## Symmetie peak with vey heavy tails 
     'RaisingCosine_pdf'      , ## Raising cosine distribution
+    'QGaussian_pdf'          , ## Q-gaussian distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
     'Logistic_pdf'           , ## Logistic aka ``sech-squared'' PDF

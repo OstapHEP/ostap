@@ -1923,6 +1923,95 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================    
+    /** @class QGaussian  
+     *  q-Gaussian distribution:
+     *  \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
+     *  where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
+     *  @see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
+     *  If is equal to 
+     *  - scaled version of Student' t-distribution for 1<q<3
+     *  - Gaussian distribution for q = 1 
+     *  - has finite  support for q<1 
+     *  Here we use \f$ \beta = \frac{1}{2\sigma^2}\f$
+     */
+    class QGaussian  
+    {
+    public:
+      // ======================================================================
+      /** constructor from all arguments            
+       *  @param mean  the mean/mode/location of the peak 
+       *  @param q     q-value   (q<3, for q>3 q = 6-q)
+       *  @param scale 
+       */
+      QGaussian ( const double mean  = 0 ,   // mean/mode/location 
+                  const double q     = 1 ,   //  q-parameter 
+                  const double scale = 1 ) ; // scale/sigma
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// evaluate  pdf  for q-Gaussian distribution
+      double pdf ( const  double x ) const ;
+      /// evaluate  pdf  for q-Gaussian distribution
+      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      // ======================================================================
+    public : // primary getters 
+      // ======================================================================
+      double mean   () const { return  m_mean  ; }
+      double q      () const { return  m_q     ; }
+      double scale  () const { return  m_scale ; }
+      // ======================================================================
+    public : // derived getters 
+      // ======================================================================
+      double mu       () const { return mean  () ; }
+      double mode     () const { return mean  () ; }
+      double median   () const { return mean  () ; }
+      double location () const { return mean  () ; }
+      double sigma    () const { return scale () ; }
+      /// get the original beta 
+      double beta     () const { return 0.5 / (m_scale*m_scale ) ; }
+      // ======================================================================
+    public : // primay getters 
+      // ======================================================================
+      // set mean 
+      bool setMean  ( const double value ) ;
+      // set q :   if q>3, q=6-q
+      bool setQ     ( const double value ) ;
+      // set scale
+      bool setScale ( const double value ) ;
+      // ======================================================================
+    public : // derived setters 
+      // ======================================================================
+      bool setMu       ( const double value ) { return setMean  ( value )  ; }
+      bool setLocation ( const double value ) { return setMean  ( value )  ; }
+      bool setSigma    ( const double value ) { return setScale ( value )  ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral () const { return 1 ; }
+      /// get the integral 
+      double integral ( const double low  , 
+                        const double high ) const ;      
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// mean/mode/location 
+      double m_mean  ; // mean/mode/location 
+      /// q-value 
+      double m_q     ; // q-value 
+      /// scale/sigma 
+      double m_scale ; // scale/sigma
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// get C_q constant 
+      double m_cq ; // get C_q constant 
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ;
+      // ======================================================================
+    } ;     
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

@@ -44,6 +44,7 @@ Empricial PDFs to describe narrow peaks
   - Sech_pdf   
   - Logistic_pdf   
   - RaisingCosine_pdf
+  - QGaussian_pdf
   
 PDF to describe ``wide'' peaks
 
@@ -89,6 +90,7 @@ __all__ = (
     'Atlas_pdf'              , ## modified gaussian with exponenital tails 
     'Slash_pdf'              , ## symmetric peakk wot very heavy tails 
     'RaisingCosine_pdf'      , ## Raising  Cosine distribution
+    'QGaussian_pdf'          , ## Q-gaussian distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperboilic secant  (inverse-cosh) 
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
@@ -2350,6 +2352,100 @@ class RaisingCosine_pdf(MASS) :
     
 models.append ( RaisingCosine_pdf )      
 
+# =============================================================================
+## @class QGaussian_pdf 
+#  q-Gaussian distribution:
+#  \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
+#  where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
+#  @see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
+#  If is equal to 
+#   - scaled version of Student' t-distribution for 1<q<3
+#   - Gaussian distribution for q = 1 
+#   - has finite  support for q<1 
+#  @see Ostap::Math::QGaussian
+#  Here we use \f$ \beta = \frac{1}{2\sigma^2}\f$
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-27
+class QGaussian_pdf(MASS) :
+    r"""q-Gaussian distribution:
+    \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
+    where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
+    - see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
+    If is equal to 
+    - scaled version of Student' t-distribution for 1<q<3
+    - Gaussian distribution for q = 1 
+    - has finite  support for q<1 
+    Note: Here we use \f$ \beta = \frac{1}{2\sigma^2}\f$
+    - see Ostap::Math::QGaussian
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean      = None ,   ## related to mean 
+                   q         = 1    ,   ## q-value 
+                   scale     = None ) : ## related to sigma 
+
+        #
+        ## initialize the base
+        #
+        
+        MASS.__init__  ( self , name , xvar , mean , scale  )
+
+        self.__scale = self.sigma
+        if self.__scale != scale : 
+            sname  = self.sigma.GetName  ()
+            stitle = self.sigma.GetTitle ()
+            gname  = sname .replace ( 'sigma' , 'scale' )
+            gtitle = stitle.replace ( 'sigma' , 'scale' )
+            self.__scale.SetName  ( gname  ) 
+            self.__scale.SetTitle ( gtitle )
+
+        ## Q 
+        self.__q = makeVar ( q               ,
+                             'q_%s'   % name ,
+                             '#q(%s)' % name , q , 1 , -1e+9 , 3-1.e-6 ) 
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.QGaussian (
+            "qgauss_"    + name ,
+            "QGauss(%s)" % name ,
+            self.xvar      ,
+            self.mean      ,
+            self.q         ,
+            self.scale     ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'q'         : self.q     ,
+            'scale'     : self.scale ,
+            }
+        
+    @property
+    def scale ( self ) :
+        """``scale''-parameter, the same as ``sigma''"""
+        return self.__scale
+    @scale.setter
+    def scale ( self, value ) :
+        value = float ( value ) 
+        assert 0 < value , "``scale''-parameter must be positive"
+        self.__scale.setVal ( value )
+        
+    @property
+    def q ( self ) :
+        """``q''-parameter"""
+        return self.__q
+    @q.setter
+    def q ( self, value ) :
+        value = float ( value ) 
+        assert 3 > value , "``q''-parameter must be <3"
+        self.__q.setVal ( value ) 
+    
+models.append ( QGaussian_pdf )      
 
 # =============================================================================
 ## @class Voigt_pdf

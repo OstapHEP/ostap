@@ -185,7 +185,7 @@ def _f1_draw_ ( self , opts ='' , *args , **kwargs ) :
                            Ostap.Math.TwoExpoPositive   ) :                                
             self._tf1.SetMinimum(0)
             
-    return self._tf1.Draw ( *opts )
+    return self._tf1.Draw ( opts )
 
 # =============================================================================
 ## get the regular complex value for amplitude 
@@ -579,6 +579,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.DoubleGauss            ,
                Ostap.Math.Gumbel                 ,
                Ostap.Math.Weibull                ,
+               Ostap.Math.QGaussian              ,
                Ostap.Math.RaisingCosine          ,
                Ostap.Math.Sigmoid                ,
                #
@@ -794,6 +795,7 @@ for pdf in ( Ostap.Models.BreitWigner          ,
              Ostap.Models.Gumbel             ,
              Ostap.Models.Weibull            ,
              Ostap.Models.RaisingCosine      ,
+             Ostap.Models.QGaussian          ,
              Ostap.Models.Tsallis            ,
              Ostap.Models.QGSM               ,
              Ostap.Models.BifurcatedGauss    ,
@@ -1095,6 +1097,7 @@ _decorated_classes_ = set( [
     Ostap.Math.DoubleGauss            ,
     Ostap.Math.Gumbel                 ,
     Ostap.Math.Weibull                ,
+    Ostap.Math.QGaussian              ,
     Ostap.Math.RaisingCosine          ,
     Ostap.Math.Tsallis                ,
     Ostap.Math.QGSM                   ,

@@ -5227,8 +5227,86 @@ namespace Ostap
       // =====================================================================
     } ;
     // ========================================================================
-    
-
+    /** @class QGaussian
+     *  q-Gaussian distribution:
+     *  \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
+     *  where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
+     *  @see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
+     *  If is equal to 
+     *  - scaled version of Student' t-distribution for 1<q<3
+     *  - Gaussian distribution for q = 1 
+     *  - has finite  support for q<1 
+     *  @see Ostap::Math::QGaussian
+     *  Here we use \f$ \beta = \frac{1}{2\sigma^2}\f$
+     */
+    class QGaussian: public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::QGaussian, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param  x      the variable 
+       *  @param  mean   the mean/mode/median/location 
+       *  @param  q      the q-value 
+       *  @param  scale  the scale parameter 
+       */
+      QGaussian ( const char*          name      , 
+                  const char*          title     ,
+                  RooAbsReal&          x         ,   // observable 
+                  RooAbsReal&          mean      ,   // mean/mode/location
+                  RooAbsReal&          q         ,   // q-value
+                  RooAbsReal&          scale     ) ; // scale parameter 
+      /// "copy" constructor 
+      QGaussian ( const QGaussian& , const char* name = 0 ) ;
+      /// clone 
+      QGaussian* clone ( const char* name ) const override ; 
+      // =====================================================================
+    public: // some fake functionality
+      // =====================================================================
+      // fake default contructor, needed just for proper (de)serialization 
+      QGaussian () {} ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      Int_t    getAnalyticalIntegral 
+        ( RooArgSet&  allVars       , 
+          RooArgSet&  analVars      , 
+          const char* rangeName = 0 ) const override ;
+      Double_t analyticalIntegral
+        ( Int_t       code          , 
+          const char* rangeName = 0 ) const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // =====================================================================
+      // the actual evaluation of function 
+      Double_t evaluate() const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::QGaussian& function () const { return m_qgauss ; }
+      // ======================================================================
+    protected:
+      // =====================================================================
+      RooRealProxy m_x     ;
+      RooRealProxy m_mean  ;
+      RooRealProxy m_q     ;
+      RooRealProxy m_scale ;
+      // =====================================================================
+    protected : // the function itself 
+      // =====================================================================
+      mutable Ostap::Math::QGaussian m_qgauss ;
+      // =====================================================================
+    } ;
+    // ========================================================================
 
     // ========================================================================
     // 1D-splines

@@ -6909,6 +6909,91 @@ Double_t Ostap::Models::RaisingCosine::analyticalIntegral
 
 
 // ============================================================================
+/*  constructor from all parameters
+ *  @param  x      the variable 
+ *  @param  mean   the mean/mode/median/location 
+ *  @param  q      the q-value 
+ *  @param  scale  the scale parameter 
+ */
+// ============================================================================
+Ostap::Models::QGaussian::QGaussian
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , // observable 
+  RooAbsReal&          mean      , // mean
+  RooAbsReal&          q         , // q
+  RooAbsReal&          scale     ) // scale
+  : RooAbsPdf  ( name , title ) 
+  , m_x        ( "x"      , "Observable"               , this , x     ) 
+  , m_mean     ( "mean"   , "Mean/location parameter"  , this , mean  ) 
+  , m_q        ( "q"      , "Q-parameter"              , this , q     ) 
+  , m_scale    ( "scale"  , "Scale parameter"          , this , scale ) 
+  , m_qgauss   ()  
+{
+  setPars () ;  
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::QGaussian::QGaussian
+( const Ostap::Models::QGaussian& right ,
+  const char*                     name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"     , this , right.m_x     ) 
+  , m_mean     ( "mean"  , this , right.m_mean  ) 
+  , m_q        ( "q"     , this , right.m_q     ) 
+  , m_scale    ( "scale" , this , right.m_scale ) 
+  , m_qgauss   ( right.m_qgauss ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::QGaussian*
+Ostap::Models::QGaussian::clone( const char* name ) const 
+{ return new Ostap::Models::QGaussian(*this,name) ; }
+// ============================================================================
+void Ostap::Models::QGaussian::setPars () const 
+{
+  m_qgauss.setMean  ( m_mean  ) ;
+  m_qgauss.setQ     ( m_q     ) ;
+  m_qgauss.setScale ( m_scale ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::QGaussian::evaluate() const 
+{
+  setPars() ;
+  return m_qgauss ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::QGaussian::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::QGaussian::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_qgauss.integral ( xmin , xmax ) ;
+}
+
+// ============================================================================
 ClassImp(Ostap::Models::BreitWigner        ) 
 ClassImp(Ostap::Models::Rho0               )
 ClassImp(Ostap::Models::Kstar              )
@@ -6974,6 +7059,7 @@ ClassImp(Ostap::Models::DoubleGauss        )
 ClassImp(Ostap::Models::Gumbel             )
 ClassImp(Ostap::Models::Weibull            )
 ClassImp(Ostap::Models::RaisingCosine      )
+ClassImp(Ostap::Models::QGaussian          )
 ClassImp(Ostap::Models::PositiveSpline     ) 
 ClassImp(Ostap::Models::MonothonicSpline   ) 
 ClassImp(Ostap::Models::ConvexOnlySpline   )
