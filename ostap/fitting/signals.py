@@ -2383,7 +2383,7 @@ class QGaussian_pdf(MASS) :
                    xvar             ,
                    mean      = None ,   ## related to mean 
                    q         = 1    ,   ## q-value 
-                   scale     = None ) : ## related to sigma 
+                   scale     = 1    ) : ## related to sigma 
 
         #
         ## initialize the base
