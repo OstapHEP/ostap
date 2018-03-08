@@ -1094,6 +1094,15 @@ class PDF (object) :
         raise AttributeError, 'something wrong goes here'
 
     # ========================================================================
+    ## convert to float 
+    def __float__ ( self ) :
+        """Convert to float
+        >>> pdf = ...
+        >>> v = float ( pdf )
+        """
+        return float ( self.pdf ) 
+       
+    # ========================================================================
     ## check minmax of the PDF using the random shoots
     #  @code
     #  pdf     = ....

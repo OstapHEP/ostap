@@ -1973,7 +1973,9 @@ for t in ( ROOT.RooAbsReal       ,
     if   _settere_  : t.error = property ( _gettere_ , _settere_ , None  , doce2 )
     elif _gettere_  : t.error = property ( _gettere_ , _settere_ , None  , doce1 )
 
-    
+    if hasattr ( t , 'getVal' ) and not hasattr ( t , '__float__' ) :
+        t.__float__ = lambda s : s.getVal()
+        
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooAbsData    ,
