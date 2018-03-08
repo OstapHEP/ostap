@@ -367,7 +367,6 @@ def test_2gauss () :
     models.add ( model_2gauss  )
 
 
-
 # =============================================================================
 ## GenGaussV1
 # =============================================================================
@@ -462,6 +461,40 @@ def test_skewgauss() :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
 
     models.add ( model_gauss_skew  )
+
+# =============================================================================
+## QGauss
+# =============================================================================
+def test_qgauss () :
+    logger.info ('Test QGaussian_pdf: q-Gaussian' ) 
+    model_qgauss = Models.Fit1D (
+        signal = Models.QGaussian_pdf ( name = 'qG'  , 
+                                        xvar = mass  ,
+                                        q    = (1,0.7,1.2), 
+                                        mean = signal_gauss.mean   ,
+                                        scale = signal_gauss.sigma ) ,
+        background = Models.Bkg_pdf ('BkgQG', xvar = mass , power = 0 )) 
+    
+    s = model_qgauss.signal
+    s.scale = 0.015
+    
+    with rooSilent() : 
+        result, frame = model_qgauss. fitTo ( dataset0 )
+        model_qgauss.signal.scale.release()
+        result, frame = model_qgauss. fitTo ( dataset0 )
+        model_qgauss.signal.q .release() 
+        result, frame = model_qgauss. fitTo ( dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print result 
+    else :     
+        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'Scale  & Q          are: %-28s & %-28s ' % ( result ( s.scale     )[0] , result( s.q           )[0] ) ) 
+        
+
+    models.add ( model_qgauss )
+
 
 # =============================================================================
 ## Bukin
@@ -1008,6 +1041,7 @@ if '__main__' == __name__ :
     test_gengauss_v1    () ## generalized Gaussian function V1          + background 
     test_gengauss_v2    () ## generalized Gaussian function V2          + background 
     test_skewgauss      () ## skew gaussian                             + background 
+    test_qgauss         () ## q-Gaussian function                       + background 
     test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
     test_studentT       () ## Student-t shape                           + background 
     test_bifstudentT    () ## Bifurcated Student-t shape                + background 
