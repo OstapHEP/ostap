@@ -486,7 +486,8 @@ class PDF (object) :
         """
 
         ## get config 
-        conf = self.config
+        conf = {}
+        conf.update ( self.config ) 
         
         ## modify the name if the name is in config  
         if conf.has_key ('name' ) : conf['name'] += '_copy'
