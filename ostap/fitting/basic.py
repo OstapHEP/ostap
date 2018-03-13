@@ -812,10 +812,11 @@ class PDF (object) :
             #
             ## suppress ugly axis labels
             #
-            frame.SetXTitle ( '' )
-            frame.SetYTitle ( '' )
-            frame.SetZTitle ( '' )
-                        
+            if not kwargs.get( 'draw_axis_title' , False ) :  
+                frame.SetXTitle ( '' )
+                frame.SetYTitle ( '' )
+                frame.SetZTitle ( '' )
+                
             #
             ## Draw the frame!
             #
@@ -845,10 +846,11 @@ class PDF (object) :
                 rframe  = frame.emptyClone ( rootID ( 'residual_' ) )
                 rh      = frame.residHist()
                 rframe.addPlotable ( rh , *residual ) 
-                rframe.SetXTitle ( '' )
-                rframe.SetYTitle ( '' )
-                rframe.SetZTitle ( '' )
-                
+                if not kwargs.get( 'draw_axis_title' , False ) :  
+                    rframe.SetXTitle ( '' )
+                    rframe.SetYTitle ( '' )
+                    rframe.SetZTitle ( '' )
+                    
             pframe = None 
             if pull      : 
                 if   pull is True               : pull =   "P",
@@ -856,9 +858,10 @@ class PDF (object) :
                 pframe  = frame.emptyClone ( rootID ( 'pull_' ) )
                 ph      = frame.pullHist()
                 pframe.addPlotable ( ph , *pull ) 
-                pframe.SetXTitle ( '' )
-                pframe.SetYTitle ( '' )
-                pframe.SetZTitle ( '' )
+                if not kwargs.get( 'draw_axis_title' , False ) :  
+                    pframe.SetXTitle ( '' )
+                    pframe.SetYTitle ( '' )
+                    pframe.SetZTitle ( '' )
                 
             return frame, rframe, pframe  
 
@@ -997,10 +1000,12 @@ class PDF (object) :
         frame  = var.frame ( *fargs )
         result.plotOn ( frame , *largs  )
 
-        frame.SetMinimum ( 0  ) 
-        frame.SetXTitle  ( '' )
-        frame.SetYTitle  ( '' )
-        frame.SetZTitle  ( '' )
+        frame.SetMinimum ( 0  )
+
+        if not kwargs.get('draw_axis_title' , False ) : 
+            frame.SetXTitle  ( '' )
+            frame.SetYTitle  ( '' )
+            frame.SetZTitle  ( '' )
         
         ## draw it! 
         if not ROOT.gROOT.IsBatch() :

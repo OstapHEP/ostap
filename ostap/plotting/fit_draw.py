@@ -69,7 +69,9 @@ keys = (
     'crossterm1_step_color' ,
     'crossterm2_step_color' ,
     'component_step_color'  ,
-    'signal_step_color'     ,   
+    'signal_step_color'     ,
+    ##
+    'draw_axis_title'       , ## draw the titles for the axes ? 
     )
 # =============================================================================
 ## get draw options:
