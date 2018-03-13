@@ -500,6 +500,16 @@ class PSPol_pdf(PolyBase) :
         #
         PolyBase.__init__  ( self , name , power , xvar , the_phis )
         #
+        if   isinstance ( phasespace , Ostap.Math.PhaseSpaceNL ) : pass
+        elif isinstance ( phasespace , tuple ) and phasespace :
+            phasespace = Ostap.Math.PhaseSpaceNL ( *phasespace )
+            logger.debug ('Phase space created: PhaseSpaceNL(%s,%s,%d,%d)' % ( phasespace.lowEdge  () ,
+                                                                               phasespace.highEdge () ,
+                                                                               phasespace.L        () ,
+                                                                               phasespace.N        () ) ) 
+        else :
+            raise AttributeError ('Illegal type of "phasespace" parameter')
+        
         self.__ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
         self.__power = power
         # 
@@ -783,10 +793,16 @@ class PSpline_pdf(PolyBase) :
                    spline           , ## the spline object Ostap::Math::PositiveSpline
                    the_phis = None  ) : 
         #
+        if   isinstance ( spline , Ostap.Math.PositiveSpline ) :  pass
+        elif isinstance ( spline , tuple ) :
+            spline = Ostap.Math.PositiveSpline ( *spline )
+            logger.debug ( 'Spline created %s' % spline ) 
+            
         PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
         #
         self.__spline = spline
-        # 
+        #
+        
         self.pdf  = Ostap.Models.PositiveSpline (
             'ps_%s'              % name ,
             'PositiveSpline(%s)' % name ,
