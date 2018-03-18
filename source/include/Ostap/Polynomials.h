@@ -23,6 +23,16 @@ namespace Ostap
   // ==========================================================================
   namespace Math
   {
+    namespace detail 
+    {
+      template <typename F, std::size_t ... Is>
+      auto
+      make_array(F f, std::index_sequence<Is...>)
+        -> std::array<std::decay_t<decltype(f(0u))>, sizeof...(Is)>
+      {
+        return {{f(Is)...}};
+      }
+    }
     // ========================================================================
     //  Chebyshev 1st kind 
     // ========================================================================
@@ -39,19 +49,19 @@ namespace Ostap
     public:
       // ======================================================================
       /// the only one important method
-      inline double operator() ( const double    x    ) const
-      { return 2 * x * m_N1 ( x ) - m_N2 ( x ) ; }
+      inline double operator() ( const double    x    ) const 
+      { return evaluate ( x ) ; }
       // ======================================================================      
-    private:
-      // ======================================================================
-      /// T (N-1)
-      Chebyshev_<N-1>  m_N1 ;                                        // T (N-1)
-      /// T (N-2)
-      Chebyshev_<N-2>  m_N2 ;                                        // T (N-2)
+      /// evaluate the polynomial 
+      static inline double evaluate ( const double x ) ;
+      /// get the array of roots 
+      static inline const std::array<double,N>&   roots   () ;
+      /// get the array of extrema
+      static inline const std::array<double,N-1>& extrema () ;
       // ======================================================================
     } ;
     // ========================================================================
-    /// specialization for 0
+    /// specialization for N=0
     template <>
     class  Chebyshev_<0>
     {
@@ -59,6 +69,12 @@ namespace Ostap
       // ======================================================================
       inline double operator() ( const double /* x */ ) const { return    1 ; }
       // ======================================================================
+      static inline double evaluate ( const double /* x */ ) { return 1 ; }
+      // ======================================================================      
+      /// get roots 
+      static inline std::array<double,0> roots   () { return {{}} ; }
+      /// get extrema
+      static inline std::array<double,0> extrema () { return {{}} ; }
     } ;
     // ========================================================================
     /// specialization for N=1
@@ -70,7 +86,43 @@ namespace Ostap
       /// the only one important method
       inline double operator() ( const double    x    ) const { return   x ; }
       // ======================================================================
+      static inline double evaluate ( const double x  ) { return x ; }
+      // ======================================================================      
+      /// get roots 
+      static inline std::array<double,1> roots   () { return {{ 0.0 }} ; }
+      static inline std::array<double,0> extrema () { return {{}}      ; }
     } ;
+    // ========================================================================
+    /// the basic recursive method 
+    template <unsigned int N>
+    inline double Chebyshev_<N>::evaluate ( const double x ) 
+    {
+      return 
+        0 == N % 2 ?  
+        2 * std::pow ( Chebyshev_<N/2>::evaluate ( x ) , 2 ) - 1 :
+        2 * Chebyshev_<N/2>::evaluate ( x ) * Chebyshev_<N/2+1>::evaluate ( x ) -  x ;
+    }
+    // ========================================================================
+    /// get the array of roots 
+    template <unsigned int N>
+    inline const std::array<double,N>& Chebyshev_<N>::roots ()
+    {
+      auto root = []( unsigned int k ) 
+        { return -std::cos ( ( 2 * k + 1 ) * M_PI / ( 2 * N ) ) ; } ;
+      static const std::array<double,N> s_roots = 
+        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      return s_roots ;
+    }
+    /// get the array of extrema 
+    template <unsigned int N>
+    inline const std::array<double,N-1>& Chebyshev_<N>::extrema ()
+    {
+      auto extremum = []( unsigned int k ) 
+        { return -std::cos ( ( k + 1 ) * M_PI / N ) ; } ;
+      static const std::array<double,N-1> s_extrema = 
+        detail::make_array ( extremum , std::make_index_sequence<N-1>() ) ;
+      return s_extrema ;
+    }
     // ========================================================================
     //  Chebyshev 2nd kind 
     // ========================================================================
@@ -88,14 +140,12 @@ namespace Ostap
       // ======================================================================
       /// the only one important method
       inline double operator() ( const double    x    ) const
-      { return x * m_U1 ( x ) + m_TN ( x ) ; }
+      { return evaluate ( x ) ; }
       // ======================================================================
-    private:
+      static inline double evaluate ( const double x ) ;
       // ======================================================================
-      /// U (N-1)
-      ChebyshevU_<N-1>  m_U1 ;                                        // U (N-1)
-      /// T (N)
-      Chebyshev_<N>     m_TN ;                                        // T (N)
+      /// get the array of roots 
+      static const std::array<double,N>&   roots   () ;
       // ======================================================================
     } ;
     // ========================================================================    
@@ -108,6 +158,8 @@ namespace Ostap
       /// the only one important method
       inline double operator() ( const double /* x */ ) const { return 1 ; }
       // ======================================================================
+      static inline double evaluate ( const double /* x */ ) { return 1 ; }
+      // ======================================================================
     } ;
     // ========================================================================
     /// specialization for N=1
@@ -119,7 +171,47 @@ namespace Ostap
       /// the only one important method
       inline double operator() ( const double x ) const { return 2 * x ; }
       // ======================================================================
+      static inline double evaluate ( const double x ) { return 2 * x ; }
+      // ======================================================================
     } ;
+    // ========================================================================
+    /// specialization for N=2
+    template <>
+    class  ChebyshevU_<2> 
+    {
+    public:
+      // ======================================================================
+      /// the only one important method
+      inline double operator() ( const double x ) const { return 4 * x * x - 1 ; }
+      // ======================================================================
+      static inline double evaluate ( const double x ) 
+      { return 4 * x * x - 1  ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// specialization for N=3
+    template <>
+    class  ChebyshevU_<3> 
+    {
+    public:
+      // ======================================================================
+      /// the only one important method
+      inline double operator() ( const double x ) const 
+      { return 4 * x * ( 2 * x *  x - 1 ) ; }
+      // ======================================================================
+      static inline double evaluate ( const double x ) 
+      { return 4 * x * ( 2 * x * x - 1 ) ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
+    // the basic recurrence 
+    template <unsigned int N>
+    inline double ChebyshevU_<N>::evaluate ( const double x ) 
+    {
+      return 
+        ChebyshevU_<N-2>::evaluate ( x ) * ( ChebyshevU_<2>::evaluate ( x )  - 1 )  
+        - ChebyshevU_<N-4>::evaluate ( x ) ;
+    }
     // ========================================================================
     //  Legendre 
     // ========================================================================
@@ -137,14 +229,9 @@ namespace Ostap
       // ======================================================================
       /// the only one important method
       inline double operator() ( const double    x    ) const
-      { return ( ( 2 * N - 1 ) * x * m_N1 ( x ) - ( N - 1 ) * m_N2 ( x ) ) / N ; }
+      { return evaluate ( x ) ; }
       // ======================================================================
-    private:
-      // ======================================================================
-      /// L (N-1)
-      Legendre_<N-1>  m_N1 ;                                         // L (N-1)
-      /// L (N-2)
-      Legendre_<N-2>  m_N2 ;                                         // L (N-2)
+      static inline double evaluate ( const double x ) ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -155,8 +242,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// the only one important method
-      inline double operator() ( const double /* x */ ) const { return    1 ; }
+      inline double operator() ( const double /* x */ ) const { return 1 ; }
       // ======================================================================
+      static inline double evaluate ( const double /* x */ ) { return 1 ; }
+      // ======================================================================      
     } ;
     // ========================================================================
     /// specialization for N=1
@@ -166,9 +255,18 @@ namespace Ostap
     public:
       // ======================================================================
       /// the only one important method
-      inline double operator() ( const double    x    ) const { return   x ; }
+      inline double operator() ( const double    x    ) const { return x ; }
+      // ======================================================================
+      static inline double evaluate ( const double x ) { return  x ; }
       // ======================================================================
     } ;
+    // ========================================================================
+    template <unsigned int N>
+    inline double Legendre_<N>::evaluate ( const double x ) 
+    {
+      return ( ( 2 * N - 1 ) * x * Legendre_<N-1>::evaluate ( x )  - 
+               (     N - 1 )     * Legendre_<N-2>::evaluate ( x ) ) / N ;
+    }
     // ========================================================================
     // Hermite
     // ========================================================================
@@ -189,14 +287,9 @@ namespace Ostap
       // ======================================================================
       /// the only one important method
       inline double operator() ( const double    x    ) const
-      { return x * m_N1 ( x ) - ( N - 1 ) * m_N2 ( x ) ; }
+      { return evaluate ( x ) ; }
       // ======================================================================
-    private:
-      // ======================================================================
-      /// H (N-1)
-      Hermite_<N-1>  m_N1 ;                                        // H (N-1)
-      /// H (N-2)
-      Hermite_<N-2>  m_N2 ;                                        // H (N-2)
+      static inline double evaluate ( const double x ) ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -208,6 +301,8 @@ namespace Ostap
       // ======================================================================
       inline double operator() ( const double /* x */ ) const { return 1 ; }
       // ======================================================================
+      static inline double evaluate ( const double /* x */ ) { return  1 ; }
+      // ======================================================================     
     } ;
     // ========================================================================
     /// specialization for N=1
@@ -219,7 +314,13 @@ namespace Ostap
       /// the only one important method
       inline double operator() ( const double    x    ) const { return   x ; }
       // ======================================================================
+      static inline double evaluate ( const double x ) { return  x ; }
+      // ======================================================================     
     } ;
+    // ========================================================================
+    template <unsigned int N>
+    inline double Hermite_<N>::evaluate ( const double x ) 
+    { return x * Hermite_<N-1>::evaluate ( x ) - ( N - 1 ) * Hermite_<N-2>::evaluate ( x ) ; }
     // ========================================================================
     // Non-templated 
     // ========================================================================
@@ -252,6 +353,13 @@ namespace Ostap
       /// get integral between low and high 
       double integral   ( const double low  , 
                           const double high ) const ;
+      // ======================================================================
+    public: // roots & extrema 
+      // ======================================================================
+      /// get all roots   of the polynomial 
+      std::vector<double> roots   () const ;
+      /// get all extrema of the polynomial 
+      std::vector<double> extrema () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -310,7 +418,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the polynomial
-      double operator() ( const double x ) const ;
+      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      double evaluate   ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -324,6 +433,11 @@ namespace Ostap
       /// get integral between low and high 
       double integral    ( const double low  , 
                            const double high ) const ;
+      // ======================================================================
+    public: // roots 
+      // ======================================================================
+      /// get the roots of the Legendere polynomial
+      std::vector<double> roots( double precision = 1.e-8 ) const ;
       // ======================================================================
     private:
       // ======================================================================

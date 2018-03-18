@@ -82,7 +82,9 @@ namespace
       1 == N             ?   x :
       s_equal ( x ,  1 ) ?                 1.0          :     
       s_equal ( x , -1 ) ?  ( 0 == N % 2 ? 1.0 : -1.0 ) :
-      2 * x * _chebyshev_ ( N - 1 , x ) - _chebyshev_ ( N - 2 , x ) ;  
+      // 2 * x * _chebyshev_ ( N - 1 , x ) - _chebyshev_ ( N - 2 , x ) ;  
+      ( 0 == N%2 ? 2 * std::pow ( _chebyshev_ ( N / 2 , x ) , 2 ) - 1  : 
+        _chebyshev_ ( N / 2 , x ) * _chebyshev_ ( N / 2 + 1 , x )  - x ) ;
   }
   // ==========================================================================
   /** evaluate chebyshev polinomial (the second kind)
@@ -97,9 +99,12 @@ namespace
     return 
       0 == N ? 1.0   :
       1 == N ? 2 * x : 
+      2 == N ? 4 * x * x - 1 :
+      3 == N ? 4 * x * ( 2 * x * x - 1 ) :
       s_equal ( x ,  1 ) ?                1.0 + N            :
       s_equal ( x , -1 ) ? ( 0 == N % 2 ? 1.0 + N : -1.0-N ) :
-      _chebyshev_ ( N , x ) + x * _chebyshevU_ ( N - 1 , x ) ;
+      _chebyshevU_ ( N - 2 , x ) * ( _chebyshevU_ ( 2 , x ) - 1 )  -
+      _chebyshevU_ ( N - 4 , x ) ;
   } 
   // ==========================================================================
   /** evaluate the integral for chebychev polynomial (1st kind) 
@@ -142,7 +147,7 @@ namespace
     return  
       0 == N ? 0.0 : 
       1 == N ? 1.0 :
-      2 == N ? 4*x :  N * _chebyshevU_ ( N - 1 , x ) ;
+      2 == N ? 4 * x :  N * _chebyshevU_ ( N - 1 , x ) ;
   }
   // ==========================================================================
   /** evaluate the integral for chebychev polynomial (2nd kind) 
@@ -211,6 +216,43 @@ double Ostap::Math::Chebyshev::integral
 ( const double low  , 
   const double high ) const 
 { return _chebyshev_int_ ( m_N , low , high ) ; }
+// ============================================================================
+// get all roots   of the polynomial 
+// ============================================================================
+std::vector<double> Ostap::Math::Chebyshev::roots   () const 
+{
+  std::vector<double> rs ( m_N ) ;
+  for ( unsigned int i = 0 ;  2 * i < m_N ; ++i ) 
+  { 
+    const unsigned int j = m_N - i - 1 ;
+    if ( i == j ) { rs[i] = 0.0 ; }
+    else 
+    {
+      rs[j] =  std::cos ( ( 2 * i + 1 ) * M_PIl / ( 2 * m_N ) ) ; 
+      rs[i] = -rs[j] ;
+    }
+  }
+  return rs ;
+}
+// ============================================================================
+// get all extrema of the polynomial 
+// ============================================================================
+std::vector<double> Ostap::Math::Chebyshev::extrema () const 
+{
+  std::vector<double> e ;
+  if  ( 1 <= m_N ) { e.resize ( m_N - 1 ) ; }
+  for ( unsigned int i = 0 ;  2 * ( i + 1 ) < m_N ; ++i ) 
+  { 
+    const unsigned int j = m_N - i - 2 ;    
+    if  ( i == j ) { e[i] = 0.0 ; }
+    else 
+    {
+      e[j] = std::cos ( ( i + 1 ) * M_PIl / m_N ) ; 
+      e[i] = -e[j] ;  
+    }
+  }
+  return e ;
+}
 // ============================================================================
 // evaluate Chebyshev polynomial of second kind 
 // ============================================================================
@@ -300,7 +342,7 @@ namespace
 // ============================================================================
 // evaluate Legendre polynomial
 // ============================================================================
-double Ostap::Math::Legendre::operator() ( const double x ) const
+double Ostap::Math::Legendre::evaluate ( const double x ) const
 { return _legendre_     ( m_N , x ) ; }
 // ============================================================================/
 // evaluate the derivative of Chebyshev polynomial
@@ -314,6 +356,36 @@ double Ostap::Math::Legendre::integral
 ( const double low  , 
   const double high ) const 
 { return _legendre_int_ ( m_N , low , high ) ; }
+// ============================================================================
+// get the roots of the Legendre polynomial
+// ============================================================================
+std::vector<double> Ostap::Math::Legendre::roots ( double precision ) const 
+{
+  std::vector<double> rs ( m_N ) ;
+  for ( unsigned int i = 0 ; 2 * i  < m_N ; ++i ) 
+  {
+    /// the the first approximation 
+    double root = - std::cos ( ( 4 * i + 3  ) * M_PIl / ( 4 * m_N + 2 ) ) ;
+    /// newton iterations
+    for ( unsigned short j = 0 ; j < 20 ; ++j ) 
+    {
+      double dr   = evaluate ( root ) / derivative ( root ) ;
+      root       -= dr ;
+      if ( m_N * std::abs ( dr ) < std::abs ( precision ) )
+      {
+        const unsigned int ii = m_N - i -1  ;
+        if ( i == ii ) { rs[i] = 0.0 ; }
+        else
+        {
+          rs [ i  ] =  root ;
+          rs [ ii ] = -root ;
+        }
+        break ;
+      }
+    }
+  }
+  return rs ;
+}
 // ============================================================================
 namespace 
 {
