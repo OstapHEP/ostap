@@ -437,7 +437,7 @@ namespace Ostap
     public: // roots 
       // ======================================================================
       /// get the roots of the Legendere polynomial
-      std::vector<double> roots( double precision = 1.e-8 ) const ;
+      std::vector<double> roots ( const double precision = 1.e-9 ) const ;
       // ======================================================================
     private:
       // ======================================================================

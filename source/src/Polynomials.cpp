@@ -359,19 +359,20 @@ double Ostap::Math::Legendre::integral
 // ============================================================================
 // get the roots of the Legendre polynomial
 // ============================================================================
-std::vector<double> Ostap::Math::Legendre::roots ( double precision ) const 
+std::vector<double> Ostap::Math::Legendre::roots ( const double precision ) const 
 {
   std::vector<double> rs ( m_N ) ;
+  static const unsigned short s_maxiter = 30 ;
   for ( unsigned int i = 0 ; 2 * i  < m_N ; ++i ) 
   {
     /// the the first approximation 
     double root = - std::cos ( ( 4 * i + 3  ) * M_PIl / ( 4 * m_N + 2 ) ) ;
     /// newton iterations
-    for ( unsigned short j = 0 ; j < 20 ; ++j ) 
+    for ( unsigned short j = 0 ; j < s_maxiter + 1 ; ++j ) 
     {
       double dr   = evaluate ( root ) / derivative ( root ) ;
       root       -= dr ;
-      if ( m_N * std::abs ( dr ) < std::abs ( precision ) )
+      if ( ( m_N + 1 ) * std::abs ( dr ) < std::abs ( precision ) || s_maxiter == j ) 
       {
         const unsigned int ii = m_N - i -1  ;
         if ( i == ii ) { rs[i] = 0.0 ; }
