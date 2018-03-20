@@ -678,7 +678,102 @@ class Reader(object) :
     def histo ( self ) :
         """``histo'': histogram with the category populations statistic"""
         return self.__histo 
-    
+
+    # =========================================================================
+    ## Helper class to get the decision of ``chopper''
+    #  @code 
+    #  reader = ...
+    #  var = reader[ method ]
+    #  val = var ( entry )
+    #  @code
+    class Method(TMVAReader.Var) :
+        """Helper class to get the decision of ``chopper''
+        >>> reader = ...
+        >>> var = reader[ method ]
+        >>> val = var ( entry )
+        """
+        def __init__ ( self , reader , method ) :
+            TMVAReader.Var.__init__ (  self ,   reader , method )
+            self.__N = reader.N 
+        # =====================================================================
+        ## Evaluate the chopper 
+        #  @code
+        #  tree = ...
+        #  method = reader.MLP
+        #  print 'Responce %s' % method ( tree )
+        #  @endcode
+        #  or using categroy and parameters
+        #  @code
+        #  category  = 2
+        #  pt , y, phi = ...
+        #  print 'Responce %s' % method ( category , pt , y , phi )
+        #  @endcode 
+        def __call__ ( self , arg ,  *args ) :
+            """Evaluate the chopper from TTree/TChain/RooAbsData:
+            >>>tree = ...
+            >>> method = reader.MLP
+            >>> print 'Responce %s' % method ( tree )
+            Using category and parameters
+            >>> category  = 2
+            >>> pt , y, phi = ...
+            >>> print 'Responce %s' % method ( category , pt , y , phi )
+            """
+            if isinstance ( arg , int ) and args :
+                category = arg
+                return self.evaluate ( category , *args ) 
+            return self.eval ( arg , *args )
+        # =====================================================================
+        ## Evaluate the method from parameters 
+        # @code 
+        # method       = ...
+        # pt, eta, phi = 5 ,  3.0 , 0  ## variables
+        # category     = 2 
+        # print 'Response is %s'    % method.evaluate ( category , pt ,  eta , phi ) 
+        # @endcode 
+        def evaluate ( self , category , *args ) :
+            """Evaluate the method from parameters 
+            >>> method       = ...
+            >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables
+            >>> category     = ...
+            >>> print 'Response is %s'    % method.evaluate ( category ,  pt ,  eta , phi ) 
+            """
+            return self.reader.evaluate ( category , self.method , *args )
+
+        # ====================================================================
+        ## Get the  mean over all categories
+        #  @code
+        #  method = ...
+        #  pt, eta, phi = 5 ,  3.0 , 0  ## variables
+        #  print 'Mean  response is %s' % method.mean (  pt , eta , phi ) 
+        #  @endcode
+        def mean ( self , *args ) :
+            """Get the  mean over all categories
+            >>> method = ...
+            >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables
+            >>> print 'Mean  response is %s' % method (  pt , eta , phi ) 
+            """
+            sum = 0.0
+            for i in range(self.__N) : sum += self.evaluate ( i , *args )
+            return sum / float ( self.__N ) 
+        
+        # ====================================================================
+        ## Get the full statistic over all categories
+        #  @code
+        #  method = ...
+        #  pt, eta, phi = 5 ,  3.0 , 0  ## variables
+        #  print 'Response statistic is %s' % method.stat (  pt , eta , phi ) 
+        #  @endcode        
+        def stat ( self , *args ) :
+            """ Get the full statistic over all categories
+            >>> method = ...
+            >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables
+            >>> print 'Response statistic is %s' % method.stat (  pt , eta , phi ) 
+            """
+            from ostap.stats.counters import SE
+            se = SE()
+            for i in range(self.__N) : se += self.evaluate ( i , *args )
+            return se 
+                        
     ## =======================================================================
     ## helper utility to  get the correspondig function from the  reader:
     #  @code 
@@ -703,7 +798,7 @@ class Reader(object) :
         """
         if not method in self.__methods :
             return KeyError( 'No method %s is booked!' %  method )
-        return TMVAReader.Var  ( self , method )
+        return Reader.Method  ( self , method )
     
     ## =======================================================================
     ## helper utility to  get the correspondig function from the  reader:
@@ -729,7 +824,7 @@ class Reader(object) :
         """                
         if not method in self.__methods :
             return AttributeError( 'No method %s is booked!' %  method )
-        return TMVAReader.Var  ( self , method ) 
+        return Reader.Method  ( self , method ) 
 
     # =========================================================================
     ## the main method - evaluate of TMVA from the certain category reader 
@@ -761,6 +856,23 @@ class Reader(object) :
                "Invalid ``category'' %s/%s" % ( ic ,  type ( ic ) )
         return self.__readers[ ic ] ( method ,  entry , cut_efficiency ) 
         
+    # ========================================================================
+    ## evaluate TMVA
+    #  @code
+    #  reader   = ...
+    #  pt, y    = ...  ##
+    #  category = ... 
+    #  print 'MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y )
+    #  @endcode
+    def evaluate ( self , category , method , *args ) :
+        """Evaluate TMVA
+        >>> reader = ...
+        >>> pt, y  = ...  ##
+        >>> print 'MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y )
+        """
+        assert isinstance ( category , ( int , long ) ) and 0 <= category < self.__N, \
+               "Invalid ``category'' %s/%s" % ( category ,  type ( category ) )
+        return self.__readers[ category ].evaluate ( method , *args ) 
                                 
     
 

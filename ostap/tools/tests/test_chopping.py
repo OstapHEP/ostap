@@ -176,6 +176,16 @@ reader = Reader(
 
 methods = reader.methods[:]
 
+# =============================================================================
+## 1') few trivial tests: use the methods/reader as simple function
+for m in methods :
+    method   = reader[m]
+    ## response = [ method ( i  , 1.1 , 0.8 , 0.3 ) for i in  range ( reader.N ) ] 
+    response = method.stat ( 1.1 , 0.8 , 0.3 )
+    logger.info ( 'Simple test: method %10s,response %s' % ( m , response ) )
+    del method 
+# =============================================================================
+
 from ostap.fitting.selectors import SelectorWithVars,  Variable     
 ## 2) Book RooDataset                 
 variables = [

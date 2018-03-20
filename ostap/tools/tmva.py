@@ -495,7 +495,8 @@ class Trainer(object):
         logger.info  ( "Trainer(%s): Output  file  : %s" % ( self.name , self.output_file   ) ) 
             
         return self.weights_files
-    
+
+
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader
@@ -777,20 +778,95 @@ class Reader(object)  :
 
     # =========================================================================
     ## helper class to get TMVA decision for certain method 
+    #  @code
+    #  reader = ...
+    #  var = reader[ method ]
+    #  val = var ( entry )
+    #  @endcode 
     class Var (object) :
-        """Helper class to get TMVA decision for certain method
+        """Helper class to get TMVA decision for the certain method
         >>>  reader = ...
         >>>  var = reader[ method ]
         >>>  val = var ( entry )
         """
         def __init__ ( self , reader , method ) :
             self.__reader = reader
-            self.__method = str(method)
-        def __call__ ( self , entry , cut_efficiency = 0.9 ) :
-            return self.__reader( self.__method , entry , cut_efficiency )
+            self.__method = str ( method )
+            self.__nvars  = len ( reader.variables )
+        # =====================================================================
+        @property
+        def nvars ( self ) :
+            """``nvars'' : number of TMVA variables"""
+            return self.__nvars
+        @property
+        def reader ( self ) :
+            """``reader'' : TMVA reader """
+            return self.__reader
+        @property
+        def method ( self ) :
+            """``method'' : TMVA method name"""
+            return self.__method
+        # =====================================================================
+        ## the main method 
+        def __call__ ( self , entry , cut_efficiency = 0.9  ) :
+            return self.eval ( entry , cut_efficiency )
+        # =====================================================================
+        ## Evaluate the method from TTree/TCahin/RooAbsData using the accessors, defined  early
+        # @code 
+        # tree   = ...
+        # method = ...
+        # print 'Response is %s' % method.eval ( tree )
+        # @endcode 
+        def eval ( self , entry , cut_efficiency = 0.9 ) :
+            """Evaluate the method fomr TTree/RooAbsData using the
+            accessors, defined  early
+            >>> tree   = ...
+            >>> method = ...
+            >>> print 'Response is %s'    % method.eval ( tree ) 
+            """
+            return self.__reader( self.__method , entry , cut_efficiency )        
+
+    # =========================================================================
+    ## helper class to get TMVA decision for certain method 
+    class Method (Var) :
+        """Helper class to get TMVA decision for certain method
+        >>>  reader = ...
+        >>>  var = reader[ method ]
+        >>>  val = var ( entry )
+        """
+        # =====================================================================
+        ## Evaluate the reader
+        #  @code
+        #  tree   = ...
+        #  method = reader.MLP
+        #  print 'Responce %s' % method ( tree )
+        #  @endcode
+        #  or using parameters
+        #  @code
+        #  pt , y, phi = ...
+        #  print 'Responce %s' % method ( pt , y , phi )
+        #  @endcode 
+        def __call__ ( self , arg ,  *args ) :
+            if isinstance ( arg , ( float , int , long , bool ) ) :
+                return self.evaluate ( arg , *args ) 
+            return self.eval ( arg , *args )
+        # =====================================================================
+        ## Evaluate the method from parameters 
+        # @code 
+        # method       = ...
+        # pt, eta, phi = 5 ,  3.0 , 0  ## variables 
+        # print 'Response is %s'    % method.evaluate ( pt ,  eta , phi ) 
+        # @endcode 
+        def evaluate ( self , *args ) :
+            """Evaluate the method from parameters 
+            >>> method       = ...
+            >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables 
+            >>> print 'Response is %s'    % method.evaluate ( pt ,  eta , phi ) 
+            """
+            return self.reader.evaluate ( self.method , *args )        
 
     # ========================================================================
-    ## helper utility to  get the correspondig function from the  reader:
+    ## helper utility to  get the corresponding function from the  reader:
     #  @code 
     #  >>> tree =  ....  ## TTree/TChain/RooDataSet with data
     #  >>> mlp_fun  =  reader['MLP']  ## <-- here!
@@ -813,7 +889,7 @@ class Reader(object)  :
         """
         if not method in self.__methods :
             return KeyError( 'No method %s is booked!' %  method )
-        return Reader.Var  ( self , method )
+        return Reader.Method  ( self , method )
     
     # ========================================================================
     ## helper utility to  get the correspondig function from the  reader:
@@ -875,6 +951,40 @@ class Reader(object)  :
         ## evaluate TMVA 
         return self.__reader.EvaluateMVA ( method , cut_efficiency ) 
 
+    # ========================================================================
+    ## evaluate TMVA
+    #  @code
+    #  reader = ...
+    #  pt, y  = ...  ##
+    #  print 'MLP response is: ', reader.MLP.evaluate ( pt , y )
+    #  @endcode
+    def evaluate ( self , method , *args ) :
+        """Evaluate TMVA
+        >>> reader = ...
+        >>> pt, y  = ...  ##
+        >>> print 'MLP response is: ', reader.MLP.evaluate ( pt , y )
+        """
+        l1 = len ( args             )
+        l2 = len ( self.__variables )
+        
+        assert l1 == l2 or l1 == l2 + 1, \
+               "TMVA.Reader.evaluate: Invalid length of the argument"
+
+        cut_efficiency = 0.9 
+        if l1 == l2 + 1 : cut_efficiency = float ( args[-1] ) 
+
+        ## vector of doubles 
+        from ostap.math.base import vDoubles
+        
+        ## vector of doubles 
+        vd = vDoubles ( l2  )  
+        for i in  range ( l2 ) :
+            vd[i] = float (  args[i] )
+            
+        ## evaluate TMVA 
+        return self.__reader.EvaluateMVA ( vd , method , cut_efficiency ) 
+
+        
 _canvas = []
 # =============================================================================
 ## start TMVA gui 

@@ -137,6 +137,15 @@ reader = Reader( 'MyMLP' ,
 
 methods = reader.methods[:]
 
+# =============================================================================
+## 1') few trivial tests: use the methods/reader as simple function
+for m in methods :
+    method = reader[m]
+    logger.info ( 'Method  %12s , response %s' % ( m , method ( 1.1 , 0.8 , 0.3 ) ) )
+    del method 
+# =============================================================================
+                  
+
 from ostap.fitting.selectors import SelectorWithVars, Variable     
 ## 2) Book RooDataset                 
 variables = [

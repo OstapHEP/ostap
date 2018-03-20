@@ -83,6 +83,11 @@ __all__     = (
     'longs'          , ## construct std::vector<long>
     'ulongs'         , ## construct std::vector<unsigned long>
     'complexes'      , ## construct std::vector<ssstd::complex<double>>
+    ##
+    'vDoubles'       , ## std::vector<double>
+    'vFloats'        , ## std::vector<float>
+    'vInts'          , ## std::vector<int>
+    'vLongs'         , ## std::vector<long>
     ) 
 # =============================================================================
 import ROOT, cppyy 
@@ -106,6 +111,11 @@ iszero   = Ostap.Math.Zero     ('double')()
 isequal  = Ostap.Math.Equal_To ('double')()
 isint    = Ostap.Math.isint 
 islong   = Ostap.Math.islong
+
+vDoubles = std.vector ( 'double' )
+vFloats  = std.vector ( 'float'  )
+vInts    = std.vector ( 'int'    )
+vLongs   = std.vector ( 'long'   )
 
 # =============================================================================
 ##  get the sign of the number 
