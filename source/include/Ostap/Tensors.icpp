@@ -1,0 +1,590 @@
+// ===============================================================
+#ifndef OSTAP_TENSORS_ICPP
+#define OSTAP_TENSORS_ICPP 1
+// ============================================================================
+// Include files
+// ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/Vector4DTypes.h"
+#include "Ostap/Tensors.h"
+// ============================================================================
+/** @file
+ *  Implementation of inline methods from namespace Ostap::Math::Tensors 
+ */
+// ============================================================================
+/** evaluate the tensor product e*v1
+ *
+ *  \f$  t_{\mu\nu\lambda} =
+ *  \epsilon_{\mu\nu\lambda\kappa}v_1^{\kappa} \f$
+ *
+ *  @code
+ *  const LorentzVector& v = ... ;
+ *  const double t_XYE = Epsilon::e_3<Epsilon::X,Epsilon::Y,Epsilon::E>( v )
+ *
+ *  @endcode
+ *
+ *  @param v the input vector
+ *  @return the product (component)
+ */
+// ============================================================================
+template <unsigned int I, unsigned int J, unsigned int K, class COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE
+Ostap::Math::Tensors::Epsilon::e_3 
+( const ROOT::Math::LorentzVector<COORDINATES>& v ) 
+{
+  typedef typename  detail::LVTYPES<COORDINATES>::iTYPE iTYPE ;
+  //
+  const iTYPE x = v.Px () ;
+  const iTYPE y = v.Py () ;
+  const iTYPE z = v.Pz () ;
+  const iTYPE e = v.E  () ;
+  //
+  // take Minkowski metric into account
+  return  
+    - Epsilon_<I,J,K,X>::value * x 
+    - Epsilon_<I,J,K,Y>::value * y 
+    - Epsilon_<I,J,K,Z>::value * z 
+    + Epsilon_<I,J,K,E>::value * e ;
+}
+// ============================================================================
+/*  evaluate the tensor e*v1*v2 product
+ *
+ *  \f$  v_{\mu\nu} =
+ *  \epsilon_{\mu\nu\lambda\kappa}v_1^{\lambda}v_2^{\kappa} \f$
+ *
+ *  @code
+ *
+ *   const LorentzVector& v1 = ... ;
+ *   const LorentzVector& v2 = ... ;
+ *   const double v_XY = Epsilon::epsilon<Epsilon::X,Epsilon::Y>( v1 , v2 )
+ *
+ *  @endcode
+ *
+ *  @param v1 the first  vector
+ *  @param v2 the second vector
+ *  @return the product (component)
+ */
+// ============================================================================
+template <unsigned int I, unsigned int J, class COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE 
+Ostap::Math::Tensors::Epsilon::e_2
+( const ROOT::Math::LorentzVector<COORDINATES>& v1 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v2 )
+{
+  typedef typename  detail::LVTYPES<COORDINATES>::iTYPE iTYPE ;
+  //
+  const iTYPE x1 = -v1.Px () ;
+  const iTYPE y1 = -v1.Py () ;
+  const iTYPE z1 = -v1.Pz () ;
+  const iTYPE e1 =  v1.E  () ;
+  
+  const iTYPE x2 = -v2.Px () ;
+  const iTYPE y2 = -v2.Py () ;
+  const iTYPE z2 = -v2.Pz () ;
+  const iTYPE e2 =  v2.E  () ;
+  
+  return Epsilon_<I,J,X,Y>::value * x1 * y2 
+    +    Epsilon_<I,J,X,Z>::value * x1 * z2 
+    +    Epsilon_<I,J,X,E>::value * x1 * e2 
+    //
+    +    Epsilon_<I,J,Y,X>::value * y1 * x2 
+    +    Epsilon_<I,J,Y,Z>::value * y1 * z2 
+    +    Epsilon_<I,J,Y,E>::value * y1 * e2 
+    //
+    +    Epsilon_<I,J,Z,X>::value * z1 * x2 
+    +    Epsilon_<I,J,Z,Y>::value * z1 * y2 
+    +    Epsilon_<I,J,Z,E>::value * z1 * e2 
+    //
+    +    Epsilon_<I,J,E,X>::value * e1 * x2 
+    +    Epsilon_<I,J,E,Y>::value * e1 * y2 
+    +    Epsilon_<I,J,E,Z>::value * e1 * z2 ;
+}
+// ============================================================================
+/*  evaluate the e*v1*v2*v3 product
+ *
+ *  \f$  v_{\mu} =
+ *  \epsilon_{\mu\nu\lambda\kappa}v_1^{\nu}v_2^{\lambda}v_3^{\kappa} \f$
+ *
+ *  @code
+ *
+ *   const LorentzVector& v1 = ... ;
+ *   const LorentzVector& v2 = ... ;
+ *   const LorentzVector& v3 = ... ;
+ *   const double v_X = Epsilon::epsilon<Epsilon::X>( v1 , v2 , v3 )
+ *
+ *  @endcode
+ *
+ *  @param v1 the first  vector
+ *  @param v2 the second vector
+ *  @param v3 the third  vector
+ *  @return the product (component)
+ */
+// ============================================================================
+template <unsigned int I, class  COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE 
+Ostap::Math::Tensors::Epsilon::e_1
+( const ROOT::Math::LorentzVector<COORDINATES>& v1 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v2 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v3 )
+{
+  typedef typename  detail::LVTYPES<COORDINATES>::iTYPE iTYPE ;
+  //
+  const iTYPE x1 = -v1.Px () ;
+  const iTYPE y1 = -v1.Py () ;
+  const iTYPE z1 = -v1.Pz () ;
+  const iTYPE e1 =  v1.E  () ;
+  
+  const iTYPE x2 = -v2.Px () ;
+  const iTYPE y2 = -v2.Py () ;
+  const iTYPE z2 = -v2.Pz () ;
+  const iTYPE e2 =  v2.E  () ;
+  
+  const iTYPE x3 = -v3.Px () ;
+  const iTYPE y3 = -v3.Py () ;
+  const iTYPE z3 = -v3.Pz () ;
+  const iTYPE e3 =  v3.E  () ;
+  
+  return Epsilon_<I,X,Y,Z>::value * x1 * y2 * z3 
+    +    Epsilon_<I,X,Y,E>::value * x1 * y2 * e3 
+    +    Epsilon_<I,X,Z,Y>::value * x1 * z2 * y3 
+    +    Epsilon_<I,X,Z,E>::value * x1 * z2 * e3
+    +    Epsilon_<I,X,E,Y>::value * x1 * e2 * y3 
+    +    Epsilon_<I,X,E,Z>::value * x1 * e2 * z3 
+    //
+    +    Epsilon_<I,Y,X,Z>::value * y1 * x2 * z3 
+    +    Epsilon_<I,Y,X,E>::value * y1 * x2 * e3
+    +    Epsilon_<I,Y,Z,X>::value * y1 * z2 * x3
+    +    Epsilon_<I,Y,Z,E>::value * y1 * z2 * e3
+    +    Epsilon_<I,Y,E,X>::value * y1 * e2 * x3  
+    +    Epsilon_<I,Y,E,Z>::value * y1 * e2 * z3 
+    //
+    +    Epsilon_<I,Z,X,Y>::value * z1 * x2 * y3
+    +    Epsilon_<I,Z,X,E>::value * z1 * x2 * e3
+    +    Epsilon_<I,Z,Y,X>::value * z1 * y2 * x3 
+    +    Epsilon_<I,Z,Y,E>::value * z1 * y2 * e3
+    +    Epsilon_<I,Z,E,X>::value * z1 * e2 * x3
+    +    Epsilon_<I,Z,E,Y>::value * z1 * e2 * y3 
+    //
+    +    Epsilon_<I,E,X,Y>::value * e1 * x2 * y3 
+    +    Epsilon_<I,E,X,Z>::value * e1 * x2 * z3
+    +    Epsilon_<I,E,Y,X>::value * e1 * y2 * x3
+    +    Epsilon_<I,E,Y,Z>::value * e1 * y2 * z3
+    +    Epsilon_<I,E,Z,X>::value * e1 * z2 * x3
+    +    Epsilon_<I,E,Z,Y>::value * e1 * z2 * y3 ;
+}
+// ====================================================================
+/* evaluate the e*v1*v2*v3 product
+ *
+ *  \f$  v_{\mu} =
+ *  \epsilon_{\mu\nu\lambda\kappa}v_1^{\nu}v_2^{\lambda}v_3^{\kappa} \f$
+ *
+ *  @code
+ *
+ *   const LorentzVector& v1 = ... ;
+ *   const LorentzVector& v2 = ... ;
+ *   const LorentzVector& v3 = ... ;
+ *
+ *   const double v_X = Epsilon::epsilon ( Epsilon::X , v1 , v2 , v3 )
+ *
+ *  @endcode
+ *
+ *  Convention here: \f$ \epsilon_{0123} = \epsilon_{XYZT} = 1 \f$
+ *
+ *  @see Epsilon::e_1
+ *
+ *  @param mu the index of the result
+ *  @param v1 the first  vector
+ *  @param v2 the second vector
+ *  @param v3 the third  vector
+ *  @return the product (component)
+ */
+// ====================================================================
+template <class  COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE
+Ostap::Math::Tensors::Epsilon::epsilon
+( const unsigned  short                         mu ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v1 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v2 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v3 )
+{
+  if ( &v1 == &v2 || &v2 == &v3 || &v1 == &v3 ) { return 0  ; } // RETURN
+  switch ( mu )
+  {
+  case X  : return e_1<X> ( v1 , v2 , v3 ) ;   // RETURN
+  case Y  : return e_1<Y> ( v1 , v2 , v3 ) ;   // RETURN
+  case Z  : return e_1<Z> ( v1 , v2 , v3 ) ;   // RETURN
+  case E  : return e_1<E> ( v1 , v2 , v3 ) ;   // RETURN
+  default : return                     0   ;
+  }
+}
+// ============================================================================
+/*  evaluate the tensor e*v1*v2 product
+ *
+ *  \f$  v_{\mu\nu} =
+ *  \epsilon_{\mu\nu\lambda\kappa}v_1^{\lambda}v_2^{\kappa} \f$
+ *
+ *  @code
+ *
+ *   const LorentzVector& v1 = ... ;
+ *   const LorentzVector& v2 = ... ;
+ *
+ *   Epsilon e ;
+ *
+ *   const double v_XY = e.epsilon( X , Y , v1 , v2 )
+ *
+ *  @endcode
+ *
+ *  @param mu the first index
+ *  @param nu the second index
+ *  @param v1 the first  vector
+ *  @param v2 the second vector
+ *  @return the product (component)
+ */
+// ============================================================================
+template <class  COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE
+Ostap::Math::Tensors::Epsilon::epsilon
+( const unsigned short                          mu ,
+  const unsigned short                          nu ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v1 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v2 )
+{
+  if ( &v1 == &v2 ) { return 0 ; } // RETURN ;
+  switch ( mu )
+  {
+  case    X :
+    switch ( nu )
+    {
+    case X : return                   0 ;
+    case Y : return e_2<X,Y>( v1 , v2 ) ;
+    case Z : return e_2<X,Z>( v1 , v2 ) ;
+    case E : return e_2<X,E>( v1 , v2 ) ;
+    default: return                   0 ;
+    }
+  case    Y :
+    switch ( nu )
+    {
+    case X : return e_2<Y,X>( v1 , v2 ) ;
+    case Y : return                   0 ;
+    case Z : return e_2<Y,Z>( v1 , v2 ) ;
+    case E : return e_2<Y,E>( v1 , v2 ) ;
+    default: return                   0 ;
+    }
+  case    Z :
+    switch ( nu )
+    {
+    case X : return e_2<Z,X>( v1 , v2 ) ;
+    case Y : return e_2<Z,Y>( v1 , v2 ) ;
+    case Z : return                   0 ;
+    case E : return e_2<Z,E>( v1 , v2 ) ;
+    default: return                   0 ;
+    }
+  case    E :
+    switch ( nu )
+    {
+    case X : return e_2<E,X>( v1 , v2 ) ;
+    case Y : return e_2<E,Y>( v1 , v2 ) ;
+    case Z : return e_2<E,Z>( v1 , v2 ) ;
+    case E : return                   0 ;
+    default: return                   0 ;
+      }
+  default:
+    return 0 ;
+  }
+}
+// ============================================================================
+/* evaluate the tensor product e*v1
+ *
+ *  \f$  t_{\mu\nu\lambda} =
+ *  \epsilon_{\mu\nu\lambda\kappa}v_1^{\kappa} \f$
+ *
+ *  @code
+ *  const LorentzVector& v = ... ;
+ *  const double t_XYE = Epsilon::epsilon( X,Y,E, v )
+ *  @endcode
+ *
+ *  Convention here: \f$ \epsilon_{0123} = \epsilon_{XYZT} = 1 \f$
+ *
+ *  @see Epsilon::e_3
+ *
+ *  @param v the input vector
+ *  @return the product (component)
+ */
+// ============================================================================
+template <class  COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE
+Ostap::Math::Tensors::Epsilon::epsilon
+( const unsigned short                          mu     ,
+  const unsigned short                          nu     ,
+  const unsigned short                          lambda ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v      )
+{
+  //
+  if ( mu == nu || nu == lambda || lambda == mu ) { return 0 ; }
+  if ( mu >  nu     ) { return -epsilon ( nu , mu     , lambda , v ) ; }
+  if ( nu >  lambda ) { return -epsilon ( mu , lambda , nu     , v ) ; }
+  //
+  typedef typename  detail::LVTYPES<COORDINATES>::iTYPE iTYPE ;
+  //
+  // take into account Minkowski metric:
+  const iTYPE x = -v.Px () ;
+  const iTYPE y = -v.Py () ;
+  const iTYPE z = -v.Pz () ;
+  const iTYPE e =  v.E  () ;
+  //
+  return 
+    -     x * epsilon ( 0  , mu , nu     , lambda )   //  3 permutations
+    +     y * epsilon ( mu ,  1 , nu     , lambda )   //  2 permutations
+    -     z * epsilon ( mu , nu ,  2     , lambda )   //  1 permutation
+    +     e * epsilon ( mu , nu , lambda ,      3 ) ; // no permitations
+}
+// ============================================================================
+/*  evaluate the e*v1*v2*v3 product
+ *
+ *  \f$  v_{\mu} =
+ *  \epsilon_{\mu\nu\lambda\kappa}v_1^{\nu}v_2^{\lambda}v_3^{\kappa} \f$
+ *
+ *  @code
+ *
+ *   const LorentzVector& v1 = ... ;
+ *   const LorentzVector& v2 = ... ;
+ *   const LorentzVector& v3 = ... ;
+ *
+ *   Epsilon e ;
+ *
+ *   const LorentzVector v = e ( v1 , v2 , v3 )
+ *
+ *  @endcode
+ *
+ *  @param v1 the first  vector
+ *  @param v2 the second vector
+ *  @param v3 the third  vector
+ *  @return the product vector
+ */
+// ============================================================================
+template <class  COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::vTYPE
+Ostap::Math::Tensors::Epsilon::epsilon
+( const ROOT::Math::LorentzVector<COORDINATES>& v1 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v2 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v3 )
+{
+  if ( &v1 == &v2 || &v2 == &v3 || &v3 == &v1 ) 
+  { return typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::vTYPE() ;}
+  return typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::vTYPE
+    ( e_1<X> ( v1 , v2 , v3 ) ,
+      e_1<Y> ( v1 , v2 , v3 ) ,
+      e_1<Z> ( v1 , v2 , v3 ) ,
+      e_1<E> ( v1 , v2 , v3 ) ) ;
+}
+// ============================================================================
+/** evaluate the e*v1*v2*v3 product
+ *
+ *  \f$  r =
+ *  \epsilon_{\mu\nu\lambda\kappa}v_1^{\mu}
+ *          v_2^{\nu}v_3^{\lambda}v_4^{\kappa} \f$
+ *
+ *  @code
+ *  const LorentzVector& v1 = ... ;
+ *  const LorentzVector& v2 = ... ;
+ *  const LorentzVector& v3 = ... ;
+ *  const LorentzVector& v4 = ... ;
+ *  const double v = Epsilon::epsilon ( v1 , v2 , v3 , v4 ) ;
+ *  @endcode
+ *
+ *  @param v1 the first  vector
+ *  @param v2 the second vector
+ *  @param v3 the third  vector
+ *  @param v3 the fourth vector
+ *  @return the product (vector)
+ */
+// ============================================================================
+template <class  COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE
+Ostap::Math::Tensors::Epsilon::epsilon
+( const ROOT::Math::LorentzVector<COORDINATES>& v1 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v2 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v3 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& v4 )
+{
+  if ( &v1 == &v2 || &v1 == &v3 || &v1 == &v4 ||
+       &v2 == &v3 || &v2 == &v4 || &v3 == &v4 ) { return 0 ; }
+  
+  typedef typename  detail::LVTYPES<COORDINATES>::iTYPE iTYPE ;
+  //
+  // take into account Minkowski metric:
+  
+  const iTYPE x1 = -v1.Px () ;
+  const iTYPE y1 = -v1.Py () ;
+  const iTYPE z1 = -v1.Pz () ;
+  const iTYPE e1 =  v1.E  () ;
+
+  const iTYPE x2 = -v2.Px () ;
+  const iTYPE y2 = -v2.Py () ;
+  const iTYPE z2 = -v2.Pz () ;
+  const iTYPE e2 =  v2.E  () ;
+
+  const iTYPE x3 = -v3.Px () ;
+  const iTYPE y3 = -v3.Py () ;
+  const iTYPE z3 = -v3.Pz () ;
+  const iTYPE e3 =  v3.E  () ;
+
+  const iTYPE x4 = -v4.Px () ;
+  const iTYPE y4 = -v4.Py () ;
+  const iTYPE z4 = -v4.Pz () ;
+  const iTYPE e4 =  v4.E  () ;
+  
+  return x1 * y2 * z3 * e4 * Epsilon_<X,Y,Z,E>::value
+    +    x1 * y2 * e3 * z4 * Epsilon_<X,Y,E,Z>::value
+    +    x1 * z2 * y3 * e4 * Epsilon_<X,Z,Y,E>::value
+    +    x1 * z2 * e3 * y4 * Epsilon_<X,Z,E,Y>::value
+    +    x1 * e2 * y3 * z4 * Epsilon_<X,E,Y,Z>::value
+    +    x1 * e2 * z3 * y4 * Epsilon_<X,E,Z,Y>::value
+    //
+    +    y1 * x2 * z3 * e4 * Epsilon_<Y,X,Z,E>::value
+    +    y1 * x2 * e3 * z4 * Epsilon_<Y,X,E,Z>::value
+    +    y1 * z2 * x3 * e4 * Epsilon_<Y,Z,X,E>::value
+    +    y1 * z2 * e3 * x4 * Epsilon_<Y,Z,E,X>::value
+    +    y1 * e2 * x3 * z4 * Epsilon_<Y,E,X,Z>::value
+    +    y1 * e2 * z3 * x4 * Epsilon_<Y,E,Z,X>::value
+    //
+    +    z1 * x2 * y3 * e4 * Epsilon_<Z,X,Y,E>::value
+    +    z1 * x2 * e3 * y4 * Epsilon_<Z,X,E,Y>::value
+    +    z1 * y2 * x3 * e4 * Epsilon_<Z,Y,X,E>::value
+    +    z1 * y2 * e3 * x4 * Epsilon_<Z,Y,E,X>::value
+    +    z1 * e2 * x3 * y4 * Epsilon_<Z,E,X,Y>::value
+    +    z1 * e2 * y3 * x4 * Epsilon_<Z,E,Y,X>::value
+    //
+    +    e1 * x2 * y3 * z4 * Epsilon_<E,X,Y,Z>::value
+    +    e1 * x2 * z3 * y4 * Epsilon_<E,X,Z,Y>::value
+    +    e1 * y2 * x3 * z4 * Epsilon_<E,Y,X,Z>::value
+    +    e1 * y2 * z3 * x4 * Epsilon_<E,Y,Z,X>::value
+    +    e1 * z2 * x3 * y4 * Epsilon_<E,Z,X,Y>::value
+    +    e1 * z2 * y3 * x4 * Epsilon_<E,Z,Y,X>::value  ;
+}
+// ============================================================================
+
+/* evaluate the tensor product: (e*a1*a2*a3)*(e*b1*b2*b3)
+ *
+ *  \f$  r =
+ *  \epsilon_{\mu\nu\lambda\kappa}
+ *  \epsilon_{\mu\rho\\delta\tau}
+ *          a_1^{\nu}a_2^{\lambda}a_3^{\kappa}
+ *          b_1^{\rho}b_2^{\delta}b_3^{\tau}   \f$
+ *
+ *  This expression typically appears in evaluation of
+ *  various "plane-angles".
+ *
+ *  @code
+ *
+ *   const LorentzVector& a1 = ... ;
+ *   const LorentzVector& a2 = ... ;
+ *   const LorentzVector& a3 = ... ;
+ *   const LorentzVector& b4 = ... ;
+ *   const LorentzVector& b5 = ... ;
+ *   const LorentzVector& b6 = ... ;
+ *
+ *   Epsilon e ;
+ *
+ *   const double r = e.epsilon ( a1 , a2 , a3 , b1 , b2 , b3 ) ;
+ *
+ *  @endcode
+ *
+ *  Convention here: \f$ \epsilon_{0123} = \epsilon_{XYZT} = 1 \f$
+ *
+ *  @param a1 the first  vector
+ *  @param a2 the second vector
+ *  @param a3 the third  vector
+ *  @param b1 the fourth vector
+ *  @param b2 the fith   vector
+ *  @param b3 the sixth  vector
+ *  @return the tensor product
+ */
+// ============================================================================
+template <class  COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE
+Ostap::Math::Tensors::Epsilon::epsilon
+( const ROOT::Math::LorentzVector<COORDINATES>& a1 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& a2 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& a3 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& b1 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& b2 ,
+  const ROOT::Math::LorentzVector<COORDINATES>& b3 )
+{
+  //
+  typedef typename  detail::LVTYPES<COORDINATES>::iTYPE iTYPE ;
+  //
+  const iTYPE a1b1 = a1 . Dot ( b1 ) ;
+  const iTYPE a1b2 = a1 . Dot ( b2 ) ;
+  const iTYPE a1b3 = a1 . Dot ( b3 ) ;
+  //
+  const iTYPE a2b1 = a2 . Dot ( b1 ) ;
+  const iTYPE a2b2 = a2 . Dot ( b2 ) ;
+  const iTYPE a2b3 = a2 . Dot ( b3 ) ;
+  //
+  const iTYPE a3b1 = a3 . Dot ( b1 ) ;
+  const iTYPE a3b2 = a3 . Dot ( b2 ) ;
+  const iTYPE a3b3 = a3 . Dot ( b3 ) ;
+
+  return a1b1 * a2b3 * a3b2
+    +    a1b2 * a2b1 * a3b3
+    +    a1b3 * a2b2 * a3b1
+    //
+    -    a1b1 * a2b2 * a3b3
+    -    a1b2 * a2b3 * a3b1
+    -    a1b3 * a2b1 * a3b2 ;
+}
+// ============================================================================
+/*  evaluate the magnitude of the "4-normal"
+ *
+ *  \f$ l^2 = L_{\mu}L^{\mu}
+ *      = \left( \epsilon_{\mu\nu\lambda\delta}
+ *     a^{\nu}b^{\lambda}c^{\delta} \right)^2
+ *    =
+ *     \left(ab\right)c^2 +
+ *     \left(ac\right)b^2 +
+ *     \left(bc\right)a^2 -
+ *      a^2b^2c^2 - 2\left(ab\right)\left(bc\right)\left(ac\right)
+ *   \f$
+ *
+ *  @param a the first  vector
+ *  @param b the second vector
+ *  @param c the third  vector
+ *  @return the magnitude of 4-normal
+ */
+// ============================================================================
+template <class  COORDINATES>
+inline typename Ostap::Math::Tensors::detail::LVTYPES<COORDINATES>::rTYPE
+Ostap::Math::Tensors::Epsilon::mag2
+( const ROOT::Math::LorentzVector<COORDINATES>& a ,
+  const ROOT::Math::LorentzVector<COORDINATES>& b ,
+  const ROOT::Math::LorentzVector<COORDINATES>& c )
+{
+  //
+  typedef typename  detail::LVTYPES<COORDINATES>::iTYPE iTYPE ;
+  //
+  const iTYPE a2 = a . M2 () ;
+  const iTYPE b2 = b . M2 () ;
+  const iTYPE c2 = c . M2 () ;
+  const iTYPE ab = a . Dot ( b ) ;
+  const iTYPE ac = a . Dot ( c ) ;
+  const iTYPE bc = b . Dot ( c ) ;
+  //
+  return ab * ab * c2
+    +    ac * ac * b2
+    +    bc * bc * a2
+    -    a2 * b2 * c2
+    -    ab * bc * ac * 2 ;
+}
+// ============================================================================
+
+
+
+
+
+// ============================================================================
+//                                                                      The END
+// ============================================================================
+#endif // OSTAP_TENSORS_ICPP
+// ============================================================================

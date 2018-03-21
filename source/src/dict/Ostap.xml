@@ -8,9 +8,9 @@
   <class pattern    = "Ostap::Utils::*"          />
   <class pattern    = "Ostap::Models::*"         />
   
-  <function pattern = "Ostap::Math::*"           />
-  <function pattern = "Ostap::Utils::*"          />
-  <function pattern = "Ostap::Utils::Histos::*"  />
+  <function pattern = "Ostap::Math::*"               />
+  <function pattern = "Ostap::Utils::*"              />
+  <function pattern = "Ostap::Utils::Histos::*"      />
   
   <class name = "std::unary_function&lt;double,double&gt;" />
   <class name = "std::binary_function&lt;double,double,double&gt;" />

@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_KINEMATICS_H 
 #define OSTAP_KINEMATICS_H 1

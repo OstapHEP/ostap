@@ -13,7 +13,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = "Version$Revision$"
 # =============================================================================
-__all__     = () ## nothing to be imported !
+__all__     = ()
 # =============================================================================
 import ROOT, cppyy 
 # logging 
@@ -54,6 +54,9 @@ Ostap.XYZLine             = Ostap.Math.XYZLine
 Ostap.Line3D              = Ostap.Math.XYZLine
 Ostap.Math.Line3D         = Ostap.Math.XYZLine
 
+
+LorentzVector = Ostap.LorentzVector
+LorentzVector = Ostap.LorentzVector
 
 ## ============================================================================
 ## some useful decoration:

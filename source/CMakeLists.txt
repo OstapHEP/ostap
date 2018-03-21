@@ -79,11 +79,13 @@ add_library(ostap SHARED src/format.cpp
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
+                         src/Polarization.cpp
                          src/SFactor.cpp
                          src/StatEntity.cpp
                          src/StatVar.cpp
                          src/StatusCode.cpp
                          src/Tee.cpp
+                         src/Tensors.cpp
                          src/UStat.cpp
                          src/Valid.cpp
                          src/ValueWithError.cpp
