@@ -190,7 +190,7 @@ def _v4_div_ ( self , other ) :
     return tmp
 
 # =============================================================================
-def _v4_pow_ ( self , e ) :
+def _v4_pow_ ( self , e = 2 ) :
     """Squared length of the Lorentz vector
     >>> print ' mass-squared is:', p4**2 
     """
@@ -324,6 +324,22 @@ if not hasattr ( V4D , 'restMomentum'   ) : V4D.restMomentum   = _v4_restP_
 if not hasattr ( V4D , 'boost'          ) : V4D.boost          = _v4_boost_ 
 if not hasattr ( V4D , 'boosted'        ) : V4D.boosted        = _v4_boost_ 
 
+del V4C.mag
+del V4C.mass 
+del V4C.mt 
+del V4C.r
+del V4C.theta
+del V4C.phi
+del V4C.isSpacelike
+del V4C.isTimelike
+del V4C.isLightlike
+
+del V4C.M
+del V4C.R
+del V4C.Theta
+del V4C.Phi
+del V4C.Mt
+del V4C.Et
 
 
 # =============================================================================
