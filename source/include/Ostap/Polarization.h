@@ -96,6 +96,14 @@ namespace Ostap
         const Ostap::LorentzVector& beam2                                , 
         const UseMadisonConvention  madison = UseMadisonConvention{true} ) ;
       // =====================================================================
+    public: // polarization vectors for the given frame 
+      // =====================================================================
+      /** get the polarization vectors from the frame 
+       *  @param f the frame 
+       *  @return polarization vectors (-1,0,+1)
+       */
+      static PolVectors vectors ( const Frame& f ) ;
+      // =====================================================================
     public: // direction cosines 
       // =====================================================================
       /** get the direction cosines of the particle direction 
@@ -153,14 +161,6 @@ namespace Ostap
         const Ostap::LorentzVector& beam1                                , 
         const Ostap::LorentzVector& beam2                                ,
         const UseMadisonConvention  madison = UseMadisonConvention{true} ) ;
-      // =====================================================================
-    public:
-      // =====================================================================
-      /** get the polarization vectors from the frame 
-       *  @param f the frame 
-       *  @return polarization vectors (-1,0,+1)
-       */
-      static PolVectors vectors ( const Frame& f ) ;
       // =====================================================================      
     } ; //                                The end of Ostap::Math::Polarization
     // =======================================================================
