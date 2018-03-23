@@ -460,7 +460,7 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     if not hasattr ( CMPLX , '_old_init_' ) : 
         CMPLX._old_init_  = CMPLX.__init__
         ## construct complex 
-        def _cmplx_new_init_ ( s , a , *b ) :
+        def _cmplx_new_init_ ( s , a = 0 , *b ) :
             """Construct complex from complex or from real/imaginary parts
             """
             if not b :
@@ -501,6 +501,9 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     
     CMPLX.__eq__      =  _cmplx_eq_
     CMPLX.__ne__      =  _cmplx_ne_
+    
+    if not hasattr ( CMPLX , 'cpp_conj' ) :
+        CMPLX.cpp_conj = lambda s : CMPLX ( s.real() , -s.imag() )
     
     CMPLX.norm        = _cmplx_norm_
     CMPLX.conjugate   = _cmplx_conjugate_

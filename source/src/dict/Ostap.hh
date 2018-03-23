@@ -69,6 +69,7 @@
 #include "Ostap/StatusCode.h"
 #include "Ostap/SVectorWithError.h"
 #include "Ostap/SymmetricMatrixTypes.h"
+#include "Ostap/Tensors.h"
 #include "Ostap/Tee.h"
 #include "Ostap/ToStream.h"
 #include "Ostap/TypeWrapper.h"

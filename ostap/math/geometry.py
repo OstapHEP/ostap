@@ -3,13 +3,13 @@
 # =============================================================================
 ## @file
 #  Set of useful "geometry" utilities 
-#  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2009-09-12
 # =============================================================================
 """ Set of useful ``geometry'' utilities 
 """
 # =============================================================================
-__author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
+__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2009-09-12"
 __version__ = "Version$Revision$"
 # =============================================================================
@@ -22,7 +22,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.geometry' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-
 cpp = cppyy.gbl 
 
 ## C++ namespace Ostap 
@@ -34,12 +33,10 @@ _RM = ROOT.ROOT.Math
 ## Geometry vectors 
 Ostap.XYZPoint            = _RM.PositionVector3D     ('ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag')
 Ostap.XYZVector           = _RM.DisplacementVector3D ('ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag')
-Ostap.LorentzVector       = _RM.LorentzVector        ('ROOT::Math::PxPyPzE4D<double>')
 Ostap.Plane3D             = _RM.Plane3D
 
 Ostap.Math.XYZPoint       = Ostap.XYZPoint
 Ostap.Math.XYZVector      = Ostap.XYZVector
-Ostap.Math.LorentzVector  = Ostap.LorentzVector
 Ostap.Math.Plane3D        = Ostap.Plane3D
 
 Ostap.Point3D             = Ostap.XYZPoint
@@ -55,137 +52,10 @@ Ostap.Line3D              = Ostap.Math.XYZLine
 Ostap.Math.Line3D         = Ostap.Math.XYZLine
 
 
-LorentzVector = Ostap.LorentzVector
-LorentzVector = Ostap.LorentzVector
-
 ## ============================================================================
 ## some useful decoration:
 ## ============================================================================
 
-_V4D = Ostap.LorentzVector
-
-## ============================================================================
-## 4-vectors 
-def _v4_iadd_ ( s , other ) :
-    """Increment 4-vector with other 4-vector
-    >>> p4  = ...
-    >>> p4 += other 
-    """
-    s.SetE    ( s.E  () + other.E  () )
-    s.SetPx   ( s.Px () + other.Px () )
-    s.SetPy   ( s.Py () + other.Py () )
-    s.SetPz   ( s.Pz () + other.Pz () )
-    return s
-
-## ============================================================================
-def _v4_isub_ ( s , other ) :
-    """Decrement 4-vector with other 4-vector
-    >>> p4  = ...
-    >>> p4 -= other 
-    """
-    s.SetE    ( s.E  () - other.E  () )
-    s.SetPx   ( s.Px () - other.Px () )
-    s.SetPy   ( s.Py () - other.Py () )
-    s.SetPz   ( s.Pz () - other.Pz () )
-    return s
-
-## ============================================================================
-def _v4_dot_   ( s , other ) :
-    """``Dot''-prodcut of two 4-vectors 
-    >>> p4    = ...
-    >>> other = ...
-    >>> print 'Q2 is ', p4.Dot ( other )
-    """
-    res  = s.e  () * other.e  () 
-    res -= s.px () * other.px ()
-    res -= s.py () * other.py ()
-    res -= s.pz () * other.pz ()
-    return res 
-
-if not hasattr ( _V4D , '__iadd__' ) : _V4D. __iadd__ = _v4_iadd_ 
-if not hasattr ( _V4D , '__isub__' ) : _V4D. __isub__ = _v4_isub_ 
-if not hasattr ( _V4D , 'Dot'      ) : _V4D.Dot       = _v4_dot_
-
-## ============================================================================
-def _v4_mul_ ( self , other ) :
-    """Multiplication/scaling of Lorentz Vectors 
-    >>> vct = ...
-    >>> a   = vct * 2
-    
-    >>> vct2 = ...
-    >>> prod = vct * vct2 ## NB! 
-    """
-    if isinstance ( other , _V4D ) : return self.Dot ( other )
-    # 
-    # scaling by the number :
-    tmp   = _V4D ( self )
-    tmp  *= other
-    return tmp
-
-## ============================================================================
-def _v4_add_ ( self , other ) :
-    """ Addition of Lorentz Vectors 
-    >>> vct1 = ...
-    >>> vct2 = ...
-    >>> a    = vct1 + vct2
-    """
-    tmp   = _V4D ( self )
-    tmp  += other
-    return tmp
-
-## ============================================================================
-def _v4_sub_ ( self , other ) :
-    """Subtraction of Lorentz Vectors 
-    >>> vct1 = ...
-    >>> vct2 = ...
-    >>> a    = vct1 - vct2
-    """
-    tmp   = _V4D ( self )
-    tmp  -= other
-    return tmp
-
-## ============================================================================
-def _v4_div_ ( self , other ) :
-    """Division/scaling of Lorentz Vectors     
-    >>> vct = ...
-    >>> a   = vct / 2 
-    """
-    tmp   = _V4D ( self )
-    tmp  /= other
-    return tmp
-
-_V4D . __mul__  = _v4_mul_
-_V4D . __add__  = _v4_add_
-_V4D . __sub__  = _v4_sub_
-_V4D . __div__  = _v4_div_
-
-_V4D . __radd__ = lambda s,o : s+o 
-_V4D . __rmul__ = lambda s,o : s*o 
-
-# =============================================================================
-if not hasattr ( Ostap.Math , 'Vector4' ) :
-    import ostap.math.linalg
-    
-_V4 = Ostap.Math.Vector4
-# =============================================================================
-## convert LorentzVector into SVector
-#  @code
-#  lv = ...
-#  v4 = lv.asSVector()
-#  @endcode 
-def _v4_as_v4_ ( self ) :
-    """Convert LorentzVector into SVector
-    >>> lv = ...
-    >>> v4 = lv.asSVector()
-    """
-    v4 = _V4()
-    v4[0] = self.X()
-    v4[1] = self.Y()
-    v4[2] = self.Z()
-    v4[3] = self.T()
-    return _v4 
-
-_V4D.asSVector = _v4_as_v4_ 
 
 ## 3-vectors 
 _P3D = Ostap.XYZPoint
@@ -227,12 +97,67 @@ def _v3_dot_   ( s , other ) :
     res += s.Z ( ) * other.Z ( )
     return res 
 
+## ============================================================================
+def _v3_cross_  ( s , other ) :
+    """``cross''-product of two 3-vectors  a * ( b x c ) 
+    >>> v3    = ...
+    >>> other = ...
+    >>> print 'Cross product is is ' , p3.cross ( other )
+    """
+    bx =     s . X ()
+    by =     s . Y ()
+    bz =     s . Z ()
+    cx = other . X ()
+    cy = other . Y ()
+    cz = other . Z ()
+    ##
+    return _V3D( by * cz - bz * cy ,
+                 bz * cx - bx * cz ,
+                 bx * cy - by * cx )
+
+
+## ============================================================================
+def _v3_triple_  ( s , b , c ) :
+    """``triple''-product of three 3-vectors
+    >>> v1    = ...
+    >>> v2    = ...
+    >>> v3    = ...
+    >>> print 'Triple is ' , v1.triple ( v2  , v3 ) 
+    """
+    return s.Dot ( b.cross ( c ) )
+                 
 if not hasattr ( _V3D , '__iadd__' ) : _V3D. __iadd__ = _v3_iadd_
 if not hasattr ( _V3D , '__isub__' ) : _V3D. __isub__ = _v3_isub_
 if not hasattr ( _V3D , 'Dot'      ) : _V3D.Dot       = _v3_dot_
+if not hasattr ( _V3D , 'dot'      ) : _V3D.dot       = _v3_dot_
+if not hasattr ( _V3D , 'Cross'    ) : _V3D.Cross     = _v3_cross_
+if not hasattr ( _V3D , 'cross'    ) : _V3D.cross     = _v3_cross_
+if not hasattr ( _V3D , 'Triple'   ) : _V3D.Triple    = _v3_triple_
+if not hasattr ( _V3D , 'triple'   ) : _V3D.triple    = _v3_triple_
 
 if not hasattr ( _P3D , '__iadd__' ) : _P3D. __iadd__ = _v3_iadd_ 
 if not hasattr ( _P3D , '__isub__' ) : _P3D. __isub__ = _v3_isub_ 
+
+
+# =============================================================================
+def cross ( b  , c ) :
+    """``cross''-product of two 3-vectors : a = b x c 
+    >>> a = ... 
+    >>> b = ... 
+    >>> print 'Cross product is ' , cross ( b , c )
+    """
+    return b.cross  ( c )
+
+
+# =============================================================================
+def triple ( a , b  , c ) :
+    """``triple''-product of three 3-vectors   : a * (b x c) 
+    >>> a = ... 
+    >>> b = ... 
+    >>> c = ... 
+    >>> print 'Triple product is ' , triple ( a , b , c )
+    """
+    return a.triple ( b , c )
 
 
 ## ============================================================================
@@ -261,7 +186,7 @@ _V3 = Ostap.Math.Vector3
 ## convert 3D-Vector/3D-point into SVector
 #  @code
 #  lv = ...
-#  v4 = lv.asSVector()
+#  v3 = lv.asSVector()
 #  @endcode 
 def _v3_as_v3_ ( self ) :
     """Convert 3D-Vector/3D-point into SVector<double,3>
@@ -422,14 +347,6 @@ _V3D . __rmul__ = lambda s,o : s*o
 
 
 # =============================================================================
-def _v4_pow_ ( self , e ) :
-    """Squared length of the Lorentz vector
-    >>> print ' mass-squared is:', p4**2 
-    """
-    if 2 != e : return NotImplemented
-    return self.M2   ()
-
-# =============================================================================
 def _v3_pow_ ( self , e ) :
     """Squared length of the 3D-vector/3D-point
     >>> print 'R-squared is ', v3**2 
@@ -437,7 +354,6 @@ def _v3_pow_ ( self , e ) :
     if 2 != e : return NotImplemented
     return self.Mag2 ()
 
-_V4D.__pow__ = _v4_pow_
 _V3D.__pow__ = _v3_pow_
 _P3D.__pow__ = _v3_pow_
 
@@ -450,14 +366,6 @@ def _v3_str_ ( self , fmt = "(%g,%g,%g) ") :
     return fmt % ( self.X() , self.Y( ), self.Z() )
 
 # =============================================================================
-## Self-printout of 4D-vectors
-def _v4_str_ ( self , fmt = "[(%g,%g,%g),%g]" ) :
-    """Self-printout of 4D-vectors
-    >>> print p4 
-    """
-    return fmt % ( self.X() , self.Y( ), self.Z() , self.E() )
-
-# =============================================================================
 if not hasattr ( _P3D , '_new_str_' ) :
     _P3D . _new_str_ = _v3_str_
     _P3D . __str__   = _v3_str_
@@ -468,12 +376,6 @@ if not hasattr ( _V3D , '_new_str_' ) :
     _V3D . _new_str_ = _v3_str_
     _V3D . __str__   = _v3_str_
     _V3D . __repr__  = _v3_str_
-
-# =============================================================================
-if not hasattr ( _V4D , '_new_str_' ) :
-    _V4D . _new_str_ = _v4_str_
-    _V4D . __str__   = _v4_str_
-    _V4D . __repr__  = _v4_str_
 
 # =============================================================================
 ## Self-printout of line
@@ -899,13 +801,11 @@ if '__main__' == __name__ :
     
     p1  = Ostap.XYZPoint      (0,1,2)
     v1  = Ostap.XYZVector     (2,1,0)
-    lv1 = Ostap.LorentzVector (2,1,0,3)
     l1  = Ostap.XYZLine       ( p1 , v1 )
     pl1 = Ostap.Plane3D       ( 1, 1, 1, 0 )
 
     logger.info ( '3D-point       (x,y,z)           : %s' % p1  )
     logger.info ( '3D-vector      (x,y,z)           : %s' % v1  )
-    logger.info ( 'Lorentz-vector ((px,py,pz),E)    : %s' % lv1 )
     logger.info ( '3D-line        (point,direction) : %s' % l1  )
     logger.info ( '3D-plane       (point,normal)    : %s' % pl1 )
 

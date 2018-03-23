@@ -4,6 +4,11 @@
 // ==========================================================================
 // Include files
 // ==========================================================================
+// STD& STL
+// ==========================================================================
+#include <cmath>
+#include <complex>
+// ==========================================================================
 // ROOT 
 // ==========================================================================
 #include "Math/Vector4D.h"
@@ -21,6 +26,9 @@ namespace Ostap
   typedef ROOT::Math::PxPyPzEVector     XYZTVector      ; ///< Cartesian 4 Vector
   typedef ROOT::Math::PxPyPzEVector     LorentzVector   ; ///< Cartesian 4 Vector
   typedef ROOT::Math::PtEtaPhiEVector   PtEtaPhiEVector ; ///< Polar 4 Vector
+  // ==========================================================================
+  typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<std::complex<double> > > 
+  ComplexLorentzVector ;
   // ==========================================================================
 }
 // ============================================================================

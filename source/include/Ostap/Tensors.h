@@ -125,13 +125,15 @@ namespace Ostap
        *  @date 2008-0725
        */
       template <unsigned int I, unsigned int J>
-      struct G_          { enum { value =  0 } ; } ;
+      struct G_        : std::integral_constant<int, 0> {}; 
       /// the proper template specialzation for diagonal elements
       template <unsigned int I>
-      struct G_<I,I>     { enum { value = -1 } ; } ;
-      /// the proper template specialzation for time component
+      struct G_<I,I>   : std::integral_constant<int,-1> {}; 
+      /// the proper template specialization for time component
       template <>
-      struct G_<T,T>     { enum { value =  1 } ; } ;
+      // struct G_<T,T>   : std::integral_constant<int, 1> {};   
+      // struct G_<E,E>   : std::integral_constant<int, 1> {};   
+      struct G_<3,3>   : std::integral_constant<int, 1> {};   
       // ======================================================================
       /** struct G
        *
@@ -247,7 +249,9 @@ namespace Ostap
       // ======================================================================
       /// stopping criteria for compile-time recursion
       template <>
-      struct Epsilon_<X,Y,Z,T> : std::integral_constant<int,1>{};
+      // struct Epsilon_<X,Y,Z,T> : std::integral_constant<int,1>{};
+      // struct Epsilon_<X,Y,Z,E> : std::integral_constant<int,1>{};
+      struct Epsilon_<0,1,2,3> : std::integral_constant<int,1>{};
       // ======================================================================
       namespace detail
       {
@@ -406,7 +410,12 @@ namespace Ostap
        *  Simple implementation of 4D Antisymmetric Levi-Civita symbols
        *   \f$ \epsilon_{\mu\nu\lambda\delta} \f$ and some related operations
        *
-       *  Convention here: \f$ \epsilon_{0123} = \epsilon_{XYZT} = 1 \f$
+       *  Convention here: \f$ \epsilon_{0123} = \epsilon_{XYZT} = 1 \f$, that gives  
+       *  - \f$ x == epsilon ( t , y , z ) \f$ 
+       *  - \f$ y == epsilon ( t , z , x ) \f$ 
+       *  - \f$ z == epsilon ( t , x , y ) \f$ 
+       *  - \f$ t == epsilon ( x , y , z ) \f$ 
+       * 
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-0725
        */
