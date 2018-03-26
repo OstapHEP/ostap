@@ -27,7 +27,7 @@ __all__     = (
 import ROOT
 from   ostap.fitting.basic import makeVar, makeBkg, H3D_dset
 from   ostap.fitting.fit2d import PDF2
-from   ostap.logger.utils  import roo_silent 
+from   ostap.logger.utils  import roo_silent, rooSilent 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit3d' )
@@ -148,11 +148,11 @@ class PDF3 (PDF2) :
         
         """
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            self.yvar.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
+            with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
             in_range2 = 'aux_rng2'
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_ran3e2 ) :
-            self.zvar.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
+            with rooSilent ( 3 ) : self.zvar.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
             in_range3 = 'aux_rng3'
 
         in_range = []
@@ -199,11 +199,11 @@ class PDF3 (PDF2) :
         
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            self.xvar.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
+            with rooSilent ( 3 ) : self.xvar.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
             in_range1 = 'aux_rng1'
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_ran3e2 ) :
-            self.zvar.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
+            with rooSilent ( 3 ) : self.zvar.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
             in_range3 = 'aux_rng3'
 
         in_range = []
@@ -249,11 +249,11 @@ class PDF3 (PDF2) :
         
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            self.xvar.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
+            with rooSilent ( 3 ) : self.xvar.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
             in_range1 = 'aux_rng1'
 
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            self.yvar.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
+            with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
             in_range2 = 'aux_rng2'
 
         in_range = []

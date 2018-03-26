@@ -25,7 +25,7 @@ __all__     = (
 # =============================================================================
 import ROOT
 from   ostap.fitting.basic import PDF, makeVar, makeBkg, H2D_dset
-from   ostap.logger.utils  import roo_silent 
+from   ostap.logger.utils  import roo_silent, rooSilent  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit2d' )
@@ -158,7 +158,7 @@ class PDF2 (PDF) :
         
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
-            self.yvar.setRange ( 'aux_rng2' , in_range[0] , in_range[1] )
+            with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range[0] , in_range[1] )
             in_range = 'aux_rng2'
             
         return self.draw ( self.xvar , 
@@ -199,7 +199,7 @@ class PDF2 (PDF) :
 
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
-            self.xvar.setRange ( 'aux_rng1' , in_range[0] , in_range[1] )
+            with rooSilent ( 3 ) : self.xvar.setRange ( 'aux_rng1' , in_range[0] , in_range[1] )
             in_range = 'aux_rng1'
 
         return self.draw ( self.yvar ,
@@ -261,7 +261,7 @@ class PDF2 (PDF) :
         args = kwargs.copy ()
         
         import ostap.plotting.fit_draw as FD
-        if not isinstance ( in_range , (list,tuple) ) : in_range = in_range ,  
+        if in_range and not isinstance ( in_range , ( list , tuple ) ) : in_range = in_range ,  
         if in_range :
             data_options        = args.pop (       'data_options' , FD.         data_options )
             background_options  = args.pop ( 'background_options' , FD. background2D_options )
