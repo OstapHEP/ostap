@@ -6,7 +6,7 @@
 #  Set of useful PDFs for various ``signal'' 1D and 2D fits
 #  It includes
 #  - soeme empricial PDFs to describe narrow peaks: Gauss, CrystalBall, ....
-#  - some PDF to describe "wide" peaks: BreitWigner,LASS, Bugg, Flatter, ...
+#  - some PDF to describe "wide" peaks: BreitWigner,LASS, Bugg, Flatte, ...
 #  - some useful PDFs to describe smooth background: phase space ;
 #    expo times polynomial; phase space times polynomial, ...
 #  - set of smooth non-facrorizeable model for 2D fits 
@@ -2878,7 +2878,7 @@ class Flatte_pdf(MASS) :
     def m0g1 ( self ) :
         """``m0*g1''-parameter for Flatte-function"""
         return self.__m0g1
-    @m0_980.setter
+    @m0g1.setter
     def m0g1 ( self, value ) :
         value = float ( value )
         self.__m0g1.setVal ( value ) 
