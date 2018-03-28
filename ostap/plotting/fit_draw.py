@@ -71,7 +71,8 @@ keys = (
     'component_step_color'  ,
     'signal_step_color'     ,
     ##
-    'draw_axis_title'       , ## draw the titles for the axes ? 
+    'draw_axis_title'       , ## draw the titles for the axes ?
+    'draw_options'          , ## generic ROOT draw options, e.g. 'same'
     )
 # =============================================================================
 ## get draw options:

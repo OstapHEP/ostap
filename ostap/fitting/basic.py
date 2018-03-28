@@ -260,7 +260,9 @@ def fitArgs ( name , dataset = None , *args , **kwargs ) :
             continue
         _args.append ( a )
 
-    from ostap.plotting.fit_draw import keys     
+    from ostap.plotting.fit_draw import keys
+    print keys
+    
     ncpu_added = False 
     for k,a in kwargs.iteritems() :
         
@@ -821,7 +823,7 @@ class PDF (object) :
             ## Draw the frame!
             #
             if not ROOT.gROOT.IsBatch() :
-                with rootWarning (): frame.draw()
+                with rootWarning (): frame.draw( kwargs.pop ( 'draw_options','' ) )
             
             residual =  kwargs.pop ( 'residual' , False )
             if residual and not  dataset :
@@ -1011,7 +1013,7 @@ class PDF (object) :
         if not ROOT.gROOT.IsBatch() :
             from ostap.logger.utils import  rootWarning
             with rootWarning ():
-                frame.Draw ()
+                frame.draw ( kwargs.get('draw_options', '' ) )
                         
         return result , frame
     
