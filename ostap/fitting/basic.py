@@ -261,8 +261,6 @@ def fitArgs ( name , dataset = None , *args , **kwargs ) :
         _args.append ( a )
 
     from ostap.plotting.fit_draw import keys
-    print keys
-    
     ncpu_added = False 
     for k,a in kwargs.iteritems() :
         
