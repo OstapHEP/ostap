@@ -116,13 +116,17 @@ class Statistics(object):
 #  initializeRemote, process and finalize.
 #  @author Pere MATO Pere.Meto@cern.ch
 class Task(object) :
-    """ Basic base class to encapsulate any processing that is going to be porcessed in parallel.
-        User class much inherit from it and implement the methods initializeLocal,
-        initializeRemote, process and finalize.   """
+    """ Basic base class to encapsulate any processing that is going to be processed in parallel.
+    User class much inherit from it and implement the methods
+    - initializeLocal
+    - initializeRemote
+    - process
+    - finalize.
+    """
     _initializeDone = False
     def __new__ ( cls, *args, **kwargs ):
         task = object.__new__( cls )
-        task.output = ()
+        task.output  = ()
         task.environ = {}
         for k,v in os.environ.items(): task.environ[k] = v  
         task.cwd = os.getcwd()
@@ -279,7 +283,7 @@ class WorkManager(object) :
 #      print pps.local_server, pps.remote_server
 #      ... do something here 
 #  @endcode
-#  @author Vanya BELYAEV Ivan.B
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class ppServer(object) : 
     
     def __init__(self, hostname , **kwargs ) :
@@ -298,8 +302,8 @@ class ppServer(object) :
         self.input = open('/dev/null','r')
 
         import pp 
-        the_file = pp.__file__
-        the_dir  = os.path.dirname(the_file)
+        the_file   = pp.__file__
+        the_dir    = os.path.dirname(the_file)
         the_server = the_dir + '/scripts/ppserver.py'  ## NB!!!
         
         secret  = kwargs.pop( 'secret' , '' )

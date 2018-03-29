@@ -16,7 +16,6 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 import ROOT,os,  random  
 import ostap.core.pyrouts 
-from   ostap.trees.data   import Data
 from   ostap.utils.timing import timing 
 import ostap.parallel.kisa  ## ATTENTION! 
 # =============================================================================
@@ -28,59 +27,16 @@ if '__main__' == __name__ or '__builtin__' == __name__ :
 else : 
     logger = getLogger( __name__ )
 # =============================================================================
-patterns = [] 
-def prepare_data ( nfiles =  100 ,  nentries = 100000 ) :
 
-    from array import array 
-    var1 = array ( 'd', [0])
-    var2 = array ( 'd', [0])
-    var3 = array ( 'd', [0])
-    
+with timing('Prepare data') :
+    logger.info('Prepare data, it could take some time') 
     import  tempfile 
-    tmpdir =   tempfile.mkdtemp()
-    patterns.append ( os.path.join ( tmpdir , '*.root' ) )
-    for i  in xrange( nfiles ) :
-        fname = os.path.join ( tmpdir  , '%s.root' %  i )
- 
-        with ROOT.TFile.Open( fname , 'new' ) as root_file:
-            
-            tree = ROOT.TTree('S','tree')
-            tree.SetDirectory ( root_file ) 
-            tree.Branch ( 'mass'  , var1 , 'mass/D'  )
-            tree.Branch ( 'c2dtf' , var2 , 'c2dtf/D' )
-            tree.Branch ( 'pt'    , var3 , 'pt/D'    )
+    tmpdir = tempfile.mkdtemp()
+    import prepare_test_kisa as PTK
+    data   = PTK.prepare_data ( tmpdir , nfiles = 2000 , nentries = 10000 , silent = False ) 
+    logger.info    ( 'DATA %s' % data  )
 
-            for i in xrange ( nentries ) : 
-                
-                m  = random.gauss        ( 3.1 ,  0.015 )
-                c2 = random.gammavariate ( 2.5 , 0.5    ) / 5 
-                pt = random.uniform      ( 0   , 10     )
-                
-                var1[0] = m
-                var2[0] = c2 
-                var3[0] = pt
-                
-                tree.Fill()
-            root_file.Write()
-            
-import atexit
-@atexit.register
-def cleanup () :
-    import   glob
-    while patterns:        
-        p = patterns.pop()
-        for f in glob.iglob ( p ) :
-            try    : os.remove (  f )
-            except : pass
-            
-
-while not patterns :
-    with timing('Prepare data') :
-        logger.info('Prepare data, it could take some time') 
-        prepare_data ( 1000 , 20000 )
-    data = Data  ( 'S' , patterns    )
-    logger.info  ( 'DATA %s' % data  )
-    
+# =============================================================================
 def test_kisa () : 
     
     h1 = ROOT.TH1D( 'h1' , '' , 200 , 3 , 3.2 )
@@ -95,7 +51,7 @@ def test_kisa () :
     logger.info ( h1.dump(100,30) ) 
     
     with timing('PARALLEL(%s):' % len(chain) , logger ) :
-        chain.pproject ( h2 , 'mass' , '3<=mass && mass<=3.2 && 0<=c2dtf && c2dtf<5' , silent = True )
+        chain.pproject ( h2 , 'mass' , '3<=mass && mass<=3.2 && 0<=c2dtf && c2dtf<5' , silent = False )
         
     logger.info ( h2.dump(100,30) ) 
 
@@ -105,8 +61,8 @@ class MASS (object):
         return s.mass
 def MASS1  ( s ) : return s.mass
 
+# =============================================================================
 def test_kisa2 () :
-
        
     from ostap.fitting.selectors import SelectorWithVars, Variable  
     variables = [
@@ -121,6 +77,7 @@ def test_kisa2 () :
     nf   = len ( data.files )
     nf //= 40
     nf  += 1 
+    nf   = min ( nf , 25 )
     
     with timing('%d files in sequence %s' % ( nf , len( data.chain )  ) ) :
         selector = SelectorWithVars  (
@@ -130,7 +87,8 @@ def test_kisa2 () :
             )
         chain =  data.chain[:nf]
         st = chain.process ( selector , silent = True )
-        ds = selector.data 
+        ds = selector.data
+        del selector 
     logger.info ( 'Dataset: %s' % ds )
     
     with timing('%s files in parallel %s' % ( len ( data.files ) , len( data.chain ) ) ) :
@@ -139,8 +97,9 @@ def test_kisa2 () :
             selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
             silence   = True 
             )
-        st = data.chain.pprocess ( selector , silent = True )
+        st = data.chain.pprocess ( selector , silent = False )
         ds = selector.data 
+        del selector 
     logger.info ( 'Dataset: %s' % ds )
 
 

@@ -8,7 +8,6 @@
 #  @see GaudiMP.Parallel
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
-#
 # =============================================================================
 """ Multiprocessing functionality for Ostap
 Currently it is not loaded on default, and requires manual activation
@@ -18,6 +17,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
+    'GenericTask' , ## "Generic Task" from three  basic functions 
     'ProjectTask' , ## "Project task" for very looooong chains/trees 
     'FillTask'    , ## "Fill task" for loooong chains/trees  
     'cproject'    , ##  project looong TChain into historgam   
@@ -33,10 +33,76 @@ else                       : logger = getLogger ( __name__     )
 # =============================================================================
 logger.debug ( 'Multiprocessing functionality for Ostap')
 # =============================================================================
-import ostap.parallel.parallel as Parallel  
+import operator
+import ostap.parallel.parallel as Parallel
 # =============================================================================
 n_large = 2**63 - 1  ## ROOT.TVirtualTreePlayer.kMaxEntries
 ## n_large = ROOT.TVirtualTreePlayer.kMaxEntries
+# =============================================================================
+## @class GenericTask
+#  Generic task for Parallel processing  
+#    One needs to  define three functions/functors:
+#    - processor   :<code>        output = processor   ( item )               </code>
+#    - merger      :<code>updated_output = merger ( old_output , new_output ) </code>
+#    - initializer :<code>        output = initializer (      )               </code> 
+class GenericTask(Parallel.Task) :
+    """Generic task for parallel processing.
+    One needs to  define three functions/functors:
+    - processor   :         output = processor   ( item ) 
+    - merger      : updated_output = merger ( old_output , new_output )
+    - initializer :         output = initializer (      )  
+    """
+    # =========================================================================
+    def __init__ ( self                       ,
+                   processor                  ,
+                   merger      = operator.add ,
+                   initializer = tuple        ) :
+        """Generic task for parallel processing. One needs to  define three functions/functors
+        - processor   :         output = processor   ( item ) 
+        - merger      : updated_output = merger ( old_output , new_output )
+        - initializer :         output = initializer (      )  
+        """        
+        self.__processor   = processor
+        self.__merger      = merger
+        self.__initializer = initializer
+
+    # =========================================================================
+    ## local initialization (executed once in parent process)
+    def initializeLocal   ( self ) :
+        """Local initialization (executed once in parent process)"""
+        self.output = self.initializer () if self.initializer else () 
+        
+    # =========================================================================
+    ## the actual processing of the single item 
+    def process  ( self , item ) :
+        """The actual processing of the single item"""
+        self.output = self.processor ( item )
+    # =========================================================================
+    ## merge results 
+    def _mergeResults ( self , result ) :
+        """Merge processing results"""
+        self.output = self.merger ( self.output , result )
+
+    # =========================================================================
+    @property
+    def processor  ( self ) :
+        """``processor'' : the actual function for each subprocess
+        - Signature: output = processor ( item ) 
+        """
+        return self.__processor
+    @property
+    def merger     ( self ) :
+        """``merger'' : the actual fuction to merge results
+        - Signature: updated_output = merger ( old_output , new_output )         
+        """
+        return self.__merger
+    @property
+    def initializer ( self ) :
+        """``initializer'' : the actual fuction to initialize local output  
+        - Signature: output = initializer() 
+        """
+        return self.__initializer
+    
 # =============================================================================
 ## The simple task object for more efficient projection of loooong chains/trees 
 #  into histogarms
@@ -45,7 +111,7 @@ n_large = 2**63 - 1  ## ROOT.TVirtualTreePlayer.kMaxEntries
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
 class ProjectTask(Parallel.Task) :
-    """ The simple task  object for efficient parallel
+    """The simple task  object for the efficient parallel
     projection of looooooong TChains/TTrees into histograms  
     """
     ## constructor: histogram 
@@ -58,13 +124,14 @@ class ProjectTask(Parallel.Task) :
         self.histo = histo
         self.histo.Reset()
         
+    
     ## local initialization (executed once in parent process)
     def initializeLocal   ( self ) :
         """Local initialization (executed once in parent process)
         """
         import ROOT,ostap.core.pyrouts
-        self.output = 0, self.histo.clone() 
-        
+        self.output = 0, self.histo.clone()
+    
     ## remote initialization (executed for each sub-processs)
     def initializeRemote  ( self ) : pass 
     
@@ -116,14 +183,13 @@ class ProjectTask(Parallel.Task) :
                                      what       , cuts           ,
                                      ''         ,
                                      nentries   , first          )
-        del chain 
+        del chain
 
     ## finalization (executed at the end at parent process)
     def finalize ( self ) : pass 
 
     ## merge results 
-    def _mergeResults(self, result) :
-        #
+    def _mergeResults ( self , result ) :
         filtered    = self.output[0] + result[0] 
         self.output[1].Add ( result[1] )
         self.output = filtered, self.output[1]
@@ -227,7 +293,7 @@ def  tproject ( tree                 ,   ## the tree
     >>> histo = ... ## histogram template 
     >>> tproject ( tree , histo , 'mass' , 'pt>10' )    
     >>> tree.pproject ( histo , 'mass' , 'pt>10' )    ## ditto 
-    - significant gain can be achieved for very large ttrees with complicated expressions and cuts
+    - significant gain can be achieved for very large TTrees with complicated expressions and cuts
     - maxentries parameter should be rather large
     Arguments:
     - tree       the tree
@@ -362,10 +428,10 @@ class  FillTask(Parallel.Task) :
     ## 
     def __init__ ( self ,  variables , selection ) :
         
-        self.variables = variables
+        self.variables = variables 
         self.selection = selection 
         
-        self.output   = ()  
+        self.output    = ()  
 
     def initializeLocal   ( self ) : pass
     def initializeRemote  ( self ) : pass
@@ -400,16 +466,14 @@ class  FillTask(Parallel.Task) :
             logger.warning ("Processing status %s"  % num )
         
         ##del selector.data
-        ##del      selector
-        
-        logger.debug ( 'Processed %s chain and filled %d entries ' % ( fname , len( self.output ) ) ) 
-
+        ##del      selector        
+        logger.debug ( 'Processed %s chain and filled %d entries ' % ( fname , len( self.output ) ) )
     
     def finalize ( self ) : pass 
 
-    ## methge resulsts/datasets 
+    ## merge results/datasets 
     def _mergeResults(self, result) :
-        #
+        
         if result :
             ds , st = result            
             if not self.output or not self.output[0] :
