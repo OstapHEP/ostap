@@ -312,6 +312,8 @@ def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
         ##
         rdir.cd() 
         _lst = rdir.GetListOfKeys()
+        if not _lst :  return _res
+        
         for i in _lst :
             inam = i.GetName()
 
@@ -354,16 +356,17 @@ def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_di
         ##
         rdir.cd() 
         _lst = rdir.GetListOfKeys()
-        for i in _lst :
-            inam   = i.GetName()
-            idir   = rdir.GetDirectory ( inam ) 
-            if not idir or not no_dir : 
-                obj = rdir.Get ( inam )
-                if fun ( inam , i , obj ) : yield inam , obj
-            if recursive and idir and not idir is rdir :
-                for k, o in _rd_iteritems_ ( idir , fun , recursive , no_dir ) :
-                    yield k,o
-                    
+        if _lst : 
+            for i in _lst :
+                inam   = i.GetName()
+                idir   = rdir.GetDirectory ( inam ) 
+                if not idir or not no_dir : 
+                    obj = rdir.Get ( inam )
+                    if fun ( inam , i , obj ) : yield inam , obj
+                if recursive and idir and not idir is rdir :
+                    for k, o in _rd_iteritems_ ( idir , fun , recursive , no_dir ) :
+                        yield k,o
+                        
 # =============================================================================a
 ## Iterate over the keys in ROOT file/directory 
 #  @code
@@ -385,15 +388,16 @@ def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
         ##
         rdir.cd() 
         _lst = rdir.GetListOfKeys()
-        for i in _lst :
-            inam   = i.GetName()
-            idir   = rdir.GetDirectory ( inam ) 
-            if not idir or not no_dir : 
-                if typ is None  or isinstance ( rdir.Get ( inam ) , typ ) : yield inam 
-            if recursive and idir  and not idir is rdir :
-                for k in _rd_iterkeys_ ( idir , typ , recursive , no_dir ) :
-                    yield k
-
+        if _lst : 
+            for i in _lst :
+                inam   = i.GetName()
+                idir   = rdir.GetDirectory ( inam ) 
+                if not idir or not no_dir : 
+                    if typ is None  or isinstance ( rdir.Get ( inam ) , typ ) : yield inam 
+                if recursive and idir  and not idir is rdir :
+                    for k in _rd_iterkeys_ ( idir , typ , recursive , no_dir ) :
+                        yield k
+                        
 # =============================================================================a
 ## Iterate over the content of ROOT file/directory 
 #  @code
@@ -500,15 +504,16 @@ def _rd_walk_ ( rdir , topdown = True ) :
         _objects = []
         _idirs   = [] 
         _lst = rdir.GetListOfKeys()
-        for i in _lst :
-            inam   = i.GetName()
-            idir   = rdir.GetDirectory ( inam ) 
-            if idir :
-                _subdirs.append  ( inam )
-                _idirs.append    ( idir ) 
-            else    :
-                _objects.append  ( inam )
-
+        if _lst : 
+            for i in _lst :
+                inam   = i.GetName()
+                idir   = rdir.GetDirectory ( inam ) 
+                if idir :
+                    _subdirs.append  ( inam )
+                    _idirs.append    ( idir ) 
+                else    :
+                    _objects.append  ( inam )
+                        
         _subdirs = tuple ( _subdirs )
         _objects = tuple ( _objects )
         
