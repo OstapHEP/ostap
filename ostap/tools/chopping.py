@@ -75,8 +75,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2017-09-10"
 __all__     = (
     ##
-    "Trainer" , ## the ``chopper'' trainer for TMVA 
-    "Reader"  , ## the ``chopper'' reader  for TMVA 
+    "Trainer"              , ## the ``chopper'' trainer for TMVA 
+    "Reader"               , ## the ``chopper'' reader  for TMVA
+    'addChoppingResponse'  , ## add ``chopping'' response to RooDataSet
     )
 # =============================================================================
 import ROOT
@@ -88,7 +89,8 @@ from   ostap.tools.tmva   import Trainer as TMVATrainer
 from   ostap.tools.tmva   import Reader  as TMVAReader
 from   ostap.core.pyrouts import hID, h1_axis 
 import ostap.trees.trees 
-import ostap.trees.cuts 
+import ostap.trees.cuts
+import ostap.utils.utils  as Utils 
 # =============================================================================
 ## @class Trainer
 #  The ``chopping''  trainer. Th einterface is very similar to TMVA Trainer
@@ -470,6 +472,38 @@ class Trainer(object) :
 
         return self.__weights_files 
 
+
+# =============================================================================
+## @class WeightFiles
+#  helper structure  to deal with weights files
+import ostap.utils.utils as Utils 
+class WeightsFiles(Utils.CleanUp) :
+    """Helper structure  to deal with weights files
+    """
+    def __init__ ( self , weights_files ) :
+        
+        if isinstance ( weights_files , str  ) :
+            
+            wf  = weights_files
+            import tarfile, os
+            assert os.path.exists  ( wf ) and tarfile.is_tarfile ( wf ) , "Non-existing or invalid tarfile %s "  % wf
+            
+            with tarfile.open ( wf , 'r' ) as tar :
+                logger.debug ( "Open tarfile %s" % wf )
+                ## tar.list()
+                tmpdir = self.tmpdir 
+                tar.extractall ( path = tmpdir )                
+                logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
+                weights_files  = [ os.path.join ( tmpdir , i ) for i in tar.getnames() ]
+                self.tmpfiles += weights_files
+                
+        self.__weights_files = weights_files
+
+    @property
+    def files   ( self ) :
+        "``files'': the weigths file"
+        import copy
+        return copy.deepcopy ( self.__weights_files ) 
 # =============================================================================
 ## @class Reader
 #  The ``chopping'' TMVA reader.
@@ -560,7 +594,6 @@ class Reader(object) :
     
     - It it natually merges with Ostap's ``SelectorWithVars'' utility     
     """
-
     def __init__ ( self          ,
                    categoryfunc  ,
                    N             , 
@@ -589,24 +622,10 @@ class Reader(object) :
         self.__variables     = tuple(variables)
         self.__methods       = []
 
-        if isinstance ( weights_files , str  ) :
-
-            wf  = weights_files
-            import tarfile, os
-            assert os.path.exists  ( wf ) and tarfile.is_tarfile ( wf ) , "Non-existing or invalid tarfile %s "  % wf
-            
-            with tarfile.open ( wf , 'r' ) as tar :
-                logger.debug( "Reader(%s): open tarfile %s"   % ( self.name , wf  ) )
-                ## tar.list()
-                import tempfile 
-                tmpdir = tempfile.gettempdir() 
-                tar.extractall ( path = tmpdir )                
-                weights_files = [ os.path.join ( tmpdir , i ) for i in tar.getnames() ]
-                
-        assert len ( weights_files ) == N , "Invalid length of ``weights_files''"
-
-        import copy 
-        self.__weights_files = copy.deepcopy(weights_files)
+        import copy
+        files = WeightsFiles ( weights_files ).files 
+        self.__weights_files = copy.deepcopy( files)
+        assert len ( self.weights_files ) == N , "Invalid length of ``weights_files''"
 
         self.__readers   = []
         for i in range ( self.N ) :
@@ -874,7 +893,85 @@ class Reader(object) :
                "Invalid ``category'' %s/%s" % ( category ,  type ( category ) )
         return self.__readers[ category ].evaluate ( method , *args ) 
                                 
+
+
+# =============================================================================
+## Helper function to add TMVA response into dataset
+#  @code
+#  tar_file = trainer.tar_file
+#  dataset  = ...
+#  inputs = [ 'var1' , 'var2' , 'var2' ]
+#  dataset.addTMVAResponce (  inputs , tar_file , prefix = 'tmva_' )
+#  @endcode 
+def addChoppingResponse ( dataset                     ,
+                          chopper                     ,
+                          N                           ,
+                          inputs                      ,
+                          weights_files               ,
+                          category_name = 'chopping'  , 
+                          prefix        = 'tmva_'     ,                          
+                          suffix        = '_response' ,
+                          aux           = 0.9         ) :
+    """
+    Helper function to add TMVA  response into dataset
+    >>> tar_file = trainer.tar_file
+    >>> dataset  = ...
+    >>> inputs = [ 'var1' , 'var2' , 'var2' ]
+    >>> dataset.addTMVAResponce (  inputs , tar_file , prefix = 'tmva_' )
+    """
+    assert isinstance ( N , int ) and 1 < N < 10000 , 'Invalid "N" %s' % N
     
+    if isinstance ( chopper , str ) :
+        
+        if chopper in dataset :
+            chopper = getattr ( varset , chopper )
+        else : 
+            varset  = dataset.get()
+            varlist = ROOT.RooArgList()
+            for v in varset : varlist.add ( v )
+            chopper = ROOT.RooFormulaVar( 'chopping' , chopper , varlist )
+            logger.info ( 'Create chopping function %s' %  chopper ) 
+
+    assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid choper type %s' % chopper 
+        
+    category = ROOT.RooCategory ( category_name ,
+                                  'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) ) 
+    for i in range(N) :
+        
+        if   N <    10 : cn = category_name + '_%d'    % i
+        if   N <   100 : cn = category_name + '_%02d'  % i
+        elif N <  1000 : cn = category_name + '_%03d'  % i
+        elif N < 10000 : cn = category_name + '_%04d'  % i
+        else           : cn = category_name + '_%d'    % i
+        category.defineType ( cn , i )
+        
+    ## decode inputs&weights
+    
+    from ostap.tools.tmva import _inputs2map_ , _weights2map_ 
+    
+    _inputs = _inputs2map_  ( inputs )
+    
+    files   = WeightsFiles  ( weights_files ).files
+    files_  = [ _weights2map_ ( f ) for f in files ]
+
+    from ostap.core.core import cpp, std, Ostap
+    MAP   = std.map    ( 'std::string', 'std::string' )
+    MAPS  = std.vector ( MAP ) 
+    _maps = MAPS()
+    for m in files_ : _maps.push_back( m ) 
+
+    sc = Ostap.TMVA.addChoppingResponse ( dataset  ,
+                                          chopper  ,
+                                          category , 
+                                          N        ,
+                                          _inputs  ,
+                                          _maps    ,
+                                          prefix   ,
+                                          suffix   ,
+                                          aux      )
+    if sc.isFailure() :
+        logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+    return sc 
 
 # =============================================================================
 if '__main__' == __name__ :

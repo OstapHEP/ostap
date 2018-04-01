@@ -1,8 +1,8 @@
 # root_generate_dictionary(ostap_dict ${CMAKE_CURRENT_SOURCE_DIR}/dict/Dict.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/selections.xml)
 
-find_package(ROOT  REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO Tree Thread TreePlayer RooFit RooFitCore PyROOT)
-find_package(GSL   REQUIRED)
-
+find_package(ROOT       REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
+find_package(GSL        REQUIRED)
+find_package(PythonLibs REQUIRED)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
@@ -25,7 +25,7 @@ endfunction( MAKE_DICT )
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 # REFLEX_GENERATE_DICTIONARY(ostap_dict src/dict/Ostap.hh SELECTION src/dict/Ostap.xml)
 MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
 
@@ -44,12 +44,14 @@ add_library(ostap SHARED src/format.cpp
                          src/Choose.cpp
                          src/Combine.cpp
                          src/Chi2Fit.cpp
+                         src/DataFrame.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
                          src/Exception.cpp
                          src/Faddeeva.cpp 
                          src/Formula.cpp   
                          src/Fourier.cpp   
+                         src/Funcs.cpp   
                          src/GSL_sentry.cpp 
                          src/GSL_utils.cpp 
                          src/Hesse.cpp
@@ -58,6 +60,7 @@ add_library(ostap SHARED src/format.cpp
                          src/HistoMake.cpp
                          src/HistoProject.cpp
                          src/HistoStat.cpp
+                         src/IFuncs.cpp
                          src/Interpolation.cpp
                          src/Iterator.cpp
                          src/Lomont.cpp
@@ -76,6 +79,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp
                          src/Printable.cpp
+                         src/PyFuncs.cpp
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
@@ -86,6 +90,7 @@ add_library(ostap SHARED src/format.cpp
                          src/StatusCode.cpp
                          src/Tee.cpp
                          src/Tensors.cpp
+                         src/Tmva.cpp
                          src/UStat.cpp
                          src/Valid.cpp
                          src/ValueWithError.cpp

@@ -30,16 +30,17 @@ if '__main__' == __name__  or '__builtin__'  == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    
-import tempfile
-data_file = os.path.join ( tempfile.gettempdir() , 'tmva_data_chopping.root')
-s_evt_per_run = 1000
-b_evt_per_run =  511
+from ostap.utils.utils import CleanUp
+data_file = os.path.join ( CleanUp().tmpdir , 'tmva_data_chopping.root')
 
 if not os.path.exists( data_file ) :
     import random 
     nB = 20000
     nS = 10000
-    logger.info('Prepare input ROOT file with data')
+    s_evt_per_run = 927
+    b_evt_per_run = 511
+    
+    logger.info('Prepare input ROOT file with data %s' % data_file )
     with ROOT.TFile.Open( data_file ,'recreate') as test_file:
         ## test_file.cd()
         treeSignal = ROOT.TTree('S','signal     tree')
@@ -48,11 +49,11 @@ if not os.path.exists( data_file ) :
         treeBkg   .SetDirectory ( test_file ) 
         
         from array import array 
-        var1 = array ( 'd', [0])
-        var2 = array ( 'd', [0])
-        var3 = array ( 'd', [0])
-        vevt = array ( 'i', [0])
-        vrun = array ( 'i', [0])
+        var1 = array ( 'd', [0] )
+        var2 = array ( 'd', [0] )
+        var3 = array ( 'd', [0] )
+        vevt = array ( 'i', [0] )
+        vrun = array ( 'i', [0] )
         
         treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
@@ -81,13 +82,13 @@ if not os.path.exists( data_file ) :
             var3[0] = -x +       z
             
             ievt += 1
-            if 0 == ievt % b_evt_per_run :
+            if 0 ==  ( ievt % b_evt_per_run ) :
                 irun += 1
                 ievt  = 1 
 
             vevt[0] = ievt
             vrun[0] = irun
- 
+
             treeBkg.Fill()
             
         ievt = 0
@@ -102,17 +103,18 @@ if not os.path.exists( data_file ) :
             
             var1[0] =  x
             var2[0] =  y  
-            var3[0] =  z 
-            treeSignal.Fill()
+            var3[0] =  z
             
             ievt += 1
-            if 0 == ievt % s_evt_per_run :
+            if 0 == ( ievt % s_evt_per_run ) :
                 irun += 1
                 ievt  = 1 
 
             vevt[0] = ievt
             vrun[0] = irun
- 
+            
+            treeSignal.Fill()
+             
             
         test_file.Write()
         test_file.ls()
@@ -191,7 +193,12 @@ from ostap.fitting.selectors import SelectorWithVars,  Variable
 variables = [
     Variable ( 'var1' , 'variable#1' , accessor = lambda s : s.var1 ) ,
     Variable ( 'var2' , 'variable#2' , accessor = lambda s : s.var2 ) ,
-    Variable ( 'var3' , 'variable#2' , accessor = lambda s : s.var2 ) ,
+    Variable ( 'var3' , 'variable#3' , accessor = lambda s : s.var3 ) ,
+    ## extra: needed for addChoppingResponse 
+    Variable ( 'evt'  , 'event'      , accessor = lambda s : s.evt  ) ,
+    Variable ( 'run'  , 'run'        , accessor = lambda s : s.run  ) ,
+    ## extra: needed for cross-checks  
+    Variable ( 'cat'  , 'category'   , accessor = category          ) ,
     ]
 
 ## 3) declare/add TMVA  variables 
@@ -228,6 +235,28 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
 
     del variables 
     del reader
+
+    from ostap.tools.chopping import addChoppingResponse
+
+    logger.info ('dataset SIG: %s' %  ds1 )
+    logger.info ('dataset BKG: %s' %  ds2 )
+    addChoppingResponse ( ds1  ,
+                          chopper       = "137*evt+813*run"  ,
+                          N             =  N                 , 
+                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          weights_files = tar_file ,
+                          prefix        = 'tmva_'     ,
+                          suffix        = '_response' )
+    addChoppingResponse ( ds2    ,
+                          chopper       = "137*evt+813*run"  ,
+                          N             =  N                 , 
+                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          weights_files = tar_file ,
+                          prefix        = 'tmva_'     ,
+                          suffix        = '_response' )
+    
+    logger.info ('dataset SIG: %s' %  ds1 )
+    logger.info ('dataset BKG: %s' %  ds2 )
     
 for m in methods :
     

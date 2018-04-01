@@ -7,10 +7,13 @@
   <class pattern    = "Ostap::Math::GSL::*"            />  
   <class pattern    = "Ostap::Utils::*"                />
   <class pattern    = "Ostap::Models::*"               />
+  <class pattern    = "Ostap::Functions::*"            />
   
-  <function pattern = "Ostap::Math::*"           />
-  <function pattern = "Ostap::Utils::*"          />
-  <function pattern = "Ostap::Utils::Histos::*"  />
+  <function pattern = "Ostap::Math::*"            />
+  <function pattern = "Ostap::Utils::*"           />
+  <function pattern = "Ostap::Utils::Histos::*"   />
+
+  <function name    = "Ostap::TMVA::addResponse"  />
   
   <class name = "std::unary_function&lt;double,double&gt;" />
   <class name = "std::binary_function&lt;double,double,double&gt;" />

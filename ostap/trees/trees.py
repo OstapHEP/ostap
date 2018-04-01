@@ -819,8 +819,6 @@ def _not_implemented_ ( self , method , *args , **kwargs ) :
 ROOT.TChain.slice  = lambda s,*x : _not_implemented_( s , 'slice'  , *x ) 
 ROOT.TChain.slices = lambda s,*x : _not_implemented_( s , 'slices' , *x ) 
 
-
-
 # =============================================================================
 ## extending the existing chain 
 def _tc_iadd_ ( self ,  other ) :
@@ -863,6 +861,64 @@ ROOT.TChain.__iadd__ = _tc_iadd_
 ROOT.TChain.__add__  = _tc_add_
 ROOT.TChain.__radd__ = _tc_add_
 
+# =============================================================================
+from ostap.utils.utils import CleanUp 
+class Tree(CleanUp) :
+    def __init__ ( self , tree = None ,  name = None , files = [] ) :
+        
+        if files and isinstance ( files , str ) : files = [ files ] 
+        if valid_pointer ( tree  ) :
+            
+            self.__name = tree.GetName() 
+            if isinstance ( tree ,  ROOT.TChain ) :
+                self.__files = tree.files()
+                self.__files.sort()
+                self.__files = tuple ( self.__files ) 
+            elif isinstance ( tree ,  ROOT.TTree ) :
+                fdir = tree.GetDirectory()
+                if isinstance ( fdir , ROOT.TFile ) :
+                    self.__files = fdir.GetName() ,
+                else :
+                    import tempfile
+                    tmpdir = self.tmpdir
+                    fname  = tempfile.mktemp  ( suffix = '.root' , dir = tmpdir )
+                    with ROOT.TFile ( fname , 'NEW') as tmpfile :
+                        c  = tree.Clone('') 
+                        c.SetDirectory ( tmpfile   )
+                        c.SetName ( tree.GetName() ) 
+                        tmpfile.Write ()
+                        tmpfile.ls() 
+                    self.__files    = fname ,
+                    self.tempfiles += [ fname ]
+                    
+            elif name and files :
+                
+                self.__name  = name
+                self.__files = files 
+                chain  = self.chain ()
+                assert valid_pointer ( chain ), 'Invalid TChain!'
+                _files = chain.files()
+                assert len(files ) == len(_files) , 'Invalid length of files'
+                
+            else :
+                raise AttributeError("Invalid params %s/%s/%s" % ( tree , name , files ) )
+
+    ## get tree/chain 
+    def tree (  self  ) :
+        chain = ROOT.TChain ( self.name )
+        for f in  self.files : chain.Add ( f ) 
+        
+    @property
+    def name  ( self ) :
+        """``name''   : TTree/TChain name"""
+        return self.__name
+    @property
+    def files ( self ) :
+        """``files''   : the files"""
+        return tuple(self.__files)
+    
+
+                
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TTree   ,

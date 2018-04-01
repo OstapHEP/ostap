@@ -55,8 +55,9 @@ __author__  = 'Vanya BELYAEV  Ivan.Belyaev@itep.ru'
 __date__    = "2013-10-02"
 __version__ = '$Revision$'
 __all__     = (
-    "Trainer" ,
-    "Reader"  ,
+    "Trainer"         , ## the basic TMVA trainer 
+    "Reader"          , ## the basic TMVA reader
+    "addTMVAResponce" , ## add TMVA responce to RooDataSet
     "tmvaGUI"
     )
 # =============================================================================
@@ -67,10 +68,87 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.tmva' )
 else                       : logger = getLogger ( __name__           )
 # =============================================================================
-
-# =============================================================================
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
+# =============================================================================
+## @class WeightFiles
+#  helper structure  to deal with weights files
+import ostap.utils.utils as Utils 
+class WeightsFiles(Utils.CleanUp) :
+    """Helper structure  to deal with weights files
+    """
+    def __init__ ( self , weights_files ) :
+
+        ## string ? treat it a a single tar-file 
+        if isinstance ( weights_files , str  ) :
+            
+            import tarfile, os  
+            assert os.path.exists  ( weights_files ) , \
+                   "Non-existing ``weights_file''  %s"   %  weights_files 
+            
+            if tarfile.is_tarfile ( weights_files ) :
+                def xml_files ( archive ) :
+                    for tarinfo in archive:
+                        if os.path.splitext(tarinfo.name)[1] == ".xml":
+                            yield tarinfo
+                            
+                with tarfile.open ( weights_files , 'r' ) as tar :
+                    ## tar.list() 
+                    xmls = [ f for f in xml_files ( tar ) ] 
+                    tmpdir = self.tmpdir 
+                    tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
+                    logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
+                    weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
+                    self.tmpfiles += weights_files
+            else :
+                weights_files = [ weights_files ]
+
+        ## list/tuple/etc 
+        if not isinstance ( weights_files , dict ) : 
+
+            wfs = {} 
+            for wf in weights_files :
+                
+                if isinstance ( wf , str ) : method , xml = None, wf 
+                else                       : method , xml =       wf
+                
+                assert os.path.exists ( xml ) and os.path.isfile ( xml ), \
+                       "No weights file '%s'" %  xml 
+                
+                if not method :
+                    f      = os.path.split ( xml ) [-1]
+                    p,s,m  = f.rpartition('_')
+                    method = m[:m.find('.weights.xml')]
+                    
+                if not method :
+                    if not s : raise AttributeError("Can't extract method name from %s" % xml )
+                    
+                wfs[method] = xml
+                
+            weights_files   = wfs
+
+        ## dictionary
+        assert isinstance ( weights_files , dict  ), \
+               "Invalid type of ``weight_files''  %s "    % weights_files
+
+        for method , xml in weights_files.iteritems() :            
+            assert os.path.exists ( xml ) and os.path.isfile ( xml ), \
+                   "No weights file '%s'" %  xml 
+            
+        self.__methods       = tuple ( [ i for  i in  weights_files.keys() ] )
+        import copy
+        self.__weights_files = copy.deepcopy ( weights_files ) 
+        
+    @property
+    def methods ( self ) :
+        "``methods'': the known methods from weights-file"
+        return self.__methods
+    @property
+    def files   ( self ) :
+        "``files'': the weigths file"
+        import copy
+        return copy.deepcopy ( self.__weights_files ) 
+        
 # =============================================================================
 ## @class Trainer
 #  Helper class to train TMVA
@@ -657,34 +735,8 @@ class Reader(object)  :
         self.__reader = ROOT.TMVA.Reader()
         self.__name   = name
 
-        ## treat weigths files
-        
-        if isinstance ( weights_files , dict ) :
-            
-            weights_files = [ (k,v) for k,v in weights_files.iteritems() ]
-        
-        elif   isinstance ( weights_files , str  ) :
-
-            import tarfile, os  
-            assert os.path.exists  ( weights_files ) , \
-                   "Non-existing ``weights_file''  %s"   %  weights_files 
-            
-            if tarfile.is_tarfile ( weights_files ) :
-                def xml_files ( archive ) :
-                    for tarinfo in archive:
-                        if os.path.splitext(tarinfo.name)[1] == ".xml":
-                            yield tarinfo
-                            
-                with tarfile.open ( weights_files , 'r' ) as tar :
-                    ## tar.list() 
-                    xmls = [ f for f in xml_files ( tar ) ] 
-                    import tempfile 
-                    tmpdir = tempfile.gettempdir() 
-                    tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
-                    weights_files = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
-            else :
-                weights_files = [ weights_files ]
-
+        ## treat the weigths files
+        weights = WeightsFiles ( weights_files )
 
         ##  book the variables:
         #   dirty trick with arrays is needed due to a bit strange reader interface.
@@ -723,30 +775,15 @@ class Reader(object)  :
             self.__reader.AddVariable ( v[0] , v[2] )            
 
         
-        self.__methods = []
-        for wf in  weights_files :
-            
-            if isinstance ( wf , str ) : method , xml = None, wf 
-            else                       : method , xml =       wf
+        self.__methods = weights.methods
 
-            import os 
-            if not os.path.exists ( xml ) or not os.path.isfile ( xml ) : 
-                raise IOError("No weights file '%s'"  %  xml )
-
-            if not method :
-                f      = os.path.split ( xml ) [-1]
-                p,s,m  = f.rpartition('_')
-                method = m[:m.find('.weights.xml')]
-
-            if not method :
-                if not s : raise AttributeError("Can't extract method name from %s" % xml )
-                
-                
-            self.__reader.BookMVA ( method , xml )
-            self.__methods.append ( method ) 
+        for method , xml in  weights.files.iteritems() :
+            m = self.__reader.BookMVA ( method , xml )
+            assert  m , 'Error in booking %s/%s' % (  method  , xml )
             logger.debug ('TMVA Reader(%s) is booked for method:%s xml: %s' % (  self.__name ,
                                                                                  method      ,
                                                                                  xml         ) )
+            
         logger.info ('TMVA Reader(%s) booked methods are %s' %  ( self.__name , self.__methods ) )
         self.__methods = tuple ( self.__methods )
 
@@ -1000,7 +1037,86 @@ def tmvaGUI ( filename , new_canvas = True ) :
     ## start GUI
     return ROOT.TMVA.TMVAGui( filename )
 
+# =============================================================================
+## convert input structure to Ostap.TMVA.MAPS
+def _inputs2map_ ( inputs ) :
+    """Convert input structure to Ostap.TMVA.MAPS
+    """
+    from ostap.core.core import cpp, std, Ostap
+    MAP     = std.map ( 'std::string', 'std::string' )
+    
+    _inputs = MAP()
+    assert isinstance ( inputs , ( dict , tuple , list ) ) , \
+           'Invalid type of "inputs": %s' % inputs
+    
+    if   isinstance ( inputs , dict  ) :
+        for k , v  in inputs.itertems() : _inputs[k] = v
+    elif isinstance ( inputs , ( tuple , list ) ) :
+        for i in inputs :
+            if isinstance ( i , str ) : k , v = i , i
+            else                      : k , v = i
+            _inputs[k] = v 
 
+    ## 
+    assert not _inputs .empty() and _inputs.size() == len ( inputs ), \
+           'Invalid MAP size %s for %s' % ( _inputs.size() , inputs ) 
+
+    return _inputs 
+# =============================================================================
+## convert weights structure to Ostap.TMVA.PAIRS 
+def _weights2map_ ( weights_files ) :
+    
+    from ostap.core.core import cpp, std, Ostap
+    MAP = std.map   ( 'std::string', 'std::string' )
+    
+    weights  = WeightsFiles ( weights_files )
+    _weights = MAP() 
+    for method , xml in weights.files.iteritems() :
+        _weights [ method ] = xml
+
+    assert not _weights .empty() , \
+           'Invalid MAP size %s for' % ( _weights.size() , weights )
+    
+    assert not _weights.empty() , "Invalid weights_files: %s"  % weights.files
+    return _weights 
+    
+# =============================================================================
+## Helper function to add TMVA response into dataset
+#  @code
+#  tar_file = trainer.tar_file
+#  dataset  = ...
+#  inputs = [ 'var1' , 'var2' , 'var2' ]
+#  dataset.addTMVAResponse (  inputs , tar_file , prefix = 'tmva_' )
+#  @endcode 
+def addTMVAResponse ( dataset        ,
+                      inputs         ,
+                      weights_files  ,
+                      prefix   = ''  , 
+                      suffix   = ''  ,
+                      aux      = 0.9 ) :
+    """
+    Helper function to add TMVA  responce into dataset
+    >>> tar_file = trainer.tar_file
+    >>> dataset  = ...
+    >>> inputs = [ 'var1' , 'var2' , 'var2' ]
+    >>> dataset.addTMVAResponce (  inputs , tar_file , prefix = 'tmva_' )
+    """
+    from ostap.core.core import cpp, std, Ostap
+    PP = std.pair   ( 'std::string', 'std::string' )
+    VP = std.vector ( PP )
+    
+    _inputs  = _inputs2map_  ( inputs        )
+    _weights = _weights2map_ ( weights_files )
+    
+    sc = Ostap.TMVA.addResponse ( dataset  ,
+                                  _inputs  ,
+                                  _weights ,
+                                  prefix   ,
+                                  suffix   ,
+                                  aux      )
+    if sc.isFailure() :
+        logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
+    return sc 
 # =============================================================================
 if '__main__' == __name__ :
     

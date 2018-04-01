@@ -554,6 +554,66 @@ def implicitMT ( enable = True ) :
     return ImplicitMT ( enable ) 
 
 
+class  CleanUp(object) :
+    _tmpfiles = set()
+    _tmpdirs  = set()
+
+    @property
+    def tmpdir  ( self , suffix='' , prefix = 'tmp' ) :
+        """``tmpdir'' :return the name of temproary directory"""
+        import tempfile
+        tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
+        self._tmpdirs.add ( tmp )
+        return tmp
+    
+    @property
+    def tmpdirs  ( self ) :
+        """``tmpdirs'' - list of currently managed temporary directories"""
+        return tuple ( self._tmpfiles )
+    
+    @property 
+    def tmpfiles ( self ) :
+        """``tempfiles'' : list of registered temporary files"""
+        return list ( self._tmpfiles ) 
+    @tmpfiles.setter
+    def tmpfiles ( self , other ) :
+        if isinstance ( other , str ) : other = [ other ]
+        for o in other : self._tmpfiles.add ( o )
+        
+        
+import atexit
+@atexit.register
+def _cleanup_ () :
+    files = CleanUp._tmpfiles
+    logger.debug ( 'CleanUp: remove temporary files: %s' % list ( files ) ) 
+    while files :
+        f = files.pop() 
+        if os.path.exists ( f )  and os.path.isfile ( f ) :
+            logger.verbose ( 'CleanUp: remove temporary file: %s' % f )
+            try    : os.remove ( f )
+            except : pass
+    dirs = CleanUp._tmpdirs
+    logger.debug ( 'CleanUp: remove temporary directories: %s' % list ( dirs ) ) 
+    while dirs :
+        f = dirs.pop()
+        if os.path.exists ( f ) and os.path.isdir ( f ) :
+            ## remove all files & subdirectories 
+            for root, dirs, files in os.walk ( f  , topdown = False ):
+                for ff in files :
+                    ff = os.path.join ( root , ff )
+                    logger.verbose ( 'CleanUp: remove file %s in temporary directory : %s' %  ( ff , f ) )
+                    try    : os.remove  ( ff  )
+                    except : pass
+                for dd in dirs :
+                    dd = os.path.join ( root , dd )
+                    logger.verbose ( 'CleanUp: remove subdirectory %s in temporary directory %s ' % ( dd , f ) )
+                    try    : os.rmdir   ( dd  )
+                    except : pass 
+            ## remove the root
+            logger.debug ( 'CleanUp: remove temporary directory: %s' % f )
+            try    : os.rmdir ( f  )
+            except : pass 
+        
 # =============================================================================
 if '__main__' == __name__ :
     

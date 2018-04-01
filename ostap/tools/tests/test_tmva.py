@@ -29,15 +29,15 @@ if '__main__' == __name__  or '__builtin__'  == __name__ :
     logger = getLogger ( 'test_tmva' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================
-import tempfile
-data_file = os.path.join ( tempfile.gettempdir() , 'tmva_data.root') 
+# ==============================================================================
+from ostap.utils.utils import CleanUp
+data_file = os.path.join ( CleanUp().tmpdir , 'tmva_data.root') 
 
 if not os.path.exists( data_file ) :
     import random 
     nB = 10000
     nS = 10000
-    logger.info('Prepare input ROOT file with data')
+    logger.info('Prepare input ROOT file with data  %s' % data_file )
     with ROOT.TFile.Open( data_file ,'recreate') as test_file:
         ## test_file.cd()
         treeSignal = ROOT.TTree('S','signal     tree')
@@ -46,9 +46,9 @@ if not os.path.exists( data_file ) :
         treeBkg   .SetDirectory ( test_file ) 
         
         from array import array 
-        var1 = array ( 'd', [0])
-        var2 = array ( 'd', [0])
-        var3 = array ( 'd', [0])
+        var1 = array ( 'd', [0] )
+        var2 = array ( 'd', [0] )
+        var3 = array ( 'd', [0] )
         
         treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
@@ -151,7 +151,7 @@ from ostap.fitting.selectors import SelectorWithVars, Variable
 variables = [
     Variable( 'var1' , 'variable#1' , accessor = lambda s : s.var1 ) ,
     Variable( 'var2' , 'variable#2' , accessor = lambda s : s.var2 ) ,
-    Variable( 'var3' , 'variable#2' , accessor = lambda s : s.var2 ) ,
+    Variable( 'var3' , 'variable#3' , accessor = lambda s : s.var3 ) ,
     ]
 
 ## 3) declare/add TMVA  variables 
@@ -183,7 +183,26 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
 
     del variables 
     del reader
+
+    from ostap.tools.tmva import addTMVAResponse
+
+    logger.info ('dataset SIG: %s' %  ds1 )
+    logger.info ('dataset BKG: %s' %  ds2 )
+    addTMVAResponse ( ds1 ,
+                      inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                      weights_files = tar_file ,
+                      prefix        = 'tmva_'     ,
+                      suffix        = '_response' )
+    addTMVAResponse ( ds2    ,
+                      inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                      weights_files = tar_file ,
+                      prefix        = 'tmva_'     ,
+                      suffix        = '_response' )
     
+    logger.info ('dataset SIG: %s' %  ds1 )
+    logger.info ('dataset BKG: %s' %  ds2 )
+
+
 for m in methods :
     
     logger.info('TMVA:%-11s for signal     %s' % ( m, ds1.statVar('tmva_%s' % m ) ) )

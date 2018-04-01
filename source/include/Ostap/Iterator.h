@@ -57,12 +57,34 @@ namespace Ostap
     public: // some pointer alchemistry 
       // ======================================================================
       /// valid iterator 
-      bool valid ()                     const { return 0 != m_iterator  ; }
+      bool valid ()             const { return nullptr != m_iterator  ; }
       /// invalid ?
-      bool operator!                 () const { return !valid()         ; }
+      bool operator!         () const { return !valid () ; }
+      /// explicit bool 
+      explicit operator bool () const { return  valid () ; }
       /// conversion to underlying type 
       inline TIterator* operator->   () const { return m_iterator.get() ; }
       // ======================================================================
+    public:
+      // =========================================================================    
+      /** iterate and cast to specific type
+       */ 
+      template <class T>
+      T* dynamic_next() const 
+      {
+        TObject* r = this->Next() ;
+        return ( nullptr == r ) ? nullptr : dynamic_cast<T*> ( r ) ; // RETURN
+      }
+      // ========================================================================
+      /** iterate and cast to specific type
+       */ 
+      template <class T>
+      T* static_next() const 
+      {
+        TObject* r = this->Next() ;
+        return ( nullptr == r ) ? nullptr : static_cast<T*> ( r ) ; // RETURN
+      }
+      // =========================================================================    
     private:
       // ======================================================================
       /// copy constructor is disabled 
