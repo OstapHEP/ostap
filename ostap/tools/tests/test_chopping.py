@@ -149,15 +149,24 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         verbose        = False    )
 
     from ostap.utils.timing import timing
-    with timing ( 'for TMVA training' , logger ) : 
-        weights_files = trainer.train ()
-        tar_file      = trainer.tar_file
 
+    # sequential trainig 
+    #with timing ( 'for TMVA training' , logger ) : 
+    #    weights_files = trainer.train ()
+    #    tar_file      = trainer.tar_file
+    
+    # parallel trainig 
+    with timing ( 'for TMVA training' , logger ) : 
+        trainer.ptrain() 
+        tar_file      = trainer.tar_file
+        
 # =============================================================================
 # remove unnesessary output files
 for f in trainer.output_files :
-    if os.path.exists ( f ) : os.remove ( f ) 
-
+    if os.path.exists ( f ) and os.path.isfile( f ) :
+        try    : os.remove ( f )
+        except : pass
+    
 # =============================================================================
 ## Use trained TMVA
 # =============================================================================

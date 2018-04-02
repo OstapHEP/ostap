@@ -862,8 +862,13 @@ ROOT.TChain.__add__  = _tc_add_
 ROOT.TChain.__radd__ = _tc_add_
 
 # =============================================================================
-from ostap.utils.utils import CleanUp 
-class Tree(CleanUp) :
+from ostap.utils.utils import CleanUp
+# =============================================================================
+## @class Chain
+#  simple class to keep definitinon of tree/chain
+class Chain(CleanUp) :
+    """Simple class to keep definitinon of tree/chain
+    """
     def __init__ ( self , tree = None ,  name = None , files = [] ) :
         
         if files and isinstance ( files , str ) : files = [ files ] 
@@ -904,9 +909,10 @@ class Tree(CleanUp) :
                 raise AttributeError("Invalid params %s/%s/%s" % ( tree , name , files ) )
 
     ## get tree/chain 
-    def tree (  self  ) :
-        chain = ROOT.TChain ( self.name )
-        for f in  self.files : chain.Add ( f ) 
+    def chain (  self  ) :
+        chain = ROOT.TChain ( self.name )        
+        for f in self.files : chain.Add ( f ) 
+        return chain 
         
     @property
     def name  ( self ) :

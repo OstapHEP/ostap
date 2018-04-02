@@ -269,7 +269,11 @@ class Trainer(object):
         
         self.__methods           = tuple ( methods    )
         self.__variables         = tuple ( variables  )
-
+        
+        from ostap.trees.trees import Chain
+        if isinstance ( signal     , Chain ) : signal     =     signal.chain ()
+        if isinstance ( background , Chain ) : background = background.chain ()
+        
         self.__signal            = signal
         self.__signal_cuts       = signal_cuts  
         self.__signal_weight     = signal_weight
@@ -280,7 +284,6 @@ class Trainer(object):
         
         self.__spectators        = [] 
 
-        
         self.__verbose = True if verbose else False 
         self.__name    = name 
 
@@ -292,6 +295,7 @@ class Trainer(object):
         self.__class_files   = []
         self.__output_file   = output_file if output_file else '%s.root' % self.name
         self.__tar_file      = None 
+        self.__log_file      = None 
         #
         ## minor adjustment
         #
@@ -305,9 +309,9 @@ class Trainer(object):
             
         if  self.verbose :
             
-            if   0 <= opts.find ( '!V:' ) : opts.replace ('!V:','V:')
-            elif 0 <= opts.find (  'V:' ) : pass 
-            else                          : opts += ':V:'
+            if   0 <= opts.find ( '!V:'      ) : opts.replace ('!V:','V:')
+            elif 0 <= opts.find (  'V:'      ) : pass 
+            else                               : opts += ':V:'
 
             if   0 <= opts.find ( '!Silent:' ) : pass
             elif 0 <= opts.find (  'Silent:' ) : opts.replace ('Silent:' , '!Silent:')
@@ -325,7 +329,7 @@ class Trainer(object):
 
 
         from ostap.utils.basic import isatty 
-        if isatty()  :
+        if isatty() and self.verbose :
             
             if   0 <= opts.find ( '!DrawProgressBar' ) : opts.replace ('!DrawProgressBar', 'DrawProgressBar' )
             elif 0 <= opts.find (  'DrawProgressBar' ) : pass
@@ -459,6 +463,10 @@ class Trainer(object):
     def tar_file ( self ) :
         """``tar_file''  : the compressed (gz) tar file with results"""
         return str(self.__tar_file) if self.__tar_file else None 
+    @property
+    def log_file ( self ) :
+        """``log_file''  : the name of log-file """
+        return str(self.__log_file) if self.__log_file else None 
 
     # =========================================================================
     ## train TMVA 
@@ -532,23 +540,33 @@ class Trainer(object):
         for m in self.methods :
             factory.BookMethod ( dataloader , *m )
 
-        # Train MVAs
-        ms = tuple( i[1] for i in  self.methods )
-        logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
-        factory.TrainAllMethods    ()
-        # Test MVAs
-        logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
-        factory.TestAllMethods     ()
-        # Evaluate MVAs
-        logger.info  ( "Trainer(%s): Evaluate all methods %s " % ( self.name , ms ) )
-        factory.EvaluateAllMethods ()
+        from ostap.logger.utils import tee_cpp , NoContext
+        logfile = self.name + '.log'
+        if os.path.exists ( logfile ) :
+            try    : os.remove ( logfile )
+            except : pass
+        ##with tee_cpp ( log_file ) if self.verbose else  NoContext() :
+        with NoContext() :
+            # Train MVAs
+            ms = tuple( i[1] for i in  self.methods )
+            logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
+            factory.TrainAllMethods    ()
+            # Test MVAs
+            logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
+            factory.TestAllMethods     ()
+            # Evaluate MVAs
+            logger.info  ( "Trainer(%s): Evaluate all methods %s " % ( self.name , ms ) )
+            factory.EvaluateAllMethods ()
+            
         # Save the output.
-        logger.debug ( "Trainer(%s): Output ROOT file %s is closed" % ( self.name , outFile.GetName() ) )  
+        logger.debug ( "Trainer(%s): Output ROOT file %s is closed" % ( self.name , outFile.GetName() ) )
+            
         outFile.Close()
 
         import glob, os 
         self.__weights_files = [ f for f in glob.glob ( self.__pattern_xml ) ]
         self.__class_files   = [ f for f in glob.glob ( self.__pattern_C   ) ]
+        self.__log_file      = logfile if os.path.exists ( logfile ) else None 
         
         del dataloader
         del factory 

@@ -215,12 +215,13 @@ class Trainer(object) :
         self.__category  = category 
         self.__N         = N
 
+        self.__signal            = signal     
+        self.__background        = background 
+
         self.__methods           = tuple(methods) 
-        self.__signal            = signal
         self.__signal_weight     = signal_weight 
         self.__signal_cuts       = ROOT.TCut ( signal_cuts )     
         
-        self.__background        = background 
         self.__background_weight = background_weight 
         self.__background_cuts   = ROOT.TCut ( background_cuts ) 
         
@@ -236,7 +237,7 @@ class Trainer(object) :
         self.__sig_histos        = ()
         self.__bkg_histos        = ()
         
-
+        
         cat = '(%s)%%%d' % ( self.category , self.N  )
         
         if self.chop_signal      :
@@ -259,44 +260,61 @@ class Trainer(object) :
             st = hb2.stat()
             if 0 >=  st.min()  : logger.warning ("Some background categories are empty!")                 
             logger.info('Background category population mean/rms: %s/%s' % ( st.mean() , st.rms() ) )
+
         
+        ##  trick to please Kisa 
+        from ostap.trees.trees import Chain
+        self.__signal            = Chain ( signal     ) 
+        self.__background        = Chain ( background )  
+        
+        print 'CHOPPER:', type(self.signal) , type(self.background)
+  
         ## book the trainers 
-        self.__trainers  = []
-
-        for i in range ( N ) : 
-            nam       =  '%s_%03d' % ( self.name , i )
-            scuts     = self.    signal_cuts 
-            bcuts     = self.background_cuts 
-            icategory = "(%s)!=%d" % ( cat , i ) 
-            if self.chop_signal     :
-                scuts = icategory * scuts if scuts else icategory
-            if self.chop_background :
-                bcuts = icategory * bcuts if bcuts else icategory
-
-            t = TMVATrainer ( methods           = self.methods           ,
-                              variables         = self.variables         ,
-                              signal            = self.signal            ,
-                              background        = self.background        ,
-                              spectators        = self.spectators        ,
-                              bookingoptions    = self.bookingoptions    ,
-                              configuration     = self.configuration     ,
-                              signal_weight     = self.signal_weight     ,
-                              background_weight = self.background_weight ,
-                              output_file       = ''      , 
-                              ##
-                              signal_cuts       = scuts   , 
-                              background_cuts   = bcuts   ,
-                              ##
-                              name              = nam     ,
-                              verbose           = self.verbose )
-            self.__trainers.append ( t )
-            
-        self.__trainers = tuple ( self.__trainers )
-        
+        self.__trainers      = () 
         self.__weights_files = []
         self.__class_files   = []
         self.__output_files  = []
         self.__tar_file      = None 
+
+    ## create all trainers 
+    def __create_trainers ( self ) :
+        if self.trainers : logger.debug ('Remove existing trainers ')
+        self.__trainers = [] 
+        for i in  range ( self.N ) : self.__trainers.append ( self.create_trainer ( i ) )
+        self.__trainers = tuple ( self.__trainers ) 
+
+    ## create the trainer for category "i"
+    def create_trainer ( self , i , verbose = True ) :
+        """Create the trainer for category ``i''
+        """
+        
+        cat       = '(%s)%%%d' % ( self.category , self.N  )
+        nam       =  '%s_%03d' % ( self.name , i )
+        scuts     = self.    signal_cuts 
+        bcuts     = self.background_cuts 
+        icategory = "(%s)!=%d" % ( cat , i ) 
+        if self.chop_signal     :
+            scuts = icategory * scuts if scuts else icategory
+        if self.chop_background :
+            bcuts = icategory * bcuts if bcuts else icategory
+            
+        t = TMVATrainer ( methods           = self.methods           ,
+                          variables         = self.variables         ,
+                          signal            = self.signal            ,
+                          background        = self.background        ,
+                          spectators        = self.spectators        ,
+                          bookingoptions    = self.bookingoptions    ,
+                          configuration     = self.configuration     ,
+                          signal_weight     = self.signal_weight     ,
+                          background_weight = self.background_weight ,
+                          output_file       = ''      , 
+                          ##
+                          signal_cuts       = scuts   , 
+                          background_cuts   = bcuts   ,
+                          ##
+                          name              = nam     ,
+                          verbose           = verbose )
+        return t 
 
     @property
     def name    ( self ) :
@@ -409,7 +427,7 @@ class Trainer(object) :
     @property
     def output_files ( self ) :
         """``output_files'': the output files """
-        return str(self.__output_files)
+        return tuple(self.__output_files)
 
     @property
     def tar_file ( self ) :
@@ -441,6 +459,11 @@ class Trainer(object) :
         >>> output_files  = trainer. output_files ## output ROOT files 
         >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
         """
+        ## create the trainers 
+        self.__create_trainers()
+
+        assert 1<= self.N and self.N == len ( self.trainers ), 'Invalid trainers!'
+        
         weights  = []
         classes  = []
         outputs  = [] 
@@ -450,12 +473,25 @@ class Trainer(object) :
             t.train() 
             weights  += [ t.weights_files ] 
             classes  += [ t.  class_files ] 
+            outputs  += [ t. output_file  ] 
             tarfiles += [ t.    tar_file  ] 
 
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
 
+        self.make_tarfile ( tarfiles )
+
+        logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
+        logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.  class_files ) ) 
+        logger.info  ( "Trainer(%s): Output  files : %s" % ( self.name , self. output_files ) ) 
+        logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) ) 
+
+        return self.__weights_files 
+
+    ## create the tarfile from the list of tarfiles 
+    def make_tarfile ( self , tarfiles ) : 
+    
         import tarfile, os  
         tfile = self.name + '.tgz'
         if os.path.exists ( tfile ) :
@@ -466,13 +502,55 @@ class Trainer(object) :
             logger.info  ( "Trainer(%s): Tar/gz  file  : %s" % ( self.name , tfile ) ) 
             if self.verbose : tar.list ()
             
-        ## finally set tar-file 
+        ## finally set the tar-file 
         if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
-            self.__tar_file = tfile 
+            self.__tar_file = tfile
+            
+        return tfile
+
+    # =======================================================================
+    ## use the parallel training 
+    def ptrain ( self ) :
+        """Use the parallel training
+        """
+        from ostap.parallel.kisa import ChopperTraining, WorkManager
+
+        import sys 
+        task   = ChopperTraining()
+        wmgr   = WorkManager ( silent = False )
+        params = [ ( i , self ) for i in range ( self.N ) ]
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+        
+        wmgr.process( task, params )
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        assert self.N == len(task.output[0]), 'Invalid number of weights files '
+        assert self.N == len(task.output[1]), 'Invalid number of   class files '
+        assert self.N == len(task.output[2]), 'Invalid number of  output files '
+        assert self.N == len(task.output[3]), 'Invalid number of     tar files '
+        
+        weights  = [ i[1] for i in task.output[0] ]
+        classes  = [ i[1] for i in task.output[1] ]
+        outputs  = [ i[1] for i in task.output[2] ]
+        tarfiles = [ i[1] for i in task.output[3] ]
+        
+        self.__weights_files = tuple ( weights ) 
+        self.__class_files   = tuple ( classes )
+        self.__output_files  = tuple ( outputs )
+        
+        self.make_tarfile ( tarfiles )
+
+        logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
+        logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.  class_files ) ) 
+        logger.info  ( "Trainer(%s): Output  files : %s" % ( self.name , self. output_files ) ) 
+        logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) ) 
 
         return self.__weights_files 
-
-
+        
 # =============================================================================
 ## @class WeightFiles
 #  helper structure  to deal with weights files

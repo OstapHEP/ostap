@@ -22,7 +22,8 @@ __all__     = (
     'FillTask'    , ## "Fill task" for loooong chains/trees  
     'cproject'    , ##  project looong TChain into historgam   
     'tproject'    , ##  project looong TTree into histogram
-    'fillDataSet' 
+    'fillDataSet' ,
+    'WorkManager' 
     ) 
 # =============================================================================
 # logging 
@@ -35,6 +36,7 @@ logger.debug ( 'Multiprocessing functionality for Ostap')
 # =============================================================================
 import operator
 import ostap.parallel.parallel as Parallel
+WorkManager = Parallel.WorkManager 
 # =============================================================================
 n_large = 2**63 - 1  ## ROOT.TVirtualTreePlayer.kMaxEntries
 ## n_large = ROOT.TVirtualTreePlayer.kMaxEntries
@@ -521,7 +523,37 @@ def  fillDataSet ( chain , variables , selection , ppservers = () , silent = Fal
 
     return task.output
 
-
+# ===================================================================================
+## @class ChopperTraining
+class ChopperTraining(Parallel.Task) :
+    def __init__          ( self ) : self.output = ()
+    def initializeLocal   ( self ) : self.output = () 
+    def process           ( self , params ) :
+        import ostap.tools.tmva
+        category , chopper = params
+        trainer  = chopper.create_trainer ( category , False )
+        trainer.train()
+        self.output = (
+            [ ( category , trainer.weights_files ) ] ,
+            [ ( category , trainer.  class_files ) ] ,
+            [ ( category , trainer. output_file  ) ] ,
+            [ ( category , trainer.    tar_file  ) ] ,
+            )
+        
+    ## merge results/datasets 
+    def _mergeResults( self , result) :
+        if not  self.output : self.output =  result
+        else :
+            weights  = list ( self.output[0] ) + list ( result[0] ) 
+            classes  = list ( self.output[1] ) + list ( result[1] ) 
+            outputs  = list ( self.output[2] ) + list ( result[2] ) 
+            tarfiles = list ( self.output[3] ) + list ( result[3] ) 
+            weights  . sort()
+            classes  . sort()
+            outputs  . sort()
+            tarfiles . sort()
+            self.output = weights , classes , outputs , tarfiles 
+                            
 # ===================================================================================
 ## parallel processing of loooong chain
 #  @code

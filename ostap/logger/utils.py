@@ -295,7 +295,7 @@ class TeePy(object) :
 #  >>> with tee_cpp('tee.txt') :
 #  ...         some_cpp_function() 
 #  @endcode
-#  @see Gaudi::Utils::Tee
+#  @see Ostap::Utils::Tee
 #  @attention: Python&C-printouts probably  are not affected 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  date 2012-07-07
@@ -308,16 +308,22 @@ class TeeCpp(object) :
     
     """
     def __init__ ( self , fname ) :
-        self._tee = cpp.Gaudi.Utils.Tee ( fname )
+        self.stdout.flush ()
+        self.stderr.flush ()
+        self._tee = cpp.Ostap.Utils.Tee ( fname )
         
     ## context manager
     def __enter__ ( self      ) :
+        self.stdout.flush ()
+        self.stderr.flush ()
         self._tee.enter ()
         return self 
     ## context manager
     def __exit__  ( self , *_ ) :
         self._tee.exit  ()
         del self._tee
+        self.stdout.flush ()
+        self.stderr.flush ()
         
 # =============================================================================
 ## very simple context manager to suppress RooFit printout
