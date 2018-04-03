@@ -37,7 +37,7 @@ namespace
   static_assert ( s_max > 0 , "std::numeric_limits<float>::max is too small" );
   static_assert ( s_min < 0 , "std::numeric_limits<float>::max is too small" );
   // ==========================================================================
-  static char s_method[] = "__call__" ;
+  static char s_method[] = "evaluate" ;
   // =========================================================================
   double call_python ( PyObject* self )  
   {
@@ -108,7 +108,7 @@ Ostap::Functions::PyFuncTree::~PyFuncTree() { Py_XDECREF ( m_self ) ; }
 // ============================================================================
 // the basic 
 // ============================================================================
-double Ostap::Functions::PyFuncTree::evaluate ( const TTree* t ) const
+double Ostap::Functions::PyFuncTree::operator() ( const TTree* t ) const
 {
   /// redefine the current  tree 
   if ( nullptr != t ) { m_tree = t ; }
@@ -135,7 +135,7 @@ Ostap::Functions::PyFuncData::~PyFuncData() { Py_XDECREF ( m_self ) ; }
 // ============================================================================
 // the basic 
 // ============================================================================
-double Ostap::Functions::PyFuncData::evaluate ( const RooAbsData* d ) const
+double Ostap::Functions::PyFuncData::operator() ( const RooAbsData* d ) const
 {
   /// redefine the current  tree 
   if ( nullptr != d ) { m_data = d ; }

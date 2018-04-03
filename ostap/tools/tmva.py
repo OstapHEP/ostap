@@ -148,7 +148,21 @@ class WeightsFiles(Utils.CleanUp) :
         "``files'': the weigths file"
         import copy
         return copy.deepcopy ( self.__weights_files ) 
-        
+# =============================================================================
+## some manipulations with TMVA options 
+def opts_replace ( opts , expr , direct = True ) :
+    """some manipulations with TMVA options"""
+    if  direct : 
+        if   0 <= opts.find ( '!' + expr ) : opts  = opts.replace ( '!' + expr , expr )
+        elif 0 <= opts.find (       expr ) : pass
+        else                               : opts += ':'  + expr
+    else :
+        if   0 <= opts.find ( '!' + expr ) : pass 
+        elif 0 <= opts.find (       expr ) : opts  = opts.replace ( expr , '!' + expr )
+        else                               : opts += ':!' + expr
+        #
+    while 0<= opts.find ( '::' ) : opts = opts.replace ( '::' , ':' )
+    return opts 
 # =============================================================================
 ## @class Trainer
 #  Helper class to train TMVA
@@ -299,62 +313,31 @@ class Trainer(object):
         #
         ## minor adjustment
         #
+        
         opts = self.__bookingoptions
-        if      self.verbose and 0 <= opts.find ('!V:')   : opts.replace('!V:', 'V:')
-        if not  self.verbose and 0 > opts.find ('Silent') : opts+= ':Silent'
         
         if 0 > opts.find ( "AnalysisType=" ) :
             opts += ":AnalysisType=Classification"
             logger.debug('Trainer(%s): booking options are appended with ":AnalysisType=Classification"' % name )
-            
-        if  self.verbose :
-            
-            if   0 <= opts.find ( '!V:'      ) : opts.replace ('!V:','V:')
-            elif 0 <= opts.find (  'V:'      ) : pass 
-            else                               : opts += ':V:'
 
-            if   0 <= opts.find ( '!Silent:' ) : pass
-            elif 0 <= opts.find (  'Silent:' ) : opts.replace ('Silent:' , '!Silent:')
-            else                               : opts += ':!Silent:'
-            
-        else :
-            
-            if   0 <= opts.find ( '!V:'      ) : pass
-            elif 0 <= opts.find (  'V:'      ) : opts.replace ('V:','!V:')
-            else                               : opts += ':!V:'
-            
-            if   0 <= opts.find ( '!Silent:' ) : opts.replace ('!Silent:' , 'Silent:')
-            elif 0 <= opts.find (  'Silent:' ) : pass
-            else                               : opts += ':Silent:'
+        opts = opts_replace ( opts , 'V:'               ,     self.verbose )
+        opts = opts_replace ( opts , 'Silent:'          , not self.verbose )
+        
+        from ostap.utils.basic import isatty
+        opts = opts_replace ( opts , 'DrawProgressBar:' , self.verbose and isatty() ) 
+        opts = opts_replace ( opts , 'Color:'           , self.verbose and isatty() ) 
 
+        _methods  = [] 
+        for _m in self.methods :
+            _m    = list( _m ) 
+            _m[2] = opts_replace ( _m[2] , 'H:' , self.verbose )
+            _methods.append (  tuple ( _m ) )
+        self.__methods = tuple (  _methods ) 
 
-        from ostap.utils.basic import isatty 
-        if isatty() and self.verbose :
-            
-            if   0 <= opts.find ( '!DrawProgressBar' ) : opts.replace ('!DrawProgressBar', 'DrawProgressBar' )
-            elif 0 <= opts.find (  'DrawProgressBar' ) : pass
-            else                                       : opts += ':DrawProgressBar:'
-            
-            if   0 <= opts.find ( '!Color' )           : opts.replace ('!Color', 'Color' )
-            elif 0 <= opts.find (  'Color' )           : pass
-            else                                       : opts += ':Color:'
-            
-        else :
-            
-            if   0 <= opts.find ( '!DrawProgressBar' ) : pass  
-            elif 0 <= opts.find (  'DrawProgressBar' ) : opts.replace ('DrawProgressBar', '!DrawProgressBar' ) 
-            else                                       : opts += ':!DrawProgressBar:'
-            
-            if   0 <= opts.find ( '!Color' )           : pass 
-            elif 0 <= opts.find (  'Color' )           : opts.replace ('Color', '!Color' )
-            else                                       : opts += ':!Color:'
-
-
-
-        self.__bookingoptions = opts
+        self.__bookingoptions = str ( opts )
 
         ## clean-up 
-        dirname    = str(self.name)
+        dirname    = str( self.name )
         for s in ( ' ' , '%' , '!' , '>' , '<' , '\n' , '?' ) :  
             while s in dirname : dirname = dirname.replace ( ' ' , '_' )
             
@@ -468,13 +451,52 @@ class Trainer(object):
         """``log_file''  : the name of log-file """
         return str(self.__log_file) if self.__log_file else None 
 
+
     # =========================================================================
     ## train TMVA 
     #  @code
     #  trainer.train ()
     #  @endcode  
     #  @return the name of output XML file with the weights 
-    def train ( self ) :
+    def train ( self , log = False , silent = False )  :
+        """ train TMVA 
+        >>> trainer.train ()
+        return the name of output XML files with the weights 
+        """
+        
+        if   log and isinstance ( log , str ) : log = log
+        elif log                              : log = self.name + '.log'
+        
+        self.__log_file = None
+        if log :
+            #
+            try    : os.remove ( log )
+            except : pass 
+            #
+            opts = self.__bookingoptions
+            opts = opts_replace ( opts , 'DrawProgressBar:' , False )
+            opts = opts_replace ( opts , 'Color:'           , False )
+            self.__bookingoptions = opts
+            from ostap.logger.utils import TeeCpp , OutputC
+            with OutputC ( log , True , True ) if silent else TeeCpp ( log )  :
+                from ostap.logger.logger import noColor
+                with noColor() : result = self.__train ()
+            if os.path.exists ( log ) and os.path.isfile ( log ) : self.__log_file = log
+            if self.log_file : logger.info ( 'Log-file created: %s'  % self.log_file )
+            return result
+        
+        ## no log-file        
+        from ostap.logger.utils import MuteC , NoContext
+        with MuteC() if silent else NoContext() :
+            return self.__train ()
+            
+    # =========================================================================
+    ## train TMVA 
+    #  @code
+    #  trainer.train ()
+    #  @endcode  
+    #  @return the names of output XML files with the weights 
+    def __train ( self ) :
         """Train the TMVA:
         - returns the names of output XML file with the weights 
         >>> trainer.train () 
@@ -537,27 +559,18 @@ class Trainer(object):
             ROOT.TCut ( self.background_cuts ) ,
             self.configuration            )
         #
-        for m in self.methods :
-            factory.BookMethod ( dataloader , *m )
-
-        from ostap.logger.utils import tee_cpp , NoContext
-        logfile = self.name + '.log'
-        if os.path.exists ( logfile ) :
-            try    : os.remove ( logfile )
-            except : pass
-        ##with tee_cpp ( log_file ) if self.verbose else  NoContext() :
-        with NoContext() :
-            # Train MVAs
-            ms = tuple( i[1] for i in  self.methods )
-            logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
-            factory.TrainAllMethods    ()
-            # Test MVAs
-            logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
-            factory.TestAllMethods     ()
-            # Evaluate MVAs
-            logger.info  ( "Trainer(%s): Evaluate all methods %s " % ( self.name , ms ) )
-            factory.EvaluateAllMethods ()
+        for m in self.methods : factory.BookMethod ( dataloader , *m )
             
+        # Train MVAs
+        ms = tuple( i[1] for i in  self.methods )
+        logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
+        factory.TrainAllMethods    ()
+        # Test MVAs
+        logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
+        factory.TestAllMethods     ()
+        # Evaluate MVAs
+        logger.info  ( "Trainer(%s): Evaluate all methods %s " % ( self.name , ms ) )
+        factory.EvaluateAllMethods ()        
         # Save the output.
         logger.debug ( "Trainer(%s): Output ROOT file %s is closed" % ( self.name , outFile.GetName() ) )
             
@@ -566,7 +579,6 @@ class Trainer(object):
         import glob, os 
         self.__weights_files = [ f for f in glob.glob ( self.__pattern_xml ) ]
         self.__class_files   = [ f for f in glob.glob ( self.__pattern_C   ) ]
-        self.__log_file      = logfile if os.path.exists ( logfile ) else None 
         
         del dataloader
         del factory 
@@ -589,6 +601,8 @@ class Trainer(object):
         logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
         logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.class_files   ) ) 
         logger.info  ( "Trainer(%s): Output  file  : %s" % ( self.name , self.output_file   ) ) 
+        if  self.log_file :
+            logger.info  ( "Trainer(%s): Log     file  : %s" % ( self.name , self.log_file  ) ) 
             
         return self.weights_files
 
@@ -717,10 +731,12 @@ class Reader(object)  :
     #  @code
     #  weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ] 
     #  @endcode
-    def __init__ ( self          ,
-                   name          , 
-                   variables     ,
-                   weights_files ) :
+    def __init__ ( self                 ,
+                   name                 , 
+                   variables            ,
+                   weights_files        ,
+                   options      = ''    ,
+                   verbose      = True  ) :
         """Constrct the reader         
         >>> from ostap.tools.tmva import Reader
         >>> r = Reader ( 'MyTMVA' ,
@@ -750,7 +766,13 @@ class Reader(object)  :
         
         ROOT.TMVA.Tools.Instance()
         
-        self.__reader = ROOT.TMVA.Reader()
+        verbose = True if verbose else False 
+        options = opts_replace ( options , 'V:'      ,     verbose )
+        options = opts_replace ( options , 'Silent:' , not verbose )
+        from ostap.utils.basic import isatty
+        optiont = opts_replace ( options , 'Color:'  , verbose and isatty() ) 
+
+        self.__reader = ROOT.TMVA.Reader( options , verbose )
         self.__name   = name
 
         ## treat the weigths files
@@ -791,7 +813,6 @@ class Reader(object)  :
         ## declare all variables to TMVA.Reader 
         for v in self.__variables :
             self.__reader.AddVariable ( v[0] , v[2] )            
-
         
         self.__methods = weights.methods
 

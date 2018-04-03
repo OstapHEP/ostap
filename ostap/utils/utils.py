@@ -553,34 +553,65 @@ def implicitMT ( enable = True ) :
     """
     return ImplicitMT ( enable ) 
 
-
+# =============================================================================
+## @class CleanUp
+#  Simple (base) class to get temporary files   and directories and to remove them at axit
 class  CleanUp(object) :
     _tmpfiles = set()
     _tmpdirs  = set()
 
     @property
-    def tmpdir  ( self , suffix='' , prefix = 'tmp' ) :
-        """``tmpdir'' :return the name of temproary directory"""
-        import tempfile
-        tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
-        self._tmpdirs.add ( tmp )
-        return tmp
+    def tmpdir ( self ) :
+        """``tmpdir'' : return the name of temporary managed directory
+        - the managed directory will be cleaned-up and deleted at-exit
+        >>> o    = CleanUp()
+        >>> tdir = o.tmpdir 
+        """
+        tdir = CleanUp.tempdir () 
+        return tdir
     
     @property
     def tmpdirs  ( self ) :
-        """``tmpdirs'' - list of currently managed temporary directories"""
+        """``tmpdirs'' - list of currently registered managed temporary directories"""
         return tuple ( self._tmpfiles )
     
     @property 
     def tmpfiles ( self ) :
-        """``tempfiles'' : list of registered temporary files"""
+        """``tempfiles'' : list of registered managed temporary files"""
         return list ( self._tmpfiles ) 
     @tmpfiles.setter
     def tmpfiles ( self , other ) :
         if isinstance ( other , str ) : other = [ other ]
         for o in other : self._tmpfiles.add ( o )
-        
-        
+
+    @staticmethod
+    def tempdir ( suffix = '' , prefix = 'tmp_' ) :
+        """Get the name of the temporary directory.
+        The directory will be cleaned-up and deleted at-exit.
+        >>> dirname = CleanUp.tempdir() 
+        """
+        import tempfile
+        tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
+        CleanUp._tmpdirs.add ( tmp )
+        return tmp        
+    
+    @staticmethod
+    def tempfile ( suffix = '' , prefix = 'tmp_' , dir = None ) :
+        """Get the name of the temporary file. The file will be deleted at-exit
+        >>> fname = CleanUp.tempfile() 
+        """
+        import tempfile, os 
+        _file = tempfile.NamedTemporaryFile( suffix = suffix ,
+                                             prefix = prefix ,
+                                             delete = False  )
+        fname = _file.name
+        _file.close()
+        os.unlink(fname)
+        assert not os.path.exists ( fname )
+        CleanUp._tmpfiles.add ( fname )
+        return fname
+
+# =============================================================================
 import atexit
 @atexit.register
 def _cleanup_ () :

@@ -1975,7 +1975,136 @@ for t in ( ROOT.RooAbsReal       ,
 
     if hasattr ( t , 'getVal' ) and not hasattr ( t , '__float__' ) :
         t.__float__ = lambda s : s.getVal()
+
+
+
+
+#==============================================================================
+def _ds_table_0_ ( dataset , variables = [] ) :
+    """Print data set as table
+    """
+    varset = dataset.get()
+    from ostap.core.core import valid_pointer
+    if not valid_pointer ( varset ) :
+        logger.error('Invalid dataset')
+        return ''
+
+    vars = list ( variables ) 
+    if     vars : vars = [ i  for i in vars if i in varset ]
+    if not vars : vars = [ i.GetName()     for i in varset ] 
+    #
+    _vars = []
+    for v in vars :
+        vv = getattr ( varset , v ) 
+        s = dataset.statVar( v )  
+        mnmx = s.minmax ()
+        mean = s.mean   ()
+        rms  = s.rms    ()
+        r    = ( vv.GetName  () ,                      ## 0 
+                 vv.GetTitle () ,                      ## 1 
+                 ('%+.5g' % mean.value() ).strip() ,   ## 2
+                 ('%-.5g' % mean.error() ).strip() ,   ## 3 
+                 ('%.5g'  % rms          ).strip() ,   ## 4 
+                 ('%+.5g' % mnmx[0]      ).strip() ,   ## 5
+                 ('%+.5g' % mnmx[1]      ).strip() )   ## 6 
+        _vars.append ( r )
         
+    _vars.sort() 
+    name_l  = len ( 'Variable'    ) + 2 
+    desc_l  = len ( 'Description' ) + 2 
+    mean_l  = len ( 'mean' ) + 2 
+    err_l   = len ( 'err'  ) + 2 
+    rms_l   = len ( 'rms'  ) + 2
+    min_l   = len ( 'min'  ) + 2 
+    max_l   = len ( 'max'  ) + 2 
+    for v in _vars :
+        name_l = max ( name_l , len ( v[0] ) )
+        desc_l = max ( desc_l , len ( v[1] ) )
+        mean_l = max ( mean_l , len ( v[2] ) )
+        err_l  = max ( err_l  , len ( v[3] ) )
+        rms_l  = max ( rms_l  , len ( v[4] ) )
+        min_l  = max ( min_l  , len ( v[5] ) )
+        max_l  = max ( max_l  , len ( v[6] ) )
+        
+    sep      = '# +%s+%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
+                                        ( desc_l       + 2 ) * '-' ,
+                                        ( mean_l+err_l + 6 ) * '-' ,
+                                        ( rms_l        + 2 ) * '-' ,
+                                        ( min_l +max_l + 5 ) * '-' )
+    fmt = '# | %%%ds | %%-%ds | %%%ds +- %%-%ds | %%%ds | %%%ds / %%-%ds |'  % (
+        name_l ,
+        desc_l ,
+        mean_l ,
+        err_l  ,
+        rms_l  ,
+        min_l  ,
+        max_l  )
+    
+    report  = 'Dataset(%s;%s): %d entries, %d variables ' %  ( dataset.GetName  () ,
+                                                               dataset.GetTitle () ,
+                                                               len ( dataset )     ,
+                                                               len ( varset  )     )
+    if dataset.isWeighted() :
+        report += ' Weighted'
+        store = dataset.store() 
+        if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) :
+            import ostap.trees.trees 
+            tree     = store.tree()
+            branches = set ( tree.branches() )
+            vvars    = set ( [ i.GetName() for i in  varset ] )
+            wvars    = branches - vvars
+            if 1 == len ( wvars ):
+                report += ' with "%s"' % wvars.pop()
+                
+    header  = fmt % ( 'Variable'    ,
+                      'Description' ,
+                      'mean'        ,
+                      'err'         ,
+                      'rms'         ,
+                      'min'         ,
+                      'max'         )
+    
+    report += '\n' + sep
+    report += '\n' + header
+    report += '\n' + sep            
+    for v in _vars :
+        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , v[6] )
+        report += '\n' + line  
+    report += '\n' + sep
+    return report , len ( sep ) 
+
+# ==============================================================================
+## print dataset in  a form of the table
+#  @code
+#  dataset = ...
+#  print dataset.table() 
+#  @endcode
+def _ds_table_ (  dataset ,  variables = [] ) :
+    """print dataset in a form of the table
+    >>> dataset = ...
+    >>> print dataset.table()
+    """
+    return _ds_table_0_ ( dataset ,  variables )[0]
+
+# =============================================================================
+##  print DataSet
+def _ds_print2_ ( dataset ) :
+    """Print dataset"""
+    if dataset.isWeighted() :
+        store = dataset.store()
+        if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) : pass
+        else : return _ds_print_ ( dataset )        
+    from ostap.utils.basic import terminal_size, isatty 
+    if not isatty() : return _ds_table_ ( dataset )
+    th  , tw  = terminal_size()
+    rep , wid = _ds_table_0_ ( dataset ) 
+    if wid < tw     : return rep
+    return _ds_print_ ( dataset )
+
+for t in ( ROOT.RooDataSet , ) :
+    t.__repr__    = _ds_print2_
+    t.__str__     = _ds_print2_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooAbsData    ,

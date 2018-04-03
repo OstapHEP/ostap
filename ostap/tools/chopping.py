@@ -267,14 +267,13 @@ class Trainer(object) :
         self.__signal            = Chain ( signal     ) 
         self.__background        = Chain ( background )  
         
-        print 'CHOPPER:', type(self.signal) , type(self.background)
-  
         ## book the trainers 
         self.__trainers      = () 
         self.__weights_files = []
         self.__class_files   = []
         self.__output_files  = []
         self.__tar_file      = None 
+        self.__log_file      = None 
 
     ## create all trainers 
     def __create_trainers ( self ) :
@@ -432,7 +431,12 @@ class Trainer(object) :
     @property
     def tar_file ( self ) :
         """``tar_file'': the compressed tar file"""
-        return str(self.__tar_file) if self.__tar_file else None 
+        return str(self.__tar_file) if self.__tar_file else None
+    
+    @property
+    def log_file ( self ) :
+        """``log_file'': the compressed tar file with tarinng log-files"""
+        return str(self.__log_file) if self.__log_file else None 
 
     # =========================================================================
     ## The main method: training of all subsamples 
@@ -468,6 +472,7 @@ class Trainer(object) :
         classes  = []
         outputs  = [] 
         tarfiles = [] 
+        logfiles = [] 
         for  t in self.trainers :
             logger.info  ( "Trainer(%s): train the trainer ``%s''" % ( self.name , t.name ) ) 
             t.train() 
@@ -475,42 +480,62 @@ class Trainer(object) :
             classes  += [ t.  class_files ] 
             outputs  += [ t. output_file  ] 
             tarfiles += [ t.    tar_file  ] 
+            logfiles += [ t.    log_file  ] if t.log_file else [] 
 
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
 
-        self.make_tarfile ( tarfiles )
+        self.make_tarfile ( tarfiles , logfiles )
 
-        logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
         logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.  class_files ) ) 
+        logger.debug ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
         logger.info  ( "Trainer(%s): Output  files : %s" % ( self.name , self. output_files ) ) 
-        logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) ) 
+        logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) )
+        if selg.log_file : 
+            logger.info  ( "Trainer(%s): Log/tgz file  : %s" % ( self.name , self. log_file ) ) 
+
 
         return self.__weights_files 
 
     ## create the tarfile from the list of tarfiles 
-    def make_tarfile ( self , tarfiles ) : 
+    def make_tarfile ( self , tarfiles , logfiles = [] ) : 
     
-        import tarfile, os  
+        import tarfile, os
+        
         tfile = self.name + '.tgz'
         if os.path.exists ( tfile ) :
             logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
             
         with tarfile.open ( tfile , 'w:gz' ) as tar :
             for x in  tarfiles: tar.add ( x )
-            logger.info  ( "Trainer(%s): Tar/gz  file  : %s" % ( self.name , tfile ) ) 
+            logger.debug ( "Trainer(%s): Tar/gz    file  : %s" % ( self.name , tfile ) ) 
             if self.verbose : tar.list ()
-            
+
         ## finally set the tar-file 
         if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
             self.__tar_file = tfile
+
+        if not logfiles : return tfile
+        
+        lfile = self.name + '_logs.tgz'
+        if os.path.exists ( lfile ) :
+            logger.debug  ( "Trainer(%s): Remove existing tar-logfile %s" % ( self.name , lfile ) )
+
+        with tarfile.open ( lfile , 'w:gz' ) as tar :
+            for x in  logfiles: tar.add ( x )
+            logger.debug ( "Trainer(%s): Tar/gz logfile  : %s" % ( self.name , lfile ) ) 
+            if self.verbose : tar.list ()
+            
+        ## finally set the tar-file 
+        if os.path.exists ( lfile ) and tarfile.is_tarfile( lfile ) :
+            self.__log_file = lfile 
             
         return tfile
 
     # =======================================================================
     ## use the parallel training 
-    def ptrain ( self ) :
+    def ptrain ( self , log = True , silent = True ) :
         """Use the parallel training
         """
         from ostap.parallel.kisa import ChopperTraining, WorkManager
@@ -518,7 +543,7 @@ class Trainer(object) :
         import sys 
         task   = ChopperTraining()
         wmgr   = WorkManager ( silent = False )
-        params = [ ( i , self ) for i in range ( self.N ) ]
+        params = [ ( i , self , log , silent ) for i in range ( self.N ) ]
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -532,23 +557,27 @@ class Trainer(object) :
         assert self.N == len(task.output[1]), 'Invalid number of   class files '
         assert self.N == len(task.output[2]), 'Invalid number of  output files '
         assert self.N == len(task.output[3]), 'Invalid number of     tar files '
+        assert self.N == len(task.output[4]), 'Invalid number of     log files '
         
-        weights  = [ i[1] for i in task.output[0] ]
-        classes  = [ i[1] for i in task.output[1] ]
-        outputs  = [ i[1] for i in task.output[2] ]
-        tarfiles = [ i[1] for i in task.output[3] ]
+        weights  = [ i[1] for i in task.output[0]         ]
+        classes  = [ i[1] for i in task.output[1]         ]
+        outputs  = [ i[1] for i in task.output[2]         ]
+        tarfiles = [ i[1] for i in task.output[3]         ]
+        logfiles = [ i[1] for i in task.output[4] if i[1] ]
         
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
         
-        self.make_tarfile ( tarfiles )
+        self.make_tarfile ( tarfiles , logfiles )
 
-        logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
         logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.  class_files ) ) 
+        logger.debug ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
         logger.info  ( "Trainer(%s): Output  files : %s" % ( self.name , self. output_files ) ) 
         logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) ) 
-
+        if self.log_file :
+            logger.info  ( "Trainer(%s): Log/tgz file  : %s" % ( self.name , self. log_file ) ) 
+            
         return self.__weights_files 
         
 # =============================================================================
@@ -672,12 +701,14 @@ class Reader(object) :
     
     - It it natually merges with Ostap's ``SelectorWithVars'' utility     
     """
-    def __init__ ( self          ,
-                   categoryfunc  ,
-                   N             , 
-                   variables     ,
-                   weights_files , 
-                   name         = 'ChopperReader' ) :
+    def __init__ ( self                           ,
+                   categoryfunc                   ,
+                   N                              , 
+                   variables                      ,
+                   weights_files                  , 
+                   name         = 'ChopperReader' ,
+                   options      = ''              ,
+                   verbose      = False           ) :
         """ Book the reader:
         >>> reader = Reader ( 
         ...    name          = 'CHOPPER' ,
@@ -712,7 +743,9 @@ class Reader(object) :
             
             self.__readers.append ( TMVAReader ( name          = inam                  ,
                                                  variables     = self.variables        ,
-                                                 weights_files = self.weights_files[i] ) )
+                                                 weights_files = self.weights_files[i] ,
+                                                 options       = options               ,
+                                                 verbose       = verbose               ) )
                 
         self.__readers  = tuple   ( self.__readers )
         self.__histo    = h1_axis ( [ -0.5 + i for i in range ( self.N + 1 ) ] ,
@@ -1008,7 +1041,7 @@ def addChoppingResponse ( dataset                     ,
             varlist = ROOT.RooArgList()
             for v in varset : varlist.add ( v )
             chopper = ROOT.RooFormulaVar( 'chopping' , chopper , varlist )
-            logger.info ( 'Create chopping function %s' %  chopper ) 
+            logger.debug ( 'Create chopping function %s' %  chopper ) 
 
     assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid choper type %s' % chopper 
         

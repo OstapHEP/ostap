@@ -36,9 +36,10 @@ Ostap::Functions::FuncFormula::FuncFormula
   const TTree*       tree       ,
   const std::string& name       )
   : Ostap::IFuncTree() 
-  , m_tree       ( tree    ) 
-  , m_formula    ( nullptr )  
-  , m_expression ( name    )  
+  , m_tree       ( tree       ) 
+  , m_formula    ( nullptr    )    
+  , m_expression ( expression )  
+  , m_name       ( name       )  
 {
   /// create the formula
   if ( m_tree ) 
@@ -54,7 +55,7 @@ Ostap::Functions::FuncFormula::FuncFormula
 // ============================================================================
 //  evaluate the formula for  TTree
 // ============================================================================
-double Ostap::Functions::FuncFormula::evaluate ( const TTree* tree ) const
+double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
 {
   //
   if ( nullptr != tree  && tree != m_tree )
@@ -117,7 +118,7 @@ Ostap::Functions::FuncRooFormula::FuncRooFormula
 // ============================================================================
 //  evaluate the formula for  Data
 // ============================================================================
-double Ostap::Functions::FuncRooFormula::evaluate ( const RooAbsData* data ) const
+double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) const
 {
   //
   if ( nullptr != data  && data != m_data )

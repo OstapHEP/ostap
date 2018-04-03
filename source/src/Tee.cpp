@@ -124,6 +124,7 @@ Ostap::Utils::Tee::Tee  ( const std::string&  filename   )
   , m_buffer (         ) 
   , m_keep   ( nullptr ) 
 {
+  std::cout << std::flush ;
   m_keep   = std::cout.rdbuf() ;
   m_buffer.reset ( new std::teebuf ( m_keep , m_file->rdbuf() ) ) ;
   std::cout.rdbuf ( m_buffer.get() ) ;
@@ -137,6 +138,7 @@ Ostap::Utils::Tee::Tee  ( std::ostream&  filestream   )
   , m_buffer (   ) 
   , m_keep   ( nullptr     ) 
 {
+  std::cout << std::flush ;
   m_keep   = std::cout.rdbuf() ;
   m_buffer.reset ( new std::teebuf ( m_keep , m_file->rdbuf() ) ) ;
   std::cout.rdbuf ( m_buffer.get() ) ;
@@ -156,6 +158,8 @@ void Ostap::Utils::Tee::enter (){}
 // ============================================================================
 void Ostap::Utils::Tee::exit  ()  
 {
+  std::cout << std::flush ;
+  if ( m_file ) { (*m_file) << std::flush ; }
   // avoid double exit 
   if ( nullptr == m_keep ) { return ; }
   //
@@ -164,6 +168,8 @@ void Ostap::Utils::Tee::exit  ()
   // 3. delete/close  the file (if needed) 
   if ( m_own ) { m_file.reset   () ; }
   else         { m_file.release () ; }
+  //
+  std::cout << std::flush ;
   //
   m_keep = nullptr ;
 }

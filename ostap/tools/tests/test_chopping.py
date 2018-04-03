@@ -31,7 +31,7 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================    
 from ostap.utils.utils import CleanUp
-data_file = os.path.join ( CleanUp().tmpdir , 'tmva_data_chopping.root')
+data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_chopping_' ) 
 
 if not os.path.exists( data_file ) :
     import random 
@@ -155,7 +155,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     #    weights_files = trainer.train ()
     #    tar_file      = trainer.tar_file
     
-    # parallel trainig 
+    #parallel trainig 
     with timing ( 'for TMVA training' , logger ) : 
         trainer.ptrain() 
         tar_file      = trainer.tar_file

@@ -12,7 +12,9 @@
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
-__all__     = () 
+__all__     = (
+    'Chain', ## helper class , deeded for multiprocessing 
+    ) 
 # =============================================================================
 import ROOT
 from ostap.core.core import cpp, VE
@@ -866,8 +868,9 @@ from ostap.utils.utils import CleanUp
 # =============================================================================
 ## @class Chain
 #  simple class to keep definitinon of tree/chain
+#  it is needed for multipircessing 
 class Chain(CleanUp) :
-    """Simple class to keep definitinon of tree/chain
+    """Simple class to keep definition of tree/chain
     """
     def __init__ ( self , tree = None ,  name = None , files = [] ) :
         
@@ -884,15 +887,17 @@ class Chain(CleanUp) :
                 if isinstance ( fdir , ROOT.TFile ) :
                     self.__files = fdir.GetName() ,
                 else :
-                    import tempfile
-                    tmpdir = self.tmpdir
-                    fname  = tempfile.mktemp  ( suffix = '.root' , dir = tmpdir )
-                    with ROOT.TFile ( fname , 'NEW') as tmpfile :
-                        c  = tree.Clone('') 
-                        c.SetDirectory ( tmpfile   )
-                        c.SetName ( tree.GetName() ) 
-                        tmpfile.Write ()
-                        tmpfile.ls() 
+                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree_' )
+                    from ostap.core.core import ROOTCWD
+                    with ROOTCWD() : 
+                        import ostap.io.root_file
+                        with ROOT.TFile ( fname , 'NEW') as tmpfile :
+                            tmpfile.cd() 
+                            c  = tree.Clone ( '' )
+                            c.SetDirectory ( tmpfile   )
+                            c.SetName ( tree.GetName() ) 
+                            tmpfile.Write ()
+                            tmpfile.ls()
                     self.__files    = fname ,
                     self.tempfiles += [ fname ]
                     
@@ -923,7 +928,6 @@ class Chain(CleanUp) :
         """``files''   : the files"""
         return tuple(self.__files)
     
-
                 
 # =============================================================================
 _decorated_classes_ = (

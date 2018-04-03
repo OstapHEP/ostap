@@ -530,14 +530,15 @@ class ChopperTraining(Parallel.Task) :
     def initializeLocal   ( self ) : self.output = () 
     def process           ( self , params ) :
         import ostap.tools.tmva
-        category , chopper = params
+        category , chopper ,log , silent = params
         trainer  = chopper.create_trainer ( category , False )
-        trainer.train()
+        trainer.train ( log , silent )
         self.output = (
             [ ( category , trainer.weights_files ) ] ,
             [ ( category , trainer.  class_files ) ] ,
             [ ( category , trainer. output_file  ) ] ,
             [ ( category , trainer.    tar_file  ) ] ,
+            [ ( category , trainer.    log_file  ) ] ,
             )
         
     ## merge results/datasets 
@@ -548,11 +549,13 @@ class ChopperTraining(Parallel.Task) :
             classes  = list ( self.output[1] ) + list ( result[1] ) 
             outputs  = list ( self.output[2] ) + list ( result[2] ) 
             tarfiles = list ( self.output[3] ) + list ( result[3] ) 
+            logfiles = list ( self.output[4] ) + list ( result[4] ) 
             weights  . sort()
             classes  . sort()
             outputs  . sort()
             tarfiles . sort()
-            self.output = weights , classes , outputs , tarfiles 
+            logfiles . sort()
+            self.output = weights , classes , outputs , tarfiles, logfiles  
                             
 # ===================================================================================
 ## parallel processing of loooong chain

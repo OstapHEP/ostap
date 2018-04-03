@@ -259,7 +259,9 @@ def _process_ ( self , selector , events = -1 , silent = False  ) :
     """
     import ostap.fitting.roofit 
     
-    if   isinstance ( self , ROOT.TTree ) : 
+    if   isinstance ( self , ROOT.TTree ) :
+
+
         if 0 < events : return Ostap.Process.process ( self , selector , events  )
         else          : return Ostap.Process.process ( self , selector )
 
@@ -333,11 +335,11 @@ class Variable(object) :
         
         assert var and isinstance ( var ,  ( str , ROOT.RooRealVar ) ) , \
                "Variable: invalid type for ``var''  %s/%s"      % ( var         , type (  var        ) ) 
-        assert accessor is None or callable ( accessor ) , \
+        assert accessor is None or callable ( accessor ) or isinstance ( str )  , \
                "Variable: illegal type for ``accessor'' %s/%s"  % ( accessor    , type ( accessor    ) )
 
         if isinstance ( var , str ) :
-            
+
             assert isinstance ( description , str ) , \
                    "Variable: illegal type for ``description''"     % ( description , type ( desctiption ) ) 
             assert isinstance ( vmin ,  ( int,long,float) ) , \
@@ -354,10 +356,15 @@ class Variable(object) :
             var = ROOT.RooRealVar ( var , description , vmin , vmax ) 
 
         if accessor is None :
-            varname = var.getName()
-            ## create the accessor 
-            accessor = lambda s : getattr ( s , varname )
+            varname  = var.GetName()
+            accessor = varname
+            
+        if isinstance  ( accessor , str ) and accessor :
+            from ostap.trees.funcs import FormulaFunc as FuncVar
+            accessor = FuncVar ( accessor ) 
 
+        assert callable ( accessor ), \
+               'Invalid accessor function! %s/%s' % ( accessor , type ( accessor ) )
         self.__var         = var
         self.__minmax      = var.minmax()
         self.__accessor    = accessor
@@ -543,10 +550,34 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__addVariable ( v )
 
         self.__variables = tuple ( self.__variables ) 
+
             
-        #
+        if not self.__silence: 
+            nl = 0
+            dl = 0 
+            for v in self.__variables :
+                nl = max ( nl , len( v.name        ) ) 
+                dl = max ( dl , len( v.description ) )                 
+            dl = max ( dl , len ( 'Description' ) + 2 ) 
+            nl = max ( nl , len ( 'Variable'    ) + 2 ) 
+        
+            line1    = '\n# | %%%ds | %%-%ds |         min / max         |' % ( nl , dl ) 
+            line2    = '\n# | %%%ds | %%-%ds | %%+11.3g / %%-+11.3g |' % ( nl , dl )         
+            the_line = 'Booked %d  variables:' % len ( self.variables ) 
+            sep      = '\n# +%s+%s+%s+' % ( (nl+2)*'-' , (dl+2)*'-' , 27*'-' )
+            the_line += sep 
+            the_line += line1 % ( 'Variable' , 'Description' )
+            the_line += sep 
+            for v in self.__variables :
+                fmt = line2 % ( v.name        , 
+                                v.description ,
+                                v.minmax[0]   ,
+                                v.minmax[1]   )
+                the_line += fmt
+            the_line += sep 
+            self.__logger.info ( the_line )
+            
         ## Book dataset
-        # 
         self.__data = ROOT.RooDataSet (
             ##
             self.name ,
@@ -562,7 +593,8 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__events   = 0
         self.__progress = None 
         self.__total    = 1
-        self.__skip     = 0 
+        from collections import defaultdict
+        self.__skip     = defaultdict(int)
 
     @property 
     def name ( self ) :
@@ -579,13 +611,7 @@ class SelectorWithVars(SelectorWithCuts) :
                "Incorrect type of data %s/%s " % ( dataset ,   type ( dataset ) )
         self.__logger.debug ("Selector(%s), add dataset %s" % (  self.__name , dataset ) )
         self.__data = dataset 
-##     @data.deleter
-##     def data ( self ) :
-##         if self.__data :
-##             self.__data.clear()
-##         del self.__data 
-##         self.__data = None
-        
+
     @property 
     def variables ( self ) :
         """``variables'' - the list/tuple of variables (cleared in Terminate)"""
@@ -647,7 +673,7 @@ class SelectorWithVars(SelectorWithCuts) :
             ## use the accessor function 
             value     = vfun ( bamboo )
             if not vmin <= value <= vmax :   ## MUST BE IN RANGE!
-                self.__skip += 1             ## SKIP EVENT 
+                self.__skip[v.name] += 1     ## SKIP EVENT 
                 return 0                     ## RETURN 
 
             var.setVal ( value ) 
@@ -661,8 +687,9 @@ class SelectorWithVars(SelectorWithCuts) :
     def __addVariable ( self , variable  ) :
         """Add declared variable to RooDataSet 
         """
-        if   isinstance ( variable , tuple ) : variable = Variable (  *variable )
-        elif isinstance ( variable , dict  ) : variable = Variable ( **variable )
+        if   isinstance ( variable , str          ) : variable = Variable (   variable )
+        elif isinstance ( variable , (tuple,list) ) : variable = Variable (  *variable )
+        elif isinstance ( variable , dict         ) : variable = Variable ( **variable )
 
         assert isinstance ( variable , Variable ), \
                "Invalid type of ``variable'' %s/%s" % (  variable , type ( variable ) )
@@ -670,7 +697,7 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__varset.add       ( variable.var ) 
         self.__variables.append ( variable     )
         if not self.__silence: 
-            self.__logger.info ( "Selector(%s): add variable name/desc/(min,max): ``%s''/``%s''/(%.3g,%.3g)" % (
+            self.__logger.verbose ( "Selector(%s): add variable name/desc/(min,max): ``%s''/``%s''/(%.3g,%.3g)" % (
                 self.name             , 
                 variable.name         ,
                 variable.description  , 
@@ -683,24 +710,110 @@ class SelectorWithVars(SelectorWithCuts) :
         if self.__progress :
             self.__progress.end() 
         #
-        if not self.__silence : 
+        ## Aborted? 
+        if   0 != self.GetAbort() :
+            self.__logger.fatal('Selector(%s): process has been aborted!' % self.__name )
+
+            self.__data = None 
+            del self.__varset
+            del self.__variables
+            self.__varset     =  ()
+            self.__variables  =  ()
+            
+            return  ## RETURN
+            
+        if not self.__silence :
+            skip = 0
+            for k,v in self.__skip.iteritems() : skip += v             
             self.__logger.info (
-                'Selector(%s): Events Processed/Total/Skept %d/%d/%d\nCUTS: "%s"' % (
-                self.__name   ,
-                self.__events ,
-                self.__total  ,
-                self.__skip   , 
-                self.cuts () ) )
+                'Selector(%s): Events Processed/Total/Skept %d/%d/%d CUTS: "%s"' % (
+                self.__name    ,
+                self.__events  ,
+                self.__total   ,
+                skip           , 
+                self.cuts () ) )            
             self.__logger.info ( 'Selector(%s): dataset created:%s' %  ( self.__name ,  self.__data ) )
+            
+        if self.__data and not self.__silence :
+            
+            vars = []
+            for v in self.__variables :
+                s    = self.__data.statVar( v.name )
+                mnmx = s.minmax ()
+                mean = s.mean   ()
+                rms  = s.rms    ()
+                r    = ( v.name        ,                       ## 0 
+                         v.description ,                       ## 1 
+                         ('%+.5g' % mean.value() ).strip() ,   ## 2
+                         ('%-.5g' % mean.error() ).strip() ,   ## 3 
+                         ('%.5g'  % rms          ).strip() ,   ## 4 
+                         ('%+.5g' % mnmx[0]      ).strip() ,   ## 5
+                         ('%+.5g' % mnmx[1]      ).strip() ,   ## 6 
+                         ('%-d'   % self.__skip[ v.name]   ) ) ## 7  
+                vars.append ( r )
+
+            vars.sort()
+            
+            name_l  = len ( 'Variable'    ) + 2 
+            desc_l  = len ( 'Description' ) + 2 
+            mean_l  = len ( 'mean' ) + 2 
+            err_l   = len ( 'err'  ) + 2 
+            rms_l   = len ( 'rms'  ) + 2
+            min_l   = len ( 'min'  ) + 2 
+            max_l   = len ( 'max'  ) + 2 
+            skip_l  = len ( 'Skip' ) 
+            for v in vars :
+                name_l = max ( name_l , len ( v[0] ) )
+                desc_l = max ( desc_l , len ( v[1] ) )
+                mean_l = max ( mean_l , len ( v[2] ) )
+                err_l  = max ( err_l  , len ( v[3] ) )
+                rms_l  = max ( rms_l  , len ( v[4] ) )
+                min_l  = max ( min_l  , len ( v[5] ) )
+                max_l  = max ( max_l  , len ( v[6] ) )
+                skip_l = max ( skip_l , len ( v[7] ) )
+
+            sep      = '# +%s+%s+%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
+                                                   ( desc_l       + 2 ) * '-' ,
+                                                   ( mean_l+err_l + 6 ) * '-' ,
+                                                   ( rms_l        + 2 ) * '-' ,
+                                                   ( min_l +max_l + 5 ) * '-' ,
+                                                   ( skip_l       + 2 ) * '-' )
+            fmt = '# | %%%ds | %%-%ds | %%%ds +- %%-%ds | %%%ds | %%%ds / %%-%ds | %%-%ds | '  % (
+                name_l ,
+                desc_l ,
+                mean_l ,
+                err_l  ,
+                rms_l  ,
+                min_l  ,
+                max_l  ,
+                skip_l )
+            
+            report  = 'Dataset created: %s entries, %s variables ' %  ( len ( self.__data    ) ,
+                                                                        len ( self.variables ) )
+            
+            header  = fmt % ( 'Variable'    ,
+                              'Description' ,
+                              'mean' ,
+                              'err'  ,
+                              'rms'  ,
+                              'min'  ,
+                              'max'  ,
+                              'skip' )
+            report += '\n' + sep
+            report += '\n' + header
+            report += '\n' + sep            
+            for v in vars :
+                line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , v[6] , v[7] )
+                report += '\n' + line  
+            report += '\n' + sep
+            self.__logger.info ( report ) 
         
         if not len ( self.__data ) :
+            skip = 0
+            for k,v in self.__skip.iteritems() : skip += v 
             self.__logger.warning("Selector(%s): empty dataset! Processed/Total/Skept %d/%d/%d"
-                                  % ( self.__name  , self.__events , self.__total , self.__skip   ) ) 
+                                  % ( self.__name  , self.__events , self.__total , skip ) ) 
             
-        ##
-        if 0 != self.GetAbort() :
-            self.__logger.error('Selector(%s): process has been aborted!' % self.__name )
-
         ## attention: delete these
 
         del self.__varset

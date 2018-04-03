@@ -31,8 +31,7 @@ else :
     logger = getLogger ( __name__ )
 # ==============================================================================
 from ostap.utils.utils import CleanUp
-data_file = os.path.join ( CleanUp().tmpdir , 'tmva_data.root') 
-
+data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tmva_' )
 if not os.path.exists( data_file ) :
     import random 
     nB = 10000
@@ -111,13 +110,13 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
         signal         = tSignal                  , ## ``Signal'' sample
         background     = tBkg                     , ## ``Background'' sample         
-        verbose        = False    )
+        verbose        = False  )
     
     from ostap.utils.timing import timing
     with timing ( 'for TMVA training' , logger ) : 
         weights_files = trainer.train ()
         tar_file      = trainer.tar_file
-        
+
 # =============================================================================
 if os.path.exists ( trainer.output_file ) :
     os.remove ( trainer.output_file )
@@ -137,6 +136,7 @@ reader = Reader( 'MyMLP' ,
 
 methods = reader.methods[:]
 
+
 # =============================================================================
 ## 1') few trivial tests: use the methods/reader as simple function
 for m in methods :
@@ -149,9 +149,12 @@ for m in methods :
 from ostap.fitting.selectors import SelectorWithVars, Variable     
 ## 2) Book RooDataset                 
 variables = [
-    Variable( 'var1' , 'variable#1' , accessor = lambda s : s.var1 ) ,
-    Variable( 'var2' , 'variable#2' , accessor = lambda s : s.var2 ) ,
-    Variable( 'var3' , 'variable#3' , accessor = lambda s : s.var3 ) ,
+    #Variable( 'var1' , 'variable#1' , accessor = lambda s : s.var1 ) ,
+    #Variable( 'var2' , 'variable#2' , accessor = lambda s : s.var2 ) ,
+    #Variable( 'var3' , 'variable#3' , accessor = lambda s : s.var3 ) ,
+    Variable( 'var1' , 'variable#1' ) ,
+    Variable( 'var2' , 'variable#2' ) ,
+    Variable( 'var3' , 'variable#3' ) ,
     ]
 
 ## 3) declare/add TMVA  variables 
@@ -175,8 +178,9 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     tSignal  = datafile['S']
     tBkg     = datafile['B']
 
-    tSignal.process ( dsS )
-    tBkg   .process ( dsB )
+    from ostap.utils.timing import timing
+    with timing("Process signal"     ) : tSignal.process ( dsS )
+    with timing("Process backrgound" ) : tBkg   .process ( dsB )
     
     ds1 = dsS.data
     ds2 = dsB.data
@@ -207,7 +211,6 @@ for m in methods :
     
     logger.info('TMVA:%-11s for signal     %s' % ( m, ds1.statVar('tmva_%s' % m ) ) )
     logger.info('TMVA:%-11s for background %s' % ( m, ds2.statVar('tmva_%s' % m ) ) )
-
 
 # =============================================================================
 # The END

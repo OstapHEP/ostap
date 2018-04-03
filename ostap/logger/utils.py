@@ -145,14 +145,10 @@ class MuteC(object):
     ## context-manager 
     def __enter__(self):
         
-        #
         ## Save the actual stdout (1) and stderr (2) file descriptors.
-        #
         self.save_fds =  os.dup(1), os.dup(2)  # leak was here !!!
         
-        #
         ## mute it!
-        #
         if self._out : os.dup2 ( self.__class__._devnull , 1 )  ## C/C++
         if self._err : os.dup2 ( self.__class__._devnull , 2 )  ## C/C++
 
@@ -161,10 +157,7 @@ class MuteC(object):
     ## context-manager 
     def __exit__(self, *_):
         
-        #
         # Re-assign the real stdout/stderr back to (1) and (2)  (C/C++)
-        #
-        
         if self._err : os.dup2 ( self.save_fds[1] , 2 )
         if self._out : os.dup2 ( self.save_fds[0] , 1 )
         
@@ -189,48 +182,53 @@ class OutputC(object) :
     """
     ## constructor: file name 
     def __init__ ( self , filename , out = True , err = False ) : 
-        """
-        Constructor
+        """Constructor
         """
         self._out  = out 
-        self._err  = out
+        self._err  = err
         self._file = file ( filename , 'w' ) 
             
     ## context-manager 
     def __enter__(self):
         
+        if self._out : sys.stdout.flush()
+        if self._err : sys.stderr.flush()
+        
+        self._file.flush()
+        
         self._file.__enter__ () 
-        #
         ## Save the actual stdout (1) and stderr (2) file descriptors.
-        #
         self.save_fds =  os.dup(1), os.dup(2)  # leak was here !!!
         
-        #
         ## mute it!
-        #
         if self._out : os.dup2 ( self._file.fileno() , 1 )  ## C/C++
         if self._err : os.dup2 ( self._file.fileno() , 2 )  ## C/C++
 
         return self
     
     ## context-manager 
-    def __exit__(self, *_):
-            
-        #
-        # Re-assign the real stdout/stderr back to (1) and (2)  (C/C++)
-        #
+    def __exit__( self , *_ ):
+
+        if self._out : sys.stdout.flush()
+        if self._err : sys.stderr.flush()
         
+        self._file.flush()
+        
+        # Re-assign the real stdout/stderr back to (1) and (2)  (C/C++)
         if self._err : os.dup2 ( self.save_fds[1] , 2 )
         if self._out : os.dup2 ( self.save_fds[0] , 1 )
         
         # fix the  file descriptor leak
         # (there were no such line in example, and it causes
-        #      the sad:  "IOError: [Errno 24] Too many open files"
-        
+        #      the sad:  "IOError: [Errno 24] Too many open files"        
         os.close ( self.save_fds[1] ) 
         os.close ( self.save_fds[0] )
         
         self._file.__exit__ ( *_ )
+        
+        sys.stdout.flush()
+        sys.stderr.flush()
+        
 
 # =============================================================================
 ## very simple context manager to duplicate Python-printout into file ("tee")
@@ -308,22 +306,22 @@ class TeeCpp(object) :
     
     """
     def __init__ ( self , fname ) :
-        self.stdout.flush ()
-        self.stderr.flush ()
+        sys.stdout.flush ()
+        sys.stderr.flush ()
         self._tee = cpp.Ostap.Utils.Tee ( fname )
         
     ## context manager
     def __enter__ ( self      ) :
-        self.stdout.flush ()
-        self.stderr.flush ()
+        sys.stdout.flush ()
+        sys.stderr.flush ()
         self._tee.enter ()
         return self 
     ## context manager
     def __exit__  ( self , *_ ) :
         self._tee.exit  ()
         del self._tee
-        self.stdout.flush ()
-        self.stderr.flush ()
+        sys.stdout.flush ()
+        sys.stderr.flush ()
         
 # =============================================================================
 ## very simple context manager to suppress RooFit printout

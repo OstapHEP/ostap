@@ -43,7 +43,7 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  TTree
-      double evaluate ( const TTree* tree = nullptr ) const override ;
+      double operator() ( const TTree* tree = nullptr ) const override ;
       // ======================================================================
     private:
       // ======================================================================
@@ -76,7 +76,7 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  data
-      double evaluate ( const RooAbsData* data = nullptr ) const override ;
+      double operator () ( const RooAbsData* data = nullptr ) const override ;
       // ======================================================================
     private:
       // ======================================================================

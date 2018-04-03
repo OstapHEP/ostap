@@ -22,6 +22,7 @@
 #include "Ostap/Error2Exception.h"
 #include "Ostap/Formula.h"
 #include "Ostap/Fourier.h"
+#include "Ostap/Funcs.h"
 #include "Ostap/GenericMatrixTypes.h"
 #include "Ostap/GenericVectorTypes.h"
 #include "Ostap/GeomFun.h"
@@ -59,7 +60,7 @@
 #include "Ostap/Polynomials.h"
 #include "Ostap/Power.h"
 #include "Ostap/Printable.h"
-#include "Ostap/PyFuncs.h"
+//#include "Ostap/PyFuncs.h"   // COMMENT OUT (temporarily) 
 #include "Ostap/PyIterator.h"
 #include "Ostap/PySelector.h"
 #include "Ostap/PySelectorWithCuts.h"
@@ -84,7 +85,8 @@
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Workspace.h"
 // ============================================================================
-
+#include "RooFormulaVar.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================

@@ -35,8 +35,10 @@ namespace Ostap
       /// destructor 
       virtual ~PyFuncTree() ;
       // ======================================================================
+    public:
+      // ======================================================================
       /// the basic 
-      double evaluate ( const TTree* tree = 0 ) const override ;
+      double operator() ( const TTree* tree = 0 ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -73,8 +75,10 @@ namespace Ostap
       /// destructor 
       virtual ~PyFuncData () ;
       // ======================================================================
+    public:
+      // ======================================================================
       /// the basic 
-      double evaluate ( const RooAbsData* data = 0 ) const override ;
+      double operator() ( const RooAbsData* data = 0 ) const override ;
       // ======================================================================
     public:
       // ======================================================================

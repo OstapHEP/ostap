@@ -58,6 +58,13 @@
     <class pattern = "ROOT::Math::DisplacementVector*" />
     <class pattern = "ROOT::Math::LorentzVector*"      />
     
+    <class name   = "Ostap::Functions::FuncFormula">  
+      <field name = "m_formula" />      
+    </class>
+    <class name   = "Ostap::Functions::FuncRooFormula">  
+      <field name = "m_formula" />      
+    </class>
+    
   </exclusion>
   
 </lcgdict>
