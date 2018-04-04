@@ -41,16 +41,21 @@ Ostap::Functions::FuncFormula::FuncFormula
   , m_expression ( expression )  
   , m_name       ( name       )  
 {
-  /// create the formula
-  if ( m_tree ) 
-  { 
-    TTree* t = const_cast<TTree*> ( m_tree ) ;
-    m_formula = std::make_unique<Ostap::Formula> ( m_name , m_expression , t ) ;
-    if ( !m_formula || !m_formula->ok() ) 
-    { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
-                               "Ostap::Function::FuncFormula"           , 
-                               Ostap::StatusCode(700)                   ) ; }
-  }
+  if ( m_tree && !make_formula () )
+  { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
+                             "Ostap::Function::FuncFormula"           , 
+                             Ostap::StatusCode(700)                   ) ; }
+}
+// ============================================================================
+// make formula  
+// ============================================================================
+bool Ostap::Functions::FuncFormula::make_formula () const
+{
+  m_formula.reset ( nullptr ) ;
+  if ( nullptr == m_tree ) { return false ; }
+  TTree* t = const_cast<TTree*> ( m_tree ) ;
+  m_formula = std::make_unique<Ostap::Formula> ( m_name , m_expression , t ) ; 
+  return m_formula && m_formula -> ok () ;
 }
 // ============================================================================
 //  evaluate the formula for  TTree
@@ -58,26 +63,23 @@ Ostap::Functions::FuncFormula::FuncFormula
 double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
 {
   //
-  if ( nullptr != tree  && tree != m_tree )
+  if ( nullptr != tree && tree != m_tree )
   { 
     m_tree    = tree  ;
     m_formula.reset ( nullptr ) ;
   }
   //
-  if ( nullptr == m_tree ) 
+  if ( nullptr == m_tree )
   { throw Ostap::Exception ( "Invalid Tree", 
                              "Ostap::Function::FuncFormula"           , 
                              Ostap::StatusCode(701)                   ) ; }
   //
-  if ( !m_formula || !m_formula->ok() )
-  {
-    TTree* t = const_cast<TTree*> ( m_tree ) ;
-    m_formula = std::make_unique<Ostap::Formula> ( m_name , m_expression , t ) ;
-    if ( !m_formula || !m_formula->ok() ) 
-    { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
-                               "Ostap::Function::FuncFormula"           , 
-                               Ostap::StatusCode(700)                   ) ; }
-  }
+  if ( !m_formula || !m_formula->ok() ) { make_formula () ; }
+  //
+  if ( !m_formula || !m_formula->ok() ) 
+  { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
+                             "Ostap::Function::FuncFormula"           , 
+                             Ostap::StatusCode(700)                   ) ; }
   //
   return m_formula->evaluate() ;
 }
@@ -98,27 +100,35 @@ Ostap::Functions::FuncRooFormula::FuncRooFormula
   , m_expression ( expression ) 
   , m_name       ( name       )
 {
-  if ( m_data ) 
-  {
-    const RooArgSet* varset  = m_data->get() ;
-    if (  nullptr == varset ) 
-    { throw Ostap::Exception ( "Invalid RooArgSet", 
-                               "Ostap::Function::FuncRooFormula"  , 
-                               Ostap::StatusCode(705)             ) ; }
-    RooArgList varlst ;
-    Ostap::Utils::Iterator iter ( *varset ) ;
-    while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
-    //
-    m_formula = std::make_unique<RooFormulaVar> 
-      ( m_name .c_str () , m_expression.c_str () , varlst ) ;
-    //
-    if ( !m_formula || !m_formula->ok() ) 
-    { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
-                               "Ostap::Function::FuncRooFormula"        , 
-                               Ostap::StatusCode(706)                   ) ; }
-  }  
+  if ( m_data && !make_formula() )
+  { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
+                             "Ostap::Function::FuncRooFormula"        , 
+                             Ostap::StatusCode(706)                   ) ; }
 }
 // ============================================================================
+// make formula  
+// ============================================================================
+bool Ostap::Functions::FuncRooFormula::make_formula () const
+{
+  m_formula.reset ( nullptr ) ;
+  if  ( !m_data ) { return false ; }
+  //
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRooFormula"  , 
+                             Ostap::StatusCode(705)             ) ; }
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_formula = std::make_unique<RooFormulaVar> 
+    ( m_name .c_str () , m_expression.c_str () , varlst ) ;
+  //
+  return m_formula && m_formula -> ok () ;
+}
+
+  // ============================================================================
 //  evaluate the formula for  Data
 // ============================================================================
 double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) const
@@ -135,25 +145,11 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
                              "Ostap::Function::FuncRooFormula"        , 
                              Ostap::StatusCode(709)                   ) ; }
   //
-  if ( !m_formula || !m_formula->ok() )
-  {                                             \
-    const RooArgSet* varset  = m_data->get() ;
-    if (  nullptr == varset ) 
-    { throw Ostap::Exception ( "Invalid RooArgSet", 
-                               "Ostap::Function::FuncRooFormula"  , 
-                               Ostap::StatusCode(707)             ) ; }
-    RooArgList varlst ;
-    Ostap::Utils::Iterator iter ( *varset ) ;
-    while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
-    //
-    m_formula = std::make_unique<RooFormulaVar> 
-      ( m_name .c_str () , m_expression.c_str () , varlst ) ;
-    //
-    if ( !m_formula || !m_formula->ok() ) 
-    { throw Ostap::Exception ( "Invalid RooFormula '" + m_expression + "'" , 
-                               "Ostap::Function::FuncRooFormula"        , 
-                               Ostap::StatusCode(708)                   ) ; }
-  }
+  if ( !m_formula || !m_formula->ok() ) { make_formula () ; }
+  if ( !m_formula || !m_formula->ok() ) 
+  { throw Ostap::Exception ( "Invalid RooFormula '" + m_expression + "'" , 
+                             "Ostap::Function::FuncRooFormula"        , 
+                             Ostap::StatusCode(708)                   ) ; }
   //
   return m_formula->getVal() ;
 }
