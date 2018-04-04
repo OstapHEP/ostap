@@ -62,19 +62,22 @@ double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
   { 
     m_tree    = tree  ;
     m_formula.reset ( nullptr ) ;
-    //
-    TTree* t = const_cast<TTree*> ( m_tree ) ; 
-    m_formula = std::make_unique<Ostap::Formula> ( m_name , m_expression , t ) ;
   }
   //
   if ( nullptr == m_tree ) 
   { throw Ostap::Exception ( "Invalid Tree", 
                              "Ostap::Function::FuncFormula"           , 
                              Ostap::StatusCode(701)                   ) ; }
-  if ( !m_formula || !m_formula->ok() ) 
-  { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
-                             "Ostap::Function::FuncFormula"           , 
-                             Ostap::StatusCode(702)                   ) ; }
+  //
+  if ( !m_formula || !m_formula->ok() )
+  {
+    TTree* t = const_cast<TTree*> ( m_tree ) ;
+    m_formula = std::make_unique<Ostap::Formula> ( m_name , m_expression , t ) ;
+    if ( !m_formula || !m_formula->ok() ) 
+    { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
+                               "Ostap::Function::FuncFormula"           , 
+                               Ostap::StatusCode(700)                   ) ; }
+  }
   //
   return m_formula->evaluate() ;
 }
@@ -125,7 +128,15 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
   { 
     m_data   = data ;
     m_formula.reset ( nullptr ) ;
-    //
+  }  
+  //
+  if ( nullptr == m_data ) 
+  { throw Ostap::Exception ( "Invalid RooAbsData", 
+                             "Ostap::Function::FuncRooFormula"        , 
+                             Ostap::StatusCode(709)                   ) ; }
+  //
+  if ( !m_formula || !m_formula->ok() )
+  {                                             \
     const RooArgSet* varset  = m_data->get() ;
     if (  nullptr == varset ) 
     { throw Ostap::Exception ( "Invalid RooArgSet", 
@@ -144,19 +155,8 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
                                Ostap::StatusCode(708)                   ) ; }
   }
   //
-  if ( nullptr == m_data ) 
-  { throw Ostap::Exception ( "Invalid RooAbsData", 
-                             "Ostap::Function::FuncRooFormula"        , 
-                             Ostap::StatusCode(709)                   ) ; }
-  if ( !m_formula || !m_formula->ok() ) 
-  { throw Ostap::Exception ( "Invalid RooFormula '" + m_expression + "'" , 
-                             "Ostap::Function::FuncRooFormula"           , 
-                             Ostap::StatusCode(710)                   ) ; }
-  //
   return m_formula->getVal() ;
 }
-
-
 // ============================================================================
 // The END 
 // ============================================================================

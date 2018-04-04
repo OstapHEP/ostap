@@ -47,13 +47,13 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      mutable const TTree*                    m_tree    ;
-      mutable std::unique_ptr<Ostap::Formula> m_formula ;
+      mutable const TTree*                    m_tree    { nullptr } ;
+      mutable std::unique_ptr<Ostap::Formula> m_formula { nullptr } ;
       // ======================================================================
       /// the  expression itself 
-      std::string m_expression ; // the  expression itself 
+      std::string m_expression {} ; // the  expression itself 
       /// the name  
-      std::string m_name       ; // the name  
+      std::string m_name       {} ; // the name  
       // ======================================================================
     } ;
     // ========================================================================
@@ -80,13 +80,13 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      mutable const RooAbsData*              m_data    ;
-      mutable std::unique_ptr<RooFormulaVar> m_formula ;
+      mutable const RooAbsData*              m_data    { nullptr } ;
+      mutable std::unique_ptr<RooFormulaVar> m_formula { nullptr } ;
       // ======================================================================
       /// the  expression itself 
-      std::string m_expression ; // the  expression itself 
+      std::string m_expression {} ; // the  expression itself 
       /// the name  
-      std::string m_name       ; // the name  
+      std::string m_name       {} ; // the name  
       // ======================================================================
     } ;
     // ========================================================================
