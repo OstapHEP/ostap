@@ -729,6 +729,27 @@ if not hasattr ( ROOT.TFile , 'close' ) :
 
 
 # =============================================================================
+def top_dir ( rdir ) :
+    """```topdir'': get the top directory for the given directory"""
+    
+    if not rdir : return None
+    with ROOTCWD()  :
+        
+        if   isinstance ( rdir , ROOT.TDirectory() ) : top = rdir
+        elif hasattr    ( rdir , 'GetDirectory'    ) : top = rdit.GetDirectory()
+        else                                         : top = rdir
+        
+        while top : 
+            moth = top.GetMotherDir() 
+            if not moth : return top  
+            top = moth
+        else :
+            return None 
+
+ROOT.TDirectory.topdir = property ( top_dir , None , None )
+
+
+# =============================================================================
 _decorated_classes_ = (
     ROOT.TFile       ,
     ROOT.TDirectory     

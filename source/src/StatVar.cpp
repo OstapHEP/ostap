@@ -18,6 +18,7 @@
 #include "Ostap/MatrixUtils.h"
 #include "Ostap/StatVar.h"
 #include "Ostap/Iterator.h"
+#include "Ostap/Notifier.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Analysis::StatVar
@@ -30,116 +31,6 @@ namespace
   // ==========================================================================
   static_assert (std::numeric_limits<unsigned long>::is_specialized   , 
                  "Numeric_limits<unsigned long> are not specialized!" ) ;
-  // ==========================================================================
-  /** @class Notifier
-   *  Local helper class to keep the proper notifications for TTree
-   *  @date 2013-10-13 
-   *  @author Vanya BELYAEV Ivan.Brlyaev@itep.ru
-   */
-  class Notifier : public TObject 
-  {
-    // ======================================================================== 
- public:
-    // ========================================================================
-    Notifier 
-    ( TTree*   tree     , 
-      TObject* obj0     , 
-      TObject* obj1 = 0 , 
-      TObject* obj2 = 0 , 
-      TObject* obj3 = 0 , 
-      TObject* obj4 = 0 ,
-      TObject* obj5 = 0 , 
-      TObject* obj6 = 0 , 
-      TObject* obj7 = 0 , 
-      TObject* obj8 = 0 , 
-      TObject* obj9 = 0 ) ;
-    // templated constructor 
-    template <class ITERATOR>
-    Notifier ( ITERATOR  begin ,
-               ITERATOR  end   , 
-               TTree*    tree  ) ;
-    /// virtual destructor 
-    virtual        ~Notifier () ; // virtual destructor 
-    /// the main method 
-    virtual Bool_t  Notify   () ;
-    // ========================================================================
-  private:
-    // ========================================================================
-    Notifier () ;
-    Notifier ( const Notifier & ) ;
-    // ========================================================================
-  private:
-    // ========================================================================
-    TTree*   m_tree ;
-    TObject* m_old  ; // old notifier  
-    // list of fobject to be notified 
-    std::vector<TObject*> m_objects ;
-    // ========================================================================
-  } ;  
-  // ==========================================================================
-  Notifier::Notifier 
-  ( TTree*   tree , 
-    TObject* obj0 , 
-    TObject* obj1 , 
-    TObject* obj2 , 
-    TObject* obj3 , 
-    TObject* obj4 ,
-    TObject* obj5 , 
-    TObject* obj6 , 
-    TObject* obj7 , 
-    TObject* obj8 , 
-    TObject* obj9 ) 
-    : TObject   () 
-    , m_tree    ( tree    ) 
-    , m_old     ( nullptr )
-    , m_objects () 
-  {
-    //
-    if ( nullptr != m_tree ) { m_old = m_tree->GetNotify ()  ; }
-    //
-    if ( nullptr != m_old  ) { m_objects.push_back ( m_old ) ; } // prepend it! 
-    //
-    if ( nullptr != obj0   ) { m_objects.push_back ( obj0  ) ; }
-    if ( nullptr != obj1   ) { m_objects.push_back ( obj1  ) ; }
-    if ( nullptr != obj2   ) { m_objects.push_back ( obj2  ) ; }
-    if ( nullptr != obj3   ) { m_objects.push_back ( obj3  ) ; }
-    if ( nullptr != obj4   ) { m_objects.push_back ( obj4  ) ; }
-    if ( nullptr != obj5   ) { m_objects.push_back ( obj5  ) ; }
-    if ( nullptr != obj6   ) { m_objects.push_back ( obj6  ) ; }
-    if ( nullptr != obj7   ) { m_objects.push_back ( obj7  ) ; }
-    if ( nullptr != obj8   ) { m_objects.push_back ( obj8  ) ; }
-    if ( nullptr != obj9   ) { m_objects.push_back ( obj9  ) ; }
-    //
-    if ( nullptr != m_tree ) { m_tree->SetNotify   ( this  ) ; }
-    //
-  }    
-  // ==========================================================================
-  template <class ITERATOR>
-  Notifier::Notifier ( ITERATOR  begin ,
-                       ITERATOR  end   , 
-                       TTree*    tree  ) 
-    : TObject   () 
-    , m_tree    ( tree    ) 
-    , m_old     ( nullptr )
-    , m_objects () 
-  {
-    if ( nullptr != m_tree ) { m_old = m_tree->GetNotify ()  ; }
-    if ( nullptr != m_old  ) { m_objects.push_back ( m_old ) ; } // prepend it! 
-    for ( ; begin != end ; ++begin ) 
-    {
-      TObject* o = *begin ;
-      if ( nullptr != o ) { m_objects.push_back ( o ) ; }
-    }
-    if ( nullptr != m_tree ) { m_tree->SetNotify   ( this  ) ; }
-  }
-  // ==========================================================================
-  Notifier::~Notifier () { if ( nullptr != m_tree ) { m_tree->SetNotify ( m_old ) ; } }
-  // ==========================================================================
-  Bool_t  Notifier::Notify   () 
-  {
-    for ( TObject* o : m_objects ) { if ( nullptr != o ) { o->Notify() ; } }    
-    return kTRUE ;
-  }
   // ==========================================================================
 } //                                                 end of anonymous namespace
 // ============================================================================
@@ -168,7 +59,7 @@ Ostap::StatVar::statVar
   Ostap::Formula formula ( "" , expression , tree ) ;
   if ( !formula.GetNdim() )         { return result ; }  // RETURN 
   //
-  Notifier notify ( tree , &formula ) ;
+  Ostap::Utils::Notifier notify ( tree , &formula ) ;
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
@@ -218,7 +109,7 @@ Ostap::StatVar::statVar
   Ostap::Formula formula   ( "" , expression , tree ) ;
   if ( !formula  .ok () ) { return result ; }            // RETURN 
   //
-  Notifier notify ( tree , &selection,  &formula ) ;
+  Ostap::Utils::Notifier notify ( tree , &selection,  &formula ) ;
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
@@ -307,7 +198,7 @@ Ostap::StatVar::statCov
   Ostap::Formula formula2 ( "" , exp2 , tree ) ;
   if ( !formula2 .ok () ) { return 0 ; }                   // RETURN 
   //
-  Notifier notify ( tree , &formula1 , &formula2 ) ;
+  Ostap::Utils::Notifier notify ( tree , &formula1 , &formula2 ) ;
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
@@ -386,7 +277,7 @@ Ostap::StatVar::statCov
   Ostap::Formula selection ( "" , cuts      , tree ) ;
   if ( !selection.ok () ) { return 0 ; }                        // RETURN 
   //
-  Notifier notify ( tree , &formula1 , &formula2 ) ;
+  Ostap::Utils::Notifier notify ( tree , &formula1 , &formula2 ) ;
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
@@ -804,7 +695,7 @@ unsigned long Ostap::StatVar::_statCov
   for ( auto& _v : _vars ) { tobjs.push_back ( _v.get() ) ; }
   tobjs.push_back( &selection ) ;
   //
-  Notifier notifier ( tobjs.begin() , tobjs.end() , tree ) ;
+  Ostap::Utils::Notifier notifier ( tobjs.begin() , tobjs.end() , tree ) ;
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
@@ -895,7 +786,7 @@ unsigned long Ostap::StatVar::_statCov
   std::vector<TObject*> tobjs ;
   for ( auto& _v : _vars ) { tobjs.push_back ( _v.get() ) ; }
   //
-  Notifier notifier ( tobjs.begin() , tobjs.end() , tree ) ;
+  Ostap::Utils::Notifier notifier ( tobjs.begin() , tobjs.end() , tree ) ;
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) tree->GetEntries() ) ;

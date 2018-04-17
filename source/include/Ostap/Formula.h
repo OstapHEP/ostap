@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 #ifndef ANALYSIS_FORMULA_H 
 #define ANALYSIS_FORMULA_H 1
@@ -40,6 +39,8 @@ namespace Ostap
     Formula ( const std::string& name       , 
               const TCut&        expression ,
               TTree*             tree       ) ;
+    /// default constructor, needed for serialisationn 
+    Formula () = default  ;
     /// virtual destructor 
     virtual ~Formula () ;
     // ========================================================================

@@ -29,11 +29,11 @@ else :
 # =============================================================================
 
 with timing('Prepare data') :
-    logger.info('Prepare data, it could take some time') 
-    import  tempfile 
-    tmpdir = tempfile.mkdtemp()
+    logger.info('Prepare data, it could take some time')
+    from ostap.utils.utils import CleanUp
+    tmpdir = CleanUp().tmpdir 
     import prepare_test_kisa as PTK
-    data   = PTK.prepare_data ( tmpdir , nfiles = 2000 , nentries = 10000 , silent = False ) 
+    data   = PTK.prepare_data ( tmpdir , nfiles = 50 , nentries = 1000, silent = False ) 
     logger.info    ( 'DATA %s' % data  )
 
 # =============================================================================
@@ -66,14 +66,15 @@ def test_kisa2 () :
        
     from ostap.fitting.selectors import SelectorWithVars, Variable  
     variables = [
-        ## Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) , 
-        Variable ( 'mass2' , 'mass(mu+mu-)' , 1 , 5 , MASS1  ) , 
-        Variable ( 'mass3' , 'mass(mu+mu-)' , 1 , 5 , MASS() ) 
+        ##Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) , 
+        Variable ( 'mass'  , 'mass(mu+mu-)' ,  3.09 , 3.11 ) , 
+        ## Variable ( 'c2dtf' , 'chi2(dtf)'    , -1 , 10           ) , 
+        ##Variable ( 'mass2' , 'mass(mu+mu-)' , 1 , 5 , MASS()  ) , 
+        ##Variable ( 'mass3' , 'mass(mu+mu-)' , 1 , 5 , 'mass'  ) 
         ]
     
-    
     ppservers = () ## 'lxplus051' , )
-
+    
     nf   = len ( data.files )
     nf //= 40
     nf  += 1 
@@ -83,32 +84,46 @@ def test_kisa2 () :
         selector = SelectorWithVars  (
             variables = variables ,
             selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
-            silence   = True 
+            ## selection =  '2<=mass && mass<4' ,
+            silence   = False
             )
         chain =  data.chain[:nf]
-        st = chain.process ( selector , silent = True )
+        st = chain.process ( selector , silent = False , shortcut = False )
         ds = selector.data
         del selector 
     logger.info ( 'Dataset: %s' % ds )
     
-    with timing('%s files in parallel %s' % ( len ( data.files ) , len( data.chain ) ) ) :
-        selector = SelectorWithVars  (
-            variables = variables ,
-            selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
-            silence   = True 
-            )
-        st = data.chain.pprocess ( selector , silent = False )
-        ds = selector.data 
-        del selector 
-    logger.info ( 'Dataset: %s' % ds )
+    ## with timing('%s files in parallel %s' % ( len ( data.files ) , len( data.chain ) ) ) :
+    ##     selector = SelectorWithVars  (
+    ##         variables = variables ,
+    ##         selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
+    ##         silence   = True 
+    ##         )
+    ##     st = data.chain.pprocess ( selector , silent = False , chunk_size = -1 )
+    ##     ds = selector.data 
+    ##     del selector 
+    ## logger.info ( 'Dataset: %s' % ds )
 
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_kisa  ()
+    ## test_kisa  ()
     test_kisa2 ()
+    pass
 
+
+## tree = data.chain ## .GetTree()
+## f1 = ROOT.TTreeFormula('a1','mass>0', tree )
+## f2 = ROOT.TTreeFormula('a2','mass<0', tree )
+## tree.SetNotify ( f1 ) 
+## ll = len(tree)
+## for i in range(ll) :
+##     tree.GetEntry(i)
+##     print i
+##     print f1.EvalInstance()
+##     print f2.EvalInstance()
+    
     
 # =============================================================================
 # The END 

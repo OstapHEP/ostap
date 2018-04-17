@@ -74,10 +74,11 @@ long Ostap::Process::process
 long Ostap::Process::process
 ( TTree*              tree      ,
   TSelector*          selector  , 
-  const unsigned long events    ) 
+  const unsigned long events    , 
+  const unsigned long first     ) 
 {
   if ( 0 == tree || 0 == selector ) { return 0 ; }
-  return tree->Process ( selector , "" , events ) ;
+  return tree->Process ( selector , "" , events , first ) ;
 } 
 // ============================================================================
 /* helper function to use TChain::Process in python 
@@ -118,10 +119,11 @@ long Ostap::Process::process
 long Ostap::Process::process
 ( TChain*             chain    ,
   TSelector*          selector ,
-  const unsigned long events   ) 
+  const unsigned long events   ,
+  const unsigned long first    ) 
 {
   if ( 0 == chain || 0 == selector ) { return 0 ; }
-  return chain -> Process ( selector , "" , events ) ;
+  return chain -> Process ( selector , "" , events , first ) ;
 }
 // ============================================================================
 // The END 

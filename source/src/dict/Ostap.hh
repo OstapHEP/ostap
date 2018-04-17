@@ -47,6 +47,7 @@
 #include "Ostap/Models2D.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Mute.h"
+#include "Ostap/Notifier.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/NStatEntity.h"
 #include "Ostap/Peaks.h"

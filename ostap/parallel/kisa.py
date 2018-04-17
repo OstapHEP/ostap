@@ -117,16 +117,17 @@ class ProjectTask(Parallel.Task) :
     projection of looooooong TChains/TTrees into histograms  
     """
     ## constructor: histogram 
-    def __init__ ( self , histo ) :
+    def __init__ ( self , histo , what , cuts = '' ) :
         """Constructor: the histogram 
         
         >>> histo = ...
         >>> task  = ProjectTask ( histo ) 
         """        
         self.histo = histo
+        self.what  = what 
+        self.cuts  = str(cuts) 
         self.histo.Reset()
         
-    
     ## local initialization (executed once in parent process)
     def initializeLocal   ( self ) :
         """Local initialization (executed once in parent process)
@@ -145,7 +146,7 @@ class ProjectTask(Parallel.Task) :
     #  - the selection/weighting criteria 
     #  - the first entry in tree to process
     #  - number of entries to process
-    def process ( self , params ) :
+    def process ( self , item ) :
         """The actual processing
         ``params'' is assumed to be a tuple-like entity:
         - the file name
@@ -160,21 +161,11 @@ class ProjectTask(Parallel.Task) :
         from ostap.logger.utils import logWarning
         with logWarning() : import ostap.core.pyrouts 
 
-        if   isinstance ( params , str ) : params = ( param , 0 , n_large  )
-        elif isinstance ( params , ROOT.TChainElement ) :
-            params = ( params.GetTitle()  , 0 , n_large  )
-
-        fname    = params[0] ## file name 
-        tname    = params[1] ## tree name 
-        what     = params[2] ## variable/expression to project 
-        cuts     = params[3] if 3 < len ( params ) else ''       ## cuts    
-        first    = params[4] if 4 < len ( params ) else 0        ## the first event
-        nentries = params[5] if 5 < len ( params ) else n_large  ## number of events 
+        import ostap.trees.trees
         
-        if isinstance ( fname , ROOT.TChainElement ) : fname = fname.GetTitle() 
-        
-        chain = ROOT.TChain ( tname )
-        chain.Add ( fname )
+        chain    = item.chain 
+        first    = item.first
+        nevents  = item.nevents
         
         ## Create the output histogram   NB! (why here???) 
         self.output = 0 , self.histo.Clone()
@@ -182,10 +173,9 @@ class ProjectTask(Parallel.Task) :
         ## use the regular projection  
         from ostap.trees.trees import _tt_project_ 
         self.output = _tt_project_ ( chain      , self.output[1] ,
-                                     what       , cuts           ,
+                                     self.what  , self.cuts      ,
                                      ''         ,
-                                     nentries   , first          )
-        del chain
+                                     nevents    , first          )
 
     ## finalization (executed at the end at parent process)
     def finalize ( self ) : pass 
@@ -211,7 +201,7 @@ class ProjectTask(Parallel.Task) :
 #  For 12-core machine, clear speedup factor of about 8 is achieved 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
-def  cproject ( chain , histo , what , cuts , silent = False ) :
+def  cproject ( chain , histo , what , cuts , nentries = -1 , first = 0 , chunk_size = 1000000 , silent = False ) :
     """Make a projection of the loooong chain into histogram
     >>> chain = ... ## large chain
     >>> histo = ... ## histogram template 
@@ -221,37 +211,14 @@ def  cproject ( chain , histo , what , cuts , silent = False ) :
     For 12-core machine, clear speedup factor of about 8 is achieved     
     """
     #
-    if not chain :
-        return 0 , histo
-    if not histo :
-        logger.error ('cproject: invalid histogram')
-        return 0 , histo
     
-    import ROOT
-    histo.Reset()    
-
-    if not isinstance ( chain , ROOT.TChain ) :
-        logger.warning ('cproject method is TChain-specific, skip parallelization') 
-        from ostap.trees.trees import _tt_project_
-        return _tt_project_ ( chain , histo , what , cuts ) 
-
-    if isinstance ( cuts , ROOT.TCut ) : cuts = str( cuts )
-    ##
-    if isinstance ( what  , str ) : what = what.split(',')
-    if isinstance ( what  , str ) : what = what.split(';')
-    if isinstance ( what  , str ) : what = [ what ] 
+    from ostap.trees.trees import Chain
+    ch    = Chain ( chain , first = first , nevents = nentries )
     
-    import ostap.trees.trees
-    files = chain.files()
-
-    cname = chain.GetName() 
+    task  = ProjectTask            ( histo , cuts )
+    wmgr  = Parallel.WorkManager   ( silent = silent )
+    wmgr.process ( task, ch.split  ( chunk_size  = chunk_size  ) )
     
-    params = [ ( f , cname , str(w) , cuts ) for f in files for w in what ] 
-
-    task  = ProjectTask          ( histo )
-    wmgr  = Parallel.WorkManager ( silent = silent )
-    wmgr.process( task, params )
-
     filtered   = task.output[0] 
     histo     += task.output[1]
     
@@ -288,7 +255,7 @@ def  tproject ( tree                 ,   ## the tree
                 cuts       = ''      ,   ## selection/weighting criteria 
                 nentries   = -1      ,   ## number of entries 
                 first      =  0      ,   ## the first entry 
-                maxentries = 1000000 ,   ## chunk size 
+                chunk_size = 1000000 ,   ## chunk size 
                 silent     = False   ) : ## silent processing 
     """Make a projection of the loooong tree into histogram
     >>> tree  = ... ## large chain
@@ -306,105 +273,14 @@ def  tproject ( tree                 ,   ## the tree
     - first      the first entry to process
     - maxentries chunk size for parallel processing 
     """
-    if not tree  :
-        return 0 , histo
-    if not histo :
-        logger.error ('tproject: invalid histogram')
-        return 0 , histo
+
+    from ostap.trees.trees import Tree
+    ch    = Tree ( tree , first = first , nevents = nevents )
     
-    import ROOT 
-    histo.Reset()
+    task  = ProjectTask            ( histo , cuts )
+    wmgr  = Parallel.WorkManager   ( silent = silent )
+    wmgr.process ( task, ch.split  ( chunk_size  = chunk_size ) )
     
-    num = len( tree )
-    if num <= first :
-        return 0, histo
-
-    if 0 >  nentries   : nentries   = n_large 
-
-    maxentries = long(maxentries)
-    if 0 >= maxentries : maxentries = n_large 
-    
-    if 0 > first       : first      = 0
-    
-    ## use the regular projection  
-    from ostap.trees.trees import _tt_project_ 
-
-    fname = None
-    tname = None
-    
-    if isinstance ( tree , ROOT.TChain ) :
-        
-        if 1 == len( tree.files() ) :
-            
-            fname = tree.files()[0]
-            tname = tree.GetName()
-            
-        else :
-            
-            logger.warning ('``tproject'' method is TTree-specific, skip parallelization')
-            return _tt_project_ ( tree , histo , what , cuts , '' , nentries , first )
-        
-    else :         
-
-        tdir  = tree.GetDirectory ()
-        ftree = tdir.GetFile      ()
-        if not ftree :
-            logger.debug ('TTree is not file resident, skip parallelization') 
-            return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
-        fname         = ftree.GetName     ()
-        tpath         = tdir.GetPath  ()
-        pr , d , path = tpath.rpartition(':')
-        tname         = path + '/' + tree.GetName()
-
-    if not fname :
-        logger.info ("Can't determine fname, skip parallelization") 
-        return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
-    
-    if not tname :
-        logger.info ("Can't determine tname, skip parallelization") 
-        return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
-        
-    # 
-    if isinstance ( cuts , ROOT.TCut ) : cuts = str( cuts )
-    if isinstance ( what , ROOT.TCut ) : what = str( what )
-    ##
-    if isinstance ( what , str ) : what = what.split(',')
-    if isinstance ( what , str ) : what = what.split(',')
-    if isinstance ( what , str ) : what = what.split(';')
-    if isinstance ( what , str ) : what = [ what ] 
-
-    ## nothing to project 
-    if not what :
-        return 0 , histo
-        
-    ## total number of events to process :
-    total = min ( num - first , nentries ) 
-
-    ## the event range is rather short, no real need  in parallel processing
-    if total * len ( what ) < maxentries and len ( what ) < 4 : 
-        return _tt_project_ ( tree ,  histo , what , cuts , '', total , first  )
-
-
-    ## number of chunks & reminder 
-    nchunks , rest = divmod ( total , maxentries )
-    csize          = int ( total / nchunks ) ## chunk size 
-
-    ## final list of parameters [ (file_name, what , cuts , first_event , num_events ) , ... ] 
-    params = []
-
-    for i in range(nchunks) :
-        for w in what : 
-            params.append ( ( fname , tname , str(w) , cuts , first +       i * csize , csize ) )
-            
-    if rest :
-        nchunks +=  1
-        for w in what : 
-            params.append ( ( fname , tname , str(w) , cuts , first + nchunks * csize , rest  ) )
-
-    task  = ProjectTask          ( histo )
-    wmgr  = Parallel.WorkManager ( silent = silent )
-    wmgr.process( task, params )
-
     filtered   = task.output[0] 
     histo     += task.output[1]
     
@@ -428,48 +304,57 @@ class  FillTask(Parallel.Task) :
     - for 12-core machine, clear speed-up factor of about 8 is achieved 
     """
     ## 
-    def __init__ ( self ,  variables , selection ) :
+    def __init__ ( self ,  variables , selection , trivial = False ) :
         
         self.variables = variables 
         self.selection = selection 
-        
+        self.trivial   = trivial  
         self.output    = ()  
 
     def initializeLocal   ( self ) : pass
     def initializeRemote  ( self ) : pass
 
     ## the actual processing 
-    def process ( self , params ) :
+    def process ( self , item ) :
 
         import ROOT
-                    
-        tree,fname = params
-        tree = ROOT.TChain( tree )
-        tree.Add ( fname )
-
         from ostap.logger.logger import logWarning
-        with logWarning() : 
-            
-            import ostap.core.pyrouts
-            from   ostap.fitting.selectors import SelectorWithVars
-            
+        with logWarning() : import ostap.core.pyrouts
+
+        import ostap.trees.trees
+        from   ostap.fitting.selectors import SelectorWithVars
+        
+        ## reconstruct chain from the item 
+        chain    = item.chain
+        ll       = len ( chain )  
+        
+        first    = item.first
+        nevents  = item.nevents 
+
+        all = 0 == first and ( nevents < 0 or ll <= nevents )
+        
+        if self.trivial and all : 
+            import ostap.fitting.selectors
+            self.output = chain.make_dataset ( self.variables , self.selection ) , 1 
+            return
+
+        ## use selector  
         selector = SelectorWithVars ( self.variables ,
                                       self.selection ,
                                       silence = True )
         
-        tree,fname = params
-        tree = ROOT.TChain( tree )
-        tree.Add ( fname )
-
-        num =  tree.process ( selector )
-        self.output =  selector.data, num  
+        args = ()  
+        if not all  :  args  = nevents, first 
+            
+        num = chain.process ( selector , *args , shortcut = self.trivial )
+        self.output =  selector.data, selector.stat  
 
         if  num < 0 :
             logger.warning ("Processing status %s"  % num )
         
         ##del selector.data
         ##del      selector        
-        logger.debug ( 'Processed %s chain and filled %d entries ' % ( fname , len( self.output ) ) )
+        logger.debug ( 'Processed %s and filled %d entries ' % ( item , len( self.output ) ) )
     
     def finalize ( self ) : pass 
 
@@ -477,51 +362,22 @@ class  FillTask(Parallel.Task) :
     def _mergeResults(self, result) :
         
         if result :
-            ds , st = result            
+            ds , stat = result            
             if not self.output or not self.output[0] :
-                self.output = ds , st 
+                self.output = ds , stat  
             else :
-                ds_ , st_ = self.output
+                ds_ , stat_ = self.output
                 ds_.append ( ds )
-                st_ += st
-                self.output = ds_ , st_
+                stat_     = list[stat_]
+                stat_[0] += stat[0] ## total 
+                stat_[1] += stat[1] ## procesed 
+                stat_[2] += stat[2] ## skipped                
+                self.output = ds_ , tuple(stat_)
                 ds.clear () 
             del result            
             logger.debug ( 'Merging: %d entries ' % len( self.output[0] ) )
         else :
             logger.error("No valid results for merging")
-
-# ==============================================================================
-## Fill dataset from looooong TChain using per-file parallelisation
-#  @code
-#  >>> chain =
-#  >>> vars  = ...
-#  >>> dset  = fillDataSet ( chain , vars , 'pt>10' )
-#  @endcode
-#  @see GaudiMP.Parallel
-#  @see GaudiMP.Parallel.Task
-#  @see Ostap.SelectorWithVars
-#  For 12-core machine, clear speed-up factor of about 8 is achieved 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-09-23 
-def  fillDataSet ( chain , variables , selection , ppservers = () , silent = False ) :
-    """Fill dataset from loooong TChain using per-file parallelisation
-    >>> chain =
-    >>> vars  = ...
-    >>> dset  = fillDataSet ( chain , vars , 'pt>10' )
-    - for 12-core machine, clear speed-up factor of about 8 is achieved 
-    """
-
-    task  = FillTask ( variables , selection )
-    wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
-    
-    cname = chain.GetName() 
-    files = chain.files() 
-    pairs = [ ( cname,i ) for i in files ] 
-
-    wmgr.process( task, pairs )
-
-    return task.output
 
 # ===================================================================================
 ## @class ChopperTraining
@@ -558,28 +414,57 @@ class ChopperTraining(Parallel.Task) :
             self.output = weights , classes , outputs , tarfiles, logfiles  
                             
 # ===================================================================================
-## parallel processing of loooong chain
+## parallel processing of loooong chain/tree 
 #  @code
 #  chain    = ...
 #  selector =  ...
 #  chain.pprocess ( selector )
 #  @endcode 
-def _pprocess_ ( chain , selector , ppservers = () , silent = False ) :
+def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  , chunk_size = 100000 , ppservers = () , silent = False ) :
+    """ Parallel processing of loooong chain/tree 
+    >>>chain    = ...
+    >>> selector =  ...
+    >>> chain.pprocess ( selector )
+    """
     
-    if not isinstance ( chain , ROOT.TChain ) :
-        logger.warning ('pprocess method is TChain-specific, skip parallelization') 
-        return chain.process ( selector )  
-    
+    from ostap.trees.trees import Chain
+
+    ch = Chain ( chain ) 
+
     selection = selector.selection
     variables = selector.variables
+    trivial   = selector.trivial
 
-    dataset, status = fillDataSet ( chain , variables ,  selection , ppservers , silent )
-    selector.data = dataset
+    all = 0 == first and ( 0 > nevents or len(chain) <= nevents )
+    ##if all and trivial :
+    ##    chunk_size = -1
+    ##    logger.info ('') 
+
+    task  = FillTask ( variables , selection , trivial )
+    wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
+    wmgr.process( task , ch.split ( chunk_size = chunk_size ) )
     
-    return status 
+    dataset, stat = task.output 
+
+    selector.data = dataset
+    selector.stat = stat 
+
+    from ostap.logger.logger import attention 
+    skipped = 'Skipped:%d' % stat[2]
+    if stat[2] : skipped = attention ( skipped )
+    logger.info (
+        'Selector(%s): Events Processed:%d/Total:%s/%s CUTS: "%s"\n# %s' % (
+        selector.name    ,
+        stat[1]          ,
+        stat[0]          ,
+        skept            ,
+        selector.cuts()  , dataset ) )            
+    
+    return 1 
 
     
 ROOT.TChain.pprocess =  _pprocess_ 
+ROOT.TTree.pprocess  =  _pprocess_ 
 
 # =============================================================================
 if '__main__' == __name__ :

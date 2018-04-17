@@ -135,11 +135,14 @@ std::string Ostap::Exception::toString  () const
  *  @param code    the code 
  */
 // ============================================================================
-void Ostap::throwException
+Ostap::StatusCode Ostap::throwException
 ( const std::string&       message ,
   const std::string&       tag     , 
   const Ostap::StatusCode& code    ) 
-{ throw Ostap::Exception ( message , tag , code ) ; }
+{
+  throw Ostap::Exception ( message , tag , code ) ;
+  return code ;
+}
 // ===========================================================================  
 
 

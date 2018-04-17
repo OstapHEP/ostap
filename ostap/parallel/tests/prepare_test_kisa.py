@@ -71,7 +71,6 @@ def create_tree ( item ) :
     return  fname,
 
 # ==============================================================================================
-the_files = set() 
 def prepare_data ( tmpdir , nfiles =  100 ,  nentries = 100 , ppservers = () , silent = True ) :
     
     ## Use generic Task from Kisa 
@@ -81,25 +80,25 @@ def prepare_data ( tmpdir , nfiles =  100 ,  nentries = 100 , ppservers = () , s
     ## task  = PrepareTask () 
     wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
 
+    from ostap.utils.utils import CleanUp
+    tmpfile = CleanUp.tempfile ( prefix = 'test_kisa_' , suffix = '.root' , dir = tmpdir )
+    
     fname = '%s/test_kisa_%d.root'
-    wmgr.process (  task , [ ( fname % ( tmpdir , i ) , nentries ) for i in xrange(nfiles) ] )
-
+    
+    files = [ CleanUp.tempfile ( prefix = 'test_kisa_' , suffix = '.root' , dir = tmpdir ) for i in range(nfiles) ]
+    
+    wmgr.process (  task , [ (f,nentries) for f in files  ] )
+    
+    the_files = set() 
     for f in task.output :
         if os.path.exists ( f ) :
             the_files.add ( f )
     
     from ostap.trees.data   import Data
+    the_files = list( the_files )
+    the_files.sort() 
     return Data ( 'S' , list ( the_files ) ) 
 
-# ==============================================================================
-import atexit
-@atexit.register
-def cleanup () :
-    while the_files :         
-        p = the_files.pop()
-        if os.path.exists ( p ) :
-            try    : os.remove ( p )
-            except : pass
 
 # =============================================================================
 if '__main__' == __name__ :

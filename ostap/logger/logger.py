@@ -28,6 +28,7 @@ __all__ = (
     'make_colors'    , ## force colored logging 
     'reset_colors'   , ## reset colored logging
     'colored_string' , ## make a colored string
+    'attention'      , ## make "attention" string
     #
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'
     )
@@ -295,8 +296,8 @@ def colored_string ( what               ,
     if not what or not with_colors() or not isatty() : return what
 
     ## nothing to do 
-    if foreground is None and backround is None :
-        if not bold and not blink and not underline : return what 
+    if ( foreground is None ) and ( background is None ) :
+        if ( not bold ) and ( not blink ) and ( not underline ) : return what 
 
     RESET_SEQ = "\033[0m"
     COLOR_SEQ = "\033[1;%dm"
@@ -315,7 +316,18 @@ def colored_string ( what               ,
         blink      = BLINK_SEQ , 
         what       = what      ,
         reset      = RESET_SEQ )
-                   
+
+# =============================================================================
+## attention!
+def attention ( what ) :
+    """Attention string """
+    return colored_string ( what       ,
+                            foreground = YELLOW ,
+                            background = RED    ,
+                            bold       = True   ,
+                            blink      = True   ,
+                            underline  = True   )
+
 # =============================================================================
 ## make colors 
 def make_colors () :
@@ -448,7 +460,8 @@ def keepColor () :
 
 ## reset colors
 ## for ipython mode and TTY output activate colors 
-if with_ipython() and isatty  () :
+## if with_ipython() and isatty  () :
+if isatty  () :
     make_colors()
     
 ## define default logging thresholds as 'INFO'

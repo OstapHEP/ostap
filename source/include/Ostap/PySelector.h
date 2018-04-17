@@ -101,9 +101,10 @@ namespace Ostap
      */
     static
     long process
-    ( TTree*              tree      ,
-      TSelector*          selector  , 
-      const unsigned long events    ) ;
+    ( TTree*              tree         ,
+      TSelector*          selector     , 
+      const unsigned long events       , 
+      const unsigned long first    = 0 ) ;
     // ========================================================================
     /** helper function to use TChain::Process in python 
      * 
@@ -137,9 +138,10 @@ namespace Ostap
      */
     static 
     long process 
-    ( TChain*             chain     ,
-      TSelector*          selector  ,
-      const unsigned long events    ) ;
+    ( TChain*             chain        ,
+      TSelector*          selector     ,
+      const unsigned long events       , 
+      const unsigned long first    = 0 ) ;
     // ========================================================================
   };  
   // ==========================================================================

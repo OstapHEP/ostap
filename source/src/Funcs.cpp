@@ -10,6 +10,7 @@
 // ============================================================================
 // Root
 // ============================================================================
+#include "TTree.h"
 #include "RooFormulaVar.h"
 #include "RooArgList.h"
 #include "RooArgSet.h"
@@ -35,7 +36,8 @@ Ostap::Functions::FuncFormula::FuncFormula
 ( const std::string& expression , 
   const TTree*       tree       ,
   const std::string& name       )
-  : Ostap::IFuncTree() 
+  : Ostap::IFuncTree()
+  , TObject      () 
   , m_tree       ( tree       ) 
   , m_formula    ( nullptr    )    
   , m_expression ( expression )  
@@ -47,6 +49,15 @@ Ostap::Functions::FuncFormula::FuncFormula
                              Ostap::StatusCode(700)                   ) ; }
 }
 // ============================================================================
+// destructor
+// ============================================================================
+Ostap::Functions::FuncFormula::~FuncFormula(){}
+// ============================================================================
+// notify 
+// ============================================================================
+bool Ostap::Functions::FuncFormula::notify() const
+{ return ( m_formula &&  m_formula->ok() ) ? m_formula->Notify() : false ; }
+// ============================================================================
 // make formula  
 // ============================================================================
 bool Ostap::Functions::FuncFormula::make_formula () const
@@ -55,7 +66,7 @@ bool Ostap::Functions::FuncFormula::make_formula () const
   if ( nullptr == m_tree ) { return false ; }
   TTree* t = const_cast<TTree*> ( m_tree ) ;
   m_formula = std::make_unique<Ostap::Formula> ( m_name , m_expression , t ) ; 
-  return m_formula && m_formula -> ok () ;
+  return  ( m_formula && m_formula -> ok () ) ?  m_formula->Notify() : false ;  
 }
 // ============================================================================
 //  evaluate the formula for  TTree
@@ -63,23 +74,26 @@ bool Ostap::Functions::FuncFormula::make_formula () const
 double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
 {
   //
-  if ( nullptr != tree && tree != m_tree )
-  { 
-    m_tree    = tree  ;
-    m_formula.reset ( nullptr ) ;
+  if ( nullptr != tree && m_tree != tree )
+  {
+    m_tree = tree ;
+    m_formula.reset( nullptr) ; 
   }
   //
-  if ( nullptr == m_tree )
-  { throw Ostap::Exception ( "Invalid Tree", 
-                             "Ostap::Function::FuncFormula"           , 
-                             Ostap::StatusCode(701)                   ) ; }
+  if ( m_formula &&  m_formula->ok() &&  m_formula->GetTree() != m_tree  )
+  { m_formula.reset( nullptr) ; }
   //
-  if ( !m_formula || !m_formula->ok() ) { make_formula () ; }
+  Ostap::Assert ( nullptr != m_tree                ,
+                  "InvalidTree"                    ,
+                  "Ostap::Function::FuncFormula"   , 
+                  Ostap::StatusCode(701)           ) ;
   //
-  if ( !m_formula || !m_formula->ok() ) 
-  { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
-                             "Ostap::Function::FuncFormula"           , 
-                             Ostap::StatusCode(700)                   ) ; }
+  if ( !m_formula || !m_formula->ok() ) { make_formula () ;}
+  //
+  Ostap::Assert ( m_formula && m_formula->ok()    ,
+                  "Invalid Formula"               , 
+                  "Ostap::Function::FuncFormula"  , 
+                  Ostap::StatusCode(700)          ) ;  
   //
   return m_formula->evaluate() ;
 }
@@ -105,6 +119,10 @@ Ostap::Functions::FuncRooFormula::FuncRooFormula
                              "Ostap::Function::FuncRooFormula"        , 
                              Ostap::StatusCode(706)                   ) ; }
 }
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Functions::FuncRooFormula::~FuncRooFormula(){}
 // ============================================================================
 // make formula  
 // ============================================================================
@@ -140,19 +158,26 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
     m_formula.reset ( nullptr ) ;
   }  
   //
-  if ( nullptr == m_data ) 
-  { throw Ostap::Exception ( "Invalid RooAbsData", 
-                             "Ostap::Function::FuncRooFormula"        , 
-                             Ostap::StatusCode(709)                   ) ; }
+  Ostap::Assert ( nullptr != m_data                  ,  
+                  "Invalid RooAbsData"               , 
+                  "Ostap::Function::FuncRooFormula"  , 
+                  Ostap::StatusCode(709)             ) ; 
   //
   if ( !m_formula || !m_formula->ok() ) { make_formula () ; }
-  if ( !m_formula || !m_formula->ok() ) 
-  { throw Ostap::Exception ( "Invalid RooFormula '" + m_expression + "'" , 
-                             "Ostap::Function::FuncRooFormula"        , 
-                             Ostap::StatusCode(708)                   ) ; }
+  //
+  Ostap::Assert  ( m_formula && m_formula->ok()      , 
+                   "Invalid RooFormula"              , 
+                   "Ostap::Function::FuncRooFormula" , 
+                   Ostap::StatusCode(708)            ) ; 
   //
   return m_formula->getVal() ;
 }
+// ============================================================================
+
+
+
+// ============================================================================
+ClassImp(Ostap::Functions::FuncFormula) 
 // ============================================================================
 // The END 
 // ============================================================================

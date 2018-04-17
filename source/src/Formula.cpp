@@ -26,8 +26,10 @@ Ostap::Formula::Formula
 ( const std::string& name       , 
   const std::string& expression ,
   TTree*             tree       ) 
-  : TTreeFormula ( name.c_str() , expression.c_str() , tree )
-{}
+: TTreeFormula ( name.c_str() , expression.c_str() , tree )
+{
+  
+}
 // ============================================================================
 Ostap::Formula::Formula
 ( const std::string& name       , 
@@ -41,7 +43,7 @@ Ostap::Formula::Formula
 Ostap::Formula::~Formula()
 {
   TTree* tree = GetTree() ;
-  if ( 0 != tree && this == tree->GetNotify() ) { tree -> SetNotify ( 0 ) ; }
+  if ( nullptr != tree && this == tree->GetNotify() ) { tree -> SetNotify ( 0 ) ; }
 }
 // ============================================================================
 // evaluate the formula 

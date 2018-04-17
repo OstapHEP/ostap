@@ -13,6 +13,10 @@
 // ============================================================================
 #include "Ostap/IFuncs.h"
 // ============================================================================
+// ROOT
+// ============================================================================
+#include  "TObject.h"
+// ============================================================================
 class RooFormulaVar ; // formm RooFit 
 // ============================================================================
 namespace Ostap 
@@ -27,8 +31,12 @@ namespace Ostap
     /** @class FuncFormula 
      *  simple implementation of TTRee-function based on Ostap::Formula
      */
-    class FuncFormula : public Ostap::IFuncTree 
+    class FuncFormula : public Ostap::IFuncTree, public TObject
     {
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Functions::FuncFormula,1) ;
+      // ======================================================================
     public :
       // ======================================================================
       /** constructor from the formula expression 
@@ -40,20 +48,30 @@ namespace Ostap
                     const TTree*       tree       =  nullptr ,
                     const std::string& name       = ""       ) ;
       // ======================================================================
+      /// default constructor, needed for serialization 
+      FuncFormula () = default ;
+      /// destructor 
+      virtual ~FuncFormula() ;
+      // ======================================================================
     public:
       // ======================================================================
       ///  evaluate the formula for  TTree
       double operator() ( const TTree* tree = nullptr ) const override ;
       // ======================================================================
-    private:
+    public:
+      // ======================================================================
+      bool Notify   () { return notify() ; }
+      bool notify   () const ;
+      // ======================================================================
+   private:
       // ======================================================================
       /// make formula 
       bool make_formula() const ;
       // ======================================================================
     private:
       // ======================================================================
-      mutable const TTree*                    m_tree    { nullptr } ;
-      mutable std::unique_ptr<Ostap::Formula> m_formula { nullptr } ;
+      mutable const TTree*                    m_tree    { nullptr } ; //! 
+      mutable std::unique_ptr<Ostap::Formula> m_formula { nullptr } ; //!
       // ======================================================================
       /// the  expression itself 
       std::string m_expression {} ; // the  expression itself 
@@ -77,6 +95,11 @@ namespace Ostap
       FuncRooFormula ( const std::string& expression            , 
                        const RooAbsData*  data       =  nullptr ,
                        const std::string& name       = ""       ) ;
+      /// default constructor, needed for serialization 
+      FuncRooFormula () = default ;
+      // ======================================================================
+      /// destructor 
+      virtual ~FuncRooFormula() ;
       // ======================================================================
     public:
       // ======================================================================

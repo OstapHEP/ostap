@@ -80,10 +80,10 @@ namespace Ostap
    *  @param tag     the tag 
    *  @param code    the code 
    */
-  void throwException
-  ( const std::string&       message           , 
-    const std::string&       tag     = "Ostap" , 
-    const Ostap::StatusCode& code    = Ostap::StatusCode::FAILURE ) ;
+  StatusCode throwException
+  ( const std::string& message           , 
+    const std::string& tag     = "Ostap" , 
+    const StatusCode&  code    = Ostap::StatusCode::FAILURE ) ;
   // ===========================================================================
 } //                                                      end of namespace Ostap
 // =============================================================================

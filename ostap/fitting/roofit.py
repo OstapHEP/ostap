@@ -1977,7 +1977,131 @@ for t in ( ROOT.RooAbsReal       ,
         t.__float__ = lambda s : s.getVal()
 
 
+# =============================================================================
+def _rad_moment_ ( data , var , order , value = 0 , error = True , *args ) :
+    """ Get n-th moment of the distribution
+    >>> data = ...
+    >>> print data.moment ( 'mass' , 3 ) 
+    """
+    assert isinstance ( order , int ) and 0 <= order, 'Invalid "order"  %s' % order
+    
+    if isintance  ( var  , str ) :
+        varset =  data.get()
+        assert  var in varset, 'Invalid varibale %s' % var 
+        var = getarrt ( varset , var ) 
+        return _rad_moment_  ( data , var  , order , value , error , *args )
 
+    m  = data._old_moment_ ( var , order , value , *args )
+    if not error : return m
+    
+    n     = data.sumEntries( *args ) 
+    sigma = data.sigma ( var , *args )
+    
+    if  abs  ( value - 0 ) < 0.01 * sigma :
+        
+        m2  = data._old_moment ( var , 2 * order , *args )
+        c2  = ( m2  - m * m )
+        c2 /= n
+        
+    elif  abs  ( value - data._old_moment_ ( var  , 1 , 0  , *args  ) ) < 0.01 * sigma :
+
+        m2  = data._old_moment_ ( var , 2             , value , *args )
+        m2o = data._old_moment_ ( var , 2 * order     , value , *args )
+        mum = data._old_moment_ ( var ,     order - 1 , value , *args )
+        mup = data._old_moment_ ( var ,     order + 1 , value , *args )
+
+        c2  = m2o
+        c2 -= 2.0 * order * mum * mup
+        c2 -= m * m
+        c2 += order  * order * m2 * mum * mup
+        c2 /= n
+        
+    else  :
+        logger.error ("Uncertainnry can be calcualted onlyfro moment/central moment") 
+        
+    return VE ( m , c2 )
+
+
+# ===============================================================================
+## Get n-th central moment of the distribution
+#  @code
+#  data = ...
+#  print data.central_moment ( 'mass' , 3 )
+#  @endcode 
+def _rad_central_moment_ ( data , var  , order , error = True , *args  ) :
+    """ Get n-th central moment of the distribution
+    >>> data = ...
+    >>> print data.central_moment ( 'mass' , 3 ) 
+    """
+    ##  get the men-value:
+    mu = _rad_moment_  ( data , var  , 1 , error = False , *args )
+    ##  calcualte moments  
+    return _rad_moment_ ( data , var , order , mu  , error , *args )
+
+
+# =============================================================================
+def _rad_skewness_ ( data , var , error = True , *args ) :
+    
+    if isintance  ( var  , str ) :
+        varset =  data.get()
+        assert var in varset, 'Invalid variable %s' % var  
+        var = getarrt ( varset , var ) 
+        return _rad_skewness_  ( data , var , error , *args )
+    
+    s  = data._old_skewness_ ( var , *args )
+    if not error : return s
+    
+    n = dat.sumEntries( *args ) 
+
+    if 2 > n : return VE ( s , 0 )
+
+    c2  = 6.0
+    c2 *= ( n - 2 )
+    c2 /= ( n + 1 ) * (  n + 3 )
+
+    return VE ( s , c2  )
+
+# =============================================================================
+def _rad_kurtosis_ ( data , var , error = True , *args ) :
+    
+    if isintance  ( var  , str ) :
+        varset =  data.get()
+        assert var in varset, 'Invalid variable %s' % var 
+        var = getarrt ( varset , var ) 
+        return _rad_kurtisis_  ( data , var , error , *args )
+
+    k  = data._old_kurtosis_ ( var , *args )
+    if not error : return k
+    
+    n = dat.sumEntries( *args ) 
+    
+    if 3 > n : return VE ( k , 0 )
+
+    c2 = 24.0 * n 
+    c2 *= ( n - 2 ) * ( n - 3 )
+    c2 /= ( n + 1 ) * ( n + 1 )
+    c2 /= ( n + 3 ) * ( n + 5 )
+    
+    return VE  ( k , c2 )
+
+
+RAD  = ROOT.RooAbsData
+if  not hasattr ( RAD , '_new_moment_' ) :
+    RAD.__old_moment_   = RAD.moment
+    RAD.__new_moment_   = _rad_moment_
+    RAD.moment          = _rad_moment_
+    
+if  not hasattr ( RAD , '_new_skewness_' ) :
+    RAD.__old_skewness_ = RAD.skewness
+    RAD.__new_skewness_ = _rad_skewness_
+    RAD.skewness        = _rad_skewness_
+
+if  not hasattr ( RAD , '_new_kurtosis_' ) :
+    RAD.__old_kurtosis_ = RAD.kurtosis
+    RAD.__new_kurtosis_ = _rad_kurtosis_
+    RAD.kurtosis        = _rad_kurtosis_
+
+RAD.central_moment = _rad_central_moment_
 
 #==============================================================================
 def _ds_table_0_ ( dataset , variables = [] ) :
@@ -2003,17 +2127,16 @@ def _ds_table_0_ ( dataset , variables = [] ) :
         r    = ( vv.GetName  () ,                      ## 0 
                  vv.GetTitle () ,                      ## 1 
                  ('%+.5g' % mean.value() ).strip() ,   ## 2
-                 ('%-.5g' % mean.error() ).strip() ,   ## 3 
-                 ('%.5g'  % rms          ).strip() ,   ## 4 
-                 ('%+.5g' % mnmx[0]      ).strip() ,   ## 5
-                 ('%+.5g' % mnmx[1]      ).strip() )   ## 6 
+                 ('%.5g'  % rms          ).strip() ,   ## 3 
+                 ('%+.5g' % mnmx[0]      ).strip() ,   ## 4
+                 ('%+.5g' % mnmx[1]      ).strip() )   ## 5
+            
         _vars.append ( r )
         
     _vars.sort() 
     name_l  = len ( 'Variable'    ) + 2 
     desc_l  = len ( 'Description' ) + 2 
     mean_l  = len ( 'mean' ) + 2 
-    err_l   = len ( 'err'  ) + 2 
     rms_l   = len ( 'rms'  ) + 2
     min_l   = len ( 'min'  ) + 2 
     max_l   = len ( 'max'  ) + 2 
@@ -2021,21 +2144,18 @@ def _ds_table_0_ ( dataset , variables = [] ) :
         name_l = max ( name_l , len ( v[0] ) )
         desc_l = max ( desc_l , len ( v[1] ) )
         mean_l = max ( mean_l , len ( v[2] ) )
-        err_l  = max ( err_l  , len ( v[3] ) )
-        rms_l  = max ( rms_l  , len ( v[4] ) )
-        min_l  = max ( min_l  , len ( v[5] ) )
-        max_l  = max ( max_l  , len ( v[6] ) )
+        rms_l  = max ( rms_l  , len ( v[3] ) )
+        min_l  = max ( min_l  , len ( v[4] ) )
+        max_l  = max ( max_l  , len ( v[5] ) )
         
-    sep      = '# +%s+%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
-                                        ( desc_l       + 2 ) * '-' ,
-                                        ( mean_l+err_l + 6 ) * '-' ,
-                                        ( rms_l        + 2 ) * '-' ,
-                                        ( min_l +max_l + 5 ) * '-' )
-    fmt = '# | %%%ds | %%-%ds | %%%ds +- %%-%ds | %%%ds | %%%ds / %%-%ds |'  % (
+    sep      = '# +%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
+                                     ( desc_l       + 2 ) * '-' ,
+                                     ( mean_l+rms_l + 5 ) * '-' ,
+                                     ( min_l +max_l + 5 ) * '-' )
+    fmt = '# | %%%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds |'  % (
         name_l ,
         desc_l ,
         mean_l ,
-        err_l  ,
         rms_l  ,
         min_l  ,
         max_l  )
@@ -2059,7 +2179,6 @@ def _ds_table_0_ ( dataset , variables = [] ) :
     header  = fmt % ( 'Variable'    ,
                       'Description' ,
                       'mean'        ,
-                      'err'         ,
                       'rms'         ,
                       'min'         ,
                       'max'         )
@@ -2068,7 +2187,7 @@ def _ds_table_0_ ( dataset , variables = [] ) :
     report += '\n' + header
     report += '\n' + sep            
     for v in _vars :
-        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , v[6] )
+        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5]  )
         report += '\n' + line  
     report += '\n' + sep
     return report , len ( sep ) 

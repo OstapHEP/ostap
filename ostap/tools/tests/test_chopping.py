@@ -119,6 +119,7 @@ if not os.path.exists( data_file ) :
         test_file.Write()
         test_file.ls()
 
+"""
 ##   number of    categories 
 N  = 7
 logger.info('Create and train TMVA')
@@ -273,6 +274,7 @@ for m in methods :
     logger.info('TMVA:%-11s for background %s' % ( m, ds2.statVar('tmva_%s' % m ) ) )
 
 
+"""
 # =============================================================================
 # The END
 # =============================================================================    

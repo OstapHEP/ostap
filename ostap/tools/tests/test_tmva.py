@@ -157,17 +157,17 @@ variables = [
     Variable( 'var3' , 'variable#3' ) ,
     ]
 
-## 3) declare/add TMVA  variables 
-for m in methods :
-    variables += [ Variable( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
+## ## 3) declare/add TMVA  variables 
+## for m in methods :
+##     variables += [ Variable( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
     
 ## 4)  Run Ostap to   fill   RooDataSet 
 dsS = SelectorWithVars (
-    variables = variables + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 1 ) ] ,
+    variables = variables , ##   + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 1 ) ] ,
     selection = "var1 < 100" , 
     )
 dsB = SelectorWithVars (
-    variables = variables + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 0 ) ] ,
+    variables = variables , ## + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 0 ) ] ,
     selection = "var1 < 100" ,
     )
 
@@ -209,8 +209,8 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
 
 for m in methods :
     
-    logger.info('TMVA:%-11s for signal     %s' % ( m, ds1.statVar('tmva_%s' % m ) ) )
-    logger.info('TMVA:%-11s for background %s' % ( m, ds2.statVar('tmva_%s' % m ) ) )
+    logger.info('TMVA:%-11s for signal     %s' % ( m, ds1.statVar('tmva_%s_response' % m ) ) )
+    logger.info('TMVA:%-11s for background %s' % ( m, ds2.statVar('tmva_%s_response' % m ) ) )
 
 # =============================================================================
 # The END
