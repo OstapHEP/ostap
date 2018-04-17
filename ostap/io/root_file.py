@@ -731,16 +731,17 @@ if not hasattr ( ROOT.TFile , 'close' ) :
 # =============================================================================
 def top_dir ( rdir ) :
     """```topdir'': get the top directory for the given directory"""
-    
+
     if not rdir : return None
+
     with ROOTCWD()  :
+
+        top = rdir 
+        if   isinstance ( rdir , ROOT.TDirectory ) : top = rdir
+        elif hasattr    ( rdir , 'GetDirectory'  ) : top = rdir.GetDirectory()
         
-        if   isinstance ( rdir , ROOT.TDirectory() ) : top = rdir
-        elif hasattr    ( rdir , 'GetDirectory'    ) : top = rdit.GetDirectory()
-        else                                         : top = rdir
-        
-        while top : 
-            moth = top.GetMotherDir() 
+        while top :
+            moth = top.GetMotherDir()
             if not moth : return top  
             top = moth
         else :

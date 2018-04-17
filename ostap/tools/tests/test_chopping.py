@@ -119,15 +119,15 @@ if not os.path.exists( data_file ) :
         test_file.Write()
         test_file.ls()
 
-"""
 ##   number of    categories 
 N  = 7
 logger.info('Create and train TMVA')
 with ROOT.TFile.Open( data_file ,'READ') as datafile : 
+    datafile =  ROOT.TFile.Open( data_file ,'READ')
     datafile.ls()
     tSignal  = datafile['S']
     tBkg     = datafile['B']
-    
+
     #
     ## book TMVA trainer
     #
@@ -138,7 +138,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         ## other  arguments as for ``plain'' TMVA
         name    = 'TestTMVA' ,   
         methods = [ # type               name   configuration
-        ( ROOT.TMVA.Types.kMLP        , "MLP"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator" ) ,
+        ( ROOT.TMVA.Types.kMLP        , "MLP"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
         ( ROOT.TMVA.Types.kBDT        , "BDTG"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
         ( ROOT.TMVA.Types.kCuts       , "Cuts"       , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
         ( ROOT.TMVA.Types.kFisher     , "Fisher"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
@@ -151,12 +151,12 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
 
     from ostap.utils.timing import timing
 
-    # sequential trainig 
-    #with timing ( 'for TMVA training' , logger ) : 
-    #    weights_files = trainer.train ()
-    #    tar_file      = trainer.tar_file
-    
-    #parallel trainig 
+    ## # sequential trainig 
+    ## with timing ( 'for TMVA training' , logger ) : 
+    ##     weights_files = trainer.train ()
+    ##     tar_file      = trainer.tar_file
+
+    # parallel trainig 
     with timing ( 'for TMVA training' , logger ) : 
         trainer.ptrain() 
         tar_file      = trainer.tar_file
@@ -201,14 +201,14 @@ for m in methods :
 from ostap.fitting.selectors import SelectorWithVars,  Variable     
 ## 2) Book RooDataset                 
 variables = [
-    Variable ( 'var1' , 'variable#1' , accessor = lambda s : s.var1 ) ,
-    Variable ( 'var2' , 'variable#2' , accessor = lambda s : s.var2 ) ,
-    Variable ( 'var3' , 'variable#3' , accessor = lambda s : s.var3 ) ,
+    Variable ( 'var1' , 'variable#1' ) ,
+    Variable ( 'var2' , 'variable#2' ) ,
+    Variable ( 'var3' , 'variable#3' ) ,
     ## extra: needed for addChoppingResponse 
-    Variable ( 'evt'  , 'event'      , accessor = lambda s : s.evt  ) ,
-    Variable ( 'run'  , 'run'        , accessor = lambda s : s.run  ) ,
+    Variable ( 'evt'  , 'event'      ) ,
+    Variable ( 'run'  , 'run'        ) ,
     ## extra: needed for cross-checks  
-    Variable ( 'cat'  , 'category'   , accessor = category          ) ,
+    Variable ( 'cat'  , 'category'   , accessor = category ) ,
     ]
 
 ## 3) declare/add TMVA  variables 
@@ -273,8 +273,6 @@ for m in methods :
     logger.info('TMVA:%-11s for signal     %s' % ( m, ds1.statVar('tmva_%s' % m ) ) )
     logger.info('TMVA:%-11s for background %s' % ( m, ds2.statVar('tmva_%s' % m ) ) )
 
-
-"""
 # =============================================================================
 # The END
 # =============================================================================    

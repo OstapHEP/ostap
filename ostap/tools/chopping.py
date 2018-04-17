@@ -261,12 +261,12 @@ class Trainer(object) :
             if 0 >=  st.min()  : logger.warning ("Some background categories are empty!")                 
             logger.info('Background category population mean/rms: %s/%s' % ( st.mean() , st.rms() ) )
 
-        
+
         ##  trick to please Kisa 
         from ostap.trees.trees import Chain
         self.__signal            = Chain ( signal     ) 
         self.__background        = Chain ( background )  
-        
+
         ## book the trainers 
         self.__trainers      = () 
         self.__weights_files = []
@@ -286,7 +286,6 @@ class Trainer(object) :
     def create_trainer ( self , i , verbose = True ) :
         """Create the trainer for category ``i''
         """
-        
         cat       = '(%s)%%%d' % ( self.category , self.N  )
         nam       =  '%s_%03d' % ( self.name , i )
         scuts     = self.    signal_cuts 
@@ -492,7 +491,7 @@ class Trainer(object) :
         logger.debug ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
         logger.info  ( "Trainer(%s): Output  files : %s" % ( self.name , self. output_files ) ) 
         logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) )
-        if selg.log_file : 
+        if self.log_file : 
             logger.info  ( "Trainer(%s): Log/tgz file  : %s" % ( self.name , self. log_file ) ) 
 
 

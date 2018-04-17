@@ -166,7 +166,7 @@ class ProjectTask(Parallel.Task) :
         chain    = item.chain 
         first    = item.first
         nevents  = item.nevents
-        
+
         ## Create the output histogram   NB! (why here???) 
         self.output = 0 , self.histo.Clone()
         
@@ -201,7 +201,14 @@ class ProjectTask(Parallel.Task) :
 #  For 12-core machine, clear speedup factor of about 8 is achieved 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
-def  cproject ( chain , histo , what , cuts , nentries = -1 , first = 0 , chunk_size = 1000000 , silent = False ) :
+def  cproject ( chain                ,
+                histo                ,
+                what                 ,
+                cuts                 ,
+                nentries   = -1      ,
+                first      =  0      ,
+                chunk_size = 1000000 ,
+                silent     = False   ) :
     """Make a projection of the loooong chain into histogram
     >>> chain = ... ## large chain
     >>> histo = ... ## histogram template 
@@ -215,7 +222,7 @@ def  cproject ( chain , histo , what , cuts , nentries = -1 , first = 0 , chunk_
     from ostap.trees.trees import Chain
     ch    = Chain ( chain , first = first , nevents = nentries )
     
-    task  = ProjectTask            ( histo , cuts )
+    task  = ProjectTask            ( histo , what , cuts )
     wmgr  = Parallel.WorkManager   ( silent = silent )
     wmgr.process ( task, ch.split  ( chunk_size  = chunk_size  ) )
     
@@ -277,9 +284,9 @@ def  tproject ( tree                 ,   ## the tree
     from ostap.trees.trees import Tree
     ch    = Tree ( tree , first = first , nevents = nevents )
     
-    task  = ProjectTask            ( histo , cuts )
-    wmgr  = Parallel.WorkManager   ( silent = silent )
-    wmgr.process ( task, ch.split  ( chunk_size  = chunk_size ) )
+    task  = ProjectTask            ( histo , what , cuts )
+    wmgr  = Parallel.WorkManager   ( silent     = silent       )
+    wmgr.process ( task, ch.split  ( chunk_size = chunk_size ) )
     
     filtered   = task.output[0] 
     histo     += task.output[1]
@@ -335,7 +342,7 @@ class  FillTask(Parallel.Task) :
         
         if self.trivial and all : 
             import ostap.fitting.selectors
-            self.output = chain.make_dataset ( self.variables , self.selection ) , 1 
+            self.output = chain.make_dataset ( self.variables , self.selection , silent = True ) 
             return
 
         ## use selector  
@@ -346,29 +353,29 @@ class  FillTask(Parallel.Task) :
         args = ()  
         if not all  :  args  = nevents, first 
             
-        num = chain.process ( selector , *args , shortcut = self.trivial )
-        self.output =  selector.data, selector.stat  
-
+        num = chain.process ( selector , *args , shortcut = all and self.trivial )
+        self.output = selector.data, selector.stat  
+        
         if  num < 0 :
             logger.warning ("Processing status %s"  % num )
         
         ##del selector.data
         ##del      selector        
         logger.debug ( 'Processed %s and filled %d entries ' % ( item , len( self.output ) ) )
-    
+
     def finalize ( self ) : pass 
 
     ## merge results/datasets 
     def _mergeResults(self, result) :
         
         if result :
-            ds , stat = result            
+            ds , stat = result
             if not self.output or not self.output[0] :
                 self.output = ds , stat  
             else :
                 ds_ , stat_ = self.output
                 ds_.append ( ds )
-                stat_     = list[stat_]
+                stat_     = list(stat_)
                 stat_[0] += stat[0] ## total 
                 stat_[1] += stat[1] ## procesed 
                 stat_[2] += stat[2] ## skipped                
@@ -378,15 +385,16 @@ class  FillTask(Parallel.Task) :
             logger.debug ( 'Merging: %d entries ' % len( self.output[0] ) )
         else :
             logger.error("No valid results for merging")
-
+            
 # ===================================================================================
 ## @class ChopperTraining
 class ChopperTraining(Parallel.Task) :
     def __init__          ( self ) : self.output = ()
     def initializeLocal   ( self ) : self.output = () 
     def process           ( self , params ) :
+
         import ostap.tools.tmva
-        category , chopper ,log , silent = params
+        category , chopper , log , silent = params
         trainer  = chopper.create_trainer ( category , False )
         trainer.train ( log , silent )
         self.output = (
@@ -434,12 +442,13 @@ def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  
     selection = selector.selection
     variables = selector.variables
     trivial   = selector.trivial
-
+    
     all = 0 == first and ( 0 > nevents or len(chain) <= nevents )
-    ##if all and trivial :
-    ##    chunk_size = -1
-    ##    logger.info ('') 
-
+    
+    if all and trivial and 1 < len( ch.files ) :
+        logger.info ("Configuration is ``trivial'': redefine ``chunk-size'' to -1")
+        chunk_size = -1
+        
     task  = FillTask ( variables , selection , trivial )
     wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
     wmgr.process( task , ch.split ( chunk_size = chunk_size ) )
@@ -451,13 +460,13 @@ def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  
 
     from ostap.logger.logger import attention 
     skipped = 'Skipped:%d' % stat[2]
-    if stat[2] : skipped = attention ( skipped )
+    skipped = '/' + attention ( skipped ) if stat[2] else ''
     logger.info (
-        'Selector(%s): Events Processed:%d/Total:%s/%s CUTS: "%s"\n# %s' % (
+        'Selector(%s): Events Processed:%d/Total:%d%s CUTS: "%s"\n# %s' % (
         selector.name    ,
         stat[1]          ,
         stat[0]          ,
-        skept            ,
+        skipped          ,
         selector.cuts()  , dataset ) )            
     
     return 1 

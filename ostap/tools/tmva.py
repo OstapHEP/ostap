@@ -285,9 +285,9 @@ class Trainer(object):
         self.__variables         = tuple ( variables  )
         
         from ostap.trees.trees import Chain
-        if isinstance ( signal     , Chain ) : signal     =     signal.chain ()
-        if isinstance ( background , Chain ) : background = background.chain ()
-        
+        if isinstance ( signal     , Chain ) : signal     =     signal.chain 
+        if isinstance ( background , Chain ) : background = background.chain 
+
         self.__signal            = signal
         self.__signal_cuts       = signal_cuts  
         self.__signal_weight     = signal_weight

@@ -2159,13 +2159,13 @@ def _ds_table_0_ ( dataset , variables = [] ) :
         rms_l  ,
         min_l  ,
         max_l  )
+    from ostap.logger.logger import allright, attention  
+    report  = 'Dataset(%s;%s):' % ( dataset.GetName  () , dataset.GetTitle () )
+    report += allright ( '%d entries, %d variables' %  ( len ( dataset )   ,
+                                                         len ( varset  ) ) )
     
-    report  = 'Dataset(%s;%s): %d entries, %d variables ' %  ( dataset.GetName  () ,
-                                                               dataset.GetTitle () ,
-                                                               len ( dataset )     ,
-                                                               len ( varset  )     )
     if dataset.isWeighted() :
-        report += ' Weighted'
+        report += attention ( ' Weighted' ) 
         store = dataset.store() 
         if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) :
             import ostap.trees.trees 
@@ -2174,7 +2174,7 @@ def _ds_table_0_ ( dataset , variables = [] ) :
             vvars    = set ( [ i.GetName() for i in  varset ] )
             wvars    = branches - vvars
             if 1 == len ( wvars ):
-                report += ' with "%s"' % wvars.pop()
+                report += attention ( ' with "%s"' % wvars.pop() ) 
                 
     header  = fmt % ( 'Variable'    ,
                       'Description' ,

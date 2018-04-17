@@ -223,7 +223,14 @@ ROOT.TChain.__call__  = _tc_call_
 #  @see TTree::Project
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def _tt_project_ ( tree , histo , what , cuts = '' , options = '' , nentries = -1 , firstentry = 0 , silent = False ) :
+def _tt_project_ ( tree               ,
+                   histo              ,
+                   what               ,
+                   cuts       = ''    ,
+                   options    = ''    ,
+                   nentries   = -1    ,
+                   firstentry =  0    ,
+                   silent     = False ) :
     """Helper project method
     
     >>> tree = ...
@@ -249,8 +256,9 @@ def _tt_project_ ( tree , histo , what , cuts = '' , options = '' , nentries = -
     - cuts  : selection criteria/weights 
     """
     #
-    if nentries <= 0 :
-        nentries = ROOT.TTree.kMaxEntries
+    
+    ## if nentries < 0 :
+    nentries = ROOT.TTree.kMaxEntries
         
     args = options , nentries , firstentry, silent
     ## 
@@ -306,6 +314,7 @@ def _tt_project_ ( tree , histo , what , cuts = '' , options = '' , nentries = -
         hh.Delete()
         del hh, h1 
         return rr , histo
+
     ## the basic case 
     from ostap.core.core import ROOTCWD
     with ROOTCWD() :
@@ -316,7 +325,7 @@ def _tt_project_ ( tree , histo , what , cuts = '' , options = '' , nentries = -
         elif isinstance ( histo , str      ) :
             h = ROOT.gROOT.FindObject ( hname )
             if h : return result, h
-            
+
     return result, histo
 
 ROOT.TTree .project = _tt_project_
@@ -925,9 +934,11 @@ class Chain(CleanUp) :
             elif isinstance ( tree ,  ROOT.TTree ) :
                 
                 topdir = tree.topdir
-                if isinstance ( fdir , ROOT.TFile ) :
+                if isinstance ( topdir , ROOT.TFile ) :
                     self.__files = topdir.GetName() ,
+
                 else :
+                    
                     fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree_' )
                     from ostap.core.core import ROOTCWD
                     with ROOTCWD() : 
@@ -959,7 +970,7 @@ class Chain(CleanUp) :
 
     ## split the chain for several chains  with max=chunk entries
     def split ( self , chunk_size = 200000  ) :
-        """Split the tree for several trees with max=chunk entries
+        """Split the tree for several trees with chunk_size entries
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
@@ -1002,7 +1013,7 @@ class Chain(CleanUp) :
 
     @property
     def chain ( self ) :
-        """``chain'' : get the undnerlyinng tree/chain"""
+        """``chain'' : get the undnerlying tree/chain"""
         if self.__chain : return self.__chain
         self.__chain = self.__create_chai() 
         return self.__chain
@@ -1094,7 +1105,7 @@ class Tree(Chain) :
         return self.files[0] 
 
     def __str__ ( self ) :
-        r = "Ttree('%s',%s" % ( self.name , self.file )
+        r = "Tree('%s',%s" % ( self.name , self.file )
         if 0 != self.first or 0 <= self.nevents : r += ",%s,%s" % ( self.first , self.last - self.first )            
         return r + ")"
     __repr__ = __str__

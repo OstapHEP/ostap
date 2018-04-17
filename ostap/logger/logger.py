@@ -29,6 +29,7 @@ __all__ = (
     'reset_colors'   , ## reset colored logging
     'colored_string' , ## make a colored string
     'attention'      , ## make "attention" string
+    'allright'       , ## make "allright" string
     #
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'
     )
@@ -116,7 +117,7 @@ __with_colors__ = False
 def with_colors() :
     """Is colorization enabled ?"""
     global __with_colors__
-    return bool(__with_colors__)
+    return bool(__with_colors__) and isatty() 
 # =============================================================================
 ## reset colorization of logging 
 def reset_colors() :
@@ -321,12 +322,23 @@ def colored_string ( what               ,
 ## attention!
 def attention ( what ) :
     """Attention string """
-    return colored_string ( what       ,
+    return colored_string ( what                ,
                             foreground = YELLOW ,
                             background = RED    ,
                             bold       = True   ,
                             blink      = True   ,
                             underline  = True   )
+
+# =============================================================================
+## allright 
+def allright ( what ) :
+    """Allright string """
+    return colored_string ( what                ,
+                            foreground = YELLOW ,
+                            background = GREEN  ,
+                            bold       = True   ,
+                            blink      = False  ,
+                            underline  = False  )
 
 # =============================================================================
 ## make colors 
