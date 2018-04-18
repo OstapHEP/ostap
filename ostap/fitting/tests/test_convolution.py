@@ -42,7 +42,7 @@ def test_laplace():
                                              slope = 1   )
     
     from ostap.fitting.convolution import  Convolution_pdf
-    
+
     ## constant resolution  
     laplace_1 = Convolution_pdf ( name = 'L1' , pdf = laplace, resolution = 0.75 )
 
@@ -53,8 +53,10 @@ def test_laplace():
     ## resolution as PDF 
     laplace_2 = Convolution_pdf ( name = 'L2' , pdf = laplace, resolution = rAp )
 
-    laplace.draw()
-    laplace_1.draw()
+    laplace.draw( silent = True )
+
+    laplace_1.draw( silent = True )
+
     laplace_2.draw()
 
     models.add ( laplace  )

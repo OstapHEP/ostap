@@ -26,6 +26,8 @@
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  */
 // ============================================================================
+ClassImp(Ostap::Functions::FuncFormula)
+// ============================================================================
 /*  constructor from the formula expression 
  *  @param expression the  formula expression 
  *  @param tree       the tree 

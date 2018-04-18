@@ -205,14 +205,9 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         
         return 1
     
+# =============================================================================
 _maxv =  0.95 * sys.float_info.max
 _minv = -0.95 * sys.float_info.max
-##  is this a a trivial variable?
-##_non_trivial = ' +-*/=%?()[]|&^'
-##def trivial ( var ) :
-##    for s in _non_trivial :
-##        if 0 <= var.find ( s ) : return False
-##    return True 
 # =============================================================================
 ## @class Variable
 #  Helper   structure to manage/keep/create the variable for   SelectorWithVars
@@ -339,7 +334,7 @@ def valid_formula ( expression , varset ) :
         del vlst
         return result
 
-    assert isinstance ( varset  , ROOT.RooArgList ), 'nvaild type %s' % type (varset)
+    assert isinstance ( varset  , ROOT.RooArgList ), 'Invalid type %s' % type (varset)
     from ostap.logger.utils import rooSilent, rootError  
     with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
         with rootError( ROOT.kError + 1 ) :
@@ -654,7 +649,8 @@ class SelectorWithVars(SelectorWithCuts) :
     def dataset   ( self  ) :
         """ Get the data-set """ 
         return self.__data
- 
+
+    # =========================================================================
     ## the only one actually important method 
     def Process ( self, entry ):
         """ Fill data set 
@@ -684,14 +680,21 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         bamboo = self.fChain
 
-        #
+        return  self.fill ( bamboo )
+
+    # =========================================================================
+    ## fill it! 
+    def fill ( self , bamboo ) :
+         """The  actual processing for the given ``bamboo''
+        Note that   this method is independent on TTree/TChain and can be used directy
+        One just need to  ensure that:
+        - 'accessor functions' for the variables and 'cuts' agree with the type of ``bamboo''
+       """
+         
         ## apply cuts (if needed) 
-        # 
         if self.__cuts and not self. __cuts ( bamboo )  : return 0 
 
-        #
         ## loop over all variables
-        # 
         for v in self.__variables :
 
             var       = v.var                ## The variable
@@ -711,6 +714,13 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__data .add ( self.__varset )
         
         return 1 
+
+    # =========================================================================
+    ## ``callable'' interface 
+    def __call__ ( self ,  entry ) :
+        """``callable'' interface to Selector
+        """
+        return self.fill ( entry ) 
 
     ## termination 
     def Terminate ( self  ) :

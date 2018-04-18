@@ -713,10 +713,10 @@ class PDF (object) :
     #  @param data_overlay          draw points atop of fitting curves?  
     #  @see ostap.plotting.fit_draw 
     def draw ( self ,
-               dataset               = None  ,
-               nbins                 = 100   ,   ## Frame binning
-               silent                = False ,   ## silent mode ?               
-               **kwargs                      ) :
+               dataset               = None ,
+               nbins                 = 100  ,   ## Frame binning
+               silent                = True ,   ## silent mode ?               
+               **kwargs                     ) :
         """  Visualize the fits results
         >>> r,f = model.draw ( dataset )
         >>> model.draw ( dataset , nbins = 100 )
@@ -757,7 +757,7 @@ class PDF (object) :
         with roo_silent ( silent ) :
 
             drawvar = self.draw_var if self.draw_var else self.xvar  
-            
+
             if nbins :  frame = drawvar.frame ( nbins )
             else     :  frame = drawvar.frame ()
             
@@ -766,13 +766,13 @@ class PDF (object) :
             #
             data_options = kwargs.pop ( 'data_options' , FD.data_options )
             if dataset : dataset .plotOn ( frame , ROOT.RooFit.Invisible() , *data_options )
-            
+
             ## draw various ``background'' terms
             boptions = kwargs.pop (     'background_options' , FD.   background_options )
             bbcolor  = kwargs.pop (  'base_background_color' , FD.base_background_color )
             bbcstep  = kwargs.pop (  'background_step_color' , 1 )
             self._draw( self.backgrounds , frame , boptions , bbcolor , bbcstep )
-                
+
             ## ugly :-(
             ct1options = kwargs.pop (     'crossterm1_options' , FD.   crossterm1_options )
             ct1bcolor  = kwargs.pop (  'base_crossterm1_color' , FD.base_crossterm1_color ) 
