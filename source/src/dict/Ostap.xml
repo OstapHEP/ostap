@@ -26,6 +26,8 @@
   
   <exclusion>
     
+    <class name    = "Ostap::StatVar::Interval"    />
+
     <class pattern = "Ostap::Math::details::*"     />
     <class pattern = "Ostap::Math::Models::*"      />
     <class pattern = "Ostap::Utils::details::*"    />

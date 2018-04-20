@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 #ifndef OSTAP_STATVAR_H
 #define OSTAP_STATVAR_H 1
@@ -19,6 +18,7 @@ class RooAbsData ; // RooFit
 // Ostap
 // ============================================================================
 #include "Ostap/WStatEntity.h"
+#include "Ostap/ValueWithError.h"
 #include "Ostap/SymmetricMatrixTypes.h"
 // ============================================================================
 namespace Ostap
@@ -38,13 +38,20 @@ namespace Ostap
     /// the actual type for styatistic 
     typedef Ostap::WStatEntity  Statistic ;
     // ========================================================================
+    /// the actual type for interval 
+    typedef std::pair<double,double>  Interval  ;
+    // ========================================================================
+  public: 
+    // ========================================================================
+    static_assert (std::numeric_limits<unsigned long>::is_specialized   ,
+                   "Numeric_limist<unsigned long> are not specialized!" ) ;
+    static constexpr unsigned long LAST { std::numeric_limits<unsigned long>::max() } ;
+    // ========================================================================
   public: 
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param tree (INPUT) the tree 
      *  @param expression (INPUT) the expression
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  tree = ... 
@@ -55,17 +62,15 @@ namespace Ostap
      *  @date   2013-10-13
      */
     static Statistic statVar
-      ( TTree*              tree                                                   , 
-        const std::string&  expression                                             ,
-        const unsigned long first      = 0                                         ,
-        const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
+      ( TTree*              tree              , 
+        const std::string&  expression        ,
+        const unsigned long first      = 0    ,
+        const unsigned long last       = LAST ) ;
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param tree       (INPUT) the tree 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection criteria 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  tree = ... 
@@ -76,18 +81,16 @@ namespace Ostap
      *  @date   2013-10-13
      */
     static Statistic statVar
-      ( TTree*              tree        , 
-        const std::string&  expression  , 
-        const std::string&  cuts        ,
-        const unsigned long first      = 0                                         ,
-        const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
+      ( TTree*              tree              , 
+        const std::string&  expression        , 
+        const std::string&  cuts              ,
+        const unsigned long first      = 0    ,
+        const unsigned long last       = LAST ) ;
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param tree       (INPUT) the tree 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection criteria 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  tree = ... 
@@ -98,11 +101,11 @@ namespace Ostap
      *  @date   2013-10-13
      */
     static Statistic statVar
-      ( TTree*              tree        , 
-        const std::string&  expression  , 
-        const TCut&         cuts        ,
-        const unsigned long first      = 0                                         ,
-        const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
+      ( TTree*              tree              , 
+        const std::string&  expression        , 
+        const TCut&         cuts              ,
+        const unsigned long first      = 0    ,
+        const unsigned long entries    = LAST ) ;
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the inpout tree 
@@ -111,48 +114,20 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2014-03-27
      */
     static unsigned long statCov 
-      ( TTree*               tree   , 
-        const std::string&   exp1   , 
-        const std::string&   exp2   , 
-        Statistic&           stat1  ,  
-        Statistic&           stat2  ,  
-        Ostap::SymMatrix2x2& cov2   , 
-        const unsigned long  first   = 0 ,
-        const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** calculate the covariance of two expressions 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param exp1  (INPUT)  the first  expresiion
-     *  @param exp2  (INPUT)  the second expresiion
-     *  @param cuts  (INPUT)  the selection criteria 
-     *  @param stat1 (UPDATE) the statistic for the first  expression
-     *  @param stat2 (UPDATE) the statistic for the second expression
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
-     *  @return number of processed events 
-     *  
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2014-03-27
-     */
-    static unsigned long statCov 
-      ( TTree*               tree   ,
-        const std::string&   exp1   , 
-        const std::string&   exp2   , 
-        const std::string&   cuts   ,
-        Statistic&           stat1  ,  
-        Statistic&           stat2  ,  
-        Ostap::SymMatrix2x2& cov2   , 
-        const unsigned long  first   = 0                                         ,
-        const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+      ( TTree*               tree          , 
+        const std::string&   exp1          , 
+        const std::string&   exp2          , 
+        Statistic&           stat1         ,  
+        Statistic&           stat2         ,  
+        Ostap::SymMatrix2x2& cov2          , 
+        const unsigned long  first  = 0    ,
+        const unsigned long  last   = LAST ) ;
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the inpout tree 
@@ -162,52 +137,55 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2014-03-27
      */
     static unsigned long statCov 
-      ( TTree*               tree   ,
-        const std::string&   exp1   , 
-        const std::string&   exp2   , 
-        const TCut&          cuts   ,
-        Statistic&           stat1  ,  
-        Statistic&           stat2  ,  
-        Ostap::SymMatrix2x2& cov2   , 
-        const unsigned long  first   = 0                                           ,
-        const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+      ( TTree*               tree         ,
+        const std::string&   exp1         , 
+        const std::string&   exp2         , 
+        const std::string&   cuts         ,
+        Statistic&           stat1        ,   
+        Statistic&           stat2        ,  
+        Ostap::SymMatrix2x2& cov2         , 
+        const unsigned long  first = 0    ,
+        const unsigned long  last  = LAST ) ;
     // ========================================================================
-  public: // the same but with RooFit 
-    // ========================================================================
-    /** build statistic for the <code>expression</code>
-     *  @param data (INPUT) the data 
-     *  @param expression (INPUT) the expression
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
-     *
-     *  @code
-     *  data = ... 
-     *  stat = data.statVar( 'S_sw' ) 
-     *  @endcode 
-     *
+    /** calculate the covariance of two expressions 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param exp1  (INPUT)  the first  expresiion
+     *  @param exp2  (INPUT)  the second expresiion
+     *  @param cuts  (INPUT)  the selection criteria 
+     *  @param stat1 (UPDATE) the statistic for the first  expression
+     *  @param stat2 (UPDATE) the statistic for the second expression
+     *  @param cov2  (UPDATE) the covariance matrix 
+     *  @return number of processed events 
+     *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2015-02-15
+     *  @date   2014-03-27
      */
-    static Statistic statVar 
-      ( const RooAbsData*   data        ,   
-        const std::string&  expression  , 
-        const unsigned long first   = 0                                           ,
-        const unsigned long last    = std::numeric_limits<unsigned long>::max() ) ;
+    static unsigned long statCov 
+      ( TTree*               tree         ,
+        const std::string&   exp1         , 
+        const std::string&   exp2         , 
+        const TCut&          cuts         ,
+        Statistic&           stat1        ,  
+        Statistic&           stat2        ,  
+        Ostap::SymMatrix2x2& cov2         , 
+        const unsigned long  first = 0    ,
+        const unsigned long  last  = LAST ) ;
+    // ========================================================================
+  public:
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
+     *  @param cutrange   (INPUT) the cut-range
+     *  @param first      (INPUT) the frist event to process
+     *  @param last       (INPUT) process till "last"-event
      *
      *  @code
      *  data = ... 
@@ -218,18 +196,17 @@ namespace Ostap
      *  @date   2015-02-15
      */
     static Statistic statVar 
-      ( const RooAbsData*   data        , 
-        const std::string&  expression  , 
-        const std::string&  cuts        , 
-        const unsigned long first   = 0                                         ,
-        const unsigned long last    = std::numeric_limits<unsigned long>::max() ) ;
+      ( const RooAbsData*   data               , 
+        const std::string&  expression         , 
+        const std::string&  cuts       = ""    , 
+        const std::string&  cut_range  = ""    ,
+        const unsigned long first      = 0     ,
+        const unsigned long last       = LAST  ) ;
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
      *
      *  @code
      *  data = ... 
@@ -241,11 +218,12 @@ namespace Ostap
      *  @date   2015-02-15
      */
     static Statistic statVar 
-      ( const RooAbsData*   data        , 
-        const std::string&  expression  , 
-        const TCut&         cuts        , 
-        const unsigned long first   = 0                                         ,
-        const unsigned long last    = std::numeric_limits<unsigned long>::max() ) ;
+      ( const RooAbsData*   data              , 
+        const std::string&  expression        , 
+        const TCut&         cuts              , 
+        const std::string&  cut_range  = ""   ,
+        const unsigned long first      = 0    ,
+        const unsigned long last       = LAST ) ;
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the input  tree 
@@ -254,22 +232,21 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2014-03-27
      */
     static unsigned long statCov
-      ( const RooAbsData*    tree   , 
-        const std::string&   exp1   , 
-        const std::string&   exp2   , 
-        Statistic&           stat1  ,  
-        Statistic&           stat2  ,  
-        Ostap::SymMatrix2x2& cov2   , 
-        const unsigned long  first   = 0 ,
-        const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+      ( const RooAbsData*    tree             , 
+        const std::string&   exp1             , 
+        const std::string&   exp2             , 
+        Statistic&           stat1            ,  
+        Statistic&           stat2            ,  
+        Ostap::SymMatrix2x2& cov2             , 
+        const std::string&   cut_range = ""   ,
+        const unsigned long  first     = 0    ,
+        const unsigned long  last      = LAST ) ;
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the input  tree 
@@ -279,130 +256,368 @@ namespace Ostap
      *  @param stat1 (UPDATE) the statistic for the first  expression
      *  @param stat2 (UPDATE) the statistic for the second expression
      *  @param cov2  (UPDATE) the covariance matrix 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
      *  @return number of processed events 
      *  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2014-03-27
      */
     static unsigned long statCov
-      ( const RooAbsData*    tree   , 
-        const std::string&   exp1   , 
-        const std::string&   exp2   , 
-        const std::string&   cuts   , 
-        Statistic&           stat1  ,  
-        Statistic&           stat2  ,  
-        Ostap::SymMatrix2x2& cov2   , 
-        const unsigned long  first   = 0 ,
-        const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+      ( const RooAbsData*    tree             , 
+        const std::string&   exp1             , 
+        const std::string&   exp2             , 
+        const std::string&   cuts             , 
+        Statistic&           stat1            ,  
+        Statistic&           stat2            ,  
+        Ostap::SymMatrix2x2& cov2             , 
+        const std::string&   cut_range = ""   ,
+        const unsigned long  first     = 0    ,
+        const unsigned long  last      = LAST ) ;
     // ========================================================================
-  public: // generic cases, require some decoration/postprocessing  in python
+  public:
     // ========================================================================
-    /** calculate the covariances for generic case 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param vars  (INPUT)  the list of variables 
-     *  @param cuts  (INPUT)  the selection criteria/weights 
-     *  @param stats (UPDATE) list of statistics 
-     *  @param covs  (UPDATE) elements of "covariance matrix" 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2017-02-17
+    /** get the number of equivalent entries 
+     *  \f$ n_{eff} \equiv = \frac{ (\sum w)^2}{ \sum w^2} \f$
+     *  @param tree  (INPUT) the tree 
+     *  @param cuts  (INPUT) selection  criteria 
+     *  @param  first  (INPUT) the first  event to process 
+     *  @param  last   (INPUT) the last event to  process
+     *  @return number of equivalent entries 
      */
-    static unsigned long _statCov 
-    ( TTree*               tree   , 
-      const std::vector<std::string>& vars      , 
-      const std::string&              cuts      ,
-      std::vector<Statistic>&         stats     ,  
-      std::vector<double>&            covs      ,
-      const unsigned long  first   = 0          ,
-      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+    static double nEff 
+      ( TTree&               tree          , 
+        const std::string&   cuts   = ""   , 
+        const unsigned long  first  = 0    ,
+        const unsigned long  last   = LAST ) ;
+    // ========================================================================
+    /** get the number of equivalent entries 
+     *  \f$ n_{eff} \equiv = \frac{ (\sum w)^2}{ \sum w^2} \f$
+     *  @param tree      (INPUT) the tree 
+     *  @param cuts      (INPUT) selection crietria  
+     *  @param first     (INPUT) the first  event to process 
+     *  @param last      (INPUT) the last event to  process
+     *  @param cut_range (INPUT) cut range 
+     *  @return number of equivalent entries 
+     */
+    static double nEff 
+      ( const RooAbsData&    tree             , 
+        const std::string&   cuts      = ""   , 
+        const std::string&   cut_range = ""   , 
+        const unsigned long  first     = 0    ,
+        const unsigned long  last      = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** calculate the moment of order "order" relative to the center "center"
+     *  @param  tree   (INPUT) input tree 
+     *  @param  expr   (INPUT) expression  (must  be valid TFormula!)
+     *  @param  order  (INPUT) the order 
+     *  @param  center (INPUT) the center 
+     *  @param  cuts   (INPUT) cuts 
+     *  @param  first  (INPUT) the first  event to process 
+     *  @param  last   (INPUT) the last event to  process
+     *  @return the moment 
+     */
+    static double get_moment 
+      ( TTree&               tree          ,  
+        const unsigned short order         , 
+        const std::string&   expr          , 
+        const double         center = 0    ,
+        const std::string&   cuts   = ""   , 
+        const unsigned long  first  = 0    ,
+        const unsigned long  last   = LAST ) ;
     // ========================================================================    
-    /** calculate the covariances for generic case 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param vars  (INPUT)  the list of variables 
-     *  @param cuts  (INPUT)  the selection criteria/weights 
-     *  @param stats (UPDATE) list of statistics 
-     *  @param covs  (UPDATE) elements of "covariance matrix" 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2017-02-17
+    /** calculate the moment of order "order" relative to the center "center"
+     *  @param  data      (INPUT) input data
+     *  @param  expr      (INPUT) expression  (must  be valid TFormula!)
+     *  @param  order     (INPUT) the order 
+     *  @param  center    (INPUT) the center 
+     *  @param  cuts      (INPUT) cuts 
+     *  @param  first     (INPUT) the first  event to process 
+     *  @param  last      (INPUT) the last event to  process
+     *  @param  cut_range (INPUT) cut range 
+     *  @return the moment 
      */
-    static unsigned long _statCov 
-    ( TTree*               tree   , 
-      const std::vector<std::string>& vars      , 
-      const TCut&                     cuts      ,
-      std::vector<Statistic>&         stats     ,  
-      std::vector<double>&            covs      ,
-      const unsigned long  first   = 0          ,
-      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** calculate the covariances for generic case 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param vars  (INPUT)  the list of variables 
-     *  @param stats (UPDATE) list of statistics 
-     *  @param covs  (UPDATE) elements of "covariance matrix" 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2017-02-17
-     */
-    static unsigned long _statCov 
-    ( TTree*               tree   , 
-      const std::vector<std::string>& vars      , 
-      std::vector<Statistic>&         stats     ,  
-      std::vector<double>&            covs      ,
-      const unsigned long  first   = 0          ,
-      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public: // the same but with RooFit 
-    // ========================================================================
-    /** calculate the covariances for generic case 
-     *  @param data  (INPUT)  the inpout dataset 
-     *  @param vars  (INPUT)  the list of variables 
-     *  @param cuts  (INPUT)  the selection criteria/weights 
-     *  @param stats (UPDATE) list of statistics 
-     *  @param covs  (UPDATE) elements of "covariance matrix" 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2017-02-17
-     */
-    static unsigned long _statCov 
-    ( const RooAbsData*               data      , 
-      const std::vector<std::string>& vars      , 
-      const std::string&              cuts      ,
-      std::vector<Statistic>&         stats     ,  
-      std::vector<double>&            covs      ,
-      const unsigned long  first   = 0          ,
-      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+    static double get_moment 
+      ( const RooAbsData&    data             ,  
+        const unsigned short order            , 
+        const std::string&   expr             , 
+        const double         center    = 0    ,
+        const std::string&   cuts      = ""   , 
+        const std::string&   cut_range = ""   , 
+        const unsigned long  first     = 0    ,
+        const unsigned long  last      = LAST ) ;
     // ========================================================================    
-    /** calculate the covariances for generic case 
-     *  @param data  (INPUT)  the inpout dataset 
-     *  @param vars  (INPUT)  the list of variables 
-     *  @param stats (UPDATE) list of statistics 
-     *  @param covs  (UPDATE) elements of "covariance matrix" 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last  event to process
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2017-02-17
-     */
-    static unsigned long _statCov 
-    ( const RooAbsData*               data      , 
-      const std::vector<std::string>& vars      , 
-      std::vector<Statistic>&         stats     ,  
-      std::vector<double>&            covs      ,
-      const unsigned long  first   = 0          ,
-      const unsigned long  last    = std::numeric_limits<unsigned long>::max() ) ;
+  public:
+    // ========================================================================    
+    /** calculate the moment of order "order"
+     *  @param  tree  (INPUT) input tree 
+     *  @param  order (INPUT) the order 
+     *  @param  expr  (INPUT) expression  (must  be valid TFormula!)
+     *  @param  cuts  (INPUT) cuts 
+     *  @param  first (INPUT) the first  event to process 
+     *  @param  last  (INPUT) the last event to  process
+     *  @return the moment 
+     */ 
+    static Ostap::Math::ValueWithError moment
+      ( TTree&               tree         ,  
+        const unsigned short order        ,
+        const std::string&   expr         , 
+        const std::string&   cuts  = ""   , 
+        const unsigned long  first = 0    ,
+        const unsigned long  last  = LAST ) ;
     // ========================================================================
-  };
+    /** calculate the moment of order "order"
+     *  @param  data  (INPUT) input data
+     *  @param  order (INPUT) the order 
+     *  @param  expr  (INPUT) expression  (must  be valid TFormula!)
+     *  @param  cuts  (INPUT) cuts 
+     *  @param  first (INPUT) the first  event to process 
+     *  @param  last  (INPUT) the last event to  process
+     *  @param  cut_range (INPUT) cut range 
+     *  @return the moment 
+     */ 
+    static Ostap::Math::ValueWithError moment
+      ( const  RooAbsData&   data             ,  
+        const unsigned short order            ,
+        const std::string&   expr             , 
+        const std::string&   cuts      = ""   , 
+        const std::string&   cut_range = ""   , 
+        const unsigned long  first     = 0    ,
+        const unsigned long  last      = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** calculate the central moment of order "order"
+     *  @param  tree  (INPUT) input tree 
+     *  @param  order (INPUT) the order 
+     *  @param  expr  (INPUT) expression  (must  be valid TFormula!)
+     *  @param  cuts  (INPUT) cuts 
+     *  @param  first (INPUT) the first  event to process 
+     *  @param  last  (INPUT) the last event to  process
+     *  @return the moment 
+     */ 
+    static Ostap::Math::ValueWithError central_moment 
+      ( TTree&               tree         ,  
+        const unsigned short order        ,
+        const std::string&   expr         , 
+        const std::string&   cuts  = ""   , 
+        const unsigned long  first = 0    ,
+        const unsigned long  last  = LAST ) ;
+    // ========================================================================
+    /** calculate the central moment of order "order"
+     *  @param  data  (INPUT) input data
+     *  @param  order (INPUT) the order 
+     *  @param  expr  (INPUT) expression  (must  be valid TFormula!)
+     *  @param  cuts  (INPUT) cuts 
+     *  @param  first (INPUT) the first  event to process 
+     *  @param  last  (INPUT) the last event to  process
+     *  @param  cut_range (INPUT) cut range 
+     *  @return the moment 
+     */ 
+    static Ostap::Math::ValueWithError central_moment 
+      ( const RooAbsData&    data             ,  
+        const unsigned short order            ,
+        const std::string&   expr             , 
+        const std::string&   cuts      = ""   , 
+        const std::string&   cut_range = ""   , 
+        const unsigned long  first     = 0    ,
+        const unsigned long  last      = LAST ) ;
+    // ========================================================================    
+  public:
+    // ========================================================================    
+    /** calculate the skewness of the  distribution
+     *  @param  tree  (INPUT) input tree 
+     *  @param  expr  (INPUT) expression  (must  be valid TFormula!)
+     *  @param  cuts  (INPUT) cuts 
+     *  @param  first (INPUT) the first  event to process 
+     *  @param  last  (INPUT) the last event to  process
+     *  @return the skewness 
+     */
+    static Ostap::Math::ValueWithError skewness 
+      ( TTree&               tree         ,  
+        const std::string&   expr         , 
+        const std::string&   cuts  = ""   , 
+        const unsigned long  first = 0    ,
+        const unsigned long  last  = LAST ) ;
+    // ========================================================================    
+    /** calculate the skewness of the  distribution
+     *  @param  data      (INPUT) input data
+     *  @param  expr      (INPUT) expression  (must  be valid TFormula!)
+     *  @param  cuts      (INPUT) cuts 
+     *  @param  first     (INPUT) the first  event to process 
+     *  @param  last      (INPUT) the last event to  process
+     *  @param  cut_range (INPUT) cut range 
+     *  @return the skewness 
+     */
+    static Ostap::Math::ValueWithError skewness 
+      ( const RooAbsData&    data             ,  
+        const std::string&   expr             , 
+        const std::string&   cuts      = ""   , 
+        const std::string&   cut_range = ""   , 
+        const unsigned long  first     = 0    ,
+        const unsigned long  last      = LAST ) ;
+    // ========================================================================    
+  public:
+    // ========================================================================    
+    /** calculate the (excess) kurtosis of the  distribution
+     *  @param  tree  (INPUT) input tree 
+     *  @param  expr  (INPUT) expression  (must  be valid TFormula!)
+     *  @param  cuts  (INPUT) cuts 
+     *  @param  first (INPUT) the first  event to process 
+     *  @param  last  (INPUT) the last event to  process
+     *  @return the (excess) kurtosis
+     */
+    static Ostap::Math::ValueWithError kurtosis
+      ( TTree&               tree         ,  
+        const std::string&   expr         , 
+        const std::string&   cuts  = ""   , 
+        const unsigned long  first = 0    ,
+        const unsigned long  last  = LAST ) ;
+    // ========================================================================    
+    /** calculate the (excess) kurtosis of the  distribution
+     *  @param  data  (INPUT) input data
+     *  @param  expr  (INPUT) expression  (must  be valid TFormula!)
+     *  @param  cuts  (INPUT) cuts 
+     *  @param  first (INPUT) the first  event to process 
+     *  @param  last  (INPUT) the last event to  process
+     *  @param  cut_range (INPUT) cut range 
+     *  @return the (excess) kurtosis
+     */
+    static Ostap::Math::ValueWithError kurtosis
+      ( const RooAbsData&    data             ,  
+        const std::string&   expr             , 
+        const std::string&   cuts      = ""   , 
+        const std::string&   cut_range = ""   , 
+        const unsigned long  first     = 0    ,
+        const unsigned long  last      = LAST ) ;
+    // ========================================================================    
+  public:
+    // ========================================================================    
+    /**  get quantile of the distribution  
+     *   @param tree  (INPUT) the input tree 
+     *   @param q     (INPUT) quantile value   0 < q < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     */
+    static double quantile
+      ( TTree&              tree         ,
+        const double        q            , //  0<q<1 
+        const std::string&  expr         , 
+        const std::string&  cuts  = ""   , 
+        const unsigned long first = 0    ,
+        const unsigned long last  = LAST ) ;
+    // ========================================================================    
+    /**  get quantile of the distribution  
+     *   @param data   (INPUT) the input data
+     *   @param q      (INPUT) quantile value   0 < q < 1  
+     *   @param expr   (INPUT) the expression 
+     *   @param cuts   (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @param  cut_range (INPUT) cut range 
+     *   @return the quantile value 
+     */
+    static double quantile
+      ( const RooAbsData&   data             ,
+        const double        q                , //  0<q<1 
+        const std::string&  expr             , 
+        const std::string&  cuts      = ""   , 
+        const std::string&  cut_range = ""   , 
+        const unsigned long first     = 0    ,
+        const unsigned long last      = LAST ) ;
+    // ========================================================================    
+  public:
+    // ========================================================================    
+    /**  get quantiles of the distribution  
+     *   @param tree  (INPUT) the input tree 
+     *   @param q     (INPUT) quantile value   0 < q < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     */
+    static std::vector<double> quantiles
+      ( TTree&                     tree             ,
+        const std::vector<double>& quantiles        , 
+        const std::string&         expr             , 
+        const std::string&         cuts      = ""   , 
+        const unsigned long        first     = 0    ,
+        const unsigned long        last      = LAST ) ;
+    // ========================================================================
+    /**  get quantiles of the distribution  
+     *   @param data  (INPUT) the input data
+     *   @param q     (INPUT) quantile value   0 < q < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     */
+    static std::vector<double> quantiles
+      ( const RooAbsData&          data              ,
+        const std::vector<double>& quantiles         , 
+        const std::string&         expr              , 
+        const std::string&         cuts       = ""   , 
+        const std::string&         cut_range  = ""   , 
+        const unsigned long        first      = 0    ,
+        const unsigned long        last       = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================    
+    /**  get the interval of the distribution  
+     *   @param tree  (INPUT) the input tree 
+     *   @param q1    (INPUT) quantile value   0 < q1 < 1  
+     *   @param q2    (INPUT) quantile value   0 < q2 < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     *   @code
+     *   Tree& tree = ... ;
+     *   /// get 90% interval:
+     *   Interval ab = interval ( tree , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+     *   @code 
+     */
+    static Interval interval 
+      ( TTree&              tree         ,
+        const double        q1           , //  0<q1<1 
+        const double        q2           , //  0<q2<1 
+        const std::string&  expr         , 
+        const std::string&  cuts  = ""   , 
+        const unsigned long first = 0    ,
+        const unsigned long last  = LAST ) ;
+    // ========================================================================    
+    /**  get the interval of the distribution  
+     *   @param data  (INPUT) the input data
+     *   @param q1    (INPUT) quantile value   0 < q1 < 1  
+     *   @param q2    (INPUT) quantile value   0 < q2 < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     *   @code
+     *   const RooAbsData& data = ... ;
+     *   /// get 90% interval:
+     *   Interval ab = interval ( data , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+     *   @code 
+     */
+    static Interval interval 
+      ( const RooAbsData&   data             ,
+        const double        q1               , //  0<q1<1 
+        const double        q2               , //  0<q2<1 
+        const std::string&  expr             , 
+        const std::string&  cuts      = ""   , 
+        const std::string&  cut_range = ""   , 
+        const unsigned long first     = 0    ,
+        const unsigned long last      = LAST ) ;
+    // ========================================================================    
+  } ;
   // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================

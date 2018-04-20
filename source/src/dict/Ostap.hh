@@ -28,6 +28,7 @@
 #include "Ostap/GeomFun.h"
 #include "Ostap/GSL_utils.h"
 #include "Ostap/Hesse.h"
+#include "Ostap/HFuncs.h"
 #include "Ostap/HistoDump.h"
 #include "Ostap/HistoInterpolation.h"
 #include "Ostap/HistoMake.h"

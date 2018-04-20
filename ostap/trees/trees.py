@@ -1013,9 +1013,9 @@ class Chain(CleanUp) :
 
     @property
     def chain ( self ) :
-        """``chain'' : get the undnerlying tree/chain"""
+        """``chain'' : get the underlying tree/chain"""
         if self.__chain : return self.__chain
-        self.__chain = self.__create_chai() 
+        self.__chain = self.__create_chain () 
         return self.__chain
 
     @property
@@ -1112,7 +1112,9 @@ class Tree(Chain) :
 
 # =============================================================================
 
-                
+from  ostap.stats.statvars import data_decorate as _dd
+_dd ( ROOT.TTree )
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TTree   ,

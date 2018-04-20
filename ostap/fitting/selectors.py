@@ -685,15 +685,15 @@ class SelectorWithVars(SelectorWithCuts) :
     # =========================================================================
     ## fill it! 
     def fill ( self , bamboo ) :
-         """The  actual processing for the given ``bamboo''
+        """The  actual processing for the given ``bamboo''
         Note that   this method is independent on TTree/TChain and can be used directy
         One just need to  ensure that:
         - 'accessor functions' for the variables and 'cuts' agree with the type of ``bamboo''
-       """
-         
+        """
+        
         ## apply cuts (if needed) 
         if self.__cuts and not self. __cuts ( bamboo )  : return 0 
-
+        
         ## loop over all variables
         for v in self.__variables :
 

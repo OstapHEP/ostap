@@ -390,7 +390,7 @@ class Kurtosis(Skewness) :
     """
     def __init__ ( self , xmin , xmax , err = False ) :
         Skewness.__init__ ( self , xmin , xmax , err )
-    ## calculate the variance 
+    ## calculate the kurtosis
     def __call__ ( self , func , *args ) :
         ## 
         args   = args if args else self._args
@@ -437,7 +437,7 @@ class Median(RMS) :
     def __init__ ( self , xmin , xmax ) :
         RMS.__init__ ( self , xmin , xmax , err = False )
         
-    ## calculate he median
+    ## calculate the median
     def _median_ ( self , func , xmin , xmax , *args ) :
 
         ## need to know the integral
@@ -544,7 +544,6 @@ class Quantile(Median) :
             
         return result
 
-
 # =============================================================================
 ## @class Mode
 #  Calculate the mode for the distribution or function  
@@ -568,7 +567,6 @@ class Mode(Median) :
 
     ## calculate the mode 
     def __call__ ( self , func , *args ) :
-        ##
         
         ## use mean    as intial approximation for mode 
         m1     = Mean   .__call__ ( self , func , *args )

@@ -2224,6 +2224,11 @@ for t in ( ROOT.RooDataSet , ) :
     t.__repr__    = _ds_print2_
     t.__str__     = _ds_print2_
 
+
+# =============================================================================
+from  ostap.stats.statvars import data_decorate as _dd
+_dd ( ROOT.RooAbsData )
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooAbsData    ,

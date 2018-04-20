@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_VALUEWITHERRORS_H 
 #define OSTAP_VALUEWITHERRORS_H 1
@@ -23,7 +22,6 @@
  *
  *  @author Vanya BELYAEV Ivane.Belyaev@itep.ru
  *  @date 2009-06-03
- *
  */
 namespace Ostap
 {
