@@ -687,7 +687,7 @@ class SelectorWithVars(SelectorWithCuts) :
     def fill ( self , bamboo ) :
         """The  actual processing for the given ``bamboo''
         Note that   this method is independent on TTree/TChain and can be used directy
-        One just need to  ensure that:
+        One just needs to  ensure that:
         - 'accessor functions' for the variables and 'cuts' agree with the type of ``bamboo''
         """
         
@@ -795,19 +795,20 @@ class SelectorWithVars(SelectorWithCuts) :
                 max_l  = max ( max_l  , len ( v[5] ) )
                 skip_l = max ( skip_l , len ( v[6] ) )
 
-                sep      = '# +%s+%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
-                                                    ( desc_l       + 2 ) * '-' ,
-                                                    ( mean_l+rms_l + 5 ) * '-' ,
-                                                    ( min_l +max_l + 5 ) * '-' ,
-                                                    ( skip_l       + 2 ) * '-' )
-            fmt = '# | %%%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds | %%-%ds | '  % (
+            sep      = '# -%s+%s+%s+%s+%s-' % ( ( name_l       + 2 ) * '-' ,
+                                                ( desc_l       + 2 ) * '-' ,
+                                                ( mean_l+rms_l + 5 ) * '-' ,
+                                                ( min_l +max_l + 5 ) * '-' ,
+                                                ( skip_l       + 2 ) * '-' )
+            fmt = '#   %%%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds | %%-%ds   '  % (
                 name_l ,
                 desc_l ,
                 mean_l ,
                 rms_l  ,
                 min_l  ,
                 max_l  ,
-                skip_l )
+                skip_l
+                )
             
             report  = 'Dataset(%s) created:' % self.__name
             report += ' ' + allright ( '%s entries, %s variables' %  ( len ( self.__data ) , len ( self.variables ) ) )

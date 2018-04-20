@@ -73,7 +73,92 @@ class FormulaFunc(Ostap.Functions.FuncFormula) :
 class RooFormulaFunc(Ostap.Functions.FuncFormula) :
     def __init__ (  self,  expression , tree = None  , name = '' ) :
         Ostap.Functions.FuncRooFormula.__init__ ( self , expression , tree , name ) 
+
+
+# ==================================================================================
+## @class H1DFunc
+#  Simple  class to use 1D-histogram  as tree-function
+#  @see Ostap::Functions::FuncTH1
+class H1DFunc (Ostap.Functions.FuncTH1) :
+    """Simple  class to use 1D-histogram  as tree-function
+    """
+    def __init__ ( self        ,
+                   histo       ,
+                   xvar        , ## x-axis
+                   tx          = Ostap.Math.HistoInterpolation.Cubic ,
+                   edges       = True  ,
+                   extrapolate = False ,
+                   density     = False ,                                         
+                   tree        = None  ) :        
+        Ostap.Functions.FuncTH1.__init__ ( self        ,
+                                           histo       ,
+                                           xvar        ,
+                                           tree        ,
+                                           tx          ,
+                                           edges       ,
+                                           extrapolate ,
+                                           density     )         
+# ==================================================================================
+## @class H2DFunc
+#  Simple  class to use 2D-histogram  as tree-function
+#  @see Ostap::Functions::FuncTH2
+class H2DFunc(Ostap.Functions.FuncTH2) :
+    """Simple  class to use 2D-histogram  as tree-function
+    """
+    def __init__ (  self        ,
+                    histo       ,
+                    xvar        , ## x-axis
+                    yvar        , ## y-axis
+                    tx = Ostap.Math.HistoInterpolation.Cubic ,
+                    ty = Ostap.Math.HistoInterpolation.Cubic ,
+                    edges         =  True  ,
+                    extrapolate   =  False ,
+                    density       =  False ,                                         
+                    tree          =  None  ) :        
+        Ostap.Functions.FuncTH2.__init__ ( self        ,
+                                           histo       ,
+                                           xvar        ,
+                                           yvar        ,
+                                           tree        ,
+                                           tx          ,
+                                           ty          ,
+                                           edges       ,
+                                           extrapolate ,
+                                           density     )         
         
+# ==================================================================================
+## @class H3DFunc
+#  Simple  class to use 3D-histogram  as tree-function
+#  @see Ostap::Functions::FuncTH3
+class H3DFunc (Ostap.Functions.FuncTH3) :
+    """Simple  class to use 3D-histogram  as tree-function
+    """
+    def __init__ (  self        ,
+                    histo       ,
+                    xvar        , ## x-axis
+                    yvar        , ## y-axis
+                    zvar        , ## y-axis
+                    tx = Ostap.Math.HistoInterpolation.Cubic ,
+                    ty = Ostap.Math.HistoInterpolation.Cubic ,
+                    tz = Ostap.Math.HistoInterpolation.Cubic ,
+                    edges         =  True  ,
+                    extrapolate   =  False ,
+                    density       =  False ,                                         
+                    tree          =  None  ) :        
+        Ostap.Functions.FuncTH3.__init__ ( self        ,
+                                           histo       ,
+                                           xvar        ,
+                                           yvar        ,
+                                           zvar        ,
+                                           tree        ,
+                                           tx          ,
+                                           ty          ,
+                                           tz          ,
+                                           edges       ,
+                                           extrapolate ,
+                                           density     )         
+        
+                
 # =============================================================================
 if '__main__' == __name__ :
     

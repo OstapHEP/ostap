@@ -318,7 +318,7 @@ double Ostap::Functions::FuncTH1::operator() ( const TTree* tree ) const
     m_xvar.reset ( nullptr ) ;
   }
   //
-  Ostap::Assert ( nullptr == m_tree , 
+  Ostap::Assert ( nullptr != m_tree , 
                   "Invalid Tree"    , 
                   "Ostap::Function::FuncTH1" ) ;
   //
