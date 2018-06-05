@@ -15,13 +15,23 @@ __version__ = "Version$Revision$"
 # =============================================================================
 __all__     = (
     ##
+    'EtaVsP'      , ## eta=eta(p)  for the fixed PT
+    'EtaVsPt'     , ## eta=eta(pt) for the fixed P
+    'YvsP'        , ## y=yy(p)     for the fixed PT and mass  
+    'YvsPt'       , ## y=y(pt)     for the fixed P  and mass
+    'EtaVsPPT'    , ## eta=eta(p,pt) 
+    'PtVsPEta'    , ## pt=pt(p,eta) 
+    'PvsPtEta'    , ## p= p(pt,eta)
+    ##
     'kallen'      , ## Kallen function
     'phasespace2' , ## 2-body phase space 
     'phasespace3' , ## the full 3-body phase space
+    'phasespace4' , ## the full 4-body phase space
     ##
     )
 # =============================================================================
-import ROOT
+import ROOT, math
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -347,7 +357,158 @@ del V4C.Phi
 del V4C.Mt
 del V4C.Et
 
+# =============================================================================
+_acosh = math.acosh
+_atanh = math.atanh
+_sqrt  = math.sqrt
+_cosh  = math.cosh
+# =============================================================================
+if not hasattr ( math , 'coth' ) :
+    math.coth  = lambda x : 1.0/math.tanh (     x )
+    math.coth. __doc__ = """coth(x)
+    Return the   hyperbolic cotangent of x 
+    """
+    logger.debug ("Insert coth function into math")
+# =============================================================================
+if not hasattr ( math , 'acoth' ) :
+    math.acoth = lambda x :     math.tanh ( 1.0/x )
+    math.acoth. __doc__ = """acoth(x)
+    Return the hyperbolic area cotangent of x (|x|>1) 
+    """
+    logger.debug ("Insert acoth function into math")
 
+# =============================================================================
+
+# =============================================================================
+## @class EtaVsP
+#  very simple function \f$ \eta = \eta(p) \$  for the fixed transverse momentum
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-07-19
+class EtaVsP(object) :
+    """
+    Very simple function \f$ \eta = \eta(p) \$  for the fixed transverse momentum
+    """
+    def __init__ ( self , pt ) :
+        assert isinstance ( pt , (int,long,float) ) and 0<=pt , "PT is invalid!"
+        self.pt = float ( pt )
+    def __call__ ( self , p )  :
+        return _acosh ( max ( p , self.pt )  / self.pt )
+
+# =============================================================================
+## @class EtaVsPt
+#  very simple function \f$ \eta = \eta(p_T) \$  for the fixed momentum
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-07-19
+class EtaVsPt(object) :
+    """Very simple function \f$ \eta = \eta(p_T) \$  for the fixed momentum"""
+    def __init__ ( self , p  ) :
+        assert isinstance ( p , (int,long,float) ) and 0<=p , "P is invalid!"
+        self.p = float ( p )
+    def __call__ ( self , pt )  :
+        return _acosh ( self.p / min ( pt , self.p ) ) 
+
+# =============================================================================
+## rapidity as function of P for fixed pt and mass 
+class YvsP(object) :
+    """Rapidity as function of P for fixed pt and mass"""
+    def __init__ ( self , pt , mass ) :
+        assert isinstance ( pt   , (int,long,float) ) and 0<=pt   , "PT is invalid!"
+        assert isinstance ( mass , (int,long,float) ) and 0<=mass , "M  is invalid!"
+        self.pt2 = float ( pt   ) * float ( pt   ) 
+        self.m2  = float ( mass ) * float ( mass )
+        
+    def __call__ ( self , p ) :
+        
+        p2  = p * p
+        e2  = p2 + self.m2  
+        pz2 = p2 - self.pt2 
+        
+        return _atanh ( _sqrt ( max ( pz2 , 0.0 ) / e2  ) )
+        
+# =============================================================================
+## rapidity as function of Pt for fixed p and mass 
+class YvsPt(object) :
+    """Rapidity as function of Pt for fixed p and mass"""
+    def __init__ ( self , p , mass ) :
+        assert isinstance ( p    , (int,long,float) ) and 0<=p    , "P  is invalid!"
+        assert isinstance ( mass , (int,long,float) ) and 0<=mass , "M  is invalid!"
+        self.p2  = float ( p    ) * float ( p    ) 
+        self.m2  = float ( mass ) * float ( mass )
+        self.e2  = self.p2 + self.m2
+    def __call__ ( self , pt ) :
+        pt2 = pt * pt
+        pz2 = self.p2 - pt2 
+        return _atanh ( _sqrt ( max ( pz2 , 0.0 ) / self.e2  ) )
+
+# =============================================================================
+## helper wrapper 
+class _WF1(object) :
+    def __init__ ( self , obj           ) :        self.obj = obj 
+    def __call__ ( self , x , pars = [] ) : return self.obj ( x[0] ) 
+
+# =============================================================================
+## convert the objects to the functions 
+def _as_TF1_ ( obj , xmin , xmax ) :
+    """Convert the objects to the functions"""
+
+    from  ostap.core.core import funID
+    
+    fobj     = _WF1( obj ) 
+    fun      = ROOT.TF1( funID() , fobj , xmin , xmax ) 
+    fun._obj = fobj
+    
+    fun.SetNpx(500)
+    
+    return fun
+
+EtaVsP  . asTF1 = _as_TF1_
+EtaVsPt . asTF1 = _as_TF1_
+YvsP    . asTF1 = _as_TF1_
+YvsPt   . asTF1 = _as_TF1_
+
+# =============================================================================
+## eta = eta(p ,pt )"
+class EtaVsPPT(object) :
+    "eta = eta(p ,pt )"
+    def __call__ ( self , p   , pt  ) : return _acosh ( p / pt ) 
+
+# =============================================================================
+## pt  = pt (p ,eta)
+class PtVsPEta(object) :
+    "pt  = pt (p ,eta)"
+    def __call__ ( self , p   , eta ) : return p  / _cosh ( eta )
+
+# =============================================================================
+## p   = p  (pt,eta)
+class PvsPtEta(object) :
+    "p   = p  (pt,eta)"
+    def __call__ ( self , pt  , eta ) : return pt * _cosh ( eta ) 
+
+# =============================================================================
+## helper wrapper 
+class _WF2(object) :
+    def __init__ ( self , obj           ) :        self.obj = obj 
+    def __call__ ( self , x , pars = [] ) : return self.obj ( x[0] , x[1] ) 
+
+# =============================================================================
+## convert the objects to the function 
+def _as_TF2_ ( obj , xmin , xmax , ymin , ymax ) :
+    """Convert the objects to the function"""
+
+    from ostap.core.core import funID
+
+    fobj       = _WF2(obj) 
+    fun        = ROOT.TF2( funID() , fobj , xmin , xmax , ymin , ymax ) 
+    fun._obj   = fobj
+
+    fun.SetNpx(250)
+    fun.SetNpy(250)
+    
+    return fun
+
+EtaVsPPT  . asTF2 = _as_TF2_
+PtVsPEta  . asTF2 = _as_TF2_
+PvsPtEta  . asTF2 = _as_TF2_
 
 # =============================================================================
 ## Kallen function, aka ``triangle'' function 
@@ -366,8 +527,8 @@ def kallen ( x , y , z ) :
 #  @endcode 
 def phasespace2 ( M ,  m1 , m2 ) :
     """Calculate the full two-body phase space
-    >>>  M, m1  , m2 = ...
-    >>>  ps = phasespace2 ( M , m1 , m2 ) 
+    >>> M, m1  , m2 = ...
+    >>> ps = phasespace2 ( M , m1 , m2 ) 
     """    
     assert 0<M and 0<=m1 and 0<=m2, 'Invalid setting of masses!'
     
@@ -381,10 +542,12 @@ def phasespace2 ( M ,  m1 , m2 ) :
 ## Calculate the three body phase space 
 #  @code
 #  M, m1  , m2 , m3 = ...
-#  ps3 = phasespace2 ( M , m1  , m2 , m3 ) 
+#  ps3 = phasespace3 ( M , m1  , m2 , m3 ) 
 #  @endcode 
 def phasespace3 ( M ,  m1 , m2 , m3 ) :
-    """Calculate the full three body phase space
+    """Calculate the full three body phase space:
+    >>> M, m1  , m2 , m3 = ...
+    >>> ps3 = phasespace3 ( M , m1  , m2 , m3 ) 
     """
     assert 0<M and 0<=m1 and 0<=m2 and 0<=m3 , 'Invalid setting of masses!'
 
@@ -410,7 +573,31 @@ def phasespace3 ( M ,  m1 , m2 , m3 ) :
     return ( math.pi**2 ) * r  / ( 4.0 * s ) 
 
 
+# =============================================================================
+## Calculate the four body phase space 
+#  @code
+#  M, m1  , m2 , m3 , m4 = ...
+#  ps4 = phasespace4 ( M , m1  , m2 , m3 , m4 ) 
+#  @endcode 
+def phasespace4 ( M ,  m1 , m2 , m3 , m4 ) :
+    """Calculate the full four body phase space
+    >>> M, m1  , m2 , m3 , m4 = ...
+    >>> ps4 = phasespace4 ( M , m1  , m2 , m3 , m4 ) 
+    """
+    assert 0<M and 0<=m1 and 0<=m2 and 0<=m3 and 0<=m4 , 'Invalid setting of masses!'
 
+    ##
+    if m1 + m2 + m3 + m4 >= M : return 0   ## RETURN! 
+    
+    low  = m1 + m2
+    high = M  - m3 - m4  
+    
+    func = lambda x : 2.0 * x * phasespace3 ( M , x , m3 , m4 ) * phasespace2 ( x , m1 , m2  )
+
+    from ostap.math.integral import integral 
+    
+    return integral ( func ,  low , high , err = False )
+    
 # =============================================================================
 if '__main__' == __name__ :
     
