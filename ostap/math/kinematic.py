@@ -13,7 +13,13 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2009-09-12"
 __version__ = "Version$Revision$"
 # =============================================================================
-__all__     = ()
+__all__     = (
+    ##
+    'kallen'      , ## Kallen function
+    'phasespace2' , ## 2-body phase space 
+    'phasespace3' , ## the full 3-body phase space
+    ##
+    )
 # =============================================================================
 import ROOT
 # logging 
@@ -340,6 +346,69 @@ del V4C.Theta
 del V4C.Phi
 del V4C.Mt
 del V4C.Et
+
+
+
+# =============================================================================
+## Kallen function, aka ``triangle'' function 
+#  @see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function
+def kallen ( x , y , z ) :
+    """ Kallen function, aka ``triangle'' function 
+    - see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function
+    """
+    return x * x + y * y + z * z - 2.0 * x * y - 2.0 * y * z -  2.0 * z * x
+
+# =============================================================================
+## Calculate the two-body phase space
+#  @code
+#  M, m1  , m2 = ...
+#  ps = phasespace2 ( M , m1 , m2 ) 
+#  @endcode 
+def phasespace2 ( M ,  m1 , m2 ) :
+    """Calculate the full two-body phase space
+    >>>  M, m1  , m2 = ...
+    >>>  ps = phasespace2 ( M , m1 , m2 ) 
+    """    
+    assert 0<M and 0<=m1 and 0<=m2, 'Invalid setting of masses!'
+    
+    ##
+    if m1 + m2 >= M : return 0   ## RETURN!
+    
+    import math
+    return math.sqrt ( kallen ( M * M , m1 * m1 , m2 * m2 ) ) / ( 8.0 * M * M * math.pi ) 
+
+# =============================================================================
+## Calculate the three body phase space 
+#  @code
+#  M, m1  , m2 , m3 = ...
+#  ps3 = phasespace2 ( M , m1  , m2 , m3 ) 
+#  @endcode 
+def phasespace3 ( M ,  m1 , m2 , m3 ) :
+    """Calculate the full three body phase space
+    """
+    assert 0<M and 0<=m1 and 0<=m2 and 0<=m3 , 'Invalid setting of masses!'
+
+    ##
+    if m1 + m2 + m3 >= M : return 0   ## RETURN! 
+
+    s    =  M * M
+    m1_2 = m1 * m1 
+    m2_2 = m2 * m2
+    m3_2 = m3 * m3
+    
+    high = ( M  - m1 ) ** 2
+    low  = ( m2 + m3 ) ** 2
+    
+    import math
+    func = lambda x : math.sqrt ( kallen ( x , s     , m1_2 ) *
+                                  kallen ( x , m2_2  , m3_2 ) ) / x
+    
+    from ostap.math.integral import integral 
+    
+    r = integral ( func ,  low , high , err = False )
+    
+    return ( math.pi**2 ) * r  / ( 4.0 * s ) 
+
 
 
 # =============================================================================
