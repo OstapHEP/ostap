@@ -608,7 +608,19 @@ for model in ( Ostap.Math.Chebyshev              ,
     if not hasattr ( model , 'mode'     ) : model.mode     = sp_mode 
     if not hasattr ( model , 'moment'   ) : model.moment   = sp_moment
     if not hasattr ( model , 'quantile' ) : model.quantile = sp_quantile 
-        
+
+# =======================================================================================
+## Special ``getattr'' for Bernstein dual basis functions: delegate the stuff to
+#  the underlying bernstein polynomial
+def _bdb_getattr_ ( self ,  attr ) :
+    """Special ``getattr'' for Bernstein dual basis functions:
+    - delegate the stuff to the underlying Bernstein polynomial
+    """
+    b = self.bernstein()
+    return getattr ( b , attr )
+Ostap.Math.BernsteinDualBasis.__getattr__ = _bdb_getattr_
+
+
 ## add some drawing method for some shapes 
 for model in ( Ostap.Math.Bernstein         ,
                Ostap.Math.BernsteinEven     , 

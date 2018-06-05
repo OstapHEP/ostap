@@ -624,6 +624,8 @@ namespace Ostap
       double par ( const unsigned short i ) const { return m_bernstein.par( i ) ; }
       ///  get all parameters
       const std::vector<double>& pars()     const { return m_bernstein.pars() ; }
+      ///  get the underlying bernstein polynomial
+      const Bernstein& bernstein ()         const { return m_bernstein ; }
       // ======================================================================
     public:
       // ======================================================================
