@@ -23,11 +23,13 @@ __all__     = (
     'PtVsPEta'    , ## pt=pt(p,eta) 
     'PvsPtEta'    , ## p= p(pt,eta)
     ##
-    'kallen'      , ## Kallen function
+    'kallen'      , ## Kallen ``lambda''/``triangle'' function
     'phasespace2' , ## 2-body phase space 
     'phasespace3' , ## the full 3-body phase space
     'phasespace4' , ## the full 4-body phase space
     'phasespace'  , ## the full N-body phase space
+    ##
+    'G'           , ## the basic universal 4-body function
     ##
     )
 # =============================================================================
@@ -341,22 +343,21 @@ if not hasattr ( V4D , 'restMomentum'   ) : V4D.restMomentum   = _v4_restP_
 if not hasattr ( V4D , 'boost'          ) : V4D.boost          = _v4_boost_ 
 if not hasattr ( V4D , 'boosted'        ) : V4D.boosted        = _v4_boost_ 
 
-del V4C.mag
-del V4C.mass 
-del V4C.mt 
-del V4C.r
-del V4C.theta
-del V4C.phi
-del V4C.isSpacelike
-del V4C.isTimelike
-del V4C.isLightlike
-
-del V4C.M
-del V4C.R
-del V4C.Theta
-del V4C.Phi
-del V4C.Mt
-del V4C.Et
+if hasattr ( V4C , 'mag'         ) :  del V4C.mag
+if hasattr ( V4C , 'mass'        ) :  del V4C.mass
+if hasattr ( V4C , 'mt'          ) :  del V4C.mt
+if hasattr ( V4C , 'r'           ) :  del V4C.r
+if hasattr ( V4C , 'theta'       ) :  del V4C.theta
+if hasattr ( V4C , 'phi'         ) :  del V4C.phi
+if hasattr ( V4C , 'isSpaceLike' ) :  del V4C.isSpaceLike
+if hasattr ( V4C , 'isTimeLike'  ) :  del V4C.isTimeLike
+if hasattr ( V4C , 'isLightLike' ) :  del V4C.isLightLike
+if hasattr ( V4C , 'M'           ) :  del V4C.M
+if hasattr ( V4C , 'R'           ) :  del V4C.R
+if hasattr ( V4C , 'Theta'       ) :  del V4C.Theta
+if hasattr ( V4C , 'Phi'         ) :  del V4C.Phi
+if hasattr ( V4C , 'Mt'          ) :  del V4C.Mt
+if hasattr ( V4C , 'Et'          ) :  del V4C.Et
 
 # =============================================================================
 _acosh = math.acosh
@@ -512,7 +513,7 @@ PtVsPEta  . asTF2 = _as_TF2_
 PvsPtEta  . asTF2 = _as_TF2_
 
 # =============================================================================
-## Kallen function, aka ``triangle'' function 
+## Kallen function, aka ``lambda''/``triangle'' function 
 #  @see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function
 def kallen ( x , y , z ) :
     """ Kallen function, aka ``triangle'' function 
@@ -522,12 +523,14 @@ def kallen ( x , y , z ) :
 
 # =============================================================================
 ## Calculate the two-body phase space
+#  \f$ R_2 = \frac{ \pi \lambda^{1/2}( M^2 , m_1^2 , m_2^2) }{2*M^2} \f$ 
 #  @code
 #  M, m1  , m2 = ...
 #  ps = phasespace2 ( M , m1 , m2 ) 
 #  @endcode 
 def phasespace2 ( M ,  m1 , m2 ) :
-    """Calculate the full two-body phase space
+    r"""Calculate the full two-body phase space
+    \f$ R_2 = \frac{ \pi \lambda^{1/2}( M^2 , m_1^2 , m_2^2) }{2*M^2} \f$ 
     >>> M, m1  , m2 = ...
     >>> ps = phasespace2 ( M , m1 , m2 ) 
     """    
@@ -535,9 +538,10 @@ def phasespace2 ( M ,  m1 , m2 ) :
     
     ##
     if m1 + m2 >= M : return 0   ## RETURN!
-    
+
+    s =  M * M 
     import math
-    return math.sqrt ( kallen ( M * M , m1 * m1 , m2 * m2 ) ) / ( 8.0 * M * M * math.pi ) 
+    return math.pi * math.sqrt ( kallen ( s , m1 * m1 , m2 * m2 ) ) / ( 2.0 * s ) 
 
 # =============================================================================
 ## Calculate the three body phase space 
@@ -645,7 +649,36 @@ def phasespace ( M , *args ) :
     
     return integral ( func ,  low , high , err = False )
 
+
+# =============================================================================
+## the basic universal 4-body function G
+#  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+#       London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+#  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf
+#  E.g. physical range for 2->2 scattering process is defined as
+#  \f$ G(s,t,m_2^2, m_a^2, m_b^2, m_1^2) \le 0 \f$
+# or the phsyical range  for Dalitz plot is
+#   \f$ G(s_2, s_1,  m_3^2, m_1^2, s , m_2^2) \le 0 \f$ 
+def G ( x , y , z , u , v , w ) :
+    r"""The basic universal 4-body function G
+    - see E.Byckling, K.Kajantie, ``Particle kinematics'', John Wiley & Sons,
+    London, New York, Sydney, Toronto, 1973 p.89, eq. (5.23)
+    - see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf
     
+    E.g. physical range for 2->2 scattering process is defined as
+    \f$ G(s,t,m_2^2, m_a^2, m_b^2 , m_1^2)     \le 0 \f$
+    or the physical range  for Dalitz plot is
+    \f$ G(s_2, s_1,  m_3^2, m_1^2 , s , m_2^2) \le 0 \f$ 
+    """
+    r1 = x * x * y + x * y * y + z * z * x + z * u * u + v * v * w + v *  w * w 
+    r2 = x * y * w + x * u * v + y * z * w + y * u * w
+    r3 = - x * y * ( z + u + v + w )
+    r4 = - z * y * ( x + y + v + w )
+    r5 = - v * w * ( x + y + z + u )
+    
+    return 0.0 + r1 + r2 + r3 + r4 + r5 
+    
+
     
 # =============================================================================
 if '__main__' == __name__ :
