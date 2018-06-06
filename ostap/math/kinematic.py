@@ -27,6 +27,7 @@ __all__     = (
     'phasespace2' , ## 2-body phase space 
     'phasespace3' , ## the full 3-body phase space
     'phasespace4' , ## the full 4-body phase space
+    'phasespace'  , ## the full N-body phase space
     ##
     )
 # =============================================================================
@@ -578,11 +579,13 @@ def phasespace3 ( M ,  m1 , m2 , m3 ) :
 #  @code
 #  M, m1  , m2 , m3 , m4 = ...
 #  ps4 = phasespace4 ( M , m1  , m2 , m3 , m4 ) 
-#  @endcode 
+#  @endcode
+#  The algorithm includes two embedded numerical integration -> could be relatively slow 
 def phasespace4 ( M ,  m1 , m2 , m3 , m4 ) :
     """Calculate the full four body phase space
     >>> M, m1  , m2 , m3 , m4 = ...
     >>> ps4 = phasespace4 ( M , m1  , m2 , m3 , m4 ) 
+    - The algorithm includes two embedded numerical integration -> could be relatively slow 
     """
     assert 0<M and 0<=m1 and 0<=m2 and 0<=m3 and 0<=m4 , 'Invalid setting of masses!'
 
@@ -597,6 +600,52 @@ def phasespace4 ( M ,  m1 , m2 , m3 , m4 ) :
     from ostap.math.integral import integral 
     
     return integral ( func ,  low , high , err = False )
+
+# ==============================================================================
+## calculate full N-body phase space
+#  @code
+#  M, m1 , m2 , ... , mn = ...
+#  ps = phasespace ( M , m1 , m2 , ... , mn ) 
+#  @endcode 
+#  The algorithm includes embedded numerical integrations -> could be relatively slow 
+def phasespace ( M , *args ) :
+    """Calculate full  N-body phase space
+    >>> M, m1 , m2 , ... , mn = ...
+    >>> ps = phasespace ( M , m1 , m2 , ... , mn )
+    - The algorithm includes embedded numerical integrations -> could be relatively slow 
+    """
+    
+    assert 0 < M and 2 <= len ( args ) , 'Invalid setting of masses!'
+    
+    summ = 0.0
+    for m in args :
+        assert 0 <= m , 'Invalid setting of masses'
+        summ += m
+        
+    if summ >= M : return 0
+    
+    N = len ( args )
+    if   2 == N : return phasespace2 ( M , *args )
+    elif 3 == N : return phasespace3 ( M , *args )
+    elif 4 == N : return phasespace4 ( M , *args )
+
+    ## split particles into two groups & (recursively) apply the splitting formula
+    
+    k  = N/2
+
+    args1 = args[k:]
+    args2 = args[:k]
+
+    low  =     sum ( args1 )
+    high = M - sum ( args2 ) 
+
+    func = lambda x : 2.0 * x * phasespace ( M , x , *args2 ) *  phasespace ( x , *args1 )
+    
+    from ostap.math.integral import integral 
+    
+    return integral ( func ,  low , high , err = False )
+
+    
     
 # =============================================================================
 if '__main__' == __name__ :
