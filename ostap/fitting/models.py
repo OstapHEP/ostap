@@ -212,7 +212,9 @@ __all__ = (
     ##
     'makeBkg'         , ## helper function to create "background" PDF
     ##
-    'Convolution_pdf' , ## generic convolution PDF 
+    'Convolution_pdf' , ## generic convolution PDF
+    ##
+    'PyPDF'           , ## helper class to implement ``pure-python'' PDF 
     )
 # =============================================================================
 import ROOT, math
@@ -240,6 +242,8 @@ logger.debug ("Import 3D background        models from ``models_3d''"    )
 from ostap.fitting.models_3d     import *  
 logger.debug ("Import convolution          models from ``convoltuion''"  )
 from ostap.fitting.convolution   import *  
+logger.debug ("Import PyPDF                       from ``pypdf''"        )
+from ostap.fitting.pypdf         import PyPDF
 
 models = []
 from ostap.fitting.signals       import models as _models 

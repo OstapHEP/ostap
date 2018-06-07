@@ -3,7 +3,7 @@
 find_package(ROOT       REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
 find_package(GSL        REQUIRED)
 ## temporarily removed 
-## find_package(PythonLibs REQUIRED)
+find_package(PythonLibs REQUIRED)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
@@ -80,7 +80,8 @@ add_library(ostap SHARED src/format.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp   
                          src/Printable.cpp
-                      ##  src/PyFuncs.cpp ##  temporarily removed 
+                         src/PyFuncs.cpp ## temporarily removed 
+                         src/PyPdf.cpp   ## temporarily removed 
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp

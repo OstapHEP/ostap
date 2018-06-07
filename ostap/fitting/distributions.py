@@ -1226,15 +1226,15 @@ class Tsallis_pdf(PDF) :
         
         self.__m0   = makeVar ( m0              ,
                                 'm0_%s'  % name , 
-                                'm0(%s)' % name , mass , 0     , 1e+6 )
+                                'm0(%s)' % name , m0 , 0     , 1e+6 )
         
         self.__n    = makeVar ( n               ,
                                 'n_%s'   % name , 
-                                'n(%s) ' % name , n    , 0.01  , 1000 )  
+                                'n(%s) ' % name , n  , 0.01  , 1000 )  
         
         self.__T    = makeVar ( T               ,
                                 'n_%s'   % name , 
-                                'n(%s) ' % name , n    , 1.e-3 , 1e+6 )
+                                'n(%s) ' % name , T  , 1.e-3 , 1e+6 )
         
         self.pdf  = Ostap.Models.Tsallis (
             'tsallis_'    + name  ,
@@ -1265,7 +1265,7 @@ class Tsallis_pdf(PDF) :
     @m0.setter
     def m0 ( self , value ) :
         value = float ( value )
-        self.__b0.setVal ( value ) 
+        self.__m0.setVal ( value ) 
 
     @property
     def n ( self ) :

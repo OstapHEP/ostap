@@ -62,7 +62,8 @@
 #include "Ostap/Polynomials.h"
 #include "Ostap/Power.h"
 #include "Ostap/Printable.h"
-//#include "Ostap/PyFuncs.h"   // COMMENT OUT (temporarily) 
+#include "Ostap/PyFuncs.h"   
+#include "Ostap/PyPdf.h"     
 #include "Ostap/PyIterator.h"
 #include "Ostap/PySelector.h"
 #include "Ostap/PySelectorWithCuts.h"

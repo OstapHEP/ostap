@@ -3267,12 +3267,12 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   , m_x        ( "x"       , "Observable"   , this , x    ) 
   , m_phis     ( "phi"     , "Coefficients" , this ) 
 //
-  , m_ps       (                  low , high , L , N , phis.getSize() ) 
+  , m_ps       ( low , high , L , N , phis.getSize() ) 
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned     num  = 0 ;
-  Ostap::Utils::Iterator   tmp ( phis ) ;
+  RooAbsArg* coef = 0 ;
+  unsigned      num  = 0 ;
+  Ostap::Utils::Iterator tmp ( phis ) ;
   while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_ps.npars() )
   {
     RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
