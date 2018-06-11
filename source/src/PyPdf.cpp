@@ -27,8 +27,10 @@
 namespace 
 {
   // ==========================================================================
-  static char s_evaluate[] = "evaluate" ;
-  static char s_clone   [] = "clone"    ;
+  static char s_evaluate[] = "evaluate"                 ;
+  static char s_clone   [] = "clone"                    ;
+  static char s_getAI   [] = "get_analytical_integral"  ;
+  static char s_AI      [] = "analytical_integral"      ;
   // ==========================================================================
 }
 // ============================================================================
@@ -112,6 +114,7 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
                               PyString_FromString ( "name" ) ,
                               PyString_FromString ( ( name ? name : "" ) ) ) )
   {
+    PyErr_Print();
     Py_DECREF ( method ) ; 
     Py_DECREF ( kwargs ) ;
     Ostap::throwException ( "Can't set ``name'' item"        ,
@@ -133,6 +136,7 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
                               PyString_FromString ( "pdf" )      ,
                               pycl                               ) )
   {
+    PyErr_Print();
     Py_DECREF ( method ) ; 
     Py_DECREF ( kwargs ) ;
     Py_DECREF ( pycl   ) ;
@@ -147,6 +151,7 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
   PyObject* pyclone = PyObject_Call ( method , args , kwargs ) ;
   if ( !pyclone ) 
   {
+    PyErr_Print();
     Py_DECREF ( method ) ; 
     Ostap::throwException ( "Can't create  python ``clone''" ,
                             "PyPdf::clone"                   ,
@@ -162,6 +167,105 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
   if ( old ) { Py_DECREF ( old ) ; }
   //
   return cl ;
+}
+// ============================================================================
+// declare the analysitical integrals 
+// ============================================================================
+Int_t Ostap::Models::PyPdf::getAnalyticalIntegral
+( RooArgSet&  allVars    ,
+  RooArgSet&  analVars   ,
+  const char* rangeName  ) const 
+{
+  //
+  Ostap::Assert ( m_self                         , 
+                  "self* points to NULL"         , 
+                  "PyPdf::getAnalyticalIntegral" , 
+                  Ostap::StatusCode(400)         ) ;
+  ///
+  m_allDeps   = &allVars  ;
+  m_analDeps  = &analVars ;
+  m_rangeName = rangeName ;
+  m_intCode   = 0         ;
+  //  
+  if ( 1 != PyObject_HasAttrString ( m_self , s_getAI ) ||
+       1 != PyObject_HasAttrString ( m_self , s_AI    ) )
+  {
+    //
+    m_allDeps   = nullptr   ;
+    m_analDeps  = nullptr   ;
+    m_rangeName = nullptr   ;
+    m_intCode   = 0         ;
+    //
+    return 0 ;
+  }
+  //
+  /// create the python method  
+  PyObject* getai = PyObject_GetAttrString ( m_self , s_getAI ) ;
+  if ( !getai || !PyCallable_Check ( getai ) ) 
+  {
+    if ( nullptr == getai) { PyErr_Print ()        ; }
+    else                   { Py_DECREF   ( getai ) ; }
+    //
+    m_allDeps   = nullptr   ;
+    m_analDeps  = nullptr   ;
+    m_rangeName = nullptr   ;
+    m_intCode   = 0         ;
+    //
+    return 0 ;                                                            // RETURN
+  }
+  /// create args 
+  PyObject*  args   = PyTuple_New ( 0 ) ;
+  // 
+  // call python method 
+  PyObject* icode = PyObject_Call ( getai , args , nullptr ) ;
+  if ( !icode || !PyInt_Check ( icode ) )   // integer value ? ) 
+  {
+    if ( nullptr == icode ) { PyErr_Print ()        ; }
+    else                    { Py_DECREF   ( icode ) ; }
+    //
+    Py_DECREF ( getai ) ; 
+    //
+    Ostap::throwException ( "Can't get proper code"        ,
+                            "PyPdf::getAnalyticalIntegral" ,
+                            Ostap::StatusCode(500)         ) ;
+  }
+  //
+  const Int_t code = PyInt_AS_LONG( icode );
+  Py_DECREF ( icode ) ;
+  ///
+  m_allDeps   = nullptr   ;
+  m_analDeps  = nullptr   ;
+  m_rangeName = nullptr   ;
+  m_intCode   = 0         ;
+  //
+  return code ;
+}
+// ============================================================================
+// get the integral 
+// ============================================================================
+Double_t Ostap::Models::PyPdf::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  m_intCode    = code      ;
+  m_rangeName  = rangeName ;
+  ///
+  const double result = call_python ( m_self , s_AI ) ;
+  //
+  m_intCode    = 0         ;
+  m_rangeName  = nullptr   ;
+  //
+  return result ;
+}
+// ============================================================================
+/// move the function from protected to public interface 
+Bool_t Ostap::Models::PyPdf::matchArgs ( const RooArgSet& refVars ) const 
+{ 
+  return 
+    nullptr != m_allDeps  && 
+    nullptr != m_analDeps && 
+    RooAbsReal::matchArgs ( *m_allDeps , *m_analDeps , refVars ) ;
 }
 // ============================================================================
 // the actual evaluation of function

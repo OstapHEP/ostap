@@ -16,8 +16,8 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random, math
 import ostap.fitting.roofit 
-from   ostap.core.core      import VE, dsID
-from   ostap.fitting.basic  import MASS
+from   ostap.core.core      import VE, dsID, Ostap
+from   ostap.fitting.basic  import MASS,     Fit1D 
 from   ostap.fitting.pypdf  import PyPDF
 # =============================================================================
 # logging 
@@ -39,23 +39,24 @@ mmin,mmax = mass.minmax()
 
 ## fill it 
 m = VE(3.100,0.015**2)
-for i in xrange(0,500) :
+for i in xrange(0,5000) :
     mass.value = m.gauss () 
     dataset.add ( varset0 )
 
+
 logger.info ('DATASET %s' % dataset )
 
+NORM = 1.0 / math.sqrt ( 2.0 * math.pi )
 # =============================================================================
 ## @class PyGauss
 #  local ``pure-python'' PDF 
 class PyGauss(MASS,PyPDF) :
     """Local ``pure-python'' PDF """    
-    norm = 1.0 / math.sqrt ( 2 * math.pi )
     def __init__ ( self         ,
                    name         ,
                    xvar         ,
-                   mean  = (         3.05  , 5.15  ) ,
-                   sigma = ( 0.010 , 0.005 , 0.025 ) ,
+                   mean  = ( 3.080 , 3.05  , 3.15  ) ,
+                   sigma = ( 0.010 , 0.005 , 0.020 ) ,
                    pdf   = None ) :
         
         MASS .__init__ ( self , name      , xvar , mean , sigma ) 
@@ -68,34 +69,81 @@ class PyGauss(MASS,PyPDF) :
             'mean'  : self.mean ,
             'sigma' : self.mean ,
             'pdf'   : None        ## attention! 
-            }        
+            }
+        
     ## the  main method 
     def evaluate ( self ) :
-        varlist = self.varlist        
-        x = float ( varlist [ 0 ] ) 
-        m = float ( varlist [ 1 ] ) 
-        s = float ( varlist [ 2 ] )        
-        dx = ( x - m ) / s        
-        return math.exp ( -0.5 * dx * dx ) * self.norm / s 
+        vlist = self.varlist
 
-                
+        x = float ( vlist [ 0 ] ) 
+        m = float ( vlist [ 1 ] ) 
+        s = float ( vlist [ 2 ] )        
+        dx = ( x - m ) / s        
+        return math.exp ( -0.5 * dx * dx ) * NORM / s 
+
+CDF  = Ostap.Math.gauss_cdf
+# =============================================================================
+## @class PyGaussAI
+#  local ``pure-python'' PDF with analytical integrals 
+class PyGaussAI(PyGauss) :
+    """Local ``pure-python'' PDF with analytical integrals """    
+    def __init__ ( self         ,
+                   name         ,
+                   xvar         ,
+                   mean  = (         3.05  , 5.15  ) ,
+                   sigma = ( 0.010 , 0.005 , 0.025 ) ,
+                   pdf   = None ) :
+
+        PyGauss.__init__ (  self , name , xvar , mean , sigma , pdf = pdf )
+
+    ## declare analytical integral 
+    def get_analytical_integral ( self ) :
+        """Declare the analytical integral"""
+        
+        x  = self.varlist[0]
+        
+        if self.matchArgs ( x ) : return 1 ## get the integration code
+        
+        return 0
+    
+    ## calculate the analytical integral 
+    def analytical_integral ( self ) :
+        """Calculate the analytical integral"""
+
+        assert 1 == self.intCode , 'Invalid integration code!'
+        
+        vlist = self.varlist
+
+        rn    = self.rangeName        
+        xv    = vlist [ 0 ]        
+        xmax  = xv.getMax ( rn )
+        xmin  = xv.getMin ( rn )
+        
+        m     = float ( vlist [ 1 ] ) 
+        s     = float ( vlist [ 2 ] )        
+        
+        return CDF ( xmax , m , s  ) - CDF ( xmin , m , s  )
+    
 # =============================================================================
 ## pygauss PDF
 # =============================================================================
-def test_pygauss() :
+##def test_pygauss() :
+if 1 < 2 :
     
     logger.info ('Test PyGauss:  simple Gaussian signal' )
     
-    gauss = PyGauss( 'PyGauss' , xvar = mass )
+    gauss   = PyGauss( 'PyGauss'   , xvar = mass )
+    gaussAI = PyGauss( 'PyGaussAI' , xvar = mass )
     
-    result = gauss.fitTo ( dataset , draw = True )
+    r1, f1  = gauss  .fitTo ( dataset , draw = False , silent = True )
+    r2, f2  = gaussAI.fitTo ( dataset , draw = True , silent = True )
 
-    print result 
+    print r1, r2
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_pygauss          () ## simple Gaussian PDF
+    ## test_pygauss          () ## simple Gaussian PDF
     pass
 
 # =============================================================================

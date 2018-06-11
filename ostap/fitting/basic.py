@@ -1362,7 +1362,7 @@ class PDF (object) :
                 pass
             
         ## use numerical ingeration
-        from ostap.math.intergal import integral as _integral
+        from ostap.math.integral import integral as _integral
         return _integral ( self , xmin , xmax )
 
     ## get the derivative at  point x 

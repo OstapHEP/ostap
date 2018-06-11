@@ -23,7 +23,8 @@ namespace Ostap
   {
     // ========================================================================
     /** @class PyPdf PyPdf.h Ostap/PyPdf.h
-     *  Helper base class to implement "purely-python"
+     *  Helper intermediate base class to implement "purely-python" RooAbsPdf
+     *  @see ostap.fitting.pypdf.PyPDF
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date   2018-06-06
      */
@@ -60,14 +61,36 @@ namespace Ostap
     public:
       // ======================================================================
       ///  get all variables in a form of the list 
-      const RooArgList& varlist () const { return m_varlist ; }
+      //const RooArgList& varlist () const { return m_varlist ; }
       ///  get all varianles in a form of the set  
-      const RooArgSet&  varset  () const { return m_varset  ; }      
+      //const RooArgSet&  varset  () const { return m_varset  ; }      
+      const RooListProxy& varlist () const { return m_varlist ; }
+      ///  get all varianles in a form of the set  
+      const RooSetProxy&  varset  () const { return m_varset  ; }      
       // ======================================================================
     public:
       // ======================================================================
       // the actual evaluation of function
       Double_t evaluate() const override;
+      // ======================================================================
+    public: // analytical integrals 
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char*    rangeName    ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public: /// helper methods  for implementation of getAnalyticalIntegral 
+      // ======================================================================
+      inline const RooArgSet*   allDeps () const { return  m_allDeps  ; } 
+      inline       RooArgSet*  analDeps () const { return m_analDeps  ; }
+      inline const char*      rangeName () const { return m_rangeName ; }
+      inline Int_t              intCode () const { return m_intCode   ; }
+      /// move the function from protected to public integrface 
+      Bool_t matchArgs ( const RooArgSet& refVars ) const ;
       // ======================================================================
     private:
       // ======================================================================  
@@ -77,6 +100,13 @@ namespace Ostap
       RooListProxy m_varlist {} ; // all variables as list of variables 
       /// all variables as set  of variables 
       RooSetProxy  m_varset  {} ; // all variables as set  of variables 
+      // ======================================================================  
+    private: // helper fields for implementation of getAnalyticalIntegral 
+      // ======================================================================  
+      mutable const RooArgSet*  m_allDeps   { nullptr } ;
+      mutable       RooArgSet*  m_analDeps  { nullptr } ;
+      mutable const char*       m_rangeName { nullptr } ;
+      mutable Int_t             m_intCode   { 0       } ; 
       // ======================================================================  
     } ;
     // ========================================================================

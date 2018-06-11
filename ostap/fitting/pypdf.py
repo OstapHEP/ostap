@@ -153,13 +153,47 @@ else                       : logger = getLogger ( __name__              )
 #
 # Note:
 #  - 1. The double inheritance pattern: It is not mandatory, but it allows to
-#       get all benefits from the left bas-class, <code>MASS</code> in this  case
+#       get all benefits from the left base-class, <code>MASS</code> in this  case
 #  - 2. The <code>__init__</code> method *must* have keyword argument
 #       <code>pdf</code> (default is <code>None</code>)
 #  - 3. One *must* specify the <code>config</code> dictionary
 #
 #  The latter two items are mandatory for the proper implemtation of RooAbsPdf::clone
-#  - @see Ostap::Models::PyPdf 
+#  - @see Ostap::Models::PyPdf
+#
+#
+# Also analytical integrals can be specified using two methods:
+#  - <code>get_analytical_integral</code>, python' partner of <code>RooAbsPdf::getAnalyticalIntegral</.code>
+#  - <code>analytical_integral</code>, python' partner of <code>RooAbsPdf::analyticalIntegral</.code>
+#  @code
+#    ## declare analytical integral 
+#    def get_analytical_integral ( self ) :
+#        """Declare the analytical integral"""
+#        
+#        x  = self.varlist[0]
+#        
+#        if self.matchArgs ( x ) : return 1 ## get the integration code
+#        
+#        return 0
+#    
+#    ## calculate the analytical integral 
+#    def analytical_integral ( self ) :
+#        """Calculate the analytical integral"""
+#
+#        assert 1 == self.intCode , 'Invalid integration code!'
+#        
+#        vlist = self.varlist
+#
+#        rn    = self.rangeName        
+#        xv    = vlist [ 0 ]        
+#        xmax  = xv.getMax ( rn )
+#        xmin  = xv.getMin ( rn )
+#        
+#        m     = float ( vlist [ 1 ] ) 
+#        s     = float ( vlist [ 2 ] )        
+#        
+#        return CDF ( xmax , m , s  ) - CDF ( xmin , m , s  )
+# @endcode
 class PyPDF (object) :
     """Helper base class to implement ``pure-python'' PDF
     
@@ -200,13 +234,33 @@ class PyPDF (object) :
     
     Note:
     
-    1. the double inhetiance pattern: It is not mandatory, but it allows to
-    get all benefits from the left bas-class, MASS in this  case
+    1. the double inheritance pattern: It is not mandatory, but it allows to
+    get all benefits from the left base-class, MASS in this  case
     2. The __init__ method *must* have keyword argument `pdf` (default is `None`)
     3. one *must* specify the `config` dictionary
     
     The latter two items are mandatory for the proper implemtation of RooAbsPdf::clone
-     - see Ostap::Models::PyPdf 
+     - see Ostap::Models::PyPdf
+
+     Also analytical integrals can be specified using two methods:
+     - get_analytical_integral : python' partner of RooAbsPdf::getAnalyticalIntegral
+     - analytical_integral     : python' partner of RooAbsPdf::analyticalIntegral
+     ... ## declare analytical integral 
+     ... def get_analytical_integral ( self ) :
+     ...     x  = self.varlist[0]
+     ...     if self.matchArgs ( x ) : return 1 ## get the integration code
+     ...     return 0
+     ... ## calculate the analytical integral 
+     ... def analytical_integral ( self ) :
+     ...     assert 1 == self.intCode , 'Invalid integration code!'
+     ...     vlist = self.varlist
+     ...     rn    = self.rangeName        
+     ...     xv    = vlist [ 0 ]        
+     ...     xmax  = xv.getMax ( rn )
+     ...     xmin  = xv.getMin ( rn )
+     ...     m     = float ( vlist [ 1 ] ) 
+     ...     s     = float ( vlist [ 2 ] )        
+     ... return CDF ( xmax , m , s  ) - CDF ( xmin , m , s  )
     """
     def __init__ ( self          ,
                    name          ,
@@ -238,25 +292,62 @@ class PyPDF (object) :
     
     @property
     def vars ( self ) :
-        """``vars'' - all variables for PyPDF
-        - it should *NOT* be used innside `evaluate`-function!
+        """``vars'' - all variables used fro PyPDF creation
+        - it should *NOT* be used inside `evaluate`-function!
         """
         return self.__pyvars
     
     @property
     def varlist ( self ) :
         """``varlist'' : get all variables (as RooArgList)  from Ostap::Models::PyPdf
-        - all variables from evalauet function *MUST* be accessed via this collection
+        - all variables *MUST* be accessed via this collection!
         """
         return self.pdf.varlist ()
     
     @property
     def varset ( self ) :
         """``varset''  : get all variables (as RooArgSet)   from Ostap::Models::PyPdf
-        - all variables from evalauet function *MUST* be accessed via this collection
+        - all variables *MUST* be accessed via this collection!
         """
         return self.pdf.varset () 
 
+    @property
+    def allDeps ( self ) :
+        """``allDeps'' - the first parameter  of ``getAnalyticalIntegra/get_analytical_integral''-method 
+        - attention:  it coudl be a null pointer! check it before usage! 
+        """
+        return self.pdf.allDeps()
+    
+    @property
+    def analDeps ( self ) :
+        """``analDeps'' - the second parameter  of ``getAnalyticalIntegral/get_analystical_integral''-method 
+        - attention:  it could be a null pointer! check it before usage!
+        """
+        return self.pdf.allDeps()
+    @property
+    
+    def rangeName ( self )  :
+        """``rangeName'' -  the ``rangeName''  parameter for ``(get_)analytical_integral''-method
+        - attention - it could be a null pointer! check it before usage! 
+        """
+        return self.pdf.rangeName ()
+    
+    @property
+    def intCode   ( self )  :
+        """``intCode'' -  the ``integration code'' parameter for ``analytic_integral''-method
+        """
+        return self.pdf.intCode ()
+
+    # =================================================================================
+    ## Safe shortcut for RooAbsPdf.matchArgs ( allDeps , analDeps , *vars ) 
+    def matchArgs ( self , *vars ) :
+        """Safe shortcut for RooAbsPdf.matchArgs ( allDeps , analDeps , *vars )
+        """
+        vv = ROOT.RooArgSet() 
+        for v in vars : vv.add ( v )
+        return self.pdf.matchArgs ( vv ) 
+    
+                                     
     ## clone the object (needed by C++ partner class)
     def clone ( self , **kwargs ) :
         """Clone the object

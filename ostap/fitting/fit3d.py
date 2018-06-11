@@ -533,7 +533,7 @@ class PDF3 (PDF2) :
                             xmin , xmax ,
                             ymin , ymax ,
                             zmin , zmax )
-
+    
 # =============================================================================
 ## @class Generic3D_pdf
 #  "Wrapper" over generic RooFit (3D)-pdf

@@ -553,14 +553,8 @@ class PDF2 (PDF) :
                 pass
             
         ## use numerical integration 
-        from scipy import integrate 
-        result = integrate.dblquad ( self ,
-                                     ymin ,
-                                     ymax ,
-                                     lambda x : xmin ,
-                                     lambda x : xmax , 
-                                     *args , **kwargs )
-        return result[0]
+        from ostap.math.integral import integral2 as _integral2
+        return _integral2 ( self , xmin , xmax , ymin , ymax )
 
 # =============================================================================
 ## suppress methods specific for 1D-PDFs only
