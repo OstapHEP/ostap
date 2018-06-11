@@ -52,9 +52,9 @@ namespace
     {
       PyErr_Print();
       Py_DECREF ( r );      
-      Ostap::Exception ( "CallPython:invalid conversion" ,
-                         "CallPython:call_python"          ,
-                         Ostap::StatusCode(600) ) ;
+      throwException ( "CallPython:invalid conversion" ,
+                       "CallPython:call_python"          ,
+                       Ostap::StatusCode(600) ) ;
     }
     //
     Py_DECREF ( r ) ; 

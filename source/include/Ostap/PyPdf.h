@@ -61,9 +61,10 @@ namespace Ostap
     public:
       // ======================================================================
       ///  get all variables in a form of the list 
-      //const RooArgList& varlist () const { return m_varlist ; }
+      const RooListProxy& proxylist () const { return m_varlist ; }
       ///  get all varianles in a form of the set  
-      //const RooArgSet&  varset  () const { return m_varset  ; }      
+      const RooSetProxy&  proxyset  () const { return m_varset  ; }      
+      ///  get all variables in a form of the list 
       const RooListProxy& varlist () const { return m_varlist ; }
       ///  get all varianles in a form of the set  
       const RooSetProxy&  varset  () const { return m_varset  ; }      
