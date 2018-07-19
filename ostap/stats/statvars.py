@@ -11,6 +11,8 @@
 - data_moment          - get the moment            (with uncertainty)
 - data_central_moment  - get the central moment    (with uncertainty)
 - data_mean            - get the mean              (with uncertainty)
+- data_variance        - get the variance          (with uncertainty)
+- data_dispersion      - get the dispersion        (with uncertainty)
 - data_rms             - get the RMS               (with uncertainty)
 - data_skewness        - get the skewness          (with uncertainty)
 - data_kurtosis        - get the (excess) kurtosis (with uncertainty)
@@ -32,6 +34,8 @@ __all__     = (
     'data_moment'         , ## get the moment            (with uncertainty)
     'data_central_moment' , ## get the central moment    (with uncertainty)
     'data_mean'           , ## get the mean              (with uncertainty)
+    'data_variance'       , ## get the variance          (with uncertainty)
+    'data_dispersion'     , ## get the dispersion        (with uncertainty)
     'data_rms'            , ## get the RMS               (with uncertainty)
     'data_skewness'       , ## get the skewness          (with uncertainty)
     'data_kurtosis'       , ## get the (excess) kurtosis (with uncertainty)
@@ -342,6 +346,38 @@ def data_mean ( data  , expression , cuts  = '' , *args ) :
     return data_moment ( data , 1 , expression ,  cuts , *args )
 
 # =============================================================================
+## Get the variance(with uncertainty):
+#  @code
+#  data = ...
+#  data_variance (  data , 'mass*mass', 'pt>0')
+#  data.variance (         'mass*mass', 'pt>0') ## ditto
+#  @endcode 
+#  @see Ostap::StatVar::central_moment
+def data_variance ( data , expression , cuts  = '' , *args ) :
+    """Get the variance (with uncertainty):
+    >>> data = ...
+    >>> data_variance ( data , 'mass*mass', 'pt>0')
+    >>> data.variance (        'mass*mass', 'pt>0') ## ditto
+    """
+    return data_central_moment ( data , 2 , expression , cuts , *args )
+
+# =============================================================================
+## Get the dispersion(with uncertainty):
+#  @code
+#  data = ...
+#  data_dispersion (  data , 'mass*mass', 'pt>0')
+#  data.dispersion (         'mass*mass', 'pt>0') ## ditto
+#  @endcode 
+#  @see Ostap::StatVar::central_moment
+def data_dispersion ( data , expression , cuts  = '' , *args ) :
+    """Get the variance (with uncertainty):
+    >>> data = ...
+    >>> data_variance ( data , 'mass*mass', 'pt>0')
+    >>> data.variance (        'mass*mass', 'pt>0') ## ditto
+    """
+    return data_variance ( data , expression , cuts , *args ) 
+
+# =============================================================================
 ## Get the rms(with uncertainty):
 #  @code
 #  data = ...
@@ -355,7 +391,8 @@ def data_rms ( data , expression , cuts  = '' , *args ) :
     >>> data_rms( data , 'mass*mass', 'pt>0')
     >>> data.rms(        'mass*mass', 'pt>0') ## ditto
     """
-    return data_central_moment ( data , 2 , expression , cuts , *args )**0.5
+    return data_variance ( data ,  expression , cuts , *args ) ** 0.5
+
 
 data_get_moment      .__doc__ += '\n' + StatVar.get_moment     .__doc__  
 data_moment          .__doc__ += '\n' + StatVar.moment         .__doc__
@@ -372,6 +409,9 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'moment'         ) : klass.orig_moment         = klass.moment
     if hasattr ( klass , 'central_moment' ) : klass.orig_central_moment = klass.central_moment
     if hasattr ( klass , 'mean'           ) : klass.orig_mean           = klass.mean
+    if hasattr ( klass , 'variance'       ) : klass.orig_variance       = klass.variance 
+    if hasattr ( klass , 'dispersion'     ) : klass.orig_dispersion     = klass.dispersion
+    if hasattr ( klass , 'rms'            ) : klass.orig_rms            = klass.rms 
     if hasattr ( klass , 'rms'            ) : klass.orig_rms            = klass.rms 
     if hasattr ( klass , 'skewness'       ) : klass.orig_skewness       = klass.skewness
     if hasattr ( klass , 'kurtosis'       ) : klass.orig_kurtosis       = klass.kurtosis
@@ -389,6 +429,8 @@ def data_decorate ( klass ) :
     klass.moment          = data_moment
     klass.central_moment  = data_central_moment
     klass.mean            = data_mean
+    klass.variance        = data_variance 
+    klass.dispersion      = data_dispersion
     klass.rms             = data_rms
     klass.skewness        = data_skewness
     klass.kurtosis        = data_kurtosis

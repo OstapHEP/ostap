@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 #ifndef OSTAP_MOREMATH_H 
 #define OSTAP_MOREMATH_H 1
@@ -252,6 +251,40 @@ namespace Ostap
      */
     double psi ( const double x ) ;    
     // ========================================================================
+    /** Pochhammer symbol, aka "rising factorial"
+     *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @see Ostap::Math::rising_factorial
+     */
+    double pochhammer
+    ( const double         x , 
+      const unsigned short n ) ;    
+    // ========================================================================
+    /** Rising  factorial, aka "Pochhammer's symbol"
+     *  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @see Ostap::Math::pochhammer 
+     *  @see Ostap::Math::falling_factorial
+     */
+    double rising_factorial  ( const double x , const unsigned short n ) ;
+    // =========================================================================
+    /** Falling factorial
+     *  \f[ (x)_n = \Pi^{k-1}_{k=0}  (x - k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @see Ostap::Math::rising_factorial
+     */
+    double falling_factorial ( const double x , const unsigned short n ) ;
+    // =========================================================================
+    /** Pochhammer symbol, aka "rising factorial" and its derivative 
+     *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @see Ostap::Math::rising_factorial
+     *  @see Ostap::Math::pochhammer 
+     */
+    std::pair<double,double> pochhammer_with_derivative 
+    ( const double         x , 
+      const unsigned short n ) ;    
+    // ========================================================================
     /** get the standard gaussian pdf 
      *  @see https://en.wikipedia.org/wiki/Normal_distribution
      *  @param x x-value  
@@ -451,6 +484,8 @@ namespace Ostap
     double continued_fraction
     ( const std::vector<double>& a , 
       const std::vector<double>& b ) ;
+    // ========================================================================    
+
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

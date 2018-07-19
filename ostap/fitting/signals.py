@@ -117,7 +117,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' 
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
 from   ostap.core.core     import cpp , Ostap 
-from   ostap.fitting.basic import makeVar, MASS, PDF  
+from   ostap.fitting.basic import MASS, PDF  
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -214,12 +214,12 @@ class CrystalBall_pdf(MASS) :
         #
         MASS.__init__ ( self , name , xvar , mean , sigma    )
         
-        self.__alpha = makeVar ( alpha ,
+        self.__alpha = self.make_var ( alpha ,
                                  'alpha_%s'        % name ,
                                  '#alpha_{CB}(%s)' % name ,  alpha  ,
                                  2.0 , 0.01  ,  5 )
         
-        self.__n     = makeVar ( n   ,
+        self.__n     = self.make_var ( n   ,
                                  'n_%s'            % name ,
                                  'n_{CB}(%s)'      % name , n       ,
                                  1.0 , 1.e-8 , 50 )
@@ -348,16 +348,16 @@ class CB2_pdf(MASS) :
         #
         ## treat the specific parameters
         #
-        self.__aL    = makeVar ( alphaL                  ,
+        self.__aL    = self.make_var ( alphaL                  ,
                                  "aL_%s"          % name ,
                                  "#alpha_{L}(%s)" % name , alphaL    , 2.0 ,  0.01 ,  5 )
-        self.__nL    = makeVar ( nL                      ,                     
+        self.__nL    = self.make_var ( nL                      ,                     
                                  "nL_%s"          % name ,
                                  "n_{L}(%s)"      % name , nL        , 1   , 1.e-8 , 50 )
-        self.__aR    = makeVar ( alphaR ,
+        self.__aR    = self.make_var ( alphaR ,
                                  "aR_%s"          % name ,
                                  "#alpha_{R}(%s)" % name , alphaR    , 2.0 , 0.01  ,  5 )
-        self.__nR    = makeVar ( nR                      ,
+        self.__nR    = self.make_var ( nR                      ,
                                  "nR_%s"          % name ,
                                  "n_{R}(%s)"      % name , nR        , 1   , 1.e-8 , 50 )
         
@@ -474,15 +474,15 @@ class Needham_pdf(MASS) :
         elif 9.460 in self.xvar : unit = 1000 
         elif 9460  in self.xvar : unit = 1
         #
-        self.__a0 = makeVar ( a0                  ,
+        self.__a0 = self.make_var ( a0                  ,
                               "a0_%s"     % name  ,
                               "a_{0}(%s)" % name  , a0 , 
                               1.975               ,   0           , 10           )
-        self.__a1 = makeVar ( a1                  ,
+        self.__a1 = self.make_var ( a1                  ,
                               "a1_%s"     % name  ,
                               "a_{1}(%s)" % name  , a1 , 
                               -0.0011   * unit    , -10 * unit    , 10 * unit    )
-        self.__a2 = makeVar ( a2                  ,
+        self.__a2 = self.make_var ( a2                  ,
                               "a2_%s"     % name  ,
                               "a_{2}(%s)" % name  , a2 , 
                               -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
@@ -578,17 +578,17 @@ class Apolonios_pdf(MASS) :
         # 
         MASS.__init__  ( self , name , xvar , mean , sigma ) 
         
-        self.__alpha = makeVar ( alpha                     ,
+        self.__alpha = self.make_var ( alpha                     ,
                                  'alpha_%s'         % name ,
                                  '#alpha_{Apo}(%s)' % name , alpha , 
                                  2.0   , 0.01 ,   5 )
         
-        self.__n     = makeVar ( n                    ,
+        self.__n     = self.make_var ( n                    ,
                                  'n_%s'        % name ,
                                  'n_{Apo}(%s)' % name , n ,
                                  2.0   , 1.e-6 , 50 )
         
-        self.__b     = makeVar ( b                    ,
+        self.__b     = self.make_var ( b                    ,
                                  'b_%s'        % name ,
                                  'b_{Apo}(%s)' % name ,  b  ,
                                  1         , 0.001 , 10000 ) 
@@ -717,7 +717,7 @@ class Apolonios2_pdf(MASS) :
         MASS.__init__  ( self , name , xvar , mean , sigma  )
 
         
-        self.__asym = makeVar ( asymmetry                 ,
+        self.__asym = self.make_var ( asymmetry                 ,
                                 'asym_%s'          % name ,
                                 '#asym_{Apo2}(%s)' % name , asymmetry , 0, -1 , 1  ) 
         
@@ -735,7 +735,7 @@ class Apolonios2_pdf(MASS) :
             "%s*(1+%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
             self.__lst_L   )
         
-        self.__beta    = makeVar ( beta ,
+        self.__beta    = self.make_var ( beta ,
                                    'beta_%s'          % name  ,
                                    '#beta_{Apo2}(%s)' % name  ,
                                    beta , 0.01  , 1000 ) 
@@ -825,7 +825,7 @@ class BifurcatedGauss_pdf(MASS) :
         MASS.__init__  ( self , name , xvar , mean , sigma ) 
         
         ## asymmetry parameter  
-        self.__asym = makeVar ( asymmetry                 ,
+        self.__asym = self.make_var ( asymmetry                 ,
                                 'asym_%s'          % name ,
                                 '#asym_{asym}(%s)' % name ,
                                 asymmetry , 0 , -1 , 1  ) 
@@ -915,13 +915,13 @@ class DoubleGauss_pdf(MASS) :
         # 
         MASS.__init__  ( self , name , xvar , mean , sigma )
         
-        self.__scale = makeVar (
+        self.__scale = self.make_var (
             scale ,
             'SigmaScale'        + name ,
             'SigmaScale(%s)'    % name , scale , 1 , 10 ) 
         
         ## the fraction 
-        self.__fraction = makeVar (
+        self.__fraction = self.make_var (
             fraction                   , 
             'CoreFraction'      + name ,
             'CoreFraction(%s)'  % name , fraction , 0 , 1 ) 
@@ -1050,7 +1050,7 @@ class GenGaussV1_pdf(MASS) :
             self.alpha.SetName  ( gname  ) 
             self.alpha.SetTitle ( gtitle )
             
-        self.__beta  = makeVar ( beta ,
+        self.__beta  = self.make_var ( beta ,
                                  'beta_%s'        % name  ,
                                  '#beta_{v1}(%s)' % name  , beta , 
                                  2 , 1.e-4  , 1.e+6 ) 
@@ -1143,7 +1143,7 @@ class GenGaussV2_pdf(MASS) :
         self.alpha.SetTitle ( gtitle )
         
         self.__xi    = self.mean 
-        self.__kappa = makeVar ( kappa ,
+        self.__kappa = self.make_var ( kappa ,
                                  'kappa_%s'        % name  ,
                                  '#kappa_{v2}(%s)' % name  , kappa , 
                                  0 , -4  , 4 ) 
@@ -1240,7 +1240,7 @@ class SkewGauss_pdf(MASS) :
 
         self.__xi   = self.mean 
         
-        self.__alpha = makeVar ( alpha ,
+        self.__alpha = self.make_var ( alpha ,
                                  'alpha_%s'   % name  ,
                                  '#alpha(%s)' % name  , alpha, 
                                  0 , -1000 , 1000  ) 
@@ -1363,15 +1363,15 @@ class Bukin_pdf(MASS) :
         #
         
         ## asymmetry 
-        self.__xi    = makeVar ( xi                    ,
+        self.__xi    = self.make_var ( xi                    ,
                                  "xi_%s"        % name ,
                                  "#xi(%s)"      % name , xi   , 0  , -1 , 1    )
         ## left tail
-        self.__rhoL  = makeVar ( rhoL                  ,
+        self.__rhoL  = self.make_var ( rhoL                  ,
                                  "rhoL_%s"      % name ,
                                  "#rho_{L}(%s)" % name , rhoL , 0  ,  -1 , 10 )        
         ## right tail
-        self.__rhoR  = makeVar ( rhoR                  ,
+        self.__rhoR  = self.make_var ( rhoR                  ,
                                  "rhoR_%s"      % name ,
                                  "#rho_{R}(%s)" % name , rhoR  , 0  ,  -1 , 10 )
         # 
@@ -1472,7 +1472,7 @@ class StudentT_pdf(MASS) :
         MASS.__init__  ( self , name , xvar , mean , sigma ) 
         
         # 
-        self.__n  = makeVar ( n                    ,
+        self.__n  = self.make_var ( n                    ,
                               'n_%s'        % name ,
                               '#n_{ST}(%s)' % name , n , 
                               2 , 1.e-8 , 100  ) 
@@ -1548,7 +1548,7 @@ class BifurcatedStudentT_pdf(MASS) :
         MASS.__init__  ( self , name , xvar , mean , sigma )
         
         ##  asymmetry 
-        self.__asym = makeVar ( asymmetry               ,
+        self.__asym = self.make_var ( asymmetry               ,
                                 'asym_%s'        % name ,
                                 '#xi_{asym}(%s)' % name ,
                                 asymmetry , 0 , -1 , 1  ) 
@@ -1568,12 +1568,12 @@ class BifurcatedStudentT_pdf(MASS) :
             self.__lst_L   )
         
         ## left exponent 
-        self.__nL =  makeVar ( nL                     ,
+        self.__nL =  self.make_var ( nL                     ,
                                'nL_%s'         % name ,
                                '#nL_{BST}(%s)' % name , nL , 
                                2  , 1.e-6 , 100  )
         ## right exponent 
-        self.__nR =  makeVar ( nR                    ,
+        self.__nR =  self.make_var ( nR                    ,
                                'nR_%s'         % name ,
                                '#nR_{BST}(%s)' % name , nR , 
                                2  , 1.e-6 , 100  ) 
@@ -1694,11 +1694,11 @@ class SinhAsinh_pdf(MASS) :
 
         ##
         self.__mu      = self.mean
-        self.__epsilon = makeVar ( epsilon ,
+        self.__epsilon = self.make_var ( epsilon ,
                                    'epsilon_%s'   % name ,
                                    '#epsilon(%s)' % name , epsilon ,
                                    0 , -1000 , +1000 )
-        self.__delta   = makeVar ( delta ,
+        self.__delta   = self.make_var ( delta ,
                                    'delta_%s'   % name ,
                                    '#delta(%s)' % name , delta ,
                                    1 , 1.e-6 , 1000   )
@@ -1845,12 +1845,12 @@ class JohnsonSU_pdf(MASS) :
             self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
 
             
-        self.__delta   = makeVar ( delta                 ,
+        self.__delta   = self.make_var ( delta                 ,
                                    'delta_%s'     % name ,
                                    '#delta(%s)'   % name , delta ,
                                    1 , 1.e-6 , 1000   )
         
-        self.__gamma   = makeVar ( gamma               ,
+        self.__gamma   = self.make_var ( gamma               ,
                                    'gamma_%s'   % name ,
                                    '#gamma(%s)' % name , gamma ,
                                    0 , -1000 , +1000 )
@@ -2070,7 +2070,7 @@ class AsymmetricLaplace_pdf(MASS) :
         ## initialize the base
         MASS.__init__  ( self , name , xvar , mean , slope )
         
-        self.__asym = makeVar ( asymmetry               ,
+        self.__asym = self.make_var ( asymmetry               ,
                                 'asym_%s'        % name ,
                                 '#asym_{AL}(%s)' % name , asymmetry , 0 , -1 , 1  ) 
 
@@ -2401,7 +2401,7 @@ class QGaussian_pdf(MASS) :
             self.__scale.SetTitle ( gtitle )
 
         ## Q 
-        self.__q = makeVar ( q               ,
+        self.__q = self.make_var ( q               ,
                              'q_%s'   % name ,
                              '#q(%s)' % name , q , 1 , -1e+9 , 3-1.e-6 ) 
         
@@ -2487,7 +2487,7 @@ class Voigt_pdf(MASS) :
             dm = mx - mn
             limits_gamma = 1.e-5 * dm , dm
             
-        self.__gamma  = makeVar ( gamma               ,
+        self.__gamma  = self.make_var ( gamma               ,
                                   'gamma_%s'   % name ,   
                                   '#gamma(%s)' % name , gamma ,
                                   *limits_gamma )
@@ -2833,14 +2833,14 @@ class Flatte_pdf(MASS) :
             self.m0_980.SetName  ( gname  ) 
             self.m0_980.SetTitle ( gtitle ) 
             
-        self.__m0g1 = makeVar  ( m0g1                          ,
+        self.__m0g1 = self.make_var  ( m0g1                          ,
                                  'm0g1_%s'              % name ,
                                  'm_{0}*\gamma_{1}(%s)' % name , m0g1 ,
                                  165                           ,
                                  1.e-5                         ,
                                  1.e+5                         )
         
-        self.__g2og1 = makeVar ( g2og1    ,
+        self.__g2og1 = self.make_var ( g2og1    ,
                                  'g2og1_%s'                  % name ,
                                  '#gamma_{2}/#gamma_{1}(%s)' % name , g2og1 , 
                                  4.21     , 
@@ -2981,56 +2981,56 @@ class LASS_pdf(MASS) :
     def __init__ ( self               ,
                    name               ,
                    xvar               ,
-                   m0_1430  = None    ,    ## mass  of K*(1430)
-                   g0_1430  = None    ,    ## width of K*(1430)
-                   a_lass   = 1.94e-3 , 
-                   r_lass   = 1.76e-3 ,
-                   e_lass   = 1.0     ,    ## elasticity                    
+                   m0       = None    ,    ## mass  of K*(1430)
+                   g0       = None    ,    ## width of K*(1430)
+                   a        = 1.94e-3 , 
+                   r        = 1.76e-3 ,
+                   e        = 1.0     ,    ## elasticity                    
                    mKaon    = 493.7   ,    ## kaon mass 
                    mPion    = 139.6   ) :  ## pion mass 
 
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , m0_1430 , g0_1430 )
+        MASS.__init__  ( self , name , xvar , m0 , g0 )
         
-        self.__gamma = self.sigma
-        if self.gamma != g0_1430 : 
-            sname  = self.gamma.GetName  ()
-            stitle = self.gamma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'gamma_1430' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma_1440' )
-            self.gamma.SetName  ( gname  ) 
-            self.gamma.SetTitle ( gtitle )
+        self.__g0 = self.sigma
+        if self.__g0 != g0  : 
+            sname  = self.g0.GetName  ()
+            stitle = self.g0.GetTitle ()
+            gname  = sname .replace ( 'sigma' , 'g0' )
+            gtitle = stitle.replace ( 'sigma' , 'g0' )
+            self.g0.SetName  ( gname  ) 
+            self.g0.SetTitle ( gtitle )
             
-        self.__m0_1430 = self.mean
-        if self.m0_1430 !=  m0_1430 : 
-            sname  = self.mean.GetName  ()
-            stitle = self.mean.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'm0_1430' )
-            gtitle = stitle.replace ( 'mean' , 'm0_1440' )
-            self.m0_1430.SetName  ( gname  ) 
-            self.m0_1430.SetTitle ( gtitle ) 
+        self.__m0 = self.mean
+        if self.__m0 !=  m0 : 
+            sname  = self.m0.GetName  ()
+            stitle = self.m0.GetTitle ()
+            gname  = sname .replace ( 'mean' , 'm0' )
+            gtitle = stitle.replace ( 'mean' , 'm0' )
+            self.m0.SetName  ( gname  ) 
+            self.m0.SetTitle ( gtitle ) 
             
-        self.__a_lass = makeVar ( a_lass             ,
-                                  'aLASS_%s'  % name ,
-                                  "aLASS(%s)" % name , a_lass , 
-                                  1.94e-3            ,
-                                  1.94e-3            ,
-                                  1.94e-3            ) 
-        self.__r_lass = makeVar ( r_lass             ,
-                                  'rLASS_%s'  % name ,
-                                  "rLASS(%s)" % name , r_lass , 
-                                  1.76e-3            ,
-                                  1.76e-3            ,
-                                  1.76e-3            ) 
-        self.__e_lass = makeVar ( e_lass             ,
-                                  'eLASS_%s'  % name ,
-                                  "eLASS(%s)" % name , e_lass ,
-                                  1.0                , 
-                                  1.0                ,
-                                  1.0                )
-
+        self.__a = self.make_var ( a                  ,
+                                   'aLASS_%s'  % name ,
+                                   "aLASS(%s)" % name , a , 
+                                   1.94e-3            ,
+                                   1.94e-3            ,
+                                   1.94e-3            ) 
+        self.__r = self.make_var ( r             ,
+                                   'rLASS_%s'  % name ,
+                                   "rLASS(%s)" % name , r , 
+                                   1.76e-3            ,
+                                   1.76e-3            ,
+                                   1.76e-3            ) 
+        self.__e = self.make_var ( e            ,
+                                   'eLASS_%s'  % name ,
+                                   "eLASS(%s)" % name , e ,
+                                   1.0                , 
+                                   1.0                ,
+                                   1.0                )
+        
         self.__mKaon = mKaon
         self.__mPion = mPion
         
@@ -3039,11 +3039,11 @@ class LASS_pdf(MASS) :
             "lass_"    + name ,
             "LASS(%s)" % name ,
             self.xvar    ,
-            self.m0_1430 ,
-            self.g0_1430 ,
-            self.a_lass  ,
-            self.r_lass  ,
-            self.e_lass  ,
+            self.m0      ,
+            self.g0      ,
+            self.a       ,
+            self.r       ,
+            self.e       ,
             self.__mKaon ,
             self.__mPion )
 
@@ -3051,69 +3051,57 @@ class LASS_pdf(MASS) :
         self.config = {
             'name'        : self.name    ,
             'xvar'        : self.xvar    ,
-            'm0_1430'     : self.m0_1430 ,
-            'g0_1430'     : self.g0_1430 ,
-            'a_lass'      : self.a_lass  ,
-            'r_lass'      : self.r_lass  ,
-            'e_lass'      : self.e_lass  ,
+            'm0'          : self.m0      ,
+            'g0'          : self.g0      ,
+            'a'           : self.a       ,
+            'r'           : self.r       ,
+            'e'           : self.e       ,
             'mKaon'       : self.__mKaon ,
             'mPion'       : self.__mPion ,
             }
     
     @property
-    def gamma ( self ) :
-        """``gamma''-parameter for LASS-function (the same as ``sigma'')"""
-        return self.__gamma
-    @gamma.setter
-    def gamma ( self, value ) :
-        value = float ( value )
-        self.__gamma.setVal ( value ) 
+    def g0 ( self ) :
+        """``g0''-parameter for LASS-function (same as ``sigma'')"""
+        return self.sigma
+    @g0.setter
+    def g0 ( self, value ) :
+        self.sigma = value 
 
     @property
-    def g0_1430 ( self ) :
-        """``gamma''-parameter for LASS-function"""
+    def m0 ( self ) :
+        """``m0''-parameter for LASS-function (same as ``mean'')"""
         return self.__gamma
-    @g0_1430.setter
-    def g0_1430 ( self, value ) :
-        value = float ( value )
-        self.__gamma.setVal ( value ) 
-
-    @property
-    def m0_1430 ( self ) :
-        """``m0''-parameter for LASS-function"""
-        return self.__gamma
-    @m0_1430.setter
-    def m0_1430 ( self, value ) :
-        value = float ( value )
-        self.__m0_1430.setVal ( value ) 
+    @m0.setter
+    def m0 ( self, value ) :
+        self.mean = value 
 
     @property
     def a ( self ) :
         """``a''-parameter for LASS-function"""
-        return self.__a_lass
+        return self.__a_
     @a.setter
     def a ( self, value ) :
         value = float ( value )
-        self.__a_lass.setVal ( value ) 
+        self.__a.setVal ( value ) 
 
     @property
     def r ( self ) :
         """``r''-parameter for LASS-function"""
-        return self.__r_lass
+        return self.__r
     @r.setter
     def r ( self, value ) :
         value = float ( value )
-        self.__r_lass.setVal ( value ) 
-        return self.__r_lass.getVal ()
+        self.__r.setVal ( value ) 
 
     @property
     def e ( self ) :
         """``e''-parameter for LASS-function"""
-        return self.__e_lass
+        return self.__e
     @e.setter
     def e ( self, value ) :
         value = float ( value )
-        self.__e_lass.setVal ( value ) 
+        self.__e.setVal ( value ) 
 
 models.append ( LASS_pdf )                          
 # =============================================================================
@@ -3129,26 +3117,26 @@ class Bugg_pdf(MASS) :
     B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
     http://dx.doi.org/10.1103/PhysRevD.48.R3948
     """
-    def __init__ ( self              ,
-                   name              ,
-                   xvar              ,
-                   bugg_m   = 0.9264 , 
-                   bugg_g2  = 0.0024 , ## g2-parameter
-                   bugg_b1  = 0.5848 , ## b1-parameter [GeV]
-                   bugg_b2  = 1.6663 , ## b2-parameter [GeV^-1]
-                   bugg_a   = 1.082  , ##  a-parameter [GeV^2]
-                   bugg_s1  = 2.8    , ## s1-parameter [GeV^2]
-                   bugg_s2  = 3.5    , ## s2-parameter
-                   mPion    = 0.1396 ) :  ## pion mass 
+    def __init__ ( self           ,
+                   name           ,
+                   xvar           ,
+                   m     = 0.9264 , 
+                   g2    = 0.0024 , ## g2-parameter
+                   b1    = 0.5848 , ## b1-parameter [GeV]
+                   b2    = 1.6663 , ## b2-parameter [GeV^-1]
+                   a     = 1.082  , ##  a-parameter [GeV^2]
+                   s1    = 2.8    , ## s1-parameter [GeV^2]
+                   s2    = 3.5    , ## s2-parameter
+                   mPion = 0.1396 ) :  ## pion mass 
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , bugg_m , bugg_g2 ) 
+        MASS.__init__  ( self , name , xvar , m , g2 ) 
         
         self.__bugg_g2 = self.sigma
         self.__gamma   = self.sigma
         ##
-        if self.gamma != bugg_g2 :  
+        if self.gamma != g2 :  
             sname  = self.gamma.GetName  ()
             stitle = self.gamma.GetTitle ()
             gname  = sname .replace ( 'sigma' , 'gamma2_Bugg' )
@@ -3158,7 +3146,7 @@ class Bugg_pdf(MASS) :
             self.gamma = self.bugg_g2 
             
         self.__bugg_m = self.mean
-        if self.bugg_m != bugg_m :  
+        if self.bugg_m != m :  
             sname  = self.mean.GetName  ()
             stitle = self.mean.GetTitle ()
             gname  = sname .replace ( 'mean' , 'm_Bugg' )
@@ -3166,35 +3154,35 @@ class Bugg_pdf(MASS) :
             self.bugg_m.SetName  ( gname  ) 
             self.bugg_m.SetTitle ( gtitle ) 
 
-        self.__bugg_b1 = makeVar ( bugg_b1             ,
-                                   'b1Bugg_%s'  % name ,
-                                   "b1Bugg(%s)" % name , bugg_b1 ,
-                                   0.5848 , 
-                                   0 , 2  )
+        self.__bugg_b1 = self.make_var ( b1                  ,
+                                         'b1Bugg_%s'  % name ,
+                                         "b1Bugg(%s)" % name , b1 ,
+                                         0.5848 , 
+                                         0 , 2  )
         
-        self.__bugg_b2 = makeVar ( bugg_b2             ,
-                                   'b2Bugg_%s'  % name ,
-                                   "b2Bugg(%s)" % name , bugg_b2 , 
-                                   1.6663 ,
-                                 1 , 2  ) 
+        self.__bugg_b2 = self.make_var ( b2             ,
+                                         'b2Bugg_%s'  % name ,
+                                         "b2Bugg(%s)" % name , b2 , 
+                                         1.6663 ,
+                                         1 , 2  ) 
         
-        self.__bugg_a  = makeVar ( bugg_a             ,
-                                   'aBugg_%s'  % name ,
-                                   "aBugg(%s)" % name , bugg_a , 
-                                   1.082    ,
-                                   0.5 , 5  ) 
+        self.__bugg_a  = self.make_var ( a             ,
+                                         'aBugg_%s'  % name ,
+                                         "aBugg(%s)" % name , a , 
+                                         1.082    ,
+                                         0.5 , 5  ) 
         
-        self.__bugg_s1  = makeVar ( bugg_s1           ,
-                                    's1Bugg_%s'  % name ,
-                                    "s1Bugg(%s)" % name , bugg_s1 , 
-                                    2.8              ,
-                                    1 , 5            ) 
+        self.__bugg_s1  = self.make_var ( s1           ,
+                                          's1Bugg_%s'  % name ,
+                                          "s1Bugg(%s)" % name , s1 , 
+                                          2.8              ,
+                                          1 , 5            ) 
         
-        self.__bugg_s2  = makeVar ( bugg_s2           ,
-                                    's2Bugg_%s'  % name ,
-                                    "s2Bugg(%s)" % name , bugg_s2 , 
-                                    3.5              ,
-                                    1 , 5            ) 
+        self.__bugg_s2  = self.make_var ( s2           ,
+                                          's2Bugg_%s'  % name ,
+                                          "s2Bugg(%s)" % name , s2 , 
+                                          3.5              ,
+                                          1 , 5            ) 
         
         self.__mPion = mPion 
         ## create PDF 
@@ -3215,13 +3203,13 @@ class Bugg_pdf(MASS) :
         self.config = {
             'name'        : self.name      ,
             'xvar'        : self.xvar      ,
-            'bugg_m'      : self.__bugg_m  ,
-            'bugg_g2'     : self.__bugg_g2 ,
-            'bugg_b1'     : self.__bugg_b1 ,
-            'bugg_b2'     : self.__bugg_b2 ,
-            'bugg_a'      : self.__bugg_a  ,
-            'bugg_s1'     : self.__bugg_s1 ,
-            'bugg_s2'     : self.__bugg_s2 ,
+            'm'           : self.__bugg_m  ,
+            'g2'          : self.__bugg_g2 ,
+            'b1'          : self.__bugg_b1 ,
+            'b2'          : self.__bugg_b2 ,
+            'a'           : self.__bugg_a  ,
+            's1'          : self.__bugg_s1 ,
+            's2'          : self.__bugg_s2 ,
             'mPion'       : self.__mPion   ,
             }
 
@@ -3323,13 +3311,13 @@ class Swanson_pdf(PDF) :
             
         ## create the variable 
         if isinstance ( xvar , tuple ) and 2 == len(mass) :  
-            xvar = makeVar ( xvar       , ## var 
+            xvar = self.make_var ( xvar       , ## var 
                              m_name     , ## name 
                              m_title    , ## title/comment
                              *mass      , ## min/max 
                              fix = None ) ## fix ? 
         elif isinstance ( xvar , ROOT.RooAbsReal ) :
-            xvar = makeVar ( xvar       , ## var 
+            xvar = self.make_var ( xvar       , ## var 
                              m_name     , ## name 
                              m_title    , ## title/comment
                              fix = None ) ## fix ? 
@@ -3341,7 +3329,7 @@ class Swanson_pdf(PDF) :
         
         self.__swanson = swanson 
         beta_max       = max ( swanson.mmin() , swanson.cusp() )
-        self.__beta0   = makeVar ( beta0 , 
+        self.__beta0   = self.make_var ( beta0 , 
                                    'b0_swanson_%s'   % name ,
                                    'b0_swanson(%s)'  % name ,
                                    beta0 , 

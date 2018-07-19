@@ -1,4 +1,3 @@
-// $Id:$
 // ===========================================================================
 #ifndef OSTAP_HISTOPROJECT_H 
 #define OSTAP_HISTOPROJECT_H 1
@@ -12,6 +11,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
+#include "Ostap/DataFrame.h"
 // ============================================================================
 // Forward declarations 
 // =============================================================================
@@ -23,11 +23,12 @@ class RooAbsData ; // RooFit
 class RooAbsReal ; // RooFit 
 // =============================================================================
 namespace Ostap
-{
+{  
+  // ==========================================================================
+  typedef ROOT::Experimental::TDataFrame DataFrame ;
   // ==========================================================================
   /** @class HistoProject Ostap/HistoProject.h
-   *  Helper class to project Dataset to histogram 
-   *
+   *  Helper class to project Dataset/DataFrame to histogram 
    *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
    *  @date   2015-10-08
    */
@@ -89,7 +90,7 @@ namespace Ostap
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
-  public:
+  public: // RooDataSet 
     // ========================================================================
     /** make a projection of RooDataSet into the histogram 
      *  @param data  (INPUT)  input data 
@@ -144,6 +145,50 @@ namespace Ostap
       const RooAbsReal*   selection  = 0  ,
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+  public:  //   DataFrame 
+    // ========================================================================
+    /** make a projection of DataFrame into the histogram 
+     *  @param data  (INPUT)  input data 
+     *  @param histo (UPDATE) histogram 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     */
+    static Ostap::StatusCode project
+    ( DataFrame           data            , 
+      TH1*                histo           ,
+      const std::string&  expression      ,
+      const std::string&  selection  = "" ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into the histogram 
+     *  @param data  (INPUT)  input data 
+     *  @param histo (UPDATE) histogram 
+     *  @param xexpression (INPUT) expression for x-axis 
+     *  @param yexpression (INPUT) expression for y-axis 
+     *  @param selection  (INPUT) selection criteria/weight 
+     */
+    static Ostap::StatusCode project2
+    ( DataFrame           data            , 
+      TH2*                histo           ,
+      const std::string&  xexpression     ,
+      const std::string&  yexpression     ,
+      const std::string&  selection  = "" );
+    // ========================================================================
+    /** make a projection of RooDataSet into the histogram 
+     *  @param data        (INPUT)  input data 
+     *  @param histo       (UPDATE) histogram 
+     *  @param xexpression (INPUT)  expression for x-axis 
+     *  @param yexpression (INPUT)  expression for y-axis 
+     *  @param zexpression (INPUT)  expression for z-axis 
+     *  @param selection   (INPUT)  selection criteria/weight 
+     */
+    static Ostap::StatusCode project3
+    ( DataFrame           data            , 
+      TH3*                histo           ,
+      const std::string&  xexpression     ,
+      const std::string&  yexpression     ,
+      const std::string&  zexpression     ,
+      const std::string&  selection  = "" ) ;
     // ========================================================================
   };
   // ==========================================================================

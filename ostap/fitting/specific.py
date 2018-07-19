@@ -41,7 +41,7 @@ from   ostap.core.core           import cpp, Ostap, VE
 # =============================================================================
 # Specializations of double-sided Crystal Ball function 
 # =============================================================================
-from   ostap.fitting.basic   import PDF, makeVar, makeBkg
+from   ostap.fitting.basic   import PDF, makeBkg
 from   ostap.fitting.fit2d   import PDF2 
 from   ostap.fitting.signals import CB2_pdf, Needham_pdf, Bukin_pdf
 # =============================================================================
@@ -419,17 +419,17 @@ class Manca_pdf (PDF) :
         ## Y(1S)
         # =====================================================================
         
-        self.__a0   = makeVar ( a0                 ,
+        self.__a0   = self.make_var ( a0                 ,
                                 'a0m_%s' % name    ,
                                 "a0 for Needham's function" , a0 , 
                                 1.91               ,    0.1             ,   3.0            )
         
-        self.__a1   = makeVar ( a1                 ,
+        self.__a1   = self.make_var ( a1                 ,
                                 'a1m_%s' % name    ,
                                 "a1 for Needham's function" , a1 ,  
                                 1.1174 / gev_      ,  -10.0  / gev_     ,  10.0  /gev_     )
         
-        self.__a2   = makeVar ( a2                 ,
+        self.__a2   = self.make_var ( a2                 ,
                                 'a2m_%s' % name    ,
                               "a2 for Needham's function" , a2 , 
                                 -5.299 / gev_**2   , -100.0  / gev_**2  , 100.0  /gev_**2  )
@@ -439,12 +439,12 @@ class Manca_pdf (PDF) :
         if a1 is None and not self.a1.isConstant () : self.a1.fix (  1.1174 / gev_    )
         if a2 is None and not self.a2.isConstant () : self.a2.fix ( -5.299  / gev_**2 ) 
         
-        self.__m1s   = makeVar ( m1s                   ,
+        self.__m1s   = self.make_var ( m1s                   ,
                                  "m1S_%s"       % name ,
                                  "mass Y1S(%s)" % name , m1s ,
                                  m_y1s , m_y1s - 0.15 * s_y1s , m_y1s + 0.15 * s_y1s ) 
         
-        self.__s1s   = makeVar ( sigma                  ,
+        self.__s1s   = self.make_var ( sigma                  ,
                                  "s1S_%s"        % name ,
                                  "sigma Y1S(%s)" % name , sigma ,
                                  s_y1s , 0.3 * s_y1s , 4 * s_y1s )
@@ -462,7 +462,7 @@ class Manca_pdf (PDF) :
         # =====================================================================
         ## Y(2S)
         # =====================================================================
-        self.__dm2s  = makeVar ( None ,
+        self.__dm2s  = self.make_var ( None ,
                                  "dm2s"      + name    ,
                                  "dm2s(%s)"  % name    ,
                                  dm_y2s                ,
@@ -497,7 +497,7 @@ class Manca_pdf (PDF) :
         # =====================================================================
         ## Y(3S)
         # =====================================================================
-        self.__dm3s  = makeVar ( None ,
+        self.__dm3s  = self.make_var ( None ,
                                  "dm3s"      + name ,
                                  "dm3s(%s)"  % name    ,
                                  dm_y3s                ,
@@ -541,16 +541,16 @@ class Manca_pdf (PDF) :
         ## use helper function to create background  
         self.background = makeBkg ( power , 'Bkg%s' % name , self.mass )
 
-        self.__n1s = makeVar ( None ,
+        self.__n1s = self.make_var ( None ,
                              "N1S" + name  ,
                                "Signal(Y1S)" ,  None , 1000 ,  0 ,  1.e+8 )
-        self.__n2s = makeVar ( None ,
+        self.__n2s = self.make_var ( None ,
                                "N2S" + name  ,
                                "Signal(Y2S)" ,  None ,  300 ,  0 ,  1.e+7 )
-        self.__n3s = makeVar ( None ,
+        self.__n3s = self.make_var ( None ,
                                "N3S" + name  ,
                                "Signal(Y3S)" ,  None ,  100 ,  0 ,  1.e+6 )
-        self.__b   = makeVar ( None ,
+        self.__b   = self.make_var ( None ,
                                "B"   + name  ,
                                "Background"  ,  None ,  100 ,  0 ,  1.e+8 )
         
@@ -778,25 +778,25 @@ class Manca2_pdf (PDF) :
         # =====================================================================
         ## Y(1S)
         # =====================================================================
-        self.__aL    = makeVar ( alphaL                  ,
+        self.__aL    = self.make_var ( alphaL                  ,
                                  "aL_%s"          % name ,
                                  "#alpha_{L}(%s)" % name , alphaL , 1.5462     , 0.1   , 10 )
-        self.__nL    = makeVar ( nL                      ,                     
+        self.__nL    = self.make_var ( nL                      ,                     
                                  "nL_%s"          % name ,
                                  "n_{L}(%s)"      % name , nL     , 1.3119     , 1.e-5 , 25 )
-        self.__aR    = makeVar ( alphaR                  ,
+        self.__aR    = self.make_var ( alphaR                  ,
                                  "aR_%s"          % name ,
                                  "#alpha_{R}(%s)" % name , alphaR , 1.6952e+00 , 0.1   , 10 )
-        self.__nR    = makeVar ( nR                      ,
+        self.__nR    = self.make_var ( nR                      ,
                                  "nR_%s"          % name ,
                                  "n_{R}(%s)"      % name , nR     , 1.5751e+01 , 1.e-5 , 25 )
         
-        self.__m1s   = makeVar ( m1s                   ,
+        self.__m1s   = self.make_var ( m1s                   ,
                                  "m1S_%s"       % name ,
                                  "mass Y1S(%s)" % name , m1s ,
                                  m_y1s , m_y1s - 0.15 * s_y1s , m_y1s + 0.15 * s_y1s ) 
         
-        self.__s1s   = makeVar ( sigma                  ,
+        self.__s1s   = self.make_var ( sigma                  ,
                                  "s1S_%s"        % name ,
                                  "sigma Y1S(%s)" % name , sigma ,
                                  s_y1s , 0.3 * s_y1s , 4 * s_y1s )
@@ -815,7 +815,7 @@ class Manca2_pdf (PDF) :
         # =====================================================================
         ## Y(2S)
         # =====================================================================
-        self.__dm2s  = makeVar ( None                  ,
+        self.__dm2s  = self.make_var ( None                  ,
                                  "dm2s"      + name    ,
                                  "dm2s(%s)"  % name    ,
                                  dm_y2s                ,
@@ -851,7 +851,7 @@ class Manca2_pdf (PDF) :
         # =====================================================================
         ## Y(3S)
         # =====================================================================
-        self.__dm3s  = makeVar ( None                  ,
+        self.__dm3s  = self.make_var ( None                  ,
                                  "dm3s"      + name    ,
                                  "dm3s(%s)"  % name    ,
                                  dm_y3s                ,
@@ -897,16 +897,16 @@ class Manca2_pdf (PDF) :
         self.background = makeBkg ( power , 'Bkg%s' % name , self.mass )
 
         
-        self.__n1s = makeVar ( None ,
+        self.__n1s = self.make_var ( None ,
                              "N1S" + name  ,
                              "Signal(Y1S)" ,  None , 1000 ,  0 ,  1.e+7 )
-        self.__n2s = makeVar ( None ,
+        self.__n2s = self.make_var ( None ,
                                "N2S" + name  ,
                                "Signal(Y2S)" ,  None ,  300 ,  0 ,  1.e+6 )
-        self.__n3s = makeVar ( None ,
+        self.__n3s = self.make_var ( None ,
                                "N3S" + name  ,
                                "Signal(Y3S)" ,  None ,  100 ,  0 ,  1.e+6 )
-        self.__b   = makeVar ( None ,
+        self.__b   = self.make_var ( None ,
                                "B"   + name  ,
                                "Background"  ,  None ,  100 ,  0 ,  1.e+8 )
         
@@ -1170,14 +1170,14 @@ class MancaX_pdf(PDF2) :
         self.bb_pdf  = RPP ( 'BB'   + suffix , 'Bkg(x)Bkg'     , self.b_A.pdf , self.b_B.pdf ) 
         
         ## coefficients
-        self.s1s = makeVar ( None , 'NY1C' + suffix , 'N(Y1S+C)' + suffix , None , 200 , 0 , 1.e+5 )
-        self.s2s = makeVar ( None , 'NY2C' + suffix , 'N(Y2S+C)' + suffix , None , 100 , 0 , 1.e+4 )
-        self.s3s = makeVar ( None , 'NY3C' + suffix , 'N(Y3S+C)' + suffix , None ,  20 , 0 , 1.e+4 )
-        self.bs  = makeVar ( None , 'NBC'  + suffix , 'N(Bkg+C)' + suffix , None , 500 , 0 , 1.e+5 )
-        self.s1b = makeVar ( None , 'NY1B' + suffix , 'N(Y1S+B)' + suffix , None , 500 , 0 , 1.e+5 )
-        self.s2b = makeVar ( None , 'NY2B' + suffix , 'N(Y2S+B)' + suffix , None , 200 , 0 , 1.e+4 )
-        self.s3b = makeVar ( None , 'NY3B' + suffix , 'N(Y3S+B)' + suffix , None , 200 , 0 , 1.e+4 )
-        self.bb  = makeVar ( None , 'NBB'  + suffix , 'N(Bkg+B)' + suffix , None , 500 , 0 , 1.e+5 )
+        self.s1s = self.make_var ( None , 'NY1C' + suffix , 'N(Y1S+C)' + suffix , None , 200 , 0 , 1.e+5 )
+        self.s2s = self.make_var ( None , 'NY2C' + suffix , 'N(Y2S+C)' + suffix , None , 100 , 0 , 1.e+4 )
+        self.s3s = self.make_var ( None , 'NY3C' + suffix , 'N(Y3S+C)' + suffix , None ,  20 , 0 , 1.e+4 )
+        self.bs  = self.make_var ( None , 'NBC'  + suffix , 'N(Bkg+C)' + suffix , None , 500 , 0 , 1.e+5 )
+        self.s1b = self.make_var ( None , 'NY1B' + suffix , 'N(Y1S+B)' + suffix , None , 500 , 0 , 1.e+5 )
+        self.s2b = self.make_var ( None , 'NY2B' + suffix , 'N(Y2S+B)' + suffix , None , 200 , 0 , 1.e+4 )
+        self.s3b = self.make_var ( None , 'NY3B' + suffix , 'N(Y3S+B)' + suffix , None , 200 , 0 , 1.e+4 )
+        self.bb  = self.make_var ( None , 'NBB'  + suffix , 'N(Bkg+B)' + suffix , None , 500 , 0 , 1.e+5 )
 
         self.S1S_name = self.s1s.GetName()
         self.S2S_name = self.s2s.GetName()

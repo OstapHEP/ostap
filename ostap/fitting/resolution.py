@@ -34,7 +34,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.resolution' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
-from ostap.fitting.basic import Ostap, RESOLUTION, makeVar
+from ostap.fitting.basic import Ostap, RESOLUTION
 # =============================================================================    
 models = set() 
 # =============================================================================
@@ -104,13 +104,13 @@ class ResoGauss2(RESOLUTION) :
                                            sigma = sigma ,
                                            mean  = mean  )
         ## fraction of sigma1-component 
-        self.__fraction = makeVar (
+        self.__fraction = self.make_var (
             fraction                   , 
             'CoreFraction_'     + name ,
             'CoreFraction(%s)'  % name , fraction , 0 ,  1 ) 
         
         ## sigma2/sigma1 width ratio;
-        self.__scale = makeVar (
+        self.__scale = self.make_var (
             scale ,
             'SigmaScale_'       + name ,
             'SigmaScale(%s)'    % name , scale    , 1 , 10 ) 
@@ -181,7 +181,7 @@ class ResoApo2(RESOLUTION) :
                                         xvar  = xvar  ,
                                         sigma = sigma ,
                                         mean  = mean  )
-        self.__beta    = makeVar (
+        self.__beta    = self.make_var (
             beta ,
             'ResoBeta_%s'  % name  ,
             'ResoBeta(%s)' % name  , beta , 0.0001 , 10000 )
@@ -243,12 +243,12 @@ class ResoCB2(RESOLUTION) :
                                        sigma = sigma ,
                                        mean  = mean  )
         
-        self.__alpha = makeVar (
+        self.__alpha = self.make_var (
             alpha                  ,
             'ResoAlpha_'    + name ,
             'ResoAlpha(%s)' % name , alpha , 0.1   , 10 )
         
-        self.__n     = makeVar (
+        self.__n     = self.make_var (
             n                  ,
             'ResoN_'        + name ,
             'ResoN(%s)'     % name , n     , 1.e-6 , 50 )

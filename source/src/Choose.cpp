@@ -10,6 +10,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Clenshaw.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Math.h"
 // ============================================================================
@@ -50,6 +51,27 @@ namespace
       r = ( r / d ) * n + ( r % d ) * n / d;
     }
     return r ;
+  }
+  // ==========================================================================
+  inline unsigned long long _stirling_ 
+  ( const unsigned short n ,
+    const unsigned short k ) 
+  {
+    return  
+      0 == n && n == k ? 1 :
+      0 == n || 0 == k ? 0 :
+      _stirling_ ( n - 1 , k ) * ( n - 1 ) + _stirling_ ( n - 1 , k - 1 ) ;
+  }
+  // ==========================================================================
+  inline long double _stirling_double_ 
+  ( const unsigned short n ,
+    const unsigned short k ) 
+  {
+    return  
+      0 == n && n == k ? 1 :
+      0 == n || 0 == k ? 0 :
+      _stirling_double_ ( n - 1 , k ) * ( n - 1 ) + 
+      _stirling_double_ ( n - 1 , k - 1 ) ;
   }
   // ==========================================================================
   /// zero for doubles  
@@ -176,6 +198,28 @@ double Ostap::Math::log_choose
     std::lgamma ( (long double) ( k     + 1 ) ) - 
     std::lgamma ( (long double) ( n - k + 1 ) ) ;
 }
+// ============================================================================
+/* calculate unsigned Stirling number of 1st kind 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2015-03-08
+ */
+// ============================================================================
+unsigned long long Ostap::Math::stirling1 ( const unsigned short n ,
+                                            const unsigned short k ) 
+{ return _stirling_ ( n , k ) ; }
+// ============================================================================
+/*  calculate unsigned Stirling number of 1st kind 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2015-03-08
+ */
+// ============================================================================
+double Ostap::Math::stirling1_double ( const unsigned short n ,
+                                       const unsigned short k ) 
+{ return _stirling_double_ ( n , k ) ; }  
+// ========================================================================
+
+
+
 // ============================================================================
 // The END 
 // ============================================================================

@@ -1,4 +1,3 @@
-// $ID:$ 
 // ============================================================================
 // Include files 
 // ============================================================================
@@ -30,33 +29,13 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
-// empty constructor 
-// ============================================================================
-Ostap::WStatEntity::WStatEntity()
-  : m_sum     ( 0 ) 
-  , m_sum2    ( 0 )
-  , m_values  (   )
-  , m_weights (   )
-{}
-// ============================================================================
-// copy constructor
-// ============================================================================
-Ostap::WStatEntity::WStatEntity ( const Ostap::WStatEntity& right ) 
-  : m_sum     ( right.m_sum     ) 
-  , m_sum2    ( right.m_sum2    ) 
-  , m_values  ( right.m_values  ) 
-  , m_weights ( right.m_weights )  
-{}
-// ============================================================================
 // constructor from StatEntity of values 
 // ============================================================================
 Ostap::WStatEntity::WStatEntity ( const Ostap::StatEntity& values ) 
-  : m_sum     ( values.sum      () ) 
-  , m_sum2    ( values.sum2     () ) 
-  , m_values  ( values             ) 
-  , m_weights ( values.nEntries () , 
-                values.nEntries () , 
-                values.nEntries () , 1 , 1 ) 
+  : m_mu      ( values.mu      () ) 
+  , m_mu2     ( values.mu2     () ) 
+  , m_values  ( values            ) 
+  , m_weights ( values.n () , 1 , 0 , 1 , 1 )  // weights are trivial 
 {}
 // ============================================================================
 // update statistics 
@@ -66,25 +45,36 @@ Ostap::WStatEntity::add
 ( const double value  ,  
   const double weight )
 {
-  m_sum     += weight * value         ;
-  m_sum2    += weight * value * value ;  
+  if ( 0 == n() ) 
+  {
+    m_mu  = value ;
+    m_mu2 = value ;
+    if ( !s_zero ( weight ) ) { m_values += value ; }
+    m_weights += weight ;    
+    //
+    return *this ;
+  }
+  //
+  const long double wA    =       sumw ()     ;
+  const long double wB    = weight            ;
+  const long double W     = wA + wB           ;
+  const long double fA    = wA / W            ;
+  const long double fB    = 1.0L - fA         ;
+  const long double delta = m_mu - value      ;
+  //
+  m_mu  = m_mu  * fA + value * fB ;              // UPDATE 
+  m_mu2 = m_mu2 * fA + fA * fB * delta * delta ; // UPDATE 
   //
   if ( !s_zero ( weight ) ) { m_values += value ; }
-  //
-  m_weights += weight ;
+  m_weights += weight ;    
   //
   return *this ;
 }
 // ============================================================================
-// get the sample mean
+// sum_i weight_i*value_i
 // ============================================================================
-double Ostap::WStatEntity::mean () const
-{
-  return ( 0 == nEntries () 
-           || s_zero ( m_sum            ) 
-           || s_zero ( m_weights.sum () ) ) ? 0.0 
-    : m_sum / m_weights.sum () ;
-}
+double Ostap::WStatEntity::sum   () const  // sum_i weight_i * value_i
+{ return 0 < n () ? m_mu * sumw () : 0.0 ; }
 // ============================================================================
 // get the sample mean
 // ============================================================================
@@ -92,31 +82,16 @@ double Ostap::WStatEntity::meanErr () const
 {
   const double neff = nEff() ;
   if ( s_zero ( neff ) ) { return 0 ; }
-  //
   const double v = dispersion() / neff ;
-  //
   return v <= 0 ? 0.0 : std::sqrt ( v ) ;
-}
-// ============================================================================
-// calculate dispersion 
-// ============================================================================
-double Ostap::WStatEntity::dispersion () const
-{ 
-  //
-  if ( 1 >= nEntries() || s_zero ( m_weights.sum() ) ) { return 0 ; }
-  //
-  const long double a1 = m_sum2   ;
-  const long double a2 = mean  () ;
-  //
-  return a1 / m_weights.sum () - std::pow ( a2 , 2 ) ;
 }
 // ============================================================================
 // calculate rms 
 // ============================================================================
 double Ostap::WStatEntity::rms () const
 {
+  if ( 2 > n() ) { return 0 ; }
   const long double d = dispersion () ;
-  //
   if ( 0 >= d || s_zero ( d ) ) { return 0 ; }
   return std::sqrt ( d ) ;
 }
@@ -125,18 +100,17 @@ double Ostap::WStatEntity::rms () const
 // ============================================================================
 double Ostap::WStatEntity::nEff () const
 {
-  //
-  if ( 0 == nEntries() || s_zero ( m_weights.sum2 () ) ) { return 0 ; }
-  //
-  return std::pow ( m_weights.sum() , 2 ) /  m_weights.sum2 () ;
+  if ( 0 == n ()      ) { return 0 ; }
+  const double sw2 =  sumw2() ;
+  return s_zero ( sw2 ) ? 0.0 : std::pow ( sumw () , 2 ) / sw2  ;
 }
 // ============================================================================
 // reset statistic 
 // ============================================================================
 void Ostap::WStatEntity::reset () 
 {
-  m_sum  = 0 ;
-  m_sum2 = 0 ;
+  m_mu  = 0 ;
+  m_mu2 = 0 ;
   m_values .reset() ;
   m_weights.reset() ;
 }
@@ -146,8 +120,8 @@ void Ostap::WStatEntity::reset ()
 std::ostream& Ostap::WStatEntity::fillStream ( std::ostream& o ) const 
 {
   return 
-    o << Ostap::format ( "#=%-14.8g Sum=%-14.8g " , nEff() , m_sum ) 
-      << Ostap::format ( " Mean=%10.4g +- %-10.5g Min/Max=%10.4g/%-10.4g" ,
+    o << Ostap::format ( "#=%-14.8g sum=%-14.8g " , nEff() , sum () ) 
+      << Ostap::format ( " mean=%10.4g +- %-10.5g min/max=%10.4g/%-10.4g" ,
                          mean() ,  rms() ,  m_values.min() ,  m_values.max() ) ;
 }
 // ============================================================================
@@ -158,6 +132,60 @@ std::string Ostap::WStatEntity::toString () const
   std::ostringstream ost ;
   fillStream ( ost )  ;
   return ost.str () ;
+}
+// ============================================================================
+/* add another counter 
+ * @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
+ * @see https://doi.org/10.1007/s00180-015-0637-z
+ */
+// ============================================================================
+Ostap::WStatEntity& 
+Ostap::WStatEntity::operator+= ( const Ostap::WStatEntity& other ) 
+{
+  // treat the trivial cases  
+  if      ( 0 == other.n () ) { return *this ; }
+  else if ( 0 ==       n () ) 
+  {
+    m_mu      = other.m_mu      ;
+    m_mu2     = other.m_mu2     ;
+    m_values  = other.m_values  ;
+    m_weights = other.m_weights ;
+    //
+    return *this ;
+  }
+  //
+  const long double wA    =       sumw ()     ;
+  const long double wB    = other.sumw ()     ;
+  const long double W     = wA + wB           ;
+  const long double fA    = wA / W            ;
+  const long double fB    = 1.0L - fA         ;
+  const long double delta = m_mu - other.m_mu ;
+  //
+  m_mu  = m_mu  * fA + other.m_mu  * fB ;                           // UPDATE 
+  m_mu2 = m_mu2 * fA + other.m_mu2 * fB + fA * fB * delta * delta ; // UPDATE 
+  //
+  m_values  += other.m_values  ;
+  m_weights += other.m_weights ;
+  //
+  return *this ;
+}
+// ============================================================================
+// comparison
+// ============================================================================
+bool Ostap::WStatEntity::operator< ( const Ostap::WStatEntity& right ) const
+{
+  return  &right == this ? false :
+    std::tie (       m_mu ,       m_mu2 ,       m_values,       m_weights ) < 
+    std::tie ( right.m_mu , right.m_mu2 , right.m_values, right.m_weights ) ;
+}
+// ============================================================================
+// comparison
+// ============================================================================
+bool Ostap::WStatEntity::operator==( const Ostap::WStatEntity& right ) const
+{
+  return  &right == this ? true :
+    std::tie (       m_mu ,       m_mu2 ,       m_values,       m_weights ) == 
+    std::tie ( right.m_mu , right.m_mu2 , right.m_values, right.m_weights ) ;
 }
 // ============================================================================
 // The END 

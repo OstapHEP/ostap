@@ -7,7 +7,9 @@
 // STD & STL
 // ============================================================================
 #include <cmath>
+#include <array>
 #include <utility>
+#include <algorithm>
 // ============================================================================
 namespace Ostap
 {
@@ -87,6 +89,13 @@ namespace Ostap
         //
         return std::make_pair ( p , q ) ;
       }
+      // ======================================================================
+      template <class CONTAINER>
+      inline 
+      std::pair<long double,long double>
+      monomial_sum 
+      ( const CONTAINER&  cnt , 
+        const long double x   ) { return monomial_sum ( cnt.begin() , cnt.end() , x ) ; }      
       // ======================================================================
       /** Clenshaw algorithm for summation of Legendre series 
        *  \f$ f(x) = \sum_{i=0}^{n} a_i L_i(x) \f$
@@ -452,6 +461,43 @@ namespace Ostap
       }
       // ======================================================================
     } //                             The end of namespace Ostap::Math::Clenshaw     
+    // ========================================================================
+    namespace detail
+    {
+      // ======================================================================
+      template <class TYPE, unsigned long N>
+      struct derivative_ 
+      {
+        template <class START>
+        std::array<TYPE,N> operator() ( START start )  
+        {
+          std::array<TYPE,N> result ;
+          unsigned int n = N ;
+          std::transform 
+            ( start , start + N , result.begin() , 
+              [&n]( const TYPE v ) { TYPE w = v * n ; --n ; return w ; } ) ;
+        }
+      } ;
+      //  =====================================================================
+    }
+    // ========================================================================
+    /** For given polynomial  of  degree n (defined as a sequence of coefficients)
+     *  get the coefficients of its derivative.
+     *  - <code>order=true</code>  : \f$ p(x)=\sum_{i=0}^{n} p_i x^{n-i}\f$ or  
+     *  - <code>order=false</code> : \f$ p(x)=\sum_{i=0}^{n} p_i x^{i}  \f$ or  
+     *  @param  poly  (INPUT) the coefficients of the polynomial 
+     *  @param  order (INPUT) flag that defines the ordering of the polynomial coefficients 
+     *  @return the coefficients of the derivative polynomial 
+     */
+    template <class TYPE, unsigned long N>
+    inline std::array<TYPE,N-1> 
+    derivative  ( const std::array<TYPE,N>& p , const bool order ) 
+    { 
+      return 
+        order ? 
+        detail::derivative_<TYPE,N-1>() ( p. begin() ) :
+        detail::derivative_<TYPE,N-1>() ( p.rbegin() ) ;
+    }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

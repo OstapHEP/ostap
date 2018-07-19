@@ -11,9 +11,7 @@
 #include <cmath>
 // ============================================================================
 /** @file Ostap/Polynomials.h
- *
  *  various polinomials 
- *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
@@ -23,15 +21,15 @@ namespace Ostap
   // ==========================================================================
   namespace Math
   {
+    // ========================================================================
     namespace detail 
     {
+      // ======================================================================
       template <typename F, std::size_t ... Is>
-      auto
-      make_array(F f, std::index_sequence<Is...>)
+      auto make_array(F f, std::index_sequence<Is...>)
         -> std::array<std::decay_t<decltype(f(0u))>, sizeof...(Is)>
-      {
-        return {{f(Is)...}};
-      }
+      { return {{f(Is)...}}; }
+      // ======================================================================
     }
     // ========================================================================
     //  Chebyshev 1st kind 
@@ -1351,7 +1349,7 @@ namespace Ostap
     chebyshev_sum ( std::function<double(double)> func  , 
                     const unsigned short          N     , 
                     const double                  x_min , 
-                    const double                  x_max ) ;
+                    const double                  x_max ) ;    
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

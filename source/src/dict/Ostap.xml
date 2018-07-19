@@ -24,35 +24,18 @@
     <field name = "m_workspace" transient="true"/>      
   </class>
   
-  <exclusion>
-    
+
+
+  <exclusion>    
+
     <class name    = "Ostap::StatVar::Interval"    />
+    <class name    = "Ostap::Math::Interpolation::DATAVCT" />    
+    <class name    = "Ostap::Math::Bernstein2D::VB" />
 
     <class pattern = "Ostap::Math::details::*"     />
     <class pattern = "Ostap::Math::Models::*"      />
     <class pattern = "Ostap::Utils::details::*"    />
     <class pattern = "Ostap::Math::TypeWrapper*"   />
-    <class name    = "Ostap::Math::Interpolation::DATAVCT" />
-    
-    <class name    = "Ostap::Math::Bernstein2D::VB" />
-    
-    <class name   = "Ostap::Math::WorkSpace">
-      <field name = "m_workspace"/>      
-    </class>
-    
-    <class name   = "Ostap::Math::Bernstein2D">
-      <field name = "m_bx"/>      
-      <field name = "m_by"/>      
-    </class>
-    
-    <class name   = "Ostap::Math::Bernstein2DSym">
-      <field name = "m_b"/>      
-    </class>
-    <class name   = "Ostap::Math::Chi2Fit">  
-      <field name = "m_solu" />      
-      <field name = "m_cov2" />      
-    </class>
-    
     <class pattern = "ROOT::Math::SVector*" />
     <class pattern = "ROOT::Math::Plane3D*" />
     <class pattern = "ROOT::Math::SMatrix*" />
@@ -60,13 +43,28 @@
     <class pattern = "ROOT::Math::DisplacementVector*" />
     <class pattern = "ROOT::Math::LorentzVector*"      />
     
-    <class name   = "Ostap::Functions::FuncFormula">  
-      <field name = "m_formula" />      
-    </class>
-    <class name   = "Ostap::Functions::FuncRooFormula">  
-      <field name = "m_formula" />      
+    <class name    = "Ostap::Math::WorkSpace">
+      <field name  = "m_workspace"/>      
     </class>
     
-  </exclusion>
-  
+    <class name    = "Ostap::Math::Bernstein2D">
+      <field name  = "m_bx"/>      
+      <field name  = "m_by"/>      
+    </class>
+    
+    <class name    = "Ostap::Math::Bernstein2DSym">
+      <field name  = "m_b"/>      
+    </class>
+    <class name    = "Ostap::Math::Chi2Fit">  
+      <field name  = "m_solu" />      
+      <field name  = "m_cov2" />      
+    </class>
+    
+    <class name    = "Ostap::Functions::FuncFormula">  
+      <field name  = "m_formula" />      
+    </class>
+    <class name    = "Ostap::Functions::FuncRooFormula">  
+      <field name  = "m_formula" />      
+    </class>
+  </exclusion>  
 </lcgdict>

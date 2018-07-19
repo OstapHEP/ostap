@@ -53,7 +53,7 @@ __all__     = (
 # =============================================================================
 import ROOT, cppyy, math, sys
 cpp = cppyy.gbl
-std = cpp.std 
+std = cpp.std
 # =============================================================================
 # logging 
 # =============================================================================
@@ -66,9 +66,10 @@ logger.debug ( 'Core objects/classes/functions for Ostap')
 from ostap.math.base      import ( cpp      , Ostap   ,
                                    iszero   , isequal ,
                                    isint    , islong  ,
-                                   inrange  ,
+                                   inrange  , strings , 
                                    natural_number     ,
-                                   natural_entry      )   
+                                   natural_entry      )
+
 from ostap.math.ve        import VE
 from ostap.stats.counters import SE,WSE 
 #
@@ -201,8 +202,6 @@ StatusCode .__str__  = _sc_print_
 
 SUCCESS = StatusCode(Ostap.StatusCode.SUCCESS)
 FAILURE = StatusCode(Ostap.StatusCode.FAILURE)
-
-
 
 _valid_pointer_ = Ostap.Utils.valid_pointer
 # =============================================================================

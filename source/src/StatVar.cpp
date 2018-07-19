@@ -7,14 +7,15 @@
 #include <numeric>
 #include <algorithm>
 #include <set>
+#include <random>
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/StatVar.h"
 #include "Ostap/Formula.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Notifier.h"
 #include "Ostap/MatrixUtils.h"
+#include "Ostap/StatVar.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -24,6 +25,7 @@
 // ============================================================================
 // Local
 // ============================================================================
+#include "OstapDataFrame.h"
 #include "Exception.h"
 // ============================================================================
 /** @file
@@ -159,7 +161,7 @@ namespace
     // ========================================================================
   }
   // ==========================================================================
-  double _moment_ ( const  RooAbsData&   data      , 
+  double _moment_ ( const RooAbsData&    data      , 
                     const RooAbsReal&    expr      , 
                     const RooAbsReal*    cuts      , 
                     const unsigned short order     , 
@@ -287,8 +289,8 @@ namespace
   _moment3_
   ( TTree&               tree  ,  
     const unsigned short order ,
-    Ostap::Formula&   var   ,
-    Ostap::Formula*   cuts  , 
+    Ostap::Formula&      var   ,
+    Ostap::Formula*      cuts  , 
     const unsigned long  first , 
     const unsigned long  last  )
   {
@@ -1391,7 +1393,7 @@ Ostap::StatVar::skewness
 {
   //
   Ostap::Formula var ( "" , expr , &tree ) ;
-  Ostap::Assert ( !var.ok()                             , 
+  Ostap::Assert ( var.ok()                              , 
                   "Invalid expression:\"" + expr + "\"" ,
                   "Ostap::StatVar::skewness"            ) ;
   //
@@ -2199,6 +2201,717 @@ Ostap::StatVar::quantiles
   return _quantiles_ ( data  , qs  , 
                        *expression , cut.get() , 
                        first , the_last , cutrange ) ;
+}
+// ============================================================================
+// Actions with frames 
+// ============================================================================
+/*  get the number of equivalent entries 
+ *  \f$ n_{eff} \equiv = \frac{ (\sum w)^2}{ \sum w^2} \f$
+ *  @param tree      (INPUT) the frame 
+ *  @param cuts      (INPUT) selection criteria   (used as "weight")
+ *  @return number of equivalent entries 
+ */
+// ============================================================================
+double Ostap::StatVar::nEff 
+( Ostap::DataFrame     frame ,
+  const std::string&   cuts  )
+{
+  //
+  const bool no_cuts = trivial ( cuts ) ;
+  if ( no_cuts ) { return  *frame.Count(); }                     // RETURN
+  //
+  /// define temporary columns 
+  const std::string weight  = Ostap::tmp_name ( "w_"  , cuts ) ;
+  const std::string weight2 = Ostap::tmp_name ( "w2_" , cuts ) ;
+  const std::string bcut    = Ostap::tmp_name ( "b_"  , cuts ) ;
+  /// decorate the frame
+  auto t = frame
+    .Define ( bcut     , "(bool)   ( " + cuts + " ) ;" ) 
+    .Filter ( bcut     )
+    .Define ( weight   , "(double) ( " + cuts + " ) ;" )
+    .Define ( weight2  , []( double v ) { return v * v ; } , { weight } ) ;
+  //
+  const double zero = 0.0 ;
+  auto  sumw_  = t.Reduce ( std::plus<double>() , { weight  } , zero ) ;
+  auto  sumw2_ = t.Reduce ( std::plus<double>() , { weight2 } , zero ) ;
+  //
+  const double sumw  = *sumw_  ;
+  const double sumw2 = *sumw2_ ;
+  //
+  return !sumw2 ? 0.0 : sumw * sumw / sumw2 ;
+}
+// ============================================================================
+/*  build statistic for the <code>expression</code>
+ *  @param data       (INPUT) the data 
+ *  @param expression (INPUT) the expression
+ *  @param cuts       (INPUT) the selection
+ *
+ *  @code
+ *  data = ... 
+ *  stat = data.statVar( 'S_sw' , 'pt>10') 
+ *  @endcode 
+ *
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2018-06-18
+ */
+// ============================================================================
+Ostap::StatVar::Statistic 
+Ostap::StatVar::statVar 
+( Ostap::DataFrame    frame      , 
+  const std::string&  expression , 
+  const std::string&  cuts       ) 
+{
+  //
+  const bool no_cuts = trivial ( cuts ) ; 
+  //
+  /// define the temporary columns 
+  const std::string var    = Ostap::tmp_name ( "v_" , expression ) ;
+  const std::string weight = Ostap::tmp_name ( "w_" , cuts       ) ;
+  const std::string bcut   = Ostap::tmp_name ( "b_" , cuts       ) ;
+  /// define actions 
+  auto t = frame
+    .Define ( bcut   , no_cuts ? "true" : "(bool)   ( " + cuts + " ) ;" ) 
+    .Filter ( bcut   ) 
+    .Define ( var    ,  "1.0*(" + expression + ")"   )
+    .Define ( weight , no_cuts ? "1.0"  : "1.0*(" + cuts + ")" ) ;
+  //
+  const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+  std::vector<Statistic> _stat ( nSlots ? nSlots : 1 ) ;
+  //
+  auto fun = [&_stat] ( unsigned int slot , double v , double w ) 
+    { _stat[slot].add ( v , w ) ; } ;
+  t.ForeachSlot ( fun ,  { var , weight } ) ; 
+  //
+  Statistic stat ; for ( const auto& s : _stat ) { stat += s ; }
+  return stat ;
+}
+// ============================================================================
+/*  calculate the covariance of two expressions 
+ *  @param frame (INPUT)  data frame 
+ *  @param exp1  (INPUT)  the first  expresiion
+ *  @param exp2  (INPUT)  the second expresiion
+ *  @param stat1 (UPDATE) the statistic for the first  expression
+ *  @param stat2 (UPDATE) the statistic for the second expression
+ *  @param cov2  (UPDATE) the covariance matrix 
+ *  @return number of processed events 
+ *  
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2018-06-18
+ */
+// ============================================================================
+unsigned long Ostap::StatVar::statCov
+( Ostap::DataFrame     frame  , 
+  const std::string&   exp1   , 
+  const std::string&   exp2   , 
+  Statistic&           stat1  ,  
+  Statistic&           stat2  ,  
+  Ostap::SymMatrix2x2& cov2   ) 
+{ return statCov ( frame , exp1 , exp2 , "" , stat1 , stat2  ,  cov2 ) ; }
+// ============================================================================
+/*  calculate the covariance of two expressions 
+ *  @param frame (INPUT)  data frame 
+ *  @param exp1  (INPUT)  the first  expresiion
+ *  @param exp2  (INPUT)  the second expresiion
+ *  @param cuts  (INPUT)  the selection 
+ *  @param stat1 (UPDATE) the statistic for the first  expression
+ *  @param stat2 (UPDATE) the statistic for the second expression
+ *  @param cov2  (UPDATE) the covariance matrix 
+ *  @return number of processed events 
+ *  
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2018-06-18
+ */
+// ============================================================================
+unsigned long Ostap::StatVar::statCov
+( Ostap::DataFrame     frame , 
+  const std::string&   exp1  , 
+  const std::string&   exp2  , 
+  const std::string&   cuts  , 
+  Statistic&           stat1 ,  
+  Statistic&           stat2 ,  
+  Ostap::SymMatrix2x2& cov2  ) 
+{
+  //
+  const bool no_cuts = trivial ( cuts ) ; 
+  /// define the temporary columns 
+  const std::string var1   = Ostap::tmp_name ( "v_" , exp1 ) ;
+  const std::string var2   = Ostap::tmp_name ( "v_" , exp2 ) ;
+  const std::string bcut   = Ostap::tmp_name ( "b_" , cuts ) ;
+  const std::string weight = Ostap::tmp_name ( "w_" , cuts ) ;
+  auto t = frame
+    .Define ( bcut   , no_cuts ? "true" : "(bool) ( " + cuts + " ) ;" ) 
+    .Filter ( bcut   )    
+    .Define ( var1   ,                   "1.0*(" + exp1 + ")" ) 
+    .Define ( var2   ,                   "1.0*(" + exp2 + ")" ) 
+    .Define ( weight , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) ;
+  ///
+  const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+  std::vector<Statistic>           _sta1 ( nSlots ? nSlots : 1 ) ;
+  std::vector<Statistic>           _sta2 ( nSlots ? nSlots : 1 ) ;
+  std::vector<Ostap::SymMatrix2x2> _cov2 ( nSlots ? nSlots : 1 ) ;
+  //
+  auto fun = [&_sta1,&_sta2,&_cov2] 
+    ( unsigned int slot , double v1 , double v2 , double w )  { 
+    if ( w ) 
+    {
+      _sta1[slot].add ( v1 , w ) ; 
+      _sta2[slot].add ( v2 , w ) ; 
+      _cov2[slot]( 0 , 0 ) += w * v1 * v1 ;
+      _cov2[slot]( 0 , 1 ) += w * v1 * v2 ;
+      _cov2[slot]( 1 , 1 ) += w * v2 * v2 ;        
+    }
+  } ;
+  t.ForeachSlot ( fun , { var1 , var2 , weight } ); 
+  // 
+  for ( const auto& s : _sta1 ) { stat1 += s ; }
+  for ( const auto& s : _sta2 ) { stat2 += s ; }
+  for ( const auto& s : _cov2 ) { cov2  += s ; }
+  //
+  if  ( 0 == stat1.nEntries() ) { return 0 ; }
+  //
+  cov2 /= stat1.nEntries() ;
+  //
+  const double v1_mean = stat1.mean() ;
+  const double v2_mean = stat2.mean() ;
+  //
+  cov2 ( 0 , 0 ) -= v1_mean * v1_mean ;
+  cov2 ( 0 , 1 ) -= v1_mean * v2_mean ;
+  cov2 ( 1 , 1 ) -= v2_mean * v2_mean ;
+  //
+  return stat1.nEntries () ;  
+}
+// ============================================================================
+/*  calculate the moment of order "order" relative to the center "center"
+ *  @param  frame  (INPUT) input frame 
+ *  @param  expr   (INPUT) expression 
+ *  @param  order  (INPUT) the order 
+ *  @param  center (INPUT) the center 
+ *  @param  cuts   (INPUT) cuts 
+ *  @return the moment 
+ */
+// ============================================================================
+double Ostap::StatVar::get_moment 
+( Ostap::DataFrame     frame  ,  
+  const unsigned short order  , 
+  const std::string&   expr   , 
+  const double         center ,    
+  const std::string&   cuts   ) 
+{
+  //
+  if ( 0 == order ) { return 1 ; } // RETURN 
+  //
+  const bool no_cuts =  trivial ( cuts ) ;
+  ///
+  /// define the temporary columns 
+  const std::string var    = Ostap::tmp_name ( "v_" , expr ) ;
+  const std::string bcut   = Ostap::tmp_name ( "b_" , cuts ) ;
+  const std::string weight = Ostap::tmp_name ( "w_" , cuts ) ;
+  const std::string mom    = Ostap::tmp_name ( "m_" , expr ) ;
+  //
+  auto t = frame
+    .Define ( bcut   , no_cuts ? "true" : "(bool) ( " + cuts + " ) ;" ) 
+    .Filter ( bcut   )    
+    .Define ( var    ,                   "1.0*(" + expr + ")" ) 
+    .Define ( weight , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) 
+    .Define ( mom    , [order,center]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv -  center , order ) : 0.0L ;
+      } , { var , weight } ) ;
+  //
+  const double zero = 0 ;
+  auto _sumv = t.Reduce( std::plus<double>() , mom    ) ;
+  auto _sumw = t.Reduce( std::plus<double>() , weight ) ;
+  //
+  const double sumv = *_sumv ; 
+  const double sumw = *_sumw ;
+  //
+  return !sumw ? 0 : sumv / sumw ;
+}
+// ============================================================================
+/*  calculate the moment of order "order"
+ *  @param  tree  (INPUT) input tree 
+ *  @param  order (INPUT) the order 
+ *  @param  expr  (INPUT) expression 
+ *  @param  cuts  (INPUT) cuts 
+ *  @return the moment 
+ */ 
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::StatVar::moment
+( Ostap::DataFrame     frame  ,  
+  const unsigned short order  ,
+  const std::string&   expr   , 
+  const std::string&   cuts   ) 
+{
+  //
+  if ( 0 == order ){ return 1 ; } // RETURN 
+  //
+  const bool no_cuts =  trivial ( cuts ) ; 
+  ///
+  /// define the temporary columns 
+  const std::string var     = Ostap::tmp_name ( "v_"  , expr ) ;
+  const std::string bcut    = Ostap::tmp_name ( "b_"  , cuts ) ;
+  const std::string weight  = Ostap::tmp_name ( "w_"  , cuts ) ;
+  const std::string weight2 = Ostap::tmp_name ( "w2_" , cuts ) ;
+  const std::string vmom    = Ostap::tmp_name ( "m_"  , expr ) ;
+  const std::string vmom2   = Ostap::tmp_name ( "m2_" , expr ) ;
+  //
+  // decorate the frame 
+  auto t = frame
+    .Define ( bcut    , no_cuts ? "true" : "(bool) ( " + cuts + " ) ;" ) 
+    .Filter ( bcut    )    
+    .Define ( var     ,                   "1.0*(" + expr + ")" ) 
+    .Define ( weight  , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) 
+    .Define ( weight2 , [] ( double w ) { return w * w ; } , { weight } ) 
+    // 
+    .Define ( vmom    , [order]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv , order ) : 0.0 ;
+      } , { var , weight } )   
+    //
+    .Define ( vmom2   , [order]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv , 2 * order ) : 0.0 ;
+      } , { var , weight } ) ;
+  //
+  auto _sum   = t.Reduce ( std::plus<double> () ,  vmom    ) ;
+  auto _sum2  = t.Reduce ( std::plus<double> () ,  vmom2   ) ;
+  auto _sumw  = t.Reduce ( std::plus<double> () ,  weight  ) ;
+  auto _sumw2 = t.Reduce ( std::plus<double> () ,  weight2 ) ;
+  //
+  const long double sumw  = *_sumw  ;
+  const long double sumw2 = *_sumw2 ;
+  const long double sum   = *_sum   ;
+  long double       sum2  = *_sum2  ;
+  //
+  if ( !sumw ) { return 0 ; }  // RETURN 
+  //
+  const long double v = sum / sumw ; // the moment of "order"
+  sum2 /= sumw  ;                    // the moment of "2*order"
+  sum2 -= v * v ;                    // m(2*order) - m(order)**2
+  //
+  const long double n = sumw * sumw / sumw2 ;
+  sum2 /= n ; 
+  //
+  return Ostap::Math::ValueWithError ( v , sum2 ) ;
+}
+// ============================================================================
+/*  calculate the central moment of order "order"
+ *  @param  tree  (INPUT) input tree 
+ *  @param  order (INPUT) the order 
+ *  @param  expr  (INPUT) expression
+ *  @param  cuts  (INPUT) cuts 
+ *  @return the moment 
+ */ 
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::StatVar::central_moment 
+( DataFrame            frame ,  
+  const unsigned short order ,
+  const std::string&   expr  , 
+  const std::string&   cuts  ) 
+{
+  //
+  if      ( 0 == order ){ return 1 ; } // RETURN 
+  else if ( 1 == order ){ return 0 ; } // RETURN 
+  //
+  const bool no_cuts = trivial (  cuts ) ; 
+  /// get the mean-value  (1-loop) 
+  const long double mu = get_moment ( frame , 1 , expr , 0.0 , cuts ) ;
+  //
+  /// define the temporary columns 
+  const std::string var     = Ostap::tmp_name ( "v_"   , expr ) ;
+  const std::string bcut    = Ostap::tmp_name ( "b_"   , cuts ) ;
+  const std::string weight  = Ostap::tmp_name ( "w_"   , cuts ) ;
+  const std::string weight2 = Ostap::tmp_name ( "w2_"  , cuts ) ;
+  const std::string vmom    = Ostap::tmp_name ( "m_"   , expr ) ;
+  const std::string vmom2   = Ostap::tmp_name ( "m2_"  , expr ) ;
+  const std::string vmp1    = Ostap::tmp_name ( "mp1_" , expr ) ;
+  const std::string vmm1    = Ostap::tmp_name ( "mm1_" , expr ) ;
+  const std::string vm2     = Ostap::tmp_name ( "mo2_" , expr ) ;
+  //
+  // decorate the frame 
+  auto t = frame
+    .Define ( bcut    , no_cuts ? "true" : "(bool) ( " + cuts + " ) ;" ) 
+    .Filter ( bcut    )    
+    .Define ( var     ,                   "1.0*(" + expr + ")" ) 
+    .Define ( weight  , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) 
+    .Define ( weight2 , [] ( double w ) { return w * w ; } , { weight } ) 
+    // 
+    .Define ( vmom    , [order,mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , order ) : 0.0 ;
+      } , { var , weight } )   
+    //
+    .Define ( vmom2   , [order,mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , 2 * order ) : 0.0 ;
+      } , { var , weight } ) 
+    //
+    .Define ( vmp1    , [order,mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , order + 1 ) : 0.0 ;
+      } , { var , weight } )   
+    //
+    .Define ( vmm1   , [order,mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , order - 1 ) : 0.0 ;
+      } , { var , weight } ) 
+    //
+    .Define ( vm2   , [order,mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , 2 ) : 0.0 ;
+      } , { var , weight } ) ;
+  //
+  auto _mom   = t.Reduce ( std::plus<double>() , vmom     ) ;
+  auto _mom2  = t.Reduce ( std::plus<double>() , vmom2    ) ;
+  auto _mp1   = t.Reduce ( std::plus<double>() , vmp1     ) ;
+  auto _mm1   = t.Reduce ( std::plus<double>() , vmm1     ) ;
+  auto _m2    = t.Reduce ( std::plus<double>() , vm2      ) ;
+  auto _sumw  = t.Reduce ( std::plus<double>() , weight  ) ;
+  auto _sumw2 = t.Reduce ( std::plus<double>() , weight2 ) ;
+  //
+  const long double sumw  = *_sumw  ;
+  //
+  if ( !sumw ) { return  0 ; }  // RETURN 
+  //
+  const long double mom   = *_mom   ;
+  const long double sumw2 = *_sumw2 ;
+  //
+  long double m2o         = *_mom2  ;
+  long double mm1         = *_mm1   ; 
+  long double mp1         = *_mp1   ;
+  long double m2          = *_m2    ;
+  //
+  // number of effective entries:
+  const long double n = sumw * sumw / sumw2 ;
+  //  
+  long double v = mom / sumw ;
+  /// correct O(1/n) bias  for  3rd and 4th order moments :
+  if      ( 3 == order ) { v *=  n * n / ( ( n - 1  ) * ( n - 2 ) ) ; }
+  else if ( 4 == order ) 
+  {
+    const double n0 =  ( n - 1 ) * ( n - 2 ) * ( n - 3 ) ;
+    const double n1 =  n * ( n * n - 2 * n +  3 ) / n0   ;
+    const double n2 =  3 * n * ( 2 * n - 3 )      / n0   ;
+    v = n1 * v - n2 * m2 * m2 / ( sumw * sumw ) ;
+  }
+  //
+  m2o /= sumw ;
+  mm1 /= sumw ;
+  mp1 /= sumw ;
+  m2  /= sumw ;
+  //
+  long double c2 = m2o  ;
+  c2 -= 2 * order * mm1 * mp1 ;
+  c2 -= v * v ;
+  c2 += order * order * m2 * mm1 * mm1 ;
+  c2 /= n  ;
+  //
+  return Ostap::Math::ValueWithError ( v , c2 ) ;            // RETURN
+}  
+// ============================================================================
+/*  calculate the skewness of the  distribution
+ *  @param  frame (INPUT) frame
+ *  @param  expr  (INPUT) expression
+ *  @param  cuts  (INPUT) cuts 
+ *  @return the skewness 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::StatVar::skewness 
+( DataFrame            frame ,  
+  const std::string&   expr  , 
+  const std::string&   cuts  ) 
+{
+  //
+  const bool no_cuts =  trivial (  cuts ) ;
+  //
+  /// get the mean-value  (1-loop) 
+  const long double mu   = get_moment ( frame , 1 , expr , 0.0 , cuts ) ;
+  //  
+  /// define the temporary columns 
+  const std::string var     = Ostap::tmp_name ( "v_"   , expr ) ;
+  const std::string bcut    = Ostap::tmp_name ( "b_"   , cuts ) ;
+  const std::string weight  = Ostap::tmp_name ( "w_"   , cuts ) ;
+  const std::string weight2 = Ostap::tmp_name ( "w2_"  , cuts ) ;
+  const std::string vmom3   = Ostap::tmp_name ( "m3_"  , expr ) ;
+  const std::string vmom2   = Ostap::tmp_name ( "m2_"  , expr ) ;
+  //
+  // decorate the frame 
+  auto t = frame
+    .Define ( bcut    , no_cuts ? "true" : "(bool) ( " + cuts + " ) ;" ) 
+    .Filter ( bcut    )    
+    .Define ( var     ,                   "1.0*(" + expr + ")" ) 
+    .Define ( weight  , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) 
+    .Define ( weight2 , [] ( double w ) { return w * w ; } , { weight } ) 
+    // 
+    .Define ( vmom3   , [mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , 3 ) : 0.0 ;
+      } , { var , weight } ) 
+    //
+    .Define ( vmom2   , [mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , 2 ) : 0.0 ;
+      } , { var , weight } ) ;
+  //
+  auto _mom3  = t.Reduce ( std::plus<double>() , vmom3   ) ;
+  auto _mom2  = t.Reduce ( std::plus<double>() , vmom2   ) ;
+  auto _sumw  = t.Reduce ( std::plus<double>() , weight  ) ;
+  auto _sumw2 = t.Reduce ( std::plus<double>() , weight2 ) ;
+  //
+  const long double sumw  = *_sumw ;
+  
+  //
+  if ( !sumw ) { return  0 ; }  // RETURN 
+  //
+  const long double mom3  = *_mom3  ; 
+  const long double sumw2 = *_sumw2 ;
+  long double       mom2  = *_mom2  ;
+  //
+  // number of effective entries:
+  const long double n = sumw * sumw / sumw2 ;
+  //
+  long double v = mom3 / sumw ;
+  /// correct O(1/n) bias  for 3rd moment 
+  v *=  n * n / ( ( n - 1  ) * ( n - 2 ) ) ; 
+  //
+  mom2 /= sumw  ;
+  v  /= std::pow ( mom2 , 1.5 ) ;
+  //
+  long double c2 = 6  ;
+  c2 *= ( n - 2 )  ;
+  c2 /= ( n + 1 ) * ( n + 3 ) ;    
+  //
+  return Ostap::Math::ValueWithError ( v , c2 ) ;            // RETURN 
+}
+// ============================================================================
+/*  calculate the (excess) kurtosis of the  distribution
+ *  @param  frame (INPUT) input frame 
+ *  @param  expr  (INPUT) expression  (must  be valid TFormula!)
+ *  @param  cuts  (INPUT) cuts 
+ *  @param  first (INPUT) the first  event to process 
+ *  @param  last  (INPUT) the last event to  process
+ *  @return the (excess) kurtosis
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::StatVar::kurtosis
+( DataFrame            frame ,  
+  const std::string&   expr  , 
+  const std::string&   cuts  )
+{
+  //
+  const bool no_cuts = trivial (  cuts ) ; 
+  //
+  /// get the mean-value  (1-loop) 
+  const long double mu   = get_moment ( frame , 1 , expr , 0.0 , cuts ) ;
+  //  
+  const std::string var     = Ostap::tmp_name ( "v_"   , expr ) ;
+  const std::string bcut    = Ostap::tmp_name ( "b_"   , cuts ) ;
+  const std::string weight  = Ostap::tmp_name ( "w_"   , cuts ) ;
+  const std::string weight2 = Ostap::tmp_name ( "w2_"  , cuts ) ;
+  const std::string vmom4   = Ostap::tmp_name ( "m4_"  , expr ) ;
+  const std::string vmom2   = Ostap::tmp_name ( "m2_"  , expr ) ;
+  //
+  // decorate the frame 
+  auto t = frame
+    .Define ( bcut    , no_cuts ? "true" : "(bool) ( " + cuts + " ) ;" ) 
+    .Filter ( bcut    )    
+    .Define ( var     ,                   "1.0*(" + expr + ")" ) 
+    .Define ( weight  , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) 
+    .Define ( weight2 , [] ( double w ) { return w * w ; } , { weight } ) 
+    // 
+    .Define ( vmom4   , [mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , 4 ) : 0.0 ;
+      } , { var , weight } ) 
+    //
+    .Define ( vmom2   , [mu]( double v , double w )->double {
+        const long double lv = v ;
+        const long double lw = w ;
+        return lw ? lw * std::pow ( lv - mu , 2 ) : 0.0 ;
+      } , { var , weight } ) ;
+  //
+  //
+  auto _mom4  = t.Reduce ( std::plus<double>() , vmom4   ) ;
+  auto _mom2  = t.Reduce ( std::plus<double>() , vmom2   ) ;
+  auto _sumw  = t.Reduce ( std::plus<double>() , weight  ) ;
+  auto _sumw2 = t.Reduce ( std::plus<double>() , weight2 ) ;
+  //
+  //
+  const long double sumw  = *_sumw ; 
+  //
+  if ( !sumw ) { return  0 ; }  // RETURN 
+  //
+  const long double mom4  = *_mom4  ; 
+  const long double sumw2 = *_sumw2 ;
+  long double       mom2  = *_mom2  ; 
+  //
+  // number of effective entries:
+  const long double n = sumw * sumw / sumw2 ;
+  //
+  long double v = mom4 / sumw ;
+  mom2 /= sumw  ; // second order moment
+  /// correct for O(1/n) bias:
+  const double n0 =  ( n - 1 ) * ( n - 2 ) * ( n - 3 ) ;
+  const double n1 =  n * ( n * n - 2 * n +  3 ) / n0   ;
+  const double n2 =  3 * n * ( 2 * n - 3 )      / n0   ;
+  v  = n1 * v - n2 * mom2 * mom2 ;
+  /// normalize  it: 
+  v /= std::pow ( mom2 , 2 ) ;
+  ///
+  long double c2 = 24 * n ;
+  c2 *= ( n - 2 ) * ( n - 3 ) ;
+  c2 /= ( n + 1 ) * ( n + 1 ) ;
+  c2 /= ( n + 3 ) * ( n + 5 ) ;
+  //
+  return Ostap::Math::ValueWithError ( v , c2 ) ;            // RETURN 
+}
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  /// get quantiles 
+  std::vector<double> _quantiles_ 
+  ( Ostap::DataFrame        frame , 
+    const std::set<double>& qs    , 
+    const std::string&      expr  , 
+    const std::string&      cuts  ) 
+  {
+    const bool no_cuts = trivial (  cuts ) ; 
+    //
+    const std::string var   = Ostap::tmp_name ( "v_"   , expr ) ;
+    const std::string bcut  = Ostap::tmp_name ( "b_"   , cuts ) ;
+    //
+    // decorate the frame 
+    auto t = frame
+      .Define       ( bcut    , no_cuts ? "true" : "(bool) ( " + cuts + " ) ;" ) 
+      .Filter       ( bcut    )    
+      .Define       ( var     , "1.0*(" + expr + ")" ) 
+      .Take<double> ( var     ) ;
+    // 
+    typedef  std::vector<double> DATA ;
+    DATA values { *t } ;
+    //
+    std::vector<double> result ; result.reserve ( qs.size() ) ;
+    //
+    DATA::iterator start = values.begin() ;
+    for ( const double q : qs )
+    {
+      const unsigned long current = values.size() * q ;
+      std::nth_element  ( start , values.begin () + current , values.end () ) ;
+      start = values.begin() + current ;
+      result.push_back ( *start ) ;
+    }
+    values.clear() ;
+    
+    return  result ;
+  }
+  // ==========================================================================
+}
+// ============================================================================
+/**  get quantile of the distribution  
+ *   @param frame  (INPUT) the input data
+ *   @param q      (INPUT) quantile value   0 < q < 1  
+ *   @param expr   (INPUT) the expression 
+ *   @param cuts   (INPUT) selection cuts 
+ *   @return the quantile value 
+ */
+// ============================================================================
+double Ostap::StatVar::quantile
+( Ostap::DataFrame    frame  ,
+  const double        q      , //  0<q<1 
+  const std::string&  expr   , 
+  const std::string&  cuts   ) 
+{
+  Ostap::Assert ( 0 < q && q < 1             , 
+                  "Invalid quantile"         ,
+                  "Ostap::StatVar::quantile" ) ;
+  auto result = _quantiles_ ( frame , std::set<double>{{ q }} , expr , cuts ) ;
+  Ostap::Assert ( 1 == result.size()         , 
+                  "Invalid quantiles size"   ,
+                  "Ostap::StatVar::interval" ) ;
+  return result [0] ;
+}
+// ========================================================================    
+/*  get quantiles of the distribution  
+ *   @param frame (INPUT) the input frame
+ *   @param q     (INPUT) quantile value   0 < q < 1  
+ *   @param expr  (INPUT) the expression 
+ *   @param cuts  (INPUT) selection cuts 
+ *   @return the quantile value 
+ */
+// ========================================================================    
+std::vector<double> Ostap::StatVar::quantiles
+( Ostap::DataFrame           frame     ,
+  const std::vector<double>& quantiles , 
+  const std::string&         expr      , 
+  const std::string&         cuts      ) 
+{
+  Ostap::Assert ( 1 <= quantiles.size()          , 
+                  "Invalid vector of quantiles"  ,
+                  "Ostap::StatVar::quantile"     ) ;
+  std::set<double> qs ;
+  for ( double v : quantiles ) { qs.insert ( v ) ; }
+  Ostap::Assert ( !qs.empty ()                ,
+                  "Invalid quantiles"         ,
+                  "Ostap::StatVar::quantiles" ) ;
+  Ostap::Assert ( 0 < *qs. begin ()           , 
+                  "Invalid quantile"          ,
+                  "Ostap::StatVar::quantiles" ) ;  
+  Ostap::Assert ( 1 > *qs.rbegin ()           , 
+                  "Invalid quantile"          ,
+                  "Ostap::StatVar::quantiles" ) ;
+  //
+  return _quantiles_ ( frame , qs , expr , cuts ) ;
+}
+// ============================================================================
+/* Get the interval of the distribution  
+ * @param tree  (INPUT) the input tree 
+ * @param q1    (INPUT) quantile value   0 < q1 < 1  
+ * @param q2    (INPUT) quantile value   0 < q2 < 1  
+ * @param expr  (INPUT) the expression 
+ * @param cuts  (INPUT) selection cuts 
+ * @return the quantile value 
+ * @code
+ * FRAME& frame = ... ;
+ * /// get 90% interval:
+ * Interval ab = interval ( frame , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+ * @code 
+ */
+// ============================================================================
+Ostap::StatVar::Interval 
+Ostap::StatVar::interval 
+( Ostap::DataFrame    frame ,
+  const double        q1    , //  0<q1<1 
+  const double        q2    , //  0<q2<1 
+  const std::string&  expr  , 
+  const std::string&  cuts  )
+{
+  Ostap::Assert ( 0 < q1 && q1 < 1 , 
+                  "Invalid quantile1"        ,
+                  "Ostap::StatVar::interval" ) ;
+  Ostap::Assert ( 0 < q2 && q2 < 1 , 
+                  "Invalid quantile2"        ,
+                  "Ostap::StatVar::interval" ) ;
+  //
+  const std::vector<double> result = 
+    _quantiles_ ( frame , std::set<double>{{ q1 , q2 }} ,  expr , cuts ) ; 
+  Ostap::Assert ( 2 == result.size()         ,
+                  "Invalid interval"         ,
+                  "Ostap::StatVar::interval" ) ;
+  //
+  return std::make_pair( result[0] , result[1] ) ;
 }
 // ============================================================================
 // The END

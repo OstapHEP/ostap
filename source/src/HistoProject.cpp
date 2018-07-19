@@ -1,4 +1,3 @@
-// $Id:$ 
 // ============================================================================
 // Include files
 // ============================================================================
@@ -17,15 +16,13 @@
 #include "Ostap/HistoProject.h"
 #include "Ostap/Iterator.h"
 // ============================================================================
+#include "OstapDataFrame.h"
+// ============================================================================
 /** @file
- *  Implementation file for class Analysis::HProject
- *  @see Analysis::HProject
+ *  Implementation file for class Ostap::HistoProject
+ *  @see Ostap::HistoProject
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date   2015-10-08
- * 
- *                    $Revision: 195425 $
- *  Last modification $Date: 2015-10-01 15:33:56 +0200 (Thu, 01 Oct 2015) $
- *                 by $Author: ibelyaev $
  */
 // ============================================================================
 namespace 
@@ -412,6 +409,120 @@ Ostap::HistoProject::project3
                     0 != cut_var ?  cut_var :   cuts.get() , first , last ) ;
 }
 // ============================================================================
+/*  make a projection of DataFrame into the histogram 
+ *  @param data  (INPUT)  input data 
+ *  @param histo (UPDATE) histogram 
+ *  @param expression (INPUT) expression
+ *  @param selection  (INPUT) selection criteria/weight 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::HistoProject::project
+( DataFrame           data       , 
+  TH1*                histo      ,
+  const std::string&  expression ,
+  const std::string&  selection  ) 
+{
+  //
+  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  else { histo->Reset() ; } // reset the histogram 
+  //
+  TH1D model {} ; histo->Copy ( model ) ;
+  //
+  const bool no_cuts = trivial ( selection ) ;
+  //
+  const std::string xvar   = Ostap::tmp_name ( "vx_" , expression ) ;
+  const std::string weight = Ostap::tmp_name ( "w_"  , selection  ) ;
+  //
+  auto h = data
+    .Define  ( xvar   ,                   "1.0*(" + expression + ")" )
+    .Define  ( weight , no_cuts ? "1.0" : "1.0*(" + selection  + ")" ) 
+    .Histo1D ( model  , xvar , weight ) ;
+  //
+  h->Copy ( *histo ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+// ========================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data  (INPUT)  input data 
+ *  @param histo (UPDATE) histogram 
+ *  @param xexpression (INPUT) expression for x-axis 
+ *  @param yexpression (INPUT) expression for y-axis 
+ *  @param selection  (INPUT) selection criteria/weight 
+ */
+// ========================================================================
+Ostap::StatusCode Ostap::HistoProject::project2
+( DataFrame           data        , 
+  TH2*                histo       ,
+  const std::string&  xexpression ,
+  const std::string&  yexpression ,
+  const std::string&  selection   )
+{
+  //
+  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  else { histo->Reset() ; } // reset the historgam 
+  //
+  const bool no_cuts = trivial ( selection ) ;
+  //
+  const std::string xvar   = Ostap::tmp_name ( "vx_" , xexpression ) ;
+  const std::string yvar   = Ostap::tmp_name ( "vy_" , yexpression ) ;
+  const std::string weight = Ostap::tmp_name ( "w_"  , selection   ) ;
+  //
+  TH2D model {} ; histo->Copy ( model ) ;
+  //
+  auto h = data
+    .Define  ( xvar   ,                   "1.0*(" + xexpression + ")" )
+    .Define  ( yvar   ,                   "1.0*(" + yexpression + ")" )
+    .Define  ( weight , no_cuts ? "1.0" : "1.0*(" + selection   + ")" ) 
+    .Histo2D ( model  , xvar , yvar , weight ) ;
+  //
+  h->Copy ( *histo ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+// ========================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  expression for x-axis 
+ *  @param yexpression (INPUT)  expression for y-axis 
+ *  @param zexpression (INPUT)  expression for z-axis 
+ *  @param selection   (INPUT)  selection criteria/weight 
+ */
+// ========================================================================
+Ostap::StatusCode Ostap::HistoProject::project3
+( DataFrame           data        , 
+  TH3*                histo       ,
+  const std::string&  xexpression ,
+  const std::string&  yexpression ,
+  const std::string&  zexpression ,
+  const std::string&  selection   )
+{
+  //
+  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  else { histo->Reset() ; } // reset the historgam 
+  //
+  const bool no_cuts = trivial ( selection  ) ; 
+  //
+  const std::string xvar   = Ostap::tmp_name ( "vx_" , xexpression ) ;
+  const std::string yvar   = Ostap::tmp_name ( "vy_" , yexpression ) ;
+  const std::string zvar   = Ostap::tmp_name ( "vz_" , yexpression ) ;
+  const std::string weight = Ostap::tmp_name ( "w_"  , selection   ) ;
+  //
+  //
+  TH3D model {} ; histo->Copy ( model ) ;
+  //
+  auto h = data
+    .Define  ( xvar   ,                   "1.0*(" + xexpression + ")" )
+    .Define  ( yvar   ,                   "1.0*(" + yexpression + ")" )
+    .Define  ( zvar   ,                   "1.0*(" + zexpression + ")" )
+    .Define  ( weight , no_cuts ? "1.0" : "1.0*(" + selection   + ")" ) 
+    .Histo3D ( model  , xvar , yvar , zvar ,  weight ) ;
+  //
+  h->Copy ( *histo ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
 
 
 // ============================================================================

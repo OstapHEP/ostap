@@ -13,19 +13,19 @@ __date__    = "2014-06-02"
 __version__ = ""
 # =============================================================================
 __all__     = (
-    'exp'        , 'expm1'     ,
-    'log'        , 'log10'     , 'log1p'  , 
-    'sqrt'       , 'cbrt'      , 'pow'    ,   
-    'sin'        , 'cos'       , 'tan'    , 
-    'sinh'       , 'cosh'      , 'tanh'   , 'sech'   ,
-    'asin'       , 'acos'      , 'atan'   , 
-    'asinh'      , 'acosh'     , 'atanh'  ,
-    'erf'        , 'erfc'      , 'erfi'   , 'erfcx'  ,
-    'probit'     , 
-    'gamma'      , 'tgamma'    , 'lgamma' , 'igamma' , 
-    'exp2'       , 'log2'      ,
-    'gauss_pdf'  , 'gauss_cdf' ,
-    'hypot'      , 'fma'       ,
+    'exp'        , 'expm1'      ,
+    'log'        , 'log10'      , 'log1p'  , 
+    'sqrt'       , 'cbrt'       , 'pow'    ,   
+    'sin'        , 'cos'        ,  'tan'   , 
+    'sinh'       , 'cosh'       , 'tanh'   , 'sech'   ,
+    'asin'       , 'acos'       , 'atan'   , 
+    'asinh'      , 'acosh'      , 'atanh'  ,
+    'erf'        , 'erfc'       , 'erfi'   , 'erfcx'  ,
+    'probit'     , 'pochhammer' , 
+    'gamma'      , 'tgamma'     , 'lgamma' , 'igamma' , 
+    'exp2'       , 'log2'       ,
+    'gauss_pdf'  , 'gauss_cdf'  ,
+    'hypot'      , 'fma'        ,
     )
 # =============================================================================
 import ROOT,math
@@ -234,6 +234,7 @@ def erfi ( x ) :
     if fun : return fun()
     return _erfi_( x )
 
+
 # =============================================================================
 ## define ``asin'' function 
 def asin ( x ) :
@@ -393,6 +394,32 @@ def hypot ( x , y , c = 0 ) :
     return _hypot_ ( _x , _y , c )
 
 
+_pochhammer = cpp.Ostap.Math.pochhammer
+# =============================================================================
+## calculate Pochhammer's  symbol
+#   \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+#  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+#  @param x (INPUT) the parameter 
+#  @param n (INPUT) the parameter 
+#  @return  pochhammer  symbol 
+#  @warning invalid and small covariances are ignored 
+#  @see Ostap::Math::rising_factorial
+#  @see Ostap::Math::falling_factorial
+#  @see Ostap::Math::pochhammer 
+def pochammer ( x , n ) :
+    """ calculate Pochhammer's  symbol
+    \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+    @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+    """
+    assert isinstance ( n , ( int , long ) ) and  0<= n <2**16, \
+           "pochhammer: invalid n=%s" % n
+    
+    fun = getattr ( x , '__pochhammer__' , None )
+    if fun : return fun()
+
+    _x = x if isinstance ( x ,  ( float , int , long ) ) else VE ( x )
+    
+    return _pochhammer ( _x , n ) 
 
 _gauss_pdf_ = cpp.Ostap.Math.gauss_pdf
 # =============================================================================

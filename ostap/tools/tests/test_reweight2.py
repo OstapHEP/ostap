@@ -7,10 +7,8 @@
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-11
-# 
 # =============================================================================
-"""
-Test for 2D-reweighting machinery
+"""Test for 2D-reweighting machinery
 """
 # =============================================================================
 __version__ = "$Revision:"

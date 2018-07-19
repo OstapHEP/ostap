@@ -164,7 +164,8 @@ for t in ( 'int'                  ,
            'unsigned long long'   ,
            'float'                ,
            'double'               ,
-           'std::complex<double>' ) :
+           'std::complex<double>' , 
+           'std::string'          ) :
     v = std.vector( t )
     v.asList   = lambda s :       [ i for i in s ]   ## convert vector into list
     v.toList   = v.asList
@@ -211,10 +212,20 @@ def _add_to ( vct , cnv , arg1 , *args ) :
     from collections import Iterable      as IT
 
     VT = type(vct)
+
+    VS = std.vector('std::string')
     
+    ## the special treatment of vector of  strings 
+    if isinstance ( vct , VS ) :
+        if isinstance ( arg1 , ( str , std.string ) ) :
+            vct.push_back ( arg1 )
+        else                                          :
+            for a in arg1 : vct.push_back ( cnv ( a ) )
     ## the first argument: iterable or generator?
-    if   isinstance ( arg1 , VT ) :
+    elif isinstance ( arg1 , VT ) :
         for a in arg1 : vct.push_back ( a )
+    elif isinstance ( arg1 , ( GT , IT ) ) :
+        for a in arg1 : vct.push_back ( cnv ( a ) )                
     else :        
         try :
             vct.push_back ( cnv ( arg1 ) )
@@ -233,7 +244,7 @@ def _add_to ( vct , cnv , arg1 , *args ) :
 #   a = make_vector( 'double' , float , 1 , 2, 3 , 4 )
 #   a = make_vector( 'int'    , int   , [ 1,2,3 ] , [4,5,6] )
 #   @endcode 
-def make_vector ( TYPE , cnv , arg1 , *args ) :
+def make_vector ( TYPE , cnv , *args ) :
     """ Create C++ std::vector<TYPE> from components
     TYPE : the internal type
     cnv  : the converter (if needed)
@@ -249,9 +260,10 @@ def make_vector ( TYPE , cnv , arg1 , *args ) :
     """
     ## create new vector 
     VT  = std.vector( TYPE ) ## vector type
-    vct = VT ( )             ## vector instance 
+    vct = VT ( )             ## vector instance
+    if not  args : return vct 
     ## add arguments to the vector
-    return _add_to ( vct , cnv , arg1 , *args )
+    return _add_to ( vct , cnv , args[0] , *args[1:] )
 
 # =============================================================================
 ## construct std::vector<double> from the arguments
@@ -302,6 +314,21 @@ def ulongs ( arg1 , *args ) :
     >>> v3 = ulongs ( [ 1 , 2 , 3 ] )    
     """
     return make_vector ( 'unsigned long' , long , arg1 , *args )
+
+# =============================================================================
+## construct std::vector<std::string> from the arguments
+def strings ( *args ) :
+    """Construct the std::vector<string> from the arguments
+    >>>  v1 = strings( 'a','b','c')
+    >>>  v2 = strings( ['a','b','c'] )
+    >>>  v3 = strings( ['a','b'],'c',['d','e'] )
+    """
+
+    return make_vector ( 'std::string' , std.string , *args ) 
+    ##  VS = std.vector(std.string) 
+    ## vs = VS()
+    ## if not args :  return vs 
+    ## return _add_to ( vs , std.string , args[0] , *args[1:] )
 
 SPD = std.pair('double','double')
 SPD.asTuple  = lambda s :      (s.first,s.second)

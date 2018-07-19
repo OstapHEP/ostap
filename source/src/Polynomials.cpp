@@ -13,10 +13,10 @@
 // ============================================================================
 #include "Ostap/Math.h"
 #include "Ostap/Power.h"
+#include "Ostap/Clenshaw.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/MoreMath.h"
-#include "Ostap/Clenshaw.h"
 #include "Ostap/Polynomials.h"
 // ============================================================================
 // Local 

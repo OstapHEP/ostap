@@ -504,10 +504,43 @@ def _rfr_corr_  ( self , name1 , name2 ) :
     >>> corr = results.corr('Signal', 'Background')
     >>> print corr
     """
-    p1 = self.param ( name1 )
-    p2 = self.param ( name2 )
+    if isinstance ( var1 ,  str ) : var1 = self.param ( var1 )[1]
+    if isinstance ( var2 ,  str ) : var2 = self.param ( var2 )[1]
     #
-    return self.correlation ( p1[1] , p2[1] ) 
+    if var1 in self.constPars() : return 0.0
+    if var2 in self.constPars() : return 0.0
+    #
+    return self.correlation ( var1 , var2 ) 
+
+# =============================================================================
+## get the covariance (sub) matrix 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
+    """Get covariance (sub) matrix 
+    >>> result = ...
+    >>> cov = results.cov_matrix('Signal', 'Background')
+    >>> print corr
+    """
+    if isinstance ( var1 , str ) : var1 = self.param (   var1 ) [1] 
+    if isinstance ( var2 , str ) : var2 = self.param (   var2 ) [1]
+    
+    args = ROOT.RooArgList ( var1 , var2 )
+    for v in vars :
+        if isinstance ( v , str ) : v = self.param ( v ) [1] 
+        args.add ( v ) 
+        
+    cm = self.reducedCovarianceMatrix (  args )
+    N  = cm.GetNrows()
+
+    import ostap.math.linalg 
+    m  = Ostap.Math.SymMatrix ( N )()
+
+    for i in range ( N ) :
+        for j in  range ( i , N ) :
+            m [i,j] = cm(i,j)
+            
+    return m  
 
 # =============================================================================
 ## get the covariance (sub) matrix 
@@ -519,11 +552,18 @@ def _rfr_cov_  ( self , name1 , name2 ) :
     >>> cov = results.cov('Signal', 'Background')
     >>> print corr
     """
-    p1   = self.param ( name1 ) 
-    p2   = self.param ( name2 ) 
-    args = ROOT.RooArgList ( p1[1] , p2[1] ) 
-    return self.reducedCovarianceMatrix (  args )
-
+    if isinstance ( var1 ,  str ) : var1 = self.param ( var1 )[1]
+    if isinstance ( var2 ,  str ) : var2 = self.param ( var2 )[1]
+    #
+    if var1 in self.constPars() : return 0.0
+    if var2 in self.constPars() : return 0.0
+    #
+    r  = self.correlation ( var1 , var2 )
+    #
+    v1 = var1.error
+    v2 = var2.error
+    # 
+    return v1 * v2 * r 
 
 # ===============================================================================
 ## get fit-parameter as attribute
@@ -546,24 +586,39 @@ def _rfr_getattr_ ( self , att ) :
     raise AttributeError ( 'RooFitResult: invalid attribute %s ' % att )
 
 # ===========================================================================
-## get correct estimate of sum of two variables,
+## get correct estimate of sum of two (or more) variables,
 #  taking into account correlations
 #  @code
 #  >>> r = ...
 #  >>> print r.sum( 'S' , 'B' )  ## S+B
 #  @endcode
-#  @see Gaudi:Math::sum 
-def _rfr_sum_ ( self , var1 , var2 ) :
-    """Get correct estimate of sum of two variables,
+def _rfr_sum_ ( self , var1 , var2 , *vars ) :
+    """Get correct estimate of sum of two or more variables,
     taking into account correlations
     >>> r = ...
     >>> print r.sum( 'S' , 'B' ) ## S+B
     """
-    _v1  = self.param ( var1 )[0]
-    _v2  = self.param ( var2 )[0]
-    _cor = self.corr  ( var1 , var2 ) 
-    return Ostap.Math.sum ( _v1 , _v2 , _cor ) 
-   
+    allvars = ( var1 , var2 ) + vars 
+    n       = len ( allvars ) 
+    s  = 0
+    c2 = 0
+    for i in range ( n ) :
+        vi = allvars [ i ]
+        if isinstance ( vi , str ) : vi = self.param ( vi ) [1]        
+        v   = vi.value
+        v   = VE ( v ) 
+        s  += v . value ()
+        vc  = v.cov2() 
+        if 0 >= vc or vi in self.constPars() : continue        
+        c2 += vc 
+        for j in range ( i + 1 , n ) :
+            vj  = allvars [ j ]
+            if isinstance ( vj , str ) : vj = self.param ( vj ) [1]
+            if vj in self.constPars()  : continue        
+            c2 += 2 * self.correlation ( vi , vj ) 
+            
+    return VE ( s , c2 ) 
+ 
 # ===========================================================================
 ## get correct estimate of product of two variables,
 #  taking into account correlations
@@ -572,16 +627,38 @@ def _rfr_sum_ ( self , var1 , var2 ) :
 #  >>> print r.multiply( 'S' , 'B' ) ## S*B
 #  @endcode
 #  @see Gaudi:Math::multiply 
-def _rfr_multiply_ ( self , var1 , var2 ) :
+def _rfr_multiply_ ( self , var1 ,  var2 , *vars ) :
     """Get correct estimate of product of two variables,
     taking into account correlations
     >>> r = ...
     >>> print r.multiply( 'S' , 'B' ) ## S*B
     """
-    _v1  = self.param ( var1 )[0]
-    _v2  = self.param ( var2 )[0]
-    _cor = self.corr  ( var1 , var2 ) 
-    return Ostap.Math.multiply ( _v1 , _v2 , _cor ) 
+    allvars = ( var1 , var2 ) + vars 
+    n       = len ( allvars ) 
+    
+    m  = 1.0
+    c2 = 0
+    for i in range ( n ) :
+        vi = allvars[i]
+        if isinstance ( vi , str ) : vi = self.param ( vi )[1]
+        v  = vi.value
+        v  = VE ( v ) 
+        vv = v.value ()
+        if iszero ( vv ) or iszero ( m ) : return  VE ( 0.0 , 0.0 )   ## RETURN HERE
+        m  *= vv
+        vc  = v.cov2()
+        if 0 >= vc or vi in self.constPars() : continue        
+        c2 += vc / ( vv * vv )        
+        for j in range ( i + 1 , n ) :            
+            vj  = allvars [ j ]
+            if isinstance ( vj , str ) : vj = self.param( vj )[1]
+            if vj in self.constPars()  : continue        
+            w   = vj . value
+            w   = VE ( w ) 
+            ww  = w.value() 
+            c2 += 2 * self.correlation ( vi , vj ) / ( vv * ww ) 
+            
+    return  VE ( m , c2 * m * m ) 
     
 # ===========================================================================
 ## get correct estimate of division  of two variables,
@@ -590,15 +667,17 @@ def _rfr_multiply_ ( self , var1 , var2 ) :
 #  >>> r = ...
 #  >>> print r.divide( 'S' , 'B' ) ## S/B
 #  @endcode
-#  @see Gaudi:Math::divide
+#  @see Ostap:Math::divide
 def _rfr_divide_ ( self , var1 , var2 ) :
     """Get correct estimate of division of two variables,
     taking into account correlations
     >>> r = ...
     >>> print r.divide( 'S' , 'B' ) ## S/B
     """
-    _v1  = self.param ( var1 )[0]
-    _v2  = self.param ( var2 )[0]
+    if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1]
+    if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]    
+    _v1  = var1.value
+    _v2  = var2.value 
     _cor = self.corr  ( var1 , var2 ) 
     return Ostap.Math.divide ( _v1 , _v2 , _cor ) 
 
@@ -609,15 +688,17 @@ def _rfr_divide_ ( self , var1 , var2 ) :
 #  >>> r = ...
 #  >>> print r.subtract( 'S' , 'B' ) ## S-B
 #  @endcode
-#  @see Gaudi:Math::subtract
+#  @see Ostap:Math::subtract
 def _rfr_subtract_ ( self , var1 , var2 ) :
     """Get correct estimate of subtraction of two variables,
     taking into account correlations
     >>> r = ...
     >>> print r.subtract( 'S' , 'B' ) ## S-B
     """
-    _v1  = self.param ( var1 )[0]
-    _v2  = self.param ( var2 )[0]
+    if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1]
+    if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]    
+    _v1  = var1.value 
+    _v2  = var2.value 
     _cor = self.corr  ( var1 , var2 ) 
     return Ostap.Math.subtract ( _v1 , _v2 , _cor ) 
 
@@ -635,11 +716,12 @@ def _rfr_fraction_ ( self , var1 , var2 ) :
     >>> r = ...
     >>> print r.fraction( 'S' , 'B' ) ##   S/(S+B)
     """
-    _av1  = abs ( self.param ( var1 )[0].value() ) 
-    _av2  = abs ( self.param ( var2 )[0].value() ) 
-    if _av1 > _av2 :
-        return 1 / ( 1 + _rfr_divide ( self , var2 , var1  ) )
-    return 1 - _rfr_fraction_ ( self , var2 , var1 ) 
+    if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1]
+    if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]    
+    _av1  = abs ( var1.value.value() ) 
+    _av2  = abs ( var2.value.value() ) 
+    if _av1 > _av2 : return 1 / ( 1 + self.ratio ( var2 , var1 ) )
+    return 1.0 - self.fraction ( var2 , var1 ) 
 
 # ============================================================================
 ## get the required results in form of SVectorWithError object
@@ -685,6 +767,7 @@ ROOT.RooFitResult . corr        = _rfr_corr_
 ROOT.RooFitResult . cor         = _rfr_corr_
 ROOT.RooFitResult . cov         = _rfr_cov_
 ROOT.RooFitResult . covariance  = _rfr_cov_
+ROOT.RooFitResult . cov_matrix  = _rfr_cov_matrix_
 ROOT.RooFitResult . parValue    = lambda s,n : s.parameter(n)[0]
 ROOT.RooFitResult . sum         = _rfr_sum_
 ROOT.RooFitResult . plus        = _rfr_sum_
@@ -737,13 +820,14 @@ def _fix_par_ ( var , value  = None ) :
     """
     #
     if None is value :
+        if var.isConstant() : return var.ve() 
         var.setConstant( True )
         return var.ve()
     
     if hasattr ( value , 'value' ) : value = value.value()
     #
     var.setVal      ( value )
-    var.setConstant ( True  )
+    if not var.isConstant() : var.setConstant ( True  )
     #
     return var.ve() 
 
@@ -757,7 +841,7 @@ def _rel_par_ ( var )  :
     >>> par = ...
     >>> par.release ()     
     """
-    var.setConstant ( False )
+    if var.isConstant() : var.setConstant ( False )
     #
     return var.ve()
 
@@ -1289,19 +1373,21 @@ def _ds_project_  ( dataset , histo , what , cuts = '' , *args ) :
     if isinstance ( cuts , str       ) : cuts = cuts.strip()
     
     ## native RooFit...  I have some suspicion that it does not work properly
-    if isinstance ( what , ROOT.RooArgList ) and isinstance ( histo , ROOT.TH1 ) :
+    if isinstance ( what , ROOT.RooArgList ) and \
+       isinstance ( histo , ROOT.TH1       ) and \
+       hasattr ( dataset , 'fillHistogram' ) :
         histo.Reset() 
         return dataset.fillHistogram  ( histo , what , cuts , *args )
     
     ## delegate to TTree (only for non-weighted dataset with TTree-based storage type) 
-    if not dataset.isWeighted() \
+    if hasattr ( dataset , 'isWeighted') and not dataset.isWeighted() \
        and isinstance ( what , str ) \
-       and isinstance ( cuts , str ) : 
-        store = dataset.store()
-        if store :
-            tree = store.tree()
-            if tree : return tree.project ( histo , what , cuts , *args ) 
-
+       and isinstance ( cuts , str ) :
+        if hasattr ( dataset , 'store' ) : 
+            store = dataset.store()
+            if store :
+                tree = store.tree()
+                if tree : return tree.project ( histo , what , cuts , *args ) 
             
     if   isinstance ( what , ROOT.RooFormulaVar ) : 
         return _ds_project_ ( dataset , histo , what.GetTitle () , cuts , *args )
@@ -1397,14 +1483,15 @@ def _ds_draw_ ( dataset , what , cuts = '' , opts = '' , *args ) :
     if isinstance ( opts , str       ) : opts = opts.strip()
 
     ## delegate to TTree for non-weighted datasets with TTree-based storage type 
-    if not dataset.isWeighted() \
+    if hasattr ( dataset , 'isWeighted') and not dataset.isWeighted() \
        and isinstance ( what , str ) \
        and isinstance ( cuts , str ) \
-       and isinstance ( opts , str ) : 
-        store = dataset.store()
-        if store : 
-            tree = store.tree()
-            if tree : return tree.Draw( what , cuts , opts  , *args )
+       and isinstance ( opts , str ) :
+        if hasattr ( dataset , 'store' ) : 
+            store = dataset.store()
+            if store : 
+                tree = store.tree()
+                if tree : return tree.Draw( what , cuts , opts  , *args )
         
     if   isinstance ( what , str ) : 
         vars  = [ v.strip() for v in what.split(':') ]

@@ -32,12 +32,15 @@ __all__     = (
     'PSRight_pdf'     , ## High edge of L-body phase space from N-body decays  
     'PSNL_pdf'        , ## L-body phase space from N-body decays  
     'PS23L_pdf'       , ## 2-body phase space from 3-body decays with orbital momenta
+    ##
+    'make_bkg'        , ## helper function to create backgrounds 
     )
 # =============================================================================
 import ROOT, math
 from   ostap.core.core     import cpp, Ostap
 from   ostap.math.base     import iszero
-from   ostap.fitting.basic import makeVar, PDF, Phases 
+from   ostap.fitting.basic import PDF
+from   ostap.fitting.utils import Phases 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_bkg' )
@@ -52,7 +55,7 @@ class PolyBase(PDF,Phases) :
     """
     def __init__ ( self , name , power , xvar = None , the_phis = None ) :
         ## check  the arguments 
-        xvar = makeVar  ( xvar , 'xvar' , 'x-variable' )
+        xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
         PDF   .__init__ ( self , name  , xvar      )
         Phases.__init__ ( self , power , the_phis  )
 # =============================================================================        
@@ -91,7 +94,7 @@ class Bkg_pdf(PolyBase) :
         # 
         ## the exponential slope
         #
-        self.__tau  = makeVar ( tau              ,
+        self.__tau  = self.make_var ( tau              ,
                                 "tau_%s"  % name ,
                                 "tau(%s)" % name , tau , 0 , *limits_tau  )
         
@@ -587,15 +590,15 @@ class TwoExpoPoly_pdf(PolyBase) :
             limits_delta = 1.e-6 , 1.e-16 , 300. / mmax             
             limits_x0    = mn , mn - 10 * dm , mx + 10 * dm 
 
-        self.__alpha  = makeVar ( alpha               ,
+        self.__alpha  = self.make_var ( alpha               ,
                                   "alpha_%s"   % name ,
                                   "#alpha(%s)" % name , alpha , *limits_alpha ) 
         
-        self.__delta  = makeVar ( delta               ,
+        self.__delta  = self.make_var ( delta               ,
                                   "delta_%s"   % name ,
                                   "#delta(%s)" % name , delta , *limits_delta )
         
-        self.__x0     = makeVar ( x0                  ,
+        self.__x0     = self.make_var ( x0                  ,
                                   "x0_%s"     % name  ,
                                   "x_{0}(%s)" % name  , x0    ,  *limits_x0 )
 
@@ -696,11 +699,11 @@ class Sigmoid_pdf(PolyBase) :
             limits_alpha = -1000./dx, +1000./dx
             limits_x0    = 0.5 * ( mn + mx ) , mn - 0.2 *  dx , mx + 0.2 * dx
             
-        self.__alpha  = makeVar ( alpha               ,
+        self.__alpha  = self.make_var ( alpha               ,
                                   'alpha_%s'  % name  ,
                                   'alpha(%s)' % name  , alpha , *limits_alpha )
         
-        self.__x0    = makeVar  ( x0                  ,
+        self.__x0    = self.make_var  ( x0                  ,
                                   'x0_%s'     % name  ,
                                   'x0(%s)'    % name  , x0    , *limits_x0    )
 
@@ -1107,7 +1110,7 @@ class PSLeft_pdf(PDF) :
         PDF.__init__ ( self , name , xvar )
         #
         self.__N    = N
-        self.__left = makeVar ( left                ,
+        self.__left = self.make_var ( left                ,
                                 'left_%s'    % name ,
                                 'm_left(%s)' % name ,
                                 None , *self.xminmax() ) 
@@ -1177,10 +1180,10 @@ class PSRight_pdf(PDF) :
         #
         self.__L = L 
         self.__N = N 
-        self.__right = makeVar ( right ,
-                                 'right_%s'      % name ,
-                                 'm_{right}(%s)' % name ,
-                                 None , self.xminmax() )
+        self.__right = self.make_var ( right ,
+                                       'right_%s'      % name ,
+                                       'm_{right}(%s)' % name ,
+                                       None , *self.xminmax() )
         
         if self.xminmax() and self.right.minmax() :
             mn  , mx  = self       .xminmax()
@@ -1260,6 +1263,9 @@ class PSNL_pdf(PDF) :
                    left  = None     , 
                    right = None     ) : 
 
+        assert isinstance ( L , int ) and 2<=L , 'PSNL: invalid L=%s (must be L>=2)' % L 
+        assert isinstance ( N , int ) and L< N , 'PSNL: invalid N=%s (must be N>L)'  % N
+
         ## initialize the base 
         PDF.__init__ ( self , name , xvar )
         #
@@ -1274,11 +1280,11 @@ class PSNL_pdf(PDF) :
             limits_left  = 0.95 * mn + 0.05 * mx , mn - dx , mx + dx 
             limits_right = 0.05 * mn + 0.95 * mx , mn - dx , mx + dx 
             
-        self.__left  = makeVar ( left ,
+        self.__left  = self.make_var ( left ,
                                  'left_%s'        % name ,
                                  'm_{left}(%s)'   % name , left  , *limits_left )
         
-        self.__right = makeVar ( right ,
+        self.__right = self.make_var ( right ,
                                  'right_%s'       % name ,
                                  'm_{right}(%s)'  % name , right , *limits_right )
 
@@ -1309,14 +1315,13 @@ class PSNL_pdf(PDF) :
     
     @property
     def N ( self ) :
-        """define ``L-from-N''phase space"""
+        """``N'':define ``L-from-N''phase space"""
         return self.__N
     @property
     def L ( self ) :
-        """define ``L-from-N''phase space"""
+        """``L'':define ``L-from-N''phase space"""
         return self.__L
 
-    @property
     @property
     def left( self ) :
         """(Left) threshold for ``L-from-N''-body phase space"""
@@ -1458,6 +1463,121 @@ class PS23L_pdf(PDF) :
         
 models.append ( PS23L_pdf ) 
 
+# =============================================================================
+## create simple popular 1D-background models
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-04-03
+def make_bkg ( bkg , name , xvar , **kwargs ) :
+    """Helper function to create 1D-background models (around Bkg_pdf)
+    
+    >>> x =   .. ## the variable
+    
+    ## None or non-negative integer:  construct PDF using Bkg_pdf 
+    >>> bkg1  = makeBkg ( 3      , 'B1' , x ) ## use Bkg_pdf ( 'B1' , x , power = 3 )
+    
+    ## generic RooAbsPdf: use this PDF
+    >>> pdf   = RooPolynomial( ... )
+    >>> bkg2  = makeBkg ( pdf    , 'B2' , x ) ## use Generic1D_pdf ( pdf , x , 'B2' )
+    
+    ## some Ostap-based model, use it as it is  
+    >>> model = Convex_pdf ( ... )
+    >>> bkg3  = makeBkg ( models , 'B3' , x )  
+    
+    ## some RooAbsReal, use is as exponenial slope for Bkg_pdf
+    >>> tau  = RooRealVar( ....  )
+    >>> bkg4 = makeBkg ( tau     , 'B4' , x ) 
+    
+    """
+    from ostap.fitting.basic import Flat1D, Generic1D_pdf
+    
+    if   bkg is None :         
+        model = Flat1D ( name = name , xvar =  xvar )
+        if kwargs : logger.warning ('makeBkg(%s): kwargs %s are ignored' % ( name , kwargs) )
+        
+    ## regular case: use Bkg_pdf or PolyPos_pdf as baseline background shapes 
+    elif isinstance ( bkg , ( int , long ) ) :
+
+        if   0 < bkg : model =     Bkg_pdf ( name , power =     bkg  , xvar = xvar , **kwargs )
+        elif 0 > bkg : model = PolyPos_pdf ( name , power = abs(bkg) , xvar = xvar , **kwargs )
+        else         :
+            model = Flat1D      ( name = name             , xvar = xvar )
+            if kwargs : logger.warning ( 'makeBkg(%s): kwargs %s are ignored' % ( name , kwargs ) )
+    
+    ## native RooFit pdf ? 
+    elif isinstance ( bkg , ROOT.RooAbsPdf ) :
+
+        ## use Generic1D_pdf 
+        model = Generic1D_pdf ( bkg , xvar = xvar , name = name ) 
+        if kwargs : logger.warning ('makeBkg(%s): kwargs %s are ignored' % ( name , kwargs ) )
+
+    ## some Ostap-based background model ?
+    elif isinstance ( bkg , PDF ) and not kwargs : 
+        
+        ## return the same model/PDF 
+        if   xvar is bkg.xvar          :
+            model = bkg  
+            logger.debug ('%s(%s) model is copied' % ( type(model).__name__ , model.name ) )
+        ## make a clone : 
+        elif hasattr ( bkg , 'clone' ) :
+            model = bkg.clone ( name = name , xvar = xvar , **kwargs )
+            logger.debug ('%s(%s) model is cloned to %s(%s)' % ( type(bkg).__name__ , bkg.name , type(model).__name__ , model.name ) ) 
+        else :
+            raise TypeError("Do not now how to clone the background model from Ostap PDF")
+        
+    ## interprete it as exponential slope for Bkg-pdf 
+    elif isinstance ( bkg , ROOT.RooAbsReal ) \
+             or   isinstance ( bkg , float )  \
+             or ( isinstance ( bkg , tuple ) and 1 < len ( tuple ) <=3 ) :
+        
+        model = Bkg_pdf ( name , mass = xvar , tau = bkg , power = 0 , **kwargs )
+        if kwargs : logger.warning ( 'makeBkg(%s): kwargs %s are ignored' % ( name , kwargs ) )
+        
+    elif bkg is math.exp :
+        
+        model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
+        if kwargs : logger.warning ( 'makeBkg(%s): kwargs %s are ignored' % ( name , kwargs ) )
+        
+    elif isinstance ( bkg , str ) :
+
+        bkg = bkg.strip().lower()
+
+        if   bkg in ( '' , 'const' , 'constant' , 'flat' , 'uniform' , 'p0' , 'pol0' , 'poly0' ) :            
+            return makeVar ( 0 , name , xvar , **kwargs ) 
+        elif bkg in ( 'e' , 'exp' , 'expo' , 'e0' , 'exp0' , 'expo0' ) : 
+            model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
+        elif bkg in ( 'e+' , 'exp+' , 'expo+' ) : 
+            model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
+            model.tau.setMin ( 0 ) 
+        elif bkg in ( 'e-' , 'exp-' , 'expo-' ) :             
+            model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
+            model.tau.setMax ( 0 ) 
+
+        import re
+        
+        poly = re.search ( r'(poly|pol|p)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if poly :
+            degree = -1 * abs ( int ( poly.group ( 'degree' ) ) ) 
+            return makeBkg ( degree  , name ,  xvar , **kwargs  )
+        
+        expo = re.search ( r'(expo|exp|e)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if expo :
+            degree =            int ( expo.group ( 'degree' ) ) 
+            return makeBkg ( degree  , name ,  xvar , **kwargs  )
+
+        incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if incr : 
+            degree = int ( incr.group ( 'degree' ) )
+            return makeBkg ( Monothonic_pdf ( name , xvar , degree , True ) , name ,  xvar , **kwargs  )
+        
+        decr = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if decr : 
+            degree = int ( decr.group ( 'degree' ) )
+            return makeBkg ( Monothonic_pdf ( name , xvar , degree , False ) , name ,  xvar , **kwargs  )
+
+        
+    if model : return model
+    
+    raise  TypeError("Wrong type of bkg object: %s/%s " % ( bkg , type ( bkg ) ) ) 
 
 # =============================================================================
 if '__main__' == __name__ : 

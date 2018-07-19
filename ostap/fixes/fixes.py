@@ -27,13 +27,13 @@ with mute() :
     del v
 
 try :
-    enabled = ROOT.IsImplicitMTEnabled ()
+    enabled = ROOT.ROOT.IsImplicitMTEnabled ()
     if enabled : logger.debug ("ImplicitMT is  enabled")
     else       : logger.debug ("ImplicitMT is disabled")
 except AttributeError :
-    ROOT.IsImplicitMTEnabled  = lambda *_ : False
-    ROOT.EnableImplicitMT     = lambda *_ : False
-    ROOT.DisableImplicitMT    = lambda *_ : False 
+    ROOT.ROOT.IsImplicitMTEnabled  = lambda *_ : False
+    ROOT.ROOT.EnableImplicitMT     = lambda *_ : False
+    ROOT.ROOT.DisableImplicitMT    = lambda *_ : False 
     logger.info ("``Enable/Disable''Implicit MT is not available") 
     
     

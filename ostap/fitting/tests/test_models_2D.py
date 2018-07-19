@@ -241,9 +241,9 @@ def test_spline2D() :
     
     logger.info ('Test Spline2D_pdf : 2D-spline')
     
-    s1 = Ostap.Math.BSpline  ( m_x.xmin(), m_x.xmax() , 1 , 2 ) 
-    s2 = Ostap.Math.BSpline  ( m_y.xmin(), m_y.xmax() , 1 , 2 ) 
-    s3 = Ostap.Math.Spline2D ( s1 , s2 )
+    s1 = Ostap.Math.BSpline          ( m_x.xmin(), m_x.xmax() , 1 , 2 ) 
+    s2 = Ostap.Math.BSpline          ( m_y.xmin(), m_y.xmax() , 1 , 2 ) 
+    s3 = Ostap.Math.PositiveSpline2D ( s1 , s2 )
     
     model = Models.Spline2D_pdf ( 'S2D' , m_x , m_y, s3 )
     
@@ -270,8 +270,8 @@ def test_splinesym2D() :
 
     logger.info ('Test Spline2Dsym_pdf: Symetric 2D-spline')
     
-    ss    = Ostap.Math.BSpline     ( m_x.xmin(), m_x.xmax() , 1 , 2 ) 
-    ss3   = Ostap.Math.Spline2DSym ( ss)
+    ss    = Ostap.Math.BSpline             ( m_x.xmin(), m_x.xmax() , 1 , 2 ) 
+    ss3   = Ostap.Math.PositiveSpline2DSym ( ss )
     
     model = Models.Spline2Dsym_pdf ( 'SS2D' , m_x , m_y, ss3 )
 

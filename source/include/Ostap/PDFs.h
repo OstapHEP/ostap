@@ -5636,6 +5636,76 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
+    /** @class Uniform
+     *  The trivial model: flat/uniform dsitribution in 1,2,3-dimensions 
+     */
+    class Uniform : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::Uniform, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// flat in 1D 
+      Uniform ( const char*                      name  ,
+                const char*                      title ,
+                RooAbsReal&                      x     ) ;
+      /// flat in 2D 
+      Uniform ( const char*                      name  ,
+                const char*                      title ,
+                RooAbsReal&                      x     , 
+                RooAbsReal&                      y     ) ;
+      /// flat in 3D 
+      Uniform ( const char*                      name  ,
+                const char*                      title ,
+                RooAbsReal&                      x     , 
+                RooAbsReal&                      y     ,
+                RooAbsReal&                      z     ) ;
+      /// copy
+      Uniform
+        ( const Uniform& right     ,
+          const char*    name = 0  ) ;
+      /// destructor
+      virtual ~Uniform () ;
+      /// clone
+      Uniform* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Uniform () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      //  dimensionality of the PDF
+      unsigned short dim () const { return m_dim ; }      
+      // ======================================================================
+    protected :
+      // ======================================================================
+      unsigned short m_dim { 0 } ;
+      RooRealProxy   m_x   {   } ;
+      RooRealProxy   m_y   {   } ;
+      RooRealProxy   m_z   {   } ;
+      // ======================================================================
+    };
+    // ========================================================================
   } //                                        end of namespace Ostap::Models
   // ==========================================================================
 } //                                                  end of namespace Analysis

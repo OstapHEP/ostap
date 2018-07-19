@@ -28,7 +28,7 @@ __all__     = (
 import ROOT, math
 from   ostap.core.core     import cpp, Ostap
 from   ostap.math.base     import iszero
-from   ostap.fitting.basic import makeVar, Phases
+from   ostap.fitting.utils import Phases
 from   ostap.fitting.fit2d import PDF2 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
@@ -42,8 +42,8 @@ models = []
 class PolyBase2(PDF2,Phases) :
     """Helper base class to implement various polynomial-like shapes
     """
-    def __init__ ( self , name , xvar , yvar , power , the_phis = None ) :
-        PDF2  .__init__ ( self , name  , xvar , yvar )
+    def __init__ ( self , name , xvar  , yvar , power , the_phis = None ) :
+        PDF2  .__init__ ( self , name  , xvar , yvar  )
         Phases.__init__ ( self , power , the_phis  )
 # =============================================================================
 ## @class PolyPos2D_pdf
@@ -455,7 +455,7 @@ class ExpoPSPol2D_pdf(PolyBase2) :
             limits_tau  = -500. / mmax ,  500. / mmax
             
         ## the exponential slope
-        self.__tau  = makeVar ( tau              ,
+        self.__tau  = self.make_var ( tau              ,
                                 "tau_%s"  % name ,
                                 "tau(%s)" % name , tau , 0 , *limits_tau )
         #
@@ -590,11 +590,11 @@ class ExpoPol2D_pdf(PolyBase2) :
         #
         ## the exponential slopes
         #
-        self.__taux  = makeVar ( taux              ,
+        self.__taux  = self.make_var ( taux              ,
                                  "taux_%s"  % name ,
                                  "taux(%s)" % name , taux , 0 , *limits_taux )
         #
-        self.__tauy  = makeVar ( tauy              ,
+        self.__tauy  = self.make_var ( tauy              ,
                                  "tauy_%s"  % name ,
                                  "tauy(%s)" % name , tauy , 0 , *limits_tauy )
             
@@ -708,7 +708,7 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
         #
         ## the exponential slopes
         #
-        self.__tau  = makeVar ( tau              ,
+        self.__tau  = self.make_var ( tau              ,
                                 "tau_%s"  % name ,
                                 "tau(%s)" % name , tau , 0 , *limits_tau )
             
@@ -811,8 +811,8 @@ class Spline2D_pdf(PolyBase2) :
                    name             ,
                    xvar             ,   ##  the first  dimension  
                    yvar             ,   ##  the second dimension
-                   spline           ,
-                   the_phis = None  ) : ## the spline: Ostap.Math.PositiveSpline2D 
+                   spline           ,   ## the spline: Ostap.Math.PositiveSpline2D 
+                   the_phis = None  ) : ## 
         
         PolyBase2.__init__ ( self , name , xvar , yvar , spline.npars() , the_phis ) 
         

@@ -1,5 +1,5 @@
 // ============================================================================
-#define GAUDIKERNEL_STATENTITY_CPP 1
+#define OSTAP_STATENTITY_CPP 1
 // ============================================================================
 // include files
 // ============================================================================
@@ -10,6 +10,7 @@
 #include <string>
 #include <cmath>
 #include <limits>
+#include <tuple>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -18,172 +19,197 @@
 // Local 
 // ============================================================================
 #include "format.h"
+#include "Exception.h"
 // ============================================================================
 /** @file
- *  Implementation file for class StatEntity
+ *  Implementation file for class Ostap::StatEntity
  *  @date 26/06/2001
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  */
 // ============================================================================
-// The full contructor from all important values
+/* The full contructor from all important values
+ * @see StatEntity::format
+ * @param entries number of entries
+ * @param mu   the mean value 
+ * @param mu2  the second central moment/variance/dispersion 
+ * @param minv the minimum value 
+ * @param maxv the maximum value 
+ */  
 // ============================================================================
 Ostap::StatEntity::StatEntity
 ( const unsigned long entries ,
-  const double        flag    ,
-  const double        flag2   ,
-  const double        minFlag ,
-  const double        maxFlag )
-  : m_se_nEntries            ( entries )
-  , m_se_accumulatedFlag     ( flag    )
-  , m_se_accumulatedFlag2    ( flag2   )
-  , m_se_minimalFlag         ( minFlag )
-  , m_se_maximalFlag         ( maxFlag )
-{}
-// ============================================================================
-// mean value of flag
-// ============================================================================
-double Ostap::StatEntity::mean   () const
+  const double        mu      ,
+  const double        mu2     ,
+  const double        minv    ,
+  const double        maxv    )
+  : m_n   ( entries )
+  , m_mu  ( mu      )
+  , m_mu2 ( mu2     )
+  , m_min ( minv    )
+  , m_max ( maxv    )
 {
-  if ( 0 >= nEntries() ) { return 0 ;}
-  const long double f1 = m_se_accumulatedFlag ;
-  const long double f2 = m_se_nEntries ;
-  return f1 / f2 ;
+  // reset empty counter 
+  if ( 0 == m_n ) { reset() ; }
+  else 
+  {
+    Ostap::Assert ( m_min <= mu && mu <= m_max , 
+                    "Ostap::StatEntity: invalid minv/mu/maxv" ,
+                    "Ostap::StatEntity" ) ; 
+    Ostap::Assert ( 0 <= m_mu2 , 
+                    "Ostap::StatEntity: invalid second moment",
+                    "Ostap::StatEntity" ) ;
+  }
+}
+// ============================================================================
+/* add a value : the main method 
+ * @see https://arxiv.org/abs/1510.04923v1
+ * @param value (INPUT) value to be added
+ * @return self reference 
+ */
+// ============================================================================
+Ostap::StatEntity& 
+Ostap::StatEntity::add ( const double value ) 
+{
+  if ( 0 == m_n ) 
+  {
+    m_n   = 1 ;
+    m_mu  = value ;
+    m_mu2 = 0 ;
+    m_min = value ;
+    m_max = value ;
+    //
+    return *this ;      // RETURN
+  }
+  // update the regular case 
+  m_n   += 1       ;                                                   // UPDATE 
+  const long double delta   = value - m_mu ;             
+  const long double delta_n = delta / m_n  ;
+  m_mu  += delta_n ;                                                   // UPDATE
+  m_mu2  = m_mu2 * ( m_n - 1 ) / m_n + delta_n * ( delta - delta_n ) ; // UPDATE
+  //
+  m_min  = std::min ( m_min , value ) ;                                // UPDATE       
+  m_max  = std::max ( m_max , value ) ;                                // UPDATE 
+  //
+  return *this ;
 }
 // ============================================================================
 // r.m.s of flag
 // ============================================================================
 double Ostap::StatEntity::rms    () const
-{
-  if ( 0 >= nEntries() ) { return 0 ; }
-  const long double f1  = m_se_accumulatedFlag  ;
-  const long double f2  = f1 / nEntries () ;
-  const long double f3  = m_se_accumulatedFlag2 ;
-  const long double f4  = f3 / nEntries () ;
-  const long double result = f4 - f2 * f2  ;
-  return ( 0 > result ) ? 0 : std::sqrt ( result ) ;
-}
+{ return 2 > m_n || 0 >= m_mu2 ? 0.0L : std::sqrt ( m_mu2 * 1.0L ) ; }
+// ============================================================================
+// sum of values 
+// ============================================================================
+double Ostap::StatEntity::sum    () const 
+{ return 0 < m_n ? m_mu * m_n : 0.0L ; }
+// ============================================================================
+// sum of value^2
+// ============================================================================
+double Ostap::StatEntity::sum2   () const
+{ return 0 < m_n ? ( m_mu2 + 1.0L * m_mu * m_mu ) * m_n : 0.0L ; }
 // ============================================================================
 // error in mean value of flag
 // ============================================================================
 double Ostap::StatEntity::meanErr() const
-{
-  if ( 0 >= nEntries () ) { return 0 ; }
-  const long double f1  = m_se_accumulatedFlag  ;
-  const long double f2  = f1 / nEntries () ;
-  const long double f3  = m_se_accumulatedFlag2 ;
-  const long double f4  = f3 / nEntries () ;
-  const long double result = f4 - f2 * f2  ;
-  if ( 0 > result      ) { return 0 ; }
-  //
-  return std::sqrt ( result / nEntries () ) ;
-}
+{ return 0 < m_n && 0 < m_mu2 ? std::sqrt ( 1.0L * m_mu2 / m_n ) : 0 ; }
 // ============================================================================
 // interprete the content as efficiency
 // ============================================================================
 double Ostap::StatEntity::efficiency    () const
 {
-  if ( 1 > nEntries () || 0 > sum() || sum() > nEntries() ) { return -1 ; }
-  const long double fMin = min () ;
-  if ( 0 != fMin && 1 != fMin ) { return -1 ; }
-  const long double fMax = max () ;
-  if ( 0 != fMax && 1 != fMax ) { return -1 ; }
-  return mean() ;
+  //
+  if ( 1 > m_n || 0 > m_mu || 1 < m_mu ) { return -1 ; }
+  if ( 0 != m_min && 1 != m_min        ) { return -1 ; }
+  if ( 0 != m_max && 1 != m_max        ) { return -1 ; }
+  //
+  return m_mu ;
 }
 // ============================================================================
-// evaluate the binomial error in efficiency
+// evaluate "the binomial" error in efficiency (note quotes) 
 // ============================================================================
 double Ostap::StatEntity::efficiencyErr () const
 {
   if ( 0 > efficiency() ) { return -1 ; }
   //
-  long double n1 = sum () ;
-  // treat properly the bins with eff=0
-  if ( 0 == n1 ) { n1 = 1 ; } ///< @attention treat properly the bins with eff=0
-  const long double n3 = nEntries  () ;
-  long double       n2 = n3 - sum () ;
-  // treat properly the bins with eff=100%
-  if ( 1 > std::abs ( n2 ) ) { n2 = 1 ; } ///< @attention treat properly the bins with eff=100%
+  long double nA = 1.0L * m_n *          m_mu   ; // "accepted"
+  long double nR = 1.0L * m_n * ( 1.0L - m_mu ) ; // "rejected" 
+  // treat properly the bins with eff=0 and  eff=100% 
+  if ( 1 > std::abs ( nA ) ) { nA = 1 ; } 
+  if ( 1 > std::abs ( nR ) ) { nR = 1 ; } 
   //
-  return std::sqrt ( n1 * n2 / n3 ) / n3 ;
+  return std::sqrt ( nA * nR / m_n ) / m_n ;
 }
 // ============================================================================
-// increment with other entity
+/* increment with other counter (useful for Monitoring/Adder )
+ * @code
+ * const StatEntity second = ... ;
+ * StatEntity first = ... ;
+ * first += second ;
+ * @endcode
+ * @param other counter to be added
+ * @return self-reference
+ * @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
+ * @see https://doi.org/10.1007/s00180-015-0637-z
+ */
 // ============================================================================
 Ostap::StatEntity& 
 Ostap::StatEntity::operator+=( const Ostap::StatEntity& other )
 {
-  m_se_nEntries         += other.m_se_nEntries ;
-  m_se_accumulatedFlag  += other.m_se_accumulatedFlag  ;
-  m_se_accumulatedFlag2 += other.m_se_accumulatedFlag2 ;
-  m_se_minimalFlag = std::min ( m_se_minimalFlag , other.m_se_minimalFlag ) ;
-  m_se_maximalFlag = std::max ( m_se_maximalFlag , other.m_se_maximalFlag ) ;
+  /// trivial updates:
+  if      ( 0 == other.m_n ) { return *this ; }
+  else if ( 0 ==       m_n ) 
+  {
+    m_n   = other.m_n   ;
+    m_mu  = other.m_mu  ;
+    m_mu2 = other.m_mu2 ;
+    m_min = other.m_min ;
+    m_max = other.m_max ;
+    //
+    return *this ;
+  }
+  //
+  const unsigned long long N     = m_n + other.m_n   ;
+  const long double        fA    = m_n * 1.0L / N    ;
+  const long double        fB    = 1.0L - fA         ;
+  const long double        delta = 1.0L * m_mu - other.m_mu ;
+  //
+  m_n   = N                                 ;                       // UPDATE 
+  m_mu  = m_mu  * fA + other.m_mu  * fB     ;                       // UPDATE 
+  m_mu2 = m_mu2 * fA + other.m_mu2 * fB + fA * fB * delta * delta ; // UPDATE
+  //
+  m_min = std::min ( m_min , other.m_min )  ;                       // UPDATE           
+  m_max = std::max ( m_max , other.m_max )  ;                       // UPDATE 
   //
   return *this ;
 }
 // ============================================================================
 // comparison
 // ============================================================================
-bool Ostap::StatEntity::operator< ( const Ostap::StatEntity& se ) const
+bool Ostap::StatEntity::operator< ( const Ostap::StatEntity& right ) const
 {
-  if      ( &se == this                     ) { return false ; }
-  else if ( nEntries () <   se.nEntries ()  ) { return true  ; }
-  else if ( nEntries () ==  se.nEntries () &&
-            sum      () <   se.sum      ()  ) { return true  ; }
-  else if ( nEntries () ==  se.nEntries () &&
-            sum      () ==  se.sum      () &&
-            min      () <   se.min      ()  ) { return true  ; }
-  else if ( nEntries () ==  se.nEntries () &&
-            sum      () ==  se.sum      () &&
-            min      () ==  se.min      () &&
-            max      () <   se.max      ()  ) { return true  ; }
-  else if ( nEntries () ==  se.nEntries () &&
-            sum      () ==  se.sum      () &&
-            min      () ==  se.min      () &&
-            max      () ==  se.max      () &&
-            sum2     () <   se.sum2     ()  ) { return true  ; }
-  ///
-  return false;
+  return  &right == this ? false :
+    std::tie (       m_n ,       m_mu ,       m_mu2 ,       m_min ,       m_max ) < 
+    std::tie ( right.m_n , right.m_mu , right.m_mu2 , right.m_min , right.m_max ) ;
 }
 // ============================================================================
 // comparison
 // ============================================================================
-bool Ostap::StatEntity::operator==( const Ostap::StatEntity& se ) const
+bool Ostap::StatEntity::operator==( const Ostap::StatEntity& right ) const
 {
-  return ( &se == this ) || 
-    ( m_se_nEntries         == se.m_se_nEntries         && 
-      m_se_accumulatedFlag  == se.m_se_accumulatedFlag  && 
-      m_se_accumulatedFlag2 == se.m_se_accumulatedFlag2 && 
-      m_se_minimalFlag      == se.m_se_minimalFlag      && 
-      m_se_maximalFlag      == se.m_se_maximalFlag       ) ;
-}
-// ============================================================================
-// increment a flag
-// ============================================================================
-unsigned long long Ostap::StatEntity::add ( const double Flag )
-{
-  /// accumulate the flag
-  m_se_accumulatedFlag   += Flag        ; // accumulate the flag
-  /// evaluate min/max
-  m_se_minimalFlag = std::min ( m_se_minimalFlag , Flag ) ; // evaluate min/max
-  m_se_maximalFlag = std::max ( m_se_maximalFlag , Flag ) ; // evaluate min/max
-  // accumulate statistics, but avoid FPE for very small flags...
-  static const double s_min1 = 2 * std::sqrt ( std::numeric_limits<double>::min() ) ;
-  if ( s_min1 < Flag || -s_min1 > Flag )
-  { m_se_accumulatedFlag2  += Flag * Flag ; }// accumulate statistics:
-  //
-  return ++m_se_nEntries ;
+  return  &right == this ? true :
+    std::tie (       m_n ,       m_mu ,       m_mu2 ,       m_min ,       m_max ) ==
+    std::tie ( right.m_n , right.m_mu , right.m_mu2 , right.m_min , right.m_max ) ;
 }
 // ============================================================================
 // reset all quantities
 // ============================================================================
 void Ostap::StatEntity::reset()
 {
-  //
-  m_se_nEntries            =        0 ;
-  m_se_accumulatedFlag     =        0 ;
-  m_se_minimalFlag         =       std::numeric_limits<double>::max() ;
-  m_se_maximalFlag         =  -1 * std::numeric_limits<double>::max() ;
-  m_se_accumulatedFlag2    =        0 ;
+  m_n   = 0 ;
+  m_mu  = 0 ;
+  m_mu2 = 0 ;
+  m_min =   std::numeric_limits<double>::max() ;
+  m_max = - std::numeric_limits<double>::max() ;
 }
 // ============================================================================
 // representation as string
@@ -200,9 +226,9 @@ std::string Ostap::StatEntity::toString () const
 std::ostream& Ostap::StatEntity::fillStream ( std::ostream& o ) const
 {
   return
-    o << Ostap::format ( "#=%-14.8g Sum=%-14.8g" , nEntries() , sum() )
-      << Ostap::format ( " Mean=%10.4g +- %-10.5g Min/Max=%10.4g/%-10.4g" ,
-                         mean() , rms() , min() , max() ) ;
+    o << Ostap::format ( "#=%-14.8g sum=%-14.8g" , n () , sum() )
+      << Ostap::format ( " mean=%10.4g +- %-10.5g min/max=%10.4g/%-10.4g" ,
+                         mean() , rms () , min() , max() ) ;
 }
 // ============================================================================
 

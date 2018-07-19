@@ -1003,10 +1003,10 @@ class Chain(CleanUp) :
         return tuple ( trees ) 
         
     ##  number of entries in the Tree/Chain
-    def  __len__ ( self ) : return len ( self.__chain )
+    def __len__ ( self ) : return len ( self.__chain )
     
     def __create_chain ( self ) :
-        """``chain'' : get the undnerlyinng tree/chain"""
+        """``chain'' : get the underlyinng tree/chain"""
         c = ROOT.TChain ( self.__name )
         for f in self.__files  : c.Add ( f )
         return c
@@ -1040,6 +1040,19 @@ class Chain(CleanUp) :
         """``nevents'' : number of events to process"""
         return self.__nevents if 0<= self.__nevents else ROOT.TChain.kMaxEntries
 
+    ## get DataFrame 
+    def  frame ( self , *vars ) :
+        """``frame'' : get ROOT.RDataFrame for the given chain/tree
+        >>> tree = ....
+        >>> f  =  tree.frame () ## get
+        >>> f1 =  tree.frame ('px', 'py' , 'pz') ## get frame with default branches
+        """
+        from ostap.frames.frames import DataFrame
+        from ostap.core.core     import strings 
+        fnames = strings  ( *self.files )
+        vnames = strings  ( *vars  )
+        return DataFrame ( self.name , fnames , vnames ) 
+        
     def __str__ ( self ) :
         r = "Chain('%s',%s" % ( self.name , self.files )
         if 0 != self.__first or 0 <= self.nevents : r += ",%s,%s" % ( self.first , self.last - self.first )            
@@ -1111,6 +1124,20 @@ class Tree(Chain) :
     __repr__ = __str__
 
 # =============================================================================
+## Get the effective entries in data frame
+#  @code
+#  data = ...
+#  neff = data.nEff('b1*b1')
+#  @endcode
+def _rt_nEff_  ( self , cuts = '' , *args ) :
+    """Get the effective entries in data frame 
+    >>> data = ...
+    >>> neff = data.nEff('b1*b1')
+    """
+    return cpp.Ostap.StatVar.nEff ( self , cuts , *args )
+
+ROOT.TTree.nEff = _rt_nEff_ 
+# =============================================================================
 
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.TTree )
@@ -1157,7 +1184,23 @@ _new_methods_       = (
     #
     ROOT.TTree.slice        ,
     ROOT.TTree.slices       ,
-    # 
+    #
+    ROOT.TTree.nEff             , 
+    ROOT.TTree.get_moment       , 
+    ROOT.TTree.central_moment   , 
+    ROOT.TTree.mean             ,
+    ROOT.TTree.rms              ,
+    ROOT.TTree.skewness         ,
+    ROOT.TTree.kurtosis         ,
+    ROOT.TTree.quantile         ,
+    ROOT.TTree.median           ,
+    ROOT.TTree.quantiles        ,
+    ROOT.TTree.interval         ,
+    ROOT.TTree.terciles         ,
+    ROOT.TTree.quartiles        ,
+    ROOT.TTree.quintiles        ,
+    ROOT.TTree.deciles          ,
+
     )
 # =============================================================================
 if '__main__' == __name__ :

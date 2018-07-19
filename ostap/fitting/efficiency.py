@@ -182,7 +182,7 @@ class Efficiency ( object ) :
     #  eff     = Efficiency1D ( ... ) 
     #  result  = eff.fitTo ( dataset ) 
     #  @endcode 
-    def  fitTo ( self , dataset , silent = True , refit = 2 , *args , **kwargs )  :
+    def  fitTo ( self , dataset , silent = True , refit = 2 , args = () , **kwargs )  :
         """Fit it!
 
         >>> dataset = ...
@@ -197,10 +197,11 @@ class Efficiency ( object ) :
         from ostap.logger.utils import roo_silent
         with roo_silent ( silent ) : 
             result , frame = self.pdf_fit.fitTo ( dataset ,                            
-                                                  False   ,
-                                                  100     ,
-                                                  silent  ,
-                                                  refit   , *vargs , **kwargs )        
+                                                  draw   = False  ,
+                                                  nbins  = 100    ,
+                                                  silent = silent ,
+                                                  refit  = refit  ,
+                                                  args   = vargs  , **kwargs )        
         self.__fit_result = result 
         return result
 
@@ -212,7 +213,10 @@ class Efficiency ( object ) :
     #  eff.fitTo ( dataset ) 
     #  eff.draw  ( dataset ) 
     #  @endcode 
-    def draw ( self , dataset = None , *args ,  **kwargs ) :
+    def draw ( self ,
+               dataset = None  ,
+               nbins   = 100   ,
+               silent  = False ,  **kwargs ) :
         """Draw the efficiency (and the dataset)
         >>> dataset = ... 
         >>> eff     = Efficiency1D( ... )
@@ -226,7 +230,9 @@ class Efficiency ( object ) :
         ddopts  =  tuple ( ddopts )
         kwargs['data_options'] = ddopts
         
-        return self.pdf_draw.draw ( dataset , *args , **kwargs )
+        return self.pdf_draw.draw ( dataset         ,
+                                    nbins  = nbins  ,
+                                    silent = silent , **kwargs )
     
 
 # =============================================================================

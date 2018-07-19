@@ -73,12 +73,12 @@ logger.info ('Dataset: %s' % dataset )
 
 ## various fit components
 
-signal_1 = Models.Gauss_pdf ( 'G1' , xvar = mass  , mean = m1.value() , sigma = m1.error() )  
-signal_2 = Models.Gauss_pdf ( 'G2' , xvar = mass  , mean = m2.value() , sigma = m2.error() ) 
-signal_3 = Models.Gauss_pdf ( 'G3' , xvar = mass  , mean = m3.value() , sigma = m3.error() )
+signal_1 = Models.Gauss_pdf ( 'G1'  , xvar = mass  , mean = m1.value() , sigma = m1.error() )  
+signal_2 = Models.Gauss_pdf ( 'G2'  , xvar = mass  , mean = m2.value() , sigma = m2.error() ) 
+signal_3 = Models.Gauss_pdf ( 'G3'  , xvar = mass  , mean = m3.value() , sigma = m3.error() )
 
-wide_1   = Models.Gauss_pdf ( 'GW1', xvar = mass  , mean = 4.0  , sigma = 4 )
-wide_2   = Models.Gauss_pdf ( 'GW2', xvar = mass  , mean = 6.0  , sigma = 4 )
+wide_1   = Models.Gauss_pdf ( 'GW1' , xvar = mass  , mean = 4.0  , sigma = 4 )
+wide_2   = Models.Gauss_pdf ( 'GW2' , xvar = mass  , mean = 6.0  , sigma = 4 )
 
 narrow_1 = Models.Gauss_pdf ( 'GN1' , xvar = mass , mean = 2.0  , sigma =  1 )
 narrow_2 = Models.Gauss_pdf ( 'GN2' , xvar = mass , mean = 4.0  , sigma =  1 )
@@ -101,14 +101,15 @@ def test_extended1 () :
  
     with rooSilent() : 
     ## signals
-        model.S[0].fix    ( 5000 )
-        model.S[1].fix    ( 5000 )
-        model.S[2].fix    ( 5000 )
+
+        model.S[0].fix ( 5000 )
+        model.S[1].fix ( 5000 )
+        model.S[2].fix ( 5000 )
     
         ## backgrounds 
-        model.B[0].fix    ( 5000 )
-        model.B[1].fix    ( 1000 )
-        model.B[2].setVal ( 1000 )
+        model.B[0].value = 5000 
+        model.B[1].value = 1000 
+        model.B[2].value = 1000 
         
         ## "components"
         model.C[0].value = 1000
@@ -128,7 +129,7 @@ def test_extended1 () :
         model.C[0].release() 
         
     r, f = model.fitTo ( dataset , draw = False , silent = True )
-        
+
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
 

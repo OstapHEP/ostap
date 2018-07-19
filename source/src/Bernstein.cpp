@@ -14,6 +14,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/Power.h"
+#include "Ostap/Clenshaw.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/MoreMath.h"

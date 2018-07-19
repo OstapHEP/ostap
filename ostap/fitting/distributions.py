@@ -3,7 +3,6 @@
 # =============================================================================
 ## @file disributions.py
 #  A set of various smooth shapes and PDFs 
-#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 # =============================================================================
@@ -53,7 +52,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.distributions' 
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
 from   ostap.core.core     import Ostap, VE 
-from   ostap.fitting.basic import makeVar, PDF
+from   ostap.fitting.basic import PDF
 # =============================================================================
 models = []
 # =============================================================================
@@ -103,10 +102,10 @@ class GammaDist_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar )
         #
-        self.__k     = makeVar ( k       ,
+        self.__k     = self.make_var ( k       ,
                                  'k_%s'                % name ,
                                  'k_{#Gamma}(%s)'      % name , k     , 1 , 1.e-3 , 100 )
-        self.__theta = makeVar ( theta   ,
+        self.__theta = self.make_var ( theta   ,
                                  'theta_%s'            % name ,
                                  '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-3 , 100 )
         self.pdf  = Ostap.Models.GammaDist (
@@ -183,13 +182,13 @@ class GenGammaDist_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar )
         #
-        self.__k     = makeVar ( k       ,
+        self.__k     = self.make_var ( k       ,
                                  'k_%s'                % name ,
                                  'k_{#Gamma}(%s)'      % name , k     , 1 , 1.e-3 , 100 )
-        self.__theta = makeVar ( theta   ,
+        self.__theta = self.make_var ( theta   ,
                                  'theta_%s'            % name ,
                                  '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-3 , 100 )
-        self.__p     = makeVar ( p       ,
+        self.__p     = self.make_var ( p       ,
                                  'p_%s'                % name ,
                                  'p_{#Gamma}(%s)'      % name , p     , 1 , 1.e-3 ,   6 )
 
@@ -198,7 +197,7 @@ class GenGammaDist_pdf(PDF) :
             mn , mx   = self.xminmax()
             limits_low = mn , mn , mx
             
-        self.__low   = makeVar ( low      ,
+        self.__low   = self.make_var ( low      ,
                                  'low_%s'         % name ,
                                  'l_{#Gamma}(%s)' % name , low , *limits_low )
         
@@ -286,16 +285,16 @@ class Amoroso_pdf(PDF) :
         PDF.__init__ ( self , name , xvar )
         #
         
-        self.__theta = makeVar ( theta   ,
+        self.__theta = self.make_var ( theta   ,
                                  'theta_%s'             % name ,
                                  '#theta_{Amoroso}(%s)' % name , theta , 1 , 1.e-3 , 100 )
-        self.__alpha = makeVar ( alpha   ,
+        self.__alpha = self.make_var ( alpha   ,
                                  'alpha_%s'             % name ,
                                  '#alpha_{Amoroso}(%s)' % name , alpha , 1 , 1.e-3 , 100 )
-        self.__beta  = makeVar ( beta    ,
+        self.__beta  = self.make_var ( beta    ,
                                  'beta_%s'              % name ,
                                  '#beta_{Amoroso}(%s) ' % name , beta  , 1 , 1.e-3 ,  10 )        
-        self.__a     = makeVar ( a       ,
+        self.__a     = self.make_var ( a       ,
                                  'a_%s'                 % name ,
                                  'a_{Amoroso}(%s)'      % name , a     , 1 , -10   ,  10  )
         
@@ -383,10 +382,10 @@ class LogGammaDist_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar )
         #
-        self.__k     = makeVar ( k       ,
+        self.__k     = self.make_var ( k       ,
                                  'k_%s'                   % name ,
                                  'k_{log#Gamma}(%s)'      % name , k     , 1 , 1.e-5 , 1000 )
-        self.__theta = makeVar ( theta   ,
+        self.__theta = self.make_var ( theta   ,
                                  'theta_%s'               % name ,
                                  '#theta_{log#Gamma}(%s)' % name , theta , 1 , 1.e-5 , 1000 )
 
@@ -451,10 +450,10 @@ class Log10GammaDist_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar )
         #
-        self.__k     = makeVar ( k       ,
+        self.__k     = self.make_var ( k       ,
                                'k_%s'                     % name ,
                                'k_{log10#Gamma}(%s)'      % name , k     , 1 , 1.e-4 , 10000 )
-        self.__theta = makeVar ( theta   ,
+        self.__theta = self.make_var ( theta   ,
                                'theta_%s'                 % name ,
                                '#theta_{log10#Gamma}(%s)' % name , theta , 1 , 1.e-4 , 10000 )
 
@@ -535,15 +534,15 @@ class LogGamma_pdf(PDF) :
             dx = mx - mn
             xm = 0.5 * ( mn + mx ) , mn - 10* dx , mx + 10 *  dx 
             
-        self.__nu     = makeVar ( nu       ,
+        self.__nu     = self.make_var ( nu       ,
                                   'nu_%s'                    % name ,
                                   '#nu_{#log#Gamma}(%s)'     % name , nu , *limits_nu )
         
-        self.__lambd  = makeVar ( lambd      ,
+        self.__lambd  = self.make_var ( lambd      ,
                                   'lambda_%s'                % name ,
                                   '#lambda_{#log#Gamma}(%s)' % name , lambd , 2 , -1000 , 1000 )
         
-        self.__alpha  = makeVar ( alpha    ,
+        self.__alpha  = self.make_var ( alpha    ,
                                   'alpha_%s'                 % name ,
                                   '#alpha_{#log#Gamma}(%s)'  % name , alpha , 1 , 1.e-3 , 1000 )
         
@@ -618,14 +617,14 @@ class BetaPrime_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar )
         # 
-        self.__alpha  = makeVar ( alpha    ,
+        self.__alpha  = self.make_var ( alpha    ,
                                   'alpha_%s'                 % name ,
                                   '#alpha_{#beta#prime}(%s)' % name , alpha , 1 , 1.e-3 , 1000 )
-        self.__beta   = makeVar ( beta     ,
+        self.__beta   = self.make_var ( beta     ,
                                   'beta_%s'                  % name ,
                                   '#beta_{#beta#prime}(%s)'  % name , beta  , 1 , 1.e-3 , 1000 )
         
-        self.__scale  = makeVar ( scale     ,
+        self.__scale  = self.make_var ( scale     ,
                                   'scale_%s'                 % name ,
                                   '#theta_{#beta#prime}(%s)' % name , scale ,
                                   1 , -1000 , 1000 )
@@ -636,7 +635,7 @@ class BetaPrime_pdf(PDF) :
             dx = mx - mn
             limits_delta = mn - 10 * dx , mx + 10 * dx
             
-        self.__delta  = makeVar ( delta     ,
+        self.__delta  = self.make_var ( delta     ,
                                   'delta_%s'                 % name ,
                                   '#delta_{#beta#prime}(%s)' % name , delta ,
                                   0 , *limits_delta )
@@ -719,7 +718,7 @@ class Landau_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar ) 
         #
-        self.__scale  = makeVar ( scale     ,
+        self.__scale  = self.make_var ( scale     ,
                                 'scale_%s'            % name ,
                                 '#theta_{Landau}(%s)' % name , scale ,
                                 1 , -1000 , 1000 )
@@ -731,7 +730,7 @@ class Landau_pdf(PDF) :
             dx = mx - mn
             limits_delta = mn - 10 * dx , mx + 10 * dx
             
-        self.__delta  = makeVar ( delta     ,
+        self.__delta  = self.make_var ( delta     ,
                                   'delta_%s'            % name ,
                                   '#delta_{Landau}(%s)' % name , delta ,
                                   0 , *limits_delta )
@@ -799,7 +798,7 @@ class Argus_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar ) 
         #
-        self.__shape  = makeVar ( shape     ,
+        self.__shape  = self.make_var ( shape     ,
                                   'shape_%s'         % name ,
                                   '#chi_{Argus}(%s)' % name , shape ,
                                   1     ,
@@ -812,11 +811,11 @@ class Argus_pdf(PDF) :
             limits_high = mx , mn - 5.0 * dm , mx + 5.0 * dm
             limits_low  = mn , mn - 5.0 * dm , mx + 5.0 * dm 
             
-        self.__high  = makeVar ( high      ,
+        self.__high  = self.make_var ( high      ,
                                  'high_%s'          % name ,
                                  'high_{Argus}(%s)' % name , high , *limits_high )
         
-        self.__low   = makeVar ( low      ,
+        self.__low   = self.make_var ( low      ,
                                  'low_%s'           % name ,
                                  'low_{Argus}(%s)'  % name , low , *limits_low )
         
@@ -914,12 +913,12 @@ class TwoExpos_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar ) 
         #
-        self.__alpha  = makeVar ( alpha      ,
+        self.__alpha  = self.make_var ( alpha      ,
                                   'alpha_%s'        % name ,
                                   '#alpha_{2e}(%s)' % name , alpha ,
                                   1     ,
                                   1.e-4 , 50 )
-        self.__delta  = makeVar ( delta     ,
+        self.__delta  = self.make_var ( delta     ,
                                   'delta_%s'        % name ,
                                   '#delta_{2e}(%s)' % name , delta ,
                                   1     ,
@@ -931,7 +930,7 @@ class TwoExpos_pdf(PDF) :
             dm  =  mx - mn
             limits_x0 = mn , mn - 0.2 *  dm , mx  + 0.1 *  dm
 
-        self.__x0     = makeVar ( x0    ,
+        self.__x0     = self.make_var ( x0    ,
                                   'x0_%s'       % name ,
                                   'x0_{2e}(%s)' % name , x0 , *limits_x0 )
         
@@ -1018,10 +1017,10 @@ class Gumbel_pdf(PDF) :
         #
         PDF.__init__ ( self , name , xvar )
         #
-        self.__mu    = makeVar ( mu      ,
+        self.__mu    = self.make_var ( mu      ,
                                'mu_%s'                  % name ,
                                'mu_{Gumbel}(%s)'        % name , mu   )
-        self.__beta  = makeVar ( beta        ,
+        self.__beta  = self.make_var ( beta        ,
                                  'beta_%s'                % name ,
                                  'beta_{Gumbel}(%s)'      % name , beta ) 
         
@@ -1104,10 +1103,10 @@ class Weibull_pdf(PDF) :
         
         PDF.__init__  ( self , name , xvar )
         
-        self.__scale = makeVar ( scale                   ,
+        self.__scale = self.make_var ( scale                   ,
                                  'scale_%s'              % name ,
                                  'scale_{Weibull}(%s)'   % name , scale , 1 , 1.e-8 , 1.e+6 )
-        self.__shape = makeVar ( shape                   ,
+        self.__shape = self.make_var ( shape                   ,
                                  'shape_%s'              % name ,
                                  'shape_{Weibull}(%s)'   % name , shape , 1 , 1.e-8 , 1.e+6 )
 
@@ -1117,7 +1116,7 @@ class Weibull_pdf(PDF) :
             dx = ( mx -  mn )
             limits_shift = mn + 0.01 * dx , mn , mx
             
-        self.__shift = makeVar ( shift                   ,
+        self.__shift = self.make_var ( shift                   ,
                                  'shift_%s'              % name ,
                                  'shift_{Weibull}(%s)'   % name , shift , *limits_shift )
         ## finally build pdf
@@ -1224,15 +1223,15 @@ class Tsallis_pdf(PDF) :
         ## initialize the base 
         PDF.__init__  ( self , name , xvar )
         
-        self.__m0   = makeVar ( m0              ,
+        self.__m0   = self.make_var ( m0              ,
                                 'm0_%s'  % name , 
                                 'm0(%s)' % name , m0 , 0     , 1e+6 )
         
-        self.__n    = makeVar ( n               ,
+        self.__n    = self.make_var ( n               ,
                                 'n_%s'   % name , 
                                 'n(%s) ' % name , n  , 0.01  , 1000 )  
         
-        self.__T    = makeVar ( T               ,
+        self.__T    = self.make_var ( T               ,
                                 'n_%s'   % name , 
                                 'n(%s) ' % name , T  , 1.e-3 , 1e+6 )
         
@@ -1330,11 +1329,11 @@ class QGSM_pdf(PDF) :
         PDF.__init__  ( self , name , pt )
 
         
-        self.__m0   = makeVar ( m0              ,
+        self.__m0   = self.make_var ( m0              ,
                                 'm0_%s'  % name , 
                                 'm0(%s)' % name , mass , 0     , 1e+6 )
         
-        self.__b    = makeVar ( b               ,
+        self.__b    = self.make_var ( b               ,
                                 'b_%s'   % name , 
                                 'b(%s) ' % name , b    , 0.    , 1e+6 )  
         

@@ -19,7 +19,6 @@
 /** @file 
  *  Collection of useful objects with associated "covariances".
  *  The concept has been stollen from Wouter Hulsbergen's lines 
- *
  *  @author Vanya BELYAEV Ivane.Belyaev@itep.ru
  *  @date 2009-06-03
  */
@@ -836,6 +835,21 @@ namespace Ostap
      */
     ValueWithError igamma
     ( const ValueWithError& b ) ;
+    // ========================================================================
+    /** evaluate Pochhammer symbol 
+     *  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @param x (INPUT) the parameter 
+     *  @param n (INPUT) the parameter 
+     *  @return  pochhammer  symbol 
+     *  @warning invalid and small covariances are ignored 
+     *  @see Ostap::Math::rising_factorial
+     *  @see Ostap::Math::falling_factorial
+     *  @see Ostap::Math::pochhammer 
+     */
+    ValueWithError pochhammer 
+    ( const ValueWithError& x ,  
+      const unsigned short n ) ;
     // ========================================================================
     /** evaluate standard Gauss PDF 
      *  @param x the value 

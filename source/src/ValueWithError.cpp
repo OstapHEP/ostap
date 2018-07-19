@@ -1255,6 +1255,36 @@ Ostap::Math::ValueWithError Ostap::Math::igamma
   return Ostap::Math::ValueWithError ( v , e2 ) ;
 }
 // ============================================================================
+/*  evaluate Pochhammer symbol 
+ *  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+ *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+ *  @param x (INPUT) the parameter 
+ *  @param n (INPUT) the parameter 
+ *  @return  pochhammer  symbol 
+ *  @warning invalid and small covariances are ignored 
+ *  @see Ostap::Math::rising_factorial
+ *  @see Ostap::Math::falling_factorial
+ *  @see Ostap::Math::pochhammer 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::pochhammer 
+( const Ostap::Math::ValueWithError& x , 
+  const unsigned short               n )
+{
+  if      ( 0 == n )   { return 1 ; }  // simple case
+  ///
+  if ( 0 >= x.cov2 () || _zero ( x.cov2() ) ) 
+  { return pochhammer ( x.value() , n ) ; }
+  ///
+  std::pair<double,double> r = pochhammer_with_derivative ( x , n ) ;
+  //
+  const double v  = r.first  ;
+  const double d  = r.second ;
+  const double e2 = x.cov2() * d * d ;
+  //
+  return Ostap::Math::ValueWithError ( v , e2 ) ;
+}
+// ============================================================================
 /*  evaluate <code>hypot(x,y)</code>
  *  \f$ \sqrt( x^2 + y^2 ) \f$
  *   @param x (INPUT) the first parameter

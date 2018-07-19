@@ -6992,8 +6992,154 @@ Double_t Ostap::Models::QGaussian::analyticalIntegral
   setPars() ;
   return m_qgauss.integral ( xmin , xmax ) ;
 }
+// ============================================================================
+
 
 // ============================================================================
+// Flat in 1D
+// ============================================================================
+Ostap::Models::Uniform::Uniform
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         )
+  : RooAbsPdf  ( name , title ) 
+  , m_dim      ( 1 ) 
+  , m_x        ( "x" , "x-observable" , this , x )
+{}
+// ============================================================================
+// Flat in 2D
+// ============================================================================
+Ostap::Models::Uniform::Uniform
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          y         )
+  : RooAbsPdf  ( name , title ) 
+  , m_dim      ( 2 ) 
+  , m_x        ( "x" , "x-observable" , this , x )
+  , m_y        ( "y" , "y-observable" , this , y )
+{}
+// ============================================================================
+// Flat in 3D
+// ============================================================================
+Ostap::Models::Uniform::Uniform
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          y         ,
+  RooAbsReal&          z         )
+  : RooAbsPdf  ( name , title ) 
+  , m_dim      ( 3 ) 
+  , m_x        ( "x" , "x-observable" , this , x )
+  , m_y        ( "y" , "y-observable" , this , y )
+  , m_z        ( "z" , "z-observable" , this , z )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Uniform::Uniform
+( const Ostap::Models::Uniform& right ,
+  const char*                   name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_dim      ( right.m_dim ) 
+  , m_x        ( "!x" , this , right.m_x ) 
+  , m_y        ( "!y" , this , right.m_y ) 
+  , m_z        ( "!z" , this , right.m_z ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::Uniform::~Uniform(){} 
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Uniform*
+Ostap::Models::Uniform::clone ( const char* name ) const 
+{ return new Ostap::Models::Uniform ( *this , name ) ; }
+// ============================================================================
+// the actual evaluation of function
+// ============================================================================
+Double_t Ostap::Models::Uniform::evaluate() const { return 1 ; }
+// ============================================================================
+Int_t Ostap::Models::Uniform::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  //
+  if      ( 3 == m_dim && matchArgs ( allVars , analVars , m_x , m_y , m_z ) ) { return 1 ; }
+  else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_x , m_z       ) ) { return 2 ; }
+  else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_y , m_z       ) ) { return 3 ; }
+  else if ( 2 <= m_dim && matchArgs ( allVars , analVars , m_x , m_y       ) ) { return 4 ; }
+  else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_z             ) ) { return 5 ; }
+  else if ( 2 <= m_dim && matchArgs ( allVars , analVars , m_y             ) ) { return 6 ; }
+  else if ( 1 <= m_dim && matchArgs ( allVars , analVars , m_x             ) ) { return 7 ; }
+  //
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Uniform::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  // 3D-itegral 
+  if      ( 3 == m_dim && 1 == code ) 
+  {
+    return 
+      ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
+      ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) *
+      ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;
+  }
+  // 2D-itegral: x,z
+  else if ( 3 == m_dim && 2 == code ) 
+  {
+    return 
+      ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
+      ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
+  }
+  // 2D-itegral: y,z
+  else if ( 3 == m_dim && 3 == code ) 
+  {
+    return 
+      ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) *
+      ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
+  }
+  // 2D-itegral: x,y
+  else if ( 2 <= m_dim && 4 == code ) 
+  {
+    return 
+      ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
+      ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) ;    
+  }
+  // 1D-itegral: z 
+  else if ( 3 == m_dim && 5 == code ) 
+  {
+    return 
+      ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
+  }
+  // 1D-itegral: y 
+  else if ( 2 <= m_dim && 6 == code ) 
+  {
+    return 
+      ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) ;    
+  }
+  // 1D-itegral: x 
+  else if ( 1 <= m_dim && 7 == code ) 
+  {
+    return 
+      ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) ;    
+  }
+  //
+  assert ( 1 > 2 ) ;
+  //
+  return 0 ;
+}
+// ============================================================================
+
+
+// ============================================================================
+ClassImp(Ostap::Models::Uniform            ) 
 ClassImp(Ostap::Models::BreitWigner        ) 
 ClassImp(Ostap::Models::Rho0               )
 ClassImp(Ostap::Models::Kstar              )

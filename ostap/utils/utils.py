@@ -517,21 +517,21 @@ class ImplicitMT(object) :
         
     ## Context manager: ENTER 
     def __enter__ ( self ) :
-        self.enabled = ROOT.IsImplicitMCEnabled()
+        self.enabled = ROOT.ROOT. IsImplicitMTEnabled ()
         
         if bool ( self.enabled ) == bool ( self.enable ) : pass 
-        elif self.enable : ROOT.EnableImplicitMT  ()
-        else             : ROOT.DisableImplicitMT ()
+        elif self.enable : ROOT.ROOT.EnableImplicitMT  ()
+        else             : ROOT.ROOT.DisableImplicitMT ()
 
         return self
     
     ## Context managr: EXIT
     def __exit__ ( self , *_ ) :
         ##
-        enabled = ROOT.IsImplicitMCEnabled()
+        enabled = ROOT.ROOT.IsImplicitMTEnabled()
         if bool ( enabled ) == bool ( self.enabled ) : pass 
-        elif self.enabled : ROOT.EnableImplicitMT  ()
-        else              : ROOT.DisableImplicitMT ()
+        elif self.enabled : ROOT.ROOT.EnableImplicitMT  ()
+        else              : ROOT.ROOT.DisableImplicitMT ()
 
 
 # =============================================================================
@@ -555,7 +555,7 @@ def implicitMT ( enable = True ) :
 
 # =============================================================================
 ## @class CleanUp
-#  Simple (base) class to get temporary files   and directories and to remove them at axit
+#  Simple (base) class to get temporary files and directories and to remove them at axit
 class  CleanUp(object) :
     _tmpfiles = set()
     _tmpdirs  = set()

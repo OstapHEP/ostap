@@ -646,6 +646,11 @@ namespace Ostap
     /** round to nearest integer, rounds half integers to nearest even integer 
      *  @author Vanya BELYAEV Ivan.BElyaev
      */
+    inline long round ( const long double x ) { return round ( double ( x ) ) ; }
+    // ========================================================================
+    /** round to nearest integer, rounds half integers to nearest even integer 
+     *  @author Vanya BELYAEV Ivan.BElyaev
+     */
     inline long round ( const float  x ) { return round ( double ( x ) ) ; }
     // ========================================================================
     /** get mantissa and (decimal) exponent 
