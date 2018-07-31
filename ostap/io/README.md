@@ -5,21 +5,21 @@
 
 Several useful classes and functions for *input/output* operations 
 
-- Very useful class `ZipShelve`, essentially the *zipped* version of the standard `shelve` module
+- Very useful class `ZipShelf`, essentially the *zipped* version of the standard `shelve` module
    - it allows to store all  *pickable* objects, in particualr almost all `ROOT`-classes 
    - it stores them in *zipped* format, therefore the resulting database is rather compact 
    - it have very simple and intutitive `dict`-like/`shelve` interface and easy-to-use 
 ```
 import zipshelve  ## import the ZipShelve module 
-with zipShelve.open ('a_db', 'n')  as db :  ## create new DB
+with zipshelve.open ('a_db', 'n')  as db :  ## create new DB
    abcde = ...
    db['some_key'] =  abcde              ## add information to DB 
    ...
    abcd = db['some_key']                ## get information from DB 
 ```
-- `SQLiteShelve` - very similar to `ZipShelve` but uses SQLite as storage backend 
-- `RootShelve` - very similar to `ZipShelve` but uses `ROOT.TFile` as storage backend 
-- `RootOnlyShelve` - very similar to the previos one, also uses `ROOT.TFile` as storage backend. but allows to store only objects storable in `ROOT.TFile` 
+- `SQLiteShelf` - very similar to `ZipShelve` but uses SQLite as storage backend 
+- `RootShelf` - very similar to `ZipShelve` but uses `ROOT.TFile` as storage backend 
+- `RootOnlyShelf` - very similar to the previos one, also uses `ROOT.TFile` as storage backend. but allows to store only objects storable in `ROOT.TFile` 
  
 Also  it provided a useful pythoniized decorations for `ROOT.TFile`/`ROOT.TDirectory`:
 ```
