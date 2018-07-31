@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 // Include files 
 // ============================================================================
@@ -10,6 +9,10 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Formula.h"
+// ============================================================================
+// Local
+// ============================================================================
+#include "Exception.h"
 // ============================================================================
 /** Implementation file for class Ostap::Formula
  *  @see Ostap::Formula
@@ -50,9 +53,36 @@ Ostap::Formula::~Formula()
 // ============================================================================
 double Ostap::Formula::evaluate () // evaluate the formula 
 { 
-  GetNdata() ; 
+  const Int_t d = GetNdata() ; 
+  Ostap::Assert ( 1 == d , 
+                  "evaluate: scalar call for GetNdata()!=1 function" , 
+                  "Ostap::Formula"           , 
+                  Ostap::StatusCode::FAILURE ) ;
   return EvalInstance () ; 
 }
+// ============================================================================
+// evaluate the given instance of the formula 
+// ============================================================================
+double Ostap::Formula::evaluate ( const unsigned short i ) // evaluate the formula 
+{ 
+  const Int_t d = GetNdata() ; 
+  Ostap::Assert ( i  < d ,
+                  "evaluate: invalid instance counter" , 
+                  "Ostap::Formula"           , 
+                  Ostap::StatusCode::FAILURE ) ;
+  return EvalInstance ( i ) ; 
+}
+// ============================================================================
+// evaluate all the instances of the formula 
+// ============================================================================
+Int_t Ostap::Formula::evaluate ( std::vector<double>& results ) 
+{ 
+  const Int_t d = GetNdata() ; 
+  results.resize ( d ) ;
+  for ( Int_t i = 0 ; i < d ; ++i ) { results [ i ] = EvalInstance ( i ) ; }
+  return d ;  
+}
+
 // ============================================================================
 // The END 
 // ============================================================================

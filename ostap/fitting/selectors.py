@@ -107,7 +107,7 @@ import ROOT, cppyy, math, sys
 # =============================================================================
 # logging 
 # =============================================================================
-from   ostap.logger.logger import getLogger 
+from   ostap.logger.logger import getLogger, attention, allright
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
@@ -511,7 +511,6 @@ class SelectorWithVars(SelectorWithCuts) :
         
         self.__trivial = self.__triv_vars and self.__triv_sel and triv_cuts
         if not silence :
-            from  ostap.logger.logger import  attention, allright
             tv = allright ( 'True' )  if  self.__triv_vars else  attention ( 'False' )
             ts = allright ( 'True' )  if  self.__triv_sel  else  attention ( 'False' )
             tc = allright ( 'True' )  if  triv_cuts        else  attention ( 'False' )
@@ -533,12 +532,8 @@ class SelectorWithVars(SelectorWithCuts) :
             the_line += sep 
             the_line += line1 % ( 'Variable' , 'Description' )
             the_line += sep
-            from  ostap.logger.logger import  attention, allright, with_colors   
             for v in self.__variables :
-                if   with_colors : 
-                    trivial = allright ('True')+ 4*' ' if v.trivial else attention ( 'False')+3*' '
-                else :
-                    trivial = '%-8s' % v.trivial 
+                trivial = allright ('True') + 4* ' ' if v.trivial else attention ( 'False' ) + 3 * ' '
                     
                 fmt = line2 % ( v.name        , 
                                 v.description ,
@@ -744,10 +739,9 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__stat[0] = self.event()
         
         if not self.__silence :
-            from ostap.logger.logger import attention, allright  
             skipped = 'Skipped:%d' % self.skipped
             skipped = '/' + attention ( skipped ) if self.skipped else ''
-            cuts    = allright ( '"%s"' % self.cuts () ) if self.trivial_sel else attenttion ( '"%s"'  % self.cuts() ) 
+            cuts    = allright ( '"%s"' % self.cuts () ) if self.trivial_sel else attention ( '"%s"'  % self.cuts() ) 
             self.__logger.info (
                 'Selector(%s): Events Total:%d/Processed:%d%s CUTS: %s' % (
                 self.__name    ,
@@ -758,7 +752,6 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__logger.info ( 'Selector(%s): dataset created:%s' %  ( self.__name ,  self.__data ) )
             
         if self.__data and not self.__silence :
-            from ostap.logger.logger import attention 
             vars = []
             for v in self.__variables :
                 s    = self.__data.statVar( v.name )
@@ -1054,9 +1047,8 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
             ds = ROOT.RooDataSet ( name  , title , tree , varset , str( cuts ) )
 
     if not silent : 
-        from ostap.logger.logger import attention
         skipped = 'Skipped:%d' % stat[2]
-        skipped = '/'+attention ( skipped ) if stat[2] else '' 
+        skipped = '/' + attention ( skipped ) if stat[2] else '' 
         logger.info (
             'make_dataset: Events Total:%d/Processed:%s%s CUTS: "%s"\n# %s' % (
             stat[0] ,

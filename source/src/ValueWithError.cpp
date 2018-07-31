@@ -2488,7 +2488,7 @@ Ostap::Math::interpolate
               y_i.begin () + std::min ( x_i.size() , y_i.size() ) , _y .begin () ) ;
   //
   std::pair<double,double> r = 
-    Ostap::Math::Interpolation::neville
+    Ostap::Math::Interpolation::neville2
     ( x_i.begin() ,  
       x_i.end  () , 
       _y .begin() ,  

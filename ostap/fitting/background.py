@@ -1464,65 +1464,107 @@ class PS23L_pdf(PDF) :
 models.append ( PS23L_pdf ) 
 
 # =============================================================================
-## create simple popular 1D-background models
+## create popular 1D ``background''  function
+#  @param bkg  the type of background function/PDF
+#  @param name the name of background function/PDF
+#  @param xvar the observable
+#  Possible values for <code>bkg</code>:
+#  - None or 0          : <code>Flat1D</code>
+#  - positive integer N : <code>Bkg_pdf(power=N)</code> 
+#  - negative integer K : <code>PolyPos_pdf(power=abs(K))</code> 
+#  - any Ostap/PDF      : PDF will be copied or cloned  
+#  - any RooAbsPdf    P : <code>Generic1D_pdf(pdf=P)</code> 
+#  - any RooAbsReal   V : <code>Bkg_pdf(power=0,tau=V)</code> 
+#  - math.exp           : <code>Bkg_pdf(power=0)</code>
+#  - ''  , 'const', 'constant' , 'flat' , 'uniform' : <code>Flat1D</code>
+#  - 'p0', 'pol0' , 'poly0' : <code>Flat1D</code>
+#  - 'e' , 'exp'  , 'expo'  : <code>Bkg_pdf(power=0)</code>
+#  - 'e+', 'exp+' , 'expo+' : <code>Bkg_pdf(power=0)</code> with tau>0
+#  - 'e-', 'exp-' , 'expo-' : <code>Bkg_pdf(power=0)</code> with tau<0
+#  - 'e0', 'exp0' , 'expo0' : <code>Bkg_pdf(power=0)</code>
+#  - 'eN', 'expN' , 'expoN' : <code>Bkg_pdf(power=N)</code>
+#  - 'pN', 'polN' , 'polyN' : <code>PolyPos_pdf(power=N)</code>
+#  - 'iN', 'incN' , 'incrN','increasingN' : <code>Monothonic_pdf(power=N,increasing=True)</code>
+#  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monothonic_pdf(power=N,increasing=False)</code>     
+#  @see ostap.fitting.basic.PDF.make_bkg 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-04-03
-def make_bkg ( bkg , name , xvar , **kwargs ) :
-    """Helper function to create 1D-background models (around Bkg_pdf)
+def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
+    """Helper function to create various popular 1D-background models
+    
+    Possible values for ``bkg'':
+    
+    - None or 0                               : Flat1D
+    - positive integer ``N''                  : Bkg_pdf(power=N)
+    - negative integer ``K''                  : PolyPos_pdf(power=abs(K))
+    - any Ostap-PDF                           : PDF will be copied or cloned  
+    - RooAbsPdf      ``pdf''                  : Generic1D_pdf(pdf=pdf)
+    - RooAbsReal     ``var''                  : Bkg_pdf(power=0,tau=var)
+    - math.exp                                : Bkg_pdf(power=0)
+    - 'const' or 'constant'                   : Flat1D
+    - '' , 'flat' or 'uniform'                : Flat1D
+    - 'e' , 'exp'  or 'expo'                  : Bkg_pdf(power=0)
+    - 'e+', 'exp+' or 'expo+'                 : Bkg_pdf(power=0) with tau>0 (increasing)
+    - 'e-', 'exp-' or 'expo-'                 : Bkg_pdf(power=0) with tau<0 (decreasing)
+    - 'e0', 'exp0' or 'expo0'                 : Bkg_pdf(power=0) 
+    - 'eN', 'expN' or 'expoN'                 : Bkg_pdf(power=N)
+    - 'p0', 'pol0' or 'poly0'                 : Flat1D
+    - 'pN', 'polN' or 'polyN'                 : PolyPos_pdf(power=N)
+    - 'iN', 'incN' , 'incrN' or 'increasingN' : Monothonic_pdf(power=N,increasing=True)
+    - 'dN', 'decN' , 'decrN' or 'decreasingN' : Monothonic_pdf(power=N,increasing=False)
     
     >>> x =   .. ## the variable
     
     ## None or non-negative integer:  construct PDF using Bkg_pdf 
-    >>> bkg1  = makeBkg ( 3      , 'B1' , x ) ## use Bkg_pdf ( 'B1' , x , power = 3 )
+    >>> bkg1  = make_bkg ( 3      , 'B1' , x ) ## use Bkg_pdf ( 'B1' , x , power = 3 )
     
     ## generic RooAbsPdf: use this PDF
     >>> pdf   = RooPolynomial( ... )
-    >>> bkg2  = makeBkg ( pdf    , 'B2' , x ) ## use Generic1D_pdf ( pdf , x , 'B2' )
+    >>> bkg2  = make_bkg ( pdf    , 'B2' , x ) ## use Generic1D_pdf ( pdf , x , 'B2' )
     
     ## some Ostap-based model, use it as it is  
     >>> model = Convex_pdf ( ... )
-    >>> bkg3  = makeBkg ( models , 'B3' , x )  
+    >>> bkg3  = make_bkg ( models , 'B3' , x )  
     
     ## some RooAbsReal, use is as exponenial slope for Bkg_pdf
     >>> tau  = RooRealVar( ....  )
-    >>> bkg4 = makeBkg ( tau     , 'B4' , x ) 
-    
+    >>> bkg4 = make_bkg ( tau     , 'B4' , x ) 
     """
-    from ostap.fitting.basic import Flat1D, Generic1D_pdf
+    if not logger : logger = globals()['logger'] 
     
+    from ostap.fitting.basic import Flat1D, Generic1D_pdf
+    model = None
+
     if   bkg is None :         
         model = Flat1D ( name = name , xvar =  xvar )
-        if kwargs : logger.warning ('makeBkg(%s): kwargs %s are ignored' % ( name , kwargs) )
+        if kwargs : logger.warning ('make_bkg: kwargs %s are ignored' % kwargs )
         
     ## regular case: use Bkg_pdf or PolyPos_pdf as baseline background shapes 
     elif isinstance ( bkg , ( int , long ) ) :
 
-        if   0 < bkg : model =     Bkg_pdf ( name , power =     bkg  , xvar = xvar , **kwargs )
-        elif 0 > bkg : model = PolyPos_pdf ( name , power = abs(bkg) , xvar = xvar , **kwargs )
+        if   0 < bkg : model =     Bkg_pdf ( name , power =       bkg  , xvar = xvar , **kwargs )
+        elif 0 > bkg : model = PolyPos_pdf ( name , power = abs ( bkg ) , xvar = xvar , **kwargs )
         else         :
             model = Flat1D      ( name = name             , xvar = xvar )
-            if kwargs : logger.warning ( 'makeBkg(%s): kwargs %s are ignored' % ( name , kwargs ) )
+            if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
     
     ## native RooFit pdf ? 
     elif isinstance ( bkg , ROOT.RooAbsPdf ) :
 
         ## use Generic1D_pdf 
         model = Generic1D_pdf ( bkg , xvar = xvar , name = name ) 
-        if kwargs : logger.warning ('makeBkg(%s): kwargs %s are ignored' % ( name , kwargs ) )
+        if kwargs : logger.warning ('make_bkg: kwargs %s are ignored' % kwargs )
 
     ## some Ostap-based background model ?
-    elif isinstance ( bkg , PDF ) and not kwargs : 
+    elif isinstance ( bkg , PDF ) : 
         
         ## return the same model/PDF 
-        if   xvar is bkg.xvar          :
-            model = bkg  
-            logger.debug ('%s(%s) model is copied' % ( type(model).__name__ , model.name ) )
-        ## make a clone : 
-        elif hasattr ( bkg , 'clone' ) :
+        if   xvar is bkg.xvar and not  kwargs :
+            model = bkg  ##  use the same stuff 
+            logger.debug ( 'make_bkg: %s model is copied to %s' % ( bkg , model ) )
+        else :           ## make a clone : 
             model = bkg.clone ( name = name , xvar = xvar , **kwargs )
-            logger.debug ('%s(%s) model is cloned to %s(%s)' % ( type(bkg).__name__ , bkg.name , type(model).__name__ , model.name ) ) 
-        else :
-            raise TypeError("Do not now how to clone the background model from Ostap PDF")
+            logger.debug ( 'make_bkg: %s model is cloned to %s' % ( bkg , model ) ) 
         
     ## interprete it as exponential slope for Bkg-pdf 
     elif isinstance ( bkg , ROOT.RooAbsReal ) \
@@ -1530,19 +1572,21 @@ def make_bkg ( bkg , name , xvar , **kwargs ) :
              or ( isinstance ( bkg , tuple ) and 1 < len ( tuple ) <=3 ) :
         
         model = Bkg_pdf ( name , mass = xvar , tau = bkg , power = 0 , **kwargs )
-        if kwargs : logger.warning ( 'makeBkg(%s): kwargs %s are ignored' % ( name , kwargs ) )
-        
-    elif bkg is math.exp :
+        if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
+
+    ## exponent 
+    elif bkg is math.exp : 
         
         model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
-        if kwargs : logger.warning ( 'makeBkg(%s): kwargs %s are ignored' % ( name , kwargs ) )
-        
+        if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
+
+    ## strings ....
     elif isinstance ( bkg , str ) :
 
         bkg = bkg.strip().lower()
 
         if   bkg in ( '' , 'const' , 'constant' , 'flat' , 'uniform' , 'p0' , 'pol0' , 'poly0' ) :            
-            return makeVar ( 0 , name , xvar , **kwargs ) 
+            return make_bkg ( 0 , name , xvar   , logger = logger , **kwargs ) 
         elif bkg in ( 'e' , 'exp' , 'expo' , 'e0' , 'exp0' , 'expo0' ) : 
             model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
         elif bkg in ( 'e+' , 'exp+' , 'expo+' ) : 
@@ -1557,27 +1601,31 @@ def make_bkg ( bkg , name , xvar , **kwargs ) :
         poly = re.search ( r'(poly|pol|p)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if poly :
             degree = -1 * abs ( int ( poly.group ( 'degree' ) ) ) 
-            return makeBkg ( degree  , name ,  xvar , **kwargs  )
+            return make_bkg ( degree  , name ,  xvar , logger = logger , **kwargs  )
         
         expo = re.search ( r'(expo|exp|e)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if expo :
             degree =            int ( expo.group ( 'degree' ) ) 
-            return makeBkg ( degree  , name ,  xvar , **kwargs  )
+            return make_bkg ( degree  , name ,  xvar , logger = logger , **kwargs  )
 
         incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if incr : 
             degree = int ( incr.group ( 'degree' ) )
-            return makeBkg ( Monothonic_pdf ( name , xvar , degree , True ) , name ,  xvar , **kwargs  )
+            bkg    = Monothonic_pdf ( name , xvar , degree , True )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
         
         decr = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if decr : 
             degree = int ( decr.group ( 'degree' ) )
-            return makeBkg ( Monothonic_pdf ( name , xvar , degree , False ) , name ,  xvar , **kwargs  )
+            bkg    = Monothonic_pdf ( name , xvar , degree , False )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
-        
-    if model : return model
+    if model :
+        logger.debug ( 'make_bkg: created model is %s' % model ) 
+        return model
     
     raise  TypeError("Wrong type of bkg object: %s/%s " % ( bkg , type ( bkg ) ) ) 
+
 
 # =============================================================================
 if '__main__' == __name__ : 

@@ -92,11 +92,6 @@ def test_approximation  ():
         s += vf-vb
             
     logger.info ('Approximation quality %s' % s )
-
-    
-    
-    
-    
     
 # =============================================================================
 if '__main__' == __name__ :

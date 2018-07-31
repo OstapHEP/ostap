@@ -30,8 +30,8 @@ __all__ = (
     'colored_string' , ## make a colored string
     'attention'      , ## make "attention" string
     'allright'       , ## make "allright" string
-    #
-    'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'
+    ##
+    'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL' ,
     )
 # =============================================================================
 # Message levels
@@ -105,7 +105,7 @@ logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
 # =============================================================================
 # - is sys.stdout attached to terminal or not ?
 # - do we run IPYTHON ? 
-from ostap.utils.basic import isatty, with_ipython  
+from ostap.utils.basic import isatty, with_ipython
 
 # =============================================================================
 # COLORS: 

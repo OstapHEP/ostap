@@ -33,6 +33,10 @@ namespace Ostap
     class LegendreSum  ; // forward declaration
     class ChebyshevSum ; // forward declaration
     class Polynomial   ; // forward declaration
+    /// Interpolants 
+    class Barycentric  ; // forward declaration
+    class Newton       ; // forward declaration
+    namespace Interpolation { class Table ; } // forward declaration
     // ========================================================================
     /** @class Bernstein
      *  The sum of bernstein's polynomial of order N
@@ -71,7 +75,7 @@ namespace Ostap
         // ====================================================================
       } ;
       // ======================================================================
-    public:
+    public: // the basic constructors 
       // ======================================================================
       /// constructor from the order
       Bernstein ( const unsigned short        N     = 0 ,
@@ -105,6 +109,8 @@ namespace Ostap
                   const double     xmin ,
                   const double     xmax ) ;
       // ======================================================================
+    public: // Newton-Bernstein interpolation 
+      // ======================================================================
       /** construct Bernstein interpolant
        *  @param x    vector of abscissas
        *  @param y    vector of function values
@@ -115,7 +121,7 @@ namespace Ostap
        *  It relies on Newton-Bernstein algorithm
        *  @see http://arxiv.org/abs/1510.09197
        *  @see Mark Ainsworth and Manuel A. Sanches,
-       *       "Computing of Bezier control points of Largangian interpolant
+       *       "Computing of Bezier control points of Lagrangian interpolant
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        */
@@ -124,15 +130,102 @@ namespace Ostap
                   const double               xmin  = 0 ,
                   const double               xmax  = 1 ) ;
       // ======================================================================
+      /** constructor from interpolation points or Neville/Lagrange polynomials 
+       *  @param p    interpolation points 
+       *  @param xmin low  edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches,
+       *       "Computing of Bezier control points of Largangian interpolant
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Interpolation::Table
+       *  @see Ostap::Math::Neville
+       *  @see Ostap::Math::Lagrange
+       */
+      Bernstein ( const Interpolation::Table& p    , 
+                  const double                xmin ,
+                  const double                xmax ) ;
+      // ======================================================================
+      /** constructor from interpolation points or Neville/Lagrange polynomials 
+       *  @param p    interpolation points 
+       *  @param xmin low  edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches,
+       *       "Computing of Bezier control points of Largangian interpolant
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Interpolation::Table
+       *  @see Ostap::Math::Neville
+       *  @see Ostap::Math::Lagrange
+       *  @see Ostap::Math::Newton
+       */
+      Bernstein ( const Interpolation::Table& p ) ;
+      // ======================================================================
+      /** constructor from Barycentric Lagrange interpolant 
+       *  @param b    barycnetric lagrange interpolant 
+       *  @param xmin low  edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches,
+       *       "Computing of Bezier control points of Lagrangian interpolant
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       */
+      Bernstein ( const Barycentric& b    , 
+                  const double       xmin ,
+                  const double       xmax ) ;
+      // ======================================================================
+      /** constructor from Barycentric Lagrange interpolant 
+       *  @param b    barycnetric lagrange interpolant 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches,
+       *       "Computing of Bezier control points of Lagrangian interpolant
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       */
+      Bernstein ( const Barycentric& b ) ;
+      // ======================================================================
+      /** constructor from Newton interpolant 
+       *  @param b    Newton interpolant 
+       *  @param xmin low  edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches,
+       *       "Computing of Bezier control points of Lagrangian interpolant
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       */
+      Bernstein ( const Newton& b    , 
+                  const double  xmin ,
+                  const double  xmax ) ;
+      // ======================================================================
+      /** constructor from Newton interpolant 
+       *  @param b    newton interpolant 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches,
+       *       "Computing of Bezier control points of Lagrangian interpolant
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       */
+      Bernstein ( const Newton& b ) ;
+      // ======================================================================
+    protected: // make it protected, since it does not eliminate duplicates  
+      // ======================================================================
       /** construct Bernstein interpolant
        *  @param xbegin    vector of abscissas
        *  @param xend      vector of abscissas
-       *  @param ybegin    vector of function values
-       *  @param yend      vector of function values
+       *  @param ybegin    vector of function values  (the same size!)
        *  @param xmin low  edge for Bernstein polynomial
        *  @param xmax high edge for Bernstein polynomial
-       *  - if vector of y is longer  than vector x, extra values are ignored
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero
+       *  @attention it is assumed that abscissas are free from duplicates  
        *  It relies on Newton-Bernstein algorithm
        *  @see http://arxiv.org/abs/1510.09197
        *  @see Mark Ainsworth and Manuel A. Sanches,
@@ -140,13 +233,19 @@ namespace Ostap
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        */
-      template <class XITERATOR,class YITERATOR>
+      template <class XITERATOR,
+                class YITERATOR,
+                class XADAPTER , 
+                class YADAPTER >
       Bernstein ( XITERATOR    xbegin , 
                   XITERATOR    xend   ,
                   YITERATOR    ybegin , 
-                  YITERATOR    yend   ,
                   const double xmin   ,
-                  const double xmax   ) ;
+                  const double xmax   , 
+                  XADAPTER     xvalue , 
+                  YADAPTER     yvalue ) ;
+      // ======================================================================
+    public: // constructors from polynomial roots 
       // ======================================================================
       /** construct Bernstein polynomial from its roots
        *
@@ -183,10 +282,7 @@ namespace Ostap
         const std::vector<double>&                 r = 
         std::vector<double> () ) ;
       // ======================================================================
-      /// copy
-      Bernstein ( const Bernstein&  ) = default ;
-      /// move
-      Bernstein (       Bernstein&& ) = default ;
+    public: // constructors from different plynomial types 
       // ======================================================================
       /** constructor from Legendre polynomial
        *  @see http://www.sciencedirect.com/science/article/pii/S0377042700003769 eq.20
@@ -198,6 +294,13 @@ namespace Ostap
       // ======================================================================
       /// constructor from simple monomial form
       explicit Bernstein ( const Polynomial&   poly ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// copy
+      Bernstein ( const Bernstein&  ) = default ;
+      /// move
+      Bernstein (       Bernstein&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================
@@ -586,7 +689,7 @@ namespace Ostap
       const double               x    ) ;
     // ========================================================================
     /** Dual basic Bernstein function
-     *  The dual basic functions \f$ d^n_j(x)\f$ are dedeined as
+     *  The dual basic functions \f$ d^n_j(x)\f$ are defined as
      *   \f$  \int_{x_{min}}^{x_{max}}   b^n_k(x) d^n_j(x) = \delta_{kj}\f$,
      *   where \f$b^n_k(x)\f$ is basic Bernstein polynomial
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -664,13 +767,13 @@ Ostap::Math::Bernstein::Bernstein
   , m_xmax ( std::max ( xmin, xmax ) )
 {}
 // ============================================================================
-/* construct Bernstein interpolant
- * @param x    vector of abscissas
- * @param y    vector of function values
- * @param xmin low  edge for Bernstein polynomial
- * @param xmin high edge for Bernstein polynomial
- *  - if vector of y is longer  than vector x, extra values are ignored
- *  - if vector of y is shorter than vector x, missing entries are assumed to be zero
+/*  construct Bernstein interpolant
+ *  @param xbegin start of vector of abscissas
+ *  @param xend   end   of vector of abscissas
+ *  @param ybegin start if vector of function values (the same size)
+ *  @param xmin low  edge for Bernstein polynomial
+ *  @param xmin high edge for Bernstein polynomial
+ *  @attention it is assumed that abscissas are free from duplicates  
  *  It relies on Newton-Bernstein algorithm
  *  @see http://arxiv.org/abs/1510.09197
  *  @see Mark Ainsworth and Manuel A. Sanches,
@@ -679,29 +782,35 @@ Ostap::Math::Bernstein::Bernstein
  *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
  */
 // ============================================================================
-template <class XITERATOR,class YITERATOR>
+template <class XITERATOR,
+          class YITERATOR, 
+          class XADAPTER , 
+          class YADAPTER >
 Ostap::Math::Bernstein::Bernstein 
 ( XITERATOR    xbegin , 
   XITERATOR    xend   ,
   YITERATOR    ybegin , 
-  YITERATOR    yend   ,
   const double xmin   ,
-  const double xmax   ) 
+  const double xmax   , 
+  XADAPTER     xvalue , 
+  YADAPTER     yvalue )
   : Ostap::Math::PolySum ( xbegin == xend ? 0 : std::distance ( xbegin , xend  ) -1 ) 
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
 {
   const unsigned int N  = std::distance ( xbegin , xend ) ;
-  const unsigned int NY = std::distance ( ybegin , yend ) ;
   //
   std::vector<long double> _t ( std::max ( N , 1u ) ) ;
   //
-  std::transform ( xbegin , xend   , _t.begin() , 
-                   [this]( const double v ) { return this->t(v) ; } ) ;
+  std::transform 
+    ( xbegin , xend   , _t.begin() , 
+      [this,&xvalue]( const auto& v ) { return this->t ( xvalue ( v ) ) ; } ) ;
   //
   std::vector<long double> _f ( N ) ;
-  YITERATOR ylast = std::next ( ybegin , std::min ( N , NY ) ) ;
-  std::copy ( ybegin, ylast , _f.begin() ) ;
+  YITERATOR ylast = std::next ( ybegin , N ) ;
+  std::transform 
+    ( ybegin, ylast , _f.begin() , 
+      [&yvalue]( const auto& v ) { return (long double) yvalue ( v ) ; } ) ;    
   //
   std::vector<long double>  w ( N , 0.0 ) ;
   std::vector<long double>  c ( N , 0.0 ) ;
@@ -850,6 +959,10 @@ namespace Ostap
 // ============================================================================
 // some  specific interpolation part 
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/Interpolation.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -858,6 +971,52 @@ namespace Ostap
     // ========================================================================
     namespace Interpolation 
     {
+      // ======================================================================
+      class Abscissas ; // forward declaration 
+      class Table     ; // forward declaration 
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param p         interpolation points 
+       *  @param xmin low  edge for Bernstein polynomial
+       *  @param xmax high edge for Bernstein polynomial       
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  Table    ip = ... ; // interpolation table
+       *  Bernstein p  = bernstein ( ip , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      Ostap::Math::Bernstein
+      bernstein ( const Table&  ip   ,
+                  const double  xmin , 
+                  const double  xmax ) ;
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param p         interpolation points 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  Table    ip = ... ; // interpolation table
+       *  Bernstein p  = bernstein ( ip , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      inline Ostap::Math::Bernstein
+      bernstein ( const Table&  ip   ) 
+      { return bernstein ( ip , ip.xmin() , ip.xmax () ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param xbegin   begin-iterator for vector of abscissas 
@@ -871,7 +1030,7 @@ namespace Ostap
        *  It relies on Newton-Bernstein algorithm
        *  @see http://arxiv.org/abs/1510.09197
        *  @see Mark Ainsworth and Manuel A. Sanches, 
-       *       "Computing of Bezier control points of Largangian interpolant 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        *  @see Ostap::Math::Bernstein 
@@ -888,16 +1047,44 @@ namespace Ostap
       inline 
       Ostap::Math::Bernstein
       bernstein ( XITERATOR    xbegin , 
-                  XITERATOR    xend   ,  
+                  XITERATOR    xend   ,   
                   YITERATOR    ybegin , 
                   YITERATOR    yend   , 
                   const double xmin   , 
                   const double xmax   )
-      {
-        return Ostap::Math::Bernstein ( xbegin , xend ,
-                                        ybegin , yend , 
-                                        xmin   , xmax ) ;
-      }
+      { return bernstein ( Table ( xbegin , xend , ybegin , yend ) , xmin , xmax ) ; }
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param xbegin   begin-iterator for vector of abscissas 
+       *  @param xend     end-iterator for vector of abscissas 
+       *  @param ybegin   begin-iterator for vector of function
+       *  @param yend     end-iterator for vector of function
+       *  - if vector of y is longer  than vector x, extra values are ignored 
+       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  std::array<double,5> x = ... ; // abscissas
+       *  std::vector<double,> f = ... ; // function values 
+       *  Bernstein p = bernstein ( x.begin() , x.end() , 
+       *                            f.begin() , f.end() , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      template <class XITERATOR, class YITERATOR>
+      inline 
+      Ostap::Math::Bernstein
+      bernstein ( XITERATOR    xbegin , 
+                  XITERATOR    xend   ,   
+                  YITERATOR    ybegin , 
+                  YITERATOR    yend   )
+      { return bernstein ( Table ( xbegin , xend , ybegin , yend ) ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param func     the function 
@@ -908,7 +1095,7 @@ namespace Ostap
        *  It relies on Newton-Bernstein algorithm
        *  @see http://arxiv.org/abs/1510.09197
        *  @see Mark Ainsworth and Manuel A. Sanches, 
-       *       "Computing of Bezier control points of Largangian interpolant 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        *  @see Ostap::Math::Bernstein 
@@ -928,13 +1115,168 @@ namespace Ostap
                   XITERATOR    xend   ,  
                   const double xmin   , 
                   const double xmax   )
+      { return bernstein ( Table ( func , xbegin , xend ) , xmin , xmax ) ; }
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param func     the function 
+       *  @param xbegin   begin-iterator for vector of abscissas 
+       *  @param xend     end-iterator for vector of abscissas 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  auto f = [] ( double t ) { return std::sin ( t ) ; }
+       *  std::array<double,5> x = ... ; // abscissas
+       *  Bernstein p = bernstein ( f , x.begin() , x.end() , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      template <class XITERATOR, class FUNCTION>
+      inline 
+      Ostap::Math::Bernstein
+      bernstein ( FUNCTION     func   , 
+                  XITERATOR    xbegin ,  
+                  XITERATOR    xend   ) 
+      { return bernstein ( Table ( func , xbegin , xend ) ) ; }
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param func the function 
+       *  @param x    interpolation abscissas 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  auto f = [] ( double t ) { return std::sin ( t ) ; }
+       *  std::array<double,5> x = ... ; // abscissas
+       *  Bernstein p = bernstein ( f , x.begin() , x.end() , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      template <class FUNCTION>
+      inline 
+      Ostap::Math::Bernstein
+      bernstein ( FUNCTION               func , 
+                  const Abscissas::Data& x    , 
+                  const double           xmin , 
+                  const double           xmax )
+      { return bernstein ( func , x.begin () , x.end () , xmin , xmax ) ; }
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param func the function 
+       *  @param x    interpolation abscissas 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  auto f = [] ( double t ) { return std::sin ( t ) ; }
+       *  std::array<double,5> x = ... ; // abscissas
+       *  Bernstein p = bernstein ( f , x.begin() , x.end() , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      template <class FUNCTION>
+      inline 
+      Ostap::Math::Bernstein
+      bernstein ( FUNCTION               func , 
+                  const Abscissas::Data& x    ) 
+      { return bernstein ( func , x.begin () , x.end () ) ; }
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param func the function 
+       *  @param a    interpolation abscissas 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  auto f = [] ( double t ) { return std::sin ( t ) ; }
+       *  std::array<double,5> x = ... ; // abscissas
+       *  Bernstein p = bernstein ( f , x.begin() , x.end() , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      template <class FUNCTION>
+      inline 
+      Ostap::Math::Bernstein
+      bernstein ( FUNCTION         func , 
+                  const Abscissas& a    ,
+                  const double     xmin , 
+                  const double     xmax )
+      { return bernstein ( Table ( func , a ) , xmin , xmax ) ; }
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param func the function 
+       *  @param a    interpolation abscissas 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  auto f = [] ( double t ) { return std::sin ( t ) ; }
+       *  std::array<double,5> x = ... ; // abscissas
+       *  Bernstein p = bernstein ( f , x.begin() , x.end() , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      template <class FUNCTION>
+      inline 
+      Ostap::Math::Bernstein
+      bernstein ( FUNCTION         func , 
+                  const Abscissas& a    ) 
+      { return bernstein ( Table ( func , a ) ) ; }
+      // ======================================================================
+      /** construct interpolation polynomial (in Bernstein form)
+       *  @param func      the function 
+       *  @param abscissas interpolation abscissas 
+       *  It relies on Newton-Bernstein algorithm
+       *  @see http://arxiv.org/abs/1510.09197
+       *  @see Mark Ainsworth and Manuel A. Sanches, 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
+       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
+       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
+       *  @see Ostap::Math::Bernstein 
+       *  @code 
+       *  auto f = [] ( double t ) { return std::sin ( t ) ; }
+       *  std::array<double,5> x = ... ; // abscissas
+       *  Bernstein p = bernstein ( f , x.begin() , x.end() , -1 , 1 );
+       *  std::cout << " interpolant at x=0.1 is " << p(0.1) << std::endl ;
+       *  std::cout << " interpolant at x=0.2 is " << p(0.2) << std::endl ;
+       *  @endcode 
+       */
+      template <class XITERATOR, class FUNCTION>
+      inline 
+      Ostap::Math::Bernstein
+      bernstein ( FUNCTION              func  , 
+                  const unsigned short  N     ,
+                  const double          xmin  , 
+                  const double          xmax  , 
+                  const Abscissas::Type t     ) 
       {
-        const unsigned int N = std::distance ( xbegin , xend ) ;
-        std::vector<double> f ( N ) ;
-        std::transform ( xbegin , xend , f.begin () , func ) ;
-        return Ostap::Math::Bernstein ( xbegin    , xend    ,
-                                        f.begin() , f.end() , 
-                                        xmin      , xmax    ) ;
+        return bernstein 
+          ( func , Abscissas ( N , xmin , xmax , t ) , xmin , xmax ) ;
       }
       // ================================================================================
       /** construct interpolation polynomial (in Bernstein form) using Gauss-Lobatto grid, 
@@ -946,7 +1288,7 @@ namespace Ostap
        *  It relies on Newton-Bernstein algorithm
        *  @see http://arxiv.org/abs/1510.09197
        *  @see Mark Ainsworth and Manuel A. Sanches, 
-       *       "Computing of Bezier control points of Largangian interpolant 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        *  @see Ostap::Math::Bernstein 
@@ -960,43 +1302,16 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      lobatto  ( FUNCTION             func , 
-                 const unsigned short N    , 
-                 const double         xmin , 
-                 const double         xmax )
+      lobatto  ( FUNCTION             func  , 
+                 const unsigned short N     , 
+                 const double         xmin  , 
+                 const double         xmax  )
       {
-        // trivial case:
-        if ( 0 == N ) 
-        {
-          //  trivial grid 
-          const double x = 0.5 * ( xmin + xmax ) ;
-          const double y = func ( x ) ;
-          return Ostap::Math::Bernstein ( &x   , &x + 1 , 
-                                          &y   , &y + 1 , 
-                                          xmin , xmax   ) ;
-        }
-        //
-        std::vector<double> x ( N + 1 ) ;        
-        //
-        const double x_min = std::min ( xmin , xmax ) ;
-        const double x_max = std::max ( xmin , xmax ) ;
-        //
-        const double xhs = 0.5 * ( x_min + x_max ) ;
-        const double xhd = 0.5 * ( x_max - x_min ) ;
-        //
-        const long double pi_N1 = M_PIl / ( N  - 1 ) ;
-        auto _xi_ = [xhs,xhd,pi_N1] ( const unsigned short k ) 
-          { return xhs - std::cos ( pi_N1 * k ) * xhd  ; } ;
-        x.front() = x_min ;
-        x.back () = x_max ;
-        for ( unsigned short i = 1 ; i + 1 < N ; ++i ) { x[i] =  _xi_ ( i )  ; }
-        //
-        return bernstein ( func                  , 
-                           x.begin () , x.end () , 
-                           xmin       , xmax     ) ;
+        return bernstein 
+          ( func , Abscissas ( N , xmin , xmax , Abscissas::Lobatto ) , xmin , xmax ) ;
       }
       // ======================================================================
-      /*  construct interpolation polynomial (in Bernstein form)
+      /** construct interpolation polynomial (in Bernstein form)
        *  @param x       vector of abscissas 
        *  @param y       vector of function values 
        *  @param xmin low  edge for Bernstein polynomial
@@ -1006,7 +1321,7 @@ namespace Ostap
        *  It relies on Newton-Bernstein algorithm
        *  @see http://arxiv.org/abs/1510.09197
        *  @see Mark Ainsworth and Manuel A. Sanches, 
-       *       "Computing of Bezier control points of Largangian interpolant 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        *  @see Ostap::Math::Bernstein 
@@ -1032,7 +1347,7 @@ namespace Ostap
        *  It relies on Newton-Bernstein algorithm
        *  @see http://arxiv.org/abs/1510.09197
        *  @see Mark Ainsworth and Manuel A. Sanches, 
-       *       "Computing of Bezier control points of Largangian interpolant 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        *  @see Ostap::Math::Bernstein 
@@ -1059,7 +1374,7 @@ namespace Ostap
        *  It relies on Newton-Bernstein algorithm
        *  @see http://arxiv.org/abs/1510.09197
        *  @see Mark Ainsworth and Manuel A. Sanches, 
-       *       "Computing of Bezier control points of Largangian interpolant 
+       *       "Computing of Bezier control points of Lagrangian interpolant 
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        *  @see Ostap::Math::Bernstein 

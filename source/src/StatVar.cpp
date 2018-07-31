@@ -71,7 +71,7 @@ namespace
    */
   double _neff_  
   ( TTree&               tree  , 
-    Ostap::Formula*   cuts  , 
+    Ostap::Formula*      cuts  , 
     const unsigned long  first ,
     const unsigned long  last  ) 
   {
@@ -134,10 +134,11 @@ namespace
     Ostap::Utils::Notifier notify ( &tree , &var , cuts ) ;
     const bool with_cuts = nullptr != cuts ? true : false ;
     //
-    long double mom   = 0    ;
-    long double sumw  = 0    ;
-    bool        empty = true ;
-    const long double v0 = center ;
+    long double         mom     = 0      ;
+    long double         sumw    = 0      ;
+    bool                empty   = true   ;
+    const long double   v0      = center ;
+    std::vector<double> results {} ;
     for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
     {      
       long ievent = tree.GetEntryNumber ( entry ) ;
@@ -150,11 +151,15 @@ namespace
       //
       if  ( !w ) { continue ; }                            // ATTENTION!
       //
-      const long double dx =  var.evaluate() -  v0 ;
-      //
-      mom   += w  * std::pow ( dx , order ) ;
-      sumw  += w ;
-      empty  = false ;
+      var.evaluate ( results ) ;
+      for ( const long double r : results ) 
+      {
+        const long double dx =  r -  v0 ;
+        //
+        mom   += w  * std::pow ( dx , order ) ;
+        sumw  += w ;
+        empty  = false ;
+      } 
     }
     //
     return empty ? 0 : mom / sumw  ;
@@ -234,12 +239,13 @@ namespace
     Ostap::Utils::Notifier notify ( &tree , &var , cuts ) ;
     const bool with_cuts = nullptr != cuts ? true : false ;
     //
-    long double mom   = 0    ;
-    long double sumw  = 0    ; // sum of weights 
+    long double         mom   = 0    ;
+    long double         sumw  = 0    ; // sum of weights 
     // for uncertainties 
-    long double sumw2 = 0    ; // sum of weights^2
-    long double c2    = 0    ;
-    double      empty = true ;
+    long double         sumw2 = 0    ; // sum of weights^2
+    long double         c2    = 0    ;
+    double              empty = true ;
+    std::vector<double> results {}   ;
     for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
     {      
       long ievent = tree.GetEntryNumber ( entry ) ;
@@ -252,15 +258,19 @@ namespace
       //
       if  ( !w ) { continue ; }                            // ATTENTION!
       //
-      const long double x =  var.evaluate() ;
-      //
-      mom   += w  * std::pow ( x , order ) ;
-      sumw  += w     ;
-      // for uncertainty:
-      sumw2 += w * w ;
-      c2    += w * std::pow ( x , 2 * order ) ;
-      // 
-      empty  =  false ;
+      var.evaluate (  results ) ;
+      for ( const long double r : results ) 
+      {
+        const long double x =  r ;
+        //
+        mom   += w  * std::pow ( x , order ) ;
+        sumw  += w     ;
+        // for uncertainty:
+        sumw2 += w * w ;
+        c2    += w * std::pow ( x , 2 * order ) ;
+        // 
+        empty  =  false ;
+      } 
     }
     //
     if  ( empty ) { return 0 ; }   //    RETURN
@@ -307,15 +317,16 @@ namespace
     Ostap::Utils::Notifier notify ( &tree , &var , cuts ) ;
     const bool with_cuts = nullptr != cuts ? true : false ;
     //
-    long double mom   = 0    ;
-    long double sumw  = 0    ; // sum of weights 
+    long double         mom   = 0    ;
+    long double         sumw  = 0    ; // sum of weights 
     // for uncertainty:
-    long double sumw2 = 0    ; // sum of weights^2
-    long double m2o   = 0    ; // moment of 2*order 
-    long double mm1   = 0    ; // moment of   order-1
-    long double mp1   = 0    ; // moment of   order+1
-    long double m2    = 0    ; // moment of 2
-    bool        empty = true ;
+    long double         sumw2 = 0    ; // sum of weights^2
+    long double         m2o   = 0    ; // moment of 2*order 
+    long double         mm1   = 0    ; // moment of   order-1
+    long double         mp1   = 0    ; // moment of   order+1
+    long double         m2    = 0    ; // moment of 2
+    bool                empty = true ;
+    std::vector<double> results ;
     for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
     {      
       long ievent = tree.GetEntryNumber ( entry ) ;
@@ -328,18 +339,22 @@ namespace
       //
       if  ( !w ) { continue ; }                            // ATTENTION!
       //
-      const long double dx =  var.evaluate() -  mean ;
-      //
-      mom   += w  * std::pow ( dx , order ) ;
-      sumw  += w     ;
-      // for uncertainty:
-      sumw2 += w * w ;
-      m2o   += w * std::pow ( dx , 2 * order     ) ; 
-      mm1   += w * std::pow ( dx ,     order - 1 ) ; 
-      mp1   += w * std::pow ( dx ,     order + 1 ) ; 
-      m2    += w * std::pow ( dx , 2             ) ;
-      //
-      empty  = false ;
+      var.evaluate ( results ) ;
+      for ( const long double r : results ) 
+      {
+        const long double dx =  r -  mean ;
+        //
+        mom   += w  * std::pow ( dx , order ) ;
+        sumw  += w     ;
+        // for uncertainty:
+        sumw2 += w * w ;
+        m2o   += w * std::pow ( dx , 2 * order     ) ; 
+        mm1   += w * std::pow ( dx ,     order - 1 ) ; 
+        mp1   += w * std::pow ( dx ,     order + 1 ) ; 
+        m2    += w * std::pow ( dx , 2             ) ;
+        //
+        empty  = false ;
+      }
     }
     //
     if  ( empty ) { return 0 ; } //  RETURN
@@ -397,12 +412,13 @@ namespace
     Ostap::Utils::Notifier notify ( &tree , &var , cuts ) ;
     const bool with_cuts = nullptr != cuts ? true : false ;
     //
-    long double mom   = 0    ;
-    long double sumw  = 0    ; // sum of weights 
+    long double          mom   = 0    ;
+    long double          sumw  = 0    ; // sum of weights 
     // for uncertainty:
-    long double sumw2 = 0    ; // sum of weights^2
-    long double m2    = 0    ; // moment of 2
-    bool        empty = true ;
+    long double          sumw2 = 0    ; // sum of weights^2
+    long double          m2    = 0    ; // moment of 2
+    bool                 empty = true ;
+    std::vector<double>  results {} ;
     for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
     {      
       long ievent = tree.GetEntryNumber ( entry ) ;
@@ -415,15 +431,19 @@ namespace
       //
       if  ( !w ) { continue ; }                            // ATTENTION!
       //
-      const long double dx =  var.evaluate() -  mean ;
-      //
-      mom   += w * std::pow ( dx , 3 ) ;
-      sumw  += w     ;
-      // for uncertainty:
-      sumw2 += w * w ;
-      m2    += w * std::pow ( dx , 2 ) ;
-      //
-      empty  = false ;
+      var.evaluate ( results ) ;
+      for ( const long double r : results ) 
+      {
+        const long double dx =  r -  mean ;
+        //
+        mom   += w * std::pow ( dx , 3 ) ;
+        sumw  += w     ;
+        // for uncertainty:
+        sumw2 += w * w ;
+        m2    += w * std::pow ( dx , 2 ) ;
+        //
+        empty  = false ;
+      }
     }
     //
     if  (  empty ) { return 0 ; }
@@ -472,12 +492,13 @@ namespace
     Ostap::Utils::Notifier notify ( &tree , &var , cuts ) ;
     const bool with_cuts = nullptr != cuts ? true : false ;
     //
-    long double mom   = 0    ;
-    long double sumw  = 0    ; // sum of weights 
+    long double         mom   = 0    ;
+    long double         sumw  = 0    ; // sum of weights 
     // for uncertainty:
-    long double sumw2 = 0    ; // sum of weights^2
-    long double m2    = 0    ; // moment of 2
-    bool        empty = true ;
+    long double         sumw2 = 0    ; // sum of weights^2
+    long double         m2    = 0    ; // moment of 2
+    bool                empty = true ;
+    std::vector<double> results {} ;
     for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
     {      
       long ievent = tree.GetEntryNumber ( entry ) ;
@@ -490,15 +511,19 @@ namespace
       //
       if  ( !w ) { continue ; }                            // ATTENTION!
       //
-      const long double dx =  var.evaluate() -  mean ;
-      //
-      mom   += w * std::pow ( dx , 4 ) ;
-      sumw  += w     ;
-      // for uncertainty:
-      sumw2 += w * w ;
-      m2    += w * std::pow ( dx , 2 ) ;
-      //
-      empty  = false ;
+      var.evaluate ( results ) ;
+      for ( const long double r : results ) 
+      { 
+        const long double dx =  r -  mean ;
+        //
+        mom   += w * std::pow ( dx , 4 ) ;
+        sumw  += w     ;
+        // for uncertainty:
+        sumw2 += w * w ;
+        m2    += w * std::pow ( dx , 2 ) ;
+        //
+        empty  = false ;
+      } 
     }
     //
     if ( empty ) { return 0 ; } // RETURN
@@ -569,6 +594,7 @@ namespace
     typedef std::vector<double> VALUES ;
     VALUES values{} ; values.reserve ( num ) ;
     //
+    std::vector<double> results {} ;
     for ( unsigned long entry = first ; entry < the_last ; ++entry ) 
     {      
       long ievent = tree.GetEntryNumber ( entry ) ;
@@ -581,8 +607,8 @@ namespace
       //
       if ( !w  ) { continue ; }                           // CONTINUE       
       //
-      const float value = var.evaluate() ;
-      values.push_back ( value ) ;
+      var.evaluate  ( results ) ;
+      values.insert ( values.end() , results.begin() , results.end() ) ;
     }
     //
     std::vector<double> result ; result.reserve ( quantiles.size() ) ;
@@ -711,6 +737,7 @@ Ostap::StatVar::statVar
   const unsigned long nEntries =
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
   //
+  std::vector<double>  results {} ;
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )
   {
     //
@@ -720,7 +747,8 @@ Ostap::StatVar::statVar
     ievent      = tree->LoadTree ( ievent ) ;
     if ( 0 > ievent ) { return result ; }                // RETURN
     //
-    result += formula.evaluate() ;
+    formula.evaluate ( results ) ;
+    for  ( const double r : results ) { result += r ; }
   }
   //
   return result ;
@@ -749,6 +777,8 @@ Ostap::StatVar::statVar
   const unsigned long last       )
 {
   //
+  if ( cuts.empty() ) { return statVar( tree , expression , first , last ) ; }
+  //
   Ostap::WStatEntity result ;
   if ( 0 == tree || last <= first ) { return result ; }  // RETURN
   Ostap::Formula selection ( "" , cuts      , tree ) ;
@@ -761,6 +791,7 @@ Ostap::StatVar::statVar
   const unsigned long nEntries =
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
   //
+  std::vector<double> results {} ;
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )
   {
     //
@@ -774,9 +805,8 @@ Ostap::StatVar::statVar
     //
     if  ( !w ) { continue ; }                            // ATTENTION!
     //
-    const double v = formula.evaluate() ;
-    //
-    result.add ( v , w ) ;
+    formula.evaluate ( results ) ;
+    for  ( const double r : results ) { result.add (  r , w ) ; }
     //
   }
   //
@@ -851,6 +881,8 @@ Ostap::StatVar::statCov
   const unsigned long nEntries =
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
   //
+  std::vector<double> results1 {} ;
+  std::vector<double> results2 {} ;
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )
   {
     //
@@ -860,15 +892,22 @@ Ostap::StatVar::statCov
     ievent      = tree->LoadTree ( ievent ) ;
     if ( 0 > ievent ) { break ; }                        // BREAK
     //
-    const double v1 = formula1.evaluate() ;
-    const double v2 = formula2.evaluate() ;
+    formula1.evaluate ( results1 ) ;
+    formula2.evaluate ( results2 ) ;
     //
-    stat1 += v1 ;
-    stat2 += v2 ;
-    //
-    cov2 ( 0 , 0 ) += v1*v1 ;
-    cov2 ( 0 , 1 ) += v1*v2 ;
-    cov2 ( 1 , 1 ) += v2*v2 ;
+    for ( const long double v1 : results1 ) 
+    { 
+      for ( const long double v2 : results2 ) 
+      {
+        //
+        stat1 += v1 ;
+        stat2 += v2 ;
+        //
+        cov2 ( 0 , 0 ) += v1*v1 ;
+        cov2 ( 0 , 1 ) += v1*v2 ;
+        cov2 ( 1 , 1 ) += v2*v2 ;
+      }
+    }
     //
   }
   //
@@ -912,6 +951,8 @@ Ostap::StatVar::statCov
   const unsigned long  first   ,
   const unsigned long  last    )
 {
+  if ( cuts.empty() ) 
+  { return statCov ( tree , exp1 , exp2 , stat1 , stat2 , cov2 , first , last ) ; }
   //
   stat1.reset () ;
   stat2.reset () ;
@@ -930,6 +971,8 @@ Ostap::StatVar::statCov
   const unsigned long nEntries =
     std::min ( last , (unsigned long) tree->GetEntries() ) ;
   //
+  std::vector<double> results1 {} ;
+  std::vector<double> results2 {} ;
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )
   {
     //
@@ -943,16 +986,22 @@ Ostap::StatVar::statCov
     //
     if ( !w ) { continue ; }                                   // ATTENTION
     //
-    const double v1 = formula1.evaluate() ;
-    const double v2 = formula2.evaluate() ;
+    formula1.evaluate ( results1 ) ;
+    formula2.evaluate ( results2 ) ;
     //
-    stat1.add ( v1 , w ) ;
-    stat2.add ( v2 , w ) ;
-    //
-    cov2 ( 0 , 0 ) += w*v1*v1 ;
-    cov2 ( 0 , 1 ) += w*v1*v2 ;
-    cov2 ( 1 , 1 ) += w*v2*v2 ;
-    //
+    for ( const long double v1 : results1 ) 
+    { 
+      for ( const long double v2 : results2 ) 
+      {
+        //
+        stat1.add ( v1 , w ) ;
+        stat2.add ( v2 , w ) ;
+        //
+        cov2 ( 0 , 0 ) += w*v1*v1 ;
+        cov2 ( 0 , 1 ) += w*v1*v2 ;
+        cov2 ( 1 , 1 ) += w*v2*v2 ;
+      }
+    }
   }
   //
   if ( 0 == stat1.nEntries() || 0 == stat1.nEff () ) { return 0 ; }
@@ -1003,6 +1052,8 @@ Ostap::StatVar::statCov
                    first , last    ) ;
 }
 // ============================================================================
+
+// ============================================================================
 Ostap::StatVar::Statistic
 Ostap::StatVar::statVar
 ( const RooAbsData*   data        ,
@@ -1014,6 +1065,18 @@ Ostap::StatVar::statVar
 {
   const std::string _cuts = cuts.GetTitle() ;
   return statVar ( data , expression , _cuts , cut_range , first , last ) ;
+}
+// ============================================================================
+Ostap::StatVar::Statistic
+Ostap::StatVar::statVar
+( const RooAbsData*   data        ,
+  const std::string&  expression  ,
+  const TCut&         cuts        ,
+  const unsigned long first       ,
+  const unsigned long last        )
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return statVar ( data , expression , _cuts , "" , first , last ) ;
 }
 // ============================================================================
 Ostap::StatVar::Statistic

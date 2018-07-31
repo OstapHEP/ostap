@@ -28,7 +28,7 @@ import ROOT, random
 from   ostap.core.core      import dsID , VE , Ostap 
 from   ostap.fitting.roofit import SETVAR
 from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
-from   ostap.fitting.basic  import PDF  , makeBkg , Flat1D 
+from   ostap.fitting.basic  import PDF , Flat1D 
 from   ostap.fitting.utils  import ( Adjust2D          , H2D_dset        ,
                                      component_similar , component_clone )
 # =============================================================================
@@ -695,6 +695,12 @@ class Flat2D(PDF2) :
             'name'     : self.name ,            
             'title'    : title     ,             
             }                   
+    ## simple conversion to string    
+    def __str__ ( self ) :
+        """Simple conversion to string"""        
+        return "Flat2D(name='%s',xvar='%s',yvar='%s')" % ( self     .name ,
+                                                           self.xvar.name ,
+                                                           self.yvar.name )
 
 # =============================================================================
 ## @class Model2D
@@ -723,12 +729,12 @@ class Model2D(PDF2) :
         if   isinstance ( xmodel , PDF            ) : self.__xmodel = xmodel
         elif isinstance ( xmodel , ROOT.RooAbsPdf ) and xvar :
             self.__xmodel = Generic1D_pdf  ( xmodel , xvar )
-        else : raise AttributeError ( "Invalid ``x-model'' attribute" )
+        else : raise AttributeError ( "Invalid ``x-model'' argument: %s" % xmodel )
 
         if   isinstance ( ymodel , PDF            ) : self.__ymodel = ymodel
         elif isinstance ( ymodel , ROOT.RooAbsPdf ) and xvar :
             self.__ymodel = Generic1D_pdf  ( ymodel , yvar )
-        else : raise AttributeError ( "Invalid ``y-model'' attribute" )
+        else : raise AttributeError ( "Invalid ``y-model'' argument: %s" % ymodel )
 
         ## initialize the base 
         PDF2.__init__ (  self , name , self.__xmodel.xvar , self.__ymodel.xvar ) 
@@ -736,22 +742,6 @@ class Model2D(PDF2) :
         ## check the title 
         if not title : title = '%s x %s' % ( self.__xmodel.name , self.__ymodel.name )
         
-        if   isinstance ( xmodel , PDF            ) : self.__xmodel = xmodel
-        elif isinstance ( xmodel , ROOT.RooAbsPdf ) and xvar :
-            self.__xmodel = Generic1D_pdf  ( xmodel , xvar )
-        else : raise AttributeError ( "Invalid ``x-model'' argument" )
-
-        if   isinstance ( ymodel , PDF            ) : self.__ymodel = ymodel
-        elif isinstance ( ymodel , ROOT.RooAbsPdf ) and yvar :
-            self.__ymodel = Generic1D_pdf  ( ymodel , yvar )
-        else : raise AttributeError ( "Invalid ``y-model'' argument" )
-
-        ## initialize the base 
-        PDF2.__init__ (  self , name , self.__xmodel.xvar , self.__ymodel.xvar ) 
-
-        ## check the title 
-        if not title : title = '%s x %s' % ( self.__xmodel.name , self.__ymodel.name )
-
         def _triv_ ( m ) :
             _U = Ostap.Models.Uniform 
             if     isinstance ( m , Flat1D ) : return True 
@@ -792,6 +782,13 @@ class Model2D(PDF2) :
     def ymodel ( self ) :
         """``y-model'' y-component of Model(x)*Model(y) PDF"""
         return self.__ymodel
+    
+    ## simple conversion to string    
+    def __str__ ( self ) :
+        """Simple conversion to string"""        
+        return "Model2D(name='%s',xmodel=%s,ymodel=%s)" % ( self  .name ,
+                                                            self.xmodel ,
+                                                            self.ymodel )
 
 # =============================================================================
 ## simple convertor of 2D-histogram into PDF
@@ -973,12 +970,12 @@ class Fit2D (PDF2) :
 
         if   isinstance ( signal_x , PDF            )          : self.__signal_x = signal_x
         elif isinstance ( signal_x , ROOT.RooAbsPdf ) and xvar :
-            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SIGNAL-X' )
+            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SX' )
         else : raise AttributeError("Invalid ``signal_x'' argument: %s" % signal_x )
             
         if   isinstance ( signal_y , PDF            )          : self.__signal_y = signal_y
         elif isinstance ( signal_y , ROOT.RooAbsPdf ) and yvar :
-            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SIGNAL-Y' )
+            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
         else : raise AttributeError("Invalid ``signal_y'' argument: %s" % signal_y )
             
         #
@@ -1009,7 +1006,7 @@ class Fit2D (PDF2) :
         ## Second component: Background(1) and Signal(2)
         # =====================================================================
 
-        self.__bkg_1x = makeBkg ( bkg_1x  , 'Bkg1X_BS' + suffix , self.xvar )
+        self.__bkg_1x = self.make_bkg ( bkg_1x  , 'Bkg1X_BS' + suffix , self.xvar )
         self.__bs_cmp = Model2D ( "BS_pdf" + suffix         ,
                                   self.__bkg_1x             ,
                                   self.__signal_y           ,
@@ -1019,7 +1016,7 @@ class Fit2D (PDF2) :
         ## Third component:  Signal(1) and Background(2)
         # =====================================================================
         
-        self.__bkg_1y = makeBkg ( bkg_1y   , 'Bkg1Y_SB' + suffix , self.yvar )
+        self.__bkg_1y = self.make_bkg ( bkg_1y   , 'Bkg1Y_SB' + suffix , self.yvar )
         self.__sb_cmp = Model2D ( "SB_pdf" + suffix         ,
                                   self.__signal_x           ,
                                   self.__bkg_1y             ,
@@ -1055,8 +1052,8 @@ class Fit2D (PDF2) :
             self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )
         else     :            
             
-            self.__bkg_2x = makeBkg ( bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
-            self.__bkg_2y = makeBkg ( bkg_2y , 'Bkg2Y_BB' + suffix , self.yvar )            
+            self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
+            self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_BB' + suffix , self.yvar )            
             self.__bb_cmp = Model2D ( "BB_pdf" + suffix         ,
                                       self.__bkg_2x             ,
                                       self.__bkg_2y             ,
@@ -1438,14 +1435,14 @@ class Fit2DSym (PDF2) :
 
         if   isinstance ( signal_x , PDF            )          : self.__signal_x = signal_x
         elif isinstance ( signal_x , ROOT.RooAbsPdf ) and xvar :
-            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SIGNAL-X' )
+            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SX' )
         else : raise AttributeError ( "Invalid ``signal_x'' argument: %s" %  signal_x )
             
         if   isinstance ( signal_y , PDF            )          : self.__signal_y = signal_y
         elif isinstance ( signal_y , ROOT.RooAbsPdf ) and yvar :
-            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SIGNAL-Y' )
+            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
         elif yvar and not signal_y :
-            self.__signal_y = self.__signal_x.clone ( xvar = yvar , name = 'SIGNAL-Y' )
+            self.__signal_y = self.__signal_x.clone ( xvar = yvar , name = 'SY' )
             self.debug('signal y-component is cloned from the signal x-component')
         else : raise AttributeError ( "Invalid ``signal_y'' argument: %s" % signal_y )
             
@@ -1469,8 +1466,8 @@ class Fit2DSym (PDF2) :
                                   self.__signal_y           , 
                                   title = "Signal(x) x Signal(y)" )
         
-        self.__bkg_1x = makeBkg (        bkg_1x , 'Bkg1X_BS' + suffix , self.xvar )
-        self.__bkg_1y = makeBkg ( self.__bkg_1x , 'Bkg1Y_SB' + suffix , self.yvar )
+        self.__bkg_1x = self.make_bkg (        bkg_1x , 'Bkg1X_BS' + suffix , self.xvar )
+        self.__bkg_1y = self.make_bkg ( self.__bkg_1x , 'Bkg1Y_SB' + suffix , self.yvar )
 
         # =====================================================================
         ## Second sub-component: Background (1) and Signal     (2)
@@ -1519,8 +1516,8 @@ class Fit2DSym (PDF2) :
             self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )
         else     :            
             
-            self.__bkg_2x = makeBkg (        bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
-            self.__bkg_2y = makeBkg ( self.__bkg_2x , 'Bkg2Y_BB' + suffix , self.yvar )
+            self.__bkg_2x = self.make_bkg (        bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
+            self.__bkg_2y = self.make_bkg ( self.__bkg_2x , 'Bkg2Y_BB' + suffix , self.yvar )
             self.__bb_cmp = Model2D ( "BB_pdf" + suffix         ,
                                       self.__bkg_2x             ,
                                       self.__bkg_2y              ,

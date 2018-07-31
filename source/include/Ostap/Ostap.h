@@ -17,6 +17,7 @@
 #include "Ostap/Choose.h"
 #include "Ostap/Combine.h"
 #include "Ostap/Digit.h"
+#include "Ostap/Differences.h"
 #include "Ostap/EigenSystem.h"
 #include "Ostap/Formula.h"
 #include "Ostap/Fourier.h"

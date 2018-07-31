@@ -406,7 +406,7 @@ _pochhammer = cpp.Ostap.Math.pochhammer
 #  @see Ostap::Math::rising_factorial
 #  @see Ostap::Math::falling_factorial
 #  @see Ostap::Math::pochhammer 
-def pochammer ( x , n ) :
+def pochhammer ( x , n ) :
     """ calculate Pochhammer's  symbol
     \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
     @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials

@@ -748,7 +748,7 @@ def lcm ( f  ,  g ) :
 #  It relies on Newton-Bernstein algorithm
 #  @see http://arxiv.org/abs/1510.09197
 #  @see Mark Ainsworth and Manuel A. Sanches, 
-#       "Computing of Bezier control points of Largangian interpolant 
+#       "Computing of Bezier control points of Lagrangian interpolant 
 #        in arbitrary dimension", arXiv:1510.09197 [math.NA]
 #  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
 #  @code
@@ -776,36 +776,15 @@ def interpolate ( func , abscissas , xmin = 0 , xmax = 1 ) :
     >> b1 = interpolate ( lambda x : x*x , [0,0.5,1,2]    , 0 , 4 )  
     >> b2 = interpolate ( { 0:0 , 0.5:0.25 , 1:1 } , None , 0 , 4 )  
     >> b3 = interpolate ( [0,0.25,1,4] , [ 0,0.5, 1,2]    , 0 , 4 )  
+    >> b4 = interpolate ( lambda x : x * x , Abscissas( 4 , -2 , 2 , 1 ) )  
     """
     if xmin > xmax :
         xmin , xmax = xmax , xmin
-        
-    from types       import GeneratorType as GT
-    from collections import Iterable      as IT
-    from collections import Mapping       as MT
-    
-    if isinstance ( abscissas , GT ):
-        abscissas = [ x for x in abscissas ]
-        
-    if   callable ( func ) :
-        func = [ func (x)  for x in abscissas ]                  ## callable 
-    elif isinstance ( func , GT   ) : func = [ f for f in func ] ## generator
-    elif isinstance ( func , dict ) and not abscissas :          ## mapping 
-        keys = func.keys()
-        keys.sort()
-        abscissas = [ x       for x in keys ]
-        func      = [ func[x] for x in keys ]
-    elif isinstance ( func , IT   ) : pass                       ## iterable 
-    else :
-        raise TypeError("Can't treat ``func''=%s"  %  func )
 
+    from ostap.math.interpolation import points
+    pnts = points ( func , abscissas )
     ##
-    from ostap.math.base import doubles
-    _x = doubles ( abscissas )
-    _y = doubles ( func      )
-    ##
-    return Ostap.Math.Interpolation.bernstein ( _x , _y , xmin , xmax ) 
-
+    return Ostap.Math.Interpolation.bernstein ( pnts , xmin , xmax ) 
 
 
 

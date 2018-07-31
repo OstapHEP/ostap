@@ -210,8 +210,6 @@ __all__ = (
     'Generic2D_pdf'   , ## wrapper over imported RooFit (2D)-pdf
     'Generic3D_pdf'   , ## wrapper over imported RooFit (2D)-pdf
     ##
-    'makeBkg'         , ## helper function to create "background" PDF
-    ##
     'Convolution_pdf' , ## generic convolution PDF
     ##
     'PyPDF'           , ## helper class to implement ``pure-python'' PDF 

@@ -23,8 +23,6 @@ __all__     = (
     'Generic1D_pdf' , ## wrapper over imported RooFit (1D)-pdf  
     'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf 
     ##
-    'makeBkg'       , ## helper function to create smooth ``background''
-    ##
     )
 # =============================================================================
 import ROOT, math,  random
@@ -1277,6 +1275,64 @@ class PDF (MakeVar) :
         ##
         return pdf , fracs , pdfs
 
+    # =========================================================================
+    ## create popular 1D ``background''  function
+    #  @param bkg  the type of background function/PDF
+    #  @param name the name of background function/PDF
+    #  @param xvar the observable
+    #  Possible values for <code>bkg</code>:
+    #  - None or 0          : <code>Flat1D</code>
+    #  - positive integer N : <code>Bkg_pdf(power=N)</code> 
+    #  - negative integer K : <code>PolyPos_pdf(power=abs(K))</code> 
+    #  - any Ostap/PDF      : PDF will be copied or cloned  
+    #  - any RooAbsPdf    P : <code>Generic1D_pdf(pdf=P)</code> 
+    #  - any RooAbsReal   V : <code>Bkg_pdf(power=0,tau=V)</code> 
+    #  - math.exp           : <code>Bkg_pdf(power=0)</code>
+    #  - ''  , 'const', 'constant' , 'flat' , 'uniform' : <code>Flat1D</code>
+    #  - 'p0', 'pol0' , 'poly0' : <code>Flat1D</code>
+    #  - 'e' , 'exp'  , 'expo'  : <code>Bkg_pdf(power=0)</code>
+    #  - 'e+', 'exp+' , 'expo+' : <code>Bkg_pdf(power=0)</code> with tau>0
+    #  - 'e-', 'exp-' , 'expo-' : <code>Bkg_pdf(power=0)</code> with tau<0
+    #  - 'e0', 'exp0' , 'expo0' : <code>Bkg_pdf(power=0)</code>
+    #  - 'eN', 'expN' , 'expoN' : <code>Bkg_pdf(power=N)</code>
+    #  - 'pN', 'polN' , 'polyN' : <code>PolyPos_pdf(power=N)</code>
+    #  - 'iN', 'incN' , 'incrN','increasingN' : <code>Monothonic_pdf(power=N,increasing=True)</code>
+    #  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monothonic_pdf(power=N,increasing=False)</code>     
+    #  @see ostap.fitting.backrgound.make_bkg 
+    def make_bkg ( self , bkg , name , xvar , **kwargs ) :
+        """Create popular 1D ``background''  function.
+        
+        Possible values for ``bkg'':
+        
+        - None or 0                               : Flat1D
+        - positive integer ``N''                  : Bkg_pdf(power=N)
+        - negative integer ``K''                  : PolyPos_pdf(power=abs(K))
+        - any Ostap-PDF                           : PDF will be copied or cloned  
+        - RooAbsPdf      ``pdf''                  : Generic1D_pdf(pdf=pdf)
+        - RooAbsReal     ``var''                  : Bkg_pdf(power=0,tau=var)
+        - math.exp                                : Bkg_pdf(power=0)
+        - 'const' or 'constant'                   : Flat1D
+        - '' , 'flat' or 'uniform'                : Flat1D
+        - 'e' , 'exp'  or 'expo'                  : Bkg_pdf(power=0)
+        - 'e+', 'exp+' or 'expo+'                 : Bkg_pdf(power=0) with tau>0 (increasing)
+        - 'e-', 'exp-' or 'expo-'                 : Bkg_pdf(power=0) with tau<0 (decreasing)
+        - 'e0', 'exp0' or 'expo0'                 : Bkg_pdf(power=0) 
+        - 'eN', 'expN' or 'expoN'                 : Bkg_pdf(power=N)
+        - 'p0', 'pol0' or 'poly0'                 : Flat1D
+        - 'pN', 'polN' or 'polyN'                 : PolyPos_pdf(power=N)
+        - 'iN', 'incN' , 'incrN' or 'increasingN' : Monothonic_pdf(power=N,increasing=True)
+        - 'dN', 'decN' , 'decrN' or 'decreasingN' : Monothonic_pdf(power=N,increasing=False)
+        For more information see 
+        see Ostap.FitBkgModels.make_bkg 
+        """
+        from ostap.fitting.background import make_bkg as bkg_make
+        return bkg_make ( bkg    = bkg         ,
+                          name   = name        ,
+                          xvar   = xvar        ,
+                          logger = self.logger , **kwargs ) 
+
+
+
 # =============================================================================
 ##  helper utilities to imlement resolution models.
 # =============================================================================
@@ -1475,8 +1531,13 @@ class Flat1D(PDF) :
             'xvar'     : self.xvar ,
             'name'     : self.name ,            
             'title'    : title     
-            }                   
-   
+            }
+        
+    ## simple conversion to string    
+    def __str__ ( self ) :
+        """Simple conversion to string"""        
+        return "Flat1D(name='%s',xvar='%s')" % ( self.name , self.xvar.name )
+  
 # =============================================================================
 ## @class Generic1D_pdf
 #  "Wrapper" over generic RooFit (1D)-pdf
@@ -1685,7 +1746,7 @@ class Fit1D (PDF) :
             
         
         ## create the background component 
-        self.__background = makeBkg ( background , 'Background' + suffix , self.xvar )
+        self.__background = self.make_bkg ( background , 'Background' + suffix , self.xvar )
 
         ##  keep the lists of signals and backgrounds 
         self.signals     .add ( self.__signal     .pdf )
@@ -2114,63 +2175,6 @@ class Fit1D (PDF) :
     def  fractions ( self ) :
         """The list/tuple of fit fractions of all numeric components (empty for extended fit)"""
         return tuple ( [ i for i in  self.alist2 ] ) if not self.extended else () 
-
-# =============================================================================
-## create simple popular 1D-background models
-#  @param bkg  the flag that defines PDF
-#  @param name the name of the pdf
-#  @param xvar fitting variable
-#  The creation fo backgroudn PDF is determinied by the <code>bkg</code> flag
-#  - None :  a constant PDF will be created
-#  - non-negative integer <code>N</code> : <code>Bkg_pdf     (... , power =     N  , ... ) </code>
-#         a product of exponental and positive polynomiak
-#  - negative     integer <code>N</code> :  <code>PolyPos_pdf (... , power = abs(N) , ... ) </code>
-#         a positive polynomial
-#  - <code>RooAbsPdf<code>               : use it as background shape
-#  - <code>PDF</code>                    : use it as background shape
-#  - <code>RooAbsReal</code>  :  <code>Bkg_pdf     (... , tau = bkg , ... ) </code>
-#         an exponential function 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2015-04-03
-def makeBkg ( bkg , name , xvar , **kwargs ) :
-    """Helper function to create 1D-background models (around Bkg_pdf)
-    
-    - bkg  : the flag that defines PDF
-    - name : the name of the pdf
-    - xvar : fitting variable
-    
-    The creation fo backgroudn PDF is determinied by the <code>bkg</code> flag
-    - None :  a constant PDF will be created
-    - non-negative integer N : Bkg_pdf     (... , power =     N  , ... ) 
-    ...        (a product of exponental and positive polynomial)
-    - negative     integer N : PolyPos_pdf (... , power = abs(N) , ... )
-    ...        (a positive polynomial)
-    - RooAbsPdf  : use it as background shape
-    - PDF        : use it as background shape
-    - RooAbsReal : Bkg_pdf     (... , tau = bkg , ... )
-    ...        (an exponential function)
-
-    >>> x =   .. ## the variable
-    
-    ## None or non-negative integer:  construct PDF using Bkg_pdf 
-    >>> bkg1  = makeBkg ( 3      , 'B1' , x ) ## use Bkg_pdf ( 'B1' , x , power = 3 )
-    
-    ## generic RooAbsPdf: use this PDF
-    >>> pdf   = RooPolynomial( ... )
-    >>> bkg2  = makeBkg ( pdf    , 'B2' , x ) ## use Generic1D_pdf ( pdf , x , 'B2' )
-    
-    ## some ostap-based model, use it as it is  
-    >>> model = Convex_pdf ( ... )
-    >>> bkg3  = makeBkg ( models , 'B3' , x )  
-    
-    ## some RooAbsReal, use is as exponenial slope for Bkg_pdf
-    >>> tau  = RooRealVar( ....  )
-    >>> bkg4 = makeBkg ( tau     , 'B4' , x ) 
-    
-    """
-
-    from ostap.fitting.background import make_bkg
-    return make_bkg ( bkg , name , xvar , **kwargs )
 
 # =============================================================================
 if '__main__' == __name__ :

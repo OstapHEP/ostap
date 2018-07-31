@@ -344,10 +344,6 @@ def _f_max_mode_ ( f ) :
     """
     return f ( f.mode() ) 
  
-
-
-
-
 # =============================================================================
 ## make 1D- numerical integration
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -590,7 +586,10 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.ConvexOnlySpline       ,
                #
                Ostap.Math.BernsteinDualBasis     ,
-
+               ## interpolation polynomials 
+               Ostap.Math.Neville     ,
+               Ostap.Math.Lagrange    ,
+               Ostap.Math.Barycentric ,               
                ) :
     model.tf1          = _tf1_ 
     model.sp_integrate = sp_integrate_1D

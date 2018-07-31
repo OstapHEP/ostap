@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
+#include <map>
 #include <algorithm>
 // ============================================================================
 // Ostap
@@ -357,35 +358,66 @@ double Ostap::Math::Legendre::integral
   const double high ) const 
 { return _legendre_int_ ( m_N , low , high ) ; }
 // ============================================================================
+std::map<unsigned short,std::vector<double> > s_rootmap {} ;
+// ============================================================================
+/** Calculate the k-th root of Legendre polynomial of order n
+ *  @param k root number
+ *  @param n legendre polynomial order 
+ *  @return k-th root of Legendre polynomial of order n
+ */
+// ============================================================================
+double Ostap::Math::legendre_root ( const unsigned short k , 
+                                    const unsigned short n ) 
+{ return Legendre ( n ).root ( k ) ; }
+// ============================================================================
+// get the root of the Legendre polynomial
+// ============================================================================
+double Ostap::Math::Legendre::calculate_root ( const unsigned short i ) const 
+{
+  if ( 0 == m_N ) { return -1000 ; } // convention... 
+  //
+  const unsigned short ii = i % m_N ;
+  static const unsigned short s_maxiter = 500 ;
+  /// the the first approximation 
+  long double r = - std::cos ( ( 4 * ii + 3  ) * M_PIl / ( 4 * m_N + 2 ) ) ;
+  /// Newton's iterations
+  for ( unsigned short j = 0 ; j < s_maxiter + 1 ; ++j ) 
+  {
+    long double dr = evaluate ( r ) * 1.0L / derivative ( r ) ;
+    if ( s_equal ( r , r - dr ) ) { break ; }                       // BREAK
+    r -= dr ;
+  }
+  return r ;
+}
+// ============================================================================
+/// get the root of the Legendre polynomial
+double Ostap::Math::Legendre::root  ( const unsigned short i ) const 
+{
+  if ( 0 == m_N ) { return -1000 ; } // signal bad situation
+  return  roots() [ i % m_N ] ;
+}
+// ============================================================================
 // get the roots of the Legendre polynomial
 // ============================================================================
-std::vector<double> Ostap::Math::Legendre::roots ( const double precision ) const 
+const std::vector<double>& Ostap::Math::Legendre::roots () const 
 {
-  std::vector<double> rs ( m_N ) ;
-  static const unsigned short s_maxiter = 30 ;
+  typedef std::map<unsigned int, std::vector<double> >  Roots ;
+  static Roots s_rootmap {}  ;
+  //
+  Roots::const_iterator i = s_rootmap.find ( m_N ) ;
+  if (  s_rootmap.end() != i ) { return i->second ; }   //  RETURN
+  //
+  // calculate and insert the entry into the map
+  std::vector<double> rs ( m_N , 0 ) ;
+  static const unsigned short s_maxiter = 200 ;
   for ( unsigned int i = 0 ; 2 * i  < m_N ; ++i ) 
   {
-    /// the the first approximation 
-    double root = - std::cos ( ( 4 * i + 3  ) * M_PIl / ( 4 * m_N + 2 ) ) ;
-    /// newton iterations
-    for ( unsigned short j = 0 ; j < s_maxiter + 1 ; ++j ) 
-    {
-      double dr   = evaluate ( root ) / derivative ( root ) ;
-      root       -= dr ;
-      if ( ( m_N + 1 ) * std::abs ( dr ) < std::abs ( precision ) || s_maxiter == j ) 
-      {
-        const unsigned int ii = m_N - i -1  ;
-        if ( i == ii ) { rs[i] = 0.0 ; }
-        else
-        {
-          rs [ i  ] =  root ;
-          rs [ ii ] = -root ;
-        }
-        break ;
-      }
-    }
+    const double ri    = calculate_root ( i ) ;
+    rs [           i ] =   ri ;
+    rs [ m_N - 1 - i ] = - ri ;
   }
-  return rs ;
+  //
+  return s_rootmap.insert ( Roots::value_type ( m_N , rs ) ).first->second ;
 }
 // ============================================================================
 namespace 

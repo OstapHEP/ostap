@@ -113,8 +113,6 @@ namespace Ostap
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
      *  @param expression (INPUT) the expression
-     *  @param cuts       (INPUT) the selection
-     *  @param cutrange   (INPUT) the cut-range
      *  @param first      (INPUT) the frist event to process
      *  @param last       (INPUT) process till "last"-event
      *
@@ -129,15 +127,87 @@ namespace Ostap
     static Statistic statVar 
     ( const RooAbsData*   data               , 
       const std::string&  expression         , 
-      const std::string&  cuts       = ""    , 
-      const std::string&  cut_range  = ""    ,
       const unsigned long first      = 0     ,
-      const unsigned long last       = LAST  ) ;
+      const unsigned long last       = LAST  ) 
+    { return statVar( data , expression , std::string() , "" , first , last ) ; }
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection
+     *  @param first      (INPUT) the frist event to process
+     *  @param last       (INPUT) process till "last"-event
+     *
+     *  @code
+     *  data = ... 
+     *  stat = data.statVar( 'S_sw' , 'pt>10') 
+     *  @endcode 
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2015-02-15
+     */
+    static Statistic statVar 
+    ( const RooAbsData*   data               , 
+      const std::string&  expression         , 
+      const std::string&  cuts               , 
+      const unsigned long first      = 0     ,
+      const unsigned long last       = LAST  ) 
+    { return statVar( data , expression , cuts , "" , first , last ) ; }
+    // ========================================================================
+    /** build statistic for the <code>expression</code>
+     *  @param data       (INPUT) the data 
+     *  @param expression (INPUT) the expression
+     *  @param cuts       (INPUT) the selection
+     *  @param first      (INPUT) the frist event to process
+     *  @param last       (INPUT) process till "last"-event
+     *
+     *  @code
+     *  data = ... 
+     *  stat = data.statVar( 'S_sw' , 'pt>10') 
+     *  @endcode 
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2015-02-15
+     */
+    static Statistic statVar 
+    ( const RooAbsData*   data               , 
+      const std::string&  expression         , 
+      const TCut&         cuts               , 
+      const unsigned long first      = 0     ,
+      const unsigned long last       = LAST  ) ;
+    // ========================================================================  
+    /** build statistic for the <code>expression</code>
+     *  @param data       (INPUT) the data 
+     *  @param expression (INPUT) the expression
+     *  @param cuts       (INPUT) the selection
+     *  @param cutrange   (INPUT) the cut-range
+     *  @param first      (INPUT) the frist event to process
+     *  @param last       (INPUT) process till "last"-event
+     *
+     *  @code
+     *  data = ... 
+     *  cut  = TCut ( ... ) 
+     *  stat = data.statVar( 'S_sw' , cut ) 
+     *  @endcode 
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2015-02-15
+     */
+    static Statistic statVar 
+    ( const RooAbsData*   data              , 
+      const std::string&  expression        , 
+      const std::string&  cuts              , 
+      const std::string&  cut_range         ,
+      const unsigned long first      = 0    ,
+      const unsigned long last       = LAST ) ;
+    // ========================================================================
+    /** build statistic for the <code>expression</code>
+     *  @param data       (INPUT) the data 
+     *  @param expression (INPUT) the expression
+     *  @param cuts       (INPUT) the selection
+     *  @param cutrange   (INPUT) the cut-range
+     *  @param first      (INPUT) the frist event to process
+     *  @param last       (INPUT) process till "last"-event
      *
      *  @code
      *  data = ... 
@@ -152,7 +222,7 @@ namespace Ostap
     ( const RooAbsData*   data              , 
       const std::string&  expression        , 
       const TCut&         cuts              , 
-      const std::string&  cut_range  = ""   ,
+      const std::string&  cut_range         ,
       const unsigned long first      = 0    ,
       const unsigned long last       = LAST ) ;
     // ========================================================================

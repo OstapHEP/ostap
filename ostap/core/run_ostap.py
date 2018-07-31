@@ -299,9 +299,18 @@ if arguments.Profile :
 ROOT.gROOT.SetBatch ( arguments.batch )
 if ROOT.gROOT.IsBatch() : logger.info ('Batch processing is activated') 
 
-
 import ostap.fixes.fixes 
 
+# =============================================================================
+# specify the build directory for ROOT 
+# =============================================================================
+import ostap.utils.utils as OUU
+td = OUU.CleanUp.tempdir ( prefix = 'build_' ) 
+logger.debug ('Set BuildDirectory to be "%s"' % td ) 
+ROOT.gSystem.SetBuildDir ( td ) 
+del td
+del OUU
+                           
 # =============================================================================
 ## ostap startup: history, readlines, etc... 
 # =============================================================================
@@ -390,9 +399,9 @@ def _load_macro_ ( macro , silent = True ) :
     if sc :
         # - Interactive mode: print traceback and continue
         if arguments.batch :
-            raise RuntimeError, 'Failure to load macro "%s" code:%d' % ( m , sc ) 
+            raise RuntimeError, 'Failure to load macro "%s" code:%d' % ( macro , sc ) 
         else :
-            logger.error       ('Failure to load macro "%s" code:%d' % ( m , sc ) )
+            logger.error       ('Failure to load macro "%s" code:%d' % ( macro , sc ) )
             return False
         
     logger.debug ("Loaded macro   '%s'" % macro )

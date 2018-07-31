@@ -13,16 +13,18 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (  
-    'Chain' , ## helper class , ndeded for multiprocessing 
+    'Chain' , ## helper class , needed for multiprocessing 
     'Tree'  , ## helper class , needed for multiprocessing 
   ) 
 # =============================================================================
 import ROOT
-from ostap.core.core import cpp, VE, hID
+from ostap.core.core    import cpp, VE, hID
+from ostap.logger.utils import multicolumn
+from ostap.utils.basic  import terminal_size, isatty 
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
+from ostap.logger.logger import getLogger, allright,  attention 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.trees' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
@@ -596,46 +598,94 @@ ROOT.TChain     . sumVar = _sum_var_
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
-def _rt_leaves_ ( t ) :
+def _rt_leaves_ ( t , pattern = '' , *args ) :
     """ Get the list of leaves names        
     
     >>> tree = ...
     >>> lst = tree.leaves()
     >>> for l in lst : print l
+    >>> lst = tree.leaves( '.*(muon).*', re.I )
+    >>> for l in lst : print l
     """
-    _lst =  t.GetListOfLeaves()
-    if not _lst : return tuple() 
+    vlst =  t.GetListOfLeaves()
+
+    if not vlst : return tuple()
+    if pattern :        
+        try : 
+            import re
+            c  =  re.compile ( pattern , *args )
+            lst  = [ v.GetName() for v in vlst if c.match ( v.GetName () ) ]
+            lst.sort()
+            return tuple ( lst ) 
+        except :
+            logger.error ('leaves: exception is caught, skip it' , exc_info = True ) 
+            
+    lst  = [ v.GetName() for v in vlst  ]
+    lst.sort()
+    return tuple ( lst ) 
+
+
+    
     _lst = [ l.GetName() for l in _lst ] 
     _lst.sort()
     return tuple( _lst ) 
 
 ROOT.TTree.leaves   = _rt_leaves_
 
+# ==============================================================================
+## Get the leaf with the certain name 
+def _rt_leaf_ ( tree , leaf ) :
+    """Get the leaf with certain name:
+    >>> tree = ...
+    >>> l = tree.leaf('pt') 
+    """
+    lst = tree.GetListOfLeaves()
+    for i in lst :
+        if leaf == i.GetName() : return i
+    return None
+
+ROOT.TTree.leaf   = _rt_leaf_
+
+
 # =============================================================================
 ## get the branches for the given tree/chain
 #  @see TTree
 #  @code
-#
 #  >>> tree = ...
 #  >>> lst = tree.branches()
 #  >>> for b in lst : print b
-#
+#  >>> lst = tree.branches( '.*(Muon).*' , re.I )
+#  >>> for b in lst : print b
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
-def _rt_branches_ ( t ) :
+def _rt_branches_ ( t , pattern = '' , *args ) :
     """Get the list of branch names
     
     >>> tree = ...
     >>> lst = tree.branches()
     >>> for b in lst : print b
+    >>> lst = tree.branches( '.*(Muon).*' , re.I )
+    >>> for b in lst : print b
     
     """
-    _lst =  t.GetListOfBranches()
-    if not _lst : return tuple() 
-    _lst = [ l.GetName() for l in _lst ] 
-    _lst.sort()
-    return tuple( _lst ) 
+    vlst =  t.GetListOfBranches()
+    if not vlst : return tuple()
+
+    if pattern :        
+        try : 
+            import re
+            c  =  re.compile ( pattern , *args )
+            lst  = [ v.GetName() for v in vlst if c.match ( v.GetName () ) ]
+            lst.sort()
+            return tuple ( lst ) 
+        except :
+            logger.error ('branches: exception is caught, skip it' , exc_info = True ) 
+            
+    lst  = [ v.GetName() for v in vlst  ]
+    lst.sort()
+    return tuple ( lst ) 
+
 
 ROOT.TTree.branches = _rt_branches_
 
@@ -661,14 +711,270 @@ def _rt_print_ ( t ) :
     res = "Name: %s Enries/#%d" %  ( t.GetName() , t.GetEntries() ) 
     if hasattr ( t , 'GetNtrees' ) : res += " Chain/#%d " %       t.GetNtrees()
     ##
-    _b          = t.branches ()
-    res        +=        "\nBranches: %s" % list( _b )
     _l          = t.leaves   ()
-    if _l != _b : res += "\nLeaves: %s"   % list( _l )
-    return res
+    res        += "\nLeaves:\n%s"    % multicolumn ( list( _l ) , indent = 2 , pad = 1 )
+
+    ## collect non-trivial branches 
+    _b          = t.branches ()
+    
+    _bs = set  ( _b )
+    _ls = set  ( _l )
+    _b  = list ( _bs - _ls ) 
+    _b . sort() 
+    if _b : res += "\nNon-trivial branches:\n%s" % multicolumn ( _b , indent = 2 ,  pad = 1 )
+
+    return res.replace ('\n','\n# ') 
 
 ROOT.TTree.__repr__ = _rt_print_
 ROOT.TTree.__str__  = _rt_print_
+ROOT.TTree.pprint   = _rt_print_
+
+
+# =============================================================================
+
+__std_ints  = ( 'char' , 'short'  , 'int' , 'long' , 'long long' )
+__std_uints = tuple ( [ 'unsigned ' + i for i in __std_ints ] )
+__std_types = ( 'bool' , 'float' , 'double' , 'long double' ) + __std_ints + __std_uints 
+__scalars   = __std_types + ( 'Bool_t'    ,
+                              'Char_t'    ,
+                              'UChar_t'   ,
+                              'Short_t'   ,
+                              'UShort_t'  , 
+                              'Int_t'     ,
+                              'UInt_t'    ,
+                              'Float_t'   ,
+                              'Double_t'  ,
+                              'Long64_t'  ,
+                              'ULong64_t' )
+__vectors  =  tuple ( [ 'vector<' + i + '>' for i in __scalars ] )
+__types    =  list ( __scalars)  + list ( __vectors )
+tmp = set()
+for t in __types :
+    while 0 <= t.find ( 2 * ' ' ) : t = t.replace ( 2 * ' ' , ' ' )
+    tmp.add ( t )
+__types    = tuple ( tmp )
+del tmp 
+
+
+def __in_types ( t ) :
+    while 0 <= t.find ( 2 * ' ' ) : t = t.replace ( 2 * ' ' , ' ' )
+    return t in __types 
+    
+# ==============================================================================
+## print tree as table 
+def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
+    """
+    """
+    ## get list of branches 
+    brs = tree.leaves ( pattern )
+    if 'TObject' in brs :
+        brs = list  ( brs )
+        brs.remove  ( 'TObject' ) 
+        brs = tuple ( brs )
+
+    ## collect information
+    _vars = []
+    s0    = tree.statVar ( '1' , cuts , *args )
+    n0    = s0.nEntries  ()
+
+    ## no entries passed the cuts 
+    brs   = () if 0 == n0 else brs
+    
+    for b in brs :
+
+
+        l = tree.leaf ( b )
+
+        if not l :
+            logger.warning ("table: can't get the leaf  \"%s\"" % b )
+            continue
+        
+        tn = l.GetTypeName ()
+        typename = tn
+        
+        br = l.GetBranch()
+        if br :  
+            n = br.GetTitle()
+            typename = '%s %s '
+            p = n.find('[')
+            if  0 <= p :
+                p2 = n.find( '/' , p + 1 )
+                if p < p2 : typename = '%s %s' % ( tn , n[p:p2] )
+                else      : typename = '%s %s' % ( tn , n[p:  ] )            
+            else          : typename = '%s'    %   tn  
+
+        rr = [ b , typename ]
+
+        
+        if __in_types ( tn ) :
+
+            try :   
+                s = tree.statVar ( b , cuts , *args )
+                n    = s.nEntries() 
+                mnmx = s.minmax ()
+                mean = s.mean   () 
+                rms  = s.rms    ()
+                rr += [ ( '%+.5g' % mean.value() ).strip()                 , ## 2
+                        ( '%.5g'  % rms          ).strip()                 , ## 3 
+                        ( '%+.5g' % mnmx[0]      ).strip()                 , ## 4
+                        ( '%+.5g' % mnmx[1]      ).strip()                 , ## 5
+                        '' if  n == n0 else '%.3g' % ( float ( n ) / n0 ) ] ## 6
+                
+            except :
+                logger.warning ("table: can't get info for the leaf \"%s\"" % b )
+                rr +=  5*[ '' ]
+        
+        else :
+            rr +=  [ '-' , '-' , '-' , '-' , '' ]
+
+        _vars.append ( tuple  ( rr ) )
+        
+        
+    _vars.sort() 
+    name_l  = len ( 'Variable' )  
+    mean_l  = len ( 'mean' ) 
+    rms_l   = len ( 'rms'  ) 
+    min_l   = len ( 'min'  )  
+    max_l   = len ( 'max'  )  
+    num_l   = len ( '#'    )    
+    type_l  = len ( 'type' )    
+    for v in _vars :
+        name_l = max ( name_l , len ( v[0] ) )
+        type_l = max ( type_l , len ( v[1] ) )
+        mean_l = max ( mean_l , len ( v[2] ) )
+        rms_l  = max ( rms_l  , len ( v[3] ) )
+        min_l  = max ( min_l  , len ( v[4] ) )
+        max_l  = max ( max_l  , len ( v[5] ) )
+        num_l  = max ( num_l  , len ( v[6] ) )
+
+    
+    __vars = []
+    for v in _vars :
+        if not ' ' in v[1]  :
+            __vars.append ( v )
+            continue 
+        tn    = v [1]
+        cl    = len ( tn )
+        ml    = type_l
+        vv    = list  ( v )
+        vv[1] = tn.replace ( ' ' , ( ml + 1 - cl ) * ' ' , 1 ) 
+        vv    = tuple ( vv ) 
+        __vars.append ( vv )
+        
+    _vars = __vars 
+
+    sep      = '# +%s+%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
+                                        ( type_l       + 2 ) * '-' ,
+                                        ( mean_l+rms_l + 5 ) * '-' ,
+                                        ( min_l +max_l + 5 ) * '-' ,
+                                        ( num_l        + 2 ) * '-' )
+    fmt = '# | %%-%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds | %%%ds |'  % (
+        name_l ,
+        type_l ,
+        mean_l ,
+        rms_l  ,
+        min_l  ,
+        max_l  ,
+        num_l  )
+    
+    report  = '# %s("%s","%s"' % ( tree.__class__.__name__ , tree.GetName  () , tree.GetTitle () )
+    if tree.GetDirectory() :  report += ',%s' % tree.GetDirectory().GetName()
+    report += ')'
+    if tree.topdir :  report += '\n# top-dir:%s' % tree.topdir.GetName()
+    report += '\n# ' + allright ( '%d entries; %d/%d variables (selected/total)' % ( len ( tree  ) ,
+                                                                                     len ( _vars ) ,
+                                                                                     len ( tree.branches() ) ) )
+
+    header  = fmt % ( 'Variable' ,
+                      'type'     , 
+                      'mean'     ,
+                      'rms'      ,
+                      'min'      ,
+                      'max'      ,
+                      '#'        )
+    
+    report += '\n' + sep
+    report += '\n' + header
+    report += '\n' + sep            
+    for v in _vars :
+        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , v[6] )
+        report += '\n' + line  
+    report += '\n' + sep
+    
+    return report, len ( sep )  
+
+
+# ==============================================================================
+## print rot-tree in a form of the table
+#  @code
+#  data = ...
+#  print dat.table() 
+#  @endcode
+def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , *args ) :
+    """print dataset in a form of the table
+    >>> dataset = ...
+    >>> print dataset.table()
+    """
+    return _rt_table_0_ ( dataset ,  variables , cuts , *args )[0]
+
+
+# =============================================================================
+## simplified printout for TTree/TChain
+#  @see TTree
+#  @code
+#
+#  >>> tree = ...
+#  >>> print tree.pprint()
+#
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-02-04
+def _rt_print_ ( t ) :
+    """Simplified print out for tree/chain
+
+    >>> tree = ...
+    >>> print tree.pprint() 
+    """
+    ##
+    res = "Name: %s Enries/#%d" %  ( t.GetName() , t.GetEntries() ) 
+    if hasattr ( t , 'GetNtrees' ) : res += " Chain/#%d " %       t.GetNtrees()
+    ##
+    _l          = t.leaves   ()
+    res        += "\nLeaves:\n%s"    % multicolumn ( list( _l ) , indent = 2 , pad = 1 )
+
+    ## collect non-trivial branches 
+    _b          = t.branches ()
+    
+    _bs = set  ( _b )
+    _ls = set  ( _l )
+    _b  = list ( _bs - _ls ) 
+    _b . sort() 
+    if _b : res += "\nNon-trivial branches:\n%s" % multicolumn ( _b , indent = 2 ,  pad = 1 )
+
+    return res.replace ('\n','\n# ') 
+
+
+# =============================================================================
+##  print DataSet
+def _rt_print2_ ( data  ) :
+    """Print TTree/TChain"""
+
+    br = len ( data.branches() ) 
+    l  = len ( data            )
+    if 10000000 < br * l : return _rt_print_ ( data )
+    
+    if not isatty() : return _rt_table_ ( data )
+    th  , tw   = terminal_size()
+    rep , wid  = _rt_table_0_ ( data ) 
+    if wid < tw  : return rep
+    ##
+    return _rt_print_ ( data )
+
+
+ROOT.TTree.__repr__ = _rt_print2_
+ROOT.TTree.__str__  = _rt_print2_
+ROOT.TTree.table    = _rt_table_ 
+
 
 # =============================================================================
 ## get lst of files used for the given chain

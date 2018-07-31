@@ -41,7 +41,7 @@ from   ostap.core.core           import cpp, Ostap, VE
 # =============================================================================
 # Specializations of double-sided Crystal Ball function 
 # =============================================================================
-from   ostap.fitting.basic   import PDF, makeBkg
+from   ostap.fitting.basic   import PDF
 from   ostap.fitting.fit2d   import PDF2 
 from   ostap.fitting.signals import CB2_pdf, Needham_pdf, Bukin_pdf
 # =============================================================================
@@ -539,7 +539,7 @@ class Manca_pdf (PDF) :
 
         self.__power = power 
         ## use helper function to create background  
-        self.background = makeBkg ( power , 'Bkg%s' % name , self.mass )
+        self.background = self.make_bkg ( power , 'Bkg%s' % name , self.mass )
 
         self.__n1s = self.make_var ( None ,
                              "N1S" + name  ,
@@ -894,7 +894,7 @@ class Manca2_pdf (PDF) :
         
         
         ## use helper function to create background  
-        self.background = makeBkg ( power , 'Bkg%s' % name , self.mass )
+        self.background = self.make_bkg ( power , 'Bkg%s' % name , self.mass )
 
         
         self.__n1s = self.make_var ( None ,
@@ -1144,10 +1144,10 @@ class MancaX_pdf(PDF2) :
         #
         ## background components
         #
-        self.b_Y = makeBkg ( bkg1 , 'BkgY' + suffix , self.m1 )   
-        self.b_C = makeBkg ( bkg2 , 'BkgC' + suffix , self.m2 )   
-        self.b_A = makeBkg ( bkgA , 'BkgA' + suffix , self.m1 )   
-        self.b_B = makeBkg ( bkgB , 'BkgB' + suffix , self.m2 )
+        self.b_Y = self.make_bkg ( bkg1 , 'BkgY' + suffix , self.m1 )   
+        self.b_C = self.make_bkg ( bkg2 , 'BkgC' + suffix , self.m2 )   
+        self.b_A = self.make_bkg ( bkgA , 'BkgA' + suffix , self.m1 )   
+        self.b_B = self.make_bkg ( bkgB , 'BkgB' + suffix , self.m2 )
         
         #
         ## pure signal components: 3 

@@ -70,6 +70,7 @@ __all__     = (
     'isint'          , ## Is equal  to int ? 
     'islong'         , ## Is equal  to long?
     'signum'         , ## sign of the number 
+    'samesign'       , ## two number of the same sign 
     ##
     'inrange'        , ## is double number in certain range?
     ## 
@@ -127,7 +128,14 @@ def signum ( x ) :
     if isinstance ( x ,  ( int , long ) ) :
         return 0 if 0==x else +1 if 0<x else -1
     ## for floating numbers
-    return 0 if iszero ( x ) else +1 if 0<x else -1
+    return 0 if iszero ( x ) else +1 if 0 < x else -1
+
+# =============================================================================
+## the same sign ?
+def samesign ( a , b ) :
+    """The same sign for two numbers?
+    """
+    return ( 0 < a and 0 < b ) or ( 0 > a and 0 > b ) 
 
 # =============================================================================
 ## natural number ?

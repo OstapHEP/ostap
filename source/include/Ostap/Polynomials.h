@@ -10,6 +10,10 @@
 #include <vector>
 #include <cmath>
 // ============================================================================
+// Ostap 
+// ============================================================================
+#include "Ostap/Math.h"
+// ============================================================================
 /** @file Ostap/Polynomials.h
  *  various polinomials 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -49,12 +53,14 @@ namespace Ostap
       /// the only one important method
       inline double operator() ( const double    x    ) const 
       { return evaluate ( x ) ; }
-      // ======================================================================      
       /// evaluate the polynomial 
       static inline double evaluate ( const double x ) ;
+      // ======================================================================      
+    public:
+      // ======================================================================      
       /// get the array of roots 
       static inline const std::array<double,N>&   roots   () ;
-      /// get the array of extrema
+      /// get the array of extrema (the endpoints are not included)
       static inline const std::array<double,N-1>& extrema () ;
       // ======================================================================
     } ;
@@ -65,14 +71,18 @@ namespace Ostap
     {
     public:
       // ======================================================================
+      /// evaluate it!
       inline double operator() ( const double /* x */ ) const { return    1 ; }
-      // ======================================================================
+      /// evaluate it!
       static inline double evaluate ( const double /* x */ ) { return 1 ; }
+      // ======================================================================      
+    public:
       // ======================================================================      
       /// get roots 
       static inline std::array<double,0> roots   () { return {{}} ; }
       /// get extrema
       static inline std::array<double,0> extrema () { return {{}} ; }
+      // ======================================================================      
     } ;
     // ========================================================================
     /// specialization for N=1
@@ -83,12 +93,16 @@ namespace Ostap
       // ======================================================================
       /// the only one important method
       inline double operator() ( const double    x    ) const { return   x ; }
-      // ======================================================================
+      /// the only one important method
       static inline double evaluate ( const double x  ) { return x ; }
+      // ======================================================================      
+    public: 
       // ======================================================================      
       /// get roots 
       static inline std::array<double,1> roots   () { return {{ 0.0 }} ; }
+      ///     extrema 
       static inline std::array<double,0> extrema () { return {{}}      ; }
+      // ======================================================================      
     } ;
     // ========================================================================
     /// the basic recursive method 
@@ -97,26 +111,27 @@ namespace Ostap
     {
       return 
         0 == N % 2 ?  
-        2 * std::pow ( Chebyshev_<N/2>::evaluate ( x ) , 2 ) - 1 :
-        2 * Chebyshev_<N/2>::evaluate ( x ) * Chebyshev_<N/2+1>::evaluate ( x ) -  x ;
+        2 * std::pow ( Chebyshev_<N/2>::evaluate ( x ) , 2 )                    - 1 :
+        2 * Chebyshev_<N/2>::evaluate ( x ) * Chebyshev_<N/2+1>::evaluate ( x ) - x ;
     }
     // ========================================================================
     /// get the array of roots 
     template <unsigned int N>
     inline const std::array<double,N>& Chebyshev_<N>::roots ()
     {
-      auto root = []( unsigned int k ) 
-        { return -std::cos ( ( 2 * k + 1 ) * M_PI / ( 2 * N ) ) ; } ;
+      auto root = []( unsigned int k ) -> double  
+        { return -std::cos ( ( 2 * k + 1 ) * M_PIl / ( 2 * N ) ) ; } ;
       static const std::array<double,N> s_roots = 
         detail::make_array ( root , std::make_index_sequence<N>() ) ;
       return s_roots ;
     }
-    /// get the array of extrema 
+    // ========================================================================
+    /// get the array of extrema (the endpoints are not included)
     template <unsigned int N>
     inline const std::array<double,N-1>& Chebyshev_<N>::extrema ()
     {
-      auto extremum = []( unsigned int k ) 
-        { return -std::cos ( ( k + 1 ) * M_PI / N ) ; } ;
+      auto extremum = []( unsigned int k ) -> double 
+        { return -std::cos ( ( k + 1 ) * M_PIl / N ) ; } ;
       static const std::array<double,N-1> s_extrema = 
         detail::make_array ( extremum , std::make_index_sequence<N-1>() ) ;
       return s_extrema ;
@@ -137,13 +152,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// the only one important method
-      inline double operator() ( const double    x    ) const
-      { return evaluate ( x ) ; }
-      // ======================================================================
+      inline double operator() ( const double    x    ) const { return evaluate ( x ) ; }
+      /// the only one important method
       static inline double evaluate ( const double x ) ;
       // ======================================================================
+    public:
+      // ======================================================================
       /// get the array of roots 
-      static const std::array<double,N>&   roots   () ;
+      static inline const std::array<double,N>&   roots   () ;
       // ======================================================================
     } ;
     // ========================================================================    
@@ -155,8 +171,13 @@ namespace Ostap
       // ======================================================================
       /// the only one important method
       inline double operator() ( const double /* x */ ) const { return 1 ; }
+      /// the only one important method
+      static inline double evaluate ( const double /* x */ )  { return 1 ; }
       // ======================================================================
-      static inline double evaluate ( const double /* x */ ) { return 1 ; }
+    public:
+      // ======================================================================
+      /// roots 
+      static inline std::array<double,0> roots   () { return {{}} ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -169,7 +190,12 @@ namespace Ostap
       /// the only one important method
       inline double operator() ( const double x ) const { return 2 * x ; }
       // ======================================================================
-      static inline double evaluate ( const double x ) { return 2 * x ; }
+      static inline double evaluate ( const double x )  { return 2 * x ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// roots 
+      static inline std::array<double,1> roots   () { return {{ 0.0 }} ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -177,13 +203,19 @@ namespace Ostap
     template <>
     class  ChebyshevU_<2> 
     {
-    public:
+      // ======================================================================
+    public: // evaluate 
       // ======================================================================
       /// the only one important method
       inline double operator() ( const double x ) const { return 4 * x * x - 1 ; }
+      /// the only one important method
+      static inline double evaluate ( const double x )  { return 4 * x * x - 1 ; }
       // ======================================================================
-      static inline double evaluate ( const double x ) 
-      { return 4 * x * x - 1  ; }
+    public: // roots & extrema 
+      // ======================================================================
+      /// roots 
+      // ======================================================================
+      static inline std::array<double,2> roots   () { return {{ -0.5 , 0.5 }} ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -191,7 +223,8 @@ namespace Ostap
     template <>
     class  ChebyshevU_<3> 
     {
-    public:
+      // ======================================================================
+    public: // evaluate 
       // ======================================================================
       /// the only one important method
       inline double operator() ( const double x ) const 
@@ -200,16 +233,184 @@ namespace Ostap
       static inline double evaluate ( const double x ) 
       { return 4 * x * ( 2 * x * x - 1 ) ; }
       // ======================================================================
+    public: // roots & extrema 
+      // ======================================================================
+      /// roots 
+      static inline const std::array<double,3>& roots   () 
+      {
+        static const std::array<double,3> s_roots = {
+          - double ( std::cos ( ( 0 + 1 ) * M_PIl / ( 3 + 1 ) ) ) ,
+          - double ( std::cos ( ( 1 + 1 ) * M_PIl / ( 3 + 1 ) ) ) ,
+          - double ( std::cos ( ( 2 + 1 ) * M_PIl / ( 3 + 1 ) ) ) } ;
+        //
+        return s_roots ;
+      }
+      // ======================================================================
     } ;
     // ========================================================================
-    // the basic recurrence 
+    /// the basic recurrence 
     template <unsigned int N>
     inline double ChebyshevU_<N>::evaluate ( const double x ) 
     {
       return 
-        ChebyshevU_<N-2>::evaluate ( x ) * ( ChebyshevU_<2>::evaluate ( x )  - 1 )  
+        ChebyshevU_<N-2>::evaluate ( x ) * ( ChebyshevU_<2>::evaluate ( x ) - 1 )  
         - ChebyshevU_<N-4>::evaluate ( x ) ;
     }
+    // ========================================================================
+    /// get the array of roots 
+    template <unsigned int N>
+    inline const std::array<double,N>& ChebyshevU_<N>::roots ()
+    {
+      auto root = []( unsigned int k ) -> double 
+        { return - std::cos ( ( k + 1 ) * M_PIl / ( N + 1 ) ) ; } ;
+      static const std::array<double,N> s_roots = 
+        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      return s_roots ;
+    }
+    // ========================================================================
+
+    // ========================================================================
+    //  Chebyshev 3rd kind 
+    // ========================================================================
+    template <unsigned int N> class  Chebyshev3_ ;
+    // ========================================================================
+    /** @class Chebychev3_
+     *  Efficient evaluator of Chebyshev polynomial of the third kind: 
+     *  \f$ V_n^{(3)} = \frac{ \cos \left( n+\frac{1}{2}\right) \theta}
+     *                       { \cos \frac{1}{2} \theta} \f$, where 
+     *  \f$ x = \cos \theta\f$
+     *  Also known as "Air-flow or airfoil polynomials"
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2011-04-19
+     */
+    template <unsigned int N>
+    class  Chebyshev3_
+    {
+    public:
+      // ======================================================================
+      /// the only one important method
+      inline double operator() ( const double    x    ) const { return evaluate ( x ) ; }
+      /// the only one important method
+      static inline double evaluate ( const double x ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// roots 
+      static inline const std::array<double,N>& roots () ; // roots 
+      // ======================================================================
+    } ;
+    // ========================================================================    
+    /// specialization for N=0
+    template <>
+    class  Chebyshev3_<0>
+    {
+    public:
+      // ======================================================================
+      /// the only one important method
+      inline double operator() ( const double /* x */ ) const { return 1 ; }
+      /// the only one important method
+      static inline double evaluate ( const double /* x */ )  { return 1 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// roots 
+      static inline std::array<double,0> roots   () { return {{}} ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// specialization for N=1
+    template <>
+    class  Chebyshev3_<1> 
+    {
+    public:
+      // ======================================================================
+      /// the only one important method
+      inline double operator() ( const double x ) const { return 2 * x - 1 ; }
+      // ======================================================================
+      static inline double evaluate ( const double x )  { return 2 * x - 1 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// roots 
+      static inline std::array<double,1> roots   () { return {{ 0.5 }} ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// the basic recursive method 
+    template <unsigned int N>
+    inline double Chebyshev3_<N>::evaluate ( const double x ) 
+    {
+      return 
+        2 * x * Chebyshev3_<N-1>::evaluate ( x ) 
+        -       Chebyshev3_<N-2>::evaluate ( x ) ;  
+    } ;
+    // ========================================================================
+    /// get the array of roots 
+    template <unsigned int N>
+    inline const std::array<double,N>& Chebyshev3_<N>::roots ()
+    {
+      auto root = []( unsigned int k ) -> double 
+        { return std::cos ( ( 2 * N - 2 * k - 1 ) * M_PIl / ( 2 * N + 1 ) ) ; } ;
+      static const std::array<double,N> s_roots = 
+        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      return s_roots ;
+    }
+    // ========================================================================
+
+    // ========================================================================
+    //  Chebyshev 4th kind 
+    // ========================================================================
+    template <unsigned int N> class  Chebyshev4_ ;
+    // ========================================================================
+    /** @class Chebychev4_
+     *  Efficient evaluator of Chebyshev polynomial of the third kind: 
+     *  \f$ W_n^{(4)} = \frac{ \sin \left( n+\frac{1}{2}\right) \theta}
+     *                       { \sin \frac{1}{2} \theta} \f$, where 
+     *  \f$ x = \cos \theta\f$
+     *  Also known as "Air-flow or airfoil polynomials"
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2011-04-19
+     */
+    template <unsigned int N>
+    class  Chebyshev4_
+    {
+    public:
+      // ======================================================================
+      /// the only one important method
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// the only one important method
+      static inline double evaluate ( const double x ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// roots 
+      static inline const std::array<double,N>& roots () ; // roots 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// the basic evaluaton method 
+    template <unsigned int N>
+    inline double Chebyshev4_<N>::evaluate ( const double x ) 
+    { return ( N % 2 ? -1 : 1 ) * Chebyshev3_<N>::evaluate ( -x ) ; } ;
+    // ========================================================================
+    /// get the array of roots 
+    template <unsigned int N>
+    inline const std::array<double,N>& Chebyshev4_<N>::roots ()
+    {
+      auto root = []( unsigned int k ) -> double 
+        { return std::cos ( ( 2 * N - 2 * k ) * M_PIl / ( 2 * N + 1 ) ) ; } ;
+      static const std::array<double,N> s_roots = 
+        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      return s_roots ;
+    }
+    // ========================================================================
+    /** Calculate the k-th root of Legendre polynomial of order n
+     *  @param k root number
+     *  @param n legendre polynomial order 
+     *  @return k-th root of Legendre polynomial of order n
+     */
+    double legendre_root ( const unsigned short k , 
+                           const unsigned short n ) ;    
     // ========================================================================
     //  Legendre 
     // ========================================================================
@@ -226,10 +427,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// the only one important method
-      inline double operator() ( const double    x    ) const
-      { return evaluate ( x ) ; }
+      inline double operator()        ( const double x ) const { return evaluate ( x ) ; }
+      /// calculate the polynomial
+      static inline double evaluate   ( const double x ) ;
+      /// calculate the derivative 
+      static inline double derivative ( const double x ) ;
       // ======================================================================
-      static inline double evaluate ( const double x ) ;
+      /// get the roots of Legendre polynomial 
+      static inline const std::array<double,N>& roots() ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -240,10 +445,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// the only one important method
-      inline double operator() ( const double /* x */ ) const { return 1 ; }
+      inline double operator()        ( const double /* x */ ) const { return 1 ; }
+      /// calculate the polynomial
+      static inline double evaluate   ( const double /* x */ )       { return 1 ; }
+      /// calculate the derivative 
+      static inline double derivative ( const double /* x */ )       { return 0 ; }
+      /// get the roots of Legendre polymonial 
+      static inline std::array<double,0> roots() { return {{}} ; }
       // ======================================================================
-      static inline double evaluate ( const double /* x */ ) { return 1 ; }
-      // ======================================================================      
     } ;
     // ========================================================================
     /// specialization for N=1
@@ -253,9 +462,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// the only one important method
-      inline double operator() ( const double    x    ) const { return x ; }
-      // ======================================================================
-      static inline double evaluate ( const double x ) { return  x ; }
+      inline double operator()        ( const double x ) const { return x ; }
+      /// calculaet the polynomial
+      static inline double evaluate   ( const double x )       { return x ; }
+      /// calculate the derivative 
+      static inline double derivative ( const double /* x */ ) { return 1 ; }
+      /// get the roots of Legendre polymonial 
+      static inline std::array<double,1> roots() { return {{ 0.0 }} ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -264,6 +477,27 @@ namespace Ostap
     {
       return ( ( 2 * N - 1 ) * x * Legendre_<N-1>::evaluate ( x )  - 
                (     N - 1 )     * Legendre_<N-2>::evaluate ( x ) ) / N ;
+    }
+    // ========================================================================
+    /// get the array of roots 
+    template <unsigned int N>
+    inline const std::array<double,N>& Legendre_<N>::roots ()
+    {
+      auto root = []( unsigned int k ) -> double { return legendre_root ( k , N ) ; } ;
+      static const std::array<double,N> s_roots = 
+        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      return s_roots ;
+    }
+    // =======================================================================
+    /// calculte the derivative 
+    template <unsigned int N>
+    inline double Legendre_<N>::derivative ( const double x ) 
+    {
+      static const Ostap::Math::Equal_To<double> s_equal {} ;
+      return 
+        x >  0.999 && s_equal ( x ,  1 ) ? 0.5 * N * ( N + 1 )                      :
+        x < -0.999 && s_equal ( x , -1 ) ? 0.5 * N * ( N + 1 ) * ( N % 2 ? 1 : -1 ) :
+        N * ( x * Legendre_<N>::evaluate ( x ) - Legendre_<N-1>::evaluate ) / ( x * x - 1 ) ;
     }
     // ========================================================================
     // Hermite
@@ -434,8 +668,15 @@ namespace Ostap
       // ======================================================================
     public: // roots 
       // ======================================================================
-      /// get the roots of the Legendere polynomial
-      std::vector<double> roots ( const double precision = 1.e-9 ) const ;
+      /// get the root of the Legendre polynomial
+      double                     root  ( const unsigned short i ) const ;
+      /// get all roots of the Legendre polynomial
+      const std::vector<double>& roots () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the root of the Legendre polynomial
+      double calculate_root ( const unsigned short i ) const ;
       // ======================================================================
     private:
       // ======================================================================

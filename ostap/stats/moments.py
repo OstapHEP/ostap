@@ -10,15 +10,16 @@
 #  - RMS 
 #  - Skewness
 #  - Kurtosis
-#  For these quantities numerical integration is used.
-#  In case scipy is not available, a hand-made replacement is in use.
-#
-#  With help of scipy.optimize.brent additional quantities can be calculated
 #  - Median
 #  - Quantile 
 #  - Mode
 #  - Width
 #  - symmetric and asymmetric "confidence intervals"
+#  For these quantities numerical integration and root-findinng are  used.
+#  In case scipy is not available, hand-made replacements are in use.
+#
+#  <code>scipy.optimise.minimize</code> is needed for:
+#  - Mode
 #
 #  All objects exists as classes/functors and as standalone simple functions
 #  - moment
@@ -44,15 +45,16 @@
 - RMS 
 - Skewness
 - Kurtosis
-For these quantities numerical integration is used. In case scipy
-is not available, a hand-made replacement is in use
-
-Also it calculates with help of scipy.optimize.brent following quantities
 - Median
 - Quantile 
 - Mode
 - Width
 - symmetric and asymmetric ``confidence intervals''
+For these quantities numerical integration and root-finding are used.
+In case scipy is not available, hand-made replacements are in in use
+
+`scipy.optimise.minimize` is needed for:
+- Mode
 
 All objects exists as classes/functors and as standalone simlpe functions
 - moment
@@ -82,12 +84,12 @@ __all__     = (
     "RMS"           , ## calculate "RMS"      for functions/distribitions, etc 
     "Skewness"      , ## calculate "skewness" for functions/distribitions, etc 
     "Kurtosis"      , ## calculate "kurtosis" for functions/distribitions, etc 
-    "Median"        , ## calculate "median"   for functions/distribitions, etc (brentq)
-    "Quantile"      , ## calculate "quantile" for functions/distribitions, etc (brentq)
-    "Mode"          , ## calculate "mode"     for functions/distribitions, etc (brentq)
-    "Width"         , ## calculate "width"    for functions/distribitions, etc (brentq)
-    "CL_symm"       , ## calcualte symmetrical confidence intervals            (brentq)
-    "CL_asymm"      , ## calcualte asymmetrical confidence intervals           (brentq)
+    "Median"        , ## calculate "median"   for functions/distribitions, etc 
+    "Quantile"      , ## calculate "quantile" for functions/distribitions, etc 
+    "Mode"          , ## calculate "mode"     for functions/distribitions, etc 
+    "Width"         , ## calculate "width"    for functions/distribitions, etc 
+    "CL_symm"       , ## calcualte symmetrical confidence intervals            
+    "CL_asymm"      , ## calcualte asymmetrical confidence intervals           
     ##
     ## stat-quantities   
     "moment"        , ## calculate N-th moment of functions/distribitions, etc 
@@ -97,12 +99,12 @@ __all__     = (
     "rms"           , ## calculate "RMS"      for functions/distribitions, etc 
     "skewness"      , ## calculate "skeness"  for functions/distribitions, etc 
     "kurtosis"      , ## calculate "kurtosis" for functions/distribitions, etc 
-    "median"        , ## calculate "median"   for functions/distribitions, etc (brentq)
-    "quantile"      , ## calculate "quantile" for functions/distribitions, etc (brentq)
-    "mode"          , ## calculate "mode"     for functions/distribitions, etc (brentq)
-    "width"         , ## calculate "width"    for functions/distribitions, etc (brentq
-    "cl_symm"       , ## calculate symmetrical confidence intervals            (brentq)
-    "cl_asymm"      , ## calculate asymmetrical confidence intervals           (brentq)
+    "median"        , ## calculate "median"   for functions/distribitions, etc 
+    "quantile"      , ## calculate "quantile" for functions/distribitions, etc 
+    "mode"          , ## calculate "mode"     for functions/distribitions, etc 
+    "width"         , ## calculate "width"    for functions/distribitions, etc 
+    "cl_symm"       , ## calculate symmetrical confidence intervals            
+    "cl_asymm"      , ## calculate asymmetrical confidence intervals           
     ##
     ) 
 # =============================================================================
@@ -424,15 +426,12 @@ class Kurtosis(Skewness) :
 #  @endcode 
 #  @see https://en.wikipedia.org/wiki/Median#Inequality_relating_means_and_medians
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @attention <code>scipy.optimize.brentq</code> is needed!
-#  @see scipy.optimize.brentq 
 #  @date   2015-07-12
 class Median(RMS) :
     """Calculate median for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> median    = Median ( xmin,xmax )  ## specify min/max
     >>> value     = median ( math.sin  )
-    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , xmin , xmax ) :
         RMS.__init__ ( self , xmin , xmax , err = False )
@@ -446,9 +445,10 @@ class Median(RMS) :
         iint   = Integral      ( func ,  xmin , err = False ,  args = args )
         half   = 2.0 / iint    ( xmax ) 
 
-        from scipy import optimize
         ifun   = lambda x : iint( x ) * half - 1.0
 
+        from ostap.math.rootfinder import findroot
+        
         ## @see https://en.wikipedia.org/wiki/Median#Inequality_relating_means_and_medians
         try: 
             meanv = Mean . __call__ ( self , func , *args )
@@ -460,9 +460,9 @@ class Median(RMS) :
             if isinstance ( xmin , float ) : xmn = max ( xmn , xmin ) 
             if isinstance ( xmax , float ) : xmx = min ( xmx , xmax )
             #
-            result = optimize.brentq ( ifun , xmn , xmx )
+            result = findroot ( ifun , xmn , xmx )
         except :
-            result = optimize.brentq ( ifun , xmin , xmax )
+            result = findroot ( ifun , xmin , xmax )
             
         return result
 
@@ -482,14 +482,12 @@ class Median(RMS) :
 #  value     = quantile ( math.sin  )
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @attention scipy.optmize.brentq is used 
 #  @date   2015-07-12
 class Quantile(Median) :
     """Calculate quantiles for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> quantile  = Quantile ( 0.1 , xmin,xmax )  ## specify min/max
     >>> value     = quantile ( math.sin  )
-    - scipy.optmize.brentq is used 
     """
     def __init__ ( self , Q , xmin , xmax ) :
         Median.__init__ ( self , xmin , xmax )
@@ -514,7 +512,6 @@ class Quantile(Median) :
         iint = IntegralCache ( func, self._xmin, err = False ,  args = args )
         quan = 1.0 / iint    (  self._xmax ) / self._Q 
         
-        from scipy import optimize
         ifun   = lambda x : iint( x ) * quan - 1.0
 
         xmn = self._xmin
@@ -539,8 +536,9 @@ class Quantile(Median) :
                 p    +=  l  
             else : return m               ## RETURN 
 
-        ## finally, calculate quantile 
-        result = optimize.brentq ( ifun , xmn , xmx )
+        ## finally, calculate quantile
+        from ostap.math.rootfinder import findroot 
+        result = findroot ( ifun , xmn , xmx )
             
         return result
 
@@ -552,7 +550,7 @@ class Quantile(Median) :
 #  mode      = Mode ( xmin,xmax )  ## specify min/max
 #  value     = mode ( math.sin  )
 #  @endcode 
-#  @attention scipy.optimize.brentq is used 
+#  @attention scipy.optimize.minimize is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Mode(Median) :
@@ -560,7 +558,7 @@ class Mode(Median) :
     >>> xmin,xmax = 0,math.pi 
     >>> mode      = Mode ( xmin,xmax )  ## specify min/max
     >>> value     = mode ( math.sin  )
-    - scipy.optimize.brentq is used 
+    - scipy.optimize.minimize is used 
     """
     def __init__ ( self , xmin , xmax ) :
         Median.__init__ ( self , xmin , xmax )
@@ -601,7 +599,6 @@ class Mode(Median) :
 #  x1,x2     = width ( math.sin  )
 #  fwhm      = x2-x1
 #  @endcode 
-#  @attention scipy.optimize.brentq is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Width(Mode) :
@@ -610,7 +607,6 @@ class Width(Mode) :
     >>> width     = Width ( xmin,xmax )  ## specify min/max
     >>> x1,x2     = width ( math.sin )
     >>> fwhm      = x2-x1
-    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , xmin , xmax , height_factor = 0.5 ) :
         Mode.__init__ ( self , xmin , xmax )
@@ -629,11 +625,11 @@ class Width(Mode) :
         ## half height 
         vheight = 1.0 * v0 * self._hfactor
         
-        ## use scipy to find solution 
-        from scipy import optimize        
         ifun = lambda x,*a : float(func (x,*a))-vheight
-        x1 = optimize.brentq ( ifun , self._xmin , m0         , args = args )
-        x2 = optimize.brentq ( ifun , m0         , self._xmax , args = args ) 
+
+        from ostap.math.rootfinder import findroot
+        x1 = findroot ( ifun , self._xmin , m0         , args = args )
+        x2 = findroot ( ifun , m0         , self._xmax , args = args ) 
         
         return x1,x2
 
@@ -651,7 +647,6 @@ class Width(Mode) :
 #  reg = CL_symm ( 0.68 , -10 , 10 )
 #  print reg ( fun )
 #  @endcode
-#  @attention scipy.optimize.brentq is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 class CL_symm(object) :
@@ -661,7 +656,6 @@ class CL_symm(object) :
     >>> fun = lambda x : exp( -0.5*x*x)
     >>> reg = CL_symm ( 0.68 , -10 , 10 )
     >>> print reg ( fun )
-    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , prob ,  xmin , xmax , x0 = None , *args ) :
         
@@ -728,9 +722,8 @@ class CL_symm(object) :
             if 0 >= x : return -yval 
             return _integral_ ( func , max ( xmin , x0 - x ) , min ( xmax , x0 + x )  ) - yval  
         
-        ## use scipy to find solution 
-        from scipy import optimize        
-        s = optimize.brentq (  ifun , 0 , max ( xmax - x0 , x0 - xmin ) )
+        from ostap.math.rootfinder import findroot
+        s = findroot (  ifun , 0 , max ( xmax - x0 , x0 - xmin ) )
 
         from ostap.math.ve import VE 
         return VE ( x0 , s * s )
@@ -753,7 +746,6 @@ class CL_symm(object) :
 #  reg   = CL_asymm ( 0.68 , -10 , 10 )
 #  print reg ( fun )
 #  @endcode 
-#  @attention scipy.optimize.brentq is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 class CL_asymm(object) :
@@ -763,7 +755,6 @@ class CL_asymm(object) :
     >>> fun = lambda x : exp( -0.5*x*x)
     >>> reg = CL_asymm ( 0.68 , -10 , 10 )
     >>> print reg ( fun )
-    - scipy.optimize.brentq is used 
     """
     def __init__ ( self , prob ,  xmin , xmax , *args ) :
         
@@ -783,10 +774,8 @@ class CL_asymm(object) :
 
         ifun = lambda x,*a : func(x,*a) - fval
 
-        ## use scipy to find solution 
-        from scipy import optimize        
-        return optimize.brentq (  ifun , xmn , xmx , args = args )
-
+        from ostap.math.rootfinder import findroot
+        return findroot (  ifun , xmn , xmx , args = args )
                    
     def __call__ ( self , func , *args ) :
 
@@ -844,9 +833,8 @@ class CL_asymm(object) :
             if 0 < fmx * fmn : ## more or less arbitrary choice 
                 return xmx if abs ( fmx ) <= abs ( fmn ) else xmn 
             #
-            ## use scipy to find solution 
-            from scipy import optimize
-            return optimize.brentq (  ifun , xmn , xmx , args = args )
+            from ostap.math.rootfinder import findroot 
+            return findroot (  ifun , xmn , xmx , args = args )
 
         yval = self._prob * norm
         fm   = func ( xmode ) 
@@ -860,14 +848,13 @@ class CL_asymm(object) :
 
             return _integral_( func , x1 , x2 ) - yval 
             
-        from scipy import optimize
-        l  = optimize.brentq (  iifun , 0 , func ( xmode ) )
+        from ostap.math.rootfinder import findroot 
+        l  = findroot (  iifun , 0 , func ( xmode ) )
         x1 = _solve_ ( func ,  l , xmin  , xmode )
         x2 = _solve_ ( func ,  l , xmode , xmax  )
 
         return x1 , x2 
 
- 
 # =============================================================================
 ## calculate some statistical quantities of variable,
 #  considering function to be PDF 

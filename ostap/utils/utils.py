@@ -63,6 +63,7 @@ __all__     = (
     ##
     'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
     ##
+    'counted'            , ## decorator to create 'counted'-function
    )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
@@ -535,6 +536,34 @@ class ImplicitMT(object) :
 
 
 # =============================================================================
+## create 'counted' function to know number of function calls
+#  @code
+#  fun = ...
+#  func = counted ( fun ) ## use as function
+# 
+#  # alternatively use it as decorator:
+#  @counted
+#  def fun2 ( ...  ) : return ...
+#  @endcode
+def counted ( f ):
+    """create 'counted' function to knon number of function calls
+
+    Example
+    -------
+    
+    >>> fun = ...
+    >>> func = counted ( fun ) ## use as function
+
+    >>> @counted
+    >>> def fun2 ( ...  ) : return ...
+    """
+    def wrapped ( *args, **kwargs ):
+        wrapped.calls += 1
+        return f( *args , **kwargs )
+    wrapped.calls = 0
+    return wrapped
+
+# =============================================================================
 ## Context manager to enable/disable implicit MT in ROOT 
 #  @see ROOT::EnableImplicitMT 
 #  @see ROOT::DisableImplicitMT 
@@ -644,6 +673,7 @@ def _cleanup_ () :
             logger.debug ( 'CleanUp: remove temporary directory: %s' % f )
             try    : os.rmdir ( f  )
             except : pass 
+
         
 # =============================================================================
 if '__main__' == __name__ :

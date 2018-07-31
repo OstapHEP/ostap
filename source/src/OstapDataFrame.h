@@ -6,9 +6,15 @@
 // ============================================================================
 #include <string>
 // ============================================================================
-// ROOT::ROOT
+// ROOTm ROOT::ROOT
 // ============================================================================
+#include "RVersion.h" // ROOT 
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,14,0)
+#include "ROOT/RDataFrame.hxx"
+#else 
 #include "ROOT/TDataFrame.hxx"
+#endif 
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -25,12 +31,13 @@ namespace
   inline bool primitive ( const std::string& name )
   { return std::string::npos == name.find_first_of ( s_SYMBOLS ) ; }
   // ==========================================================================
-  /// is selection a trivial one? 
+  /// is selection/weight a trivial one? 
   inline bool trivial ( const std::string& selection ) 
   {
     return 
       ""     == selection || 
       "1"    == selection || 
+      "1."   == selection || 
       "1.0"  == selection || 
       "true" == selection || 
       std::string::npos == selection.find_first_not_of (' ') ;

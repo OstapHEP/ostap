@@ -3,7 +3,10 @@
 # =============================================================================
 # Copyright Ostap developers
 # =============================================================================
-"""Simple example of operations with ROOT histograms
+## @file examples/histos/histos_ex002_operators.py
+#  Simple example of operations and operators with ROOT histograms
+# =============================================================================
+"""Simple example of operations and operators with ROOT histograms
 """
 # =============================================================================
 import ROOT,random 

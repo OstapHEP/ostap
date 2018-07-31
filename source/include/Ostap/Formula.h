@@ -48,6 +48,10 @@ namespace Ostap
     // ========================================================================
     /// evaluate the formula 
     double evaluate () ;       // evaluate the formula 
+    /// evaluate the specified instance of the formula 
+    double evaluate ( const unsigned short i ) ; // evaluate the formula 
+    /// eevaluate all instances of the formula 
+    Int_t  evaluate ( std::vector<double>& results ) ;
     // is formula OK?
     bool   ok       () const { return this->GetNdim() ; } // is formula OK ? 
     // ========================================================================    

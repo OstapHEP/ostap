@@ -240,6 +240,17 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
     ROOT.TObject.draw = _to_draw_
 
+# =============================================================================
+## Set/Set name/title 
+# ==========================================================================
+def _tn_name_get_ ( self )         : return self.GetName()
+def _tn_name_set_ ( self , value ) : self.SetName( value )
+_tn_name_doc_ = "``name'' of the object using GetName/SetName"
+def _tn_title_get_ ( self )         : return self.GetTitle()
+def _tn_title_set_ ( self , value ) : self.SetTitle( value )
+_tn_title_doc_ = "``title'' of the object using GetTitle/SetTitle"
+ROOT.TNamed.name  = property ( _tn_name_get_  ,  _tn_name_set_  , None , _tn_name_doc_  ) 
+ROOT.TNamed.title = property ( _tn_title_get_ ,  _tn_title_set_ , None , _tn_title_doc_ ) 
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -54,9 +54,15 @@ of Dr.O.Callot et al.:
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2014-10-19"
 __version__ = '$Revision$'
-__all__     = ( 'getCanvas' , 'getCanvases' )
+__all__     = (
+    'getCanvas'   ,
+    'getCanvases' ,
+    'AutoPlots'   , ## context manager to activate the auto-plotting machinery
+    'auto_plots'  , ## ditto, but as function 
+    )
 # =============================================================================
-import ROOT
+import ROOT, os, tempfile  
+import ostap.core.core    
 # =============================================================================
 # logging 
 # =============================================================================
@@ -138,9 +144,136 @@ def _cnv_rshift_ ( cnv , fname ) :
     """
     return _cnv_print_ ( cnv , fname )
 
-ROOT.TCanvas.print_     = _cnv_print_
-ROOT.TCanvas.__rshift__ = _cnv_rshift_
+ROOT.TVirtualPad.print_     = _cnv_print_
+ROOT.TVirtualPad.__rshift__ = _cnv_rshift_
 
+# =============================================================================
+# Auto-plotting
+# =============================================================================
+from collections import defaultdict 
+# =============================================================================
+## @class AutoPlots
+#  Helper structure/context manager to setup "auto-plotting"
+#  all produced plots will be saved
+class AutoPlots ( object ) :
+    """helper structure to setup ``auto-plotting''
+    all produced plots will be saved
+    """
+    
+    __auto_plots  = []
+    __plot_counts = defaultdict(int) 
+    
+    @classmethod
+    def plot ( cls ) :
+        """Get the plot name for auto-plotting:
+        >>> plotname = AutoPlot.plot()
+        >>> if plotname : canvas >> plotname 
+        """
+        if not cls.__auto_plots : return False 
+        p  = cls.__auto_plot[-1]
+        c  = cls._counts[p] + 1
+        c %=  1000
+        cls._counts[p] = c 
+        return p % c 
+    
+    def __init__ ( self                      ,
+                   pattern   = 'ostap_%0.4d' ,
+                   directory = ''            ) :
+
+        if directory and not os.path.exists ( directory ) :
+            try :
+                os.path.makedirs ( _dname )
+            except OSError :
+                logger.error ( "Can't create directory \"%s\"" %  directory)
+                directory = None
+                
+        if directory and os.path.exists ( directory ) :
+            if not os.path.isdir ( directory ) :
+                logger.error ( "Invalid directory \"%s\"" %  directory)
+                directory = None
+                
+        if directory and os.path.exists ( directory ) and os.path.isdir ( directory ) : 
+            if not os.access ( directory , os.W_OK ) :
+                logger.error ( "Non-writeable directory \"%s\"" %  directory)
+                directory = None
+                
+        if not directory :
+            directory = tempfile.mkdtemp ( prefix = 'plots_' )
+            logger.info ( 'AutoPlots: use directory "%s"' % directory ) 
+
+        ## check the validity of pattern
+        try :
+            r = pattern % 999
+        except TypeError :
+            pattern = 'ostap_%0.4d' 
+            logger.info ( 'Pattern "%s"' % pattern)
+
+        self.__pattern = os.path.join ( directory , pattern )
+
+    @property
+    def pattern ( self ):
+        """``pattern'' -  the pattern for the file name"""
+        return self.__pattern
+
+    ## context manager  
+    def __enter__ ( self ) :        
+        AutoPlots.__auto_plots.append ( self.pattern )
+        return self 
+        
+    def __exit__  ( self, *_ ) :
+        AutoPlots.__auto_plots.pop  ()  
+
+
+# =============================================================================
+## Helper function /context manager to setup "auto-plotting"
+#  all produced plots will be saved
+#  @code
+#  with auto_plot ( 'all_%d'  , directory  = 'plots' ) :
+#  ...     a.draw()
+#  ...     b.draw()
+#  ...     c.draw()
+#  ...     d.draw()
+#  @endcode
+def auto_plot ( pattern   = 'ostap_%0.4d' ,
+                directory = ''            ) :
+    """Helper function /context manager to setup "auto-plotting"
+    all produced plots will be saved
+    with auto_plots ( 'all_%d'  , directory  = 'plots' ) :
+    ...     a.draw()
+    ...     b.draw()
+    ...     c.draw()
+    ...     d.draw()
+    """
+    return AutoPlots ( pattern = pattern , directory = directory )
+
+# =============================================================================
+##  new draw method: silent draw
+def _TO_draw_ ( obj , *args , **kwargs ) :
+    """ (silent) Draw of ROOT object
+    >>> obj
+    >>> obj.Draw()  ##
+    >>> obj.draw()  ## ditto
+    """
+    from ostap.logger.utils import rootWarning, rooSilent 
+    with rootWarning() , rooSilent ( 2 ) :
+        result = obj.Draw ( *args , **kwargs )
+        if ROOT.gPad : 
+            plot = AutoPlots.plot()
+            if plot : ROOT.gPad >> plot
+        return result
+
+# =============================================================================
+## decorate ROOT.TObject
+if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
+    
+    ## add new method  
+    ROOT.TObject.draw_with_autoplot = _TO_draw_
+    ## save old method 
+    if hasattr ( ROOT.TObject ,  'draw' ) :
+        ROOT.TObject._draw_backup = ROOT.TObject.draw
+        
+    ROOT.TObject.draw       = ROOT.TObject.draw_with_autoplot
+        
 # =============================================================================
 ## get all known canvases 
 def getCanvases () :
@@ -156,10 +289,14 @@ atexit.register ( _remove_canvases_ )
 
 # =============================================================================
 _decorated_classes_  = (
-    ROOT.TCanvas , 
+    ROOT.TVirtualPad , 
+    ROOT.TObject     , 
     )
+
 _new_methods_        = (
-    ROOT.TCanvas.__rshift__ , 
+    ROOT.TVirtualPad.__rshift__ , 
+    ROOT.TObject    .draw       , 
+    ROOT.TObject    .draw_with_autoplot, 
     )
 # =============================================================================
 if '__main__' == __name__ :

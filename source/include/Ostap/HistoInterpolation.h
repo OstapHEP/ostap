@@ -33,7 +33,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class HistoInterpolation
-     *  Collection of primitive utilities for hiostorgam interpoaltion 
+     *  Collection of primitive utilities for historgam interpolation 
      *
      *  Originally developed for Ostap in python
      *  Translated to C++ to get some gain in CPU 

@@ -35,7 +35,7 @@ from   ostap.core.core import cpp, Ostap, VE, hID, dsID , valid_pointer
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
+from ostap.logger.logger import getLogger , allright,  attention
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.rootfit' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
@@ -2190,24 +2190,78 @@ if  not hasattr ( RAD , '_new_kurtosis_' ) :
 
 RAD.central_moment = _rad_central_moment_
 
-#==============================================================================
-def _ds_table_0_ ( dataset , variables = [] ) :
+# ==============================================================================
+## get the list/tuple of variable names 
+#  @code
+#  data = ...
+#  br1 = data.branches() 
+#  br2 = data.branches('.*(Muon).*'   , re.I ) 
+#  br3 = data.branches('.*(Probnn).*' , re.I ) 
+#  @endcode
+def _rad_branches_ (  self , pattern = '' , *args ) :
+    """Get the list/tuple of variable names 
+    >>> data = ...
+    >>> br1 = data.branches() 
+    >>> br2 = data.branches('.*(Muon).*'   , re.I ) 
+    >>> br3 = data.branches('.*(Probnn).*' , re.I )
+    >>> br1 = data.leaves  () 
+    >>> br2 = data.leaves  ('.*(Muon).*'   , re.I ) 
+    >>> br3 = data.leaves  ('.*(Probnn).*' , re.I )
+    """
+    
+    vlst = self.varset()
+    if not vlst : return tuple()
+
+    if pattern :        
+        try : 
+            import re
+            c  =  re.compile ( pattern , *args )
+            lst  = [ v.GetName() for v in vlst if c.match ( v.GetName () ) ]
+            lst.sort()
+            return tuple ( lst ) 
+        except :
+            logger.error ('branches: exception is caught, skip it' , exc_info = True ) 
+            
+    lst  = [ v.GetName() for v in vlst  ]
+    lst.sort()
+    return tuple ( lst ) 
+
+
+RAD.branches = _rad_branches_
+RAD.leaves   = _rad_branches_
+
+# ==============================================================================
+def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**62 ) :
     """Print data set as table
     """
     varset = dataset.get()
-    from ostap.core.core import valid_pointer
     if not valid_pointer ( varset ) :
         logger.error('Invalid dataset')
         return ''
 
-    vars = list ( variables ) 
-    if     vars : vars = [ i  for i in vars if i in varset ]
-    if not vars : vars = [ i.GetName()     for i in varset ] 
+    if isinstance ( variables ,  str ) :
+        variables = variables.strip ()
+        variables = variables.replace ( ',' , ' ' ) 
+        variables = variables.replace ( ';' , ' ' )
+        variables = variables.split ()
+        
+    if 1 == len ( variables ) : variables = variables [0]
+
+    if isinstance ( variables ,  str ) :
+        
+        if variables in varset :
+            vars = [ variables ]
+        else :
+            vars = list ( dataset.branches ( variables ) ) 
+            
+    elif variables : vars = [ i.GetName() for i in varset if i in variables ]        
+    else           : vars = [ i.GetName() for i in varset                   ]
+        
     #
     _vars = []
     for v in vars :
-        vv = getattr ( varset , v ) 
-        s = dataset.statVar( v )  
+        vv   = getattr ( varset , v ) 
+        s    = dataset.statVar( v , cuts , first , last )  
         mnmx = s.minmax ()
         mean = s.mean   ()
         rms  = s.rms    ()
@@ -2220,7 +2274,93 @@ def _ds_table_0_ ( dataset , variables = [] ) :
             
         _vars.append ( r )
         
-    _vars.sort() 
+    _vars.sort()
+
+    report  = '# %s("%s","%s"):' % ( dataset.__class__.__name__ ,
+                                     dataset.GetName  () ,
+                                     dataset.GetTitle () )
+    report += allright ( '%d entries, %d variables' %  ( len ( dataset )   ,
+                                                         len ( varset  ) ) )
+
+    if not _vars :
+        return report , 120 
+
+
+    weight = None 
+    if dataset.isWeighted() :
+        report += attention ( ' Weighted' )
+
+        dstmp = None 
+        wvar  = None
+        
+        ## 1) try to get the name of the weight variable
+        store = dataset.store()
+        if not valid_pointer ( store ) : store = None
+        if store and not isinstance ( store , ROOT.RooTreeDataStore ) :
+            dstmp = dataset.emptyClone ()
+            dstmp.convertToTreeStore   ()
+            store = dstmp.store        ()
+            if not valid_pointer ( store ) : store = None
+        if hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) : 
+            tree = store.tree() 
+            branches = set ( tree.branches() )
+            vvars    = set ( [ i.GetName() for i in  varset ] )
+            wvars    = branches - vvars
+            if 1 == len ( wvars ):
+                wvar = wvars.pop() 
+                report += attention ( ' with "%s"' % wvar )
+                
+        store = None 
+        if not dstmp is None :            
+            dstmp.reset()            
+            del dstmp
+            dstmp = None 
+
+        ## 2) if weight name is known, try to get information about the weight
+        if wvar :
+            store = dataset.store()
+            if not valid_pointer ( store ) : store = None
+            if store and not isinstance ( store , ROOT.RooTreeDataStore ) :
+
+                rargs = ROOT.RooFit.EventRange ( first , last ) , 
+                if cuts :
+                    ## need all variables 
+                    dstmp = dataset.reduce ( ROOT.RooFit.Cut  ( cuts ) , *rargs ) 
+                else    :
+                    ## enough to keep only 1 variable
+                    vvs   = ROOT.RooArgSet ( varset[vars[0]] )
+                    dstmp = dataset.reduce ( ROOT.RooFit.SelectVars ( vvs ) , *rargs )
+
+                dstmp.convertToTreeStore ()
+                store = dstmp.store()
+                cuts , first , last = '' , 0 , 2**62
+                
+            if hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) : 
+                tree =  store.tree() 
+                s = tree.statVar ( wvar , cuts , first , last ) ## no cuts here... 
+                mnmx = s.minmax ()
+                mean = s.mean   ()
+                rms  = s.rms    ()
+                weight = '*%s*' % wvar
+                r    = (  weight                           ,   ## 0 
+                         'Weight variable'                 ,   ## 1 
+                         ('%+.5g' % mean.value() ).strip() ,   ## 2
+                         ('%.5g'  % rms          ).strip() ,   ## 3 
+                         ('%+.5g' % mnmx[0]      ).strip() ,   ## 4
+                         ('%+.5g' % mnmx[1]      ).strip() )   ## 5
+                _vars.append ( r ) 
+                with_weight = True
+                
+            store = None 
+            if not dstmp is None :
+                dstmp.reset ()                
+                del dstmp
+                dstmp = None 
+
+    # ==============================================================================================
+    # build the actual table 
+    # ==============================================================================================
+    
     name_l  = len ( 'Variable'    ) + 2 
     desc_l  = len ( 'Description' ) + 2 
     mean_l  = len ( 'mean' ) + 2 
@@ -2239,29 +2379,14 @@ def _ds_table_0_ ( dataset , variables = [] ) :
                                      ( desc_l       + 2 ) * '-' ,
                                      ( mean_l+rms_l + 5 ) * '-' ,
                                      ( min_l +max_l + 5 ) * '-' )
-    fmt = '# | %%%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds |'  % (
+    fmt = '# | %%-%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds |'  % (
         name_l ,
         desc_l ,
         mean_l ,
         rms_l  ,
         min_l  ,
         max_l  )
-    from ostap.logger.logger import allright, attention  
-    report  = 'Dataset(%s;%s):' % ( dataset.GetName  () , dataset.GetTitle () )
-    report += allright ( '%d entries, %d variables' %  ( len ( dataset )   ,
-                                                         len ( varset  ) ) )
     
-    if dataset.isWeighted() :
-        report += attention ( ' Weighted' ) 
-        store = dataset.store() 
-        if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) :
-            import ostap.trees.trees 
-            tree     = store.tree()
-            branches = set ( tree.branches() )
-            vvars    = set ( [ i.GetName() for i in  varset ] )
-            wvars    = branches - vvars
-            if 1 == len ( wvars ):
-                report += attention ( ' with "%s"' % wvars.pop() ) 
                 
     header  = fmt % ( 'Variable'    ,
                       'Description' ,
@@ -2272,12 +2397,25 @@ def _ds_table_0_ ( dataset , variables = [] ) :
     
     report += '\n' + sep
     report += '\n' + header
-    report += '\n' + sep            
-    for v in _vars :
+    report += '\n' + sep
+
+    vlst   = _vars
+    
+    if weight : vlst = _vars[:-1]
+    
+    for v in vlst :
         line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5]  )
         report += '\n' + line  
     report += '\n' + sep
+    
+    if weight :
+        v = _vars[-1]
+        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5]  )
+        report += '\n' + line.replace ( weight , attention ( weight ) ) 
+        report += '\n' + sep
+        
     return report , len ( sep ) 
+
 
 # ==============================================================================
 ## print dataset in  a form of the table
@@ -2310,6 +2448,9 @@ def _ds_print2_ ( dataset ) :
 for t in ( ROOT.RooDataSet , ) :
     t.__repr__    = _ds_print2_
     t.__str__     = _ds_print2_
+    t.table       = _ds_table_
+    t.pprint      = _ds_print_ 
+    
 
 
 # =============================================================================

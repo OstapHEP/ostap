@@ -3,7 +3,10 @@
 # =============================================================================
 # Copyright Ostap developers
 # =============================================================================
-"""Simple example of operations with ROOT histograms
+## @file examples/histos/histos_ex001_basic.py
+#  Simple example of basic operations with ROOT histograms
+# =============================================================================
+"""Simple example of basic operations with ROOT histograms
 """
 # =============================================================================
 import ROOT

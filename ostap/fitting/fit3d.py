@@ -28,7 +28,7 @@ import ROOT, random
 from   ostap.core.core      import dsID , VE , Ostap 
 from   ostap.logger.utils   import roo_silent , rooSilent
 from   ostap.fitting.utils  import Adjust3D , H3D_dset , component_similar , component_clone
-from   ostap.fitting.basic  import makeBkg , Flat1D 
+from   ostap.fitting.basic  import Flat1D 
 from   ostap.fitting.fit2d  import PDF2
 from   ostap.fitting.roofit import SETVAR
 # =============================================================================
@@ -647,8 +647,16 @@ class Flat3D(PDF3) :
             'zvar'     : self.zvar ,
             'name'     : self.name ,            
             'title'    : title     ,             
-            }                   
-
+            }
+        
+    ## simple conversion to string    
+    def __str__ ( self ) :
+        """Simple conversion to string"""        
+        return "Flat3D(name='%s',xvar='%s',yvar='%s',zvar='%s')" % ( self     .name ,
+                                                                     self.xvar.name ,
+                                                                     self.yvar.name ,
+                                                                     self.zvar.name )
+    
 # =============================================================================
 ## @class Model3D
 #  Trivial class to construct 3D model as a product of split 1D-models
@@ -759,6 +767,14 @@ class Model3D(PDF3) :
         """``z-model'' z-component of M(x)*M(y)*M(z) PDF"""
         return self.__zmodel
     
+    ## simple conversion to string    
+    def __str__ ( self ) :
+        """Simple conversion to string"""        
+        return "Model3D(name='%s',xmodel=%s,ymodel=%s,zmodel=%s)" % ( self  .name ,
+                                                                      self.xmodel ,
+                                                                      self.ymodel ,
+                                                                      self.zmodel )
+    
 # =============================================================================
 ## simple convertor of 3D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -807,6 +823,7 @@ class H3D_pdf(H3D_dset,PDF3) :
 # =============================================================================
 # Compound models for 3D-fit
 # =============================================================================
+
 # =============================================================================
 ## @class Fit3D
 #  The actual model for 3D-fits
@@ -814,12 +831,9 @@ class H3D_pdf(H3D_dset,PDF3) :
 #  @code
 # 
 #  model   = Models.Fit3D (
-#      signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-#      signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-#      signal_3 = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
-#      power1   = 1 , 
-#      power2   = 1 ,
-#      power3   = 1 )
+#      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+#      signal_y = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
+#      signal_z = Models.Gauss_pdf ( 'Gz' , mass = m_z ) )
 #
 #  r = model.fitTo ( dataset ) ## fit dataset 
 #
@@ -836,12 +850,12 @@ class Fit3D (PDF3) :
     """The actual model for 3D-fits
     
     >>>  model   = Models.Fit3D (
-    ...      signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-    ...      signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-    ...      signal_3 = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
-    ...      bkgX1    = 1 , 
-    ...      bkgY1    = 0 ,
-    ...      bkgZ1    = 0 )
+    ...      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+    ...      signal_y = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
+    ...      signal_x = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
+    ...      bkg_1x   = 1 , 
+    ...      bkg_1y   = 0 ,
+    ...      bkg_1z   = 0 )
     >>> r,f = model.fitTo ( dataset ) ## fit dataset 
     >>> print r                       ## get results  
     >>> fx  = model.draw1 ()          ## visualize X-projection
@@ -1016,17 +1030,17 @@ class Fit3D (PDF3) :
 
         if   isinstance ( signal_x , PDF            )          : self.__signal_x = signal_x
         elif isinstance ( signal_x , ROOT.RooAbsPdf ) and xvar :
-            self.__signal_x = Generic1D_pdf ( signal_1 , xvar , 'SIGNAL-X' )
+            self.__signal_x = Generic1D_pdf ( signal_1 , xvar , 'SX' )
         else : raise AttributeError ( "Invalid ``signal_x'' argument: %s" % signal_x )
             
         if   isinstance ( signal_y , PDF            )          : self.__signal_y = signal_y
         elif isinstance ( signal_y , ROOT.RooAbsPdf ) and yvar :
-            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SIGNAL-Y' )
+            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
         else : raise AttributeError ( "Invalid ``signal_y'' argument: %s" % signal_y )
 
         if   isinstance ( signal_z , PDF            )          : self.__signal_z = signal_z
         elif isinstance ( signal_z , ROOT.RooAbsPdf ) and zvar :
-            self.__signal_z = Generic1D_pdf ( signal_z , zvar , 'SIGNAL-Z' )
+            self.__signal_z = Generic1D_pdf ( signal_z , zvar , 'SZ' )
         else : raise AttributeError ( "Invalid ``signal_z'' argument: %s" % signal_z )
             
         #
@@ -1054,9 +1068,9 @@ class Fit3D (PDF3) :
         ## 2-4) Three terms:  ( 2 signals )  x ( 1 background ) 
         # =====================================================================
         
-        self.__bkg_1x    = makeBkg ( bkg_1x , 'Bkg1X_BSS' + suffix , self.xvar )
-        self.__bkg_1y    = makeBkg ( bkg_1y , 'Bkg1Y_SBS' + suffix , self.yvar )
-        self.__bkg_1z    = makeBkg ( bkg_1z , 'Bkg1Z_SSB' + suffix , self.zvar )
+        self.__bkg_1x    = self.make_bkg ( bkg_1x , 'Bkg1X_BSS' + suffix , self.xvar )
+        self.__bkg_1y    = self.make_bkg ( bkg_1y , 'Bkg1Y_SBS' + suffix , self.yvar )
+        self.__bkg_1z    = self.make_bkg ( bkg_1z , 'Bkg1Z_SSB' + suffix , self.zvar )
         
         self.__ssb_cmp = Model3D ( "SSB_pdf" + suffix ,
                                    self.__signal_x , self.__signal_y , self.__bkg_1z   ,
@@ -1108,8 +1122,8 @@ class Fit3D (PDF3) :
             self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar )
         else :
 
-            if not self.__bkg_2x : self.__bkg_2x = makeBkg ( bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )    
-            if not self.__bkg_2y : self.__bkg_2y = makeBkg ( bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )                    
+            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )    
+            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )                    
             self.__bkg_2xy = Model2D ( 'Bkg2XY' + suffix ,
                                        self.__bkg_2x     ,
                                        self.__bkg_2y     ,
@@ -1120,8 +1134,8 @@ class Fit3D (PDF3) :
         elif bkg_2xz and isinstance ( bkg_2xz , ROOT.RooAbsPdf ) : 
             self.__bkg_2xz = Generic2D_pdf ( bkg_2xz  , self.xvar , self.zvar )
         else :
-            if not self.__bkg_2x : self.__bkg_2x = makeBkg ( bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )    
-            if not self.__bkg_2z : self.__bkg_2z = makeBkg ( bkg_2z , 'Bkg2Z_S2B' + suffix , self.zvar )                                
+            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )    
+            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , 'Bkg2Z_S2B' + suffix , self.zvar )                                
             self.__bkg_2xz = Model2D ( 'Bkg2XZ' + suffix ,                                     
                                        self.__bkg_2x     ,
                                        self.__bkg_2z       , 
@@ -1132,8 +1146,8 @@ class Fit3D (PDF3) :
         elif bkg_2yz and isinstance ( bkg_2yz , ROOT.RooAbsPdf ) : 
             self.__bkg_2yz = Generic2D_pdf ( bkg_2yz  , self.yvar , self.zvar)
         else :            
-            if not self.__bkg_2y : self.__bkg_2y = makeBkg ( bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )    
-            if not self.__bkg_2z : self.__bkg_2z = makeBkg ( bkg_2z , 'Bkg2Z_S2B' + suffix , self.zvar )                                
+            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )    
+            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , 'Bkg2Z_S2B' + suffix , self.zvar )                                
             self.__bkg_2yz = Model2D ( 'Bkg2YZ' + suffix ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     ,
@@ -1190,9 +1204,9 @@ class Fit3D (PDF3) :
             self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar )
         else :
             
-            self.__bkg_3x = makeBkg ( bkg_3x , 'Bkg3X_BBB' + suffix , self.xvar )
-            self.__bkg_3y = makeBkg ( bkg_3y , 'Bkg3Y_BBB' + suffix , self.yvar )
-            self.__bkg_3z = makeBkg ( bkg_3z , 'Bkg3Z_BBB' + suffix , self.zvar )
+            self.__bkg_3x = self.make_bkg ( bkg_3x , 'Bkg3X_BBB' + suffix , self.xvar )
+            self.__bkg_3y = self.make_bkg ( bkg_3y , 'Bkg3Y_BBB' + suffix , self.yvar )
+            self.__bkg_3z = self.make_bkg ( bkg_3z , 'Bkg3Z_BBB' + suffix , self.zvar )
             
             self.__bbb_cmp = Model3D (
                 "BBB_pdf" + suffix ,
@@ -1605,16 +1619,16 @@ class Fit3D (PDF3) :
 #  @param suffix   (string) An optional suffix to be  added to the names of created PDFs and variables
 #  @param bkg_1x   (RooFit/PDF, Ostap/PDF,  integer, RooRealVar or None)
 #                  1D x-background for SSB-terms
-#                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+#                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
 #  @param bkg_2x   (RooFit/PDF, Ostap/PDF,integer, RooRealVar or None)
 #                  1D x-background for SBB-terms, if <code>bkg2D</code> is not specified. 
-#                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+#                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
 #  @param bkg_2xy  (RooFit/PDF or Ostap/PDF)
 #                   2D x,y-background for SBB-terms
 #                   Use directly RooFit/PDF or Ostap/PDF
 #  @param bkg_3x   (RooFit/PDF, Ostap/PDF,integer, RooRealVar or None)
 #                   1D x-background for BBB-term, if <code>bkg3D</code> is not specified. 
-#                   Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+#                   Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
 #  @param bkg_3D   (RooFit/PDF or Ostap/PDF)
 #                   3D x,y,z-background for BBB-term
 #                   Use directly RooFit/PDF or Ostap/PDF        
@@ -1637,12 +1651,12 @@ class Fit3D (PDF3) :
 #  @param name       ("")   the PDF name 
 #  @code
 #  model   = Models.Fit3DSym (
-#      signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-#      signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-#      signal_3 = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
-#      bkg1     = -1 , 
-#      bkg2     = -1 ,
-#      bkg3     = -1 )
+#      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+#      signal_y = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
+#      signal_z = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
+#      bkg_1x   = -1 , 
+#      bkg_2x   = -1 ,
+#      bkg_3x   = -1 )
 #
 #  r = model.fitTo ( dataset ) ## fit dataset 
 #
@@ -1658,12 +1672,12 @@ class Fit3DSym (PDF3) :
     """The actual model for fully symmetric 3D-fits
     
     >>>  model   = Models.Fit3DSym (
-    ...      signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-    ...      signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-    ...      signal_3 = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
-    ...      bkg1    =  1 , 
-    ...      bkg2    = -1 ,
-    ...      bkg3    = -1 )
+    ...      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+    ...      signal_y = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
+    ...      signal_z = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
+    ...      bkg_1x   =  1 , 
+    ...      bkg_2x   = -1 ,
+    ...      bkg_3x   = -1 )
     >>> r,f = model.fitTo ( dataset ) ## fit dataset 
     >>> print r                       ## get results  
     >>> fx  = model.draw1 ()          ## visualize X-projection
@@ -1682,16 +1696,16 @@ class Fit3DSym (PDF3) :
         An optional suffix to be  added to the names of created PDFs and variables
     bkg_1x   : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
         1D x-background for SSB-terms
-        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
     bkg_2x  : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
         1D x-background for SBB-terms
-        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
     bkg_2xy : RooFit/PDF or Ostap/PDF
         2D x,y-background for SBB-terms
         Use directly RooFit/PDF or Ostap/PDF
     bkg_3x  : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
         1D x-background for BBB-term
-        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
     bkg_3D  : RooFit/PDF or Ostap/PDF
         3D x,y,z-background for BBB-term
         Use directly RooFit/PDF or Ostap/PDF
@@ -1775,22 +1789,22 @@ class Fit3DSym (PDF3) :
            
         if   isinstance ( signal_x , PDF            )          : self.__signal_x= signal_x
         elif isinstance ( signal_x , ROOT.RooAbsPdf ) and xvar :
-            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SIGNAL-X' )
+            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SX' )
         else : raise AttributeError ( "Invalid ``signal_x'' argument: %s" % signal_x )
             
         if   isinstance ( signal_y , PDF            )          : self.__signal_y = signal_y
         elif isinstance ( signal_y , ROOT.RooAbsPdf ) and yvar :
-            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SIGNAL-Y' )
+            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
         elif yvar and not signal_y :
-            self.__signal_y = self.__signal_x.clone ( xvar = yvar , name = 'SIGNAL-Y' )
+            self.__signal_y = self.__signal_x.clone ( xvar = yvar , name = 'SY' )
             self.debug('signal y-component is cloned from the signal_x component')
         else : raise AttributeError ( "Invalid ``signal_y'' argument: %s" % signal_y )
 
         if   isinstance ( signal_z , PDF            )          : self.__signal_z = signal_z
         elif isinstance ( signal_z , ROOT.RooAbsPdf ) and zvar :
-            self.__signal_z = Generic1D_pdf ( signal_z , zvar , 'SIGNAL-Z' )
+            self.__signal_z = Generic1D_pdf ( signal_z , zvar , 'SZ' )
         elif zvar and not signal_z :
-            self.__signal_z = self.__signal_x.clone ( xvar = zvar , name = 'SIGNAL-Z' )
+            self.__signal_z = self.__signal_x.clone ( xvar = zvar , name = 'SZ' )
             self.debug('signal z-component is cloned from the signal_x component')
         else : raise AttributeError ( "Invalid ``signal_z'' argument: %s" % signal_z )
             
@@ -1820,9 +1834,9 @@ class Fit3DSym (PDF3) :
         ## 2) ( 2 signals )  x ( 1 background )
         # =====================================================================
         
-        self.__bkg_1x = makeBkg (        bkg_1x , 'Bkg1X_BSS' + suffix , self.xvar )
-        self.__bkg_1y = makeBkg ( self.__bkg_1x , 'Bkg1Y_SBS' + suffix , self.yvar )
-        self.__bkg_1z = makeBkg ( self.__bkg_1x , 'Bkg1Z_SSB' + suffix , self.zvar )
+        self.__bkg_1x = self.make_bkg (        bkg_1x , 'Bkg1X_BSS' + suffix , self.xvar )
+        self.__bkg_1y = self.make_bkg ( self.__bkg_1x , 'Bkg1Y_SBS' + suffix , self.yvar )
+        self.__bkg_1z = self.make_bkg ( self.__bkg_1x , 'Bkg1Z_SSB' + suffix , self.zvar )
         
         self.__ssb_cmp_raw = Model3D ( "SSB_raw" + suffix ,
                                        self.__signal_x , self.__signal_y , self.__bkg_1z   ,
@@ -1884,9 +1898,9 @@ class Fit3DSym (PDF3) :
                                                     yvar = self.zvar            )
         else :
 
-            self.__bkg_2x  = makeBkg (        bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )        
-            self.__bkg_2y  = makeBkg ( self.__bkg_2x , 'Bkg2Y_S2B' + suffix , self.yvar )        
-            self.__bkg_2z  = makeBkg ( self.__bkg_2x , 'Bkg2Z_S2B' + suffix , self.zvar )
+            self.__bkg_2x  = self.make_bkg (        bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )        
+            self.__bkg_2y  = self.make_bkg ( self.__bkg_2x , 'Bkg2Y_S2B' + suffix , self.yvar )        
+            self.__bkg_2z  = self.make_bkg ( self.__bkg_2x , 'Bkg2Z_S2B' + suffix , self.zvar )
             
             self.__bkg_2xy = Model2D ( 'Bkg2XY' + suffix ,
                                        self.__bkg_2x     ,
@@ -1944,9 +1958,9 @@ class Fit3DSym (PDF3) :
             self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar )
         else :
             
-            self.__bkg_3x  = makeBkg (        bkg_3x , 'Bkg3X_BBB' + suffix , self.xvar )        
-            self.__bkg_3y  = makeBkg ( self.__bkg_3x , 'Bkg3Y_BBB' + suffix , self.yvar )        
-            self.__bkg_3z  = makeBkg ( self.__bkg_3x , 'Bkg3Z_BBB' + suffix , self.zvar )
+            self.__bkg_3x  = self.make_bkg (        bkg_3x , 'Bkg3X_BBB' + suffix , self.xvar )        
+            self.__bkg_3y  = self.make_bkg ( self.__bkg_3x , 'Bkg3Y_BBB' + suffix , self.yvar )        
+            self.__bkg_3z  = self.make_bkg ( self.__bkg_3x , 'Bkg3Z_BBB' + suffix , self.zvar )
             
             self.__bbb_cmp = Model3D ( "BBB_pdf" + suffix ,
                                        self.__bkg_3x      ,
@@ -2358,22 +2372,22 @@ class Fit3DSym (PDF3) :
 ## @class Fit3DMix
 #  The actual model for fully "mixed-symemtry" 3D-fits  (symmetric for y<-->z)
 #
-#  @param signal_1 (RooFit/PDF or Ostap/PDF) PDF to describe (1D)-signal in X-direction
-#  @param signal_2 (RooFit/PDF, Ostap/PDF or None) PDF to describe (1D)-signal in Y-direction
-#  @param signal_3 (RooFit/PDF, Ostap/PDF or None) PDF to describe (1D)-signal in Z-direction
+#  @param signal_x (RooFit/PDF or Ostap/PDF) PDF to describe (1D)-signal in X-direction
+#  @param signal_y (RooFit/PDF, Ostap/PDF or None) PDF to describe (1D)-signal in Y-direction
+#  @param signal_z (RooFit/PDF, Ostap/PDF or None) PDF to describe (1D)-signal in Z-direction
 #  @param suffix   (string) An optional suffix to be  added to the names of created PDFs and variables
 #  @param bkg1     (RooFit/PDF, Ostap/PDF,  integer, RooRealVar or None)
 #                  1D x-background for SSB-terms
-#                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+#                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
 #  @param bkg2     (RooFit/PDF, Ostap/PDF,integer, RooRealVar or None)
 #                  1D x-background for SBB-terms, if <code>bkg2D</code> is not specified. 
-#                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+#                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
 #  @param bkg2D    (RooFit/PDF or Ostap/PDF)
 #                   2D x,y-background for SBB-terms
 #                   Use directly RooFit/PDF or Ostap/PDF
 #  @param bkg3     (RooFit/PDF, Ostap/PDF,integer, RooRealVar or None)
 #                   1D x-background for BBB-term, if <code>bkg3D</code> is not specified. 
-#                   Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+#                   Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
 #  @param bkg3D    (RooFit/PDF or Ostap/PDF)
 #                   3D x,y,z-background for BBB-term
 #                   Use directly RooFit/PDF or Ostap/PDF        
@@ -2396,12 +2410,12 @@ class Fit3DSym (PDF3) :
 #  @param name       ("")   the PDF name 
 #  @code
 #  model   = Models.Fit3DSym (
-#      signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-#      signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-#      signal_3 = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
-#      bkg1     = -1 , 
-#      bkg2     = -1 ,
-#      bkg3     = -1 )
+#      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+#      signal_y = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
+#      signal_z = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
+#      bkg_1x     = -1 , 
+#      bkg_2x     = -1 ,
+#      bkg_1y     = -1 )
 #
 #  r = model.fitTo ( dataset ) ## fit dataset 
 #
@@ -2417,12 +2431,12 @@ class Fit3DMix (PDF3) :
     """The actual model for  y<->z-symmetric 3D-fits
     
     >>>  model   = Models.Fit3DSym (
-    ...      signal_1 = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
-    ...      signal_2 = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
-    ...      signal_3 = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
-    ...      bkg1    =  1 , 
-    ...      bkg2    = -1 ,
-    ...      bkg3    = -1 )
+    ...      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
+    ...      signal_y = Models.Gauss_pdf ( 'Gy' , mass = m_y ) ,
+    ...      signal_z = Models.Gauss_pdf ( 'Gz' , mass = m_z ) ,
+    ...      bkg_1x   =  1 , 
+    ...      bkg_2x   = -1 ,
+    ...      bkg_1y   = -1 )
     >>> r,f = model.fitTo ( dataset ) ## fit dataset 
     >>> print r                       ## get results  
     >>> fx  = model.draw1 ()          ## visualize X-projection
@@ -2431,26 +2445,26 @@ class Fit3DMix (PDF3) :
 
     Parameters
     ----------
-    signal_1 :  RooFit/PDF or Ostap/PDF 
+    signal_x :  RooFit/PDF or Ostap/PDF 
         PDF to describe (1D)-signal in X-direction
-    signal_2 :  RooFit/PDF or Ostap/PDF 
+    signal_y :  RooFit/PDF or Ostap/PDF 
         PDF to describe (1D)-signal in Y-direction
-    signal_3 :  RooFit/PDF or Ostap/PDF 
+    signal_z :  RooFit/PDF or Ostap/PDF 
         PDF to describe (1D)-signal in Z-direction
     suffix   : string
         An optional suffix to be  added to the names of created PDFs and variables
     bkg1    : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
         1D x-background for SSB-terms
-        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
     bkg2    : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
         1D x-background for SBB-terms
-        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
     bkg2D   : RooFit/PDF or Ostap/PDF
         2D x,y-background for SBB-terms
         Use directly RooFit/PDF or Ostap/PDF
     bkg3    : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
         1D x-background for BBB-term
-        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via makeBkg
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
     bkg3D   : RooFit/PDF or Ostap/PDF
         3D x,y,z-background for BBB-term
         Use directly RooFit/PDF or Ostap/PDF
@@ -2479,7 +2493,7 @@ class Fit3DMix (PDF3) :
                    #
                    signal_x           , 
                    signal_y           ,
-                   signal_z = None    , ## cloned from signal_2 if None 
+                   signal_z = None    , ## cloned from signal_y if None 
                    suffix   = ''      ,
                    # background  for SSB-terms:
                    bkg_1x  = None  , ## 1D     x-background for BSS-terms
@@ -2552,21 +2566,21 @@ class Fit3DMix (PDF3) :
 
         if   isinstance ( signal_x , PDF            )          : self.__signal_x = signal_x
         elif isinstance ( signal_x , ROOT.RooAbsPdf ) and xvar :
-            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SIGNAL-X' )
+            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SX' )
         else : raise AttributeError ( "Invalid ``signal_x'' argumnent: %s" % signal_x )
             
         if   isinstance ( signal_y , PDF            )          : self.__signal_y = signal_y
         elif isinstance ( signal_y , ROOT.RooAbsPdf ) and yvar :
-            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SIGNAL-Y' )
+            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
         else : raise AttributeError ( "Invalid ``signal_y'' argument: %s" %   signal_y )
 
         if   isinstance ( signal_z , PDF            )          : self.__signal_z = signal_z
         elif isinstance ( signal_z , ROOT.RooAbsPdf ) and zvar :
-            self.__signal_z = Generic1D_pdf ( signal_z , zvar , 'SIGNAL-Z' )
+            self.__signal_z = Generic1D_pdf ( signal_z , zvar , 'SZ' )
         elif zvar and not signal_z :
-            self.__signal_z = self.__signal_y.clone ( xvar = zvar , name = 'SIGNAL-Z' )
+            self.__signal_z = self.__signal_y.clone ( xvar = zvar , name = 'SZ' )
             self.debug('signal z-component is cloned from the signal_y component')
-        else : raise AttributeError ( "Invalid ``signal_z'' argument: %s" % signal_3 )
+        else : raise AttributeError ( "Invalid ``signal_z'' argument: %s" % signal_z )
             
         #
         ## initialize base class
@@ -2591,7 +2605,7 @@ class Fit3DMix (PDF3) :
         # =====================================================================
         ## 2) background x signal x  signal 
         # =====================================================================        
-        self.__bkg_1x  = makeBkg (  bkg_1x , 'Bkg1X_BSS' + suffix , self.xvar )
+        self.__bkg_1x  = self.make_bkg (  bkg_1x , 'Bkg1X_BSS' + suffix , self.xvar )
         self.__bss_cmp = Model3D ( "BSS_pdf" + suffix ,
                                     self.__bkg_1x , self.__signal_y , self.__signal_z ,
                                     title = "Background1(x) x Signal(y) x Signal(z)" )
@@ -2600,8 +2614,8 @@ class Fit3DMix (PDF3) :
         ## 3) signal x (  signal x background + backround x signal ) 
         # =====================================================================
 
-        self.__bkg_1y  = makeBkg (        bkg_1y , 'Bkg1Y_SBS' + suffix , self.yvar )
-        self.__bkg_1z  = makeBkg ( self.__bkg_1y , 'Bkg1Z_SSB' + suffix , self.zvar )
+        self.__bkg_1y  = self.make_bkg (        bkg_1y , 'Bkg1Y_SBS' + suffix , self.yvar )
+        self.__bkg_1z  = self.make_bkg ( self.__bkg_1y , 'Bkg1Z_SSB' + suffix , self.zvar )
         
         self.__ssb_cmp_raw = Model3D ( "SSB_raw" + suffix ,
                                        self.__signal_x , self.__signal_y , self.__bkg_1z   ,
@@ -2654,8 +2668,8 @@ class Fit3DMix (PDF3) :
         elif bkg_2yz and isinstance ( bkg_2yz , ROOT.RooAbsPdf ) :            
             self.__bkg_2yz = Generic2D_pdf ( bkg_2yz  , self.yvar , self.zvar , name = bkg2D.name )
         else :
-            self.__bkg_2y = makeBkg (        bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )        
-            self.__bkg_2z = makeBkg ( self.__bkg_2y , 'Bkg2Z_S2B' + suffix , self.zvar )
+            self.__bkg_2y = self.make_bkg (        bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )        
+            self.__bkg_2z = self.make_bkg ( self.__bkg_2y , 'Bkg2Z_S2B' + suffix , self.zvar )
             
             self.__bkg_2yz = Model2D ( 'Bkg2YZ' + suffix ,
                                        self.__bkg_2y     ,
@@ -2681,9 +2695,9 @@ class Fit3DMix (PDF3) :
                                                     yvar = self.zvar         )  
         else :
             
-            if not self.__bkg_2x : self.__bkg_2x = makeBkg (        bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )        
-            if not self.__bkg_2y : self.__bkg_2y = makeBkg (        bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )        
-            if not self.__bkg_2z : self.__bkg_2z = makeBkg ( self.__bkg_2y , 'Bkg2Z_S2B' + suffix , self.zvar )
+            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg (        bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )        
+            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg (        bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )        
+            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( self.__bkg_2y , 'Bkg2Z_S2B' + suffix , self.zvar )
             
             self.__bkg_2xy = Model2D ( 'Bkg2XY' + suffix , 
                                        self.__bkg_2x     ,
@@ -2755,11 +2769,11 @@ class Fit3DMix (PDF3) :
             elif bkg_3yz and isinstance ( bkg_3yz , ROOT.RooAbsPdf ) :
                 self.__bkg_3yz = Generic2D_pdf ( bkg_3yz , self.yvar , self.zvar )
             else :
-                self.__bkg_3y  = makeBkg (        bkg_3y , 'Bkg3Y_BBB' + suffix , self.yvar )        
-                self.__bkg_3z  = makeBkg ( self.__bkg_3y , 'Bkg3Z_BBB' + suffix , self.zvar )
+                self.__bkg_3y  = self.make_bkg (        bkg_3y , 'Bkg3Y_BBB' + suffix , self.yvar )        
+                self.__bkg_3z  = self.make_bkg ( self.__bkg_3y , 'Bkg3Z_BBB' + suffix , self.zvar )
                 self.__bkg_3yz = Model2D ( 'Bkg3YZ' + suffix , self.__bkg_3y , self.__bkg_3z )
                 
-            self.__bkg_3x  = makeBkg ( bkg_3x , 'Bkg3X_BBB' + suffix , self.xvar )
+            self.__bkg_3x  = self.make_bkg ( bkg_3x , 'Bkg3X_BBB' + suffix , self.xvar )
             self.__bbb_cmp = Generic3D_pdf (
                 ROOT.RooProdPdf ( "BBB_pdf" + suffix ,
                                   "Background3(x) x Background3(y,z)" ,
