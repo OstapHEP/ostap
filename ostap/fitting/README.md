@@ -19,7 +19,7 @@ Collection of various utilities that simplify  the communications with [`RooFit`
        - `Generic1D_pdf` 
        - `Generic2D_pdf` 
        - `Generic3D_pdf` 
-   - other: `PyPDF`, *resolution*. *efficiencies* , etc..
+   - other: `PyPDF`, *resolution*, *convolution*, *efficiencies* , etc..
 - zillions of specialized pdfs:
    - *signal/peak-like*  
    - generic smooth background 
