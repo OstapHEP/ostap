@@ -2,9 +2,9 @@
 
 * [ostap.histos](README.md)
 
-Collection of utilities and decorators for easy manipulations with the histograms:
- - bin-access, looping, ranges, etc...
- - operators for historgams, in particualr for any historgams `h`, `h1` and `h2`, 
+Collection of utilities and decorators for easy manipulations with the histograms & graphs
+- bin-access, looping, ranges, etc...
+- operators for historgams, in particualr for any historgams `h`, `h1` and `h2`, 
 any *function*/*callable* `f`  and any *scalar constant* `c` there are valid actions:
 ```
 h1 + h2 , h1 - h2, h1 * h2 , h1 / h2 
@@ -34,6 +34,6 @@ c  + h  , h  - c , h  * c  , f  / c
      - approximation using `RooAbsPdf`    
 - many methods for historgam comparison,  inclusing bin-by-bin and shape comparisons 
 - summation and integration methods 
+- transformation to various type of graphs 
 - ... 
- 
        
