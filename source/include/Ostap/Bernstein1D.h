@@ -268,10 +268,14 @@ namespace Ostap
       double t ( const double x ) const { return m_bernstein. t ( x )  ; }
       // ======================================================================
     public:
-      //
+      // ======================================================================
+      /// decreasing?
       bool decreasing  () const { return m_bernstein.decreasing()     ; }
+      /// increasing?
       bool increasing  () const { return m_bernstein.increasing()     ; }
-      bool monothonic  () const { return increasing() || decreasing() ; }
+      /// monotonic?
+      bool monotonic  () const { return increasing() || decreasing() ; }
+      //// constant 
       bool constant    () const { return m_bernstein.constant()       ; }
       // ======================================================================
     public:
@@ -509,41 +513,41 @@ namespace Ostap
     inline BernsteinEven operator-( const double v , const PositiveEven& p )
     { return v - p.even() ; }
     // ========================================================================
-    /** @class Monothonic
-     *  The "positive" monothonic polynomial of order N
+    /** @class Monotonic
+     *  The "positive" monotonic polynomial of order N
      *  Actually it is a sum of basic bernstein polynomials with
      *  non-negative coefficients
      */
-    class Monothonic : public Ostap::Math::Positive
+    class Monotonic : public Ostap::Math::Positive
     {
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from the order
-      Monothonic
+      Monotonic
         ( const unsigned short       N          =    1 ,
           const double               xmin       =    0 ,
           const double               xmax       =    1 ,
           const bool                 increasing = true ) ;
       // ======================================================================
       /// constructor from N phases
-      Monothonic
+      Monotonic
         ( const std::vector<double>& pars              ,
           const double               xmin       =    0 ,
           const double               xmax       =    1 ,
           const bool                 increasing = true ) ;
       // ======================================================================
       /// constructor positive spline
-      Monothonic
+      Monotonic
         ( const Positive&            poly              ,
           const bool                 increasing        ) ;
       // ======================================================================
       /// copy  constructor
-      Monothonic ( const Monothonic&  right ) ;
+      Monotonic ( const Monotonic&  right ) ;
       /// move
-      Monothonic (       Monothonic&& right ) = default ;
+      Monotonic (       Monotonic&& right ) = default ;
       // ======================================================================
-      virtual ~Monothonic() ;
+      virtual ~Monotonic() ;
       // ======================================================================
     public:
       // ======================================================================
@@ -551,8 +555,8 @@ namespace Ostap
       bool increasing () const { return  m_increasing  ; }
       /// decreasing ?
       bool decreasing () const { return !increasing () ; }
-      /// monothonic
-      bool monothonic () const { return  true  ; }
+      /// monotonic
+      bool monotonic () const { return  true  ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -579,7 +583,7 @@ namespace Ostap
      *  Actually it is a sum of basic bernstein polynomials with
      *  non-negative coefficients
      */
-    class Convex : public Ostap::Math::Monothonic
+    class Convex : public Ostap::Math::Monotonic
     {
       // ======================================================================
     public:
@@ -608,7 +612,7 @@ namespace Ostap
       // ======================================================================
       /// constructor from polynom
       Convex
-        ( const Monothonic&          poly      ,
+        ( const Monotonic&          poly      ,
           const bool                 convex    ) ;
       // ======================================================================
       /// copy constructor

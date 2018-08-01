@@ -105,9 +105,9 @@ namespace Ostap
        *  (Compile-time) Minkowski metric:
        * \f$  g_{\mu\nu} =
        *   \begin{pmatrix}
-       *      -1 &  0  &  0  & 0 \              \
-       *       0 & -1  &  0  & 0 \              \
-       *       0 &  0  & -1  & 0 \              \
+       *      -1 &  0  &  0  & 0 \\
+       *       0 & -1  &  0  & 0 \\
+       *       0 &  0  & -1  & 0 \\
        *       0 &  0  &  0  & 1
        * \end{pmatrix}
        * \f$
@@ -140,9 +140,9 @@ namespace Ostap
        *  Minkowski metric:
        * \f$  g_{\mu\nu} =
        *   \begin{pmatrix}
-       *      -1 &  0  &  0  & 0 \              \
-       *       0 & -1  &  0  & 0 \              \
-       *       0 &  0  & -1  & 0 \              \
+       *      -1 &  0  &  0  & 0 \\
+       *       0 & -1  &  0  & 0 \\
+       *       0 &  0  & -1  & 0 \\
        *       0 &  0  &  0  & 1
        * \end{pmatrix}
        * \f$

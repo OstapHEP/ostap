@@ -467,7 +467,7 @@ double Ostap::Math::PositiveEven::integral
 // ============================================================================
 // constructor from the order
 // ============================================================================
-Ostap::Math::Monothonic::Monothonic 
+Ostap::Math::Monotonic::Monotonic 
 ( const unsigned short      N          ,
   const double              xmin       ,
   const double              xmax       , 
@@ -480,7 +480,7 @@ Ostap::Math::Monothonic::Monothonic
 // ============================================================================
 // constructor from the order
 // ============================================================================
-Ostap::Math::Monothonic::Monothonic 
+Ostap::Math::Monotonic::Monotonic 
 ( const std::vector<double>& pars       ,
   const double               xmin       ,
   const double               xmax       ,
@@ -493,7 +493,7 @@ Ostap::Math::Monothonic::Monothonic
 // ============================================================================
 // constructor from the spline 
 // ============================================================================
-Ostap::Math::Monothonic::Monothonic 
+Ostap::Math::Monotonic::Monotonic 
 ( const Ostap::Math::Positive& spline   ,
   const bool                 increasing ) 
   : Ostap::Math::Positive ( spline      )  
@@ -504,19 +504,19 @@ Ostap::Math::Monothonic::Monothonic
 // ============================================================================
 // constructor from the spline 
 // ============================================================================
-Ostap::Math::Monothonic::Monothonic 
-( const Ostap::Math::Monothonic& right ) 
+Ostap::Math::Monotonic::Monotonic 
+( const Ostap::Math::Monotonic& right ) 
   : Ostap::Math::Positive ( right              )  
   , m_increasing          ( right.m_increasing )
 {}
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Math::Monothonic::~Monothonic (){}
+Ostap::Math::Monotonic::~Monotonic (){}
 // ============================================================================
 // update bernstein coefficients
 // =============================================================================
-bool Ostap::Math::Monothonic::updateBernstein ()
+bool Ostap::Math::Monotonic::updateBernstein ()
 {
   //
   bool   update = false ;
@@ -545,7 +545,7 @@ bool Ostap::Math::Monothonic::updateBernstein ()
 // ============================================================================
 // get the minimal value of function 
 // ============================================================================
-double Ostap::Math::Monothonic::fun_min () const
+double Ostap::Math::Monotonic::fun_min () const
 {
   const std::vector<double>& ps = m_bernstein.pars() ;
   return  std::min( ps.front() , ps.back() ) ;
@@ -553,7 +553,7 @@ double Ostap::Math::Monothonic::fun_min () const
 // ============================================================================
 // get the maximal value of function 
 // ============================================================================
-double Ostap::Math::Monothonic::fun_max () const
+double Ostap::Math::Monotonic::fun_max () const
 {
   const std::vector<double>& ps = m_bernstein.pars() ;
   return  std::max( ps.front() , ps.back() ) ;
@@ -567,7 +567,7 @@ Ostap::Math::Convex::Convex
   const double              xmax       , 
   const bool                increasing ,
   const bool                convex     ) 
-  : Ostap::Math::Monothonic ( N , xmin, xmax , increasing ) 
+  : Ostap::Math::Monotonic ( N , xmin, xmax , increasing ) 
   , m_convex                ( convex )  
 {
   updateBernstein () ;
@@ -581,7 +581,7 @@ Ostap::Math::Convex::Convex
   const double               xmax       ,
   const bool                 increasing ,
   const bool                 convex     ) 
-  : Ostap::Math::Monothonic ( pars  , xmin, xmax , increasing ) 
+  : Ostap::Math::Monotonic ( pars  , xmin, xmax , increasing ) 
   , m_convex                ( convex     )  
 {
   updateBernstein () ;
@@ -593,7 +593,7 @@ Ostap::Math::Convex::Convex
 ( const Ostap::Math::Positive& poly      ,
   const bool                  increasing ,
   const bool                  convex     ) 
-  : Ostap::Math::Monothonic ( poly , increasing ) 
+  : Ostap::Math::Monotonic ( poly , increasing ) 
   , m_convex                ( convex     )  
 {
   updateBernstein () ;
@@ -602,9 +602,9 @@ Ostap::Math::Convex::Convex
 // constructor from the 
 // ============================================================================
 Ostap::Math::Convex::Convex
-( const Ostap::Math::Monothonic& poly   ,
+( const Ostap::Math::Monotonic& poly   ,
   const bool                     convex ) 
-  : Ostap::Math::Monothonic ( poly       ) 
+  : Ostap::Math::Monotonic ( poly       ) 
   , m_convex                ( convex     )  
 {
   updateBernstein () ;
@@ -613,7 +613,7 @@ Ostap::Math::Convex::Convex
 // copy constructor 
 // ============================================================================
 Ostap::Math::Convex::Convex ( const Ostap::Math::Convex& right  ) 
-  : Ostap::Math::Monothonic ( right           ) 
+  : Ostap::Math::Monotonic ( right           ) 
   , m_convex                ( right.m_convex  )  
 {}
 // ============================================================================

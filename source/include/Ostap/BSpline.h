@@ -194,8 +194,8 @@ namespace Ostap
       bool   decreasing    () const ;
       /// is it a increasing function?
       bool   increasing    () const ;
-      /// is it a monothonical function?
-      bool   monothonic    () const { return increasing() || decreasing() ; }
+      /// is it a monotonical function?
+      bool   monotonic    () const { return increasing() || decreasing() ; }
       /// is it a constant function?
       bool   constant      () const ;
       // ======================================================================
@@ -406,8 +406,8 @@ namespace Ostap
       bool   decreasing    () const { return m_bspline.decreasing () ; }
       /// is it a increasing function?
       bool   increasing    () const { return m_bspline.decreasing () ; }
-      /// is it a monothonical function?
-      bool   monothonic    () const { return increasing() || decreasing() ; }
+      /// is it a monotonical function?
+      bool   monotonic    () const { return increasing() || decreasing() ; }
       /// is it a constant function?
       bool   constant      () const { return m_bspline.constant  () ; }
       // ======================================================================
@@ -561,7 +561,7 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class MonothonicSpline
+    /** @class MonotonicSpline
      *  The special spline for non-negative increasing function,
      *  (well, actually non-decreasing)
      *  Actually it is a sum of B-splines with
@@ -573,7 +573,7 @@ namespace Ostap
      *  @see http://en.wikipedia.org/wiki/B-spline
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
-    class MonothonicSpline : public PositiveSpline
+    class MonotonicSpline : public PositiveSpline
     {
       // ======================================================================
     public:
@@ -587,7 +587,7 @@ namespace Ostap
        *  - duplicated knots will be ignored
        *  - min/max value will be used as interval boundaries
        */
-      MonothonicSpline
+      MonotonicSpline
         ( const std::vector<double>& points            ,
           const unsigned short       order      = 3    ,
           const bool                 increasing = true ) ;
@@ -601,7 +601,7 @@ namespace Ostap
        *  - duplicated knots will be ignored
        *  - min/max value will be used as interval boundaries
        */
-      MonothonicSpline
+      MonotonicSpline
         ( const std::vector<double>& points            ,
           const std::vector<double>& pars              ,
           const bool                 increasing = true ) ;
@@ -613,26 +613,26 @@ namespace Ostap
        *  @param order  the degree of spline
        *  @param increasing the flag
        */
-      MonothonicSpline
+      MonotonicSpline
         ( const double         xmin       = 0    ,
           const double         xmax       = 1    ,
           const unsigned short inner      = 2    ,   // number of inner points
           const unsigned short order      = 3    ,
           const bool           increasing = true ) ;
       /// constructor from positive spline
-      MonothonicSpline ( const PositiveSpline& spline     ,
+      MonotonicSpline ( const PositiveSpline& spline     ,
                          const bool            increasing ) ;
       /// constructor from the basic spline
-      MonothonicSpline ( const BSpline&        spline     ,
+      MonotonicSpline ( const BSpline&        spline     ,
                          const bool            increasing ) ;
       /// destructor
-      virtual ~MonothonicSpline() ;
+      virtual ~MonotonicSpline() ;
       // ======================================================================
     public:
       // ======================================================================
       bool increasing () const { return m_increasing    ; }
       bool decreasing () const { return  !increasing () ; }
-      bool monothonic () const { return true ; }
+      bool monotonic () const { return true ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -649,11 +649,11 @@ namespace Ostap
     /** @class ConvexSpline
      *  The special spline with following properties :
      *   - it is positive
-     *   - it it monothonic (increasing or decreasing)
+     *   - it it monotonic (increasing or decreasing)
      *   - it is eitehr convex or concave
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
-    class ConvexSpline : public MonothonicSpline
+    class ConvexSpline : public MonotonicSpline
     {
       // ======================================================================
     public:
@@ -713,9 +713,9 @@ namespace Ostap
         ( const BSpline&          spline     ,
           const bool              increasing ,
           const bool              convex      ) ;
-      /// constructor from monothonic spline
+      /// constructor from monotonic spline
       ConvexSpline
-        ( const MonothonicSpline& spline     ,
+        ( const MonotonicSpline&  spline      ,
           const bool              convex      ) ;
       /// destructor
       virtual ~ConvexSpline() ;

@@ -70,7 +70,7 @@ class H_fit(object) :
 #  functions, in particular:
 #  - positive bernstein polynomial,
 #  - positive B-spline expansion 
-#  - positive monothonic B-spline expansion, etc...
+#  - positive monotonic B-spline expansion, etc...
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-09
 class H_Nfit (object) :
@@ -242,11 +242,11 @@ for t in (  Ostap.Math.Bernstein        ,
 
 for t in (  Ostap.Math.Positive         ,
             Ostap.Math.PositiveEven     , 
-            Ostap.Math.Monothonic       ,
+            Ostap.Math.Monotonic       ,
             Ostap.Math.Convex           ,
             Ostap.Math.ConvexOnly       ,            
             Ostap.Math.PositiveSpline   ,
-            Ostap.Math.MonothonicSpline ,
+            Ostap.Math.MonotonicSpline ,
             Ostap.Math.ConvexSpline     , 
             Ostap.Math.ConvexOnlySpline ) : t.funobj = _funobjN_
             
@@ -398,11 +398,11 @@ _decorated_classes_ = (
     #
     Ostap.Math.Positive         ,
     Ostap.Math.PositiveEven     , 
-    Ostap.Math.Monothonic       ,
+    Ostap.Math.Monotonic       ,
     Ostap.Math.Convex           ,
     Ostap.Math.ConvexOnly       ,            
     Ostap.Math.PositiveSpline   ,
-    Ostap.Math.MonothonicSpline ,
+    Ostap.Math.MonotonicSpline ,
     Ostap.Math.ConvexSpline     , 
     Ostap.Math.ConvexOnlySpline ,
     #

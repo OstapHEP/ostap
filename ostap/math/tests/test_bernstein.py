@@ -212,11 +212,11 @@ def test_even () :
     logger.info ('Even       poly is OK' )
 
 # ==============================================================================
-## test  for monothonic polynomial 
-def test_monothonic () :
+## test  for monotonic polynomial 
+def test_monotonic () :
     
-    ## 8-9) check for Monothonic 
-    BPM = Ostap.Math.Monothonic
+    ## 8-9) check for Monotonic 
+    BPM = Ostap.Math.Monotonic
     
     b = BPM ( 5 , 0 , 2 , True )
     for i in  b :  b[i] = random.uniform ( -10 , 10 )
@@ -418,7 +418,7 @@ if '__main__' == __name__ :
         
     test_poly           ()
     test_even           ()
-    test_monothonic     ()
+    test_monotonic      ()
     test_convex         () 
     test_convexonly     ()
     test_solve          ()

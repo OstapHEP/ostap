@@ -67,8 +67,8 @@ for i in xrange(0,entries) :
 # h2 - increasing convex
 # h3 - increasing concave
 # h4 - decreasing concave 
-# h5 - non-monothonic convex     (symmetric)
-# h6 - non-monothonic concave    (symmetric)
+# h5 - non-monotonic convex     (symmetric)
+# h6 - non-monotonic concave    (symmetric)
 
 
 ## make a quadratic difference between two functions 

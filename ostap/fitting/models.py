@@ -153,9 +153,9 @@ __all__ = (
     'Bkg_pdf'              , ## Background: exponential modified by positive polynom
     'PolyPos_pdf'          , ## Background: positive polynom
     'PolyEven_pdf'         , ## Background: positive even polynom
-    'Monothonic_pdf'       , ## Background: positive monothonic polynom
-    'Convex_pdf'           , ## Background: positive monothonic polynom with fixed sign second derivative
-    'ConvexOnly_pdf'       , ## Background: positive monothonic polynom with fixed sign second derivative
+    'Monotonic_pdf'       , ## Background: positive monotonic polynom
+    'Convex_pdf'           , ## Background: positive monotonic polynom with fixed sign second derivative
+    'ConvexOnly_pdf'       , ## Background: positive monotonic polynom with fixed sign second derivative
     'Sigmoid_pdf'          , ## Background: sigmoid modulated by positive polynom
     'TwoExpoPoly_pdf'      , ## Background: difference of two exponents modulated by polynom
     'PSPol_pdf'            , ## phase space modulated by positive polynomial
@@ -165,8 +165,8 @@ __all__ = (
     'PSNL_pdf'             , ## L-body phase space from N-body decays  
     'PS23L_pdf'            , ## 2-body phase space from 3-body decays with orbital momenta
     'PSpline_pdf'          , ## positive spline (B-spline)
-    'MSpline_pdf'          , ## positive monothonic spline 
-    'CSpline_pdf'          , ## positive monothonic convex or concave spline 
+    'MSpline_pdf'          , ## positive monotonic spline 
+    'CSpline_pdf'          , ## positive monotonic convex or concave spline 
     'CPSpline_pdf'         , ## positive convex or concave spline 
     #
     ## 2D non-factorazable models

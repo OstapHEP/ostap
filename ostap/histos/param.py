@@ -15,13 +15,13 @@
 # - as      plain monomal    sum
 # - as positive                           Bernstein/Bezier sum
 # - as positive even                      Bernstein/Bezier sum
-# - as positive monothonic                Bernstein/Bezier sum
+# - as positive monotonic                Bernstein/Bezier sum
 # - as positive            convex/concave Bernstein/Bezier sum
-# - as positive monothonic convex/concave Bernstein/Bezier sum
+# - as positive monotonic convex/concave Bernstein/Bezier sum
 # - as      generic                            spline  (b-spline)
 # - as      positive                           spline  (p-spline)
-# - as      positive monothonic                spline  (m-spline) 
-# - as      positive monothonic convex/concave spline  (c-spline) 
+# - as      positive monotonic                spline  (m-spline) 
+# - as      positive monotonic convex/concave spline  (c-spline) 
 # - as      positive            convex/concave spline  (convex/concave-spline) 
 #
 # where possible, fit starts from reasonable approximatuion, taken from (1)
@@ -46,12 +46,12 @@
 #
 # - as positive                           Bernstein/Bezier sum
 # - as positive even                      Bernstein/Bezier sum
-# - as positive monothonic                Bernstein/Bezier sum
+# - as positive monotonic                Bernstein/Bezier sum
 # - as positive            convex/concave Bernstein/Bezier sum
-# - as positive monothonic convex/concave Bernstein/Bezier sum
+# - as positive monotonic convex/concave Bernstein/Bezier sum
 # - as      positive                           spline  (p-spline)
-# - as      positive monothonic                spline  (m-spline) 
-# - as      positive monothonic convex/concave spline  (c-spline) 
+# - as      positive monotonic                spline  (m-spline) 
+# - as      positive monotonic convex/concave spline  (c-spline) 
 # - as      positive            convex/concave spline  (convex/concave-spline)
 #
 # Typical usage:
@@ -82,13 +82,13 @@
 - as      plain monomal    sum
 - as positive                           Bernstein/Bezier sum
 - as positive even                      Bernstein/Bezier sum
-- as positive monothonic                Bernstein/Bezier sum
+- as positive monotonic                Bernstein/Bezier sum
 - as positive            convex/concave Bernstein/Bezier sum
-- as positive monothonic convex/concave Bernstein/Bezier sum
+- as positive monotonic convex/concave Bernstein/Bezier sum
 - as      generic                            spline  (b-spline)
 - as      positive                           spline  (p-spline)
-- as      positive monothonic                spline  (m-spline) 
-- as      positive monothonic convex/concave spline  (c-spline) 
+- as      positive monotonic                spline  (m-spline) 
+- as      positive monotonic convex/concave spline  (c-spline) 
 - as      positive            convex/concave spline  (convex/concave-spline) 
 
 where possible, fit starts from reasonable approximatuion, taken from (1)
@@ -112,12 +112,12 @@ Typical usage:
 
 - as positive                           Bernstein/Bezier sum
 - as positive even                      Bernstein/Bezier sum
-- as positive monothonic                Bernstein/Bezier sum
+- as positive monotonic                Bernstein/Bezier sum
 - as positive            convex/concave Bernstein/Bezier sum
-- as positive monothonic convex/concave Bernstein/Bezier sum
+- as positive monotonic convex/concave Bernstein/Bezier sum
 - as      positive                           spline  (p-spline)
-- as      positive monothonic                spline  (m-spline) 
-- as      positive monothonic convex/concave spline  (c-spline) 
+- as      positive monotonic                spline  (m-spline) 
+- as      positive monotonic convex/concave spline  (c-spline) 
 - as      positive            convex/concave spline  (convex/concave-spline)
 
 Typical usage:
@@ -665,10 +665,10 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
 
 
 # =============================================================================
-## represent 1D-histo as MONOTHONIC bernstein polynomial
+## represent 1D-histo as MONOTONIC bernstein polynomial
 #  @code
 #  h = ...                  ## the historgam
-#  b = h.monothonic ( 5 , increasing = True )
+#  b = h.monotonic ( 5 , increasing = True )
 # 
 #  tf1        = b[0]        ## TF1 object
 #  obj        = b[1]        ## helper object 
@@ -680,11 +680,11 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
 #  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
 #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
 #  @endcode 
-def _h1_monothonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
-    """Represent histo as Monothonic Bernstein polynomial
+def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
+    """Represent histo as Monotonic Bernstein polynomial
     
     >>> h = ...           ## the historgam
-    >>> b = h.monothonic ( 5 , increasing = True )
+    >>> b = h.monotonic ( 5 , increasing = True )
     
     >>> tf1        = b[0] ## TF1 object
     >>> obj        = b[1] ## helper object 
@@ -698,13 +698,13 @@ def _h1_monothonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func  = cpp.Ostap.Math.Monothonic ( N , xmin , xmax , increasing )
+    func  = cpp.Ostap.Math.Monotonic ( N , xmin , xmax , increasing )
     # 
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 
 # =============================================================================
-## represent 1D-histo as MONOTHONIC CONVEX/CONCAVE bernstein polynomial
+## represent 1D-histo as MONOTONIC CONVEX/CONCAVE bernstein polynomial
 #  @code
 #  h = ...                  ## the historgam
 #  b = h.convex ( 5 , increasing = True , convex = False )    
@@ -720,7 +720,7 @@ def _h1_monothonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg
 #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
 #  @endcode 
 def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  xmin = inf_neg , xmax = inf_pos ) :
-    """Represent histo as Monothonic Convex/Concave  Bernstein polynomial    
+    """Represent histo as Monotonic Convex/Concave  Bernstein polynomial    
     >>> h = ...           ## the historgam
     >>> b = h.convex ( 5 , increasing = True , convex = False )    
     
@@ -865,7 +865,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0I' , xmin = inf_neg 
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 # =============================================================================
-## represent 1D-histo as positive monothonic spline
+## represent 1D-histo as positive monotonic spline
 #  @code
 #  h = ...                  ## the historgam
 #  b = h.mSpline ( degree = 3 , knots = 3  , increasing = True  )
@@ -883,7 +883,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0I' , xmin = inf_neg 
 #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
 #  @endcode 
 def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
-    """Represent histo as positive monothonic  spline 
+    """Represent histo as positive monotonic  spline 
     
     >>> h  = ... # the historgam
     
@@ -906,17 +906,17 @@ def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , ( int , long ) ) :
-        func = cpp.Ostap.Math.MonothonicSpline ( xmin , xmax , knots , degree , increasing )
+        func = cpp.Ostap.Math.MonotonicSpline ( xmin , xmax , knots , degree , increasing )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func = cpp.Ostap.Math.MonothonicSpline ( knots , degree , increasing )
+        func = cpp.Ostap.Math.MonotonicSpline ( knots , degree , increasing )
     #
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 # =============================================================================
-## represent 1D-histo as monothonic convex/concave spline
+## represent 1D-histo as monotonic convex/concave spline
 #  @code
 #  h = ...                  ## the historgam
 #  b = h.cSpline ( degree = 3 , knots = 3  , increasing = True , convex = False )
@@ -940,7 +940,7 @@ def _h1_cspline_ ( h1                   ,
                    opts       = 'SQ0I'  ,
                    xmin       = inf_neg ,
                    xmax       = inf_pos ) :
-    """Represent histo as positive monothonic convex/concave spline  
+    """Represent histo as positive monotonic convex/concave spline  
     
     >>> h = ... # the historgam
     >>> b = h.cSpline ( degree = 3 , knots = 3  , increasing = True , convex = False )
@@ -1092,7 +1092,7 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.polynomial     = _h1_polinomial_
     t.positive       = _h1_positive_
     t.positiveeven   = _h1_positiveeven_
-    t.monothonic     = _h1_monothonic_
+    t.monotonic     = _h1_monotonic_
     t.convex         = _h1_convex_
     t.convexpoly     = _h1_convexpoly_
     t.concavepoly    = _h1_concavepoly_
@@ -1114,7 +1114,7 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
         _h1_polinomial_    ,
         _h1_positive_      ,
         _h1_positiveeven_  ,
-        _h1_monothonic_    ,
+        _h1_monotonic_    ,
         _h1_convex_        ,
         _h1_convexpoly_    ,
         _h1_concavepoly_   ,
@@ -1219,11 +1219,11 @@ def _h1_pdf_even_ ( h1 , halfdegree , *args , **kwargs ) :
 
 
 # =============================================================================
-## parameterize/fit histogram with the monothonic positive polynomial
+## parameterize/fit histogram with the monotonic positive polynomial
 #  @code
 #  h1 = ...
-#  results = h1.pdf_monothonic ( 3 , increasing = True )
-#  results = h1.pdf_monothonic ( 3 , increasing = True , draw = True , silent = True )
+#  results = h1.pdf_monotonic ( 3 , increasing = True )
+#  results = h1.pdf_monotonic ( 3 , increasing = True , draw = True , silent = True )
 #  print     results[ 0]
 #  pdf     = results[ 1]
 #  func    = results[ 2]
@@ -1233,11 +1233,11 @@ def _h1_pdf_even_ ( h1 , halfdegree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_monothonic_ ( h1 , degree , increasing , *args , **kwargs ) :
-    """Parameterize/fit histogram with the monothonic positive polynomial
+def _h1_pdf_monotonic_ ( h1 , degree , increasing , *args , **kwargs ) :
+    """Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
-    >>> results = h1.pdf_monothonic ( 3 , increasing = True )
-    >>> results = h1.pdf_monothonic ( 3 , increasing = True , draw = 3 , silent = True )
+    >>> results = h1.pdf_monotonic ( 3 , increasing = True )
+    >>> results = h1.pdf_monotonic ( 3 , increasing = True , draw = 3 , silent = True )
     >>> print     results[ 0] ## fit results 
     >>> pdf     = results[ 1] ## get PDF
     >>> func    = results[ 2] ## normalized function  
@@ -1245,8 +1245,8 @@ def _h1_pdf_monothonic_ ( h1 , degree , increasing , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    from ostap.fitting.background import Monothonic_pdf
-    return _h1_pdf_ ( h1 , Monothonic_pdf , (degree,increasing) , *args , **kwargs )
+    from ostap.fitting.background import Monotonic_pdf
+    return _h1_pdf_ ( h1 , Monotonic_pdf , (degree,increasing) , *args , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the increasing positive polynomial
@@ -1264,7 +1264,7 @@ def _h1_pdf_monothonic_ ( h1 , degree , increasing , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_increasing_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with the monothonic positive polynomial
+    """Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_increasing ( 3 )
     >>> results = h1.pdf_increasing ( 3 , draw = True , silent = True )
@@ -1275,7 +1275,7 @@ def _h1_pdf_increasing_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    return _h1_pdf_monothonic_ ( h1 , degree , True , *args , **kwargs ) 
+    return _h1_pdf_monotonic_ ( h1 , degree , True , *args , **kwargs ) 
 
 # =============================================================================
 ## parameterize/fit histogram with the decreasing positive polynomial
@@ -1293,7 +1293,7 @@ def _h1_pdf_increasing_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_decreasing_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with the monothonic positive polynomial
+    """Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_decreasing ( 3 )
     >>> results = h1.pdf_decreasing ( 3 , draw = True , silent = True )
@@ -1304,7 +1304,7 @@ def _h1_pdf_decreasing_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    return _h1_pdf_monothonic_ ( h1 , degree , False , *args , **kwargs ) 
+    return _h1_pdf_monotonic_ ( h1 , degree , False , *args , **kwargs ) 
 
 # =============================================================================
 ## parameterize/fit histogram with the convex polynomial
@@ -1548,7 +1548,7 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.pdf_positive           = _h1_pdf_positive_
     t.pdf_positiveeven       = _h1_pdf_even_
     t.pdf_even               = _h1_pdf_even_
-    t.pdf_monothonic         = _h1_pdf_monothonic_
+    t.pdf_monotonic         = _h1_pdf_monotonic_
     t.pdf_increasing         = _h1_pdf_increasing_
     t.pdf_decreasing         = _h1_pdf_decreasing_
     t.pdf_convex             = _h1_pdf_convex_
@@ -1563,7 +1563,7 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     _new_methods_ += [
         _h1_pdf_positive_    ,
         _h1_pdf_even_        ,
-        _h1_pdf_monothonic_  ,
+        _h1_pdf_monotonic_  ,
         _h1_pdf_increasing_  ,
         _h1_pdf_decreasing_  ,
         _h1_pdf_convex_      ,
@@ -1607,7 +1607,7 @@ def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
 
 
 # =============================================================================
-## parameterize/fit histogram with the monothonic positive  b-spline 
+## parameterize/fit histogram with the monotonic positive  b-spline 
 #  @code
 #  h1 = ...
 #  results = h1.pdf_mSpline ( spline = ( 3 , 2 , True )  ) ## order=3, inner knots=2
@@ -1619,7 +1619,7 @@ def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
-    """Parameterize/fit histogram with monothonic positive b-spline 
+    """Parameterize/fit histogram with monotonic positive b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_mSpline ( spline = (3,2,True) )
     >>> results = h1.pdf_mSpline ( (3,2,True) , draw = True , silent = True )
@@ -1630,14 +1630,14 @@ def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , ( tuple , list ) ) :
         ## create the spline with uniform binning 
-        MS     = cpp.Ostap.Math.MonothonicSpline
+        MS     = cpp.Ostap.Math.MonotonicSpline
         spline = MS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] )
         #
     from ostap.fitting.background import MSpline_pdf
     return _h1_pdf_ ( h1 , MSpline_pdf , ( spline , ) , *args , **kwargs )
 
 # =============================================================================
-## parameterize/fit histogram with the convex/concave monothonic positive  b-spline 
+## parameterize/fit histogram with the convex/concave monotonic positive  b-spline 
 #  @code
 #  h1 = ...
 #  results = h1.pdf_cSpline ( spline = ( 3 , 2 , True )  ) ## order=3, inner knots=2

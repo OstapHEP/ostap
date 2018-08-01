@@ -326,15 +326,17 @@ namespace Ostap
       bool   decreasing    () const ;
       /// is it a increasing function?
       bool   increasing    () const ;
-      /// is it a monothonical function?
-      bool   monothonic    () const { return increasing() || decreasing() ; }
+      /// is it a monotonical function?
+      bool   monotonic     () const { return increasing() || decreasing() ; }
       /// is it a constant function?
       bool   constant      () const ;
       // ======================================================================
     public: // convert from local to global variables
       // ======================================================================
+      /// t --> x conversion 
       double x ( const double t ) const
       { return       m_xmin   + ( m_xmax - m_xmin ) * t ; }
+      /// x -> t conversion 
       double t ( const double x ) const
       { return ( x - m_xmin ) / ( m_xmax - m_xmin )     ; }
       // ======================================================================

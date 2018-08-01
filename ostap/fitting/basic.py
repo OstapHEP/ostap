@@ -1296,8 +1296,8 @@ class PDF (MakeVar) :
     #  - 'e0', 'exp0' , 'expo0' : <code>Bkg_pdf(power=0)</code>
     #  - 'eN', 'expN' , 'expoN' : <code>Bkg_pdf(power=N)</code>
     #  - 'pN', 'polN' , 'polyN' : <code>PolyPos_pdf(power=N)</code>
-    #  - 'iN', 'incN' , 'incrN','increasingN' : <code>Monothonic_pdf(power=N,increasing=True)</code>
-    #  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monothonic_pdf(power=N,increasing=False)</code>     
+    #  - 'iN', 'incN' , 'incrN','increasingN' : <code>Monotonic_pdf(power=N,increasing=True)</code>
+    #  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monotonic_pdf(power=N,increasing=False)</code>     
     #  @see ostap.fitting.backrgound.make_bkg 
     def make_bkg ( self , bkg , name , xvar , **kwargs ) :
         """Create popular 1D ``background''  function.
@@ -1320,8 +1320,8 @@ class PDF (MakeVar) :
         - 'eN', 'expN' or 'expoN'                 : Bkg_pdf(power=N)
         - 'p0', 'pol0' or 'poly0'                 : Flat1D
         - 'pN', 'polN' or 'polyN'                 : PolyPos_pdf(power=N)
-        - 'iN', 'incN' , 'incrN' or 'increasingN' : Monothonic_pdf(power=N,increasing=True)
-        - 'dN', 'decN' , 'decrN' or 'decreasingN' : Monothonic_pdf(power=N,increasing=False)
+        - 'iN', 'incN' , 'incrN' or 'increasingN' : Monotonic_pdf(power=N,increasing=True)
+        - 'dN', 'decN' , 'decrN' or 'decreasingN' : Monotonic_pdf(power=N,increasing=False)
         For more information see 
         see Ostap.FitBkgModels.make_bkg 
         """

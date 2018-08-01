@@ -174,11 +174,11 @@ def _f1_draw_ ( self , opts ='' , *args , **kwargs ) :
         
         if type(self) in ( Ostap.Math.Positive          ,
                            Ostap.Math.PositiveEven      , 
-                           Ostap.Math.Monothonic        , 
+                           Ostap.Math.Monotonic        , 
                            Ostap.Math.Convex            , 
                            Ostap.Math.ConvexOnly        , 
                            Ostap.Math.PositiveSpline    , 
-                           Ostap.Math.MonothonicSpline  , 
+                           Ostap.Math.MonotonicSpline  , 
                            Ostap.Math.ConvexSpline      ,
                            Ostap.Math.ConvexOnlySpline  ,
                            Ostap.Math.ExpoPositive      ,
@@ -322,7 +322,7 @@ def _p_min_ ( bp ) :
     return max ( min ( pars ) , 0 )
 
 for t in ( Ostap.Math.Positive      ,
-           Ostap.Math.Monothonic    ,
+           Ostap.Math.Monotonic    ,
            Ostap.Math.Convex        ,
            Ostap.Math.ConvexOnly    ) :
     
@@ -518,7 +518,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Polynomial             ,               
                Ostap.Math.Positive               ,
                Ostap.Math.PositiveEven           ,
-               Ostap.Math.Monothonic             ,
+               Ostap.Math.Monotonic             ,
                Ostap.Math.Convex                 ,
                Ostap.Math.ConvexOnly             ,
                Ostap.Math.BifurcatedGauss        ,
@@ -581,7 +581,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,
-               Ostap.Math.MonothonicSpline       ,
+               Ostap.Math.MonotonicSpline       ,
                Ostap.Math.ConvexSpline           ,
                Ostap.Math.ConvexOnlySpline       ,
                #
@@ -625,7 +625,7 @@ for model in ( Ostap.Math.Bernstein         ,
                Ostap.Math.BernsteinEven     , 
                Ostap.Math.Positive          ,
                Ostap.Math.PositiveEven      ,
-               Ostap.Math.Monothonic        ,
+               Ostap.Math.Monotonic        ,
                Ostap.Math.Convex            ,
                Ostap.Math.ConvexOnly        ,
                Ostap.Math.ChebyshevSum      ,               
@@ -638,7 +638,7 @@ for model in ( Ostap.Math.Bernstein         ,
                Ostap.Math.TwoExpoPositive   , 
                #
                Ostap.Math.BSpline           ,
-               Ostap.Math.MonothonicSpline  ,
+               Ostap.Math.MonotonicSpline  ,
                Ostap.Math.PositiveSpline    , 
                Ostap.Math.ConvexSpline      , 
                Ostap.Math.ConvexOnlySpline  ) : 
@@ -661,7 +661,7 @@ Ostap.Math.Positive      .__str__  = lambda s : _f_print_ ( s , 'Positive'      
 Ostap.Math.PositiveEven  .__str__  = lambda s : _f_print_ ( s , 'PositiveEven'  )
 Ostap.Math.Convex        .__str__  = lambda s : _f_print_ ( s , 'Convex'        ) 
 Ostap.Math.ConvexOnly    .__str__  = lambda s : _f_print_ ( s , 'ConvexOnly'    )
-Ostap.Math.Monothonic    .__str__  = lambda s : _f_print_ ( s , 'Monothonic'    )
+Ostap.Math.Monotonic    .__str__  = lambda s : _f_print_ ( s , 'Monotonic'    )
 Ostap.Math.FourierSum    .__str__  = lambda s : _f_print_ ( s , 'FourierSum'    )
 Ostap.Math.CosineSum     .__str__  = lambda s : _f_print_ ( s , 'CosineSum'     )
 
@@ -675,7 +675,7 @@ Ostap.Math.Positive      .__repr__ = lambda s : _f_print_ ( s , 'Positive'      
 Ostap.Math.PositiveEven  .__repr__ = lambda s : _f_print_ ( s , 'PositiveEven'  )
 Ostap.Math.Convex        .__repr__ = lambda s : _f_print_ ( s , 'Convex'        ) 
 Ostap.Math.ConvexOnly    .__repr__ = lambda s : _f_print_ ( s , 'ConvexOnly'    )
-Ostap.Math.Monothonic    .__repr__ = lambda s : _f_print_ ( s , 'Monothonic'    )
+Ostap.Math.Monotonic    .__repr__ = lambda s : _f_print_ ( s , 'Monotonic'    )
 Ostap.Math.FourierSum    .__repr__ = lambda s : _f_print_ ( s , 'FourierSum'    )
 Ostap.Math.CosineSum     .__repr__ = lambda s : _f_print_ ( s , 'CosineSum'     )
 
@@ -692,7 +692,7 @@ Ostap.Math.PositiveSpline  .__str__  = lambda s : 'PositiveSpline(%s,%s)'      %
 Ostap.Math.ConvexOnlySpline.__str__  = lambda s : 'ConvexOnlySpline(%s,%s,%s)' % ( s.knots ()      ,
                                                                                    s.pars  ()      ,
                                                                                    s.convex()      )
-Ostap.Math.MonothonicSpline.__str__  = lambda s : 'MonothonicSpline(%s,%s,%s)' % ( s.knots ()      ,
+Ostap.Math.MonotonicSpline.__str__  = lambda s : 'MonotonicSpline(%s,%s,%s)' % ( s.knots ()      ,
                                                                                    s.pars  ()      ,
                                                                                    s.increasing () )
 Ostap.Math.ConvexSpline    .__str__  = lambda s : 'ConvexSpline(%s,%s,%s,%s)'  % ( s.knots ()      ,
@@ -702,7 +702,7 @@ Ostap.Math.ConvexSpline    .__str__  = lambda s : 'ConvexSpline(%s,%s,%s,%s)'  %
 for t in ( Ostap.Math.BSpline          ,
            Ostap.Math.PositiveSpline   ,
            Ostap.Math.ConvexOnlySpline ,
-           Ostap.Math.MonothonicSpline ,
+           Ostap.Math.MonotonicSpline ,
            Ostap.Math.ConvexSpline     ) : t.__repr__ = t.__str__
     
 # =============================================================================
@@ -782,7 +782,7 @@ for pdf in ( Ostap.Models.BreitWigner          ,
              Ostap.Models.ExpoPositive       ,
              Ostap.Models.TwoExpoPositive    ,
              Ostap.Models.PositiveSpline     ,
-             Ostap.Models.MonothonicSpline   , 
+             Ostap.Models.MonotonicSpline   , 
              
              Ostap.Models.StudentT           ,
              Ostap.Models.BifurcatedStudentT , 
@@ -1023,11 +1023,11 @@ _decorated_classes_ = set( [
     ##
     Ostap.Math.Positive          ,
     Ostap.Math.PositiveEven      , 
-    Ostap.Math.Monothonic        , 
+    Ostap.Math.Monotonic        , 
     Ostap.Math.Convex            , 
     Ostap.Math.ConvexOnly        , 
     Ostap.Math.PositiveSpline    , 
-    Ostap.Math.MonothonicSpline  , 
+    Ostap.Math.MonotonicSpline  , 
     Ostap.Math.ConvexSpline      ,
     Ostap.Math.ConvexOnlySpline  ,
     Ostap.Math.ExpoPositive      ,
@@ -1055,7 +1055,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Polynomial             ,               
     Ostap.Math.Positive               ,
     Ostap.Math.PositiveEven           ,
-    Ostap.Math.Monothonic             ,
+    Ostap.Math.Monotonic             ,
     Ostap.Math.Convex                 ,
     Ostap.Math.ConvexOnly             ,
     Ostap.Math.BifurcatedGauss        ,
@@ -1117,7 +1117,7 @@ _decorated_classes_ = set( [
     #
     Ostap.Math.BSpline                , 
     Ostap.Math.PositiveSpline         ,
-    Ostap.Math.MonothonicSpline       ,
+    Ostap.Math.MonotonicSpline       ,
     Ostap.Math.ConvexSpline           ,
     Ostap.Math.ConvexOnlySpline       ,
     #
@@ -1127,7 +1127,7 @@ _decorated_classes_ = set( [
     Ostap.Math.BernsteinEven     , 
     Ostap.Math.Positive          ,
     Ostap.Math.PositiveEven      ,
-    Ostap.Math.Monothonic        ,
+    Ostap.Math.Monotonic        ,
     Ostap.Math.Convex            ,
     Ostap.Math.ConvexOnly        ,
     Ostap.Math.ChebyshevSum      ,               
@@ -1140,7 +1140,7 @@ _decorated_classes_ = set( [
     Ostap.Math.TwoExpoPositive   , 
     #
     Ostap.Math.BSpline           ,
-    Ostap.Math.MonothonicSpline  ,
+    Ostap.Math.MonotonicSpline  ,
     Ostap.Math.PositiveSpline    , 
     Ostap.Math.ConvexSpline      , 
     Ostap.Math.ConvexOnlySpline  ,
@@ -1164,7 +1164,7 @@ _decorated_classes_ = set( [
     Ostap.Math.PositiveEven  ,
     Ostap.Math.Convex        ,
     Ostap.Math.ConvexOnly    ,
-    Ostap.Math.Monothonic    ,
+    Ostap.Math.Monotonic    ,
     Ostap.Math.FourierSum    ,
     Ostap.Math.CosineSum     ,
     ##
@@ -1214,7 +1214,7 @@ _decorated_classes_ = set( [
     Ostap.Models.ExpoPositive       ,
     Ostap.Models.TwoExpoPositive    ,
     Ostap.Models.PositiveSpline     ,
-    Ostap.Models.MonothonicSpline   , 
+    Ostap.Models.MonotonicSpline   , 
     ##
     Ostap.Models.StudentT           ,
     Ostap.Models.BifurcatedStudentT , 

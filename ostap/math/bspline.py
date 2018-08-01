@@ -546,7 +546,7 @@ from ostap.math.bernstein import _p_set_par_ , _p_get_par_, _p_iter_
 for  p in ( Ostap.Math.BSpline          ,
             Ostap.Math.PositiveSpline   ,
             Ostap.Math.ConvexOnlySpline ,
-            Ostap.Math.MonothonicSpline ,
+            Ostap.Math.MonotonicSpline ,
             Ostap.Math.ConvexSpline     ) :
     
     p.lower_convex_hull =  lower_convex_hull
@@ -670,7 +670,7 @@ _decorated_classes_ = set( [
     Ostap.Math.BSpline              ,
     Ostap.Math.PositiveSpline       ,
     Ostap.Math.ConvexOnlySpline     ,
-    Ostap.Math.MonothonicSpline     ,
+    Ostap.Math.MonotonicSpline     ,
     Ostap.Math.ConvexSpline         ,  
     Ostap.Math.BSpline2D            ,
     Ostap.Math.BSpline2DSym         ,

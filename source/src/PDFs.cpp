@@ -3718,9 +3718,9 @@ Double_t Ostap::Models::PolyPositiveEven::analyticalIntegral
 
 
 // ============================================================================
-// monothonic polinomial
+// monotonic polinomial
 // ============================================================================
-Ostap::Models::PolyMonothonic::PolyMonothonic
+Ostap::Models::PolyMonotonic::PolyMonotonic
 ( const char*          name       , 
   const char*          title      ,
   RooAbsReal&          x          ,
@@ -3732,7 +3732,7 @@ Ostap::Models::PolyMonothonic::PolyMonothonic
   , m_x        ( "x"       , "Observable"   , this , x ) 
   , m_phis     ( "phi"     , "Coefficients" , this     )
 //
-  , m_monothonic ( phis.getSize() , xmin , xmax , increasing ) 
+  , m_monotonic ( phis.getSize() , xmin , xmax , increasing ) 
 {
   //
   Ostap::Utils::Iterator tmp ( phis ) ;
@@ -3748,30 +3748,30 @@ Ostap::Models::PolyMonothonic::PolyMonothonic
 // ============================================================================
 // copy constructor
 // ============================================================================
-Ostap::Models::PolyMonothonic::PolyMonothonic
-( const Ostap::Models::PolyMonothonic&  right ,      
+Ostap::Models::PolyMonotonic::PolyMonotonic
+( const Ostap::Models::PolyMonotonic&  right ,      
   const char*                              name  ) 
   : RooAbsPdf ( right , name ) 
 //
   , m_x          ( "x"      , this , right.m_x     ) 
   , m_phis       ( "phis"   , this , right.m_phis  ) 
     //
-  , m_monothonic ( right.m_monothonic ) 
+  , m_monotonic ( right.m_monotonic ) 
 {
   setPars () ;
 }
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Models::PolyMonothonic::~PolyMonothonic() {}
+Ostap::Models::PolyMonotonic::~PolyMonotonic() {}
 // ============================================================================
 // clone 
 // ============================================================================
-Ostap::Models::PolyMonothonic*
-Ostap::Models::PolyMonothonic::clone( const char* name ) const 
-{ return new Ostap::Models::PolyMonothonic(*this,name) ; }
+Ostap::Models::PolyMonotonic*
+Ostap::Models::PolyMonotonic::clone( const char* name ) const 
+{ return new Ostap::Models::PolyMonotonic(*this,name) ; }
 // ============================================================================
-void Ostap::Models::PolyMonothonic::setPars () const 
+void Ostap::Models::PolyMonotonic::setPars () const 
 {
   RooAbsArg*       phi   = 0 ;
   const RooArgSet* nset  = m_phis.nset() ;
@@ -3787,7 +3787,7 @@ void Ostap::Models::PolyMonothonic::setPars () const
     //
     const double phi   = r->getVal ( nset ) ;
     //
-    m_monothonic.setPar ( k  , phi ) ;
+    m_monotonic.setPar ( k  , phi ) ;
     //
     ++k ;
   }
@@ -3796,15 +3796,15 @@ void Ostap::Models::PolyMonothonic::setPars () const
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
-Double_t Ostap::Models::PolyMonothonic::evaluate() const 
+Double_t Ostap::Models::PolyMonotonic::evaluate() const 
 {
   //
   setPars () ;
   //
-  return m_monothonic ( m_x ) ; 
+  return m_monotonic ( m_x ) ; 
 }
 // ============================================================================
-Int_t Ostap::Models::PolyMonothonic::getAnalyticalIntegral
+Int_t Ostap::Models::PolyMonotonic::getAnalyticalIntegral
 ( RooArgSet&     allVars      , 
   RooArgSet&     analVars     ,
   const char* /* rangename */ ) const 
@@ -3813,7 +3813,7 @@ Int_t Ostap::Models::PolyMonothonic::getAnalyticalIntegral
   return 0 ;
 }
 // ============================================================================
-Double_t Ostap::Models::PolyMonothonic::analyticalIntegral 
+Double_t Ostap::Models::PolyMonotonic::analyticalIntegral 
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
@@ -3821,7 +3821,7 @@ Double_t Ostap::Models::PolyMonothonic::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  return m_monothonic.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+  return m_monotonic.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
 
@@ -4285,7 +4285,7 @@ Double_t Ostap::Models::PositiveSpline::analyticalIntegral
 
 
 // ============================================================================
-// monothonic spline 
+// monotonic spline 
 // ============================================================================
 /** constructor with the spline 
  *  @param name  the name 
@@ -4295,11 +4295,11 @@ Double_t Ostap::Models::PositiveSpline::analyticalIntegral
  *  @param phis  vector of parameters 
  */
 // ============================================================================
-Ostap::Models::MonothonicSpline::MonothonicSpline 
+Ostap::Models::MonotonicSpline::MonotonicSpline 
 ( const char*                          name, 
   const char*                          title     ,
   RooAbsReal&                          x         ,
-  const Ostap::Math::MonothonicSpline& spline    ,   // the spline 
+  const Ostap::Math::MonotonicSpline& spline    ,   // the spline 
   RooArgList&                          phis      )   // parameters
   : RooAbsPdf ( name , title ) 
   , m_x        ( "x"       , "Observable"   , this , x ) 
@@ -4322,8 +4322,8 @@ Ostap::Models::MonothonicSpline::MonothonicSpline
 // ============================================================================
 // copy constructor
 // ============================================================================
-Ostap::Models::MonothonicSpline::MonothonicSpline 
-( const Ostap::Models::MonothonicSpline&  right ,      
+Ostap::Models::MonotonicSpline::MonotonicSpline 
+( const Ostap::Models::MonotonicSpline&  right ,      
   const char*                                name  ) 
   : RooAbsPdf ( right , name ) 
 //
@@ -4337,15 +4337,15 @@ Ostap::Models::MonothonicSpline::MonothonicSpline
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Models::MonothonicSpline::~MonothonicSpline() {}
+Ostap::Models::MonotonicSpline::~MonotonicSpline() {}
 // ============================================================================
 // clone 
 // ============================================================================
-Ostap::Models::MonothonicSpline*
-Ostap::Models::MonothonicSpline::clone( const char* name ) const 
-{ return new Ostap::Models::MonothonicSpline(*this,name) ; }
+Ostap::Models::MonotonicSpline*
+Ostap::Models::MonotonicSpline::clone( const char* name ) const 
+{ return new Ostap::Models::MonotonicSpline(*this,name) ; }
 // ============================================================================
-void Ostap::Models::MonothonicSpline::setPars () const 
+void Ostap::Models::MonotonicSpline::setPars () const 
 {
   RooAbsArg*       phi   = 0 ;
   const RooArgSet* nset  = m_phis.nset() ;
@@ -4369,7 +4369,7 @@ void Ostap::Models::MonothonicSpline::setPars () const
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
-Double_t Ostap::Models::MonothonicSpline::evaluate() const 
+Double_t Ostap::Models::MonotonicSpline::evaluate() const 
 {
   //
   setPars () ;
@@ -4377,7 +4377,7 @@ Double_t Ostap::Models::MonothonicSpline::evaluate() const
   return m_spline ( m_x ) ; 
 }
 // ============================================================================
-Int_t Ostap::Models::MonothonicSpline::getAnalyticalIntegral
+Int_t Ostap::Models::MonotonicSpline::getAnalyticalIntegral
 ( RooArgSet&     allVars      , 
   RooArgSet&     analVars     ,
   const char* /* rangename */ ) const 
@@ -4386,7 +4386,7 @@ Int_t Ostap::Models::MonothonicSpline::getAnalyticalIntegral
   return 0 ;
 }
 // ============================================================================
-Double_t Ostap::Models::MonothonicSpline::analyticalIntegral 
+Double_t Ostap::Models::MonotonicSpline::analyticalIntegral 
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
@@ -7176,7 +7176,7 @@ ClassImp(Ostap::Models::PhaseSpacePol      )
 ClassImp(Ostap::Models::PhaseSpace23L      ) 
 ClassImp(Ostap::Models::PolyPositive       ) 
 ClassImp(Ostap::Models::PolyPositiveEven   ) 
-ClassImp(Ostap::Models::PolyMonothonic     ) 
+ClassImp(Ostap::Models::PolyMonotonic     ) 
 ClassImp(Ostap::Models::PolyConvex         ) 
 ClassImp(Ostap::Models::PolyConvexOnly     ) 
 ClassImp(Ostap::Models::ExpoPositive       ) 
@@ -7207,7 +7207,7 @@ ClassImp(Ostap::Models::Weibull            )
 ClassImp(Ostap::Models::RaisingCosine      )
 ClassImp(Ostap::Models::QGaussian          )
 ClassImp(Ostap::Models::PositiveSpline     ) 
-ClassImp(Ostap::Models::MonothonicSpline   ) 
+ClassImp(Ostap::Models::MonotonicSpline   ) 
 ClassImp(Ostap::Models::ConvexOnlySpline   )
 ClassImp(Ostap::Models::ConvexSpline       )
 // ============================================================================

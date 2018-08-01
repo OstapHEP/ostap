@@ -6,7 +6,6 @@
 // ============================================================================
 // STD&STL
 // ============================================================================
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Workspace.h"
@@ -127,27 +126,43 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// pole position 
       double         m0     () const { return m_m0      ; }
+      /// pole position 
       double         mass   () const { return   m0   () ; }
+      /// pole position 
       double         peak   () const { return   m0   () ; }
+      /// the width at the pole 
       double         gam0   () const { return m_gam0    ; }
+      /// the width at the pole 
       double         gamma0 () const { return   gam0 () ; }
+      /// the width at the pole 
       double         gamma  () const { return   gam0 () ; }
+      /// the width at the pole 
       double         width  () const { return   gam0 () ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// the mass of the first daughter 
       double         m1     () const { return m_m1 ; }
+      /// the mass of the second daughter 
       double         m2     () const { return m_m2 ; }
+      /// relative orbital momentum 
       unsigned short L      () const { return m_L  ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// set pole position 
       bool setM0     ( const double x ) ;
+      /// set pole position 
       bool setMass   ( const double x ) { return setM0     ( x ) ; }
+      /// set pole position 
       bool setPeak   ( const double x ) { return setM0     ( x ) ; }
+      // set width at pole 
       bool setGamma0 ( const double x ) ;
+      // set width at pole 
       bool setGamma  ( const double x ) { return setGamma0 ( x ) ; }
+      // set width at pole 
       bool setWidth  ( const double x ) { return setGamma0 ( x ) ; }
       // ======================================================================
     public:
@@ -294,6 +309,7 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
+      /// the mass of eta'
       double m_eta_prime ;
       // ======================================================================
     } ;
@@ -357,29 +373,46 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// pole position
       double m0     () const { return m_m0      ; }
+      /// pole position
       double mass   () const { return   m0   () ; }
+      /// pole position
       double peak   () const { return   m0   () ; }
+      /// m*g1 
       double m0g1   () const { return m_m0g1    ; }
+      /// g2/g1 
       double g2og1  () const { return m_g2og1   ; }
+      /// mass of the first  daughter 
       double mA1    () const { return m_A1      ; }
+      /// mass of the second daughter 
       double mA2    () const { return m_A2      ; }
+      /// mass of the first  daughter in for the coupled channel
       double mB1    () const { return m_B1      ; }
+      /// mass of the second daughter in for the coupled channel
       double mB2    () const { return m_B2      ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// the thereshold 
       double thresholdA () const { return mA1() + mA2() ; }
+      /// the threshold for the coupled channel 
       double thresholdB () const { return mB1() + mB2() ; }
+      /// minimal threshold 
       double threshold  () const
       { return std::min ( thresholdA () , thresholdB () ) ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// set pole position
       bool setM0     ( const double x ) ;
+      /// set pole position
       bool setMass   ( const double x ) { return setM0 ( x ) ; }
+      /// set pole position
       bool setPeak   ( const double x ) { return setM0 ( x ) ; }
+      /// set m*g1 
       bool setM0G1   ( const double x ) ;
+      /// set g2/g1 
       bool setG2oG1  ( const double x ) ;
       // ======================================================================
     public:
@@ -495,11 +528,16 @@ namespace Ostap
       double fwhm   () const ;
       // ======================================================================
     public:
-      // ======================================================================
+      // ====================================================================== 
+      /// pole position 
       bool setM0     ( const double x ) ;
+      /// pole position 
       bool setMass   ( const double x ) { return setM0 ( x ) ; }
+      /// pole position 
       bool setPeak   ( const double x ) { return setM0 ( x ) ; }
+      /// width at the pole 
       bool setGamma  ( const double x ) ;
+      /// width at the pole 
       bool setSigma  ( const double x ) ;
       // ======================================================================
     public:
@@ -524,7 +562,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PseudoVoigt
-     *  Simplified verison of Voigt profile
+     *  Simplified version of Voigt profile
      *  @see T. Ida, M. Ando and H. Toraya,
      *       "Extended pseudo-Voigt function for approximating the Voigt profile"
      *       J. Appl. Cryst. (2000). 33, 1311-1316
@@ -552,24 +590,37 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// pole position 
       double m0     () const { return m_m0      ; }
+      /// pole position 
       double mass   () const { return   m0   () ; }
+      /// pole position 
       double peak   () const { return   m0   () ; }
+      /// width at the pole 
       double gamma  () const { return m_gamma   ; }
+      /// resolution  
       double sigma  () const { return m_sigma   ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// set pole position
       bool setM0     ( const double x ) ;
+      /// set pole position
       bool setMass   ( const double x ) { return setM0 ( x ) ; }
+      /// set pole position
       bool setPeak   ( const double x ) { return setM0 ( x ) ; }
-      bool setGamma  ( const double x ) ;
+      /// set width at the pole 
+      bool setGamma  ( const double x ) ; 
+      /// set resolution 
       bool setSigma  ( const double x ) ;
       // ======================================================================
     public: // helper constants
       // ======================================================================
+      /// FWHM-gaussian
       double fwhm_gauss      () const ;
+      /// FWHM-lorenzian
       double fwhm_lorentzian () const { return 2 * m_gamma ; }
+      /// rho 
       double rho             () const
       { return fwhm_lorentzian() / ( fwhm_lorentzian() + fwhm_gauss() ) ; }
       // ======================================================================
@@ -808,13 +859,14 @@ namespace Ostap
         // ====================================================================
       private:
         // ====================================================================
-        Case   m_L ;
-        double m_b ;
+        /// orbital momentum
+        Case   m_L ; // orbital momentum
+        /// Break-up 
+        double m_b ; // Break-up 
         // ====================================================================
       } ;
       // ======================================================================
     } // end of namespace Ostap:Math::FormFactors
-    // ========================================================================
     // ========================================================================
     // VARIOUS BEASTS 
     // ========================================================================
@@ -861,21 +913,33 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// pole position
       double m0  ( ) const { return m_m0 ; }
+      /// width at the pole 
       double g0  ( ) const { return m_g0 ; }
+      /// a 
       double a   ( ) const { return m_a  ; }
+      /// r 
       double r   ( ) const { return m_r  ; }
+      /// elasticity 
       double e   ( ) const { return m_e  ; }
       // ======================================================================
+      /// the mass of the first daughter 
       double m1  ( ) const { return m_ps2.m1 () ; }
+      /// the mass of the second daughter 
       double m2  ( ) const { return m_ps2.m2 () ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// set pole posiiton 
       bool setM0 ( const double value ) ;
+      /// set with 
       bool setG0 ( const double value ) ;
+      /// a 
       bool setA  ( const double value ) ;
+      /// r
       bool setR  ( const double value ) ;
+      /// elatisicity 
       bool setE  ( const double value ) ;
       // ======================================================================
     public:
@@ -945,6 +1009,7 @@ namespace Ostap
       // ======================================================================
       /// calculate the Bugg shape
       double operator() ( const double x ) const { return pdf ( x ) ; }
+      /// calculate the Bugg shape      
       double pdf        ( const double x ) const ;
       // ======================================================================
     public:
@@ -989,29 +1054,50 @@ namespace Ostap
       // ======================================================================
       // sigma & Bugg variables
       // ======================================================================
+      /// pole position  
       double M     () const  { return m_M       ; }
+      /// m^2
       double M2    () const  { return m_M * m_M ; }
+      /// pole positon  
       double m0    () const  { return   M ()    ; }
+      /// pole positon      
       double mass  () const  { return   M ()    ; }
+      /// pole positon
       double peak  () const  { return   M ()    ; }
       // ======================================================================
+      /// g2 
       double g2    () const  { return m_g2   ; }
+      /// b1 
       double b1    () const  { return m_b1   ; }
+      /// b2 
       double b2    () const  { return m_b2   ; }
+      /// s1 
       double s1    () const  { return m_s1   ; }
+      /// s2 
       double s2    () const  { return m_s2   ; }
+      /// a 
       double a     () const  { return m_a    ; }
       // ======================================================================
+      /// set pole position
       bool setM    ( const double value  ) ;
+      /// set pole position
       bool setM0   ( const double value  ) { return setM ( value )  ; }
+      /// set pole position
       bool setMass ( const double value  ) { return setM ( value )  ; }
+      /// set pole position
       bool setPeak ( const double value  ) { return setM ( value )  ; }
       // ======================================================================
+      /// g2
       bool setG2   ( const double value  ) ;
+      /// b1 
       bool setB1   ( const double value  ) ;
+      /// b2 
       bool setB2   ( const double value  ) ;
+      /// s1 
       bool setS1   ( const double value  ) ;
+      /// s2 
       bool setS2   ( const double value  ) ;
+      /// a
       bool setA    ( const double value  ) ;
       // ======================================================================
     public:
@@ -1215,26 +1301,41 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// pole position 
       double m0     () const { return m_bw . m0   () ; }
+      /// pole position 
       double mass   () const { return        m0   () ; }
+      /// pole position 
       double peak   () const { return        m0   () ; }
+      /// width  at the pole 
       double gam0   () const { return m_bw . gam0 () ; }
+      /// width  at the pole 
       double gamma0 () const { return        gam0 () ; }
+      /// width  at the pole 
       double gamma  () const { return        gam0 () ; }
+      /// width  at the pole 
       double width  () const { return        gam0 () ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// set pole position 
       bool setM0     ( const double x ) { return m_bw.setM0     ( x ) ; }
+      /// set pole position 
       bool setMass   ( const double x ) { return setM0          ( x ) ; }
+      /// set width
       bool setPeak   ( const double x ) { return setM0          ( x ) ; }
+      /// set width
       bool setGamma0 ( const double x ) { return m_bw.setGamma0 ( x ) ; }
+      /// set width
       bool setGamma  ( const double x ) { return setGamma0      ( x ) ; }
+      /// set width
       bool setWidth  ( const double x ) { return setGamma0      ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// low  edge of phasespace 
       double lowEdge   () const { return m_ps. lowEdge() ; }
+      /// high edge of phasespace 
       double highEdge  () const { return m_ps.highEdge() ; }
       // ======================================================================
     public:
@@ -1314,23 +1415,35 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// pole position
       double m0     () const { return m_flatte . m0    () ; }
+      /// pole position
       double mass   () const { return            m0    () ; }
+      /// pole position
       double peak   () const { return            m0    () ; }
+      /// m*g1 
       double m0g1   () const { return m_flatte . m0g1  () ; }
+      /// g2/g1 
       double g2og1  () const { return m_flatte . g2og1 () ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// ste pole   position 
       bool setM0     ( const double x ) { return m_flatte . setM0    ( x ) ; }
+      /// ste pole   position 
       bool setMass   ( const double x ) { return            setM0    ( x ) ; }
+      /// ste pole   position 
       bool setPeak   ( const double x ) { return            setM0    ( x ) ; }
+      /// m*g1 
       bool setM0G1   ( const double x ) { return m_flatte . setM0G1  ( x ) ; }
+      /// g2/g1
       bool setG2oG1  ( const double x ) { return m_flatte . setG2oG1 ( x ) ; }
-      // ======================================================================
+      // ======================================================================      
     public:
       // ======================================================================
+      /// low  edge of phase space 
       double lowEdge   () const { return m_ps .  lowEdge () ; }
+      /// high edge of phase space 
       double highEdge  () const { return m_ps . highEdge () ; }
       // ======================================================================
     public:
@@ -1419,25 +1532,41 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// pole position 
       double m0  () const { return m_lass . m0 () ; } // K*(1430) mass
+      /// width at the pole 
       double g0  () const { return m_lass . g0 () ; } // K*(1430) width
+      /// a 
       double a   () const { return m_lass . a  () ; }
+      /// r 
       double r   () const { return m_lass . r  () ; }
+      ///  e 
       double e   () const { return m_lass . e  () ; }
       // ======================================================================
+      /// mass of the first daughter 
       double m1  () const { return m_ps   . m1 () ; }
+      /// mass of the second daughter 
       double m2  () const { return m_ps   . m2 () ; }
+      /// the tthird mass 
       double m3  () const { return m_ps   . m3 () ; }
+      /// m 
       double m   () const { return m_ps   . m  () ; }
+      /// l 
       double l   () const { return m_ps   . l  () ; }
+      /// L 
       double L   () const { return m_ps   . L  () ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// set pole position 
       bool setM0 ( const double value ) { return m_lass . setM0 ( value ) ; }
+      /// set g0 
       bool setG0 ( const double value ) { return m_lass . setG0 ( value ) ; }
+      /// a 
       bool setA  ( const double value ) { return m_lass . setA  ( value ) ; }
+      /// r 
       bool setR  ( const double value ) { return m_lass . setR  ( value ) ; }
+      ///  e 
       bool setE  ( const double value ) { return m_lass . setE  ( value ) ; }
       // ======================================================================
     public:
@@ -1519,6 +1648,7 @@ namespace Ostap
       // ======================================================================
       /// calculate the Bugg shape
       double operator() ( const double x ) const { return pdf ( x ) ; }
+      /// calculate the Bugg shape
       double pdf        ( const double x ) const ;
       // ======================================================================
     public:
@@ -1533,12 +1663,18 @@ namespace Ostap
       // ======================================================================
       // phase space variables
       // ======================================================================
+      /// the first mass 
       double m1        () const { return m_ps.m1 () ; }
+      /// the second mass 
       double m2        () const { return m_ps.m2 () ; }
+      /// the third mass 
       double m3        () const { return m_ps.m3 () ; }
+      /// mass 
       double m         () const { return m_ps.m  () ; }
       // ======================================================================
+      /// low   edge of phase space 
       double lowEdge   () const { return m_ps. lowEdge() ; }
+      /// high edge of phase space 
       double highEdge  () const { return m_ps.highEdge() ; }
       // ======================================================================
     public:
@@ -1565,29 +1701,50 @@ namespace Ostap
       // ======================================================================
       // sigma & Bugg variables
       // ======================================================================
+      /// M
       double M     () const  { return m_bugg. M    () ; }
+      /// M2
       double M2    () const  { return m_bugg. M2   () ; }
+      /// pole postition
       double m0    () const  { return m_bugg. m0   () ; }
+      /// pole position 
       double mass  () const  { return m_bugg. mass () ; }
+      /// pole position 
       double peak  () const  { return m_bugg. peak () ; }
       // ======================================================================
+      /// g2 
       double g2    () const  { return m_bugg. g2   () ; }
+      /// b1 
       double b1    () const  { return m_bugg. b1   () ; }
+      ///  b2 
       double b2    () const  { return m_bugg. b2   () ; }
+      ///  s1 
       double s1    () const  { return m_bugg. s1   () ; }
+      /// s2 
       double s2    () const  { return m_bugg. s2   () ; }
+      /// a 
       double a     () const  { return m_bugg. a    () ; }
       // ======================================================================
+      /// set pole position
       bool setM    ( const double value  ) { return m_bugg.setM    ( value ) ; }
+      /// set pole position
       bool setM0   ( const double value  ) { return m_bugg.setM0   ( value ) ; }
+      /// set pole position
       bool setMass ( const double value  ) { return m_bugg.setMass ( value ) ; }
+      /// set pole position
       bool setPeak ( const double value  ) { return m_bugg.setPeak ( value ) ; }
       // ======================================================================
+      /// g2 
       bool setG2   ( const double value  ) { return m_bugg.setG2   ( value ) ; }
+      /// b1 
       bool setB1   ( const double value  ) { return m_bugg.setB1   ( value ) ; }
+      ///  b2 
       bool setB2   ( const double value  ) { return m_bugg.setB2   ( value ) ; }
+      /// s1 
       bool setS1   ( const double value  ) { return m_bugg.setS1   ( value ) ; }
+      /// s2 
       bool setS2   ( const double value  ) { return m_bugg.setS2   ( value ) ; }
+      /// a 
       bool setA    ( const double value  ) { return m_bugg.setA    ( value ) ; }
       // ======================================================================
     public:
@@ -1660,12 +1817,18 @@ namespace Ostap
       // ======================================================================
       // phase space variables
       // ======================================================================
+      /// m1 
       double m1        () const { return m_ps.m1 () ; }
+      /// m2 
       double m2        () const { return m_ps.m2 () ; }
+      /// m3 
       double m3        () const { return m_ps.m3 () ; }
+      /// mass 
       double m         () const { return m_ps.m  () ; }
       // ======================================================================
+      /// low edge of the phasespace 
       double lowEdge   () const { return m_ps. lowEdge() ; }
+      /// high dge of the phasespace 
       double highEdge  () const { return m_ps.highEdge() ; }
       // ======================================================================
     private:
@@ -1683,22 +1846,36 @@ namespace Ostap
       // ======================================================================
       // Gounaris & Sakurai variables
       // ======================================================================
+      /// pole position
       double M      () const  { return m_M     ; }
+      /// pole position
       double m0     () const  { return   M  () ; }
+      /// pole position
       double mass   () const  { return   M  () ; }
+      /// pole position
       double peak   () const  { return   M  () ; }
       // ======================================================================
+      /// width at the pole
       double g0     () const  { return m_g0    ; }
+      /// width at the pole
       double gamma  () const  { return   g0 () ; }
+      /// width at the pole
       double width  () const  { return   g0 () ; }
       // ======================================================================
+      /// set pole position
       bool setM     ( const double value  ) ;
+      /// set pole position
       bool setM0    ( const double value  ) { return setM  ( value ) ; }
+      /// set pole position
       bool setMass  ( const double value  ) { return setM  ( value ) ; }
+      /// set pole position
       bool setPeak  ( const double value  ) { return setM  ( value ) ; }
       // ======================================================================
+      /// set width
       bool setG0    ( const double value  ) ;
+      /// set width
       bool setGamma ( const double value  ) { return setG0 ( value ) ; }
+      /// set width
       bool setWidth ( const double value  ) { return setG0 ( value ) ; }
       // ======================================================================
     public:

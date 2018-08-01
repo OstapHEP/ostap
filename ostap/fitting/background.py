@@ -16,15 +16,15 @@ __all__     = (
     'PSPol_pdf'       , ## A phase space  function, modulated by positive polynomial
     'PolyPos_pdf'     , ## A positive polynomial
     'PolyEven_pdf'    , ## A positive even polynomial
-    'Monothonic_pdf'  , ## A positive monothonic polynomial
+    'Monotonic_pdf'  , ## A positive monotonic polynomial
     'Convex_pdf'      , ## A positive polynomial with fixed sign first and second derivatives 
     'ConvexOnly_pdf'  , ## A positive polynomial with fixed sign second derivatives 
     'Sigmoid_pdf'     , ## Background: sigmoid modulated by positive polynom 
     'TwoExpoPoly_pdf' , ## difference of two exponents, modulated by positive polynomial
     ##
     'PSpline_pdf'     , ## positive            spline 
-    'MSpline_pdf'     , ## positive monothonic spline 
-    'CSpline_pdf'     , ## positive monothonic convex or concave spline 
+    'MSpline_pdf'     , ## positive monotonic spline 
+    'CSpline_pdf'     , ## positive monotonic convex or concave spline 
     'CPSpline_pdf'    , ## positive convex or concave spline 
     ##
     'PS2_pdf'         , ## 2-body phase space (no parameters)
@@ -240,14 +240,14 @@ class PolyEven_pdf(PolyBase) :
 models.append ( PolyEven_pdf ) 
 
 # =============================================================================
-## @class  Monothonic_pdf
-#  A positive monothonic polynomial 
-#  @see Ostap::Models::PolyMonothonic 
-#  @see Ostap::Math::Monothonic
+## @class  Monotonic_pdf
+#  A positive monotonic polynomial 
+#  @see Ostap::Models::PolyMonotonic 
+#  @see Ostap::Math::Monotonic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Monothonic_pdf(PolyBase) :
-    """Positive monothonic (Bernstein) polynomial:
+class Monotonic_pdf(PolyBase) :
+    """Positive monotonic (Bernstein) polynomial:
     
     f(x) = Pol_n(x)
     with f(x)>= 0 over the whole range and
@@ -256,10 +256,10 @@ class Monothonic_pdf(PolyBase) :
     >>>  mass = ROOT.RooRealVar( ... )
     
     # increasing background 
-    >>>  bkg_inc  = Monothonic_pdf ( 'B1' , mass , power = 2 , increasing = True  )
+    >>>  bkg_inc  = Monotonic_pdf ( 'B1' , mass , power = 2 , increasing = True  )
     
     # decreasing background 
-    >>>  bkg_dec  = Monothonic_pdf ( 'B2' , mass , power = 2 , increasing = False  )
+    >>>  bkg_dec  = Monotonic_pdf ( 'B2' , mass , power = 2 , increasing = False  )
     """
     ## constructor
     def __init__ ( self              ,
@@ -275,9 +275,9 @@ class Monothonic_pdf(PolyBase) :
         self.__increasing = True if increasing else False 
         #
         xmin,  xmax = self.xminmax() 
-        self.pdf  = Ostap.Models.PolyMonothonic (
+        self.pdf  = Ostap.Models.PolyMonotonic (
             'pp_%s'              % name ,
-            'PolyMonothonic(%s)' % name ,
+            'PolyMonotonic(%s)' % name ,
             self.xvar            ,
             self.phi_list        ,
             xmin                 ,
@@ -295,21 +295,21 @@ class Monothonic_pdf(PolyBase) :
 
     @property
     def power ( self ) :
-        """``power''-parameter (polynomial order) for Monothonic function"""
+        """``power''-parameter (polynomial order) for Monotonic function"""
         return self.__power
 
     @property
     def increasing ( self ) :
-        """``increasing''-parameter for Monothonic function"""
+        """``increasing''-parameter for Monotonic function"""
         return self.__increasing
 
     @property
     def decreasing ( self ) :
-        """``decreasing''-parameter for Monothonic function"""
+        """``decreasing''-parameter for Monotonic function"""
         return not self.increasing
     
         
-models.append ( Monothonic_pdf ) 
+models.append ( Monotonic_pdf ) 
 # =============================================================================
 ## @class  Convex_pdf
 #  A positive polynomial with fixed signs of the first and second derivative 
@@ -318,7 +318,7 @@ models.append ( Monothonic_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Convex_pdf(PolyBase) :
-    """Positive monothonic (Bernstein) polynomial with fixed-sign second derivative:
+    """Positive monotonic (Bernstein) polynomial with fixed-sign second derivative:
     
     f(x) = Pol_n(x)
     with f(x)>= 0 over the whole range and
@@ -829,9 +829,9 @@ class PSpline_pdf(PolyBase) :
 models.append ( PSpline_pdf ) 
 # =============================================================================
 ## @class  MSpline_pdf
-#  The special spline for non-negative monothonic function
-#  @see Ostap::Models::MonothonicSpline 
-#  @see Ostap::Math::MonothonicSpline 
+#  The special spline for non-negative monotonic function
+#  @see Ostap::Models::MonotonicSpline 
+#  @see Ostap::Math::MonotonicSpline 
 #  @see http://en.wikipedia.org/wiki/I-spline
 #  @see http://en.wikipedia.org/wiki/M-spline
 #  @see http://en.wikipedia.org/wiki/B-spline
@@ -839,21 +839,21 @@ models.append ( PSpline_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class MSpline_pdf(PolyBase) :
-    """A positive monothonic spline
+    """A positive monotonic spline
 
     >>> mass   = ... ## the variable
     >>> order  = 3   ## spline order
     
     ## create uniform spline 
     >>> inner  = 3   ## number of inner knots between min and max 
-    >>> spline = Ostap.Math.MonothonicSpline( mass.xmin() , mass.xmax() , inner , order , True )
+    >>> spline = Ostap.Math.MonotonicSpline( mass.xmin() , mass.xmax() , inner , order , True )
 
     ## create non-uniform spline with
     >>> knots = std.vector('double)()
     >>> knots.push_back ( mass.xmin() )
     >>> knots.push_back ( mass.xmax() )
     >>> knots.push_back ( ... )
-    >>> spline = Ostap.Math.MonothonicSpline( knots , order , True )
+    >>> spline = Ostap.Math.MonotonicSpline( knots , order , True )
 
     >>> bkg = MSpline_pdf ( 'Spline' , mass , spline ) 
     
@@ -862,16 +862,16 @@ class MSpline_pdf(PolyBase) :
     def __init__ ( self             ,
                    name             ,   ## the name 
                    xvar             ,   ## the variable
-                   spline           ,   ## the spline object Ostap::Math::MonothonicSpline
+                   spline           ,   ## the spline object Ostap::Math::MonotonicSpline
                    the_phis = None  ) : 
         #
         PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
         #
         self.__spline = spline
         # 
-        self.pdf  = Ostap.Models.MonothonicSpline (
+        self.pdf  = Ostap.Models.MonotonicSpline (
             'is_%s'                % name ,
-            'MonothonicSpline(%s)' % name ,
+            'MonotonicSpline(%s)' % name ,
             self.xvar                     ,
             self.spline                   , 
             self.phi_list                 )
@@ -892,7 +892,7 @@ class MSpline_pdf(PolyBase) :
 models.append ( MSpline_pdf )
 # =============================================================================
 ## @class  CSpline_pdf
-#  The special spline for non-negative monothonic convex/concave function
+#  The special spline for non-negative monotonic convex/concave function
 #  @see Ostap::Models::ConvexSpline 
 #  @see Ostap::Math::ConvexSpline 
 #  @see http://en.wikipedia.org/wiki/I-spline
@@ -902,7 +902,7 @@ models.append ( MSpline_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class CSpline_pdf(PolyBase) :
-    """A positive monothonic convex/concave spline
+    """A positive monotonic convex/concave spline
 
     >>> mass   = ... ## the variable
     >>> order  = 3   ## spline order
@@ -1484,8 +1484,8 @@ models.append ( PS23L_pdf )
 #  - 'e0', 'exp0' , 'expo0' : <code>Bkg_pdf(power=0)</code>
 #  - 'eN', 'expN' , 'expoN' : <code>Bkg_pdf(power=N)</code>
 #  - 'pN', 'polN' , 'polyN' : <code>PolyPos_pdf(power=N)</code>
-#  - 'iN', 'incN' , 'incrN','increasingN' : <code>Monothonic_pdf(power=N,increasing=True)</code>
-#  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monothonic_pdf(power=N,increasing=False)</code>     
+#  - 'iN', 'incN' , 'incrN','increasingN' : <code>Monotonic_pdf(power=N,increasing=True)</code>
+#  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monotonic_pdf(power=N,increasing=False)</code>     
 #  @see ostap.fitting.basic.PDF.make_bkg 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-04-03
@@ -1510,8 +1510,8 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
     - 'eN', 'expN' or 'expoN'                 : Bkg_pdf(power=N)
     - 'p0', 'pol0' or 'poly0'                 : Flat1D
     - 'pN', 'polN' or 'polyN'                 : PolyPos_pdf(power=N)
-    - 'iN', 'incN' , 'incrN' or 'increasingN' : Monothonic_pdf(power=N,increasing=True)
-    - 'dN', 'decN' , 'decrN' or 'decreasingN' : Monothonic_pdf(power=N,increasing=False)
+    - 'iN', 'incN' , 'incrN' or 'increasingN' : Monotonic_pdf(power=N,increasing=True)
+    - 'dN', 'decN' , 'decrN' or 'decreasingN' : Monotonic_pdf(power=N,increasing=False)
     
     >>> x =   .. ## the variable
     
@@ -1611,13 +1611,13 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if incr : 
             degree = int ( incr.group ( 'degree' ) )
-            bkg    = Monothonic_pdf ( name , xvar , degree , True )
+            bkg    = Monotonic_pdf ( name , xvar , degree , True )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
         
         decr = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if decr : 
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = Monothonic_pdf ( name , xvar , degree , False )
+            bkg    = Monotonic_pdf ( name , xvar , degree , False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
     if model :

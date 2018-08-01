@@ -1019,7 +1019,7 @@ for  p in ( Ostap.Math.Bernstein     ,
             Ostap.Math.BernsteinEven ,
             Ostap.Math.Positive      ,
             Ostap.Math.PositiveEven  ,
-            Ostap.Math.Monothonic    ,
+            Ostap.Math.Monotonic    ,
             Ostap.Math.Convex        ,
             Ostap.Math.ConvexOnly    ) :
     
@@ -1358,7 +1358,7 @@ _decorated_classes_ = set( [
     Ostap.Math.BernsteinEven  ,
     Ostap.Math.Positive       ,
     Ostap.Math.PositiveEven   ,
-    Ostap.Math.Monothonic     ,
+    Ostap.Math.Monotonic     ,
     Ostap.Math.Convex         ,
     Ostap.Math.ConvexOnly     ,
     ##

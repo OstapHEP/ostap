@@ -70,12 +70,12 @@ def test_poly4 () :
     models.add ( model ) 
 
 # =============================================================================
-## Test  monothonic Poly(4)-Distribution
+## Test  monotonic Poly(4)-Distribution
 # =============================================================================
-def test_monothonic4 () :
+def test_monotonic4 () :
     
-    logger.info("Test  monothonic Poly(4)-Distribution")
-    model = Models.Monothonic_pdf('M4'  , x , power = 4 , increasing = False  )
+    logger.info("Test  monotonic Poly(4)-Distribution")
+    model = Models.Monotonic_pdf('M4'  , x , power = 4 , increasing = False  )
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset )  
@@ -86,7 +86,7 @@ def test_monothonic4 () :
         print result
     else :
         for phi in model.phis : 
-            logger.info ( "\tMonothonic4:  phi= %-17s " % phi.ve() ) 
+            logger.info ( "\tMonotonic4:  phi= %-17s " % phi.ve() ) 
             
     models.add ( model ) 
 
@@ -160,7 +160,7 @@ def test_pspline () :
 def test_mspline () :
     
     logger.info ("Test positive decreasing spline of order 3 with 2 inner knots ")
-    spline = cpp.Ostap.Math.MonothonicSpline( x.xmin() , x.xmax() , 2 , 3 , False )
+    spline = cpp.Ostap.Math.MonotonicSpline( x.xmin() , x.xmax() , 2 , 3 , False )
     model  = Models.MSpline_pdf ( 'S3' , x , spline )
 
     ## fit it! 
@@ -214,12 +214,12 @@ def test_db() :
 if '__main__' == __name__ :
 
     test_poly4       () ## Polynomial (4)
-    test_monothonic4 () ## Monothonic polynomial (4)
+    test_monotonic4 () ## Monotonic polynomial (4)
     test_convex4     () ## Convex polynomial (4)
     test_expopoly2   () ## Exponent times positive polynomial (2)
     test_pspline     () ## Positive spline of order 3 with two knots 
-    test_mspline     () ## Positive monothonic spline of order 3 with two knots 
-    test_cspline     () ## Positive monothonic convex spline of order 3 with two knots 
+    test_mspline     () ## Positive monotonic spline of order 3 with two knots 
+    test_cspline     () ## Positive monotonic convex spline of order 3 with two knots 
 
     ## check finally that everything is serializeable:
     test_db          ()          

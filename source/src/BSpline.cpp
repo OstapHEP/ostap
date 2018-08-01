@@ -1239,7 +1239,7 @@ double  Ostap::Math::PositiveSpline::integral
  *  - min/max value will be used as interval boundaries 
  */
 // ============================================================================
-Ostap::Math::MonothonicSpline::MonothonicSpline
+Ostap::Math::MonotonicSpline::MonotonicSpline
 ( const std::vector<double>& points      ,
   const unsigned short       order       , 
   const bool                 increasing  )
@@ -1258,7 +1258,7 @@ Ostap::Math::MonothonicSpline::MonothonicSpline
  *  - min/max value will be used as interval boundaries 
  */
 // ============================================================================
-Ostap::Math::MonothonicSpline::MonothonicSpline
+Ostap::Math::MonotonicSpline::MonotonicSpline
 ( const std::vector<double>& points     ,
   const std::vector<double>& pars       ,
   const bool                 increasing ) 
@@ -1275,7 +1275,7 @@ Ostap::Math::MonothonicSpline::MonothonicSpline
  *  @param order  the degree of splline 
  */
 // ============================================================================
-Ostap::Math::MonothonicSpline::MonothonicSpline
+Ostap::Math::MonotonicSpline::MonotonicSpline
 ( const double         xmin       ,  
   const double         xmax       , 
   const unsigned short inner      ,   // number of inner points 
@@ -1289,7 +1289,7 @@ Ostap::Math::MonothonicSpline::MonothonicSpline
 // ============================================================================
 // constructor from the basic spline 
 // ============================================================================
-Ostap::Math::MonothonicSpline::MonothonicSpline
+Ostap::Math::MonotonicSpline::MonotonicSpline
 ( const Ostap::Math::PositiveSpline& spline     , 
   const bool                         increasing ) 
   : Ostap::Math::PositiveSpline ( spline        ) 
@@ -1300,7 +1300,7 @@ Ostap::Math::MonothonicSpline::MonothonicSpline
 // ============================================================================
 // constructor from the basic spline 
 // ============================================================================
-Ostap::Math::MonothonicSpline::MonothonicSpline
+Ostap::Math::MonotonicSpline::MonotonicSpline
 ( const Ostap::Math::BSpline&        spline     , 
   const bool                         increasing ) 
   : Ostap::Math::PositiveSpline ( spline        ) 
@@ -1311,11 +1311,11 @@ Ostap::Math::MonothonicSpline::MonothonicSpline
 // ============================================================================
 // destructor
 // ============================================================================
-Ostap::Math::MonothonicSpline::~MonothonicSpline(){}
+Ostap::Math::MonotonicSpline::~MonotonicSpline(){}
 // ============================================================================
 // update coefficients  
 // ============================================================================
-bool Ostap::Math::MonothonicSpline::updateCoefficients  () 
+bool Ostap::Math::MonotonicSpline::updateCoefficients  () 
 {
   //
   bool   update = false ;
@@ -1548,7 +1548,7 @@ Ostap::Math::ConvexSpline::ConvexSpline
   const unsigned short       order       , 
   const bool                 increasing  ,
   const bool                 convex      )
-  : Ostap::Math::MonothonicSpline ( points , order , increasing ) 
+  : Ostap::Math::MonotonicSpline ( points , order , increasing ) 
   , m_convex                      ( convex ) 
 {
   if ( 2 > this->order() ) { Ostap::throwException
@@ -1571,7 +1571,7 @@ Ostap::Math::ConvexSpline::ConvexSpline
   const std::vector<double>& pars       ,
   const bool                 increasing ,
   const bool                 convex     ) 
-  : Ostap::Math::MonothonicSpline ( points , pars , increasing ) 
+  : Ostap::Math::MonotonicSpline ( points , pars , increasing ) 
   , m_convex                      ( convex ) 
 {
   if ( 2 > order() ) { Ostap::throwException
@@ -1594,7 +1594,7 @@ Ostap::Math::ConvexSpline::ConvexSpline
   const unsigned short    order      , 
   const bool              increasing ,
   const bool              convex     ) 
-  : Ostap::Math::MonothonicSpline ( xmin , xmax , inner , order , increasing ) 
+  : Ostap::Math::MonotonicSpline ( xmin , xmax , inner , order , increasing ) 
   , m_convex                      ( convex ) 
 {
   if ( 2 > this->order() ) { Ostap::throwException
@@ -1609,7 +1609,7 @@ Ostap::Math::ConvexSpline::ConvexSpline
 ( const PositiveSpline&   spline      , 
   const bool              increasing  ,
   const bool              convex      ) 
-  : Ostap::Math::MonothonicSpline ( spline , increasing ) 
+  : Ostap::Math::MonotonicSpline ( spline , increasing ) 
   , m_convex                      ( convex ) 
 {
   if ( 2 > order() ) { Ostap::throwException
@@ -1624,7 +1624,7 @@ Ostap::Math::ConvexSpline::ConvexSpline
 ( const BSpline&          spline     , 
   const bool              increasing ,
   const bool              convex     ) 
-  : Ostap::Math::MonothonicSpline ( spline , increasing ) 
+  : Ostap::Math::MonotonicSpline ( spline , increasing ) 
   , m_convex                      ( convex ) 
 {
   if ( 2 > order() ) { Ostap::throwException
@@ -1633,12 +1633,12 @@ Ostap::Math::ConvexSpline::ConvexSpline
   updateCoefficients () ;
 }
 // ============================================================================
-// constructor from monothonic spline 
+// constructor from monotonic spline 
 // ============================================================================
 Ostap::Math::ConvexSpline::ConvexSpline
-( const MonothonicSpline& spline , 
+( const MonotonicSpline& spline , 
   const bool              convex ) 
-  : Ostap::Math::MonothonicSpline ( spline ) 
+  : Ostap::Math::MonotonicSpline ( spline ) 
   , m_convex                      ( convex ) 
 {
   if ( 2 > order() ) { Ostap::throwException

@@ -79,11 +79,11 @@ namespace Ostap
    *  - generic   positive non-factorizable polynomial in 2D
    *   \f$ P^+(x,y) = \sum_i \sum_j \alpha^2_{i,j} B^n_i(x) B^k_j(y) \f$
    *  - symmetric positive non-factorizable polynomial in 2D \f$ P^+_{sym}(x,y) \f$
-   *  - \f$ f(x,y)       = \Phi_1(x)\times\Phi_2(y)\timesP^+(x,y)       \f$
-   *  - \f$ f_{sym}(x,y) = \Phi  (x)\times\Phi  (y)\timesP^+_{sym}(x,y) \f$
-   *  - \f$ f(x,y)       = exp   (x)\times\Phi  (y)\timesP^+(x,y)       \f$
-   *  - \f$ f(x,y)       = exp   (x)\times exp  (y)\timesP^+(x,y)       \f$
-   *  - \f$ f_{sym}(x,y) = exp   (x)\times exp  (y)\timesP^+_{sym}(x,y) \f$
+   *  - \f$ f(x,y)       = \Phi_1(x)\times\Phi_2(y)\times P^+(x,y)       \f$
+   *  - \f$ f_{sym}(x,y) = \Phi  (x)\times\Phi  (y)\times P^+_{sym}(x,y) \f$
+   *  - \f$ f(x,y)       = exp   (x)\times\Phi  (y)\times P^+(x,y)       \f$
+   *  - \f$ f(x,y)       = exp   (x)\times exp  (y)\times P^+(x,y)       \f$
+   *  - \f$ f_{sym}(x,y) = exp   (x)\times exp  (y)\times P^+_{sym}(x,y) \f$
    *
    *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
    *  @date   2011-11-30
@@ -2705,7 +2705,7 @@ namespace Ostap
      *    and \f$L\f$ is the orbital momentum between the pair and
      *    the third particle.
      *   E.g. taking \f$\ell=0, L=1\f$, one can get the S-wave contribution for
-     *   \f$\pi^+\pi^-\f$-mass from \f$B^0\rightarrowJ/\psi\pi^+\pi^-\f$ decay.
+     *   \f$\pi^+\pi^-\f$-mass from \f$B^0\rightarrow J/\psi\pi^+\pi^-\f$ decay.
      *
      *  @see Ostap::Math::PhaseSpace23L
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2933,23 +2933,23 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class PolyMonothonic
-     *  positive monothonic  polynomial
-     *  @see Ostap::Math::Monothonic
+    /** @class PolyMonotonic
+     *  positive monotonic  polynomial
+     *  @see Ostap::Math::Monotonic
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
-    class  PolyMonothonic: public RooAbsPdf
+    class  PolyMonotonic: public RooAbsPdf
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDef(Ostap::Models::PolyMonothonic, 1) ;
+      ClassDef(Ostap::Models::PolyMonotonic, 1) ;
       // ======================================================================
     public:
       // ======================================================================
       /// general
-      PolyMonothonic
+      PolyMonotonic
         ( const char*          name       ,
           const char*          title      ,
           RooAbsReal&          x          ,
@@ -2958,18 +2958,18 @@ namespace Ostap
           const double         xmax       ,
           const bool           increasing ) ;
       /// copy
-      PolyMonothonic
-        ( const PolyMonothonic&     right     ,
+      PolyMonotonic
+        ( const PolyMonotonic&     right     ,
           const char*          name = 0  ) ;
       /// destructor
-      virtual ~PolyMonothonic() ;
+      virtual ~PolyMonotonic() ;
       /// clone
-      PolyMonothonic* clone ( const char* name ) const override;
+      PolyMonotonic* clone ( const char* name ) const override;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
       // fake default contructor, needed just for proper (de)serialization
-      PolyMonothonic () {} ;
+      PolyMonotonic () {} ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2994,7 +2994,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Monothonic& function() const { return m_monothonic ; }
+      const Ostap::Math::Monotonic& function() const { return m_monotonic ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3004,7 +3004,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Monothonic m_monothonic ;            // the function
+      mutable Ostap::Math::Monotonic m_monotonic ;            // the function
       // ======================================================================
     } ;
     // ========================================================================
@@ -4211,7 +4211,7 @@ namespace Ostap
     // ========================================================================
     /** @class Atlas
      *  Modified gaussian function
-     *  \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\deltax/2}}}{2})\f$,
+     *  \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\delta x/2}}}{2})\f$,
      *  where \f$\delta x = \left| x - \mu \right|/\sigma\f$
      *  Fuction is taken from http://arxiv.org/abs/arXiv:1507.07099
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4299,7 +4299,7 @@ namespace Ostap
      *  that is, it has a more acute peak near its mean, and heavier tails,
      *  compared with the standard normal distribution.
      *
-     *  \f$ f(x,\mu,\sigma) \propto \frac{1}{2} \sech ( \frac{\pi}{2}\frac{x-\mu}{\sigma} )\f$
+     *  \f$ f(x,\mu,\sigma) \propto \frac{1}{2} {\mathrm{sech}}\left( \frac{\pi}{2}\frac{x-\mu}{\sigma} \right)\f$
      *  @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-04-25
@@ -5003,9 +5003,9 @@ namespace Ostap
     /** @class Gumbel
      *  Gumbel  distribution:
      *  https://en.wikipedia.org/wiki/Gumbel_distribution
-     *  \f$  G(x;\mu,\beta) = \frac{1}{\left|\beta\right| e^{-(z+e^{-z}}\f$, 
+     *  \f$  G(x;\mu,\beta) = \frac{1}{\left|\beta\right|} e^{-(z+e^{-z}}\f$, 
      *  where \f$ z = \frac{x-\mu}{\beta}\f$.
-     *  Importnat  cases if \f$ E(x) = e^{-\tau x}\f$, and:
+     *  Important  cases if \f$ E(x) = e^{-\tau x}\f$, and:
      *  - \f$ z \equiv  \log(x)\f$, then \f$ F(z) = E(x) = G(z, -log(\tau) , 1 ) \f$, 
      *  - \f$ z \equiv -\log(x)\f$, then \f$ F(z) = E(x) = G(z, -log(\tau) , 1 ) \f$.
      *  As a direct sequence,  a sum of exponential componets is transformed to 
@@ -5397,19 +5397,19 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    /** @class MonothonicSpline
-     *  The special spline for non-negative monothonic function
+    /** @class MonotonicSpline
+     *  The special spline for non-negative monotonic function
      *  @see http://en.wikipedia.org/wiki/I-spline
      *  @see http://en.wikipedia.org/wiki/M-spline
      *  @see http://en.wikipedia.org/wiki/B-spline
      *  @see Ostap::Math::PositiveSpline
      */
-    class   MonothonicSpline : public RooAbsPdf
+    class   MonotonicSpline : public RooAbsPdf
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDef(Ostap::Models::MonothonicSpline, 1) ;
+      ClassDef(Ostap::Models::MonotonicSpline, 1) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5420,25 +5420,25 @@ namespace Ostap
        *  @param spine the spline
        *  @param phis  vector of parameters
        */
-      MonothonicSpline
+      MonotonicSpline
         ( const char*                          name,
           const char*                          title     ,
           RooAbsReal&                          x         ,
-          const Ostap::Math::MonothonicSpline& spline    ,   // the spline
+          const Ostap::Math::MonotonicSpline& spline    ,   // the spline
           RooArgList&                          phis      ) ; // parameters
       /// copy
-      MonothonicSpline
-        ( const MonothonicSpline& right     ,
+      MonotonicSpline
+        ( const MonotonicSpline& right     ,
           const char*             name = 0  ) ;
       /// destructor
-      virtual ~MonothonicSpline() ;
+      virtual ~MonotonicSpline() ;
       /// clone
-      MonothonicSpline* clone ( const char* name ) const override;
+      MonotonicSpline* clone ( const char* name ) const override;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
       // fake default contructor, needed just for proper (de)serialization
-      MonothonicSpline  () {} ;
+      MonotonicSpline  () {} ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5463,8 +5463,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::MonothonicSpline& function() const { return m_spline ; }
-      const Ostap::Math::MonothonicSpline& spline  () const { return m_spline ; }
+      const Ostap::Math::MonotonicSpline& function() const { return m_spline ; }
+      const Ostap::Math::MonotonicSpline& spline  () const { return m_spline ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -5474,7 +5474,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::MonothonicSpline m_spline ;          // the function
+      mutable Ostap::Math::MonotonicSpline m_spline ;          // the function
       // ======================================================================
     };
     // ========================================================================
@@ -5558,7 +5558,7 @@ namespace Ostap
     };
     // ========================================================================
     /** @class ConvexSpline
-     *  The special spline for non-negative monothonic
+     *  The special spline for non-negative monotonic
      *  convex or concave function
      *  @see Ostap::Math::ConvexSpline
      */
