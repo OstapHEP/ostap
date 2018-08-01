@@ -98,8 +98,7 @@ __all__ = (
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
     # 
     'BreitWigner_pdf'      , ## (relativistic) 2-body Breit-Wigner
-    'Flatte_pdf'           , ## Flatte-function  (pipi)
-    'Flatte2_pdf'          , ## Flatte-function  (KK) 
+    'Flatte_pdf'           , ## Flatte-function  (pipi/KK)
     'LASS_pdf'             , ## kappa-pole
     'Bugg_pdf'             , ## sigma-pole
     'Swanson_pdf'          , ## Swanson's S-wave cusp 
@@ -2798,6 +2797,7 @@ models.append ( BW23L_pdf )
 #  @see http://www.sciencedirect.com/science/article/pii/0370269376906547
 #  @see Ostap::Models::Flatte
 #  @see Ostap::Math::Flatte
+#  @see Ostap::Math::Flatte2
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-01-18
 class Flatte_pdf(MASS) :
@@ -2807,11 +2807,11 @@ class Flatte_pdf(MASS) :
     Phys. Lett. B63, 224 (1976
     http://www.sciencedirect.com/science/article/pii/0370269376906547
 
-    Typical case:    f0 -> pi+ pi- shape 
+    Typical case:    f0 -> pi+ pi-/ K+ K- shapes 
     """
     def __init__ ( self              ,
                    name              ,
-                   flatte            , ## Ostap::Math::Flatte 
+                   flatte            , ## Ostap::Math::Flatte/Flatte2
                    xvar              ,
                    m0_980   = None   ,    ## mass  of f0(980) resonance
                    m0g1     = 165000 ,    ## m0(f0(980))*gamma_1 
@@ -2899,68 +2899,7 @@ class Flatte_pdf(MASS) :
         return self.__flatte
 
 models.append ( Flatte_pdf )                          
-# =============================================================================
-## @class Flatte2_pdf
-#  Flatte function to describe dikaon system near threshold
-#  S.M.Flatte, 
-#    "Coupled-channel analysis of the \f$\pi\eta\f$ 
-#    and \f$K\bar{K}\f$ systems near \f$K\bar{K}\f$ threshold  
-#    Phys. Lett. B63, 224 (1976)
-#  Well suitable for \f$\f_0(980)\rightarrow K^+ K^-\f$
-#  @see http://www.sciencedirect.com/science/article/pii/0370269376906547
-#  @see Ostap::Models::Flatte2
-#  @see Ostap::Math::Flatte2
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2014-01-18
-class Flatte2_pdf(Flatte_pdf) :
-    """Flatte function:
-    S.M.Flatte, ``Coupled-channel analysis of the (pi eta) and (KbarK) systems near (KbarK) threshold'' 
-    Phys. Lett. B63, 224 (1976
-    http://www.sciencedirect.com/science/article/pii/0370269376906547
-    
-    Typical case:    f0 -> K+ K- shape 
-    """
-    def __init__ ( self              ,
-                   name              ,
-                   flatte            , ## Ostap::Math::Flatte or Flatte2 
-                   xvar              ,
-                   m0_980   = None   ,    ## mass  of f0(980) resonance
-                   m0g1     = 165000 ,    ## m0(f0(980))*gamma_1
-                   g2og1    = 4.21   ) :  ## gamma2/gamma1 
-        
-        #
-        ## initialize the base
-        # 
-        Flatte_pdf.__init__  ( self     , name , flatte ,
-                               xvar     ,
-                               m0_980   ,
-                               m0g1     ,
-                               g2og1    )
 
-        #
-        ## build the actual pdf
-        # 
-        ## create PDF 
-        self.pdf = Ostap.Models.Flatte2 ( 
-            "flatte2_"    + name ,
-            "Flatte2(%s)" % name ,
-            self.xvar    ,
-            self.m0_980  ,
-            self.m0g1    ,
-            self.g2og1   ,
-            self.flatte  )
-        
-        ## save the configuration
-        self.config = {
-            'name'        : self.name    ,
-            'flatte'      : self.flatte  ,
-            'xvar'        : self.xvar    ,
-            'm0_980'      : self.m0_980  ,
-            'm0g1'        : self.m0g1    ,
-            'g2og1'       : self.g2og1   ,
-            }
-    
-models.append ( Flatte2_pdf )                          
 # =============================================================================
 ## @class LASS_pdf
 #  The LASS parameterization (Nucl. Phys. B296, 493 (1988))

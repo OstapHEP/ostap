@@ -4,6 +4,10 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <memory>
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Peaks.h"
@@ -178,7 +182,7 @@ namespace Ostap
       /// get the amplitude
       std::complex<double>            amplitude () const  ;
       /// access to underlying function
-      const Ostap::Math::BreitWigner& function  () const { return m_bw ; }
+      const Ostap::Math::BreitWigner& function  () const { return *m_bw ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -189,137 +193,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::BreitWigner m_bw ;            // the actual function
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Rho0
-     *
-     *  J.D.Jackson,
-     *  "Remarks on the Phenomenological Analysis of Resonances",
-     *  In Nuovo Cimento, Vol. XXXIV, N.6
-     *
-     *  http://www.springerlink.com/content/q773737260425652/
-     *
-     *  @see Ostap::Models::BreitWigner
-     *  @see Ostap::Math::BreitWigner
-     *  @see Ostap::Math::Rho0
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  Rho0 : public Ostap::Models::BreitWigner
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::Rho0, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Rho0 ( const char*          name      ,
-             const char*          title     ,
-             RooAbsReal&          x         ,
-             RooAbsReal&          mass      ,
-             RooAbsReal&          width     ,
-             const double         pi_mass   ) ;
-      /// "copy" constructor
-      Rho0 ( const Rho0& , const char* name = 0 ) ;
-      /// virtual destructor
-      virtual ~Rho0 () ;
-      /// clone
-      Rho0* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      Rho0 () {} ;
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Kstar
-     *
-     *  J.D.Jackson,
-     *  "Remarks on the Phenomenological Analysis of Resonances",
-     *  In Nuovo Cimento, Vol. XXXIV, N.6
-     *
-     *  http://www.springerlink.com/content/q773737260425652/
-     *
-     *  @see Ostap::Models::BreitWigner
-     *  @see Ostap::Math::BreitWigner
-     *  @see Ostap::Math::Kstar
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  Kstar : public Ostap::Models::BreitWigner
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::Kstar, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Kstar ( const char*          name      ,
-              const char*          title     ,
-              RooAbsReal&          x         ,
-              RooAbsReal&          mass      ,
-              RooAbsReal&          width     ,
-              const double         k_mass    ,
-              const double         pi_mass   ) ;
-      /// "copy" constructor
-      Kstar ( const Kstar& , const char* name = 0 ) ;
-      /// virtual destructor
-      virtual ~Kstar () ;
-      /// clone
-      Kstar* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      Kstar () {} ;
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Phi
-     *
-     *  J.D.Jackson,
-     *  "Remarks on the Phenomenological Analysis of Resonances",
-     *  In Nuovo Cimento, Vol. XXXIV, N.6
-     *
-     *  http://www.springerlink.com/content/q773737260425652/
-     *
-     *  @see Ostap::Models::BreitWigner
-     *  @see Ostap::Math::BreitWigner
-     *  @see Ostap::Math::Rho0
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  Phi : public Ostap::Models::BreitWigner
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::Phi, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Phi  ( const char*          name      ,
-             const char*          title     ,
-             RooAbsReal&          x         ,
-             RooAbsReal&          mass      ,
-             RooAbsReal&          width     ,
-             const double         k_mass    ) ;
-      /// "copy" constructor
-      Phi ( const Phi& , const char* name = 0 ) ;
-      /// virtual destructor
-      virtual ~Phi () ;
-      /// clone
-      Phi* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      Phi () {} ;
+      std::unique_ptr<Ostap::Math::BreitWigner> m_bw{}  ; // the actual function
       // ======================================================================
     } ;
     // ========================================================================
@@ -490,7 +364,7 @@ namespace Ostap
       /// get the amplitude
       virtual std::complex<double> amplitude () const  ;
       /// access to underlying function
-      const Ostap::Math::Flatte&   function  () const { return m_flatte ; }
+      const Ostap::Math::Flatte&   function  () const { return *m_flatte ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -507,89 +381,7 @@ namespace Ostap
     protected:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Flatte m_flatte ;             // the actual function
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Flatte2
-     *
-     *  S.M.Flatte,
-     *  "Coupled-channel analysis of the \f$\pi\eta\f$
-     *  and \f$K\bar{K}\f$ systems near \f$K\bar{K}\f$ threshold
-     *  Phys. Lett. B63, 224 (1976
-     *
-     *  http://www.sciencedirect.com/science/article/pii/0370269376906547
-     *
-     *  \f$\pi\pi\f$-channel
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  Flatte2 : public RooAbsPdf
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::Flatte2, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Flatte2 ( const char*                name      ,
-                const char*                title     ,
-                RooAbsReal&                x         ,
-                RooAbsReal&                m0        ,
-                RooAbsReal&                m0g1      ,
-                RooAbsReal&                g2og1     ,
-                const Ostap::Math::Flatte& flatte    ) ;
-      /// "copy" constructor
-      Flatte2 ( const Flatte2& , const char* name = 0 ) ;
-      /// virtual destructor
-      virtual ~Flatte2 () ;
-      /// clone
-      Flatte2* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      Flatte2 () {} ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amplitude
-      std::complex<double>          amplitude () const  ;
-      /// access to underlying function
-      const Ostap::Math::Flatte2&   function  () const { return m_flatte2 ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    protected:
-      // ======================================================================
-      RooRealProxy m_x     ;
-      RooRealProxy m_m0    ;
-      RooRealProxy m_m0g1  ;
-      RooRealProxy m_g2og1 ;
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// the actual function
-      mutable Ostap::Math::Flatte2 m_flatte2 ;          // the actual function
+      std::unique_ptr<Ostap::Math::Flatte> m_flatte ;  // the actual function
       // ======================================================================
     } ;
     // ========================================================================

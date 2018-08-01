@@ -630,6 +630,10 @@ Ostap::Math::BreitWigner::BreitWigner
   bw.m_formfactor = nullptr ;
 }
 // ============================================================================
+Ostap::Math::BreitWigner*
+Ostap::Math::BreitWigner::clone() const
+{ return new BreitWigner ( *this ) ; }  
+// ============================================================================
 // destructor
 // ============================================================================
 Ostap::Math::BreitWigner::~BreitWigner ()
@@ -927,6 +931,12 @@ Ostap::Math::Rho0FromEtaPrime::Rho0FromEtaPrime
   , m_eta_prime ( std::abs ( eta_prime ) )
 {}
 // ============================================================================
+// clone 
+// ============================================================================
+Ostap::Math::Rho0FromEtaPrime*
+Ostap::Math::Rho0FromEtaPrime::clone() const
+{ return new Rho0FromEtaPrime ( *this ) ; }  
+// ============================================================================
 // destructor
 // ============================================================================
 Ostap::Math::Rho0FromEtaPrime::~Rho0FromEtaPrime(){}
@@ -979,11 +989,14 @@ Ostap::Math::Flatte::Flatte
 // ============================================================================
 Ostap::Math::Flatte::~Flatte(){}
 // ============================================================================
+Ostap::Math::Flatte*
+Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; }
+// ============================================================================
 // get the value of Flatte function
 // ============================================================================
 double Ostap::Math::Flatte::operator() ( const double x ) const
-  { return flatte ( x ) ; }
-  // ============================================================================
+{ return flatte ( x ) ; }
+// ============================================================================
   // get the complex Flatte amplitude
 // ============================================================================
 std::complex<double> Ostap::Math::Flatte::flatte_amp
@@ -1222,6 +1235,9 @@ Ostap::Math::Flatte2::Flatte2
 // destructor
 // ============================================================================
 Ostap::Math::Flatte2::~Flatte2(){}
+// ============================================================================
+Ostap::Math::Flatte2*
+Ostap::Math::Flatte2::clone() const { return new Ostap::Math::Flatte2 ( *this ) ; }
 // ============================================================================
 // get the value of Flatte function
 // ============================================================================
@@ -2425,10 +2441,10 @@ Ostap::Math::BW23L::BW23L
   const double         m    ,
   const unsigned short L1   ,
   const unsigned short L2   )
-//
-  : m_bw ( m0 , gam0 , m1  , m2 , L1      )
+  //
+  : m_bw ( std::make_unique<BreitWigner> ( m0 , gam0 , m1  , m2 , L1 ) )
   , m_ps ( m1 , m2   , m3  , m  , L2 , L1 )
-//
+    //
   , m_workspace ()
 {}
 // ============================================================================
@@ -2444,8 +2460,8 @@ Ostap::Math::BW23L::BW23L
   const unsigned short                       L1   ,
   const unsigned short                       L2   ,
   const Ostap::Math::FormFactors::JacksonRho r    )
-//
-  : m_bw ( m0 , gam0 , m1  , m2 , L1 , r  )
+  //
+  : m_bw ( std::make_unique<BreitWigner> ( m0 , gam0 , m1  , m2 , L1 , r ) )
   , m_ps ( m1 , m2   , m3  , m  , L2 , L1 )
 //
   , m_workspace ()
@@ -2458,11 +2474,18 @@ Ostap::Math::BW23L::BW23L
   const double                    m3 ,
   const double                    m  ,
   const unsigned short            L2 )
-//
-  : m_bw ( bw )
+  //
+  : m_bw ( bw.clone () ) 
   , m_ps ( bw.m1() , bw.m2() , m3  , m  , L2 , bw. L())
-//
+    //
   , m_workspace ()
+{}
+// ============================================================================
+// COPY
+// ============================================================================
+Ostap::Math::BW23L::BW23L ( const Ostap::Math::BW23L& right ) 
+  : m_bw ( right.m_bw->clone() ) 
+  , m_ps ( right.m_ps )
 {}
 // ============================================================================
 // destructor
@@ -2475,7 +2498,7 @@ double Ostap::Math::BW23L::operator() ( const double x ) const
 {
   if (  lowEdge() >= x || highEdge()  <= x ) { return 0 ; }
   //
-  const double bw = std::norm ( m_bw.amplitude ( x ) )   ;
+  const double bw = std::norm ( m_bw->amplitude ( x ) )   ;
   //
   // // get the incomplete phase space factor
   // const double ps  =                   // get the incomplete phase space factor
@@ -2576,10 +2599,10 @@ Ostap::Math::Flatte23L::Flatte23L
   const double         m3    ,     // MeV
   const double         m     ,     // MeV
   const unsigned short L     )
-//
-  : m_flatte    ( m0  , m0g1 , g2og1 , mA , mA , mB , mB ) 
+  //
+  : m_flatte ( std::make_unique<Flatte> ( m0  , m0g1 , g2og1 , mA , mA , mB , mB ) )
   , m_ps        ( mA  , mA  , m3    , m  , L    )
-//
+    //
   , m_workspace ()
 {}
 // ============================================================================
@@ -2595,10 +2618,18 @@ Ostap::Math::Flatte23L::Flatte23L
   const double               m   ,     // MeV
   const unsigned short       L   )
 //
-  : m_flatte    ( fun )
+  : m_flatte    ( fun.clone() ) 
   , m_ps        ( fun.mA1() , fun.mA2()  , m3    , m  , L    )
     //
   , m_workspace ()
+{}
+// ============================================================================
+// copy
+// ============================================================================
+Ostap::Math::Flatte23L::Flatte23L
+( const Ostap::Math::Flatte23L& right ) 
+  : m_flatte ( right.m_flatte->clone() )
+  , m_ps     ( right.m_ps )
 {}
 // ============================================================================
 // destructor
@@ -2613,7 +2644,7 @@ double Ostap::Math::Flatte23L::operator() ( const double x ) const
   if ( lowEdge () >= x || highEdge() <= x ) { return 0 ; } // RETURN
   //
   // get the amplitude...
-  std::complex<double> amp = m_flatte.flatte_amp ( x ) ;
+  std::complex<double> amp = m_flatte->flatte_amp ( x ) ;
   //
   return m_ps ( x ) * std::norm ( amp ) * 2 / M_PI * m0g1() ;
 }

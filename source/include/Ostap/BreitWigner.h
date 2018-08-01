@@ -6,6 +6,8 @@
 // ============================================================================
 // STD&STL
 // ============================================================================
+#include <memory>
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Workspace.h"
@@ -108,6 +110,9 @@ namespace Ostap
       // ======================================================================
       /// destructor
       virtual ~BreitWigner () ;
+      // ======================================================================
+      /// clone it 
+      virtual BreitWigner* clone() const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -287,7 +292,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
-    class  Rho0FromEtaPrime : public Ostap::Math::Rho0
+    class Rho0FromEtaPrime : public Ostap::Math::Rho0
     {
     public:
       // ======================================================================
@@ -301,6 +306,9 @@ namespace Ostap
                           const double eta_prime = 957.7 ) ;  // MeV
       /// destructor
       virtual ~Rho0FromEtaPrime () ;
+      // ======================================================================
+      /// clone it! 
+      Rho0FromEtaPrime* clone() const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -350,6 +358,9 @@ namespace Ostap
                 const double mB2   = 493.7 ) ;
       /// destructor
       virtual ~Flatte () ;
+      // ======================================================================
+      /// clone it! 
+      virtual Flatte* clone() const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -478,6 +489,8 @@ namespace Ostap
       Flatte2 ( const Flatte& flatte ) ;
       /// destructor
       virtual ~Flatte2 () ;
+      /// clone it!
+      Flatte2* clone() const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1288,6 +1301,8 @@ namespace Ostap
               const double                    m3 ,
               const double                    m  ,
               const unsigned short            L2 ) ;
+      /// copy 
+      BW23L ( const Ostap::Math::BW23L& bw  ) ;
       /// destructor
       virtual ~BW23L () ;
       // ======================================================================
@@ -1297,18 +1312,18 @@ namespace Ostap
       double operator() ( const double x ) const ;
       /// get the amplitude
       std::complex<double>
-      amplitude ( const double x ) const { return m_bw.amplitude ( x ) ; }
+      amplitude ( const double x ) const { return m_bw->amplitude ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// pole position 
-      double m0     () const { return m_bw . m0   () ; }
+      double m0     () const { return m_bw-> m0   () ; }
       /// pole position 
       double mass   () const { return        m0   () ; }
       /// pole position 
       double peak   () const { return        m0   () ; }
       /// width  at the pole 
-      double gam0   () const { return m_bw . gam0 () ; }
+      double gam0   () const { return m_bw-> gam0 () ; }
       /// width  at the pole 
       double gamma0 () const { return        gam0 () ; }
       /// width  at the pole 
@@ -1319,17 +1334,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// set pole position 
-      bool setM0     ( const double x ) { return m_bw.setM0     ( x ) ; }
+      bool setM0     ( const double x ) { return m_bw->setM0     ( x ) ; }
       /// set pole position 
-      bool setMass   ( const double x ) { return setM0          ( x ) ; }
+      bool setMass   ( const double x ) { return setM0           ( x ) ; }
       /// set width
-      bool setPeak   ( const double x ) { return setM0          ( x ) ; }
+      bool setPeak   ( const double x ) { return setM0           ( x ) ; }
       /// set width
-      bool setGamma0 ( const double x ) { return m_bw.setGamma0 ( x ) ; }
+      bool setGamma0 ( const double x ) { return m_bw->setGamma0 ( x ) ; }
       /// set width
-      bool setGamma  ( const double x ) { return setGamma0      ( x ) ; }
+      bool setGamma  ( const double x ) { return setGamma0       ( x ) ; }
       /// set width
-      bool setWidth  ( const double x ) { return setGamma0      ( x ) ; }
+      bool setWidth  ( const double x ) { return setGamma0       ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1341,7 +1356,12 @@ namespace Ostap
     public:
       // ======================================================================
       /// calculate the current width
-      double gamma ( const double x ) const { return m_bw.gamma ( x ) ; }
+      double gamma ( const double x ) const { return m_bw->gamma ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the Breit-Wigner
+      const Ostap::Math::BreitWigner& breitwigner() const { return *m_bw ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1354,7 +1374,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the breit wigner
-      Ostap::Math::BreitWigner   m_bw        ;    // the breit wigner
+      std::unique_ptr<Ostap::Math::BreitWigner> m_bw;    // the breit wigner
       /// the phase space
       Ostap::Math::PhaseSpace23L m_ps        ;    // the phase space
       /// integration workspace
@@ -1400,6 +1420,8 @@ namespace Ostap
                    const double         m3    = 3096.9   ,     // MeV
                    const double         m     = 5366.0   ,     // MeV
                    const unsigned short L     = 1        ) ;
+      /// copy 
+      Flatte23L  ( const Flatte23L& right ) ;
       /// destructor
       virtual ~Flatte23L () ;
       // ======================================================================
@@ -1411,33 +1433,33 @@ namespace Ostap
       // ======================================================================
       /// get the value of complex Flatte amplitude (pipi-channel)
       std::complex<double> amplitude ( const double x ) const
-      { return m_flatte.flatte_amp ( x ) ; }
+      { return m_flatte->flatte_amp ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// pole position
-      double m0     () const { return m_flatte . m0    () ; }
+      double m0     () const { return m_flatte-> m0    () ; }
       /// pole position
       double mass   () const { return            m0    () ; }
       /// pole position
       double peak   () const { return            m0    () ; }
       /// m*g1 
-      double m0g1   () const { return m_flatte . m0g1  () ; }
+      double m0g1   () const { return m_flatte-> m0g1  () ; }
       /// g2/g1 
-      double g2og1  () const { return m_flatte . g2og1 () ; }
+      double g2og1  () const { return m_flatte-> g2og1 () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// ste pole   position 
-      bool setM0     ( const double x ) { return m_flatte . setM0    ( x ) ; }
+      bool setM0     ( const double x ) { return m_flatte-> setM0    ( x ) ; }
       /// ste pole   position 
       bool setMass   ( const double x ) { return            setM0    ( x ) ; }
       /// ste pole   position 
       bool setPeak   ( const double x ) { return            setM0    ( x ) ; }
       /// m*g1 
-      bool setM0G1   ( const double x ) { return m_flatte . setM0G1  ( x ) ; }
+      bool setM0G1   ( const double x ) { return m_flatte-> setM0G1  ( x ) ; }
       /// g2/g1
-      bool setG2oG1  ( const double x ) { return m_flatte . setG2oG1 ( x ) ; }
+      bool setG2oG1  ( const double x ) { return m_flatte-> setG2oG1 ( x ) ; }
       // ======================================================================      
     public:
       // ======================================================================
@@ -1454,10 +1476,15 @@ namespace Ostap
       virtual double integral ( const double low  ,
                                 const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the Flatte
+      const Ostap::Math::Flatte& flatte () const { return *m_flatte ; }
+      // ======================================================================
     private:
       // ======================================================================
       /// the actual Flatte function
-      Ostap::Math::Flatte        m_flatte ; // the actual Flatte function
+      std::unique_ptr<Ostap::Math::Flatte> m_flatte ; // the actual Flatte function
       /// phase space factor
       Ostap::Math::PhaseSpace23L m_ps     ; // phase space factor
       // ======================================================================
