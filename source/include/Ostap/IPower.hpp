@@ -1,4 +1,4 @@
-// $Id: IPower.hpp,v 1.2 2008-08-01 10:16:02 ibelyaev Exp $
+// ============================================================================
 #ifndef LHCBMATH_IPOWER_HPP 
 #define LHCBMATH_IPOWER_HPP 1
 // ============================================================================
@@ -14,7 +14,7 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
-    /** @struct Ostap::Math::IPower 
+    /** @struct IPower  Ostap/IPower.hpp
      *  Template metafunction for compile-time calculation of even, positive
      *  powers of integer numbers.
      *

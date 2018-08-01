@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 #ifndef ANALYSIS_ITERATOR_H 
 #define ANALYSIS_ITERATOR_H 1
@@ -23,7 +22,7 @@ namespace Ostap
   namespace Utils 
   {
     // ========================================================================
-    /** @class Iterator 
+    /** @class Iterator  Ostap/Iterator.h
      *  helper class to simplify manipulations with ROOT-iterator
      *  @see TIterator 
      *  @author Vanay BELYAEV  Ivan.Belyaev@=itep.ru

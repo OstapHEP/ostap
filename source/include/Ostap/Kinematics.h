@@ -14,10 +14,8 @@
 #include "Math/SVector.h"
 #include "Math/Vector4D.h"
 // ============================================================================
-/** @file 
- *
+/** @file Ostap/Kinematics.h
  *  Collection of useful mathematical utilities related to the kinematics
- *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date   2008-01-15
  */

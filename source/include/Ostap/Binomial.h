@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_BINOMIAL_H 
 #define OSTAP_BINOMIAL_H 1
@@ -9,7 +8,7 @@
 // ============================================================================
 #include <utility>
 // ============================================================================
-/** @file
+/** @file Ostap/Binomial.h
  *  Collection of functions to estimate the confidence intervals for 
  *  binomial proportion/efficiency
  *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval

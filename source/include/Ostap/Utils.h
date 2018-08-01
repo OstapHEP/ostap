@@ -2,8 +2,8 @@
 #ifndef OSTAP_UTILS_H 
 #define OSTAP_UTILS_H 1
 // ============================================================================
-/** @file 
- *  collection if variosu C++ utilities 
+/** @file Ostap/Utils.h
+ *  collection of various C++ utilities 
  *  @author Vanya Belyaev
  *  @date   2018-03-23
  */

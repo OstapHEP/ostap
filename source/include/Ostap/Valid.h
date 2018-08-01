@@ -12,6 +12,9 @@ class TObject ;  //  from ROOT
 namespace Ostap 
 {
   // ==========================================================================
+  /** @namespace Ostap::Utils
+   *  trivial utilities 
+   */
   namespace Utils 
   {
     // ========================================================================

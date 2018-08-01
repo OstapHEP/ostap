@@ -28,7 +28,7 @@ namespace Ostap
   namespace Functions 
   {
     // ========================================================================
-    /** @class FuncFormula 
+    /** @class FuncFormula Ostap/Funcs.h
      *  simple implementation of TTRee-function based on Ostap::Formula
      */
     class FuncFormula : public Ostap::IFuncTree, public TObject

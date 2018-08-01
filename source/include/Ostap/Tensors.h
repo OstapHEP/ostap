@@ -19,7 +19,7 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
-    /** @namespace Tensors
+    /** @namespace Ostap::Math::Tensors Ostap/Tensors.h
      *  Collection of general purpose tensors and operations with them
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-0725
@@ -50,7 +50,7 @@ namespace Ostap
         LAST = 4
       } ;
       // ======================================================================
-      /** @struct Delta_
+      /** @struct Delta_  Ostap/Tensors.h
        *
        *  (Compile-time) Kronecker delta: \f$ \delta^{\mu}_{\nu} \f$
        *
@@ -647,7 +647,7 @@ namespace Ostap
          *  @param v1 the first  vector
          *  @param v2 the second vector
          *  @param v3 the third  vector
-         *  @param v3 the fourth vector
+         *  @param v4 the fourth vector
          *  @return the product (vector)
          */
         inline double operator()

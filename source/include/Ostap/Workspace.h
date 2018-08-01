@@ -10,7 +10,7 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
-    /** @class WorkSpace
+    /** @class WorkSpace Ostap/Workspace.h
      *  helper utility to keep the integration workspace fro GSL integration
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2011-12-03

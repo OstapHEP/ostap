@@ -19,9 +19,7 @@ class RooDataSet ;
 namespace Ostap
 {
   // ==========================================================================
-  /** @class UStat UStat.h Analysis/UStat.h
-   *  
-   *
+  /** @class UStat Ostap/UStat.h
    *  @author Vanya Belyaev
    *  @date   2011-09-27
    */

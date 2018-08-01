@@ -25,7 +25,7 @@ namespace Ostap
   namespace Functions 
   {
     // ========================================================================
-    /** @class FuncTH
+    /** @class FuncTH Ostap/HFuncs.h
      *  simple implementation of Tree-function based on TH
      */
     class FuncTH : public Ostap::IFuncTree, public TObject

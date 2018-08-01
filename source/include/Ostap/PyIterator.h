@@ -1,4 +1,3 @@
-// $If:$ 
 // ============================================================================
 #ifndef OSTAP_PYITERATOR_H 
 #define OSTAP_PYITERATOR_H 1

@@ -37,6 +37,11 @@ namespace Ostap
     /// base class for formfactors
     class FormFactor ;
     // ========================================================================
+    /** @namespace Ostap::Math::FormFactors
+     *  form-factor functions for Breit-Wigner
+     *   - Blatt-Weisskopf form-factors 
+     *   - Jackson's form-factors 
+     */
     namespace FormFactors
     {
       // ======================================================================
@@ -687,6 +692,9 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================  
+    /** @namespace Ostap::Math::Jackson
+     *   - Jackson's form-factors 
+     */
     namespace Jackson
     {
       // ======================================================================

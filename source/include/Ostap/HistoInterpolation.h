@@ -16,7 +16,7 @@ class TH1 ; // from ROOT
 class TH2 ; // from ROOT 
 class TH3 ; // from ROOT 
 // ============================================================================
-/** @file HistoInterpolation.h LHCbMath/HistoInterpolation.h
+/** @file Ostap/HistoInterpolation.h
  *  Collection of primitive utilities for hiostorgam interpoaltion 
  *
  *  Originally developed for Ostap in python

@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_CHI2SOLUTION_H 
 #define OSTAP_CHI2SOLUTION_H 1
@@ -15,15 +14,18 @@
 #include "Math/SMatrix.h"
 #include "Math/SVector.h"
 // ============================================================================
+/** @file Ostap/Chi2Solution.h
+ *  Generic solution for N-dimensional chi2-problem with R-constraints 
+ */ 
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
   namespace Math
   {
     // ========================================================================
-    /** @class Chi2Solution LHCbMath/Chi2Solution.h
-     *  
-     *  Generic solution for N-dimensional chi2-problem wth R-constraints 
+    /** @class Chi2Solution Ostap/Chi2Solution.h
+     *  Generic solution for N-dimensional chi2-problem with R-constraints 
      *
      *  All Formulae and notation from Paul Avery :
      *  - Applied Fitting theory I: General Least Squares Theory

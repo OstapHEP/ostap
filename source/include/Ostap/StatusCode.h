@@ -12,7 +12,7 @@
 namespace Ostap
 {
   // ==========================================================================
-  /** @class StatusCode StatusCode.h
+  /** @class StatusCode Ostap/StatusCode.h
    *  Simplified version of StatusCode form Gaudi Project 
    */
   class StatusCode final 

@@ -16,6 +16,7 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
+    /// the line type 
     typedef Line<XYZPoint, XYZVector> XYZLine; ///< 3D cartesian line (double)
     // ========================================================================
   }

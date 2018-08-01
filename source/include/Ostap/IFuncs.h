@@ -12,7 +12,7 @@ class RooAbsData  ; // From RooFit
 namespace Ostap 
 {
   // ==========================================================================
-  /** @class ITreeFunc
+  /** @class ITreeFunc  Ostap/IFuncs.h
    *  Helper abstract class to evaluate certain TTree-functions 
    */
   class IFuncTree 
@@ -26,7 +26,7 @@ namespace Ostap
     // ========================================================================
   };
   // ==========================================================================
-  /** @class IFuncData
+  /** @class IFuncData Ostap/IFnucData.h
    *  Helper abstract class to evaluate certain RooAbsData-functions 
    */
   class IFuncData 

@@ -8,10 +8,8 @@
 // ============================================================================
 #include "Math/Vector3D.h"
 // ============================================================================
-/** @file Vector3DTypes.h
- *
+/** @file Ostap/Vector3DTypes.h
  *  3D vector typedefs
- *
  *  @author Juan PALACIOS
  *  @date   2005-11-21
  */

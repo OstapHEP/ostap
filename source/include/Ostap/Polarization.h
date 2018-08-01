@@ -13,7 +13,7 @@
 #include "Ostap/Vector4DTypes.h"
 #include "Ostap/Utils.h"
 // ============================================================================
-/** @file 
+/** @file Ostap/Polarization.h
  *  Collection of  functions to deal with polarization  axes
  *  @see  M.Beneke, M.Kramer, M.Vanttiner, Phys.Rev. D57 (1998) 4258
  *  @see https://doi.org/10.1103/PhysRevD.57.4258

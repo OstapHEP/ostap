@@ -13,7 +13,7 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
-    /** @class Lomont 
+    /** @class Lomont Ostap/Lomont.h
      *  The equality comparison of double numbers using as the metric the maximal 
      *  number of Units in the Last Place (ULP).
      *  It is a slightly modified version of very efficient implementation 

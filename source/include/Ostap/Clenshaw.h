@@ -11,13 +11,19 @@
 #include <utility>
 #include <algorithm>
 // ============================================================================
+/** @file Ostap/Clenshaw.h
+ *  Collection of Clenshaw's summation algorithms
+ *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
+ */
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
   namespace Math
   {
     // ========================================================================
-    /** Namespace with collection of Clenshaw summation algorithms 
+    /** @namespace Ostap::Math::Clenshaw
+     *  Namespace with collection of Clenshaw's summation algorithms 
      *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2015-08-06
@@ -90,6 +96,7 @@ namespace Ostap
         return std::make_pair ( p , q ) ;
       }
       // ======================================================================
+      /// Clenshaw algorithm for summation of monomial series (aka "Horner's rule")
       template <class CONTAINER>
       inline 
       std::pair<long double,long double>
@@ -465,6 +472,7 @@ namespace Ostap
     namespace detail
     {
       // ======================================================================
+      /// get the derivative 
       template <class TYPE, unsigned long N>
       struct derivative_ 
       {

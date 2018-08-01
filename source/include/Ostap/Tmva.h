@@ -23,6 +23,9 @@ class RooCategory ; // from RooFit
 namespace Ostap 
 {
   // ==========================================================================
+  /** @namespace Ostap::TMVA Ostap/Tmva.h 
+   *  collection of helper functions to deal with TMVA
+   */
   namespace TMVA 
   {
     // ========================================================================

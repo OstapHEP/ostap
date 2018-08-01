@@ -14,8 +14,7 @@
 #include "Ostap/IPower.hpp"
 #include "Ostap/Power.h"
 // ============================================================================
-/** @file
- *
+/** @file Ostap/Digit.h
  *  The collection of useful utilities for evaluation of 
  *  decimal digits for the unsigned integral values 
  *

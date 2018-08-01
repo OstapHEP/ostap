@@ -13,10 +13,8 @@
 // ==========================================================================
 #include "Math/Vector4D.h"
 // ==========================================================================
-/** @file Vector4DTypes.h
- *
+/** @file Ostap/Vector4DTypes.h
  *  4 vector typedefs
- *
  *  @author Juan PALACIOS
  *  @date   2005-11-21
  */

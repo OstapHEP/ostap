@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_BIT_H 
 #define OSTAP_BIT_H 1
@@ -14,7 +13,7 @@
 // ============================================================================
 #include "Ostap/TypeWrapper.h"
 // ============================================================================
-/** @file
+/** @file Ostap/Bit.h
  *
  *  The collection of utilities for evaluation of bits for 
  *  the unsigned integral values 

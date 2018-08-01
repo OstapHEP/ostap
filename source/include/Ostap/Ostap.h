@@ -71,7 +71,7 @@
 #include "Ostap/UStat.h"
 #include "Ostap/WStatEntity.h"
 // ============================================================================
-/** @namespace Ostap
+/** @namespace Ostap Ostap/Ostap.h
  *  The main namespace to keep all Ostap code 
  */
 namespace Ostap

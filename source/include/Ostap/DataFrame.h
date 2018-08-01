@@ -10,6 +10,10 @@
 // ==========================================================================
 // ROOT::ROOT
 // ============================================================================
+/** @file Ostap/DataFrame.h
+ *  the   first attemps to use ROOT (R,T)DataFrame
+ */
+// ============================================================================
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,14,0)
 namespace ROOT  { class         RDataFrame           ; }
 namespace Ostap { typedef ROOT::RDataFrame DataFrame ; }

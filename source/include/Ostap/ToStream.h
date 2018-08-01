@@ -17,7 +17,7 @@
 #include <sstream>
 #include <type_traits>
 // ============================================================================
-/** @file GaudiKernel/ToStream.h
+/** @file Ostap/ToStream.h
  *  implementation of various functions for streaming.
  *  this functionality is essential for usage of various types as property for
  *  the various Gaudi components

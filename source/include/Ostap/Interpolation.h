@@ -21,7 +21,7 @@ namespace Ostap
   namespace Math  
   {
     // ========================================================================
-    /** @namespace Ostap::Math::Interpolation
+    /** @namespace Ostap::Math::Interpolation Ostap/Interpolation.h
      *  Collection of simple utilities for various types of interpolation
      *  - straightforward Lagrange interpolation 
      *  - Neville interpolation 

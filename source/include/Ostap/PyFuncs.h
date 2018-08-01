@@ -14,10 +14,13 @@
 namespace Ostap 
 {
   // ==========================================================================
+  /** @namespace Ostap::Functions Ostap/PyFuncs.h
+   *  collection of special functions/functors 
+   */
   namespace  Functions 
   {
     // ========================================================================
-    /** @class PyFuncTree 
+    /** @class PyFuncTree  Ostap/PyFuncs.h
      *  Helper class to implemet "TTree-functions" in python
      *  @see Ostap::IFuncTree
      */

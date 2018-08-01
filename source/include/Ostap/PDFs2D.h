@@ -29,7 +29,7 @@ namespace Ostap
   namespace Models
   {
     // ========================================================================
-    /** @class Poly2DPositive
+    /** @class Poly2DPositive 
      *  Poly2DPositive polynomial
      *  @see Ostap::Math::Positive2D
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru

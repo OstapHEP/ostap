@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef LHCBMATH_LORENTZVECTORWITHERROR_H 
 #define LHCBMATH_LORENTZVECTORWITHERROR_H 1
@@ -28,9 +27,7 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
-    /** @class LorentzVectorWithError LHCbMath/LorentzVectorWithError.h
-     *  
-     *
+    /** @class LorentzVectorWithError Ostap/LorentzVectorWithError.h
      *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
      *  @date   2009-06-12
      */

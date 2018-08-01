@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_PYSELECTOR_H 
 #define OSTAP_PYSELECTOR_H 1
@@ -17,18 +16,11 @@ class TChain ;            // ROOT
 namespace Ostap
 {
   // ==========================================================================
-  /** @class Selector PySelector.h Analysis/PySelector.h
-   *
-   *  Helper class for implementation of "python TSelector"
-   *
-   * The fix has been kindly provided by Wim Lavrijsen
-   *
+  /** @class Selector PySelector.h Ostap/PySelector.h
+   *  Helper class for implementation of "python TSelector".
+   *  The fix has been kindly provided by Wim Lavrijsen
    *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
    *  @date   2011-01-21
-   * 
-   *                    $Revision$
-   *  Last modification $Date$
-   *                 by $Author$
    */
   class Selector : public  TPySelector
   {
@@ -54,7 +46,7 @@ namespace Ostap
 namespace Ostap
 {
   // ==========================================================================
-  /** @class Process
+  /** @class Process Ostap/PySelector.h
    *  Helper class to fix strange "feature" of (Py)ROOT:
    *     - ROOT.TTree  does have method <c>TTree.Process</c>  with TSelector as argument 
    *     - ROOT.TChain has *NO*  method <c>TChain.Process</c> with TSelector as argument 

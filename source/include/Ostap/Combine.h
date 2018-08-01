@@ -1,4 +1,3 @@
-//  $Id$ 
 // ============================================================================
 #ifndef OSTAP_COMBINE_H 
 #define OSTAP_COMBINE_H 1
@@ -16,6 +15,13 @@
 #include "Ostap/MatrixUtils.h"
 #include "Ostap/ValueWithError.h"
 #include "Ostap/SVectorWithError.h"
+// ============================================================================
+/** @file Ostap/Combine.h 
+ *  Helper utility to combine   correlated measurements 
+ *  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
+ *  @see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
+ *  @see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+ */  
 // ============================================================================
 namespace  Ostap
 {

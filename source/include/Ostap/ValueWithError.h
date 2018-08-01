@@ -16,7 +16,7 @@
 // ============================================================================
 #include "Ostap/StatusCode.h"
 // ============================================================================
-/** @file 
+/** @file Ostap/ValueWithError.h
  *  Collection of useful objects with associated "covariances".
  *  The concept has been stollen from Wouter Hulsbergen's lines 
  *  @author Vanya BELYAEV Ivane.Belyaev@itep.ru

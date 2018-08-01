@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 #ifndef ANALYSIS_PYSELECTORWITHCUTS_H 
 #define ANALYSIS_PYSELECTORWITHCUTS_H 1
@@ -21,9 +20,7 @@ namespace Ostap
   // ==========================================================================
   class Formula ;
   // ==========================================================================
-  /** @class PySelectorWithCuts Analysis/PySelectorWithCuts.h
-   *  
-   *
+  /** @class PySelectorWithCuts Ostap/PySelectorWithCuts.h
    *  @author Vanya Belyaev
    *  @date   2013-05-06
    */

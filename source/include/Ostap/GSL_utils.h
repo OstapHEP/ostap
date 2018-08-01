@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_GSL_UTILS_H 
 #define OSTAP_GSL_UTILS_H 1
@@ -9,6 +8,10 @@
 // ============================================================================
 #include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
+// =============================================================================
+/** @file Ostap/GLS_utils.h
+ *  utilities for GSL 
+ */
 // =============================================================================
 namespace Ostap
 {
@@ -43,16 +46,14 @@ namespace Ostap
 } //                                                     end of namespace Ostap
 // ============================================================================
 /// print operator 
-inline 
-std::ostream& operator<<( std::ostream& s , const gsl_vector& v ) 
+inline std::ostream& operator<<( std::ostream& s , const gsl_vector& v ) 
 { return Ostap::Utils::toStream ( v , s ) ; }
 // ============================================================================
 /// print operator 
-inline 
-std::ostream& operator<<( std::ostream& s , const gsl_matrix& m ) 
+inline std::ostream& operator<<( std::ostream& s , const gsl_matrix& m ) 
 { return Ostap::Utils::toStream ( m , s ) ; }
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================
 #endif // OSTAP_GSL_UTILS_H
 // ============================================================================

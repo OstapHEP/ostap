@@ -9,13 +9,16 @@
 #include <functional>
 #include <iterator>
 // ============================================================================
+/** @file Ostap/Differences.h
+ *  Collection of classes and functions to deal with the finite differences 
+ */
 namespace Ostap
 {
   // ==========================================================================
   namespace Math
   {
     // ========================================================================
-    /** @namespace Differences
+    /** @namespace Ostap::Math::Differences
      *  Collection of classes and functions to deal with the finite differences 
      *  @see https://en.wikipedia.org/wiki/Divided_differences 
      *  @author Vanya Belyaev

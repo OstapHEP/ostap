@@ -13,7 +13,7 @@ namespace Ostap
     /// use local error handler for ROOT 
     bool useErrorHandler ( const bool use = true ) ;
     // ========================================================================
-    /** @class ErrorSentry 
+    /** @class ErrorSentry Ostap/Utils.h
      *  Simple error handler for ROOT that converts error messages into exceptions
      *  @author Vanya Belyaev Ivan.Belayev@itep.ru
      *  @date   2016-12-10

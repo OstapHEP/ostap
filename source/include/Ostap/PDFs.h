@@ -27,7 +27,7 @@ using std::size_t ;
 namespace Ostap
 {
   // ==========================================================================
-  /** @namespace  Models PDFs.h Ostap/PDFs.h
+  /** @namespace  Ostap::Models Ostap/PDFs.h
    *
    *  Naturally "wide" models:
    *

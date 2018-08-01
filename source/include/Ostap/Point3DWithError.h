@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_POINT3DWITHERROR_H 
 #define OSTAP_POINT3DWITHERROR_H 1
@@ -15,7 +14,7 @@
 #include "Ostap/Vector3DWithError.h"
 #include "Ostap/SVectorWithError.h"
 // ============================================================================
-/** @file 
+/** @file Ostap/Point3DWithError.h
  *  Collection of useful objects with associated "covarinaces".
  *  The concept has been stollen from Wouter Hulsbergen's lines 
  *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl

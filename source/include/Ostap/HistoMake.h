@@ -1,4 +1,3 @@
-// $Id$
 // ===============================================================================
 #ifndef OSTAP_HISTOMAKE_H 
 #define OSTAP_HISTOMAKE_H 1
@@ -18,7 +17,7 @@ class RooAbsRealLValue ;
 namespace Ostap
 {
   // ==============================================================================
-  /** @class HistoMake
+  /** @class HistoMake  Ostap/HistoMake.h
    *  Helper class to "fix" the problem with "masked" 
    *  RooAbsData::createHistogram method
    *

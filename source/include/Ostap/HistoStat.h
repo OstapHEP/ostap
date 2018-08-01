@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_HSTATS_H
 #define OSTAP_HSTATS_H 1
@@ -19,7 +18,7 @@ namespace Ostap
   namespace Utils
   {
     // ========================================================================
-    /** @class HistoStat
+    /** @class HistoStat   Ostap/HistoStat.h
      *  The collection of trivial functions to access  the
      *  statistical information for the histograms
      *  @see Ostap::Utils::HistoStats 

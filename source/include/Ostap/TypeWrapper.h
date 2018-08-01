@@ -10,8 +10,8 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
-    /** @struct TypeWrapper 
-     *  Simple helepr routine to wrap the type 
+    /** @struct TypeWrapper Ostap/TypeWrapper.h
+     *  Simple helper routine to wrap the type 
      *  @author Juan PALACIOS juan.palacios@cern.ch
      *  @date 2006-10-26 
      */    

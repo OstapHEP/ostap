@@ -16,7 +16,7 @@ namespace Ostap
   namespace Utils 
   {
     // ========================================================================
-    /** @class Tee
+    /** @class Tee  Ostap/Tee.h
      *  Helper utility for "tee"
      *  @see Ostap::Utils::Mute 
      *  @author Vanya Belyaev

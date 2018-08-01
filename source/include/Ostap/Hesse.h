@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef LHCBMATH_HESSE_H 
 #define LHCBMATH_HESSE_H 1
@@ -20,10 +19,13 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
+    /** @namespace Ostap::Math::GLS  
+     *  GSL-specific functions 
+     */
     namespace GSL
     {
       // ======================================================================
-      /** @class Hesse
+      /** @class Hesse Ostap/Hesse.h
        *  evaluate the hessian for the function
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2012-05-27

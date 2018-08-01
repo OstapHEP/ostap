@@ -19,9 +19,7 @@
 #include "Ostap/PhaseSpace.h"
 // ============================================================================
 /** @file Ostap/Models.h
- *
  *  set of useful models
- *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */

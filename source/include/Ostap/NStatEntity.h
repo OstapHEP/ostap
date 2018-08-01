@@ -12,7 +12,7 @@
 namespace Ostap
 {
   // ========================================================================
-  /** @class NStatEntity LHCbMath/NStatEntity.h
+  /** @class NStatEntity Ostap/NStatEntity.h
    *  A good and efficient approximation to the running
    *  statistic for last N-events.Actually statiustic is calcualetd for 
    *  last n-events, where   N<= n < 2*N.

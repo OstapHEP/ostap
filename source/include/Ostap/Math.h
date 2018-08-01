@@ -18,17 +18,30 @@
 #include "Ostap/Lomont.h"
 #include "Ostap/Power.h"
 // ============================================================================
+/** @file Ostap/Math.h
+ *  collection of generic math functions and classes 
+ */
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
+  /** @namesapce Ostap::Math Math.h
+   *  collection of generic math functions and classes 
+   */
   namespace Math 
   {
     // ========================================================================
-    /// Parameters for numerical calculations (M.Needham)
+    // Parameters for numerical calculations (M.Needham)
+    // ========================================================================
+    /// high tolerance
     static const double hiTolerance    = 1e-40;
+    /// low  tolerance
     static const double lowTolerance   = 1e-20;
+    /// very loose tolerance
     static const double looseTolerance = 1e-5;
+    /// sqrt(12)
     static const double     sqrt_12 = 3.4641016151377546; // sqrt(12.)
+    /// 1/sqrt(12)
     static const double inv_sqrt_12 = 0.2886751345948129; // 1./sqrt(12.)
     // ========================================================================
     /** @var mULPS_float
@@ -97,12 +110,16 @@ namespace Ostap
     template <class TYPE>
     struct abs_less 
     {
+      // ======================================================================
+      /// abs(v1) < abs (v2) ?
       inline TYPE operator() 
       ( typename detail::param<const TYPE>::param_type v1 ,
         typename detail::param<const TYPE>::param_type v2 ) const 
-      { return m_eval ( std::fabs( v1 ) , std::fabs( v2 ) ) ; }
+      { return m_eval ( std::fabs ( v1 ) , std::fabs ( v2 ) ) ; }
+      // ======================================================================
       /// evaluator: 
       std::less<TYPE> m_eval ;
+      // ======================================================================
     } ;
     // ========================================================================
     /** @struct abs_greater
@@ -113,12 +130,16 @@ namespace Ostap
     template <class TYPE>
     struct abs_greater
     {
+      // ======================================================================
+      /// abs(v1) > abs(v2) ?
       inline TYPE operator() 
       ( typename detail::param<const TYPE>::param_type v1 ,
         typename detail::param<const TYPE>::param_type v2 ) const 
       { return m_eval ( std::fabs( v1 ) , std::fabs( v2 ) ) ; }
+      // ======================================================================
       /// evaluator: 
       std::greater<TYPE> m_eval ;
+      // ======================================================================
     } ;
     // ========================================================================
     /** return "min_by_abs"
@@ -177,6 +198,7 @@ namespace Ostap
     struct Equal_To 
     {
       // ======================================================================
+      /// the actual type 
       typedef typename detail::param<const TYPE>::param_type T ;
       // ======================================================================
       /// comparison
@@ -375,6 +397,7 @@ namespace Ostap
     struct Zero
     {
       // ======================================================================
+      /// parameter type 
       typedef typename detail::param<const TYPE>::param_type T ;
       /// comparison
       inline bool operator() ( T v ) const { return m_cmp ( v , 0 ) ; }
@@ -461,6 +484,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
+      ///  comparison
       inline bool operator () ( const std::vector<TYPE>& v ) const
       {
         /// empty vector or all elements are zeros 
@@ -479,6 +503,7 @@ namespace Ostap
     struct Small 
     {
       // ======================================================================
+      /// inner type 
       typedef  TYPE   Inner ;
       // ======================================================================
       // constructor with threshold 
@@ -505,6 +530,7 @@ namespace Ostap
     struct Small<std::vector<TYPE> > 
     {
       // ======================================================================
+      /// inner type 
       typedef TYPE Inner ;
       // ======================================================================
       // constructor with threshold 
@@ -524,6 +550,7 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
+      /// comparison 
       Small<TYPE> m_cmp ;
       // ======================================================================
     } ;
@@ -549,6 +576,7 @@ namespace Ostap
       // ======================================================================
       /// zero ?
       Zero    <TYPE> m_zero  {} ; // zero ?
+      /// eqiality ?
       Equal_To<TYPE> m_equal {} ; // equality ? 
       // ======================================================================
     } ;
@@ -573,8 +601,9 @@ namespace Ostap
       // ======================================================================      
     private :
       // ======================================================================
-      // the reference value
+      /// the reference value
       TYPE              m_b       ;
+      /// smaller ? 
       MuchSmaller<TYPE> m_smaller ;
       // ======================================================================
     } ;
@@ -612,7 +641,9 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
+      /// comparison
       std::greater_equal<TYPE>   m_geq   ; // ordering criteria
+      /// equality
       Equal_To<TYPE>             m_equal ; // equality criteria 
       // ======================================================================
     } ;  
@@ -1147,10 +1178,10 @@ namespace Ostap
      */
     template <typename T> 
     inline constexpr signed char signum ( T x , std::false_type /* is_signed */ ) 
-    { return T(0)< x; }    
+    { return T ( 0 ) < x; }    
     template <typename T> 
     inline constexpr signed char signum ( T x , std::true_type  /* is_signed */ ) 
-    { return ( T(0) < x ) - ( x < T(0) ); }
+    { return ( T ( 0 ) < x ) - ( x < T ( 0 ) ); }
     template <typename T>
     inline constexpr signed char signum ( T x ) 
     { return signum ( x , std::is_signed<T>() ) ; }
@@ -1187,7 +1218,7 @@ namespace Ostap
   // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================
 #endif // OSTAP_MATH_H
 // ============================================================================

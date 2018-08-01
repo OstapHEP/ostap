@@ -8,11 +8,9 @@
 // ============================================================================
 #include <cmath>
 // ============================================================================
-/** @file
- *
- *  This file was originally taken from the LoKi project - 
+/** @file Ostap/Power.h
+ *  This file is taken from the LoKi project - 
  *    "C++ ToolKit  for Smart and Friendly Physics Analysis"
- *
  *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
  *  @date 2001-01-23 
  */

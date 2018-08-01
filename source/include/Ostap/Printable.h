@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_PRINTABLE_H 
 #define OSTAP_PRINTABLE_H 1
@@ -13,6 +12,11 @@
 // forward declaration 
 // ============================================================================
 class RooPrintable ;  // RooFit 
+// ============================================================================
+/** @file Ostap/Printable.h
+ *  utilities to deal with class RooPrintable
+ *  @see  RooPrintable
+ */   
 // ============================================================================
 namespace Ostap
 {

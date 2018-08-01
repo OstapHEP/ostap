@@ -18,7 +18,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/MatrixUtils.h"
 // ============================================================================
-/** @file 
+/** @file Ostap/MatrixTransforms.h
  *  The collection of useful utils to minimize the conversion from 
  *  geometry&kinematical vectors into linear algebra vectors 
  *   In particular it includes:

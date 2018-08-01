@@ -15,7 +15,7 @@ namespace Ostap
   namespace Utils 
   {
     // ========================================================================
-    /** @class Mute Mute.h Analysis/Mute.h
+    /** @class Mute Ostap/Mute.h
      *  Helper utility to mute output (or redirect it to the file)
      *  @see Ostap::Utils::Tee
      *  @author Vanya Belyaev

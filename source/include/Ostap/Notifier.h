@@ -17,7 +17,7 @@ namespace  Ostap
   namespace  Utils
   {
     // ========================================================================
-    /** @class Notifier
+    /** @class Notifier Ostap/Notifier.h
      *  Local helper class to keep the proper notifications for TTree
      *  @date 2013-10-13 
      *  @author Vanya BELYAEV Ivan.Brlyaev@itep.ru

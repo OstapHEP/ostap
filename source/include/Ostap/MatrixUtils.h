@@ -24,7 +24,7 @@
 // ============================================================================
 #include "Ostap/Math.h"
 // ============================================================================
-/** @file
+/** @file Ostap/MastrixUtils.h
  *  The collection of functions for manipulation with matrices and vectors.
  *  In particular it includes
  *     - (re)setting all elements of matrices and vectors

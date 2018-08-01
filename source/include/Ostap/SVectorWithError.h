@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_SVECTORWITHERROR_H 
 #define OSTAP_SVECTORWITHERROR_H 1
@@ -24,7 +23,7 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
-    /** @class SVectorWithError
+    /** @class SVectorWithError Ostap/SVectorWithError.h
      *  Simple class with represent SVector with 
      *  the associated covariance matrix
      *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl

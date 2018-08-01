@@ -13,7 +13,7 @@
 #include "Ostap/SVectorWithError.h"
 #include "Ostap/MatrixUtils.h"
 // ============================================================================
-/** @file 
+/** @file Ostap/SVectorWithError.icpp
  *  The implementation file for class Ostap::Math::SVectorWithError
  *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
  *  @date 2009-06-13

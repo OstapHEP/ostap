@@ -14,7 +14,7 @@ namespace Ostap
   namespace Math 
   {
     // ==========================================================================
-    /** @class NSphere 
+    /** @class NSphere Ostap/NSphere.h
      *  "N-sphere" of parameters 
      *  @author Vanya Belyaev
      *  @date   2014-01-21

@@ -21,6 +21,11 @@
 // ============================================================================
 #include "Ostap/StatusCode.h"
 // ============================================================================
+/** @file Ostap/EigenSystem.h
+ *  Helper class with allows to find eigenvalues and eigenvector
+ *  for symmetrical MathLib matrices ("SMatrix") using GSL library
+ */
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -30,11 +35,9 @@ namespace Ostap
     namespace GSL
     {      
       // ======================================================================
-      /** @class EigenSystem EigenSystem.h
-       *  
+      /** @class EigenSystem Ostap/EigenSystem.h
        *  Helper class with allows to find eigenvalues and eigenvector
        *  for symmetrical MathLib matrices ("SMatrix") using GSL library
-       *
        *  @author Vanya BELYAEV
        *  @date   2006-05-24
        */
