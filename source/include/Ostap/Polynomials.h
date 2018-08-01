@@ -236,15 +236,7 @@ namespace Ostap
     public: // roots & extrema 
       // ======================================================================
       /// roots 
-      static inline const std::array<double,3>& roots   () 
-      {
-        static const std::array<double,3> s_roots = {
-          - double ( std::cos ( ( 0 + 1 ) * M_PIl / ( 3 + 1 ) ) ) ,
-          - double ( std::cos ( ( 1 + 1 ) * M_PIl / ( 3 + 1 ) ) ) ,
-          - double ( std::cos ( ( 2 + 1 ) * M_PIl / ( 3 + 1 ) ) ) } ;
-        //
-        return s_roots ;
-      }
+      static inline const std::array<double,3>& roots   () ;
       // ======================================================================
     } ;
     // ========================================================================
