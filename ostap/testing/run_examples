@@ -1,0 +1,18 @@
+#!/bin/bash
+
+rm -rf work  
+mkdir  work 
+
+echo $PWD
+
+cp   $OSTAP_DIR/testing/rootlogon.C  work
+
+find $OSTAP_DIR/examples -name '*.cpp' | parallel "cp {} work"
+find $OSTAP_DIR/examples -name '*.C'   | parallel "cp {} work"
+find $OSTAP_DIR/examples -name '*.py'  | parallel "cp {} work"
+
+cd work
+
+ls *.cpp | parallel --files --results results --group 'root.exe -q {}++' 
+ls *.C   | parallel --files --results results --group 'root.exe -q {}++' 
+ls *.py  | parallel --files --results results --group 'python {} '
