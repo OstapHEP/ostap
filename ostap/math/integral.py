@@ -1133,7 +1133,7 @@ class Integrate2D_Y(IntegralBase) :
 # =============================================================================
 ## @class Integrate3D_X
 # helper class to perform (partial) integration of 3D function
-# \f{displaymth} f(y,z) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y,z) dx \f}
+# \f{displaymath} f(y,z) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y,z) dx \f}
 # @code
 # fun3d  = ... ## 2D-function
 # fyz     = Integral2D_X( fun3d , xmin = 0 , xmax = 1 )

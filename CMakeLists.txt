@@ -17,7 +17,7 @@ set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 ### where to put the libraries
-set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
+set(LIBRARY_OUTPUT_PATH     "${CMAKE_BINARY_DIR}/lib")
 ### where to put the executables
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
@@ -27,3 +27,14 @@ add_subdirectory(source)
 # first we can indicate the documentation build as an option and set it to ON by default
 option(BUILD_DOC "Build documentation" ON)
 
+find_program(DOXYGEN_EXECUTABLE NAMES doxygen)
+if ( EXISTS "${DOXYGEN_EXECUTABLE}" ) 
+ set(DOXYGEN_IN  ${CMAKE_CURRENT_SOURCE_DIR}/docs/OstapDoxy.cfg.in)
+ set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/OstapDoxy.cfg)
+ configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+ add_custom_target(doxy_doc  
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen (could be *very* time consuming)"
+        VERBATIM )
+endif() 

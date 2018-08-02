@@ -67,7 +67,7 @@ namespace Ostap
     /** @class Choose 
      *  Binomial coefficents  \f$ C^n_k = \frac{n!}{k!(n-k)!} \$
      *  computed recursively as \f$ C^{n-1}_{k-1} + C^{n-1}_{k}\f$ with
-     *  with initial/b oundary conditions 
+     *  with initial/boundary conditions 
      *  \f$ C^n_0 = 1 \f$  and \f$C^n_n=1\f$
      */
     template <unsigned short N, unsigned short K>

@@ -73,7 +73,7 @@ MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
-#---Create a shared library with geneated dictionary
+#---Create a shared library 
 add_library(ostap SHARED src/format.cpp
                          src/gauss.cpp
                          src/BSpline.cpp
@@ -154,7 +154,3 @@ target_link_libraries(ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES})
 set_target_properties(ostap ostapDict PROPERTIES
   SUFFIX ".so"
   COMPILE_DEFINITIONS __MATH_LONG_DOUBLE_CONSTANTS)
-# #---Create  a main program using the library
-# add_executable(Main MainEvent.cxx)
-# target_link_libraries(Main Event)
-

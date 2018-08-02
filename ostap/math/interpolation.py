@@ -3,7 +3,12 @@
 # =============================================================================
 ## @file ostap/math/interpolation.py
 #  Module with some useful utilities for dealing with interpolation.
-#  In particular, it provdies very efficient Barycentric Lagrange interpolation
+#
+#  In particular, it providies very efficient Barycentric Lagrange interpolation
+#  - it takes O(n)   flops for initialization with Chebyshev/Lobatto or Uniform abscissas 
+#  - it takes O(n^2) flops for initialization with arbitrary interpolation      abscissas
+#  - it takes O(n)   flops for evaluation! It is very fast!
+#
 #  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
 #       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
 #       ISSN (print): 0036-1445
@@ -11,22 +16,23 @@
 #  @see https://doi.org/10.1137/S0036144502417715
 #  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
 #  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-#  - it takes O(n)   flops for initialization with Chebyshev/Lobatto or Uniform abscissas 
-#  - it takes O(n^2) flops for initialization with arbitrary interpolation      abscissas
-#  - it takes O(n)   flops for evaluation! It is very fast! 
 #  @see Ostap::Math::Barycentric
 #  @see Ostap::Math::Newton
+#
 #  Straightforward Lagrange and Neville algorithm are also provided
 #  - Both are rather slow: O(n^2) flops for evaluation,  while Neville is a bit faster 
-#  - Lagrange algorithm is not stable numerically,  and Neville algorithm is more stable 
+#  - Lagrange algorithm is not stable numerically,  and Neville algorithm is more stable
+#
 #  @see Ostap::Math::Interpolation
 #  @see Ostap::Math::Neville 
 #  @see Ostap::Math::Lagrange 
 #  @see Ostap::Math::Newton 
 #  @see Ostap::Math::Barycentric
+#
 #  For  completeness see also:
 #  - interpolation with Bersntein polynomials using on Newton-Bernstein algorithm
-#  - interpolation with B-splines 
+#  - interpolation with B-splines
+#
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2018-07-22
 # =============================================================================

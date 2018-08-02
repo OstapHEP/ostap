@@ -1,0 +1,28 @@
+PROJECT_NAME         = "ostap @OSTAP_VERSION@"
+OUTPUT_DIRECTORY     = @CMAKE_CURRENT_BINARY_DIR@/doxygen_doc 
+GENERATE_TAGFILE     = ostap.tag
+
+HTML_HEADER          = @CMAKE_CURRENT_SOURCE_DIR@/docs/OstapHeader.html
+HTML_FOOTER          = @CMAKE_CURRENT_SOURCE_DIR@/docs/OstapFooter.html
+
+#INPUT               = ../source/src/ ../source/include/Ostap
+#FILE_PATTERNS       = *.h *.cpp 
+
+
+## python source  
+INPUT                = @CMAKE_CURRENT_SOURCE_DIR@/ostap
+## C++ source  
+INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/src 
+INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/include  
+
+FILE_PATTERNS        = *.py *.cpp *.h *.C 
+
+RECURSIVE            = YES 
+
+# Following for Latex formulas
+EXTRA_PACKAGES      += times
+EXTRA_PACKAGES      += amsmath
+
+BUILTIN_STL_SUPPORT  = YES
+
+

@@ -435,13 +435,15 @@ def inverse_polynomial ( a , b , *other ) :
 
 # =============================================================================
 ## trivial bisection method
-#  @see https://en.wikipedia.org/wiki/Bisection_method
 #  @code
+#
 #  xa , xb = ...
 #  fun     = ...
 #  a  , b  = Point ( xa  , fun ( xa ) ) , Point ( xb  , fun ( xb ) )
 #  a , n   = bisection ( fun , a , b )
+#
 #  @endcode 
+#  @see https://en.wikipedia.org/wiki/Bisection_method
 def bisection ( fun , a  , b , args = () ) :
     """Trivial bisection method
 
@@ -483,11 +485,13 @@ def bisection ( fun , a  , b , args = () ) :
 
 # =============================================================================
 ## try to find next approximation using Aitken delta-squared process
-#  @see https://en.wikipedia.org/wiki/Aitken%27s_delta-squared_process
 #  @code
+#
 #  xcurr , xm1 , xm2 = ...
-#  r = aitken_delta2 ( xcurr , xm1 , xm2 ) 
+#  r = aitken_delta2 ( xcurr , xm1 , xm2 )
+#
 #  @endcode 
+#  @see https://en.wikipedia.org/wiki/Aitken%27s_delta-squared_process
 def aitken_delta2 ( xl , xl1 , xl2 , *others ) :
     """Try to find next approximation to the root using Aitken delta-squared process.
     
@@ -527,12 +531,10 @@ def aitken_delta2 ( xl , xl1 , xl2 , *others ) :
 # =============================================================================
 ## create 'counted' function to know number of function calls
 #  @code
+#
 #  fun = ...
 #  func = counted ( fun ) ## use as function
-# 
-#  # alternatively use it as decorator:
-#  @counted
-#  def fun2 ( ...  ) : return ...
+#
 #  @endcode
 def counted ( f ):
     """create 'counted' function to knon number of function calls
@@ -543,8 +545,6 @@ def counted ( f ):
     >>> fun = ...
     >>> func = counted ( fun ) ## use as function
 
-    >>> @counted
-    >>> def fun2 ( ...  ) : return ...
     """
     def wrapped ( *args, **kwargs ):
         wrapped.calls += 1
@@ -554,9 +554,10 @@ def counted ( f ):
 
 # ========================================================================================
 ## @class RootResults
-#  helper class to keep results of root-finding preocedure
-#  it is very similar(almost clone) of corresponding class
-#  <code>RootResults<code> from <code>scipy.optimize.zeros</code>
+#  Helper class to keep results of root-finding preocedure
+# 
+#  It is very similar (almost clone) of corresponding class
+#  <code>RootResults</code> from <code>scipy.optimize.zeros</code>
 class RootResults ( object ):
 
     __slots__ = ( 'converged'            ,
