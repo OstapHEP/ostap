@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file utils.py
+## @file ostap/fitting/utils.py
 #  Set of useful technical utilities to build various fit models 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
@@ -317,15 +317,15 @@ class MakeVar ( object ) :
 # =============================================================================
 ## simple convertor of 1D-histo to data set
 #  @code
-#  h1   = ...
-#  dset = H1D_dset ( h1 )
+#  h   = ...
+#  dset = H1D_dset ( h )
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H1D_dset(MakeVar) :
     """Simple convertor of 1D-histogram into data set
-    >>> h1   = ...
-    >>> dset = H1D_dset ( h1 )
+    >>> h   = ...
+    >>> dset = H1D_dset ( h )
     """
     def __init__ ( self            , 
                    histo           ,

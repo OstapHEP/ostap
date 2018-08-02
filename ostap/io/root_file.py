@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file roo_file.py
+## @file ostap/io/roo_file.py
 #  Module with decoration of TFile objects for efficient use in python
 #  It provides TFile (well, actually any TDirectory) with python-like protocol
 #  @code
@@ -130,7 +130,7 @@ def _rd_setitem_ ( rdir , name , tobj ) :
 #  rdir   = ...    ## some writable ROOT directory
 #  tnamed = ...    ## some named object
 #  tnamed >> rdir  ## write it 
-#  @endcore 
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2016-06-03
 def _rd_rrshift_ ( rdir , tnamed ) :
@@ -154,7 +154,7 @@ def _rd_rrshift_ ( rdir , tnamed ) :
 #  rdir   = ...    ## some writable ROOT directory
 #  tnamed = ...    ## some named object
 #  tnamed >> rdir  ## write it 
-#  @endcore 
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2016-06-03
 def _tnamed_rshift_ ( tnamed , rdir ) :

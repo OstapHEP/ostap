@@ -1069,22 +1069,14 @@ namespace Ostap
       // ======================================================================
       /** get the integral over 2D-region
        *  \f[ x_{min}<x<x_{max}, y_{min}<y<y_{max}\f]
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
        */
       double integral   () const ;
       /** get the integral over X  for given Y
        *  @param y  (INPU) y-value
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
        */
       double integrateX ( const double y ) const ;
       /** get the integral over Y  for given X
        *  @param x  (INPU) y-value
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
        */
       double integrateY ( const double x ) const ;
       // ======================================================================
@@ -1219,23 +1211,15 @@ namespace Ostap
       // ======================================================================
       /** get the integral over 2D-region
        *  \f[ x_{min}<x<x_{max}, y_{min}<y<y_{max}\f]
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
        */
       double integral   () const { return 1 ; }
       /** get the integral over X  for given Y
-       *  @param y  (INPU) y-value
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
+       *  @param y  (INPUT) y-value
        */
       double integrateX ( const double y ) const 
       { return m_spline.integrateX ( y  ) ; }      
       /** get the integral over Y  for given X
-       *  @param x  (INPU) y-value
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
+       *  @param x  (INPUT) y-value
        */
       double integrateY ( const double x ) const 
       { return m_spline.integrateY ( x  ) ; }
@@ -1354,12 +1338,12 @@ namespace Ostap
        */
       double integral   () const { return  1 ; }
       /** get the integral over X  for given Y
-       *  @param y  (INPU) y-value
+       *  @param y  (INPUT) y-value
        */
       double integrateX ( const double y ) const 
       { return m_spline.integrateX ( y ) ; }      
       /** get the integral over Y  for given X
-       *  @param x  (INPU) y-value
+       *  @param x  (INPUT) y-value
        */
       double integrateY ( const double x ) const 
       { return m_spline.integrateY ( x ) ; }      
@@ -1473,7 +1457,7 @@ namespace Ostap
     /** get abscissas of crossing points of the control polygon with x-axis
      *  @param  b     (INPUT) bernstein polynomial
      *  @param formal (INPUT) get all formal crossing-points 
-     *  @reutrn abscissas of crossing points of the control  polygon
+     *  @return abscissas of crossing points of the control  polygon
      */
     std::vector<double> 
     crossing_points  ( const Ostap::Math::BSpline& b              , 
@@ -1496,7 +1480,7 @@ namespace Ostap
      *  @param order (INPUT) the order of spline 
      *  @param knots (INPUT) the vector of knots 
      *  @param pars  (INPUT) the vector of control points 
-     *  @return the valeu of b-spline at point x 
+     *  @return the value of b-spline at point x 
      */
     double deboor
     ( const double               x     ,      

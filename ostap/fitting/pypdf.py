@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file pypdf.py
+## @file ostap/fitting/pypdf.py
 #  Very specific helper class PyPDF to implement "pythonic" PDF for RooFit
 #  - Typical usage:
 #  @code
@@ -149,7 +149,7 @@ else                       : logger = getLogger ( __name__              )
 #           s  = float ( varlist[2] ) 
 #           dx = ( x - m ) / s
 #           return math.exp ( -0.5 * dx * dx ) * self.norm / s
-#   @endcode
+#  @endcode
 #
 # Note:
 #  - 1. The double inheritance pattern: It is not mandatory, but it allows to
@@ -339,7 +339,7 @@ class PyPDF (object) :
         return self.pdf.intCode ()
 
     # =================================================================================
-    ## Safe shortcut for RooAbsPdf.matchArgs ( allDeps , analDeps , *vars ) 
+    ## Safe shortcut for <code>RooAbsPdf.matchArgs ( allDeps , analDeps , *vars )</code> 
     def matchArgs ( self , *vars ) :
         """Safe shortcut for RooAbsPdf.matchArgs ( allDeps , analDeps , *vars )
         """

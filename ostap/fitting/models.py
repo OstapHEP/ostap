@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file models.py
+## @file ostap/fitting/models.py
 #
 #  Set of useful PDFs for various 1D and 2D fits
 #  It includes

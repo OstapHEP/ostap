@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/frames/frames.py
 #  Module with decoration of TDataFrame objects for efficient use in python
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-06-16

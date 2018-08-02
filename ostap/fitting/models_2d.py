@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file models_2d.py
+## @file ostap/fitting/models_2d.py
 #  Smooth non-factorizable 2D-models to describe background distribtions
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
@@ -48,7 +48,7 @@ class PolyBase2(PDF2,Phases) :
 # =============================================================================
 ## @class PolyPos2D_pdf
 #  positive polynomial in 2D:
-#  \f$  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{\ij} B^n_i(x) B^k_j(y) \f$,
+#  \f{displaymath}  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y) \f},
 #  where \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial 
 #  @see Ostap::Models::Poly2DPositive
 #  @see Ostap::Math::Poly2DPositive
@@ -117,7 +117,7 @@ models.append ( PolyPos2D_pdf )
 # =============================================================================
 ## @class PolyPos2Dsym_pdf
 #  Positive symetric polynomial in 2D:
-#  \f$  f(x,y) = \sum^{i=n}_{i=0}\sum{j=n}_{j=0} a^2_{\ij} B^n_i(x) B^n_j(y) \f$,
+#  \f{displaymath} f(x,y) = \sum^{i=n}_{i=0}\sum{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y) \f},
 #  where \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial and
 #  \f$a_{ij} = a_{ji}\f$
 #  @see Ostap::Models::Poly2DSymPositive
@@ -791,7 +791,7 @@ models.append ( ExpoPol2Dsym_pdf )
 # =============================================================================
 ## @class Spline2D_pdf
 #  positive spline in 2D:
-#  \f$  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{\ij} M^n_i(x) M^k_j(y) \f$,
+#  \f{displaymath}  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{ij} M^n_i(x) M^k_j(y) \f},
 #  where \f$ B^n_i(x)\f$ denotes the M-splines  
 #  @see Ostap::Models::Spline2D
 #  @see Ostap::Math::Spline2D
@@ -847,7 +847,7 @@ models.append ( Spline2D_pdf )
 # =============================================================================
 ## @class Spline2Dsym_pdf
 #  symmetric positive spline in 2D:
-#  \f$  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{\ij} M^n_i(x) M^k_j(y) \f$,
+#  \f{displaymath}  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{ij} M^n_i(x) M^k_j(y) \f},
 #  where \f$ B^n_i(x)\f$ denotes the M-splines  
 #  @see Ostap::Models::Spline2DSym
 #  @see Ostap::Math::Spline2DSym

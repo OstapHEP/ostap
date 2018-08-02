@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file selectors.py
+# @file ostap/fitting/selectors.py
 # 
 # Helper module to fix a problems in communication of
 # <c>TTree/TChain::Process</c> and <c>TPySelector</c>.

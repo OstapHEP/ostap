@@ -278,7 +278,7 @@ Ostap::Math::Polarization::angles
   return { cs[2] , std::atan2 ( cs[1] , cs[0] ) } ;
 }
 // ============================================================================
-/** get the angles \$ (\cos \theta,\phi)\$ for the particle 
+/*  get the angles \$f(\cos \theta,\phi)\f$ for the particle 
  *  in the rest frame of particle m,  and the beam-momenta p1& p2  
  *  @param p the particle
  *  @param f the frame 
@@ -286,7 +286,7 @@ Ostap::Math::Polarization::angles
  *  @param p1 4-momenta of the first colliding particle
  *  @param p2 4-momenta of the second colliding particle
  *  @param madison use Madison convention?
- *  @return  \$ (\cos \theta,\phi)\$ structure
+ *  @return  \f$ (\cos \theta,\phi)\f$ structure
  */
 // ============================================================================
 Ostap::Math::Polarization::Angles 

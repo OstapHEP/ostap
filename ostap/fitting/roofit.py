@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/fitting/roofit.py
 #  Module with decoration of asome RooFit objects for efficient use in python
 #  - iterators  for RooArgList
 #  - iterators  for RooArgSet

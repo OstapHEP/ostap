@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file efficiency.py
+## @file ostap/fitting/efficiency.py
 #  Set of useful basic utilities to fit "efficiency" 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
@@ -25,10 +25,10 @@ from   ostap.fitting.fit3d import PDF3, Generic3D_pdf
 # =============================================================================
 ## @class Efficiency1D
 #  Helper class  to get get the efficiency using unbinned fit and ROOT.RooEfficiency class
-#  @attenion this an internal class, not to be used directly!
+#  @attention this an internal class, not to be used directly!
 class Efficiency ( object ) :
     """ Helper class to get the efficiency using unbinned fit and ROOT.RooEfficiency class
-    - attenion : this an internal class, not to be used directly!
+    - attention : this an internal class, not to be used directly!
     """
     def __init__  ( self              ,
                     name              ,

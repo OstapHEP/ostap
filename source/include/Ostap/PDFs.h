@@ -1210,7 +1210,7 @@ namespace Ostap
     /** @class Needham
      *  The special parametrization by Matthew NEEDHAM of
      *  ``Crystal Ball-function'' nicely suitable for \f$J/\psi\f$-peak
-     *  @thank Matthew Needham
+     *
      *  @see Ostap::Math::Needham
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-05-13
@@ -4802,7 +4802,7 @@ namespace Ostap
      *  - \f$ z \equiv -\log(x)\f$, then \f$ F(z) = E(x) = G(z, -log(\tau) , 1 ) \f$.
      *  As a direct sequence,  a sum of exponential componets is transformed to 
      *  a sum of ``peak-like'' Gumbel  stuctures
-     *  @seee Ostap::Math::Gumbel
+     *  @see Ostap::Math::Gumbel
      */
     class  Gumbel : public RooAbsPdf 
     {
@@ -4876,7 +4876,7 @@ namespace Ostap
      *  \f$ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f$, where 
      *  \f$ y \equiv \frac{x-x_0}{\lambda}\f$
      *  @see https://en.wikipedia.org/wiki/Weibull_distribution
-     *  @seee Ostap::Math::Weibull
+     *  @see Ostap::Math::Weibull
      */
     class Weibull : public RooAbsPdf 
     {

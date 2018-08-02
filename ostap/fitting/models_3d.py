@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file models_3d.py
+## @file ostap/fitting/models_3d.py
 #  Smooth non-factorizable 3D-models to describe background distribtions
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2017-11-20

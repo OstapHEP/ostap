@@ -24,7 +24,8 @@
 #include "local_gsl.h"
 #include "gauss.h"      
 // ============================================================================
-/** @implmentation file for classed form the file Ostap/Peaks.h
+/** @file 
+ *  implmentation file for classes from the file Ostap/Peaks.h
  *  @author 
  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
  *  @date 2010-04-19

@@ -29,12 +29,18 @@ option(BUILD_DOC "Build documentation" ON)
 
 find_program(DOXYGEN_EXECUTABLE NAMES doxygen)
 if ( EXISTS "${DOXYGEN_EXECUTABLE}" ) 
+ find_program (DOT_EXECUTABLE dot)
+ if ( EXISTS "${DOT_EXECUTABLE}" )
+ set (HAVE_DOT YES)
+ else() 
+ set (HAVE_DOT NO)
+ endif()
  set(DOXYGEN_IN  ${CMAKE_CURRENT_SOURCE_DIR}/docs/OstapDoxy.cfg.in)
  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/OstapDoxy.cfg)
- configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+ configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)              
  add_custom_target(doxy_doc  
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen (could be *very* time consuming)"
-        VERBATIM )
+        VERBATIM)
 endif() 

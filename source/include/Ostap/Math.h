@@ -25,7 +25,7 @@
 namespace Ostap
 {
   // ==========================================================================
-  /** @namesapce Ostap::Math Math.h
+  /** @namespace Ostap::Math Math.h
    *  collection of generic math functions and classes 
    */
   namespace Math 

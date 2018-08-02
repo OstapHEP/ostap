@@ -1574,10 +1574,10 @@ namespace Ostap
       // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y,z) \mathrm{d}x\f]
-       *  @param x     variable
+       *  @param y     variable
        *  @param z     variable
-       *  @param ylow  low  edge in y
-       *  @param yhigh high edge in y
+       *  @param xlow  low  edge in x
+       *  @param xhigh high edge in x
        */
       double integrateX ( const double y    ,
                           const double z    ,                          
@@ -1585,10 +1585,10 @@ namespace Ostap
       { return m_bernstein.integrateX ( y ,  z , xlow , xhigh ) ; }
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
-       *  @param y     variable
+       *  @param x     variable
        *  @param z     variable
-       *  @param xlow  low  edge in x
-       *  @param xhigh high edge in x
+       *  @param ylow  low  edge in y
+       *  @param yhigh high edge in y
        */
       double integrateY ( const double x    ,
                           const double z    ,
@@ -1739,9 +1739,9 @@ namespace Ostap
      *  to be non-negative and symmetric for \f$ x \leftrightarrow y\f$ interchange 
      *  over the  defined range      
      *  \f[  P(x,y,z) = \sum_{i,j,k} a_{ijk}B^{n}_i(x) B^{n}_j(y) B^{n_z}_k(z)\f] 
-     *  where all coefficients \f$a_{ijk}\f$ are:
+     *  where all coefficients \f$ a_{ijk} \f$ are:
      * - non-negative: \f$ a_{ijk}\ge0 \f$
-     * - symmetric for \f$ x \leftrightarrow y\f$ interchange: f$ a_{ijk}=a_{jik}\f$
+     * - symmetric for \f$ x \leftrightarrow y\f$ interchange: \f$ a_{ijk}=a_{jik}\f$
      * - constrainted: \f$ \sum_{i,j,k} a_{ijk}=1 \f$ 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2017-11-14

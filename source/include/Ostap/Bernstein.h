@@ -931,7 +931,7 @@ namespace Ostap
     /** get abscissas of crosssing point of the control polygon 
      *  for Bernstein polynomial
      *  @param  b bernstein polynomial
-     *  @reutrn abscissas of crossing points of the control  polygon
+     *  @return abscissas of crossing points of the control  polygon
      */
     std::vector<double> 
     crossing_points  ( const Ostap::Math::Bernstein& b ) ;

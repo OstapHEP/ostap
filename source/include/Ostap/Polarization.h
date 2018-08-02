@@ -124,7 +124,7 @@ namespace Ostap
        *  @param p1 4-momenta of the first colliding particle
        *  @param p2 4-momenta of the second colliding particle
        *  @param madison use Madison convention?
-       *  @return  \$ (\cos \theta,\phi)\$ structure
+       *  @return  \f$ (\cos \theta,\phi)\f$ structure
        */
       static Cosines cosines
       ( const Ostap::LorentzVector& p                                    , 
@@ -134,17 +134,17 @@ namespace Ostap
         const Ostap::LorentzVector& beam2                                ,
         const UseMadisonConvention  madison = UseMadisonConvention{true} ) ;
       // =====================================================================
-      /** get the angles \$ (\cos \theta,\phi)\$ for the particle 
+      /** get the angles \f$(\cos\theta,\phi)\f$ for the particle 
        *  in the defined frame
        *  @param p the particle
        *  @param f the frame 
-       *  @return  \$ (\cos \theta,\phi)\$ structure
+       *  @return  \f$(\cos\theta,\phi)\f$ structure
        */
       static Angles angles
       ( const Ostap::LorentzVector& p , 
         const Frame&                f ) ;
       // ====================================================================
-      /** get the angles \$ (\cos \theta,\phi)\$ for the particle 
+      /** get the angles \f$(\cos \theta,\phi)\f$ for the particle 
        *  in the rest frame of particle m,  and the beam-momenta p1& p2  
        *  @param p the particle
        *  @param f the frame 
@@ -152,7 +152,7 @@ namespace Ostap
        *  @param p1 4-momenta of the first colliding particle
        *  @param p2 4-momenta of the second colliding particle
        *  @param madison use Madison convention?
-       *  @return  \$ (\cos \theta,\phi)\$ structure
+       *  @return  \f$ (\cos \theta,\phi)\f$ structure
        */
       static Angles angles
       ( const Ostap::LorentzVector& p                                    , 
@@ -176,8 +176,8 @@ namespace Ostap
     /** simple function which evaluates the magnitude of 3-momentum
      *  of particle "v" in the rest system of particle "M"
      *
-     *  \f$ \left|\vec{p}\right| =
-     *     \sqrt{  \frac{\left(v\cdot M\right)^2}{M^2} -v^2} \f$
+     *  \f{displaymath} \left|\vec{p}\right| =
+     *     \sqrt{  \frac{\left(v\cdot M\right)^2}{M^2} -v^2} \f}
      *
      *  Note that this is clear Lorentz invarinat expresssion.
      *
@@ -210,8 +210,7 @@ namespace Ostap
                         const Ostap::LorentzVector& M ) ;
     // =======================================================================
     /**  simple function for evaluation of the euclidiam norm
-     *  for LorentzVectors
-     *  (E**2+Px**2+Py**2+Pz**2)
+     *  for LorentzVectors (E**2+Px**2+Py**2+Pz**2)
      *  @param vct the vector
      *  @return euclidian norm squared
      *  @date 2006-01-17

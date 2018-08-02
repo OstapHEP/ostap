@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file signals.py
+## @file ostap/fitting/signals.py
 #
 #  Set of useful PDFs for various ``signal'' 1D and 2D fits
 #  It includes
@@ -9,7 +9,7 @@
 #  - some PDF to describe "wide" peaks: BreitWigner,LASS, Bugg, Flatte, ...
 #  - some useful PDFs to describe smooth background: phase space ;
 #    expo times polynomial; phase space times polynomial, ...
-#  - set of smooth non-facrorizeable model for 2D fits 
+#  - set of smooth non-facrorizable model for 2D fits 
 #
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
@@ -429,14 +429,13 @@ models.append ( CB2_pdf )
 ## @class Needham_pdf
 #  Needham function: specific parameterisation of Crystal Ball function with
 #   - \f$ n = 1 \f$  
-#   - \f$ \alpha(\sigma) = a_0 + \sigma\times (a_1+\sigma \times a_2)
+#   - \f$ \alpha(\sigma) = a_0 + \sigma\times (a_1+\sigma \times a_2) \f$
 #  The function is very well sutable to fit
 #  \f$J/\psi \rightarrow \mu^+\mu^-\f$,
 #  \f$\psi^{\prime} \rightarrow \mu^+\mu^-\f$ and
 #  \f$\Upsilon \rightarrow \mu^+\mu^-\f$ signals and
 #  is has been used with great success for all LCHb papers
 #  on quarkonia production in dimuon final states
-#  @thank Matthew Needham
 #  @see CrystalBall_pdf 
 #  @see Ostap::Models::Needham 
 #  @see Ostap::Math::Needham 
@@ -674,8 +673,8 @@ models.append ( Apolonios_pdf )
 #         \sqrt{ \beta^2+\left(\delta x\right)^2}} \f] 
 #   where 
 #  \f[ \delta x  = \left\{ \begin{array}{ccc}
-#          \frac{x-\mu}{\sigma_l} & \text{for} & x \le \mu \\
-#          \frac{x-\mu}{\sigma_r} & \text{for} & x \gt \mu \\
+#          \dfrac{x-\mu}{\sigma_l} & \text{for} & x \le \mu \\
+#          \dfrac{x-\mu}{\sigma_r} & \text{for} & x >   \mu \\
 #          \end{array}
 #          \right.\f]
 #  Large betas corresponds to gaussian 
@@ -1300,7 +1299,7 @@ models.append ( SkewGauss_pdf )
 #  - asymmetrical gaussian-like core
 #  - exponential (optionally gaussian) asymmetrical tails
 #  @see http://journals.aps.org/prd/abstract/10.1103/PhysRevD.84.112007
-#  @http://arxiv.org/abs/1107.5751
+#  @see http://arxiv.org/abs/1107.5751
 #  Here small reparameterization is applied to achieve more stable fits.
 # 
 #  It is very well suitable to describe high statistic charm meson peaks,
@@ -1434,9 +1433,9 @@ models.append ( Bukin_pdf )
 #  Student-T distribution
 #  @see http://en.wikipedia.org/wiki/Student%27s_t-distribution
 #
-#  \f[  f(y) = \frac{1}{\sqrt{\pi n}} \frac { \Gamma( \frac{n+1}{2}) } { \Gamma( \frac{n}{2}  ) }
-#  \left( 1 + \frac{y^2}{n} \right)^{ -\frac{n+1}{2}} \f], 
-#  where \f$ y = \frac{x - \mu}{\sigma} \f$  
+#  \f[  f(y) = \dfrac{1}{\sqrt{\pi n}} \dfrac { \Gamma( \dfrac{n+1}{2}) } { \Gamma( \dfrac{n}{2}  ) }
+#  \left( 1 + \dfrac{y^2}{n} \right)^{ -\dfrac{n+1}{2}} \f], 
+#  where \f$ y = \dfrac{x - \mu}{\sigma} \f$  
 # 
 #  @attention Unlike the original definition parameter 'n' here is shifted by 1: n <- |n| + 1
 #  @see Ostap::Models::StudentT
@@ -1765,7 +1764,7 @@ models.append ( SinhAsinh_pdf )
 #
 #  When variable \f$x\f$ follows Johnson-SU distribution, 
 #  the variable 
-#  \f$ z = \gamma + \delta \sinh^{-1}\frac{ x - \xi}{\lambda} \f$
+#  \f$ z = \gamma + \delta \sinh^{-1}\dfrac{ x - \xi}{\lambda} \f$
 #  follows normal distribtion with mean 0 and sigma 1.
 #
 #  Note:
@@ -1919,7 +1918,7 @@ models.append ( JohnsonSU_pdf )
 # =============================================================================
 ## @class Atlas_pdf
 #  Modified gaussian with exponential tails
-#  \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\deltax/2}}}{2})\f$,
+#  \f{displaymath} f(x) \propto \exp(-\dfrac{\delta x^{1+\dfrac{1}{1+\delta x/2}}}{2})\f},
 #  where \f$\delta x = \left| x - \mu \right|/\sigma\f$
 #  Function is taken from http://arxiv.org/abs/arXiv:1507.07099
 # 
@@ -1933,7 +1932,7 @@ models.append ( JohnsonSU_pdf )
 #  @date   2015-08-024
 class Atlas_pdf(MASS) :
     """Modified gaussian with exponential tails
-    \f$  f(x) \propto \exp( -frac{\delta x^{1+\frac{1}{1+\deltax/2}}}{2})\f$,
+    \f$  f(x) \propto \exp( -frac{\delta x^{1+\dfrac{1}{1+\delta x/2}}}{2})\f$,
     where \f$\delta x = \left| x - \mu \right|/\sigma\f$
     Function is taken from http://arxiv.org/abs/arXiv:1507.07099    
     """
@@ -2046,13 +2045,13 @@ models.append ( Slash_pdf )
 #  @see https://en.wikipedia.org/wiki/Asymmetric_Laplace_distribution
 #  @see Ostap::Math::AsymmetricLaplace
 #  @see Ostap::Models::Laplace
-#  \f$  f(x) \propto \exp ( \pm \frac{x-\mu}{ \lambda_{L,R}} ) \f$ 
+#  \f$  f(x) \propto \exp ( \pm \dfrac{x-\mu}{ \lambda_{L,R}} ) \f$ 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-004
 class AsymmetricLaplace_pdf(MASS) :
     r"""Asymmetric version of Laplace distribution:
     
-    f(x) \propto \exp ( \pm \frac { x- \mu } { \lambda_{ L , R } } )
+    f(x) \propto \exp ( \pm \dfrac { x- \mu } { \lambda_{ L , R } } )
     
     - see https://en.wikipedia.org/wiki/Asymmetric_Laplace_distribution
     - see Ostap::Math::AsymmetricLaplace
@@ -2173,7 +2172,9 @@ models.append ( AsymmetricLaplace_pdf )
 #  that is, it has a more acute peak near its mean, and heavier tails, 
 #  compared with the standard normal distribution.
 #
-#  \f$ f(x,\mu,\sigma) \propto \frac{1}{2} \sech ( \frac{\pi}{2}\frac{x-\mu}{\sigma} )\f$ 
+#  \f{displaymath} f(x,\mu,\sigma)
+#   \propto \dfrac{1}{2} \mathrm{sech}
+#   \left( \dfrac{\pi}{2}\dfrac{x-\mu}{\sigma}\right) \f}    
 #   @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
 #
 #  @see Ostap::Math::Sech
@@ -2193,7 +2194,7 @@ class Sech_pdf(MASS) :
     that is, it has a more acute peak near its mean, and heavier tails, 
     compared with the standard normal distribution.
     
-    f(x,\mu,\sigma) \propto \frac{1}{2} \sech ( \frac{\pi}{2}\frac{x-\mu}{\sigma} )
+    f(x,\mu,\sigma) \propto \dfrac{1}{2} sech ( \dfrac{\pi}{2}\dfrac{x-\mu}{\sigma} )
     
     @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
     """
@@ -2232,9 +2233,9 @@ models.append ( Sech_pdf )
 # =============================================================================
 ## @class Logistic_pdf
 #  Logistic, aka "sech-square" PDF
-#  \f$ f(x;\mu;s) = \frac{1}{4s}sech^2\left(\frac{x-\mu}{2s}\right)\f$, 
+#  \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
 #   where
-#   \f$  s = \sigma \frac{\sqrt{3}}{\pi}\f$
+#   \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
 #  @see https://en.wikipedia.org/wiki/Logistic_distribution
 #  @see Ostap::Math::Logistic
 #  @see Ostap::Models::Logistic
@@ -2242,9 +2243,9 @@ models.append ( Sech_pdf )
 #  @date   2016-06-14
 class Logistic_pdf(MASS) :
     """ Logistic, aka ``sech-square'' PDF
-     \f$ f(x;\mu;s) = \frac{1}{4s}sech^2\left(\frac{x-\mu}{2s}\right)\f$, 
+     \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
-     \f$  s = \sigma \frac{\sqrt{3}}{\pi}\f$
+     \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
      - see https://en.wikipedia.org/wiki/Logistic_distribution
      - see Ostap::Math::Logistic
      - see Ostap::Models::Logistic
@@ -2285,8 +2286,8 @@ models.append ( Logistic_pdf )
 # =============================================================================
 ## @class RaisingCosine_pdf 
 #  "Raising cosine" distribution
-#  \f$ f(x,\mu,s) = \frac{1}{2s}   \left( 1   +\cos \pi y \right)  \f$, 
-#  where \f$  y  \equiv = \frac{x-\mu}{s}\f$ 
+#  \f{displaymath} f(x,\mu,s) = \dfrac{1}{2s} \left( 1 + \cos \pi y \right)  \f}, 
+#  where \f$  y \equiv \dfrac{x-\mu}{s}\f$ 
 #  @see https://en.wikipedia.org/wiki/Raised_cosine_distribution
 #  @see Ostap::Models::RaisingCosine 
 #  @see Ostap::Math::RaisingCosine 
@@ -2294,8 +2295,8 @@ models.append ( Logistic_pdf )
 #  @date   2018-02-27
 class RaisingCosine_pdf(MASS) :
     r"""``Raising cosine'' distribution
-    \f$ f(x,\mu,s) = \frac{1}{2s}   \left( 1   +\cos \pi y \right)  \f$, 
-    where \f$  y  \equiv = \frac{x-\mu}{s}\f$ 
+    (x,\mu,s) = \dfrac{1}{2s}   \left( 1   +\cos \pi y \right), 
+    where y  \equiv = \dfrac{x-\mu}{s} 
     - see https://en.wikipedia.org/wiki/Raised_cosine_distribution
     - see Ostap::Models::RaisnCosine 
     - see Ostap::Math::RaisnCosine
@@ -2354,27 +2355,27 @@ models.append ( RaisingCosine_pdf )
 # =============================================================================
 ## @class QGaussian_pdf 
 #  q-Gaussian distribution:
-#  \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
-#  where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
+#  \f{displaymath} f(x) = \dfrac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)\f}, 
+#  where \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\dfrac{1}{1-q}}\f$ 
 #  @see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
 #  If is equal to 
 #   - scaled version of Student' t-distribution for 1<q<3
 #   - Gaussian distribution for q = 1 
 #   - has finite  support for q<1 
 #  @see Ostap::Math::QGaussian
-#  Here we use \f$ \beta = \frac{1}{2\sigma^2}\f$
+#  Here we use \f$ \beta = \dfrac{1}{2\sigma^2}\f$
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
 class QGaussian_pdf(MASS) :
     r"""q-Gaussian distribution:
-    \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
-    where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
+    \f$ f(x) = \dfrac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
+    where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\dfrac{1}{1-q}}\f$ 
     - see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
     If is equal to 
     - scaled version of Student' t-distribution for 1<q<3
     - Gaussian distribution for q = 1 
     - has finite  support for q<1 
-    Note: Here we use \f$ \beta = \frac{1}{2\sigma^2}\f$
+    Note: Here we use \f$ \beta = \dfrac{1}{2\sigma^2}\f$
     - see Ostap::Math::QGaussian
     """
     def __init__ ( self             ,
@@ -2793,7 +2794,7 @@ models.append ( BW23L_pdf )
 #  S.M.Flatte, "Coupled-channel analysis of the \f$\pi\eta\f$ 
 #    and \f$K\bar{K}\f$ systems near \f$K\bar{K}\f$ threshold  
 #    Phys. Lett. B63, 224 (1976)
-#  Well suitable for \f$\f_0(980)\rightarrow \pi^+ \pi^-\f$
+#  Well suitable for \f$f_0(980)\rightarrow \pi^+ \pi^-\f$
 #  @see http://www.sciencedirect.com/science/article/pii/0370269376906547
 #  @see Ostap::Models::Flatte
 #  @see Ostap::Math::Flatte
@@ -2807,7 +2808,7 @@ class Flatte_pdf(MASS) :
     Phys. Lett. B63, 224 (1976
     http://www.sciencedirect.com/science/article/pii/0370269376906547
 
-    Typical case:    f0 -> pi+ pi-/ K+ K- shapes 
+    Typical case:    f0(980) -> pi+ pi- & K+ K- shapes 
     """
     def __init__ ( self              ,
                    name              ,

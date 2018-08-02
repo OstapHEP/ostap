@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file chopping.py
+## @file ostap/tools/chopping.py
 #  ``TMVA Chopper'' - helper utility to train/use  TMVA using ``chopping''
 #
 # The most frequest case:
@@ -169,23 +169,23 @@ class Trainer(object) :
     >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
     """
     def __init__ ( self                              ,
-                   category                          ,   ## accessor to category 
-                   N                                 ,   ## number of categories 
-                   methods                           ,   ## list of TMVA methods
-                   variables                         ,   ## list of variables 
-                   signal                            ,   ## signal tree
-                   background                        ,   ## background tree
-                   signal_cuts       = ''            ,   ## signal cuts 
-                   background_cuts   = ''            ,   ## background cuts 
+                   category                          ,   # accessor to category 
+                   N                                 ,   # number of categories 
+                   methods                           ,   # list of TMVA methods
+                   variables                         ,   # list of variables 
+                   signal                            ,   # signal tree
+                   background                        ,   # background tree
+                   signal_cuts       = ''            ,   # signal cuts 
+                   background_cuts   = ''            ,   # background cuts 
                    spectators        = []            ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
                    configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ,
                    signal_weight     = None          ,                
                    background_weight = None          ,                                     
-                   name              = 'TMVAChopper' ,   ## the name 
-                   verbose           = False         ,   ## verbose ? 
-                   chop_signal       = False         ,   ## chop the signal     ?
-                   chop_background   = True          ) : ## chop the background ?
+                   name              = 'TMVAChopper' ,   # the name 
+                   verbose           = False         ,   # verbose ? 
+                   chop_signal       = False         ,   # chop the signal     ?
+                   chop_background   = True          ) : #x chop the background ?
         """Create TMVA ``chopping'' trainer
         
         >>> N = 11 

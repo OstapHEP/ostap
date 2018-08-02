@@ -11,7 +11,7 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/StatEntity.h"
 // ================================================================================
-/** @file examples/math/math/math_ex002_interpolation.cpp
+/** @file examples/math/math_ex002_interpolation.cpp
  *  Example dealing with various interpolation functions in C++ 
  *  @see  Ostap::Math::Interpolation
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -38,26 +38,26 @@ int math_ex002_interpolation ()
 
   
   // ==========================================================================
-  /// (A) get interpolation data directly the function 
+  // (A) get interpolation data directly the function 
   // ==========================================================================
 
-  /// 0) Barycentric innterpolant with uniform abscissas 
+  // 0) Barycentric innterpolant with uniform abscissas 
   auto l0 = lagrange  ( fun , Abscissas ( N , low , high , Abscissas::Uniform   ) ) ;
   
-  /// 1) Barycentric interpolant with Chebyshev abscissas 
+  // 1) Barycentric interpolant with Chebyshev abscissas 
   auto l1 = lagrange  ( fun , Abscissas ( N , low , high , Abscissas::Chebyshev ) ) ;
   
-  /// 2) Barycentric interpolant with Lobatto abscissas 
+  // 2) Barycentric interpolant with Lobatto abscissas 
   auto l2 = lagrange  ( fun , Abscissas ( N , low , high , Abscissas::Lobatto   ) ) ;
   
-  /// 3) Barycentric intepolant with given abscissas 
+  // 3) Barycentric intepolant with given abscissas 
   auto l3 = lagrange  ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } ) ;
   
-  /// 4) Bernstein interpolant with given abscissas 
+  // 4) Bernstein interpolant with given abscissas 
   auto l4 = bernstein ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } , low , high ) ;
 
   // ==========================================================================
-  /// (B,C) get interpolation data in a form of std::map or Interpolation::Table
+  // (B,C) get interpolation data in a form of std::map or Interpolation::Table
   // ==========================================================================
 
   using MAP = std::map<double,double> ;
@@ -74,13 +74,13 @@ int math_ex002_interpolation ()
     map [ x ] = fx ;
   }
   
-  /// 5) Barycentric interpolant from std::map  
+  // 5) Barycentric interpolant from std::map  
   auto l5 = lagrange ( map ) ;
 
-  /// 6) Barycentric interpolant frmo the interpolaton table 
+  // 6) Barycentric interpolant frmo the interpolaton table 
   auto l6 = lagrange ( table ) ;
 
-  /// 7) Newton interpolant with given abscissas  
+  // 7) Newton interpolant with given abscissas  
   auto l7 = newton    ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } ) ;
 
 

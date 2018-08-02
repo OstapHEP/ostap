@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file resolution.py
-## Set of useful resolution models:
+## @file ostap/fitting/resolution.py
+#  Set of useful resolution models:
 #  - single Gaussian
 #  - double Gaussian                     (gaussian   tails)
 #  - symmetric Apolonious                (exponenial tails)

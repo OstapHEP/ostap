@@ -78,7 +78,7 @@ namespace Ostap
      *  @see RooPrintable::printSstream
      */
     std::string  print_printable2 
-    ( const RooPrintable&  objbect      , 
+    ( const RooPrintable&  object       , 
       const int            content      , 
       const short          style        , 
       std::string          indent  = "" ) ;

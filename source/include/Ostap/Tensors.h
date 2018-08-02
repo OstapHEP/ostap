@@ -759,7 +759,7 @@ namespace Ostap
          *
          *  @see Epsilon::e_3
          *
-         *  @param v the input vector
+         *  @param  v1 the input vector
          *  @return the product (component)
          */
         template <class  COORDINATES>

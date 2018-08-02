@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file spectra.py
+## @file ostap/fitting/spectra.py
 #  A set of predefined ready-to-use
 #  functions and shapes for fitting of pt-spectra 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

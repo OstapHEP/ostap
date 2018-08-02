@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ==========================================================================================
-## @file tmva.py
+## @file ostap/tools/tmva.py
 #  Python interface to basic TMVA functionality: Trainer and Reader 
 #
 #  Actually for the Trainer, it is a bit simplified version of Albert's code 
@@ -200,7 +200,7 @@ def opts_replace ( opts , expr , direct = True ) :
 # 
 #  @date   2013-10-02
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
-#  @thanks Albert PUIG
+#  Thanks to Albert PUIG
 class Trainer(object):
     """Helper class to train TMVA:  
     
@@ -250,18 +250,18 @@ class Trainer(object):
     #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
     def __init__(  self                       ,
                    methods                    ,
-                   variables                  ,  ## list of variables 
-                   signal                     ,  ## signal sample/tree
-                   background                 ,  ## background sample/tree 
-                   signal_cuts       = ''     ,  ## signal cuts 
-                   background_cuts   = ''     ,  ## background cuts 
+                   variables                  ,  # list of variables 
+                   signal                     ,  # signal sample/tree
+                   background                 ,  # background sample/tree 
+                   signal_cuts       = ''     ,  # signal cuts 
+                   background_cuts   = ''     ,  # background cuts 
                    spectators        = []     ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
                    configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents" ,
                    signal_weight     = None   ,                
                    background_weight = None   ,
                    ##
-                   output_file       = ''     ,  ## the name of output file 
+                   output_file       = ''     ,  # the name of output file 
                    verbose           = True   ,
                    name              = 'TMVA' ) :
         """Constructor with list of methods
@@ -660,7 +660,7 @@ class Trainer(object):
 #  @see TMVA::Reader
 #  @date   2013-10-02
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
-#  @thanks Alexander BARANOV
+#  Thanks to Alexander BARANOV
 class Reader(object)  :
     """ Rather generic python interface to TMVA-reader
 

@@ -2006,7 +2006,7 @@ Ostap::Math::deflate ( const Ostap::Math::Bernstein& b ,
 /*  get abscissas of crosssing points of the control polygon 
  *  for Bernstein polynomial
  *  @param  b bernstein polynomial
- *  @reutrn abscissas of crossing points of the control  polygon
+ *  @return abscissas of crossing points of the control  polygon
  */
 // ============================================================================
 std::vector<double> 
