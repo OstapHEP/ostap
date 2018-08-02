@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/math/geometry.py
 #  Set of useful "geometry" utilities 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2009-09-12

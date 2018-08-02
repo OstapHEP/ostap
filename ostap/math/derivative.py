@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file  derivative.py 
+## @file  ostap/math/derivative.py 
 #  Simple adaptive numerical differentiation (for pyroot/PyRoUts/Ostap)
-#  R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see https://link.springer.com/article/10.1007/s12039-009-0111-y
 #  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
-#  
 # =============================================================================
 """Simple adaptive numerical differentiation (for pyroot/PyRoUts/Ostap/...)
 
@@ -24,6 +24,11 @@ there are also object form:
 >>> deriv = Derivative ( func )
 >>> integ = Integral   ( func , 0 )
 >>> print deriv ( 0.1 ) , integ ( 0.1 )  
+
+- see R. De Levie, ``An improved numerical approximation for the first derivative''
+- see https://link.springer.com/article/10.1007/s12039-009-0111-y
+- see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -66,24 +71,22 @@ def _delta_ ( x , ulps = _mULPs_ ) :
     return max ( abs ( n1 - x ) , abs ( n2 - x ) )
 
 # =============================================================================
-## Four versions:
+# Four versions:
 
-## (1) use dot_fma from ostap            ## 17.7s
+## use dot_fma from ostap            ## 17.7s
 dot_fma = cpp.Ostap.Math.dot_fma  
 import array
 ARRAY   = lambda x : array.array ( 'd' , x )
 
-## (2) use dot based on Kahan summation  ## 17.5s 
+# (2) use dot based on Kahan summation  ## 17.5s 
 # dot_fma = cpp.Ostap.Math.dot_kahan
 # import array 
 # ARRAY =  lambda x : array.array ( 'd' , x )
-
-## (3) use numpy variant                 ## 17.9s
+# (3) use numpy variant                 ## 17.9s
 # import numpy
 # ARRAY   = lambda x     : numpy.array ( x , dtype=float) 
 # dot_fma = lambda n,x,y : numpy.dot(x,y)
-
-## (4) SLOWEST:  use math.fsum           ## 21s
+# (4) SLOWEST:  use math.fsum           ## 21s
 # import numpy
 # ARRAY   = lambda x     : numpy.array ( x , dtype=float)
 # from math import fsum 
@@ -95,15 +98,17 @@ ARRAY   = lambda x : array.array ( 'd' , x )
 #  - f'      is calcualted as O(h^(N-1))
 #  - f^{(N)} is calcualted as O(h^2)
 #  Simple adaptive numerical differentiation
-#  R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see https://link.springer.com/article/10.1007/s12039-009-0111-y
 #  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
 class DeLevie(object) :
     """Calculate  1st (and optionally Nth) derivative with the given step
     - f'      is calcualted as O(h^(N-1))
     - f^{(N)} is calcualted as O(h^2) 
     Simple adaptive numerical differentiation 
-    R. De Levie, ``An improved numerical approximation for the first derivative''
-    @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+    - see R. De Levie, ``An improved numerical approximation for the first derivative''
+    - see https://link.springer.com/article/10.1007/s12039-009-0111-y
+    - see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
     """
     _d1h = [
         ( ARRAY ( [      +1 ,       0                                                      ] ) ,      2 ) ,
@@ -145,14 +150,15 @@ class DeLevie(object) :
     #  - f'      is calcualted as O(h^(N-1))
     #  - f^{(N)} is calcualted as O(h^2)
     #  Simple adaptive numerical differentiation
-    #  R. De Levie, "An improved numerical approximation for the first derivative"
+    #  @see R. De Levie, "An improved numerical approximation for the first derivative"
     #  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
     def __call__ ( self , func , x , h , der = False ) :
         """Calculate  1st (and optionally Nth) derivative with the given step
         - f'      is calcualted as O(h^(N-1))
         - f^{(N)} is calcualted as O(h^2)
         Simple adaptive numerical differentiation
-        R. De Levie, ``An improved numerical approximation for the first derivative''
+        - see R. De Levie, ``An improved numerical approximation for the first derivative''
+        - see https://link.springer.com/article/10.1007/s12039-009-0111-y
         - see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
         """
 
@@ -209,7 +215,8 @@ _numbers_ = (
 
 # =============================================================================
 ## Calculate the first derivative for the function
-#  R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see https://link.springer.com/article/10.1007/s12039-009-0111-y
 #  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
 #  @code
 #  >>> fun =  lambda x : x*x
@@ -227,6 +234,9 @@ def derivative ( fun , x , h = 0  , I = 2 , err = False ) :
     #  @code
     #  >>> fun =  lambda x : x*x
     #  >>> print derivative ( fun , x = 1 ) 
+    - see R. De Levie, ``An improved numerical approximation for the first derivative''
+    - see https://link.springer.com/article/10.1007/s12039-009-0111-y
+    - see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
     """
 
     func = lambda x : float ( fun ( x ) )
@@ -271,7 +281,8 @@ def derivative ( fun , x , h = 0  , I = 2 , err = False ) :
 # =============================================================================
 ## @class Derivative
 #  Calculate the first derivative for the function
-#  R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see https://link.springer.com/article/10.1007/s12039-009-0111-y
 #  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
 #  @code
 #  func  = math.sin
@@ -281,8 +292,9 @@ def derivative ( fun , x , h = 0  , I = 2 , err = False ) :
 #  @date   2014-06-06
 class Derivative(object) :
     """Calculate the first derivative for the function
-    R. De Levie, ``An improved numerical approximation for the first derivative''
-    see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+    - see R. De Levie, ``An improved numerical approximation for the first derivative''
+    - see https://link.springer.com/article/10.1007/s12039-009-0111-y
+    - see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
     >>> func = math.sin
     >>> deri = Derivative ( func )        
     """
@@ -335,8 +347,8 @@ class Derivative(object) :
 
 # =============================================================================
 ## Calculate the partial derivative for the function
-#  @see derivative
-#  R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see https://link.springer.com/article/10.1007/s12039-009-0111-y
 #  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
 #  @code
 #  >>> fun2 =  lambda x,y : x*x+y*y
@@ -361,6 +373,8 @@ def partial ( index , func , x , h = 0  , I = 2 , err = False ) :
     
     Algorithm used:
     R. De Levie, ``An improved numerical approximation for the first derivative''
+    - see R. De Levie, ``An improved numerical approximation for the first derivative''
+    - see https://link.springer.com/article/10.1007/s12039-009-0111-y
     - see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
     >>> fun2 =  lambda x,y : x*x+y*y
     >>> print partial ( 0 , fun , (1.0,2.0) ) )     

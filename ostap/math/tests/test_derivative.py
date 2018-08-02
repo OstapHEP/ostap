@@ -3,7 +3,11 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-""" Test module for ostap/math/derivative.py.
+## @file ostap/math/tests/test_derivative.py
+#  Test module for the file ostap/math/derivative.py
+# ============================================================================= 
+""" Test module for ostap/math/derivative.py
+
 It tests local implementation of numerical derivatives 
 """
 # ============================================================================= 

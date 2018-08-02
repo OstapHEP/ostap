@@ -3,7 +3,11 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-""" Test module for ostap/math/integral.py.
+## @file ostap/math/tests/test_integral.py
+#  Test module for the file ostap/math/integral.py
+# ============================================================================= 
+""" Test module for ostap/math/integral.py
+
 It tests local implementation of numerical integrtauon using Romberg's method
 - see https://en.wikipedia.org/wiki/Romberg's_method
 - see https://en.wikipedia.org/wiki/Richardson_extrapolation

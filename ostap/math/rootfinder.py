@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file rootfinder.py
+## @file ostap/math/rootfinder.py
 #  Module with some useful utilities for root finding
 #  - a kind of replacement for Brent's method when scipy is not accessible
 #
@@ -552,9 +552,8 @@ def counted ( f ):
     wrapped.calls = 0
     return wrapped
 
-
 # ========================================================================================
-## @class RooResults
+## @class RootResults
 #  helper class to keep results of root-finding preocedure
 #  it is very similar(almost clone) of corresponding class
 #  <code>RootResults<code> from <code>scipy.optimize.zeros</code>

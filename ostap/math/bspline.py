@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file bspline.py
-#
+## @file ostap/math/bspline.py
 #  Module with some useful utilities for dealing with BSpline
 #  @see Ostap::Math::BSpline
-#
 # - control_polygon      : get a control polygon for BSpline
 # - upper_convex_hull    : upper convex hull for BSpline
 # - lower_convex_hull    : lower convex hull for BSpline

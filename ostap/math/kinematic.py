@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/math/kinematic.py
 #  Set of useful "kinematic" utilities 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2009-09-12
@@ -11,7 +11,7 @@
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2009-09-12"
-__version__ = "Version$Revision$"
+__version__ = "Version $Revision:$"
 # =============================================================================
 __all__     = (
     ##

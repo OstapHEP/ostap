@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/math/base.py
 #
-#  Simple file to provide "easy" access in python for
-#  the basic ROOT::Math classes
+#  Simple file to provide "easy" access in python for the basic ROOT::Math classes
 #  @see Ostap/Point3DTypes.h
 #  @see Ostap/Vector3DTypes.h
 #  @see Ostap/Vector4DTypes.h

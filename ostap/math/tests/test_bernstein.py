@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
+# =============================================================================
+## @file ostap/math/tests/test_bernstein.py
+#  Test module for the file ostap/math/bernstein.py
 # ============================================================================= 
-""" Test module for ostap/math/bernstein.py.
+""" Test module for the file ostap/math/bernstein.py
 """
 # ============================================================================= 
 # logging 

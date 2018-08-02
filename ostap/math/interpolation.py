@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file interpolation.py
+## @file ostap/math/interpolation.py
 #  Module with some useful utilities for dealing with interpolation.
 #  In particular, it provdies very efficient Barycentric Lagrange interpolation
 #  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
@@ -19,9 +19,11 @@
 #  Straightforward Lagrange and Neville algorithm are also provided
 #  - Both are rather slow: O(n^2) flops for evaluation,  while Neville is a bit faster 
 #  - Lagrange algorithm is not stable numerically,  and Neville algorithm is more stable 
+#  @see Ostap::Math::Interpolation
 #  @see Ostap::Math::Neville 
 #  @see Ostap::Math::Lagrange 
-#  @see Ostap::Math::Interpolation
+#  @see Ostap::Math::Newton 
+#  @see Ostap::Math::Barycentric
 #  For  completeness see also:
 #  - interpolation with Bersntein polynomials using on Newton-Bernstein algorithm
 #  - interpolation with B-splines 

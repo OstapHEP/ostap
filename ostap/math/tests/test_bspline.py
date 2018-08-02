@@ -3,7 +3,10 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-""" Test module for ostap/math/bspline.py.
+## @file ostap/math/tests/test_bspline.py
+#  Test module for the file ostap/math/bspline.py
+# ============================================================================= 
+""" Test module for ostap/math/bspline.py
 """
 # ============================================================================= 
 # logging 

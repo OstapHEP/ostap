@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/math/other.py
 #
 #  Simple file to provide "easy" access in python for
 #  the basic ROOT::Math classes

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file random_ext.py
+# @file ostap/math/random_ext.py
 # The simple extention for the standard python module random
 # @author Vanya BELYAEV
 # @date   2012-04-28

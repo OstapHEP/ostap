@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file bernstein.py
-#
-#  Module with some useful utilities for dealing with Bernstein polynomials
-#  @see Ostap::Math::Bernstein
-#
+## @file ostap/math/bernstein.py
+#  Module with some useful utilities for dealing with Bernstein polynomials:
 # - control_polygon    : get a control polygon for Bernstein polynomial
 # - upper_convex_hull  : upper convex hull for Bernstein polynomial
 # - lower_convex_hull  : lower convex hull for Bernstein polynomial
@@ -25,6 +22,7 @@
 # - interpolate        : construct Bernstein interpolant
 # - generate&shoot     : generate random  numbers         
 #
+#  @see Ostap::Math::Bernstein
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-12-01
 # =============================================================================

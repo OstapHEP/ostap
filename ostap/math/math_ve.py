@@ -1,7 +1,7 @@
 #!/usr/bin/env python 
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/math/math_ve.py
 #  Simple file to provide some wrapper function for dealing with
 #  Gaudi::Math::ValueWithError objects 
 #  @see Ostap::Math::ValueWithError

@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
+# =============================================================================
+## @file ostap/math/tests/test_interpolation.py
+#  Test module for the file ostap/math/interpolation.py
 # ============================================================================= 
-""" Test module for ostap/math/interpolation.py.
+""" Test module for ostap/math/interpolation.py
 """
 # ============================================================================= 
 # logging 

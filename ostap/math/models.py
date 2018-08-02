@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file models.py
+## @file ostap/math/models.py
 #  Module with some useful utilities for simple functions and fit models.
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-12-01
@@ -755,7 +755,6 @@ for pdf in ( Ostap.Models.BreitWigner          ,
              Ostap.Models.Kstar              ,
              Ostap.Models.Phi                , 
              Ostap.Models.Flatte             ,
-             Ostap.Models.Flatte2            ,  
              Ostap.Models.Bukin              ,
              Ostap.Models.PhaseSpace2        ,
              Ostap.Models.PhaseSpaceNL       ,
@@ -1183,11 +1182,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Expo2DPolSym   ,
     ##
     Ostap.Models.BreitWigner        , 
-    Ostap.Models.Rho0               ,
-    Ostap.Models.Kstar              ,
-    Ostap.Models.Phi                , 
     Ostap.Models.Flatte             ,
-    Ostap.Models.Flatte2            ,  
     Ostap.Models.Bukin              ,
     Ostap.Models.PhaseSpace2        ,
     Ostap.Models.PhaseSpaceNL       ,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/math/param.py
 #  Module with utilities for parameterization of functions/historgams 
 #
 ## (1) using histogram data only:

@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
+# =============================================================================
+## @file ostap/math/tests/test_math_ve.py
+#  Test module for the file ostap/math/math_ve.py
 # ============================================================================= 
-""" Test module for ostap/math/math_ve.py.
+""" Test module for ostap/math/math_ve.py
 """
 # ============================================================================= 
 import math

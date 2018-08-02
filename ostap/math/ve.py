@@ -3,14 +3,21 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # =============================================================================
-# @file
-# Simple ``value with error'' utility.
+# @file ostap/math/ve.py
+# Simple ``value-with-error'' concept
 # @code
+# a = VE (1,0.1**2)
+# b = VE (2,0.2**2)
+# c = a + b 
 # @endcode
 # @see Ostap::Math::ValueWithError
 # ============================================================================= 
-"""
-Simple ``value with error'' utility.
+""" Simple ``value-with-error'' concept
+
+>>> a = VE (1,0.1**2)
+>>> b = VE (2,0.2**2)
+>>> c = a + b
+
 """
 # ============================================================================= 
 __all__     = (
@@ -47,7 +54,7 @@ VVE.Vector . __len__  = lambda s : s.size ()
 
 
 # ============================================================================= 
-# Sum the contents of the vector
+## Sum the contents of the vector
 def _ve_sum_ ( s ) :
     """Sum the contents of the vector.
     >>> v = ...

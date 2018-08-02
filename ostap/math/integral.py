@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file  integral.py
+## @file  ostap/math/integral.py
 #  Simple wrapper over scipy integration in a spirit of derivative.py 
 #  - In case scipy is not available, it provides a reasonable replacement
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -35,32 +35,32 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-06"
 __all__     = (
-    ##
+    #
     "integral"       , ## (1D) numerical integration (as function, using scipy if possible)
     "integral2"      , ## (2D) numerical integration (as function, using scipy if possible)
     "integral3"      , ## (3D) numerical integration (as function, using scipy if possible)
-    ##
+    #
     "Integral"       , ## (1D) numerical integration (as as object, using scipy if possible)
     "Integral2"      , ## (2D) numerical integration (as as object, using scipy if possible)
     "Integral3"      , ## (3D) numerical integration (as as object, using scipy if possible)
-    ##
+    #
     'Integrate2D_X'  , ## partial integration of 2D-function over x-range  
     'Integrate2D_Y'  , ## partial integration of 2D-function over y-range
-    ##
+    #
     'Integrate3D_X'  , ## partial integration of 2D-function over x-range  
     'Integrate3D_Y'  , ## partial integration of 2D-function over y-range
     'Integrate3D_Z'  , ## partial integration of 2D-function over z-range
-    ##
+    #
     'Integrate3D_XY' , ## partial integration of 2D-function over xy-range  
     'Integrate3D_XZ' , ## partial integration of 2D-function over xz-range
     'Integrate3D_YZ' , ## partial integration of 2D-function over yz-range
-    ##
+    #
     "romberg"        , ## (1D) numerical integration using romberg's method 
     'genzmalik2'     , ## (2D) numerical integration using Genz&Malik's method
     'genzmalik3'     , ## (3D) numerical integration using Genz&Malik's method
-    ##
+    #
     "IntegralCache"  , ## (1D) numerical integration (as object, using scipy is if ssible)
-    ##    
+    #    
     ) 
 # =============================================================================
 import ROOT, warnings, math 
@@ -91,10 +91,10 @@ def romberg ( fun                ,
               err      = False   , 
               epsabs   = 1.49e-8 ,
               epsrel   = 1.49e-8 ,
-              limit    = 10      , ## ignored, kept to mimic consistency with 
+              limit    = 10      , # ignored, kept to mimic consistency with 
               args     = ()      ,
-              nmax     = 8       , ## steps in Richardson's extrapolation
-              maxdepth = 10        ## the maxmal depth 
+              nmax     = 8       , # steps in Richardson's extrapolation
+              maxdepth = 10        # the maxmal depth 
               ) : 
     """Straw-man replacement of scipy.integrate.quad when it is not available.
     Actually it is a primitive form of Romberg's adaptive integration
@@ -114,42 +114,42 @@ def romberg ( fun                ,
         rp = nmax * [0.0]
         rc = nmax * [0.0]
 
-        ## starting value for integration step: full interval 
+        # starting value for integration step: full interval 
         h     =             (  b   -     a   )
 
-        ## here we have R(0,0) 
+        # here we have R(0,0) 
         rc[0] = 0.5 * h * ( f( b ) + f ( a ) )
         
         i2    = 1
-        nf    = 2  ## number of function calls
+        nf    = 2  # number of function calls
         for n in range ( 1 , nmax ) :
             
-            nf     += i2     ## count number of function calls 
-            rp,rc   = rc,rp  ## swap rows
+            nf     += i2     # count number of function calls 
+            rp,rc   = rc,rp  # swap rows
             
-            h      *= 0.5    ## decrement the step 
+            h      *= 0.5    # decrement the step 
 
-            ## use simple trapezoid rule to calculate R(n,0) 
+            # use simple trapezoid rule to calculate R(n,0) 
             rr      = 0.0
             i2     *= 2 
             for k in xrange ( 1 , i2 , 2 ) :
                 rr += f ( a + h * k )
                 
-            ## here we have R(n,0) 
+            # here we have R(n,0) 
             rc[0] = 0.5*rp[0] + h*rr
             
-            ## calculate R(n,m) using Richardson's extrapolation
+            # calculate R(n,m) using Richardson's extrapolation
             p4 = 1 
             for m in xrange ( 1 , n + 1 ) :
                 p4   *= 4 
-                ## here we have R(n,m)
+                # here we have R(n,m)
                 rc[m] = rc[m-1] + (rc[m-1]-rp[m-1])/(p4-1)
 
-            ## inspect last two elements in the row     
+            # inspect last two elements in the row     
             e  = rc[n  ]
             p  = rc[n-1]
             
-            ## check their absolute and relative difference 
+            # check their absolute and relative difference 
             d  = abs ( e - p )
             ae = max ( abs ( e ) , abs ( p ) , abs( rc[0] ) ) 
             
@@ -157,32 +157,32 @@ def romberg ( fun                ,
                 return e , d , depth , nf       ## RETURN
 
         # =====================================================================
-        ## Need to split the interval into subintervals
+        # Need to split the interval into subintervals
         # =====================================================================
 
-        ## first check the maximal depth 
+        # first check the maximal depth 
         if 0 < maxdepth <= depth :
             warnings.warn('Romberg integration: maximal depth is reached')
             return  e, d , depth , nf 
         
-        ## prepare to split the interval into 2**n subintervals 
+        # prepare to split the interval into 2**n subintervals 
         n2 = 2**n
 
-        ## the absolute uncertainty needs to be adjusted 
+        # the absolute uncertainty needs to be adjusted 
         new_ea = ea / n2                                ## ok
-        ## keep the same relative uncertainty 
+        # keep the same relative uncertainty 
         new_er = er 
 
-        ## the final result, its uncertainty and the max-depth 
+        # the final result, its uncertainty and the max-depth 
         rr , ee , dd  = 0.0 , 0.0 , 0
 
-        ## split the region and start recursion: 
+        # split the region and start recursion: 
         for i in range( n2 ) :
             
             ai = a  + i*h
             bi = ai +   h
             
-            ## recursion:
+            # start recursion here: 
             #  get result, error, depth and number of function calls from subinterval
             r , e , d , n = _romberg_ ( f , ai , bi , new_ea , new_er , nmax , depth + 1 )
             
@@ -193,31 +193,31 @@ def romberg ( fun                ,
 
         return rr , ee , dd , nf   ## RETURN 
 
-    ## adjust input data
+    # adjust input data
     
     a  = float ( x0     ) 
     b  = float ( x      ) 
     ea = float ( epsabs )
     er = float ( epsrel )
     
-    ## the same edges 
+    # the same edges 
     if isequal ( a , b )  :
         return VE( 0 , 0 ) if err else 0.0
 
-    ## crazy settings for uncertainties 
+    # crazy settings for uncertainties 
     if  ( ea <= 0 or iszero ( ea ) ) and ( er <= 0 or iszero  ( er )  ) : 
         raise AttributeError("Romberg: absolute and relative tolerances can't be non-positive simultaneously")
 
-    ## adjust maximal number of steps in Richardson's extrapolation 
+    # adjust maximal number of steps in Richardson's extrapolation 
     nmax        = max ( 2 , nmax )
 
-    ## ensure that function returns double values: 
+    # ensure that function returns double values: 
     func        = lambda x : float ( fun ( x , *args ) )
 
-    ## finally use Romberg's integration 
+    # finally use Romberg's integration 
     v, e, d, nc = _romberg_ ( func , a , b , ea , er , nmax )
 
-    ## form the final result :
+    # form the final result :
     return VE ( v , e * e ) if err else v 
 
 # =============================================================================
@@ -255,7 +255,7 @@ except ImportError :
 
 
 # =============================================================================
-## 2D&3D integration 
+# 2D&3D integration 
 # =============================================================================
 _w  = ( lambda N : (12824-9120*N+400*N*N)/19683. ,
         lambda N : (980                 )/ 6561. ,
@@ -298,8 +298,8 @@ def _genzmalik2_ ( func , xlims , ylims , args = () ) :
     - see https://doi.org/10.1016/0771-050X(80)90039-X.
     - see http://www.sciencedirect.com/science/article/pii/0771050X8090039X)
     
-    Example:
-    ========
+    Example
+    -------
     
     >>> func  = lambda x,y : x*x + y * y
     >>> i7,i5 = _genzmalik2_ ( func , (-1,1) , (-1,1) )
@@ -357,8 +357,8 @@ def _genzmalik3_ ( func , xlims , ylims , zlims , args =  () ) :
     - see https://doi.org/10.1016/0771-050X(80)90039-X.
     - see http://www.sciencedirect.com/science/article/pii/0771050X8090039X)
     
-    Example:
-    ========
+    Example
+    -------
     
     >>> func  = lambda x,y,z : x*x + y*y + z*z
     >>> i7,i5 = _genzmalik2_ ( func , (-1,1) , (-1,1) , (-1,1) )
@@ -429,8 +429,8 @@ def _genzmalik3_ ( func , xlims , ylims , zlims , args =  () ) :
 def _split2_ ( xlims , ylims ) :
     """Split 2D-region into   four smaller pieces
 
-    Example:
-    ========
+    Example
+    -------
     
     >>> region     =  (-1,1),( -2,5)
     >>> newregions = _split2_( region )
@@ -457,8 +457,8 @@ def _split2_ ( xlims , ylims ) :
 def _split3_ ( xlims , ylims , zlims ) :
     """Split 3D-region into eight smaller pieces
 
-    Example:
-    ========
+    Example
+    -------
     
     >>> region     =  (-1,1),( -2,5) , ( -3,3) 
     >>> newregions = _split3_( region )
@@ -518,10 +518,10 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
 
     while 1 < 2 :
         
-        serr =  0    ## (current) sum of errors
-        res  =  0    ## (current) result 
-        rmx  =  None ## (current) region with the maximal error 
-        emx  = -1    ## (current) maximal error
+        serr =  0    # (current) sum of errors
+        res  =  0    # (current) result 
+        rmx  =  None # (current) region with the maximal error 
+        emx  = -1    # (current) maximal error
 
         for r,entry in stack.iteritems() :
 
@@ -535,7 +535,7 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
 
             if   serr <= 0.5 * epsabs : pass
             elif serr <= 0.5 * relerr : pass
-            else                      : break ##  BREAK
+            else                      : break # BREAK
 
         else :
             # cumulated uncertainty is small enough, return  
@@ -543,15 +543,15 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
             del stack 
             return res, serr, nfc , lstack
 
-        ##  ??? 
-        if not rmx : break     ## BREAK 
+        # ??? 
+        if not rmx : break     # BREAK 
         
         rr = splitter ( *rmx )
         for r in  rr :
             r7,r5  = basic_rule (  func , *r , args = args )
             nfc   += 17 
             stack[ r ] = abs(r7-r5),r7
-        ## remove large region from the stack 
+        # remove large region from the stack 
         del stack[rmx]            
 
     lstack = len(stack)
@@ -583,8 +583,8 @@ def genzmalik2 ( func , xmin , xmax , ymin ,  ymax , args = () , err = False , e
     - see https://doi.org/10.1016/0771-050X(80)90039-X.
     - see http://www.sciencedirect.com/science/article/pii/0771050X8090039X)
     
-    Example:
-    ========
+    Example
+    -------
     
     >>> func   = lambda x,y : x*x + y*y
     >>> r      = genzmalik2 ( func , xmin=-1 , xmax=2 , ymin=-1 , ymax=2 )
@@ -621,8 +621,8 @@ def genzmalik3 ( func , xmin , xmax , ymin ,  ymax , zmin ,  zmax , args = () , 
     - see https://doi.org/10.1016/0771-050X(80)90039-X.
     - see http://www.sciencedirect.com/science/article/pii/0771050X8090039X)
     
-    Example:
-    ========
+    Example
+    -------
     
     >>> func   = lambda x,y : x*x + y*y + z*z 
     >>> r      = genzmalik3 ( func , xmin=-1 , xmax=2 , ymin=-1 , ymax=2 , zmin = -4, zmax = 7)
@@ -865,18 +865,18 @@ class IntegralCache(Integral) :
         xmn    = self.xmin
         delta  = 0.0
         
-        ## Is there a good ``previos'' calculation ?
+        # Is there a good ``previos'' calculation ?
         if self.__prev :
-            ##
+            #
             prev_args , prev_x , prev_result = self.__prev
-            ##
+            #
             if prev_args == args : ## the same extra arguments                
                 
-                ## the point is good! 
+                # the point is good! 
                 if prev_x == x or isequal ( x , prev_x ) :
                     return prev_result                                 ## RETURN
                 
-                ## old point is good, take it as xmin  
+                # old point is good, take it as xmin  
                 if abs ( prev_x - x ) <= abs ( self.xmin - x ) :
                     xmn   = prev_x
                     delta = prev_result
@@ -884,7 +884,7 @@ class IntegralCache(Integral) :
         result  = self._integrate_1D_ ( self.func , xmn , x , args = args )
         result += delta 
         
-        ## fill the cache 
+        # fill the cache 
         self.__prev = args , x , result 
             
         return result 
@@ -895,7 +895,7 @@ class IntegralCache(Integral) :
         return self.__prev 
 
 # =============================================================================
-## 2D-integration
+# 2D-integration
 # =============================================================================
 
 # =============================================================================
@@ -1008,14 +1008,14 @@ class Integral3(Integral2) :
 
 
 # =============================================================================
-## Partial integrations  of 2D-functions 
+# Partial integrations  of 2D-functions 
 # =============================================================================
 
 
 # =============================================================================
 ## @class Integrate2D_X
 # helper class to perform (partial) integration of 2D function
-# \f$  f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx \f$ 
+# \f{displaymath} f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx \f}
 # @code
 # fun2d  = ... ## 2D-function
 # fy     = Integral2D_X( fun2d , xmin = 0 , xmax = 1 )
@@ -1055,7 +1055,7 @@ class Integrate2D_X(IntegralBase) :
         """
         ## create the helper function 
         _funx_ = lambda x , *_ : self.func ( x , y , *_ )
-        ## make integration 
+        # make integration 
         return self._integrate_1D_ ( _funx_ , self.xmin , self.xmax , args = args )
     
     @property 
@@ -1072,7 +1072,7 @@ class Integrate2D_X(IntegralBase) :
 # =============================================================================
 ## @class Integrate2D_Y
 # helper class to perform (partial) integration of 2D function
-# \f$  f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy \f$ 
+# \f{displaymath} f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy \f}
 # @code
 # fun2d  = ... ## 2D-function
 # fx     = Integral2D_Y( fun2d , ymin = 0 , ymax = 1 )
@@ -1126,14 +1126,14 @@ class Integrate2D_Y(IntegralBase) :
 
 
 # =============================================================================
-## Partial (1D)-integrations  of 3D-functions 
+# Partial (1D)-integrations  of 3D-functions 
 # =============================================================================
 
 
 # =============================================================================
 ## @class Integrate3D_X
 # helper class to perform (partial) integration of 3D function
-# \f$  f(y,z) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y,z) dx \f$ 
+# \f{displaymth} f(y,z) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y,z) dx \f}
 # @code
 # fun3d  = ... ## 2D-function
 # fyz     = Integral2D_X( fun3d , xmin = 0 , xmax = 1 )
@@ -1180,7 +1180,7 @@ class Integrate3D_X(Integrate2D_X) :
 # =============================================================================
 ## @class Integrate3D_Y
 # helper class to perform (partial) integration of 3D function
-# \f$  f(x,z) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y,z) dy \f$ 
+# \f{displaymath} f(x,z) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y,z) dy \f}
 # @code
 # fun3d  = ... ## 2D-function
 # fxy     = Integral2D_Y( fun3d , ymin = 0 , ymax = 1 )
@@ -1228,7 +1228,7 @@ class Integrate3D_Y(Integrate2D_Y) :
 # =============================================================================
 ## @class Integrate3D_Z
 # helper class to perform (partial) integration of 3D function
-# \f$  f(x,y) = \int_{z_{min}}^{z_{max}} f_{2D}(x,y,z) dz \f$ 
+# \f{displaymath} f(x,y) = \int_{z_{min}}^{z_{max}} f_{2D}(x,y,z) dz \f}
 # @code
 # fun3d  = ... ## 2D-function
 # fxy     = Integral2D_Z( fun3d , zmin = 0 , zmax = 1 )
@@ -1285,14 +1285,14 @@ class Integrate3D_Z(IntegralBase) :
     
 
 # =============================================================================
-## Partial (2D)-integrations  of 3D-functions 
+# Partial (2D)-integrations  of 3D-functions 
 # =============================================================================
 
 
 # =============================================================================
 ## @class Integrate3D_XY
 # helper class to perform (partial) integration of 3D function
-# \f$  f(z) = \int_{x_{min}}^{x_{max}}\int^{y_{max}}_{y_{min}} f_{2D}(x,y,z) dxdy \f$ 
+# \f{displaymath} f(z) = \int_{x_{min}}^{x_{max}}\int^{y_{max}}_{y_{min}} f_{2D}(x,y,z) dx dy \f} 
 # @code
 # fun3d  = ... ## 2D-function
 # fz     = Integral3D_XY( fun3d , xmin = 0 , xmax = 1  , ymin = 0, ymax = 1 )
@@ -1311,12 +1311,12 @@ class Integrate3D_XY(Integrate3D_X) :
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , ymin , ymax , args = () , err = False , **kwargs ) :
         """Construct the integration object
-    
-    f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
-    
-    >>> fun3d  = ... ## 3D-function
-    >>> fz     = Integral3D_XY( fun3d , xmin = 0 , xmax = 1 , ymin = 0 , ymax = 1 )
-    >>> print fz ( 1 )
+        
+        f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
+        
+        >>> fun3d  = ... ## 3D-function
+        >>> fz     = Integral3D_XY( fun3d , xmin = 0 , xmax = 1 , ymin = 0 , ymax = 1 )
+        >>> print fz ( 1 )
         """
         Integrate3D_X.__init__ ( self , fun3d , xmin , xmax , args , err , **kwargs )
         self.__ymin = ymin
@@ -1327,7 +1327,7 @@ class Integrate3D_XY(Integrate3D_X) :
     def __call__ ( self , z , *args ) :
         """Evaluate the function (perform (xy)-integration)
         
-            f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
+        f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
         
         >>> fun3d  = ... ## 3D-function
         >>> fz     = Integral3D_XY( fun3d , xmin = 0 , xmax = 1 , ymin = 0 , ymax = 1 )
@@ -1353,7 +1353,7 @@ class Integrate3D_XY(Integrate3D_X) :
 # =============================================================================
 ## @class Integrate3D_XZ
 #  Perform (partial) integration of 3D function
-#  \f$  f(y) = \int_{x_{min}}^{x_{max}}\int^{z_{max}}_{z_{min}} f_{2D}(x,y,z) dxdz \f$ 
+#  \f{displaymath} f(y) = \int_{x_{min}}^{x_{max}}\int^{z_{max}}_{z_{min}} f_{2D}(x,y,z) dxdz \f}
 #  @code
 #  fun3d  = ... ## 2D-function
 #  fy     = Integral3D_XZ( fun3d , xmin = 0 , xmax = 1  , zmin = 0, zmax = 1 )
@@ -1384,7 +1384,7 @@ class Integrate3D_XZ(Integrate3D_X) :
         self.__zmax = zmax
         
         
-    ##  evaluate the function (perform xz-integration) 
+    ## evaluate the function (perform xz-integration) 
     def __call__ ( self , y , *args ) :
         """Evaluate the function (perform (xz)-integration)
         
@@ -1395,9 +1395,9 @@ class Integrate3D_XZ(Integrate3D_X) :
         >>> print fy ( 1 )
 
         """
-        ## create the helper function 
+        # create the helper function 
         _funxz_ = lambda x , z , *_ : self.func ( x , y , z , *_ )
-        ## make integration 
+        # make integration 
         return self._integrate_2D_ ( _funxz_ ,
                                      self.xmin , self.xmax ,
                                      self.zmin , self.zmax , args = args)
@@ -1415,7 +1415,7 @@ class Integrate3D_XZ(Integrate3D_X) :
 # =============================================================================
 ## @class Integrate3D_YZ
 #  Perform (partial) integration of 3D function
-#  \f$  f(x) = \int_{y_{min}}^{y_{max}}\int^{z_{max}}_{z_{min}} f_{2D}(x,y,z) dydz \f$ 
+#  \f{displaymath} f(x) = \int_{y_{min}}^{y_{max}}\int^{z_{max}}_{z_{min}} f_{2D}(x,y,z) dydz \f}
 #  @code
 #  fun3d  = ... ## 2D-function
 #  fx     = Integral3D_YZ( fun3d , ymin = 0 , ymax = 1  , zmin = 0, zmax = 1 )
@@ -1434,11 +1434,11 @@ class Integrate3D_YZ(Integrate3D_Y) :
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , zmin , zmax , args = () , err = False , **kwargs ) :
         """Construct the integration object
-    f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
-    
-    >>> fun3d  = ... ## 3D-function
-    >>> fx     = Integral3D_YZ( fun3d , ymin = 0 , ymax = 1 , zmin = 0 , zmax = 1 )
-    >>> print fx ( 1 )
+        f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
+        
+        >>> fun3d  = ... ## 3D-function
+        >>> fx     = Integral3D_YZ( fun3d , ymin = 0 , ymax = 1 , zmin = 0 , zmax = 1 )
+        >>> print fx ( 1 )
         """
         Integrate3D_Y.__init__ ( self , fun3d , xmin , xmax , args , err , **kwargs )
         self.__zmin = zmin
@@ -1455,9 +1455,9 @@ class Integrate3D_YZ(Integrate3D_Y) :
         >>> fx     = Integral3D_YZ( fun3d , ymin = 0 , ymax = 1 , zmin = 0 , zmax = 1 )
         >>> print fx ( 1 )
         """
-        ## create the helper function 
+        # create the helper function 
         _funyz_ = lambda y , z , *_ : self.func ( x , y , z , *_ )
-        ## make integration 
+        # make integration 
         return self._integrate_2D_ ( _funyz_ ,
                                      self.ymin , self.ymax ,
                                      self.zmin , self.zmax , args = args)
@@ -1470,8 +1470,6 @@ class Integrate3D_YZ(Integrate3D_Y) :
     def zmax ( self ) :
         """High integration limit"""
         return self.__zmax
-
-
 
 
 # =============================================================================
