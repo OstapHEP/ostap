@@ -549,7 +549,7 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
 # =============================================================================
 ## construct std::vector<std::complex> from the arguments
 def complexes ( arg1 , *args ) :
-    """Construct the std::vector<std::complex<dobule>> from the arguments    
+    """Construct the std::vector<std::complex<double>> from the arguments    
     >>> v1 = complexs( 1+2j )
     >>> v2 = complexs( 1 , 1+2j , 1  )
     >>> v3 = complexs( [ 1 , 2 , 3+3j ] )    

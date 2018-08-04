@@ -163,8 +163,8 @@ else                       : logger = getLogger ( __name__              )
 #
 #
 # Also analytical integrals can be specified using two methods:
-#  - <code>get_analytical_integral</code>, python' partner of <code>RooAbsPdf::getAnalyticalIntegral</.code>
-#  - <code>analytical_integral</code>, python' partner of <code>RooAbsPdf::analyticalIntegral</.code>
+#  - <code>get_analytical_integral</code>, python' partner of <code>RooAbsPdf::getAnalyticalIntegral</code>
+#  - <code>analytical_integral</code>, python' partner of <code>RooAbsPdf::analyticalIntegral</code>
 #  @code
 #    ## declare analytical integral 
 #    def get_analytical_integral ( self ) :
@@ -339,7 +339,7 @@ class PyPDF (object) :
         return self.pdf.intCode ()
 
     # =================================================================================
-    ## Safe shortcut for <code>RooAbsPdf.matchArgs ( allDeps , analDeps , *vars )</code> 
+    ## Safe shortcut for <code>RooAbsPdf.matchArgs(allDeps,analDeps,*vars)</code> 
     def matchArgs ( self , *vars ) :
         """Safe shortcut for RooAbsPdf.matchArgs ( allDeps , analDeps , *vars )
         """

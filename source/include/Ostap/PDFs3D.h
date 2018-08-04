@@ -117,7 +117,7 @@ namespace Ostap
      *  \f[  P(x,y,z) = \sum_{i,j,k} a_{ijk}B^{n}_i(x) B^{n}_j(y) B^{n}_k(z)\f] 
      *  where all coefficients \f$a_{ijk}\f$ are:
      * - non-negative: \f$ a_{ijk}\ge0 \f$
-     * - symmetric: \f$ a_{ijk}=a_{jik}=a_{ikj}\f$
+     * - symmetric:    \f$ a_{ijk}=a_{jik}=a_{ikj}\f$
      * - constrainted: \f$ \sum_{i,j,k} a_{ijk}=1 \f$ 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2017-11-14
@@ -202,7 +202,7 @@ namespace Ostap
      *  \f[  P(x,y,z) = \sum_{i,j,k} a_{ijk}B^{n}_i(x) B^{n}_j(y) B^{n_z}_k(z)\f] 
      *  where all coefficients \f$a_{ijk}\f$ are:
      * - non-negative: \f$ a_{ijk}\ge0 \f$
-     * - symmetric for \f$ x \leftrightarrow y\f$ interchange: f$ a_{ijk}=a_{jik}\f$
+     * - symmetric for \f$ x \leftrightarrow y \f$ interchange: \f$a_{ijk}=a_{jik}\f$
      * - constrainted: \f$ \sum_{i,j,k} a_{ijk}=1 \f$ 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2017-11-14

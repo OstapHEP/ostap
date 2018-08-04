@@ -3,4 +3,7 @@
 #      PATTERN *.in EXCLUDE
 #      PATTERN *.txt EXCLUDE
 # )
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py) 
+install(DIRECTORY . 
+        DESTINATION ostap
+        FILES_MATCHING PATTERN "*.py" )

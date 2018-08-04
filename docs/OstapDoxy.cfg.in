@@ -8,7 +8,6 @@ HTML_FOOTER          = @CMAKE_CURRENT_SOURCE_DIR@/docs/OstapFooter.html
 INPUT                = 
 FILE_PATTERNS        =  
 
-
 ## python source & python tests
 INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/ostap
 FILE_PATTERNS       += *.py 
@@ -20,8 +19,9 @@ INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/include
 ## examples
 INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/examples
 FILE_PATTERNS       += *.cpp *.h *.C 
+## FILE_PATTERNS       += *Histo*.cpp *Histo*.h *.C 
 
-
+TAGFILES            += ./ROOT.tag=https://root.cern.ch/doc/v@ROOT_DOXYTAG@/
 
 RECURSIVE            = YES 
 HAVE_DOT             = @HAVE_DOT@

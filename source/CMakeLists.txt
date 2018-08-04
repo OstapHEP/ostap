@@ -1,6 +1,6 @@
 # root_generate_dictionary(ostap_dict ${CMAKE_CURRENT_SOURCE_DIR}/dict/Dict.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/selections.xml)
 
-find_package(ROOT       REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
+find_package(ROOT 6 REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
 
 # =============================================================================
 ## Locate GSL 
@@ -33,46 +33,20 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python-version
 find_package(PythonInterp ${PYVERSION_ROOT} REQUIRED )
 find_package(PythonLibs                     REQUIRED )
 
-
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
-
-if(PYTHONLIBS_FOUND)
-  set(OSTAP_USE_PYTHONLIBS 1)
-else() 
-  set(OSTAP_USE_PYTHONLIBS 0)
-endif()               
 
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap/Config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h"
   )
 
-function( MAKE_DICT name header selection )
-   REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANTS)
-   add_library( ${name}Dict SHARED ${name}.cxx )
-   add_dependencies(${name}Dict ${name}-dictgen)
-   # set_target_properties( ${name} PROPERTIES COMPILE_FLAGS ${ROOT_CXX_FLAGS} )
-   target_link_libraries( ${name}Dict ostap ${ROOT_LIBRARIES})
-endfunction( MAKE_DICT )
 
-#---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
-include(${ROOT_USE_FILE})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
 
-if(PYTHONLIBS_FOUND)
- include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
-else() 
- include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
-endif()               
-
-# REFLEX_GENERATE_DICTIONARY(ostap_dict src/dict/Ostap.hh SELECTION src/dict/Ostap.xml)
-MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION ${LIBRARY_OUTPUT_PATH})
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 #---Create a shared library 
 add_library(ostap SHARED src/format.cpp
                          src/gauss.cpp
@@ -143,14 +117,36 @@ add_library(ostap SHARED src/format.cpp
                          src/WStatEntity.cpp    
                          src/nSphere.cpp      
                          src/owens.cpp      
-                        )    
+                        )
 
-target_link_libraries(ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES})
+target_compile_features (ostap PUBLIC cxx_std_14)
+target_link_libraries   (ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES} ${PYTHON_LIBRARIES})
 
-# For clang we need to define __MATH_LONG_DOUBLE_CONSTANTS for
-# defining M_El, M_PIl math constants.
-#set(COMPILE_DEFINITIONS -D__MATH_LONG_DOUBLE_CONSTANTS)
-# add_definitions(-D__MATH_LONG_DOUBLE_CONSTANTS)
-set_target_properties(ostap ostapDict PROPERTIES
-  SUFFIX ".so"
-  COMPILE_DEFINITIONS __MATH_LONG_DOUBLE_CONSTANTS)
+function( MAKE_DICT name header selection )
+   REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANT -Wno-inconsistent-missing-override)
+   add_library( ${name}Dict MODULE ${name}.cxx)
+   add_dependencies(${name}Dict ${name}-dictgen ostap)
+   target_compile_features ( ${name}Dict PUBLIC cxx_std_14)
+   target_link_libraries   ( ${name}Dict ostap )
+endfunction( MAKE_DICT )
+
+#---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
+include(${ROOT_USE_FILE})
+
+## make dictionaries 
+MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
+ 
+## For clang we need to define __MATH_LONG_DOUBLE_CONSTANTS for
+## defining M_El, M_PIl math constants.
+## set(COMPILE_DEFINITIONS -D__MATH_LONG_DOUBLE_CONSTANTS)
+## add_definitions(-D__MATH_LONG_DOUBLE_CONSTANTS)
+## set_target_properties(ostap ostapDict PROPERTIES
+## SUFFIX ".so"
+## COMPILE_DEFINITIONS __MATH_LONG_DOUBLE_CONSTANTS)
+
+install(TARGETS                             ostap     LIBRARY DESTINATION lib )
+install(TARGETS                             ostapDict LIBRARY DESTINATION lib )
+install(FILES   ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib )
+install(FILES   ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib )
+
+set( $ENV{LD_LIBRARY_PATH} ${CMAKE_INSTALL_PREFIX}/lib:$ENV{LD_LIBRARY_PATH} ) 
