@@ -5,7 +5,8 @@ project(Ostap LANGUAGES CXX)
 set(OSTAP_VERSION_MAJOR 1)
 set(OSTAP_VERSION_MINOR 2)
 set(OSTAP_VERSION_PATCH 0)
-set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH})
+set(OSTAP_VERSION_TWEAK 0)
+set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
 
 # Use compiler from PATH, not the system one
@@ -21,6 +22,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 add_subdirectory(ostap)
 add_subdirectory(source)
+add_subdirectory(scripts)
 
 # first we can indicate the documentation build as an option and set it to ON by default
 option(BUILD_DOC "Build documentation" ON)
@@ -30,6 +32,8 @@ set(LIBRARY_OUTPUT_PATH    "${CMAKE_BINARY_DIR}/lib")
 ### where to put the executables
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
+
+if (BUILD_DOC) 
 find_program(DOXYGEN_EXECUTABLE NAMES doxygen)
 if ( EXISTS "${DOXYGEN_EXECUTABLE}" ) 
  find_package (ROOT) 
@@ -51,9 +55,10 @@ if ( EXISTS "${DOXYGEN_EXECUTABLE}" )
         DEPENDS root_doxy_tag
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT} 2> grep -e 'Fontconfig error: Cannot load default config file' -v 
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating API documentation with Doxygen (could be time consuming)"
+        COMMENT "Generating API documentation with Doxygen (could be time consuming O(15-20'))"
         VERBATIM)
  ##install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc/html DESTINATION doc)
  install(FILES     ${CMAKE_CURRENT_BINARY_DIR}/ROOT.tag         DESTINATION doc)
  install(FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_doxy.tag   DESTINATION doc)
 endif() 
+endif(BUILD_DOC) 
