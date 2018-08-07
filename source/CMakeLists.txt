@@ -45,6 +45,7 @@ configure_file (
 
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
+message ( 'use fie' ${ROOT_USE_FILE} ) 
 
 function( MAKE_DICT name header selection )
    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANT -Wno-inconsistent-missing-override)
@@ -135,20 +136,18 @@ target_link_libraries      (ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES} ${PYTHON_LI
 target_include_directories (ostap
     PUBLIC 
         $<INSTALL_INTERFACE:include>    
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include ${ROOT_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR} ${ROOT_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}
 )
-
 
 ## make dictionaries 
 MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
  
 target_include_directories (ostapDict
     PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include ${ROOT_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/include ${ROOT_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}
 )
-
 
 ## For clang we need to define __MATH_LONG_DOUBLE_CONSTANTS for
 ## defining M_El, M_PIl math constants.

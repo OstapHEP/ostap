@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
-project(Ostap LANGUAGES CXX)
+project(ostap LANGUAGES CXX)
+include(CTest)
 
 set(OSTAP_VERSION_MAJOR 1)
 set(OSTAP_VERSION_MINOR 2)
@@ -19,13 +20,18 @@ find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PA
 # - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
+if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
+  set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
+endif ( )
 
-add_subdirectory(ostap)
+message  ('install prefix' ${CMAKE_INSTALL_PREFIX} ) 
+ 
 add_subdirectory(source)
+add_subdirectory(ostap)
 add_subdirectory(scripts)
 
 # first we can indicate the documentation build as an option and set it to ON by default
-option(BUILD_DOC "Build documentation" ON)
+option(BUILD_DOC "Build documentation?" ON)
 
 ### where to put the libraries
 set(LIBRARY_OUTPUT_PATH    "${CMAKE_BINARY_DIR}/lib")
@@ -44,21 +50,40 @@ if ( EXISTS "${DOXYGEN_EXECUTABLE}" )
  set (HAVE_DOT NO)
  endif()
  string(APPEND ROOT_DOXYTAG ${ROOT_VERSION_MAJOR} ${ROOT_VERSION_MINOR})
- find_program (WGET_EXECUTABLE wget) 
- add_custom_target ( root_doxy_tag
-                     COMMAND ${WGET_EXECUTABLE} -q http://root.cern.ch/doc/v${ROOT_DOXYTAG}/ROOT.tag 
-                     COMMENT "(w)get ROOT.tag file" )
+ find_file (ROOT_TAG_FILE ROOT.tag ${CMAKE_CURRENT_BINARY_DIR} )
+ if (ROOT_TAG_FILE_NOTFOUND) 
+   find_program (WGET_EXECUTABLE wget) 
+   add_custom_target ( root_doxy_tag
+                       COMMAND ${WGET_EXECUTABLE} -q http://root.cern.ch/doc/v${ROOT_DOXYTAG}/ROOT.tag 
+                       COMMENT "(w)get ROOT.tag file" )
+   find_file (ROOT_TAG_FILE ROOT.tag ${CMAKE_CURRENT_BINARY_DIR} )
+ else()
+   add_custom_target ( root_doxy_tag COMMENT ${ROOT_TAG_FILE} ) 
+ endif() 
  set(DOXYGEN_IN  ${CMAKE_CURRENT_SOURCE_DIR}/docs/OstapDoxy.cfg.in)
  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/OstapDoxy.cfg)
  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)              
  add_custom_target(doxy_doc 
-        DEPENDS root_doxy_tag
+        DEPENDS root_doxy_tag ostap 
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT} 2> grep -e 'Fontconfig error: Cannot load default config file' -v 
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen (could be time consuming O(15-20'))"
         VERBATIM)
- ##install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc/html DESTINATION doc)
+ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc/html DESTINATION doc)
+ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc/man  DESTINATION doc)
  install(FILES     ${CMAKE_CURRENT_BINARY_DIR}/ROOT.tag         DESTINATION doc)
  install(FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_doxy.tag   DESTINATION doc)
 endif() 
-endif(BUILD_DOC) 
+endif(BUILD_DOC)
+
+
+ 
+# build a CPack driven installer package
+include (InstallRequiredSystemLibraries)
+set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set (CPACK_PACKAGE_VERSION_MAJOR "${OSTAP_VERSION_MAJOR}")
+set (CPACK_PACKAGE_VERSION_MINOR "${OSTAP_VERSION_MINOR}")
+set (CPACK_PACKAGE_VERSION_PATCH "${OSTAP_VERSION_PATCH}")
+set (CPACK_PACKAGE_VERSION_TWEAK "${OSTAP_VERSION_TWEAK}")
+set (CPACK_PACKAGE_ICON           ${CMAKE_CURRENT_SOURCE_DIR}/docs/ostap.jpg )
+include (CPack)

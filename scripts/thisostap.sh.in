@@ -1,0 +1,78 @@
+#!/bin/env bash
+# =====================================================================
+# @file
+# Helper script to  define the environment for ostap-@OSTAP_VERSION@ 
+# =====================================================================
+
+function _path_prepend {
+cat<<EOF | python - $1 $2 
+from __future__ import print_function
+import os,sys
+path = sys.argv[1] 
+item = sys.argv[2] if 2<len(sys.argv)  else ''
+item = item.strip() 
+path = os.environ.get ( path , '' )
+path = path.split ( os.pathsep ) 
+if item : path.insert ( 0 , item ) 
+npath = []
+for p in path : 
+   if not os.path.exists ( p ) : continue 
+   if not os.path.isdir  ( p ) : continue 
+   pn = os.path.normpath ( p ) 
+   if pn in npath              : continue 
+   npath.append ( pn  )
+path = os.pathsep.join ( npath )
+print(path)
+EOF
+}
+
+function _path_remove {
+cat<<EOF | python - $1 $2 
+from __future__ import print_function
+import os,sys
+#print sys.argv
+path  = sys.argv[1] 
+item  = sys.argv[2] if 2<len(sys.argv)  else ''
+item  = item.strip() 
+##print(path, item)
+path  = os.environ.get ( path , '' )
+path  = path.split ( os.pathsep ) 
+npath = []
+for p in path : 
+   if os.path.exists ( item ) and os.path.samefile ( p , item ) : continue    
+   if not os.path.exists ( p ) : continue 
+   if not os.path.isdir  ( p ) : continue 
+   pn = os.path.normpath ( p ) 
+   if pn in npath              : continue 
+   npath.append ( pn )
+path = os.pathsep.join ( npath )
+print(path)
+EOF
+}
+
+## clean the path 
+if [ -z "$OSTAPDIR" ] ; then
+   old_ostapdir=$OSTAPDIR
+   export PATH=$(            _path_remove PATH            $old_ostapdir/bin     ) 
+   export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir         ) 
+   export LD_LIBRARY_PATH=$( _path_remove LD_LIBRARY_PATH $old_ostapdir/lib     ) 
+   export MANPATH=$(         _path_remove MANPATH         $old_ostapdir/doc/man )
+fi
+
+## define OSTAPDIR  
+export OSTAPDIR=@CMAKE_INSTALL_PREFIX@
+export OSTAPVERSION=@OSTAP_VERSION@ 
+
+## update all   nesessary paths 
+export PATH=$(              _path_prepend PATH            $OSTAPDIR/bin     ) 
+export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR         )  
+export LD_LIBRARY_PATH=$(   _path_prepend LD_LIBRARY_PATH $OSTAPDIR/lib     )  
+export MANPATH=$(           _path_prepend MANPATH         $OSTAPDIR/doc/man )  
+
+unset -f _path_prepend
+unset -f _path_remove 
+
+# =====================================================================
+#                                                               The END 
+# =====================================================================
+ 

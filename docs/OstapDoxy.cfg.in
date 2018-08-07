@@ -9,8 +9,8 @@ INPUT                =
 FILE_PATTERNS        =  
 
 ## python source & python tests
-INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/ostap
-FILE_PATTERNS       += *.py 
+##INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/ostap
+##FILE_PATTERNS       += *.py 
 
 ## C++ source  
 INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/src 
@@ -18,8 +18,9 @@ INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/include
 
 ## examples
 INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/examples
-FILE_PATTERNS       += *.cpp *.h *.C 
-## FILE_PATTERNS       += *Histo*.cpp *Histo*.h *.C 
+##FILE_PATTERNS       += *.cpp *.h *.C 
+		    
+FILE_PATTERNS       += *Histo*.cpp *Histo*.h *.C 
 
 TAGFILES            += ./ROOT.tag=https://root.cern.ch/doc/v@ROOT_DOXYTAG@/
 
@@ -37,8 +38,8 @@ BUILTIN_STL_SUPPORT  = YES
 GENERATE_HTML        = YES 
 GENERATE_LATEX       = YES 
 GENERATE_XML         = YES 
+GENERATE_MAN         = YES 
 #GENERATE_RTF        = YES 
-#GENERATE_MAN        = YES 
 #GENERATE_DOCBOOK    = YES 
 
 USE_PDFLATEX         = YES 
