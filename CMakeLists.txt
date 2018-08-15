@@ -51,11 +51,13 @@ if ( EXISTS "${DOXYGEN_EXECUTABLE}" )
  endif()
  string(APPEND ROOT_DOXYTAG ${ROOT_VERSION_MAJOR} ${ROOT_VERSION_MINOR})
  find_file (ROOT_TAG_FILE ROOT.tag ${CMAKE_CURRENT_BINARY_DIR} )
- if (ROOT_TAG_FILE_NOTFOUND) 
-   find_program (WGET_EXECUTABLE wget) 
+ if ( NOT ${ROOT_TAG_FILE} ) 
+   find_program (WGET_EXECUTABLE wget)
+   set( ROOT_TAG_URL  http://root.cern.ch/doc/v${ROOT_DOXYTAG}/ROOT.tag ) 
    add_custom_target ( root_doxy_tag
-                       COMMAND ${WGET_EXECUTABLE} -q http://root.cern.ch/doc/v${ROOT_DOXYTAG}/ROOT.tag 
-                       COMMENT "(w)get ROOT.tag file" )
+                       COMMAND ${WGET_EXECUTABLE} -q ${ROOT_TAG_URL} 
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                       COMMENT "(w)get ROOT.tag file from ${ROOT_TAG_URL}" )
    find_file (ROOT_TAG_FILE ROOT.tag ${CMAKE_CURRENT_BINARY_DIR} )
  else()
    add_custom_target ( root_doxy_tag COMMENT ${ROOT_TAG_FILE} ) 

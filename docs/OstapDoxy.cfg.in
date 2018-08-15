@@ -1,6 +1,6 @@
 PROJECT_NAME         = "ostap @OSTAP_VERSION@"
 OUTPUT_DIRECTORY     = @CMAKE_CURRENT_BINARY_DIR@/doxygen_doc 
-GENERATE_TAGFILE     = ostap_doxy.tag
+GENERATE_TAGFILE     = @CMAKE_CURRENT_BINARY_DIR@/ostap_doxy.tag
 
 HTML_HEADER          = @CMAKE_CURRENT_SOURCE_DIR@/docs/OstapHeader.html
 HTML_FOOTER          = @CMAKE_CURRENT_SOURCE_DIR@/docs/OstapFooter.html

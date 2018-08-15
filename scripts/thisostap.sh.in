@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/bin/bash
 # =====================================================================
 # @file
 # Helper script to  define the environment for ostap-@OSTAP_VERSION@ 
@@ -51,7 +51,7 @@ EOF
 }
 
 ## clean the path 
-if [ -z "$OSTAPDIR" ] ; then
+if [ -n "$OSTAPDIR" ] ; then
    old_ostapdir=$OSTAPDIR
    export PATH=$(            _path_remove PATH            $old_ostapdir/bin     ) 
    export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir         ) 
@@ -59,9 +59,18 @@ if [ -z "$OSTAPDIR" ] ; then
    export MANPATH=$(         _path_remove MANPATH         $old_ostapdir/doc/man )
 fi
 
-## define OSTAPDIR  
-export OSTAPDIR=@CMAKE_INSTALL_PREFIX@
-export OSTAPVERSION=@OSTAP_VERSION@ 
+# =============================================================================
+## define OSTAPDIR  as a directory where the script 
+# =============================================================================
+OSTAPDIR="${BASH_SOURCE[0]}"
+while [ -h "$OSTAPDIR" ]; do # resolve $OSTAPDIR until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$OSTAPDIR" )" >/dev/null && pwd )"
+  OSTAPDIR="$(readlink "$OSTAPDIR")"
+  [[ $OSTAPDIR != /* ]] && OSTAPDIR="$DIR/$OSTAPDIR" # if $OSTAPDIR was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+OSTAPDIR="$( cd -P "$( dirname "$OSTAPDIR" )" >/dev/null && pwd )" ; export OSTAPDIR 
+
+OSTAPVERSION=@OSTAP_VERSION@                                       ; export OSTAPVERSION
 
 ## update all   nesessary paths 
 export PATH=$(              _path_prepend PATH            $OSTAPDIR/bin     ) 
