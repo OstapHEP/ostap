@@ -9,7 +9,6 @@ set(OSTAP_VERSION_PATCH 0)
 set(OSTAP_VERSION_TWEAK 0)
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
-
 # Use compiler from PATH, not the system one
 # http://stackoverflow.com/a/29904501/504346
 find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
@@ -28,6 +27,7 @@ message  ('install prefix' ${CMAKE_INSTALL_PREFIX} )
  
 add_subdirectory(source)
 add_subdirectory(ostap)
+add_subdirectory(examples)
 add_subdirectory(scripts)
 
 # first we can indicate the documentation build as an option and set it to ON by default
