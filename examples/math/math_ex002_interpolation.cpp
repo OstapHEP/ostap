@@ -161,7 +161,7 @@ int math_ex002_interpolation ()
             << "] mean = " << c7.mean()/scale << "+-" << c7.rms()/scale 
             <<  "  \tmax=" << c7.max ()/scale << std::endl ;
   //
-  return 1 ;
+  return 0 ;
 }
 // ================================================================================
 // The END 
