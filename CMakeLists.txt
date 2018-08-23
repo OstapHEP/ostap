@@ -23,8 +23,6 @@ if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
   set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
 endif ( )
 
-message  ('install prefix' ${CMAKE_INSTALL_PREFIX} ) 
- 
 add_subdirectory(source)
 add_subdirectory(ostap)
 add_subdirectory(examples)

@@ -45,7 +45,6 @@ configure_file (
 
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
-message ( 'use fie' ${ROOT_USE_FILE} ) 
 
 function( MAKE_DICT name header selection )
    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANT -Wno-inconsistent-missing-override)
