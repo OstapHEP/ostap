@@ -564,14 +564,12 @@ def _h1_iter_reversed_ ( h1 ) :
     sx = ax.GetNbins ()
     for i in range ( sx , 0 , -1 ) : 
         yield i
-
         
 ROOT.TH1  . __iter__     = _h1_iter_ 
 ROOT.TH1F . __iter__     = _h1_iter_ 
 ROOT.TH1D . __iter__     = _h1_iter_ 
 ROOT.TH1F . __reversed__ = _h1_iter_reversed_ 
 ROOT.TH1D . __reversed__ = _h1_iter_reversed_ 
-
 
 # =============================================================================
 ## iterator for 2D-histogram 
@@ -662,14 +660,12 @@ def _h3_iter_reversed_ ( h3 ) :
         for iy in range ( sy , 0 , -1  ) : 
             for ix in range ( sx , 0 , -1  ) : 
                 yield  ix , iy , iz
-                
-                    
+                                    
 ROOT.TH3  . __iter__     = _h3_iter_ 
 ROOT.TH3F . __iter__     = _h3_iter_ 
 ROOT.TH3D . __iter__     = _h3_iter_ 
 ROOT.TH3F . __reversed__ = _h3_iter_reversed_ 
 ROOT.TH3D . __reversed__ = _h3_iter_reversed_ 
-
 
 # =============================================================================
 ## C++ function for 1D-histogram interpolation
@@ -779,8 +775,6 @@ ROOT.TH3F  .  binsy       = lambda s : s.GetNbinsY()
 ROOT.TH3F  .  binsz       = lambda s : s.GetNbinsZ()
 
 
-
-
 # =============================================================================
 ## check bin in 2D-histo 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -828,8 +822,6 @@ def _num_empty_ ( h ) :
     return ne 
 
 ROOT.TH1 . numEmpty = _num_empty_
-
-
 
 # =============================================================================
 ## find bin in 1D-histogram
@@ -6419,11 +6411,16 @@ _decorated_classes_ = (
 _new_methods_   = (
     #
     ROOT.TH1F.__init__ , 
-    ROOT.TH1F.Clone    ,
     ROOT.TH2F.__init__ , 
-    ROOT.TH2F.Clone    ,
-    ROOT.TH3F.__init__ , 
+    ROOT.TH3F.__init__ ,
+    #
     ROOT.TH3F.Clone    ,
+    ROOT.TH1F.Clone    ,
+    ROOT.TH2F.Clone    ,
+    #
+    ROOT.TH3F.clone    ,
+    ROOT.TH1F.clone    ,
+    ROOT.TH2F.clone    ,
     #
     ROOT.TAxis . __iter__     ,
     ROOT.TAxis . __reversed__ ,
