@@ -50,7 +50,7 @@ function( MAKE_DICT name header selection )
    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANT -Wno-inconsistent-missing-override)
    add_library( ${name}Dict MODULE ${name}.cxx)
    add_dependencies(${name}Dict ${name}-dictgen ostap)
-   target_compile_features ( ${name}Dict PUBLIC cxx_std_14)
+   ##target_compile_features ( ${name}Dict PUBLIC cxx_std_14 )
    target_link_libraries   ( ${name}Dict ostap )
 endfunction( MAKE_DICT )
 
@@ -129,7 +129,7 @@ add_library(ostap SHARED src/format.cpp
                          src/owens.cpp      
                         )
 
-target_compile_features    (ostap PUBLIC cxx_std_14 )
+##target_compile_features    (ostap PUBLIC cxx_std_14 )
 target_link_libraries      (ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES} ${PYTHON_LIBRARIES})
 
 target_include_directories (ostap
@@ -156,12 +156,18 @@ target_include_directories (ostapDict
 ## SUFFIX ".so"
 ## COMPILE_DEFINITIONS __MATH_LONG_DOUBLE_CONSTANTS)
 
-install ( TARGETS ostap     LIBRARY DESTINATION lib INCLUDES DESTINATION include )
-install ( TARGETS ostapDict LIBRARY DESTINATION lib )
+install ( TARGETS ostap     EXPORT   ostap-export 
+                            LIBRARY  DESTINATION lib 
+                            INCLUDES DESTINATION include )
+install ( TARGETS ostapDict LIBRARY  DESTINATION lib )
 
 install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     DESTINATION include       )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           )
 
-set( $ENV{LD_LIBRARY_PATH} ${CMAKE_INSTALL_PREFIX}/lib:$ENV{LD_LIBRARY_PATH} ) 
+install(EXPORT ostap-export
+  FILE         OstapTargets.cmake
+  NAMESPACE    ostap::
+  DESTINATION  cmake/Ostap
+)

@@ -1062,12 +1062,11 @@ def _h3_call_ ( h3                         ,
         tx = 0
         ty = 0
         tz = 0
-    elif isinstance ( interpolate , (tuple,list) ) and 3 <= len ( interpolate ) :
+    elif isinstance ( interpolate , ( tuple , list ) ) and 3 <= len ( interpolate ) :
         tx = int ( interpolate [ 0 ] ) 
         ty = int ( interpolate [ 1 ] ) 
-        tx = int ( interpolate [ 2 ] )
+        tz = int ( interpolate [ 2 ] )
 
-        
     ## use C++ function for fast interpolation 
     result = _interpolate_3D_ ( h3 , x , y , z , tx , ty , tz , edges , extrapolate , density )
 
