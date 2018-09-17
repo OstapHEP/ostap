@@ -28,9 +28,14 @@ or, if you are working at the LHCb environment
 
     lb-run ROOT bash
 
-Example
--------
+e.g. at lxplus/7 one can do 
 
-Build and run `python/example.py`:
+    git clone git://github.com/OstapHEP/ostap.git
+    cd ostap
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=<INSTALL_DIRECTORY>
+    make -j8
+    make install
+    source <INSTALL_DIRECTORY>/thisostap.sh 
 
-    ./scripts/bootstrap
