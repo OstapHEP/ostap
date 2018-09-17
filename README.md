@@ -30,6 +30,7 @@ or, if you are working at the LHCb environment
 
 e.g. at lxplus/7 one can do 
 
+    lb-run --ext Python --ext pytools --ext pyanalysis --ext ROOT LCG/93 bash --norc
     git clone git://github.com/OstapHEP/ostap.git
     cd ostap
     mkdir build
