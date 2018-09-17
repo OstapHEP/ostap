@@ -330,7 +330,8 @@ def inverse_parabolic ( a , b , c ) :
 #  fun          = ...
 #  r = inverse_cubic ( Point ( xa , fun ( xa ) ) ,
 #                      Point ( xb , fun ( xb ) ) ,
-#                      Point ( xc , fun ( xc ) ) )
+#                      Point ( xc , fun ( xc ) ) ,
+#                      Point ( xd , fun ( xd ) ) )
 #  @endcode
 def inverse_cubic ( a , b , c , d ) :
     """Inverse cubic interpolaton via the last four approximations to the root
