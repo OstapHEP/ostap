@@ -16,7 +16,11 @@ __all__     = (
     'PolyPos2D_pdf'   , ## A positive polynomial in 2D  
     'PolyPos2Dsym_pdf', ## A positive symmetric polynomial in 2D
     'PSPol2D_pdf'     , ## Product of phase spaces, modulated with 2D polynomial
+    'PSPol2D2_pdf'    , ## Product of phase spaces, modulated with 2D polynomial
+    'PSPol2D3_pdf'    , ## Product of phase spaces, modulated with 2D polynomial
     'PSPol2Dsym_pdf'  , ## Symmetric product of phase spaces, modulated with 2D polynomial
+    'PSPol2D2sym_pdf' , ## Symmetric product of phase spaces, modulated with 2D polynomial
+    'PSPol2D3sym_pdf' , ## Symmetric product of phase spaces, modulated with 2D polynomial
     'ExpoPSPol2D_pdf' , ## Exponential times  phase space times positive 2D-polynomial
     'ExpoPol2D_pdf'   , ## Product of exponents times positive 2D-polynomial
     'ExpoPol2Dsym_pdf', ## Symmetric version of above
@@ -185,33 +189,37 @@ class PolyPos2Dsym_pdf(PolyBase2) :
         """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
         return self.__n
        
-models.append ( PolyPos2Dsym_pdf ) 
+models.append ( PolyPos2Dsym_pdf )
+
 # =============================================================================
 ## @class PSPol2D_pdf
-#  Product of phase space factors, modulated by positive polynomial in 2D 
-#  \f$  f(x,y) = \Phi_1(x) \times \Phi_2(y) \times P^+(x,y) \f$,
-#  where \f$ P^+(x,y)\f$ denotes the positive polynomial,
+#  The 2D-function, that represent a cross-product of two phase-space factors,
+#  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+#  The function is:
+#  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
+#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
+#  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
 #  @see Ostap::Models::PS2DPol
 #  @see Ostap::Math::PS2DPol
+#  @see Ostap::Math::PhaseSpaceNL 
+#  @see Ostap::Math::Positive2D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PSPol2D_pdf(PolyBase2) :
     """Product of phase space factors, modulated by the positive polynom in 2D
     
-    f(x,y) = PSX(x) * PSY(y) * Pnk(x,y)
+    f(x,y) = PSx(x) * PSy(y) * Pnk(x,y)
     
     where
-    - PSX(x) is a phase space function for x-axis (Ostap::Math::PhaseSpaceNL)
-    - PSY(y) is a phase space function for y-axis (Ostap::Math::PhaseSpaceNL)
-    - Pnk(x,y) is positive non-factorizable polynom
-    
-    Pnk(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y)
-    where:
-    - B^n_i - are Bernstein polynomials
+    - PSx(x) is a phase space function for x-axis   (Ostap::Math::PhaseSpaceNL)
+    - PSy(y) is a phase space function for y-axis   (Ostap::Math::PhaseSpaceNL)
+    - Pnk(x,y) is positive non-factorizable polynom (Ostap::Math::Positive2D)
+    -- Pnk(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y), where 
+    --- B^n_i - are Bernstein polynomials
     
     Note:
     - f(x,y)>=0 for whole 2D-range
-
+    
     """
     def __init__ ( self             ,
                    name             ,
@@ -219,11 +227,10 @@ class PSPol2D_pdf(PolyBase2) :
                    yvar             ,   ##  the second dimension
                    psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
                    psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
-                   nx  = 2          ,   ##  polynomial degree in X 
-                   ny  = 2          ,   ##  polynomial degree in Y 
-                   the_phis = None  ) : 
-
-
+                   nx   = 2         ,   ##  polynomial degree in X 
+                   ny   = 2         ,   ##  polynomial degree in Y 
+                   the_phis = None  ) :
+        
         ## check arguments 
         assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
         assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
@@ -237,8 +244,7 @@ class PSPol2D_pdf(PolyBase2) :
         
         self.__nx          =  nx
         self.__ny          =  ny
-        
-                        
+
         #
         ## finally build PDF 
         #
@@ -262,7 +268,7 @@ class PSPol2D_pdf(PolyBase2) :
             'psy'      : self.phasespacey ,
             'nx'       : self.nx   , 
             'ny'       : self.ny   , 
-            'the_phis' : self.phis , 
+            'the_phis' : self.phis ,
             }
     
     @property 
@@ -293,49 +299,305 @@ class PSPol2D_pdf(PolyBase2) :
     def ny ( self ) :
         """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
         return self.__ny
-
+    
+        
 models.append ( PSPol2D_pdf ) 
+
+
 # =============================================================================
-## @class PSPol2Dsym_pdf
-#  Symmetric product of phase space factors, modulated by positiev polynomial in 2D 
-#  \f$  f(x,y) = \Phi(x) \times \Phi(y) \times P^+_{sym}(x,y) \f$,
-#  where \f$ P^+_{sym}(x,y)\f$ denotes the symmetric positive polynomial,
-#  @see Ostap::Models::PS2DPolSym
-#  @see Ostap::Math::PS2DPolSym
+## @class PSPol2D2_pdf
+#  The 2D-function, that represent a cross-product of two phase-space factors,
+#  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+#  The function is:
+#  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
+#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
+#  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
+#  @see Ostap::Models::PS2DPol
+#  @see Ostap::Math::PS2DPol
+#  @see Ostap::Math::PhaseSpaceNL 
+#  @see Ostap::Math::Positive2D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
-class PSPol2Dsym_pdf(PolyBase2) :
-    """Symmetric product of phase space factors, modulated by the symmetrical
-    positive polynom in 2D
+class PSPol2D2_pdf(PolyBase2) :
+    """Product of phase space factors, modulated by the positive polynom in 2D
     
-    f(x,y) = PS(x) * PS(y) * Sn(x,y)
+    f(x,y) = PSx(x) * PSy(y) * Pnk(x,y)
     
     where
-    - PS(x) is a phase space function for axis (Ostap::Math::PhaseSpaceNL)
-    - Sn(x,y) is positive non-factorizable symemtric polynom
-    
-    Sn(x,y)= sum^{i=n}_{i=0}sum{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y)
-    
-    where:
-    
-    - B^n_i - are Bernstein polynomials
-    - a_{ij} = a_{ji}
+    - PSx(x) is a phase space function for x-axis   (Ostap::Math::PhaseSpaceNL)
+    - PSy(y) is a phase space function for y-axis   (Ostap::Math::PhaseSpaceNL)
+    - Pnk(x,y) is positive non-factorizable polynom (Ostap::Math::Positive2D)
+    -- Pnk(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y), where 
+    --- B^n_i - are Bernstein polynomials
     
     Note:
     - f(x,y)>=0 for whole 2D-range
-    - f(x,y) = f(y,x)
+    
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
+                   psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
+                   psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL
+                   mmax             ,   ##  max-mass 
+                   nx   = 2         ,   ##  polynomial degree in X 
+                   ny   = 2         ,   ##  polynomial degree in Y 
+                   the_phis = None  ) :
+        
+        ## check arguments 
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
+        assert isinstance ( mmax , float ) , "``mmax''-parameter is illegal: %s" % mmax
+
+        ## the base 
+        PolyBase2.__init__ ( self , name , xvar , yvar ,
+                             ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis )
+        
+        self.__phasespacex = psx  
+        self.__phasespacey = psy
+        
+        self.__nx          = nx
+        self.__ny          = ny
+        self.__mmax        = mmax
+        
+        #
+        ## finally build PDF 
+        #
+        self.pdf = Ostap.Models.PS2DPol2 (
+            'ps2D2_%s'     % name ,
+            'PS2DPol2(%s)' % name ,
+            self.x           ,
+            self.y           ,
+            self.phasespacex ,
+            self.phasespacey ,
+            self.mmax        ,
+            self.nx          ,
+            self.ny          , 
+            self.phi_list    )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'psx'      : self.phasespacex , 
+            'psy'      : self.phasespacey ,
+            'mmax'     : self.mmax , 
+            'nx'       : self.nx   , 
+            'ny'       : self.ny   , 
+            'the_phis' : self.phis ,
+            }
+    
+    @property 
+    def mass1 ( self ) :
+        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    
+    @property 
+    def mass2 ( self ) :
+        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        return self.yvar
+
+    @property
+    def phasespacex( self ) :
+        """``x-phasespace''-function for  PSPol2D-function"""
+        return self.__phasespacex
+    
+    @property
+    def phasespacey( self ) :
+        """``y-phasespace''-function for  PSPol2D-function"""
+        return self.__phasespacey 
+
+    @property
+    def mmax  ( self ) :
+        """``mmax''-parameter - the maximal allowed mass"""
+        return self.__mmax
+    
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__nx
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__ny
+    
+models.append ( PSPol2D2_pdf ) 
+
+
+
+
+# =============================================================================
+## @class PSPol2D3_pdf
+#  The 2D-function, that represent a cross-product of two phase-space factors,
+#  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+#  The function is:
+#  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
+#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
+#  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
+#  @see Ostap::Models::PS2DPol
+#  @see Ostap::Math::PS2DPol
+#  @see Ostap::Math::PhaseSpaceNL 
+#  @see Ostap::Math::Positive2D
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-01-10
+class PSPol2D3_pdf(PolyBase2) :
+    """Product of phase space factors, modulated by the positive polynom in 2D
+    
+    f(x,y) = PSx(x) * PSy(y) * Pnk(x,y)
+    
+    where
+    - PSx(x) is a phase space function for x-axis   (Ostap::Math::PhaseSpaceNL)
+    - PSy(y) is a phase space function for y-axis   (Ostap::Math::PhaseSpaceNL)
+    - Pnk(x,y) is positive non-factorizable polynom (Ostap::Math::Positive2D)
+    -- Pnk(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y), where 
+    --- B^n_i - are Bernstein polynomials
+    
+    Note:
+    - f(x,y)>=0 for whole 2D-range
+    
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
+                   psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
+                   psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL
+                   mmax             ,   ##  max-mass 
+                   nx   = 2         ,   ##  polynomial degree in X 
+                   ny   = 2         ,   ##  polynomial degree in Y 
+                   the_phis = None  ) :
+        
+        ## check arguments 
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
+        assert isinstance ( mmax , float ) , "``mmax''-parameter is illegal: %s" % mmax
+
+        ## the base 
+        PolyBase2.__init__ ( self , name , xvar , yvar , nx + ny , the_phis )
+        
+        self.__phasespacex = psx  
+        self.__phasespacey = psy
+        
+        self.__nx          = nx
+        self.__ny          = ny
+        self.__mmax        = mmax
+        
+        #
+        ## finally build PDF 
+        #
+        self.pdf = Ostap.Models.PS2DPol3 (
+            'ps2D3_%s'     % name ,
+            'PS2DPol3(%s)' % name ,
+            self.x           ,
+            self.y           ,
+            self.phasespacex ,
+            self.phasespacey ,
+            self.mmax        ,
+            self.nx          ,
+            self.ny          , 
+            self.phi_list    )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'psx'      : self.phasespacex , 
+            'psy'      : self.phasespacey ,
+            'mmax'     : self.mmax , 
+            'nx'       : self.nx   , 
+            'ny'       : self.ny   , 
+            'the_phis' : self.phis ,
+            }
+    
+    @property 
+    def mass1 ( self ) :
+        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    
+    @property 
+    def mass2 ( self ) :
+        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        return self.yvar
+
+    @property
+    def phasespacex( self ) :
+        """``x-phasespace''-function for  PSPol2D-function"""
+        return self.__phasespacex
+    
+    @property
+    def phasespacey( self ) :
+        """``y-phasespace''-function for  PSPol2D-function"""
+        return self.__phasespacey 
+
+    @property
+    def mmax  ( self ) :
+        """``mmax''-parameter - the maximal allowed mass"""
+        return self.__mmax
+    
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__nx
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__ny
+    
+models.append ( PSPol2D3_pdf ) 
+
+
+
+# =============================================================================
+## @class PSPol2Dsym_pdf
+#  The symmetric 2D-function, that represent a cross-product of two identical 
+#  phase-space factors,
+#  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
+#  polynomial
+#
+#  The function is:
+#  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
+#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
+#  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial
+# 
+# Clearly the function is symmetric under 
+# \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
+#  @see Ostap::Models::PS2DPolSym
+#  @see Ostap::Math::PS2DPolSym
+#  @see Ostap::Math::PhaseSpaceNL 
+#  @see Ostap::Math::Positive2DSym
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-01-10
+class PSPol2Dsym_pdf(PolyBase2) :
+    """Symmetric product of phase space factors, modulated by the positive polynom in 2D
+    
+    f(x,y) = PS(x) * PS(y) * Pn(x,y) 
+    
+    where
+    - PS(x) is a phase space function  (Ostap::Math::PhaseSpaceNL)
+    - Pnk(x,y) is positive symmetric non-factorizable polynom (Ostap::Math::Positive2DSym)
+    -- Pn(x,y) = sum^{i=n}_{i=0}sum^{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y), where 
+    --- B^n_i - are Bernstein polynomials
+    --- a_{ij}=a_{ji}
+    
+    Note:
+    - f(x,y)>=0 for whole 2D-range
+    - f(x,y)=f(y,x) for whole 2D-range
     """
     def __init__ ( self             ,
                    name             ,
                    xvar             ,   ##  the first  dimension  
                    yvar             ,   ##  the second dimension
                    ps               ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
-                   n   = 2          ,   ##  polynomial degree in Y
+                   n        = 2     ,   ##  polynomial degree in Y
                    the_phis = None  ) :
         
         ## check arguments 
         assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
         ## 
+
         ## the base 
         PolyBase2.__init__ ( self , name , xvar , yvar , ( n + 1 ) * ( n + 2 ) / 2  - 1 , the_phis )
 
@@ -346,17 +608,18 @@ class PSPol2Dsym_pdf(PolyBase2) :
         self.__phasespace = ps  
 
         self.__n = n 
+        
         #
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.PS2DPolSym (
             'ps2Ds_%s'       % name ,
             'PS2DPolSym(%s)' % name ,
-            self.x        ,
-            self.y        ,
-            ps            ,
-            n             ,
-            self.phi_list )
+            self.x          ,
+            self.y          ,
+            self.phasespace ,
+            self.n          ,
+            self.phi_list   )
         
         ## save configuration
         self.config = {
@@ -405,8 +668,276 @@ class PSPol2Dsym_pdf(PolyBase2) :
     def ny ( self ) :
         """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
         return self.__n
+    
         
 models.append ( PSPol2Dsym_pdf ) 
+
+
+# =============================================================================
+## @class PSPol2D2sym_pdf
+#  The symmetric 2D-function, that represent a cross-product of two identical 
+#  phase-space factors,
+#  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
+#  polynomial
+#
+#  The function is:
+#  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
+#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
+#  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial
+# 
+# Clearly the function is symmetric under 
+# \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
+#  @see Ostap::Models::PS2DPolSym
+#  @see Ostap::Math::PS2DPolSym
+#  @see Ostap::Math::PhaseSpaceNL 
+#  @see Ostap::Math::Positive2DSym
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-01-10
+class PSPol2D2sym_pdf(PolyBase2) :
+    """Symmetric product of phase space factors, modulated by the positive polynom in 2D
+    
+    f(x,y) = PS(x) * PS(y) * Pn(x,y) 
+    
+    where
+    - PS(x) is a phase space function  (Ostap::Math::PhaseSpaceNL)
+    - Pnk(x,y) is positive symmetric non-factorizable polynom (Ostap::Math::Positive2DSym)
+    -- Pn(x,y) = sum^{i=n}_{i=0}sum^{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y), where 
+    --- B^n_i - are Bernstein polynomials
+    --- a_{ij}=a_{ji}
+    
+    Note:
+    - f(x,y)>=0 for whole 2D-range
+    - f(x,y)=f(y,x) for whole 2D-range
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
+                   ps               ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL
+                   mmax             ,   ##   max-mass
+                   n        = 2     ,   ##  polynomial degree in Y
+                   the_phis = None  ) :
+        
+        ## check arguments 
+        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
+        assert isinstance ( mmax , float ) , "``mmax''-parameter is illegal: %s" % mmax
+        ## 
+
+        ## the base 
+        PolyBase2.__init__ ( self , name , xvar , yvar , ( n + 1 ) * ( n + 2 ) / 2  - 1 , the_phis )
+
+        if self.xminmax() != self.yminmax() :
+            logger.warning( 'PSPol2Dsym_pdf: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )
+
+        
+        self.__phasespace = ps  
+
+        self.__n    = n 
+        self.__mmax = mmax 
+        #
+        ## finally build PDF 
+        #
+        self.pdf = Ostap.Models.PS2DPol2Sym (
+            'ps2D2s_%s'       % name ,
+            'PS2DPol2Sym(%s)' % name ,
+            self.x          ,
+            self.y          ,
+            self.phasespace ,
+            self.mmax       , 
+            self.n          ,
+            self.phi_list   )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'ps'       : self.phasespace  , 
+            'mmax'     : self.mmax , 
+            'n'        : self.n    , 
+            'the_phis' : self.phis , 
+            }
+        
+    @property 
+    def mass1 ( self ) :
+        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    
+    @property 
+    def mass2 ( self ) :
+        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        return self.yvar
+
+    @property
+    def phasespace ( self ) :
+        """``phasespace''-function for PSPol2DSym-function"""
+        return self.__phasespace
+    
+    @property
+    def phasespacex( self ) :
+        """``x-phasespace''-function for PSPol2Dsym-function"""
+        return self.__phasespace
+    
+    @property
+    def phasespacey( self ) :
+        """``y-phasespace''-function for PSPol2Dsym-function"""
+        return self.__phasespace 
+
+    @property
+    def mmax  ( self ) :
+        """``mmax''-parameter - the maximal allowed mass"""
+        return self.__mmax
+    
+    @property
+    def n  ( self ) :
+        """``n''-parameter  - order/degree of 2D-polynom in x&y-directions"""
+        return self.__n
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__n
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__n
+    
+        
+models.append ( PSPol2D2sym_pdf ) 
+
+
+
+# =============================================================================
+## @class PSPol2D3sym_pdf
+#  The symmetric 2D-function, that represent a cross-product of two identical 
+#  phase-space factors,
+#  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
+#  polynomial
+#
+#  The function is:
+#  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
+#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
+#  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial
+# 
+# Clearly the function is symmetric under 
+# \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
+#  @see Ostap::Models::PS2DPolSym
+#  @see Ostap::Math::PS2DPolSym
+#  @see Ostap::Math::PhaseSpaceNL 
+#  @see Ostap::Math::Positive2DSym
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-01-10
+class PSPol2D3sym_pdf(PolyBase2) :
+    """Symmetric product of phase space factors, modulated by the positive polynom in 2D
+    
+    f(x,y) = PS(x) * PS(y) * Pn(x,y) 
+    
+    where
+    - PS(x) is a phase space function  (Ostap::Math::PhaseSpaceNL)
+    - Pnk(x,y) is positive symmetric non-factorizable polynom (Ostap::Math::Positive2DSym)
+    -- Pn(x,y) = sum^{i=n}_{i=0}sum^{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y), where 
+    --- B^n_i - are Bernstein polynomials
+    --- a_{ij}=a_{ji}
+    
+    Note:
+    - f(x,y)>=0 for whole 2D-range
+    - f(x,y)=f(y,x) for whole 2D-range
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,   ##  the first  dimension  
+                   yvar             ,   ##  the second dimension
+                   ps               ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL
+                   mmax             ,   ##   max-mass
+                   n        = 2     ,   ##  polynomial degree in Y
+                   the_phis = None  ) :
+        
+        ## check arguments 
+        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
+        assert isinstance ( mmax , float ) , "``mmax''-parameter is illegal: %s" % mmax
+        ## 
+
+        ## the base 
+        PolyBase2.__init__ ( self , name , xvar , yvar , n , the_phis )
+
+        if self.xminmax() != self.yminmax() :
+            logger.warning( 'PSPol2Dsym_pdf: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )
+
+        
+        self.__phasespace = ps  
+
+        self.__n    = n 
+        self.__mmax = mmax 
+        #
+        ## finally build PDF 
+        #
+        self.pdf = Ostap.Models.PS2DPol3Sym (
+            'ps2D2s_%s'       % name ,
+            'PS2DPol2Sym(%s)' % name ,
+            self.x          ,
+            self.y          ,
+            self.phasespace ,
+            self.mmax       , 
+            self.n          ,
+            self.phi_list   )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name ,            
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'ps'       : self.phasespace  , 
+            'mmax'     : self.mmax , 
+            'n'        : self.n    , 
+            'the_phis' : self.phis , 
+            }
+        
+    @property 
+    def mass1 ( self ) :
+        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    
+    @property 
+    def mass2 ( self ) :
+        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        return self.yvar
+
+    @property
+    def phasespace ( self ) :
+        """``phasespace''-function for PSPol2DSym-function"""
+        return self.__phasespace
+    
+    @property
+    def phasespacex( self ) :
+        """``x-phasespace''-function for PSPol2Dsym-function"""
+        return self.__phasespace
+    
+    @property
+    def phasespacey( self ) :
+        """``y-phasespace''-function for PSPol2Dsym-function"""
+        return self.__phasespace 
+
+    @property
+    def mmax  ( self ) :
+        """``mmax''-parameter - the maximal allowed mass"""
+        return self.__mmax
+    
+    @property
+    def n  ( self ) :
+        """``n''-parameter  - order/degree of 2D-polynom in x&y-directions"""
+        return self.__n
+    @property
+    def nx ( self ) :
+        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        return self.__n
+    @property
+    def ny ( self ) :
+        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        return self.__n
+    
+        
+models.append ( PSPol2D3sym_pdf ) 
+
+
 # =============================================================================
 ## @class ExpoPSPol2D_pdf
 #  Product of phase space factors, modulated by positiev polynomial in 2D 

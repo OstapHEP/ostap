@@ -81,7 +81,7 @@ _fit_status_ = {
 def fit_status ( status ) : return _fit_status_.get( status ,"%s" % status )
 # =============================================================================
 _nemax = 20000  ## number of events per CPU-core 
-_ncmax =     6  ## maximal number of CPUs: there are some problems with >= 7
+_ncmax =    12  ## maximal number of CPUs: there are some problems with >= 7
                 ## @see https://sft.its.cern.ch/jira/browse/ROOT-4897
 # ==============================================================================
 _ncpus = []
@@ -613,7 +613,7 @@ class Adjust2D(MakeVar) :
         self.name      = name 
         self.__old_pdf = pdf
         
-        from otap.fitting.fit2d import Flat2D 
+        from ostap.fitting.fit2d import Flat2D 
         self.__flat    = Flat2D  ( xvar , yvar , name = 'flat_' + name )
         self.__frac    = self.make_var ( value , 'fracA_%s'                     % name ,
                                    'small  fraction of flat component %s' % name ,

@@ -353,6 +353,9 @@ namespace Ostap
       double  par       ( const unsigned int k ) const ;
       /// get the parameter value
       double  parameter ( const unsigned int k ) const { return par ( k ) ; }
+      /// get all parameters/phases 
+      const  std::vector<double>& pars() const 
+      { return m_sphere.phases() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -769,6 +772,8 @@ namespace Ostap
       double  par       ( const unsigned int k ) const ;
       /// get the parameter value
       double  parameter ( const unsigned int k ) const { return par ( k ) ; }
+      /// get all parameters/phases 
+      const std::vector<double>& pars() const { return m_sphere.phases() ; }
       /// get lower/upper edges
       double         xmin () const { return m_bernstein.xmin () ; }
       double         xmax () const { return m_bernstein.xmax () ; }

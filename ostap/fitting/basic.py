@@ -46,7 +46,7 @@ class PDF (MakeVar) :
     """
     def __init__ ( self , name ,  xvar = None , special = False ) :
         
-        self.name          = name
+        self.__name        = name
         
         self.__signals     = ROOT.RooArgList ()
         self.__backgrounds = ROOT.RooArgList ()
@@ -574,7 +574,7 @@ class PDF (MakeVar) :
             ## ugly :-(
             ct2options = kwargs.pop (     'crossterm2_options' , FD.   crossterm1_options )
             ct2bcolor  = kwargs.pop (  'base_crossterm2_color' , FD.base_crossterm1_color )
-            ct1cstep   = kwargs.pop (  'crossterm2_step_color' , 1 )         
+            ct2cstep   = kwargs.pop (  'crossterm2_step_color' , 1 )         
             if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
                 self._draw( self.crossterms2 , frame , ct2options , ct2bcolor , ct2cstep )
 
@@ -995,7 +995,7 @@ class PDF (MakeVar) :
             
         return funcall (  fun , xmin , xmax , *args , **kwargs ) 
         
-    
+    # ========================================================================
     ## get the effective RMS 
     def rms ( self ) :
         """Get the effective RMS
@@ -1018,6 +1018,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import rms as _rms
         return  self._get_stat_ ( _rms )
 
+    # ========================================================================
     ## get the effective Full Width at Half Maximum
     def fwhm ( self ) :
         """Get the effective Full Width at  Half Maximum
@@ -1030,6 +1031,7 @@ class PDF (MakeVar) :
         w = self._get_stat_ ( _width )
         return w[1]-w[0]
 
+    # =========================================================================
     ## get the effective Skewness
     def skewness ( self ) :
         """Get the effective Skewness
@@ -1041,6 +1043,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import skewness as _skewness
         return self._get_stat_ ( _skewness )
 
+    # =========================================================================
     ## get the effective Kurtosis
     def kurtosis ( self ) :
         """Get the effective Kurtosis
@@ -1051,7 +1054,8 @@ class PDF (MakeVar) :
         ## use generic machinery 
         from ostap.stats.moments import kurtosis as _kurtosis
         return self._get_stat_ ( _kurtosis )
-    
+
+    # =========================================================================
     ## get the effective mode 
     def mode ( self ) :
         """Get the effective mode
@@ -1062,6 +1066,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import mode as _mode
         return self._get_stat_ ( _mode )
 
+    # =========================================================================
     ## get the effective median
     def median ( self ) :
         """Get the effective median
@@ -1072,6 +1077,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import median as _median
         return self._gets_stat_ ( _median )
 
+    # =========================================================================
     ## get the effective mean
     def get_mean ( self ) :
         """Get the effective Mean
@@ -1082,6 +1088,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import mean as _mean
         return self._get_stat_ ( _mean )
     
+    # =========================================================================
     ## get the effective moment for the distribution
     def moment ( self , N ) :
         """Get the effective moment
@@ -1093,6 +1100,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import moment as _moment
         return self._get_stat_ ( _moment , N ) 
     
+    # =========================================================================
     ## get the effective central moment for the distribution
     def central_moment ( self , N ) :
         """Get the effective central moment
@@ -1103,6 +1111,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import central_moment as _moment
         return self._get_stat_ ( _moment , N ) 
 
+    # =========================================================================
     ## get the effective quantile 
     def quantile ( self , prob  ) :
         """Get the effective quantile
@@ -1113,7 +1122,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import quantile as _quantile
         return self._get_stat_ ( quantile , prob ) 
 
-
+    # =========================================================================
     ## get the symmetric confidence interval 
     def cl_symm ( self , prob , x0 =  None ) :
         """Get the symmetric confidence interval 
@@ -1124,6 +1133,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import cl_symm as _cl
         return self._get_sstat_ ( _cl , prob , x0 ) 
 
+    # =========================================================================
     ## get the asymmetric confidence interval 
     def cl_asymm ( self , prob ) :
         """Get the asymmetric confidence interval 
@@ -1134,6 +1144,7 @@ class PDF (MakeVar) :
         from ostap.stats.moments import cl_asymm as _cl
         return self._get_sstat_ ( _cl , prob )
     
+    # =========================================================================
     ## get the integral between xmin and xmax 
     def integral ( self , xmin , xmax ) :
         """Get integral between xmin and xmax
@@ -1162,6 +1173,7 @@ class PDF (MakeVar) :
         from ostap.math.integral import integral as _integral
         return _integral ( self , xmin , xmax )
 
+    # =========================================================================
     ## get the derivative at  point x 
     def derivative ( self , x ) :
         """Get derivative at point x 
@@ -1187,6 +1199,117 @@ class PDF (MakeVar) :
         ## use numerical ingeration
         from ostap.math.derivative import derivative as _derivatve
         return _derivative ( self , x )
+
+
+
+    # ==========================================================================
+    ## convert PDF into TF1 object, e.g. to profit from TF1::Draw options
+    #  @code
+    #  pdf = ...
+    #  tf1 = pdf.tf()
+    #  tf1.Draw('colz')
+    #  @endcode
+    def tf ( self , xmin = None , xmax = None ) :
+        """Convert PDF  to TF1 object, e.g. to profit from TF1::Draw options
+        >>> pdf = ...
+        >>> tf2 = pdf.tf()
+        >>> tf1.Draw('colz')
+        """
+        def _aux_fun_ ( x , pars = [] ) :
+            return self ( x[0] , error = False )
+        
+        if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
+        if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+
+        if xmin == None : xmin = 0.0
+        if xmax == None : xmin = 1.0
+        
+        from ostap.core.core import fID
+        return ROOT.TF1 ( fID() , _aux_fun_ , xmin , xmax ) 
+
+    # ==========================================================================
+    ## Convert PDF to the 1D-histogram
+    #  @code
+    #  pdf = ...
+    #  h1  = pdf.histo ( 100 , -1 , 10 ) ## specify histogram parameters
+    #  histo_template = ...
+    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+    #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  @endcode
+    def histo ( self             ,
+                nbins    = 100   , xmin = None , xmax = None ,
+                hpars    = ()    , 
+                histo    = None  ,
+                intergal = False ,
+                errors   = False , 
+                density  = False ) :
+        """Convert PDF to the 1D-histogram
+        >>> pdf = ...
+        >>> h1  = pdf.histo ( 100 , 0. , 10. ) ## specify histogram parameters
+        >>> histo_template = ...
+        >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+        >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+        >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        """
+        
+        import ostap.histos.histos
+
+        # histogram is provided 
+        if histo :
+            
+            assert isinstance ( histo  , ROOT.TH1 ) and not isinstance ( ROOT.TH2 ) , \
+                   "Illegal type of ``histo''-argument %s" % type( histo )
+            
+            histo = histo.clone()
+            histo.Reset()
+
+        # arguments for the histogram constructor 
+        elif hpars :
+            
+            from ostap.core.core import hID
+            histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , *hpars  )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+        # explicit construction from (#bins,min,max)-triplet  
+        else :
+            
+            assert isinstance ( nbins , ( int , long) ) and 0 < nbins, \
+                   "Wrong ``nbins''-argument %s" % nbins 
+            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
+            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+            
+            from ostap.core.core import hID
+            histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , nbins , xmin , xmax )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+
+        # loop over the historgam bins 
+        for i,x,y in histo.iteritems() :
+
+            xv , xe = x.value() , x.error()
+            
+            # value at the bin center 
+            c = self ( xv , error = errors ) 
+
+            if not integral : 
+                histo[i] = c
+                continue
+
+            # integral over the bin 
+            v  = self.integral( xv -  xe , xv + xe )
+            
+            if errors :
+                if    0 == c.cov2 () : pass
+                elif  0 != c.value() and 0 != v : 
+                    v = c * ( v / c.value() )
+                    
+            histo[i] = v 
+
+        ## coovert to density historgam, if requested 
+        if density : histo =  histo.density()
+        
+        return histo
     
     # ==========================================================================
     # Several purely technical methods 
@@ -1239,7 +1362,7 @@ class PDF (MakeVar) :
         fracs    = [] 
         n        =  ( N - 1 ) if fractions else N
         NN       = n + 1
-        vminmax  =  ( 0 , 1 ) if fractions else ( 0 , 1.e+8 )
+        vminmax  =  ( 0 , 1 ) if fractions else ( 0 , 1.e+7 )
         value    = 1 
         prod     = 1.0
         for i in range ( 0 , n ) :            

@@ -181,10 +181,16 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PS2DPol
-     *
-     *  F(x,y) = PS(x)*PS(y)*PPOL(x,y)
-     *
+     *  The 2D-function, that represent a cross-product of two phase-space factors,
+     *  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+     *  The function is:
+     *  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
+     *  - \f$ Ps_x(x)\f$ is 1D phase-space function 
+     *  - \f$ Ps_y(y)\f$ is 1D phase-space function 
+     *  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
      *  @see Ostap::Math::PS2DPol
+     *  @see Ostap::Math::PhaseSpaceNL 
+     *  @see Ostap::Math::Positive2D
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2011-05-25
      */
@@ -193,33 +199,33 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDef(Ostap::Models::PS2DPol, 2) ;
+      ClassDef(Ostap::Models::PS2DPol,2) ;
       // ======================================================================
     public:
       // ======================================================================
       /// constructor
       PS2DPol
-        ( const char*                      name      ,
-          const char*                      title     ,
-          RooRealVar&                      x         ,
-          RooRealVar&                      y         ,
-          const Ostap::Math::PhaseSpaceNL& psx       ,
-          const Ostap::Math::PhaseSpaceNL& psy       ,
-          const unsigned short nX                    ,
-          const unsigned short nY                    ,
-          RooArgList&          phis      ) ; // at least (nX+1)*(nY+1)-1 elements
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PhaseSpaceNL& psx        ,
+        const Ostap::Math::PhaseSpaceNL& psy        ,
+        const unsigned short             nX         ,
+        const unsigned short             nY         ,
+        RooArgList&                      phis       ) ; // at least (nX+1)*(nY+1)-1 elements
       /// constructor
       PS2DPol
-        ( const char*                      name      ,
-          const char*                      title     ,
-          RooRealVar&                      x         ,
-          RooRealVar&                      y         ,
-          const Ostap::Math::PS2DPol&      ps        ,
-          RooArgList&          phis      ) ; // at least (nX+1)*(nY+1)-1 elements
+      ( const char*                      name      ,
+        const char*                      title     ,
+        RooRealVar&                      x         ,
+        RooRealVar&                      y         ,
+        const Ostap::Math::PS2DPol&      ps        ,
+        RooArgList&                      phis      ) ; // at least (nX+1)*(nY+1)-1 elements
       /// copy
       PS2DPol
-        ( const PS2DPol&       right     ,
-          const char*          name = 0  ) ;
+      ( const PS2DPol&       right     ,
+        const char*          name = 0  ) ;
       /// destructor
       virtual ~PS2DPol() ;
       /// clone
@@ -273,13 +279,23 @@ namespace Ostap
       mutable Ostap::Math::PS2DPol m_function ;              // the function
       // ======================================================================
     } ;
-
     // ========================================================================
     /** @class PS2DPolSym
+     *  The symmetric 2D-function, that represent a cross-product of two identical 
+     *  phase-space factors,
+     *  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
+     *  polynomial.
      *
-     *  F(x,y) = PS(x)*PS(y)*PPOL(x,y)
+     *  The function is:
+     *  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
+     *  - \f$ Ps(x)\f$ is 1D phase-space function
+     *  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial 
      *
+     * Clearly the function is symmetric under 
+     * \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
      *  @see Ostap::Math::PS2DPolSym
+     *  @see Ostap::Math::PhaseSpaceNL 
+     *  @see Ostap::Math::Positive2DSym
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2011-05-25
      */
@@ -294,21 +310,21 @@ namespace Ostap
       // ======================================================================
       /// constructor
       PS2DPolSym
-        ( const char*                      name      ,
-          const char*                      title     ,
-          RooRealVar&                      x         ,
-          RooRealVar&                      y         ,
-          const Ostap::Math::PhaseSpaceNL& ps        ,
-          const unsigned short N                    ,
-          RooArgList&          phis      ) ; // at least (nX+1)*(nY+1)-1 elements
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PhaseSpaceNL& ps         ,
+        const unsigned short N                      , 
+        RooArgList&                      phis       ) ; // at least (nX+1)*(nY+1)-1 elements
       /// constructor
       PS2DPolSym
-        ( const char*                      name      ,
-          const char*                      title     ,
-          RooRealVar&                      x         ,
-          RooRealVar&                      y         ,
-          const Ostap::Math::PS2DPolSym&   ps        ,
-          RooArgList&          phis      ) ; // at least (nX+1)*(nY+1)-1 elements
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PS2DPolSym&   ps         ,
+        RooArgList&                      phis       ) ; // at least (nX+1)*(nY+1)-1 elements
       /// copy
       PS2DPolSym
         ( const PS2DPolSym&    right     ,
@@ -366,6 +382,419 @@ namespace Ostap
       mutable Ostap::Math::PS2DPolSym m_function ;              // the function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class PS2DPol2
+     *  The 2D-function, that represent a cross-product of two phase-space factors,
+     *  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+     *  The function is:
+     *  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
+     *  - \f$ Ps_x(x)\f$ is 1D phase-space function 
+     *  - \f$ Ps_y(y)\f$ is 1D phase-space function 
+     *  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
+     *  @see Ostap::Math::PS2DPol
+     *  @see Ostap::Math::PhaseSpaceNL 
+     *  @see Ostap::Math::Positive2D
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+     *  @date 2011-05-25
+     */
+    class  PS2DPol2: public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::PS2DPol2,2) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      PS2DPol2
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PhaseSpaceNL& psx        ,
+        const Ostap::Math::PhaseSpaceNL& psy        ,
+        const double                     mmax       ,
+        const unsigned short             nX         ,
+        const unsigned short             nY         ,
+        RooArgList&                      phis       ) ; // at least (nX+1)*(nY+1)-1 elements
+      /// constructor
+      PS2DPol2
+      ( const char*                      name      ,
+        const char*                      title     ,
+        RooRealVar&                      x         ,
+        RooRealVar&                      y         ,
+        const Ostap::Math::PS2DPol2&     ps        ,
+        RooArgList&                      phis      ) ; // at least (nX+1)*(nY+1)-1 elements
+      /// copy
+      PS2DPol2
+      ( const PS2DPol2&      right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~PS2DPol2() ;
+      /// clone
+      PS2DPol2* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      PS2DPol2 () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function(s)
+      const Ostap::Math::PS2DPol2&     function    () const { return m_function ; }
+      const Ostap::Math::Positive2D&   positive    () const { return m_function.positive   () ; }
+      const Ostap::Math::Positive2D&   polynom     () const { return m_function.positive   () ; }
+      const Ostap::Math::PhaseSpaceNL& psX         () const { return m_function.phasespaceX() ; }
+      const Ostap::Math::PhaseSpaceNL& psY         () const { return m_function.phasespaceY() ; }
+      const Ostap::Math::PhaseSpaceNL& phasespaceX () const { return psX () ; }
+      const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x    ;
+      RooRealProxy m_y    ;
+      RooListProxy m_phis ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual functions()
+      mutable Ostap::Math::PS2DPol2 m_function ;                // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class PS2DPol2Sym
+     *  The symmetric 2D-function, that represent a cross-product of two identical 
+     *  phase-space factors,
+     *  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
+     *  polynomial.
+     *
+     *  The function is:
+     *  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
+     *  - \f$ Ps(x)\f$ is 1D phase-space function
+     *  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial 
+     *
+     * Clearly the function is symmetric under 
+     * \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
+     *  @see Ostap::Math::PS2DPolSym
+     *  @see Ostap::Math::PhaseSpaceNL 
+     *  @see Ostap::Math::Positive2DSym
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+     *  @date 2011-05-25
+     */
+    class  PS2DPol2Sym: public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::PS2DPol2Sym, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      PS2DPol2Sym
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PhaseSpaceNL& ps         ,
+        const double                     mmax       ,
+        const unsigned short N                      , 
+        RooArgList&                      phis       ) ; // at least (nX+1)*(nY+1)-1 elements
+      /// constructor
+      PS2DPol2Sym
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PS2DPol2Sym&  ps         ,
+        RooArgList&                      phis       ) ; // at least (nX+1)*(nY+1)-1 elements
+      /// copy
+      PS2DPol2Sym
+        ( const PS2DPol2Sym&   right     ,
+          const char*          name = 0  ) ;
+      /// destructor
+      virtual ~PS2DPol2Sym() ;
+      /// clone
+      PS2DPol2Sym* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      PS2DPol2Sym () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function(s)
+      const Ostap::Math::PS2DPol2Sym&   function    () const { return m_function ; }
+      const Ostap::Math::Positive2DSym& positive    () const { return m_function.positive   () ; }
+      const Ostap::Math::Positive2DSym& polynom     () const { return m_function.positive   () ; }
+      const Ostap::Math::PhaseSpaceNL&  psX         () const { return m_function.phasespaceX() ; }
+      const Ostap::Math::PhaseSpaceNL&  psY         () const { return m_function.phasespaceY() ; }
+      const Ostap::Math::PhaseSpaceNL&  phasespaceX () const { return psX () ; }
+      const Ostap::Math::PhaseSpaceNL&  phasespaceY () const { return psY () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x    ;
+      RooRealProxy m_y    ;
+      RooListProxy m_phis ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual functions()
+      mutable Ostap::Math::PS2DPol2Sym m_function ;             // the function
+      // ======================================================================
+    } ;
+
+
+
+    // ========================================================================
+    /** @class PS2DPol3
+     *  The 2D-function, that represent a cross-product of two phase-space factors,
+     *  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+     *  The function is:
+     *  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
+     *  - \f$ Ps_x(x)\f$ is 1D phase-space function 
+     *  - \f$ Ps_y(y)\f$ is 1D phase-space function 
+     *  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
+     *  @see Ostap::Math::PS2DPol
+     *  @see Ostap::Math::PhaseSpaceNL 
+     *  @see Ostap::Math::Positive2D
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+     *  @date 2011-05-25
+     */
+    class  PS2DPol3: public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::PS2DPol3,2) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      PS2DPol3
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PhaseSpaceNL& psx        ,
+        const Ostap::Math::PhaseSpaceNL& psy        ,
+        const double                     mmax       ,
+        const unsigned short             nX         ,
+        const unsigned short             nY         ,
+        RooArgList&                      phis       ) ; // at least nX+nY elements
+      /// constructor
+      PS2DPol3
+      ( const char*                       name      ,
+        const char*                       title     ,
+        RooRealVar&                       x         ,
+        RooRealVar&                       y         ,
+        const Ostap::Math::PS2DPol3&      ps        ,
+        RooArgList&                       phis      ) ; // at least nX+nY elements
+      /// copy
+      PS2DPol3
+      ( const PS2DPol3&      right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~PS2DPol3() ;
+      /// clone
+      PS2DPol3* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      PS2DPol3 () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function(s)
+      const Ostap::Math::PS2DPol3&      function    () const { return m_function ; }
+      const Ostap::Math::PhaseSpacePol& psX         () const { return m_function.phasespaceX() ; }
+      const Ostap::Math::PhaseSpacePol& psY         () const { return m_function.phasespaceY() ; }
+      const Ostap::Math::PhaseSpacePol& phasespaceX () const { return psX () ; }
+      const Ostap::Math::PhaseSpacePol& phasespaceY () const { return psY () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x    ;
+      RooRealProxy m_y    ;
+      RooListProxy m_phis ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual functions()
+      mutable Ostap::Math::PS2DPol3 m_function ;                // the function
+      // ======================================================================
+    } ;
+
+
+
+    // ========================================================================
+    /** @class PS2DPol3Sym
+     *  The symmetric 2D-function, that represent a cross-product of two identical 
+     *  phase-space factors,
+     *  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
+     *  polynomial.
+     *
+     *  The function is:
+     *  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
+     *  - \f$ Ps(x)\f$ is 1D phase-space function
+     *  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial 
+     *
+     * Clearly the function is symmetric under 
+     * \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
+     *  @see Ostap::Math::PS2DPolSym
+     *  @see Ostap::Math::PhaseSpaceNL 
+     *  @see Ostap::Math::Positive2DSym
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+     *  @date 2011-05-25
+     */
+    class  PS2DPol3Sym: public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::PS2DPol3Sym, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      PS2DPol3Sym
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PhaseSpaceNL& ps         ,
+        const double                     mmax       ,
+        const unsigned short             N          , 
+        RooArgList&                      phis       ) ; // at least N elements
+      /// constructor
+      PS2DPol3Sym
+      ( const char*                      name       ,
+        const char*                      title      ,
+        RooRealVar&                      x          ,
+        RooRealVar&                      y          ,
+        const Ostap::Math::PS2DPol3Sym&  ps         ,
+        RooArgList&                      phis       ) ; // at least N elements
+      /// copy
+      PS2DPol3Sym
+        ( const PS2DPol3Sym&   right     ,
+          const char*          name = 0  ) ;
+      /// destructor
+      virtual ~PS2DPol3Sym() ;
+      /// clone
+      PS2DPol3Sym* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      PS2DPol3Sym () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function(s)
+      const Ostap::Math::PS2DPol3Sym&   function    () const { return m_function ; }
+      const Ostap::Math::PhaseSpacePol& psX         () const { return m_function.phasespaceX() ; }
+      const Ostap::Math::PhaseSpacePol& psY         () const { return m_function.phasespaceY() ; }
+      const Ostap::Math::PhaseSpacePol& phasespaceX () const { return psX () ; }
+      const Ostap::Math::PhaseSpacePol& phasespaceY () const { return psY () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x    ;
+      RooRealProxy m_y    ;
+      RooListProxy m_phis ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual functions()
+      mutable Ostap::Math::PS2DPol3Sym m_function ;             // the function
+      // ======================================================================
+    } ;
+
 
 
     // ========================================================================

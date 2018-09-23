@@ -47,7 +47,8 @@ class PDF2 (PDF) :
         
         PDF.__init__ ( self , name , xvar , special = special )
         
-        self.__yvar = None
+        self.__yvar       = None
+        self.__adjustment = None
         
         ## create the variable 
         if isinstance ( yvar , tuple ) and 2 == len(yvar) :  
@@ -406,6 +407,11 @@ class PDF2 (PDF) :
         ## replace original PDF  with  adjusted one:
         self.pdf          = self.__adjustment.pdf
 
+    # =========================================================================
+    @property
+    def  adjustment ( self ) :
+        """``adjustement'' object for the pdf (``None'' if no adjustment was performed)"""
+        return self.__adjustment 
         
     # =========================================================================
     ## generate toy-sample according to PDF
@@ -449,7 +455,7 @@ class PDF2 (PDF) :
 
     # =========================================================================
     ## simple 'function-like' interface 
-    def __call__ ( self , x , y , erorr = False ) :
+    def __call__ ( self , x , y , error = False ) :
         """ Simple  function-like interface
         >>>  pdf = ...
         >>>  print pdf(0.1,0.5) 
@@ -568,6 +574,128 @@ class PDF2 (PDF) :
         ## use numerical integration 
         from ostap.math.integral import integral2 as _integral2
         return _integral2 ( self , xmin , xmax , ymin , ymax )
+
+    # ==========================================================================
+    ## convert PDF into TF2 object, e.g. to profit from TF2::Draw options
+    #  @code
+    #  pdf = ...
+    #  tf2 = pdf.tf()
+    #  tf2.Draw('colz')
+    #  @endcode
+    def tf ( self , xmin = None , xmax = None , ymin = None , ymax = None ) :
+        """Convert PDF to TF2 object, e.g. to profit from TF2::Draw options
+        >>> pdf = ...
+        >>> tf2 = pdf.tf()
+        >>> tf1.Draw('colz')
+        """
+        def _aux_fun_ ( x , pars = [] ) :
+            return self ( x[0] , x[1] , error = False )
+
+        if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
+        if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+        if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
+        if ymax == None and self.yminmax() : ymax = self.yminmax()[1]
+        
+        if xmin == None : xmin = 0.0
+        if xmax == None : xmin = 1.0
+        if ymin == None : ymin = 0.0
+        if ymax == None : ymin = 1.0
+        
+        from ostap.core.core import fID
+        return ROOT.TF2 ( fID() , _aux_fun_ , xmin , xmax , ymin , ymax ) 
+
+    # ==========================================================================
+    ## Convert PDF to the 2D-histogram
+    #  @code
+    #  pdf = ...
+    #  h1  = pdf.histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
+    #  histo_template = ...
+    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+    #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  @endcode
+    def histo ( self             ,
+                xbins    = 20    , xmin = None , xmax = None ,
+                ybins    = 20    , ymin = None , ymax = None ,
+                hpars    = ()    , 
+                histo    = None  ,
+                intergal = False ,
+                errors   = False , 
+                density  = False ) :
+        """Convert PDF to the 2D-histogram
+        >>> pdf = ...
+        >>> h1  = pdf.histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
+        >>> histo_template = ...
+        >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+        >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+        >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        """
+        
+        import ostap.histos.histos
+
+        # histogram is provided 
+        if histo :
+            
+            assert isinstance ( histo  , ROOT.TH2 ) and not isinstance ( ROOT.TH3 ) , \
+                   "Illegal type of ``histo''-argument %s" % type( histo )
+            
+            histo = histo.clone()
+            histo.Reset()
+
+        # arguments for the histogram constructor 
+        elif hpars :
+            
+            from ostap.core.core import hID
+            histo = ROOT.TH2F ( hID () , 'PDF%s' % self.name , *hpars  )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+        # explicit contruction from (#bins,min,max)-triplet  
+        else :
+            
+            assert isinstance ( xbins , ( int , long) ) and 0 < xbins, \
+                   "Wrong ``xbins''-argument %s" % xbins 
+            assert isinstance ( ybins , ( int , long) ) and 0 < ybins, \
+                   "Wrong ``ybins''-argument %s" % ybins 
+            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
+            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+            if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
+            if ymax == None and self.yminmax() : ymax = self.yminmax()[1]
+            
+            from ostap.core.core import hID
+            histo = ROOT.TH2F ( hID() , 'PDF%s' % self.name ,
+                                xbins , xmin , xmax ,
+                                ybins , ymin , ymax )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+
+        # loop over the historgam bins 
+        for ix,iy,x,y,z in histo.iteritems() :
+
+            xv , xe = x.value() , x.error()
+            yv , ye = y.value() , y.error()
+            
+            # value at the bin center 
+            c = self ( xv , yv , error = errors ) 
+
+            if not integral : 
+                histo[ix,iy] = c
+                continue
+
+            # integral over the bin 
+            v  = self.integral( xv - xe , xv + xe , yv - ye , yv + ye )
+            
+            if errors :
+                if    0 == c.cov2 () : pass
+                elif  0 != c.value() and 0 != v : 
+                    v = c * ( v / c.value() )
+                    
+            histo[ix,iy] = v 
+
+        ## coovert to density historgam, if requested 
+        if density : histo =  histo.density()
+        
+        return histo
+  
 
 # =============================================================================
 ## suppress methods specific for 1D-PDFs only
@@ -1064,13 +1192,13 @@ class Fit2D (PDF2) :
         # =====================================================================
     
         self.__ss = self.make_var ( ss   , "SS"                      + suffix ,
-                                    "Signal(x)&Signal(y)"     + suffix , None , 1000  , 0 , 1.e+8 )
+                                    "Signal(x)&Signal(y)"     + suffix , None , 1000  , 0 , 1.e+7 )
         self.__sb = self.make_var ( sb   ,  "SB"                      + suffix ,
-                                    "Signal(x)&Background(y)" + suffix , None ,  100  , 0 , 1.e+8 )
+                                    "Signal(x)&Background(y)" + suffix , None ,  100  , 0 , 1.e+7 )
         self.__bs = self.make_var ( bs   , "BS"                      + suffix ,
-                                    "Background(x)&Signal(y)" + suffix , None ,  100  , 0 , 1.e+8 )        
+                                    "Background(x)&Signal(y)" + suffix , None ,  100  , 0 , 1.e+7 )        
         self.__bb = self.make_var ( bb   , "BB"                      + suffix ,
-                                    "Background(x,y)"         + suffix , None ,   10  , 0 , 1.e+8 )
+                                    "Background(x,y)"         + suffix , None ,   10  , 0 , 1.e+7 )
         
         self.alist1 = ROOT.RooArgList (
             self.__ss_cmp.pdf ,
@@ -1528,13 +1656,13 @@ class Fit2DSym (PDF2) :
         # =====================================================================
         
         self.__ss = self.make_var ( ss , "SS"             + suffix ,
-                                    "Signal(x)&Signal(y)" + suffix , None , 1000  , 0 ,  1.e+8 )
+                                    "Signal(x)&Signal(y)" + suffix , None , 1000  , 0 ,  1.e+7 )
         
         self.__bb = self.make_var ( bb , "BB"             + suffix ,
-                                    "Background(x,y)"     + suffix , None ,   10  , 0 ,  1.e+8 )
+                                    "Background(x,y)"     + suffix , None ,   10  , 0 ,  1.e+7 )
         
         self.__sb = self.make_var ( sb , "SB"             + suffix ,
-                                    "Signal(x)&Background(y)+Background(x)&Signal(y)" + suffix , None ,  100  , 0 ,  1.e+8 )
+                                    "Signal(x)&Background(y)+Background(x)&Signal(y)" + suffix , None ,  100  , 0 ,  1.e+7 )
         
         ## duplicate 
         self.__bs = self.__sb

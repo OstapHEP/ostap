@@ -371,11 +371,54 @@ def sp_integrate_2D ( func  ,
     >>> print func.sp_integrate ( -10  , 10   , -20  , 20   ) 
 
     """
-    from ostap.math.inntegral import integral2 as _integral2 
+    from ostap.math.integral import integral2 as _integral2 
     return _integral2 ( func  ,
                         xmin  , xmax ,
                         ymin  , ymax ,
                         *args , **kwargs )
+
+# =============================================================================
+## make 1D numerical integration 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_2Dx ( func  , y    ,
+                       xmin  , xmax , *args , **kwargs ) :
+    """Make 1D numerical integration over x-axis 
+    
+    >>> func = ...  ## func ( x , y )
+    ##                              y   , xmin , xmax 
+    >>> print func.sp_integrate_x ( 0.5 , -20  , 20   ) 
+    
+    """
+    def _func_ ( p , *args ) :
+        return func ( p , y , *args )
+    
+    from ostap.math.integral import integral as _integral 
+    return _integral ( _func_ ,
+                       xmin   , xmax ,
+                       *args  , **kwargs )
+
+# =============================================================================
+## make 1D numerical integration 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_2Dy ( func  , x    ,
+                       ymin  , ymax , *args , **kwargs ) :
+    """Make 1D numerical integration over y-axis 
+    
+    >>> func = ...  ## func ( x , y )
+    ##                              x   , ymin , ymax 
+    >>> print func.sp_integrate_y ( 0.5 , -20  , 20   ) 
+    
+    """
+    def _func_ ( p , *args ) :
+        return func ( x , p , *args )
+    
+    from ostap.math.integral import integral as _integral 
+    return _integral ( _func_ ,
+                       ymin   , ymax ,
+                       *args  , **kwargs )
+
 
 # =============================================================================
 ## make 3D numerical integration 
@@ -391,11 +434,152 @@ def sp_integrate_3D ( func  ,
     ##                            xmin , xmax , ymin , ymax   zmin zmax 
     >>> print func.sp_integrate ( -10  , 10   , -20  , 20   , -1 ,   1 ) 
     """
-    from ostap.math.inntegral import integral2 as _integral3 
+    from ostap.math.integral import integral2 as _integral3 
     return _integral3 ( func  ,
                         xmin  , xmax ,
                         ymin  , ymax ,
                         zmin  , zmax ,
+                        *args , **kwargs )
+
+# =============================================================================
+## make 1D numerical integration 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_3Dx ( func  ,
+                       y     , z   ,  
+                       xmin  , xmax , *args , **kwargs ) :
+    """Make 1D numerical integration over x-axis 
+    
+    >>> func = ...  ## func ( x , y , z )
+    ##                              y   ,   z , xmin , xmax 
+    >>> print func.sp_integrate_x ( 0.5 , 0.1 , -20  , 20   ) 
+    
+    """
+    def _func_ ( p , *args ) :
+        return func ( p , y , z , *args )
+    
+    from ostap.math.integral import integral as _integral 
+    return _integral ( _func_ ,
+                       xmin   , xmax ,
+                       *args  , **kwargs )
+
+# =============================================================================
+## make 1D numerical integration 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_3Dy ( func  ,
+                       x     ,  z   , 
+                       ymin  , ymax , *args , **kwargs ) :
+    """Make 1D numerical integration over y-axis 
+    
+    >>> func = ...  ## func ( x , y , z )
+    ##                              x   , z   , ymin , ymax 
+    >>> print func.sp_integrate_y ( 0.5 , 0.1 , -20  , 20   ) 
+    
+    """
+    def _func_ ( p , *args ) :
+        return func ( x , p , z , *args )
+    
+    from ostap.math.integral import integral as _integral 
+    return _integral ( _func_ ,
+                       ymin   , ymax ,
+                       *args  , **kwargs )
+
+# =============================================================================
+## make 1D numerical integration 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_3Dz ( func  ,
+                       x     , y    , 
+                       zmin  , zmax , *args , **kwargs ) :
+    """Make 1D numerical integration over z-axis 
+    
+    >>> func = ...  ## func ( x , y , z )
+    ##                              x   , y   , zmin , zmax 
+    >>> print func.sp_integrate_y ( 0.5 , 0.1 , -20  , 20   ) 
+    
+    """
+    def _func_ ( p , *args ) :
+        return func ( x , y , p , *args )
+    
+    from ostap.math.integral import integral as _integral 
+    return _integral ( _func_ ,
+                       zmin   , zmax ,
+                       *args  , **kwargs )
+
+
+# =============================================================================
+## make 2D numerical integration 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_3Dxy ( func  ,
+                        z     ,
+                        xmin  , xmax ,
+                        ymin  , ymax , *args , **kwargs ) :
+    """Make 2D numerical integration
+
+    >>> func = ...  ## func ( x , y , z )
+    ##                            z , xmin , xmax , ymin , ymax 
+    >>> print func.sp_integrate_xy ( 0.5 , -10  , 10   , -20  , 20   ) 
+
+    """
+    def _func_ ( p1 , p2 , *args ) :
+        return  func ( p1 , p2 , z , *args )
+    
+    from ostap.math.integral import integral2 as _integral2 
+    return _integral2 ( func  ,
+                        xmin  , xmax ,
+                        ymin  , ymax ,
+                        *args , **kwargs )
+
+
+# =============================================================================
+## make 2D numerical integration 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_3Dxz ( func  ,
+                        y     ,
+                        xmin  , xmax ,
+                        zmin  , zmax , *args , **kwargs ) :
+    """Make 2D numerical integration
+
+    >>> func = ...  ## func ( x , y , z )
+    ##                                 y , xmin , xmax , zmin , zmax 
+    >>> print func.sp_integrate_xz ( 0.5 , -10  , 10   , -20  , 20   ) 
+
+    """
+    def _func_ ( p1 , p2 , *args ) :
+        return  func ( p1 , y , p2 , *args )
+    
+    from ostap.math.integral import integral2 as _integral2 
+    return _integral2 ( func  ,
+                        xmin  , xmax ,
+                        ymin  , ymax ,
+                        *args , **kwargs )
+
+
+# =============================================================================
+## make 2D numerical integration 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-12-01
+def sp_integrate_3Dyz ( func  ,
+                        x     ,
+                        ymin  , ymax ,
+                        zmin  , zmax , *args , **kwargs ) :
+    """Make 2D numerical integration
+
+    >>> func = ...  ## func ( x , y , z )
+    ##                                 x , ymin , ymax , zmin , zmax 
+    >>> print func.sp_integrate_yz ( 0.5 , -10  , 10   , -20  , 20   ) 
+
+    """
+    def _func_ ( p1 , p2 , *args ) :
+        return  func ( x , p1 , p2 , *args )
+    
+    from ostap.math.integral import integral2 as _integral2 
+    return _integral2 ( func  ,
+                        xmin  , xmax ,
+                        ymin  , ymax ,
                         *args , **kwargs )
 
 # =============================================================================
@@ -723,6 +907,10 @@ for model in ( Ostap.Math.BSpline2D           ,
                Ostap.Math.Positive2DSym       ,
                Ostap.Math.PS2DPol             ,
                Ostap.Math.PS2DPolSym          ,
+               Ostap.Math.PS2DPol2            ,
+               Ostap.Math.PS2DPol2Sym         ,
+               Ostap.Math.PS2DPol3            ,
+               Ostap.Math.PS2DPol3Sym         ,
                Ostap.Math.ExpoPS2DPol         ,
                Ostap.Math.Expo2DPol           ,
                Ostap.Math.Expo2DPolSym        ) :
@@ -732,6 +920,8 @@ for model in ( Ostap.Math.BSpline2D           ,
     model.__getattr__     = _tf2_getattr_
     model.sp_integrate    = sp_integrate_2D
     model.sp_integrate_2D = sp_integrate_2D
+    model.sp_integrate_x  = sp_integrate_2Dx
+    model.sp_integrate_y  = sp_integrate_2Dy
 
 # =============================================================================
 ## Decorate 3D models
@@ -745,8 +935,13 @@ for model in ( Ostap.Math.Bernstein3D    ,
     
     model . tf3 = _tf3_ 
     model . tf  = _tf3_ 
-    model.sp_integrate = sp_integrate_3D
-    model.__getattr__  = _tf3_getattr_
+    model.sp_integrate    = sp_integrate_3D
+    model.sp_integrate_x  = sp_integrate_3Dx
+    model.sp_integrate_y  = sp_integrate_3Dy
+    model.sp_integrate_xy = sp_integrate_3Dxy
+    model.sp_integrate_xz = sp_integrate_3Dxz
+    model.sp_integrate_yz = sp_integrate_3Dyz
+    model.__getattr__     = _tf3_getattr_
 
 # =============================================================================
 ## decorate 1D-PDFs
@@ -825,6 +1020,10 @@ for pdf in ( Ostap.Models.Poly2DPositive     ,
              Ostap.Models.Poly2DSymPositive  , 
              Ostap.Models.PS2DPol            ,
              Ostap.Models.PS2DPolSym         , 
+             Ostap.Models.PS2DPol2           ,
+             Ostap.Models.PS2DPol2Sym        , 
+             Ostap.Models.PS2DPol3           ,
+             Ostap.Models.PS2DPol3Sym        , 
              Ostap.Models.ExpoPS2DPol        , 
              Ostap.Models.Expo2DPol          ,
              Ostap.Models.Expo2DPolSym       , 
@@ -1178,6 +1377,10 @@ _decorated_classes_ = set( [
     Ostap.Math.Positive2DSym  ,
     Ostap.Math.PS2DPol        ,
     Ostap.Math.PS2DPolSym     ,
+    Ostap.Math.PS2DPol2       ,
+    Ostap.Math.PS2DPol2Sym    ,
+    Ostap.Math.PS2DPol3       ,
+    Ostap.Math.PS2DPol3Sym    ,
     Ostap.Math.ExpoPS2DPol    ,
     Ostap.Math.Expo2DPol      ,
     Ostap.Math.Expo2DPolSym   ,
@@ -1240,6 +1443,10 @@ _decorated_classes_ = set( [
     Ostap.Models.Poly2DSymPositive  , 
     Ostap.Models.PS2DPol            ,
     Ostap.Models.PS2DPolSym         , 
+    Ostap.Models.PS2DPol2           ,
+    Ostap.Models.PS2DPol2Sym        , 
+    Ostap.Models.PS2DPol3           ,
+    Ostap.Models.PS2DPol3Sym        , 
     Ostap.Models.ExpoPS2DPol        , 
     Ostap.Models.Expo2DPol          ,
     Ostap.Models.Expo2DPolSym       , 

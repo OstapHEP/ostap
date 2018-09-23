@@ -272,6 +272,8 @@ Double_t Ostap::Models::Poly2DSymPositive::analyticalIntegral
     3 == code ? m_positive.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 
+
+
 // ============================================================================
 //  PS(x)*PS(y)*Polynom 
 // ============================================================================
@@ -284,7 +286,7 @@ Ostap::Models::PS2DPol::PS2DPol
   const Ostap::Math::PhaseSpaceNL& psy ,
   const unsigned short nX        ,
   const unsigned short nY        ,
-  RooArgList&          phis      ) 
+  RooArgList&          phis      )
   : RooAbsPdf ( name , title ) 
   , m_x        ( "x"       , "Observable-X" , this , x ) 
   , m_y        ( "y"       , "Observable-Y" , this , y ) 
@@ -398,9 +400,6 @@ void Ostap::Models::PS2DPol::setPars () const
   }
   //
 }
-
-
-
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -438,6 +437,345 @@ Double_t Ostap::Models::PS2DPol::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+
+
+
+// ============================================================================
+//  PS(x)*PS(y)*Polynom 
+// ============================================================================
+Ostap::Models::PS2DPol2::PS2DPol2
+( const char*          name      , 
+  const char*          title     ,
+  RooRealVar&          x         ,
+  RooRealVar&          y         ,
+  const Ostap::Math::PhaseSpaceNL& psx , 
+  const Ostap::Math::PhaseSpaceNL& psy ,
+  const double         mmax      , 
+  const unsigned short nX        ,
+  const unsigned short nY        ,
+  RooArgList&          phis      )
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable-X" , this , x ) 
+  , m_y        ( "y"       , "Observable-Y" , this , y ) 
+  , m_phis     ( "phis"    , "Coefficients" , this     )
+    //
+  , m_function ( psx, psy , mmax , 
+                 nX , nY  , 
+                 x.getMin() , x.getMax() ,
+                 y.getMin() , y.getMax() )
+{
+  //  
+  RooAbsArg* coef = 0 ;
+  unsigned num = 0 ;
+  Ostap::Utils::Iterator tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+    ++num ;  
+  }
+  //
+  if ( num != m_function.npars() ) 
+  { Ostap::throwException ( "Invalid size of parameters vector", 
+                            "Ostap::PS2DPol2"                  , 
+                            Ostap::StatusCode::FAILURE         ) ; }
+  
+  //
+}
+// ============================================================================
+// generic polinomial
+// ============================================================================
+Ostap::Models::PS2DPol2::PS2DPol2
+( const char*          name       , 
+  const char*          title      ,
+  RooRealVar&          x          ,
+  RooRealVar&          y          ,
+  const Ostap::Math::PS2DPol2& ps , 
+  RooArgList&          phis       ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable-X" , this , x ) 
+  , m_y        ( "y"       , "Observable-Y" , this , y ) 
+  , m_phis     ( "phis"    , "Coefficients" , this     )
+    //
+  , m_function ( ps ) 
+{
+  //
+  RooAbsArg* coef = 0 ;
+  unsigned num = 0 ;
+  Ostap::Utils::Iterator tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+    ++num ;  
+  }
+  //
+  if ( num != m_function.npars() ) 
+  { Ostap::throwException ( "Invalid size of parameters vector", 
+                            "Ostap::PS2DPol2"                  , 
+                            Ostap::StatusCode::FAILURE         ) ; }
+  
+  //
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::PS2DPol2::PS2DPol2
+( const Ostap::Models::PS2DPol2&  right ,      
+  const char*                       name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"      , this , right.m_x     ) 
+  , m_y        ( "y"      , this , right.m_y     ) 
+  , m_phis     ( "phis"   , this , right.m_phis  ) 
+    //
+  , m_function ( right.m_function )
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::PS2DPol2::~PS2DPol2() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::PS2DPol2*
+Ostap::Models::PS2DPol2::clone( const char* name ) const 
+{ return new Ostap::Models::PS2DPol2 ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::PS2DPol2::setPars () const 
+{
+  //
+  RooAbsArg*       phi   = 0 ;
+  const RooArgSet* nset  = m_phis.nset() ;
+  //
+  unsigned short k = 0 ;
+  Ostap::Utils::Iterator it ( m_phis ) ;
+  while ( ( phi = (RooAbsArg*) it.next() ) )
+  {
+    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
+    if ( 0 == r ) { continue ; }
+    //
+    const double phiv   = r->getVal ( nset ) ;
+    //
+    m_function.setPar ( k  , phiv ) ;
+    //
+    ++k ;
+  }
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::PS2DPol2::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_function ( m_x , m_y ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::PS2DPol2::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
+  //
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::PS2DPol2::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( 1 == code || 2 == code || 3 == code ) ;
+  //
+  setPars () ;
+  //
+  return 
+    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
+                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
+    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
+    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
+}
+
+// ============================================================================
+//  PS(x)*PS(y)*Polynom 
+// ============================================================================
+Ostap::Models::PS2DPol3::PS2DPol3
+( const char*          name      , 
+  const char*          title     ,
+  RooRealVar&          x         ,
+  RooRealVar&          y         ,
+  const Ostap::Math::PhaseSpaceNL& psx , 
+  const Ostap::Math::PhaseSpaceNL& psy ,
+  const double         mmax      , 
+  const unsigned short nX        ,
+  const unsigned short nY        ,
+  RooArgList&          phis      )
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable-X" , this , x ) 
+  , m_y        ( "y"       , "Observable-Y" , this , y ) 
+  , m_phis     ( "phis"    , "Coefficients" , this     )
+    //
+  , m_function ( psx, psy , mmax , 
+                 nX , nY  ,  
+                 x.getMin() , x.getMax() ,
+                 y.getMin() , y.getMax() )
+{
+  //  
+  RooAbsArg* coef = 0 ;
+  unsigned num = 0 ;
+  Ostap::Utils::Iterator tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+    ++num ;  
+  }
+  //
+  if ( num != m_function.npars() ) 
+  { Ostap::throwException ( "Invalid size of parameters vector", 
+                            "Ostap::PS2DPol3"                  , 
+                            Ostap::StatusCode::FAILURE         ) ; }
+  
+  //
+}
+// ============================================================================
+// generic polinomial
+// ============================================================================
+Ostap::Models::PS2DPol3::PS2DPol3
+( const char*          name       , 
+  const char*          title      ,
+  RooRealVar&          x          ,
+  RooRealVar&          y          ,
+  const Ostap::Math::PS2DPol3& ps , 
+  RooArgList&          phis       ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable-X" , this , x ) 
+  , m_y        ( "y"       , "Observable-Y" , this , y ) 
+  , m_phis     ( "phis"    , "Coefficients" , this     )
+    //
+  , m_function ( ps ) 
+{
+  //
+  RooAbsArg* coef = 0 ;
+  unsigned num = 0 ;
+  Ostap::Utils::Iterator tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+    ++num ;  
+  }
+  //
+  if ( num != m_function.npars() ) 
+  { Ostap::throwException ( "Invalid size of parameters vector", 
+                            "Ostap::PS2DPol3"                  , 
+                            Ostap::StatusCode::FAILURE         ) ; }
+  
+  //
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::PS2DPol3::PS2DPol3
+( const Ostap::Models::PS2DPol3&    right ,      
+  const char*                       name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"      , this , right.m_x     ) 
+  , m_y        ( "y"      , this , right.m_y     ) 
+  , m_phis     ( "phis"   , this , right.m_phis  ) 
+    //
+  , m_function ( right.m_function )
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::PS2DPol3::~PS2DPol3() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::PS2DPol3*
+Ostap::Models::PS2DPol3::clone( const char* name ) const 
+{ return new Ostap::Models::PS2DPol3 ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::PS2DPol3::setPars () const 
+{
+  //
+  RooAbsArg*       phi   = 0 ;
+  const RooArgSet* nset  = m_phis.nset() ;
+  //
+  unsigned short k = 0 ;
+  Ostap::Utils::Iterator it ( m_phis ) ;
+  while ( ( phi = (RooAbsArg*) it.next() ) )
+  {
+    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
+    if ( 0 == r ) { continue ; }
+    //
+    const double phiv   = r->getVal ( nset ) ;
+    //
+    m_function.setPar ( k  , phiv ) ;
+    //
+    ++k ;
+  }
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::PS2DPol3::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_function ( m_x , m_y ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::PS2DPol3::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
+  //
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::PS2DPol3::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( 1 == code || 2 == code || 3 == code ) ;
+  //
+  setPars () ;
+  //
+  return 
+    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
+                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
+    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
+    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
+}
+
+
+
+
+
 // ============================================================================
 //  PS(x)*PS(y)*SymPolynom 
 // ============================================================================
@@ -448,7 +786,7 @@ Ostap::Models::PS2DPolSym::PS2DPolSym
   RooRealVar&          y         ,
   const Ostap::Math::PhaseSpaceNL& ps ,
   const unsigned short n         ,
-  RooArgList&          phis      ) 
+  RooArgList&          phis      )
   : RooAbsPdf ( name , title ) 
   , m_x        ( "x"       , "Observable-X" , this , x ) 
   , m_y        ( "y"       , "Observable-Y" , this , y ) 
@@ -595,6 +933,327 @@ Double_t Ostap::Models::PS2DPolSym::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+
+
+// ============================================================================
+//  PS(x)*PS(y)*SymPolynom 
+// ============================================================================
+Ostap::Models::PS2DPol2Sym::PS2DPol2Sym
+( const char*          name      , 
+  const char*          title     ,
+  RooRealVar&          x         ,
+  RooRealVar&          y         ,
+  const Ostap::Math::PhaseSpaceNL& ps ,
+  const double         mmax      ,
+  const unsigned short n         ,
+  RooArgList&          phis      )
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable-X" , this , x ) 
+  , m_y        ( "y"       , "Observable-Y" , this , y ) 
+  , m_phis     ( "phis"    , "Coefficients" , this     )
+    //
+  , m_function ( ps , mmax , n , x.getMin() , x.getMax() ) 
+{
+  //
+  RooAbsArg* coef = 0 ;
+  unsigned   num  = 0 ;  
+  Ostap::Utils::Iterator tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+    ++num ;  
+  }
+  //
+  if ( num != m_function.npars() ) 
+  { Ostap::throwException ( "Invalid size of parameters vector", 
+                            "Ostap::PS2DPol2Sym"               , 
+                            Ostap::StatusCode::FAILURE         ) ; }
+  
+  //
+}
+// ============================================================================
+// generic polinomial
+// ============================================================================
+Ostap::Models::PS2DPol2Sym::PS2DPol2Sym
+( const char*          name      , 
+  const char*          title     ,
+  RooRealVar&          x         ,
+  RooRealVar&          y         ,
+  const Ostap::Math::PS2DPol2Sym& ps , 
+  RooArgList&          phis      ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable-X" , this , x ) 
+  , m_y        ( "y"       , "Observable-Y" , this , y ) 
+  , m_phis     ( "phis"    , "Coefficients" , this     )
+    //
+  , m_function ( ps ) 
+{
+  //
+  RooAbsArg* coef = 0 ;
+  unsigned num = 0 ;
+  Ostap::Utils::Iterator tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+    ++num ;  
+  }
+  //
+  if ( num != m_function.npars() ) 
+  { Ostap::throwException ( "Invalid size of parameters vector", 
+                            "Ostap::PS2DPol2Sym"               , 
+                            Ostap::StatusCode::FAILURE         ) ; }
+  
+  //
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::PS2DPol2Sym::PS2DPol2Sym
+( const Ostap::Models::PS2DPol2Sym& right ,      
+  const char*                       name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"      , this , right.m_x     ) 
+  , m_y        ( "y"      , this , right.m_y     ) 
+  , m_phis     ( "phis"   , this , right.m_phis  ) 
+    //
+  , m_function ( right.m_function )
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::PS2DPol2Sym::~PS2DPol2Sym() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::PS2DPol2Sym*
+Ostap::Models::PS2DPol2Sym::clone( const char* name ) const 
+{ return new Ostap::Models::PS2DPol2Sym ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::PS2DPol2Sym::setPars () const 
+{
+  RooAbsArg*       phi   = 0 ;
+  const RooArgSet* nset  = m_phis.nset() ;
+  //
+  unsigned short k = 0 ;
+  Ostap::Utils::Iterator it ( m_phis ) ;
+  while ( ( phi = (RooAbsArg*) it.next() ) )
+  {
+    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
+    if ( 0 == r ) { continue ; }
+    //
+    const double phiv   = r->getVal ( nset ) ;
+    //
+    m_function.setPar ( k  , phiv ) ;
+    //
+    ++k ;
+  }
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::PS2DPol2Sym::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_function ( m_x , m_y ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::PS2DPol2Sym::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
+  //
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::PS2DPol2Sym::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( 1 == code || 2 == code || 3 == code ) ;
+  //
+  setPars () ;
+  //
+  return 
+    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
+                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
+    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
+    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
+}
+
+
+
+
+// ============================================================================
+//  PS(x)*PS(y)*SymPolynom 
+// ============================================================================
+Ostap::Models::PS2DPol3Sym::PS2DPol3Sym
+( const char*          name      , 
+  const char*          title     ,
+  RooRealVar&          x         ,
+  RooRealVar&          y         ,
+  const Ostap::Math::PhaseSpaceNL& ps ,
+  const double         mmax      ,
+  const unsigned short n         ,
+  RooArgList&          phis      )
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable-X" , this , x ) 
+  , m_y        ( "y"       , "Observable-Y" , this , y ) 
+  , m_phis     ( "phis"    , "Coefficients" , this     )
+    //
+  , m_function ( ps , mmax , n , x.getMin() , x.getMax() ) 
+{
+  //
+  RooAbsArg* coef = 0 ;
+  unsigned   num  = 0 ;  
+  Ostap::Utils::Iterator tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+    ++num ;  
+  }
+  //
+  if ( num != m_function.npars() ) 
+  { Ostap::throwException ( "Invalid size of parameters vector", 
+                            "Ostap::PS2DPol3Sym"               , 
+                            Ostap::StatusCode::FAILURE         ) ; }
+}
+// ============================================================================
+// generic polinomial
+// ============================================================================
+Ostap::Models::PS2DPol3Sym::PS2DPol3Sym
+( const char*          name      , 
+  const char*          title     ,
+  RooRealVar&          x         ,
+  RooRealVar&          y         ,
+  const Ostap::Math::PS2DPol3Sym& ps , 
+  RooArgList&          phis      ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable-X" , this , x ) 
+  , m_y        ( "y"       , "Observable-Y" , this , y ) 
+  , m_phis     ( "phis"    , "Coefficients" , this     )
+    //
+  , m_function ( ps ) 
+{
+  //
+  RooAbsArg* coef = 0 ;
+  unsigned num = 0 ;
+  Ostap::Utils::Iterator tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+    ++num ;  
+  }
+  //
+  if ( num != m_function.npars() ) 
+  { Ostap::throwException ( "Invalid size of parameters vector", 
+                            "Ostap::PS2DPol3Sym"               , 
+                            Ostap::StatusCode::FAILURE         ) ; }
+  
+  //
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::PS2DPol3Sym::PS2DPol3Sym
+( const Ostap::Models::PS2DPol3Sym& right ,      
+  const char*                       name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"      , this , right.m_x     ) 
+  , m_y        ( "y"      , this , right.m_y     ) 
+  , m_phis     ( "phis"   , this , right.m_phis  ) 
+    //
+  , m_function ( right.m_function )
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::PS2DPol3Sym::~PS2DPol3Sym() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::PS2DPol3Sym*
+Ostap::Models::PS2DPol3Sym::clone( const char* name ) const 
+{ return new Ostap::Models::PS2DPol3Sym ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::PS2DPol3Sym::setPars () const 
+{
+  RooAbsArg*       phi   = 0 ;
+  const RooArgSet* nset  = m_phis.nset() ;
+  //
+  unsigned short k = 0 ;
+  Ostap::Utils::Iterator it ( m_phis ) ;
+  while ( ( phi = (RooAbsArg*) it.next() ) )
+  {
+    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
+    if ( 0 == r ) { continue ; }
+    //
+    const double phiv   = r->getVal ( nset ) ;
+    //
+    m_function.setPar ( k  , phiv ) ;
+    //
+    ++k ;
+  }
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::PS2DPol3Sym::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_function ( m_x , m_y ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::PS2DPol3Sym::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
+  //
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::PS2DPol3Sym::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( 1 == code || 2 == code || 3 == code ) ;
+  //
+  setPars () ;
+  //
+  return 
+    1 == code ? m_function.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
+                                               m_y.min(rangeName) , m_y.max(rangeName) ) : 
+    2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
+    3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
+}
+
 
 
 
@@ -1304,7 +1963,11 @@ Double_t Ostap::Models::Spline2DSym::analyticalIntegral
 ClassImp(Ostap::Models::Poly2DPositive    ) 
 ClassImp(Ostap::Models::Poly2DSymPositive )
 ClassImp(Ostap::Models::PS2DPol           )
+ClassImp(Ostap::Models::PS2DPol2          )
+ClassImp(Ostap::Models::PS2DPol3          )
 ClassImp(Ostap::Models::PS2DPolSym        )
+ClassImp(Ostap::Models::PS2DPol2Sym       )
+ClassImp(Ostap::Models::PS2DPol3Sym       )
 ClassImp(Ostap::Models::ExpoPS2DPol       ) 
 ClassImp(Ostap::Models::Expo2DPol         ) 
 ClassImp(Ostap::Models::Expo2DPolSym      ) 

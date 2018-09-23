@@ -260,6 +260,13 @@ namespace Ostap
       /// get the parameter value
       double  parameter ( const unsigned short k ) const
       { return m_positive.par ( k ) ; }
+      ///  get all parameters 
+      const  std::vector<double>& pars() const { return m_positive.pars() ; }
+      // get the order of polynomial 
+      unsigned short n () const { return m_positive.degree() ; }
+      // ======================================================================
+      double xmin () const { return m_positive.xmin() ; }
+      double xmax () const { return m_positive.xmax() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -268,6 +275,11 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral ( const double low  ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const Ostap::Math::PhaseSpaceNL* operator->() const 
+      { return &m_phasespace ; }
       // ======================================================================
     private:
       // ======================================================================

@@ -40,7 +40,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const std::size_t s_SIZE = 300 ;
+  const std::size_t s_SIZE = 500 ;
   // ==========================================================================
   /** @var s_PRECISION
    *  the default precision for various calculations,

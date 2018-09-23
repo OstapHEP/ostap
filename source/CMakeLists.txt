@@ -127,6 +127,8 @@ add_library(ostap SHARED src/format.cpp
                          src/WStatEntity.cpp    
                          src/nSphere.cpp      
                          src/owens.cpp      
+                         src/hcubature.cpp                         
+                         src/pcubature.cpp
                         )
 
 ##target_compile_features    (ostap PUBLIC cxx_std_14 )

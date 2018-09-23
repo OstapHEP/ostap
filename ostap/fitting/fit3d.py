@@ -28,8 +28,8 @@ import ROOT, random
 from   ostap.core.core      import dsID , VE , Ostap 
 from   ostap.logger.utils   import roo_silent , rooSilent
 from   ostap.fitting.utils  import Adjust3D , H3D_dset , component_similar , component_clone
-from   ostap.fitting.basic  import Flat1D 
-from   ostap.fitting.fit2d  import PDF2
+from   ostap.fitting.basic  import PDF  , Flat1D 
+from   ostap.fitting.fit2d  import PDF2 , Model2D 
 from   ostap.fitting.roofit import SETVAR
 # =============================================================================
 from   ostap.logger.logger  import getLogger
@@ -540,6 +540,145 @@ class PDF3 (PDF2) :
                             ymin , ymax ,
                             zmin , zmax )
     
+    # ==========================================================================
+    ## convert PDF into TF2 object, e.g. to profit from TF3::Draw options
+    #  @code
+    #  pdf = ...
+    #  tf3 = pdf.tf()
+    #  tf3.Draw( options )
+    #  @endcode
+    def tf ( self                      ,
+             xmin = None , xmax = None ,
+             ymin = None , ymax = None ,
+             zmin = None , zmax = None ) :
+        """Convert PDF  to TF3 object, e.g. to profit from TF3::Draw options
+        >>> pdf = ...
+        >>> tf3 = pdf.tf()
+        >>> tf3.Draw('colz')
+        """
+        def _aux_fun_ ( x , pars = [] ) :
+            return self ( x[0] , x[1] , x[2] , error = False )
+
+        if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
+        if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+        if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
+        if ymax == None and self.yminmax() : ymax = self.yminmax()[1]
+        if zmin == None and self.zminmax() : zmin = self.zminmax()[0]
+        if zmax == None and self.zminmax() : zmax = self.zminmax()[1]
+        
+        if xmin == None : xmin = 0.0
+        if xmax == None : xmin = 1.0
+        if ymin == None : ymin = 0.0
+        if ymax == None : ymin = 1.0
+        if zmin == None : zmin = 0.0
+        if zmax == None : zmin = 1.0
+        
+        from ostap.core.core import fID
+        return ROOT.TF3 ( fID() , _aux_fun_ , xmin , xmax , ymin , ymax , zmin , zmax ) 
+
+
+    # ==========================================================================
+    ## Convert PDF to the 3D-histogram
+    #  @code
+    #  pdf = ...
+    #  h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
+    #  histo_template = ...
+    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+    #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  @endcode
+    def histo ( self             ,
+                xbins    = 10    , xmin = None , xmax = None ,
+                ybins    = 10    , ymin = None , ymax = None ,
+                zbins    = 10    , zmin = None , zmax = None ,
+                hpars    = ()    , 
+                histo    = None  ,
+                intergal = False ,
+                errors   = False , 
+                density  = False ) :
+        """Convert PDF to the 3D-histogram
+        >>> pdf = ...
+        >>> h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
+        >>> histo_template = ...
+        >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+        >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+        >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        """
+        
+        import ostap.histos.histos
+
+        # histogram is provided 
+        if histo :
+            
+            assert isinstance ( histo  , ROOT.TH3 ), \
+                   "Illegal type of ``histo''-argument %s" % type( histo )
+            
+            histo = histo.clone()
+            histo.Reset()
+
+        # arguments for the histogram constructor 
+        elif hpars :
+            
+            from ostap.core.core import hID
+            histo = ROOT.TH3F ( hID () , 'PDF%s' % self.name , *hpars  )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+        # explicit contruction from (#bins,min,max)-triplet  
+        else :
+            
+            assert isinstance ( xbins , ( int , long) ) and 0 < xbins, \
+                   "Wrong ``xbins''-argument %s" % xbins 
+            assert isinstance ( ybins , ( int , long) ) and 0 < ybins, \
+                   "Wrong ``ybins''-argument %s" % ybins 
+            assert isinstance ( zbins , ( int , long) ) and 0 < zbins, \
+                   "Wrong ``zbins''-argument %s" % zbins 
+            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
+            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+            if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
+            if ymax == None and self.yminmax() : ymax = self.yminmax()[1]
+            if zmin == None and self.zminmax() : zmin = self.zminmax()[0]
+            if zmax == None and self.zminmax() : zmax = self.zminmax()[1]
+            
+            from ostap.core.core import hID
+            histo = ROOT.TH3F ( hID() , 'PDF%s' % self.name ,
+                                xbins , xmin , xmax ,
+                                ybins , ymin , ymax ,
+                                zbins , zmin , zmax )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+
+        # loop over the historgam bins 
+        for ix,iy,iz,x,y,z,w in histo.iteritems() :
+
+            xv , xe = x.value() , x.error()
+            yv , ye = y.value() , y.error()
+            zv , ze = z.value() , z.error()
+            
+            # value at the bin center 
+            c = self ( xv , yv , zv , error = errors ) 
+
+            if not integral : 
+                histo[ix,iy,iz] = c
+                continue
+
+            # integral over the bin 
+            v  = self.integral( xv - xe , xv + xe ,
+                                yv - ye , yv + ye ,
+                                zv - ze , zv + ze )
+            
+            if errors :
+                if    0 == c.cov2 () : pass
+                elif  0 != c.value() and 0 != v : 
+                    v = c * ( v / c.value() )
+                    
+            histo[ix,iy,iz] = v 
+
+        ## coovert to density historgam, if requested 
+        if density : histo =  histo.density()
+        
+        return histo
+ 
+
 # =============================================================================
 ## @class Generic3D_pdf
 #  "Wrapper" over generic RooFit (3D)-pdf
@@ -1218,21 +1357,21 @@ class Fit3D (PDF3) :
         ## coefficients
         #
         self.__sss = self.make_var ( sss   , "SSS"          + suffix ,
-                               "Signal(x)&Signal(y)&Signal(z)"     + suffix , sss , 1000  , 0 ,  1.e+8 )
+                               "Signal(x)&Signal(y)&Signal(z)"     + suffix , sss , 1000  , 0 ,  1.e+7 )
         self.__ssb = self.make_var ( ssb   , "SSB"          + suffix ,
-                               "Signal(x)&Signal(y)&Background(z)" + suffix , ssb , 1000  , 0 ,  1.e+8 )
+                               "Signal(x)&Signal(y)&Background(z)" + suffix , ssb , 1000  , 0 ,  1.e+7 )
         self.__sbs = self.make_var ( sbs   , "SBS"          + suffix ,
-                               "Signal(x)&Background(y)&Signal(z)" + suffix , sbs , 1000  , 0 ,  1.e+8 )
+                               "Signal(x)&Background(y)&Signal(z)" + suffix , sbs , 1000  , 0 ,  1.e+7 )
         self.__bss = self.make_var ( bss   , "BSS"          + suffix ,
-                               "Background(x)&Signal(y)&Signal(z)" + suffix , bss , 1000  , 0 ,  1.e+8 )
+                               "Background(x)&Signal(y)&Signal(z)" + suffix , bss , 1000  , 0 ,  1.e+7 )
         self.__sbb = self.make_var ( sbb  , "SBB"           + suffix ,
-                               "Signal(x)&Background(y,z)"         + suffix , sbb , 1000  , 0 ,  1.e+8 )
+                               "Signal(x)&Background(y,z)"         + suffix , sbb , 1000  , 0 ,  1.e+7 )
         self.__bsb = self.make_var ( bsb  , "BSB"           + suffix ,
-                               "Signal(y)&Background(x,z)"         + suffix , bsb , 1000  , 0 ,  1.e+8 )
+                               "Signal(y)&Background(x,z)"         + suffix , bsb , 1000  , 0 ,  1.e+7 )
         self.__bbs = self.make_var ( bbs  ,  "BBS"          + suffix ,
-                               "Signal(z)&Background(x,y)"         + suffix , bbs , 1000  , 0 ,  1.e+8 )
+                               "Signal(z)&Background(x,y)"         + suffix , bbs , 1000  , 0 ,  1.e+7 )
         self.__bbb = self.make_var ( bbb  , "BBB"           + suffix ,
-                               "Background(x,y,z)"                 + suffix , bbb , 1000  , 0 ,  1.e+8 )
+                               "Background(x,y,z)"                 + suffix , bbb , 1000  , 0 ,  1.e+7 )
         
         self.alist1 = ROOT.RooArgList (
             self.__sss_cmp.pdf ,
@@ -1970,13 +2109,13 @@ class Fit3DSym (PDF3) :
         ## coefficients
         #
         self.__sss = self.make_var ( sss   , "SSS" + suffix ,
-                               "Signal(x)&Signal(y)&Signal(z)" + suffix , sss , 1000 , 0 , 1.e+8 )
+                               "Signal(x)&Signal(y)&Signal(z)" + suffix , sss , 1000 , 0 , 1.e+7 )
         self.__ssb = self.make_var ( ssb   , "SSB" + suffix ,
-                               "Signal*2&Background"           + suffix , ssb , 1000 , 0 , 1.e+8 )
+                               "Signal*2&Background"           + suffix , ssb , 1000 , 0 , 1.e+7 )
         self.__sbb = self.make_var ( sbb   , "SBB" + suffix ,
-                               "Signal&Backrgound*2"           + suffix , sbb , 1000 , 0 , 1.e+8 )
+                               "Signal&Backrgound*2"           + suffix , sbb , 1000 , 0 , 1.e+7 )
         self.__bbb = self.make_var ( bbb  , "BBB"  + suffix ,
-                               "Background*3"                  + suffix , bbb , 1000 , 0 , 1.e+8 )
+                               "Background*3"                  + suffix , bbb , 1000 , 0 , 1.e+7 )
         
         self.__sbs = self.__ssb ## the same 
         self.__bss = self.__ssb ## the same 
@@ -2785,17 +2924,17 @@ class Fit3DMix (PDF3) :
         # =====================================================================
         
         self.__sss = self.make_var ( sss   , "SSS" + suffix ,
-                                     "Signal(x)&Signal(y)&Signal(z)"     + suffix , sss , 1000 , 0 , 1.e+8 )
+                                     "Signal(x)&Signal(y)&Signal(z)"     + suffix , sss , 1000 , 0 , 1.e+7 )
         self.__bss = self.make_var ( bss   , "BSS" + suffix ,
-                                     "Background(x)&Signal(y)&Signal(z)" + suffix , bss , 1000 , 0 , 1.e+8 )
+                                     "Background(x)&Signal(y)&Signal(z)" + suffix , bss , 1000 , 0 , 1.e+7 )
         self.__ssb = self.make_var ( ssb   , "SSB" + suffix ,
-                                     "Signal&(SB+BS)"                    + suffix , sbb , 1000 , 0 , 1.e+8 )
+                                     "Signal&(SB+BS)"                    + suffix , sbb , 1000 , 0 , 1.e+7 )
         self.__sbb = self.make_var ( sbb   , "SBB" + suffix ,
-                                     "Signal&Background(x,y)"            + suffix , sbb , 1000 , 0 , 1.e+8 )
+                                     "Signal&Background(x,y)"            + suffix , sbb , 1000 , 0 , 1.e+7 )
         self.__bbs = self.make_var ( bbs   , "BBS" + suffix ,
-                                     "Backgroun&(SB+BS)"                 + suffix , bbs , 1000 , 0 , 1.e+8 )        
+                                     "Backgroun&(SB+BS)"                 + suffix , bbs , 1000 , 0 , 1.e+7 )        
         self.__bbb = self.make_var ( bbb  , "BBB"  + suffix ,
-                                     "Background(x,y,z)"                 + suffix , bbb , 1000 , 0 , 1.e+8 )
+                                     "Background(x,y,z)"                 + suffix , bbb , 1000 , 0 , 1.e+7 )
 
         self.__sbs = self.__ssb ## the same 
         self.__bsb = self.__bbs ## the same 
