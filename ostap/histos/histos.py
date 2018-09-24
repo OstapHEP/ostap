@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file histos 
+## @file ostap/histos/histos.py 
 #  Module with decoration of TH* objects for efficient use in python
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

@@ -25,7 +25,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class PhaseSpace2
-     *  simple function to represent two-body phase space
+     *  Function to represent two-body phase space
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
@@ -69,11 +69,12 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      /** calculate the triangle function
+      /** calculate the ``triangle'' function, aka ``lambda'' or ``Kallen'' function 
        *  \f[ \lambda ( a , b, c ) = a^2 + b^2 + c^2 - 2ab - 2bc - 2ca \f]
+       *  @see see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function          
        *  @param a parameter a
        *  @param b parameter b
-       *  @param c parameter b
+       *  @param c parameter c
        *  @return the value of triangle function
        */
       static double triangle
@@ -95,6 +96,8 @@ namespace Ostap
         const double m2 ) ;
       // ======================================================================
       /** calculate the particle momentum in rest frame
+       *  - real for physical case 
+       *  - imaginary for non-physical case (below the threshold)
        *  @param m the mass
        *  @param m1 the mass of the first particle
        *  @param m2 the mass of the second particle
@@ -129,7 +132,7 @@ namespace Ostap
     } ;  
     // ========================================================================
     /** @class PhaseSpace3
-     *  simple function to represent three-body phase space
+     *  Function to represent three-body phase space
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
@@ -198,7 +201,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PhaseSpaceLeft
-     *  simple function to represent N-body phase space near left-threshold
+     *  Function to represent N-body phase space near left-threshold
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
@@ -238,7 +241,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PhaseSpaceRight
-     *  simple function to represent N/L-body phase space near right-threshold
+     *  simple function to represent L/N-body phase space near right-threshold
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
@@ -279,27 +282,38 @@ namespace Ostap
     } ;  
     // ========================================================================
     /** @class PhaseSpaceNL
-     *  simple function to represent the approximation for
-     *  the mass distribution of L-particles from N-body
-     *  phase space decay
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  Function epresenting the approximation for
+     *  the mass distribution of \f$l\f$-particles from \f$n\f$-body
+     *  phase space decay:
+     *  \f[ \Phi_{l,n}(x;x_{low},x_{high}) \equiv  
+     *       C y^{\frac{3l-5}{2}}\left(1-y\right)^{\frac{3(n-l)-2}{2}}\f]
+     *  where 
+     *  - \f$ y\equiv \frac{x-x_{low}}{x_{high}-x_{low}}\f$ 
+     *  - \f$ C\f$ is a normalization constant, such as 
+     *        \f$ \int_{x_{low}}^{x_{high}} \Phi_{l,n}(x) d x = 1\f$ 
+     *  - \f$x_{low}= \sum_{i}^{l}m_i\f$ - is a lower threshodl for mass 
+     *     of \f$l\f$-particles 
+     *  - \f$x_{high}= M - \sum{i=l+1}{n}m_i\f$, is an upper threshold for 
+     *     mass of \f$l\f$-particles from \f$n\f$-body decay of the particle
+     *     with mass \f$M\f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
-    class  PhaseSpaceNL
+    class PhaseSpaceNL
     {
       // ======================================================================
     public:
       // ======================================================================
       /** constructor from thresholds and number of particles
-       *  @param threshold_L the low-mass  threshold
-       *  @param threshold_H the high-mass threshold
-       *  @param l           how many particles we consider
-       *  @param n           total number of particles ( N>L!)
+       *  @param low  the low-mass  threshold
+       *  @param high the high-mass threshold
+       *  @param l    how many particles we consider
+       *  @param n    total number of particles ( N>L!)
        */
-      PhaseSpaceNL ( const double         threshold_L =  0 ,
-                     const double         threshold_H = 10 ,
-                     const unsigned short l           =  2 ,
-                     const unsigned short n           =  3 ) ;
+      PhaseSpaceNL ( const double         low  =  0 ,
+                     const double         high = 10 ,
+                     const unsigned short l    =  2 ,
+                     const unsigned short n    =  3 ) ;
       /// destructor
       ~PhaseSpaceNL () ;                                     // deststructor
       // ======================================================================

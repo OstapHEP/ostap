@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file data.py 
+## @file ostap/trees/data.py 
 #
 #  Useful utilities to get access to datafiles & chains
 #  Actualy it is just a little bit modified version (with globbing) of

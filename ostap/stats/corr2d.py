@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file corr2D.py 
+## @file ostap/stats/corr2d.py 
 #  Simple 2D-decorrelation transformation 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-08

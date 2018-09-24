@@ -20,7 +20,7 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
-    /** @class Chi2Fit LHCbMath/Chi2Fit.h
+    /** @class Chi2Fit  Ostap/Chi2Fit.h
     *   Trivial chi2-fit 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2012-05-26

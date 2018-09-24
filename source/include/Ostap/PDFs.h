@@ -4091,7 +4091,11 @@ namespace Ostap
      *  that is, it has a more acute peak near its mean, and heavier tails,
      *  compared with the standard normal distribution.
      *
-     *  \f$ f(x,\mu,\sigma) \propto \frac{1}{2} {\mathrm{sech}}\left( \frac{\pi}{2}\frac{x-\mu}{\sigma} \right)\f$
+     *  \f[ f(x,\mu,\sigma) \propto 
+     *   \frac{1}{2} {\mathrm{sech}}
+     *   \left( \frac{\pi}{2}\frac{x-\mu}{\sigma} \right)
+     *  \f]
+     *
      *  @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-04-25
@@ -4167,9 +4171,9 @@ namespace Ostap
     // ========================================================================
     /** @class Logistic
      *  aka "Sech-square"
-     *  \f$ f(x;\mu;s) = \frac{1}{4s}sech^2\left(\frac{x-\mu}{2s}\right)\f$
+     *  \f[ f(x;\mu;s) = \frac{1}{4s}sech^2\left(\frac{x-\mu}{2s}\right)\f]
      *  where
-     *  \f$  s = \sigma \frac{\sqrt{3}}{\pi}\f$
+     *  - \f$  s = \sigma \frac{\sqrt{3}}{\pi}\f$
      *  @see https://en.wikipedia.org/wiki/Logistic_distribution
      *  @see Ostap::Math::Logistic
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4477,8 +4481,8 @@ namespace Ostap
      *
      *  \f[ \frac{d\sigma}{dp_T} \propto
      *    p_T\times \left( 1 + \frac{E_{kin}}{Tn}\right)^{-n}\f],
-     *  where \f$E_{kin} = \sqrt{p_T^2-M^2}-M\f$
-     *  is transverse kinetic energy
+     *  where 
+     *  - \f$E_{kin} = \sqrt{p_T^2-M^2}-M\f$ is transverse kinetic energy
      *
      *  @see Ostap::Math::Tsallis
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
@@ -4644,9 +4648,9 @@ namespace Ostap
     // ========================================================================
     /** @class TwoExpos
      *  simple difference of two exponents
-     *  \f$ f \propto
+     *  \f[ f \propto
      *        \mathrm{e}^{-a_1    x}       -\mathrm{e}^{-a_2 x} =
-     *        \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f$
+     *        \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f]
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
@@ -4795,11 +4799,13 @@ namespace Ostap
     /** @class Gumbel
      *  Gumbel  distribution:
      *  https://en.wikipedia.org/wiki/Gumbel_distribution
-     *  \f$  G(x;\mu,\beta) = \frac{1}{\left|\beta\right|} e^{-(z+e^{-z}}\f$, 
-     *  where \f$ z = \frac{x-\mu}{\beta}\f$.
+     *  \f[  G(x;\mu,\beta) = \frac{1}{\left|\beta\right|} e^{-(z+e^{-z}}\f], 
+     *  where 
+     *  - \f$ z = \frac{x-\mu}{\beta}\f$.
      *  Important  cases if \f$ E(x) = e^{-\tau x}\f$, and:
      *  - \f$ z \equiv  \log(x)\f$, then \f$ F(z) = E(x) = G(z, -log(\tau) , 1 ) \f$, 
      *  - \f$ z \equiv -\log(x)\f$, then \f$ F(z) = E(x) = G(z, -log(\tau) , 1 ) \f$.
+     *
      *  As a direct sequence,  a sum of exponential componets is transformed to 
      *  a sum of ``peak-like'' Gumbel  stuctures
      *  @see Ostap::Math::Gumbel
@@ -4873,8 +4879,9 @@ namespace Ostap
     // ========================================================================
     /** @class Weibull
      *  3-parameter  Weibull distribution 
-     *  \f$ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f$, where 
-     *  \f$ y \equiv \frac{x-x_0}{\lambda}\f$
+     *  \f[ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f]
+     *  where 
+     *  - \f$ y \equiv \frac{x-x_0}{\lambda}\f$
      *  @see https://en.wikipedia.org/wiki/Weibull_distribution
      *  @see Ostap::Math::Weibull
      */
@@ -4949,8 +4956,9 @@ namespace Ostap
     // ========================================================================
     /** @class RaisingCosine
      *  "Raising cosine" distribution
-     *  \f$ f(x,\mu,s) = \frac{1}{2s}   \left( 1   +\cos \pi y \right)  \f$, 
-     *  where \f$  y  \equiv = \frac{x-\mu}{s}\f$ 
+     *  \f[ f(x,\mu,s) = \frac{1}{2s}   \left( 1   +\cos \pi y \right)  \f], 
+     *  where 
+     *  - \f$  y  \equiv = \frac{x-\mu}{s}\f$ 
      *  @see https://en.wikipedia.org/wiki/Raised_cosine_distribution
      *  @see Ostap::Math::RaisngCosine 
      */
@@ -5021,8 +5029,9 @@ namespace Ostap
     // ========================================================================
     /** @class QGaussian
      *  q-Gaussian distribution:
-     *  \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
-     *  where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
+     *  \f[ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2) \f], 
+     *  where  
+     *  - \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
      *  @see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
      *  If is equal to 
      *  - scaled version of Student' t-distribution for 1<q<3
@@ -5108,8 +5117,8 @@ namespace Ostap
     /** @class PositiveSpline
      *  The special spline for non-negative function
      *  Actually it is a sum of M-splines with non-negative coefficients
-     *  \f$ f(x) = \sum_i \alpha_i * M_i^k(x) \f$,
-     *  with constraints  \f$  \sum_i \alpha_i=1\f$
+     *  \f[ f(x) = \sum_i \alpha_i * M_i^k(x) \f],
+     *  with constraints \f$  \sum_i \alpha_i=1\f$
      *  and \f$ 0 \le \alpha_i\f$.
      *  @see http://en.wikipedia.org/wiki/M-spline
      *  @see http://en.wikipedia.org/wiki/B-spline
@@ -5498,7 +5507,7 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-  } //                                        end of namespace Ostap::Models
+  } //                                           end of namespace Ostap::Models
   // ==========================================================================
 } //                                                  end of namespace Analysis
 // ============================================================================

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ParallelPathos.py 
+## @file ostap/parallel/mp_pathos.py
 #
 #  Useful utilities for multiprocessing and parallel processing for Ostap
 #  Actualy it is just a little bit upgraded version of original

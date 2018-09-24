@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/fitting/param.h
+## @file ostap/fitting/param.py
 #  Auxillary utilities for parameterization of histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07

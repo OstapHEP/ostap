@@ -839,7 +839,7 @@ namespace Ostap
      *   Tree& tree = ... ;
      *   /// get 90% interval:
      *   Interval ab = interval ( tree , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
-     *   @code 
+     *   @endcode 
      */
     static Interval interval 
     ( TTree&              tree         ,
@@ -863,7 +863,7 @@ namespace Ostap
      *   const RooAbsData& data = ... ;
      *   /// get 90% interval:
      *   Interval ab = interval ( data , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
-     *   @code 
+     *   @endcode 
      */
     static Interval interval 
     ( const RooAbsData&   data             ,
@@ -888,7 +888,7 @@ namespace Ostap
      *   FRAME& frame = ... ;
      *   /// get 90% interval:
      *   Interval ab = interval ( frame , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
-     *   @code 
+     *   @endcode 
      */
     static Interval interval 
     ( DataFrame           frame        ,

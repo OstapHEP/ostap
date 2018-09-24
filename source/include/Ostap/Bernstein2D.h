@@ -1,5 +1,4 @@
-// ============================================================================
-#ifndef OSTAP_BERNSTEIN2D_H
+#ifndef OSTAP_BERNSTEIN2D_H 
 #define OSTAP_BERNSTEIN2D_H 1
 // ============================================================================
 // Include files
@@ -35,6 +34,12 @@ namespace Ostap
     // ========================================================================
     /** @class Bernstein2D
      *  The Bernstein's polynomial of order Nx*Ny
+     *  \f[  B_{n^x,n^y}(x,y) \equiv 
+     *    \sum_{i=0}{n^{x}}
+     *    \sum_{j=0}{n^{y}} \alpha_{i,j} B_{n^{x}}^i(x) B_{n^{y}}^j(y) \f]
+     *  where 
+     *  - \f$ B_n^k(x) \f$ is basic Bernstein polynomial
+     *  @see Ostap::Math::Bernstein
      */
     class Bernstein2D 
     {
@@ -313,6 +318,16 @@ namespace Ostap
      *  The "positive" 2D-polynomial of order Nx*Ny
      *  Actually it is a sum of basic bernstein 2D-polynomials with
      *  non-negative coefficients
+     *  \f[  P_{n^x,n^y}(x,y) \equiv 
+     *    \sum_{i=0}{n^{x}}
+     *    \sum_{j=0}{n^{y}} \alpha_{i,j} B_{n^{x}}^i(x) B_{n^{y}}^j(y) \f]
+     *  where 
+     *  - \f$ B_n^k(x) \f$ is basic Bernstein polynomial
+     *  - \f$ \alpha_{ij} \ge 0\f$
+     *  - \f$ \sum{i,j} \alpha_{i,j} = 1 \f$ 
+     *
+     *  Clearly \f$ P_{N^x,N^y}(x,y) \ge 0\f$  
+     *  @see Ostap::Math::Bernstein2D
      */
     class Positive2D 
     {
@@ -478,7 +493,19 @@ namespace Ostap
     inline void  swap ( Positive2D& a  , Positive2D& b ) { a.swap ( b ) ; }
     // ========================================================================
     /** @class Bernstein2DSym
-     *  The symmetric Bernstein's polynomial of order N*N
+     *  The symmetric Bernstein's polynomial of order N*N.
+     *  Symmetric  verison of Ostap::Math::Bernstein2D
+     *  
+     *  \f[  B_{n}(x,y) \equiv 
+     *    \sum_{i=0}{n}
+     *    \sum_{j=0}{n} \alpha_{i,j} B_n^i(x) B_n^j(y) \f]
+     *  where 
+     *  - \f$ B_n^k(x) \f$ is basic Bernstein polynomial
+     *  - \f$ \alpha_{ji} = \alpha_{ij}\f$ 
+     * 
+     *  Clearly  it is symmetric function \f$ B_{n}(y,x)=B_{n}(x,y) \f$
+     *  @see Ostap::Math::Bernstein2D
+     *  @see Ostap::Math::Bernstein
      */
     class Bernstein2DSym 
     {
@@ -734,7 +761,20 @@ namespace Ostap
     /** @class Positive2DSym
      *  The "positive" symmetrical polynomial of order Nx*Ny
      *  Actually it is a sum of basic bernstein 2D-polynomials with
-     *  non-negative coefficients
+     *  non-negative coefficients.
+     *  Symmetrized version of Ostap::Math::Positive2D
+     *  \f[  P_{n,n}(x,y) \equiv 
+     *    \sum_{i=0}^{n}
+     *    \sum_{j=0}^{n} \alpha_{i,j} B_n^i(x) B_n^j(y) \f]
+     *  where 
+     *  - \f$ B_n^k(x) \f$ is basic Bernstein polynomial
+     *  - \f$ \alpha_{ij} \ge 0\f$
+     *  - \f$ \alpha_{ji} = \alpha_{ij}\f$
+     *  - \f$ \sum_{i,j} \alpha_{i,j} = 1 \f$ 
+     *
+     *  Clearly \f$ P_{n}(x,y) \ge 0\f$  and \f$ P_{n}(y,x)=P_{n}(x,y) \f$
+     *  @see Ostap::Math::Positive2D
+     *  @see Ostap::Math::Bernstein2DSym
      */
     class Positive2DSym
     {

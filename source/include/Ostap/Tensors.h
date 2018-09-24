@@ -35,7 +35,7 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-0725
        */
-      enum {
+      enum Indices {
         //
         X    = 0 ,
         Y    = 1 ,

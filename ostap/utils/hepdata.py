@@ -121,7 +121,7 @@ class HepDataBase(object) :
 #  @code
 #  with HepDataFile(  *metainfo ) as hf :
 #  ...            <do something>
-#  @encode 
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-29
 class HepDataFile(HepDataBase) :
@@ -178,7 +178,7 @@ class HepDataFile(HepDataBase) :
 #  histo    = ...
 #  metadata = { ... }
 #  ds = HepData ( histo , **metadata  )
-#  @encode
+#  @endcode
 #  @attention The object must have ``toHepDATA'' method 
 #  Currently followong types are supported 
 #  - ROOT.TH1F

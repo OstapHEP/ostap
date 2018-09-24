@@ -13,14 +13,17 @@ INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/ostap
 FILE_PATTERNS       += *.py 
 
 ## C++ source  
-INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/src 
 INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/include  
+INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/src 
+
+EXCLUDE_PATTERNS    += */src/*cubature.cpp
+EXCLUDE_PATTERNS    += */src/vwrapper.h
+EXCLUDE_PATTERNS    += */src/clencurt.h
+EXCLUDE_PATTERNS    += */src/converged.h
 
 ## examples
 INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/examples
 FILE_PATTERNS       += *.cpp *.h *.C 
-		    
-##FILE_PATTERNS       += *Histo*.cpp *Histo*.h *.C 
 
 TAGFILES            += ./ROOT.tag=https://root.cern.ch/doc/v@ROOT_DOXYTAG@/
 

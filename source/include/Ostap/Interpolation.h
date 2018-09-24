@@ -1381,7 +1381,8 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Newton interpolation polynomial
+    /** @class Newton 
+     *  Interpolation polynomial
      *  https://en.wikipedia.org/wiki/Newton_polynomial
      *  @attention it is efficient  and relatively stable numerically
      */

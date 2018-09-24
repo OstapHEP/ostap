@@ -24,7 +24,8 @@
 // ============================================================================
 #include "Exception.h"
 // ============================================================================
-/** @file Implementation file for classes from file Ostap/Polynomials.h
+/** @file 
+ *  Implementation file for classes from file Ostap/Polynomials.h
  *  @see LHCbMath/Polynomials.h
  *  @date 2015-02-23 
  *  @author Vanya Belyaev Ivan Belyaev@itep.ru

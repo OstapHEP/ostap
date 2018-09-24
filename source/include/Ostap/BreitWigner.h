@@ -771,9 +771,9 @@ namespace Ostap
                           double    m1    ,
                           double    m2     ) ;
       // ======================================================================
-      /** the simple function for \f$\rho^- \rightarrow \pi^+ \pi^-\f$
+      /** the simple function for \f$\rho^0 \rightarrow \pi^+ \pi^-\f$ and           
        *  \f$ 1- \rightarrow 0^- 0^- \f$, l = 1
-       *  \f$\rho(\omega)= \left[ q_0^2 + q^2 \right]^{-1}f$
+       *  \f$ \rho(\omega)= \left[ q_0^2 + q^2 \right]^{-1} \f$
        *  @see Ostap::Math::BreitWigner
        *  @see Ostap::Math::BreitWigner::rho_fun
        *  @param m the invariant mass

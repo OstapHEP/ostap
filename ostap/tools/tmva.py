@@ -951,7 +951,7 @@ class Reader(object)  :
     #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
     #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
     #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
-    # @encode        
+    # @endcode        
     def __getitem__ ( self , method ) :
         """Helper utility to  get the correspondig function from the  reader:
         - Use the reader
@@ -977,7 +977,7 @@ class Reader(object)  :
     #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
     #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
     #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
-    # @encode        
+    # @endcode        
     def __getattr__ ( self , method ) :
         """Helper utility to  get the correspondig function from the  reader:
         - Use the reader

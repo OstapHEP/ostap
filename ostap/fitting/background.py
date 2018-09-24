@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/fitting/backgtround.py
+## @file ostap/fitting/background.py
 #  Set of useful smooth 1D-models to describe smooth ``background'' distribtions
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25

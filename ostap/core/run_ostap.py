@@ -69,7 +69,7 @@ def parse_args ( args = [] ) :
     #  ... default = []      ,
     #  ...)
     #  print parser.parse_args('a.txt b.txt --foo 1 2 3 --foo 4 -foo 5 '.split())
-    #  @encode
+    #  @endcode
     class Collect(argparse.Action):
         """Simple parsing action to collect multiple arguments
         >>> parser =...

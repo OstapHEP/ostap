@@ -1750,7 +1750,8 @@ def setStorage ( new_type = RAD.Tree ) :
     else : logger.debug ( 'RooAbsData: Default storage type is %s' % the_type  )
 
 # =============================================================================
-## @class UseStorage context manager to change the storage type
+## @class UseStorage
+#  Context manager to change the storage type
 class UseStorage(object) :
     """Context manager to change the storage type
     >>> with UseStorage() :

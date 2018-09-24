@@ -36,7 +36,6 @@
 # fun        = b[2]    ## underlying normalzed C++ object 
 # fit_result = b[3]    ## fit result & status
 # norm       = b[4]    ## normalization coefficient 
-
 # x = ...
 # print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
 # print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
@@ -58,7 +57,6 @@
 # @code
 # histo = ...                                 ## the histogram
 # b = histo.pdf_positive ( 5 , draw = True )  ## make a fit... 
-# 
 # result = b[0]  ## RooFit result
 # pdf    = b[1]  ## PDF used in the fit
 # fun    = b[2]  ## the actual function from PDF
@@ -66,8 +64,7 @@
 # @endcode 
 #  
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-# @date   2011-06-07
-#  
+# @date   2011-06-07  
 # =============================================================================
 """Module with utilities for parameterization of historgams
 

@@ -3,8 +3,8 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-## @file ostap/math/tests/tesr_models_2d.py
-#  Test module for the file ostap/math/models.py
+## @file ostap/math/tests/test_models_2d.py
+#  Test module for the file ostap/math/models_2d.py
 # ============================================================================= 
 """ Test module for 2D-models
 """

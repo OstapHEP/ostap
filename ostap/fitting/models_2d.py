@@ -52,18 +52,26 @@ class PolyBase2(PDF2,Phases) :
 # =============================================================================
 ## @class PolyPos2D_pdf
 #  positive polynomial in 2D:
-#  \f{displaymath}  f(x,y) = \sum^{i=n}_{i=0}\sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y) \f},
-#  where \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial 
+#  \f[ P(x,y) =
+#   \sum^{n}_{i=0} \sum{k}_{j=0} a_{ij} B^n_i(x) B^k_j(y)
+#  \f] 
+#  where
+#  - \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial
+#  - \f$ a_{ij} \ge 0 \f$
+#  - \f$ \sum_{i,j} a_{ij} = 1 \f$
 #  @see Ostap::Models::Poly2DPositive
 #  @see Ostap::Math::Poly2DPositive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PolyPos2D_pdf(PolyBase2) :
-    """Positive (non-factorizable!) polynomial in 2D:
-
-    f(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y)
+    r"""Positive (non-factorizable!) polynomial in 2D:
     
-    where  B^n_i - are Bernstein polynomials
+    P_{n,k}(x,y) = \sum^{n}_{i=0}\sum{k}_{j=0} a_{ij} B^n_i(x) B^k_j(y)
+    
+    where:
+    - B^n_i - are Bernstein polynomials
+    - a_{ij} >= 0
+    - \sum_{ij} a_{ij} = 1
     
     Note:
     
@@ -120,22 +128,30 @@ class PolyPos2D_pdf(PolyBase2) :
 models.append ( PolyPos2D_pdf ) 
 # =============================================================================
 ## @class PolyPos2Dsym_pdf
-#  Positive symetric polynomial in 2D:
-#  \f{displaymath} f(x,y) = \sum^{i=n}_{i=0}\sum{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y) \f},
-#  where \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial and
-#  \f$a_{ij} = a_{ji}\f$
+#  Positive symetric polynomial in 2D. Symmetrized version of PolyPos2D_pdf
+#  \f[ P_{n}(x,y) =
+#   \sum^{n}_{i=0} \sum{k}_{j=0} a_{ij} B^n_i(x) B^k_j(y)
+#  \f] 
+#  where
+#  - \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial
+#  - \f$ a_{ij} \ge 0 \f$
+#  - \f$ a_{ji}=a_{i,j} \f$ 
+#  - \f$ \sum_{i,j} a_{ij} = 1 \f$
 #  @see Ostap::Models::Poly2DSymPositive
 #  @see Ostap::Math::Poly2DSymPositive
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PolyPos2Dsym_pdf(PolyBase2) :
-    """Positive (non-factorizable!) SYMMETRIC polynomial in 2D:
+    r"""Positive (non-factorizable!) SYMMETRIC polynomial in 2D:
     
-    f(x,y) = sum^{i=n}_{i=0}sum{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y)
+    P_{n}(x,y) = \sum^{n}_{i=0} \sum{k}_{j=0} a_{ij} B^n_i(x) B^k_j(y)
     
     where:
     - B^n_i - are Bernstein polynomials
     - a_{ij} = a_{ji}
+    - a_{ij} \ge 0 
+    - a_{ji}=a_{i,j} 
+    - \sum_{i,j} a_{ij} = 1
     
     Note:
     - f(x,y)>=0 for whole 2D-range
@@ -194,11 +210,17 @@ models.append ( PolyPos2Dsym_pdf )
 # =============================================================================
 ## @class PSPol2D_pdf
 #  The 2D-function, that represent a cross-product of two phase-space factors,
-#  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+#
 #  The function is:
-#  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
-#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
-#  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
+#    \f[ f(x,y) = 
+#        \Phi_{k,l}(x;x_{low}, x_{high})
+#        \Phi_{m,n}(y;y_{low}, y_{high})
+#        P_{N,M}(x,y) \f]
+#   where  
+#  - \f$ \Phi_{k,l}(x;x_{low},x_{high}) \f$ is a phase-space function for x-axis
+#  - \f$ \Phi_{m,n}(y;y_{low},y_{high}) \f$ is a phase-space function for y-axis
+#  - \f$ P_{N,M}(x,y) \f$ is 2D positive Bernstein polynomial
+#
 #  @see Ostap::Models::PS2DPol
 #  @see Ostap::Math::PS2DPol
 #  @see Ostap::Math::PhaseSpaceNL 
@@ -206,20 +228,21 @@ models.append ( PolyPos2Dsym_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PSPol2D_pdf(PolyBase2) :
-    """Product of phase space factors, modulated by the positive polynom in 2D
+    r"""Product of phase space factors, modulated by the positive polynom in 2D
     
-    f(x,y) = PSx(x) * PSy(y) * Pnk(x,y)
+    f (x,y) =
+    = \Phi_{k,l}(x;x_{low}, x_{high}) 
+    * \Phi_{m,n}(y;y_{low}, y_{high})
+    *  P_{N,M}(x,y) 
     
-    where
-    - PSx(x) is a phase space function for x-axis   (Ostap::Math::PhaseSpaceNL)
-    - PSy(y) is a phase space function for y-axis   (Ostap::Math::PhaseSpaceNL)
-    - Pnk(x,y) is positive non-factorizable polynom (Ostap::Math::Positive2D)
-    -- Pnk(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y), where 
-    --- B^n_i - are Bernstein polynomials
+    where:
     
+    - \Phi_{k,l}(x;x_{low},x_{high}) is a phase-space function for x-axis
+    - \Phi_{m,n}(y;y_{low},y_{high}) is a phase-space function for y-axis
+    - \P_{N,M}(x,y) is 2D positive Bernstein polynomial
+        
     Note:
     - f(x,y)>=0 for whole 2D-range
-    
     """
     def __init__ ( self             ,
                    name             ,
@@ -306,29 +329,42 @@ models.append ( PSPol2D_pdf )
 
 # =============================================================================
 ## @class PSPol2D2_pdf
-#  The 2D-function, that represent a cross-product of two phase-space factors,
-#  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+#  The 2D-function, that represent non-factorizeable "product" of  
+#  phase-space functions modulated by the 2D-positive polynomial.
+#  The  function is useful to describe e.g. 2D-distributions of 
+#  \f$ m_{23}\f$ vs \f$m_{45}\f$ from 5-body decays. 
+#
 #  The function is:
-#  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
-#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
-#  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
-#  @see Ostap::Models::PS2DPol
-#  @see Ostap::Math::PS2DPol
+#  \f[ f(x,y) = \frac{1}{2}
+#   \left( \Phi_{k,n}(x;x_{low},x_{high}) \Phi_{l,m-1}(y,y_{low},m_{max}-x) 
+#        + \Phi_{l,m}(y;y_{low},y_{high}) \Phi_{k,n-1}(x,x_{low},m_{max}-y) 
+#   \right) P_{N^{x},N^{y}}(x,y) \f]
+#  where 
+#  - \f$ \Phi_{i,j}(z;z_{low},z_{high}\f$ are normalized phase space functions
+#    for mass of \f$i\f$-particles from \f$j\f$-body decays
+#  - \f$ P_{N^{x},N^{y}}(x,y) \f$ is 2D positive Bernstein polynomial
+#  - \f$m_{max}\f$ is a maximal allowed mass for \f$x+y\f$
+#  
+#  @see Ostap::Models::PS2DPol2
+#  @see Ostap::Math::PS2DPol2
 #  @see Ostap::Math::PhaseSpaceNL 
 #  @see Ostap::Math::Positive2D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PSPol2D2_pdf(PolyBase2) :
-    """Product of phase space factors, modulated by the positive polynom in 2D
+    r"""Product of phase space factors, modulated by the positive polynom in 2D
     
-    f(x,y) = PSx(x) * PSy(y) * Pnk(x,y)
+    f(x,y) =
+    \frac{1}{2} \left(
+    \Phi_{k,n}(x;x_{low},x_{high}) \Phi_{l,m-1}(y,y_{low},m_{max}-x) 
+    + \Phi_{l,m}(y;y_{low},y_{high}) \Phi_{k,n-1}(x,x_{low},m_{max}-y) \right)
+    P_{N^{x},N^{y}}(x,y)
     
-    where
-    - PSx(x) is a phase space function for x-axis   (Ostap::Math::PhaseSpaceNL)
-    - PSy(y) is a phase space function for y-axis   (Ostap::Math::PhaseSpaceNL)
-    - Pnk(x,y) is positive non-factorizable polynom (Ostap::Math::Positive2D)
-    -- Pnk(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y), where 
-    --- B^n_i - are Bernstein polynomials
+    where 
+    - \Phi_{i,j}(z;z_{low},z_{high} are normalized phase space functions
+    for mass of i-particles from j-body decays
+    -  P_{N^{x},N^{y}}(x,y)  is 2D positive Bernstein polynomial
+    - m_{max} is a maximal allowed mass for \f$x+y\f$
     
     Note:
     - f(x,y)>=0 for whole 2D-range
@@ -426,33 +462,50 @@ class PSPol2D2_pdf(PolyBase2) :
 models.append ( PSPol2D2_pdf ) 
 
 
-
-
 # =============================================================================
 ## @class PSPol2D3_pdf
-#  The 2D-function, that represent a cross-product of two phase-space factors,
-#  \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$,  modulated by the 2D-positive polynomial
+#  The 2D-function, that represent non-factorizeable "product" of  
+#  two modulated phase-space functions.
+#  It can be considered as a simpler alternative for class PSPol2D2_pdf
+#  The  function is useful to describe e.g. 2D-distributions of 
+#  \f$ m_{23}\f$ vs \f$m_{45}\f$ from 5-body decays. 
+#
 #  The function is:
-#  \f[ f(x,y) = Ps_{x}(x) Ps_{y}(y) P_{pos}(x,y)\f], where 
-#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
-#  - \f$ P_{pos}(x,y) \f$ is 2D positive Bernstein polynomial 
-#  @see Ostap::Models::PS2DPol
-#  @see Ostap::Math::PS2DPol
+#  \f[ f(x,y) = \frac{1}{2}
+#   \left( \Phi^{(N^{x})}_{k,n}(x;x_{low},x_{high}) \Phi_{l,m-1}(y,y_{low},m_{max}-x) 
+#        + \Phi^{(N^{y})}_{l,m}(y;y_{low},y_{high}) \Phi_{k,n-1}(x,x_{low},m_{max}-y) 
+#    \right) \f]
+#  where 
+#  - \f$\Phi_{i,j}(z;z_{low},z_{high}\f$ are normalized phase space functions
+#    for mass of \f$i\f$-particles from \f$j\f$-body decays
+#  - \f$\Phi^{(N)}_{i,j}(z;z_{low},z_{high}\f$ are normalized phase space functions
+#    for mass of \f$i\f$-particles from \f$j\f$-body decays, modulated by
+#    1D positive benrstein polynomial of degree \f$N\f$
+#  - \f$m_{max}\f$ is a maximal allowed mass for \f$x+y\f$
+# 
+#  @see Ostap::Models::PS2DPol3
+#  @see Ostap::Math::PS2DPol3
+#  @see Ostap::Math::PhaseSpacePol
 #  @see Ostap::Math::PhaseSpaceNL 
 #  @see Ostap::Math::Positive2D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PSPol2D3_pdf(PolyBase2) :
-    """Product of phase space factors, modulated by the positive polynom in 2D
+    r"""Product of phase space factors, modulated by the positive polynom in 2D
     
-    f(x,y) = PSx(x) * PSy(y) * Pnk(x,y)
+    The function is:
+    f(x,y) = \frac{1}{2}
+    \left( \Phi^{(N^{x})}_{k,n}(x;x_{low},x_{high}) \Phi_{l,m-1}(y,y_{low},m_{max}-x) 
+    + \Phi^{(N^{y})}_{l,m}(y;y_{low},y_{high}) \Phi_{k,n-1}(x,x_{low},m_{max}-y) 
+    \right)
     
-    where
-    - PSx(x) is a phase space function for x-axis   (Ostap::Math::PhaseSpaceNL)
-    - PSy(y) is a phase space function for y-axis   (Ostap::Math::PhaseSpaceNL)
-    - Pnk(x,y) is positive non-factorizable polynom (Ostap::Math::Positive2D)
-    -- Pnk(x,y) = sum^{i=n}_{i=0}sum{j=k}_{j=0} a^2_{ij} B^n_i(x) B^k_j(y), where 
-    --- B^n_i - are Bernstein polynomials
+    where 
+    - \f$\Phi_{i,j}(z;z_{low},z_{high}\f$ are normalized phase space functions
+    for mass of \f$i\f$-particles from \f$j\f$-body decays
+    - \f$\Phi^{(N)}_{i,j}(z;z_{low},z_{high}\f$ are normalized phase space functions
+    for mass of \f$i\f$-particles from \f$j\f$-body decays, modulated by
+    1D positive benrstein polynomial of degree \f$N\f$
+    - \f$m_{max}\f$ is a maximal allowed mass for \f$x+y\f$
     
     Note:
     - f(x,y)>=0 for whole 2D-range
@@ -549,21 +602,24 @@ class PSPol2D3_pdf(PolyBase2) :
 models.append ( PSPol2D3_pdf ) 
 
 
-
 # =============================================================================
 ## @class PSPol2Dsym_pdf
-#  The symmetric 2D-function, that represent a cross-product of two identical 
-#  phase-space factors,
-#  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
-#  polynomial
+#  The symmetric 2D-function, that represent a cross-product 
+#  \f$ \Phi_{k,l}(x)\f$ and \f$ \Phi_{m,n}(y)\f$,  
+#  modulated by the 2D-positive symmetric polynomial.
+#  It is a "symmetrised" version of class PSPol2D
 #
 #  The function is:
-#  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
-#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
-#  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial
-# 
-# Clearly the function is symmetric under 
-# \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
+#  \f[ f(x,y) = 
+#      \Phi_{k,l}(x;x_{low}, x_{high})
+#      \Phi_{k,l}(y;y_{low}, y_{high})
+#       P_{N,N}(x,y) \f]
+#  where  
+#  - \f$ \Phi_{k,l}(x;x_{low},x_{high}) \f$ is a phase-space function,
+#        \f$ y_{low}=x_{low}\f$ and \f$y_{high}=x_{high}\f$
+#  - \f$ P_{N,N}(x,y) \f$ is 2D positive symmetric  Bernstein polynomial 
+#
+#  Clearly the function is symmetric: \f$f(x,y) = f(y,x) \f$ 
 #  @see Ostap::Models::PS2DPolSym
 #  @see Ostap::Math::PS2DPolSym
 #  @see Ostap::Math::PhaseSpaceNL 
@@ -571,16 +627,18 @@ models.append ( PSPol2D3_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PSPol2Dsym_pdf(PolyBase2) :
-    """Symmetric product of phase space factors, modulated by the positive polynom in 2D
+    r"""Symmetric product of phase space factors, modulated by the positive polynom in 2D
     
-    f(x,y) = PS(x) * PS(y) * Pn(x,y) 
-    
-    where
-    - PS(x) is a phase space function  (Ostap::Math::PhaseSpaceNL)
-    - Pnk(x,y) is positive symmetric non-factorizable polynom (Ostap::Math::Positive2DSym)
-    -- Pn(x,y) = sum^{i=n}_{i=0}sum^{j=n}_{j=0} a^2_{ij} B^n_i(x) B^n_j(y), where 
-    --- B^n_i - are Bernstein polynomials
-    --- a_{ij}=a_{ji}
+    #  The function is:
+    #  \f[ f(x,y) = 
+    #      \Phi_{k,l}(x;x_{low}, x_{high})
+    #      \Phi_{k,l}(y;y_{low}, y_{high})
+    #       P_{N,N}(x,y) \f]
+    #  where  
+    #  - \f$ \Phi_{k,l}(x;x_{low},x_{high}) \f$ is a phase-space function,
+    #        \f$ y_{low}=x_{low}\f$ and \f$y_{high}=x_{high}\f$
+    #  - \f$ P_{N,N}(x,y) \f$ is 2D positive symmetric  Bernstein polynomial 
+    #
     
     Note:
     - f(x,y)>=0 for whole 2D-range
@@ -675,18 +733,27 @@ models.append ( PSPol2Dsym_pdf )
 
 # =============================================================================
 ## @class PSPol2D2sym_pdf
-#  The symmetric 2D-function, that represent a cross-product of two identical 
-#  phase-space factors,
-#  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
-#  polynomial
 #
-#  The function is:
-#  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
-#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
-#  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial
-# 
-# Clearly the function is symmetric under 
-# \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
+#  The symmetric 2D-function, that represent non-factorizeable "product" of
+#  phase-space functions modulated by the 2D-positive polynomial.
+#  It is a  symmetrised version of class PSPol2D2.
+#  The  function is useful to describe e.g. 2D-distributions of 
+#  \f$ m_{23}\f$ vs \f$m_{45}\f$ from 5-body decays. 
+#
+# The function is:
+#  \f[ f(x,y) = \frac{1}{2}
+#   \left( \Phi_{k,n}(x;x_{low},x_{high}) \Phi_{k,n-1}(y,y_{low},m_{max}-x) 
+#        + \Phi_{k,n}(y;y_{low},y_{high}) \Phi_{k,n-1}(x,x_{low},m_{max}-y) 
+#        \right)
+#        P_{N,N}(x,y) \f]
+#  where 
+#  - \f$ \Phi_{i,j}(x;x_{low},x_{high}\f$ are normalized phase space function,
+#    for mass of \f$i\f$-particles from \f$j\f$-body decays;
+#  - \f$ y_{low}=x_{low}\f$ and \f$y_{high}=x_{high}\f$
+#  - \f$ P_{N,N}(x,y) \f$ is 2D positive symmertic Bernstein polynomial
+#  - \f$m_{max}\f$ is a maximal allowed mass for \f$x+y\f$
+#
+#  Clearly the function is symmetric \f$f(x,y) = f(y,x) \f$  
 #  @see Ostap::Models::PS2DPolSym
 #  @see Ostap::Math::PS2DPolSym
 #  @see Ostap::Math::PhaseSpaceNL 
@@ -808,18 +875,27 @@ models.append ( PSPol2D2sym_pdf )
 
 # =============================================================================
 ## @class PSPol2D3sym_pdf
-#  The symmetric 2D-function, that represent a cross-product of two identical 
-#  phase-space factors,
-#  \f$ Ps(x)\f$ and \f$ Ps(y)\f$,  modulated by the symmetric 2D-positive 
-#  polynomial
+#  
+#  The symmetric 2D-function, that represent non-factorizeable "product" of  
+#  two modulated phase-space functions.
+#  It is a  symmetrized version of PSPol2D3_pdf 
+#  The  function is useful to describe e.g. 2D-distributions of 
+#  \f$ m_{23}\f$ vs \f$m_{45}\f$ from 5-body decays. 
 #
 #  The function is:
-#  \f[ f(x,y) = Ps(x) Ps(y) P_{pos}(x,y)\f], where 
-#  - \f$ Ps_x(x)\f$ and \f$ Ps_y(y)\f$ are 1D phase-space functions 
-#  - \f$ P_{pos}(x,y) \f$ is symmetric 2D positive Bernstein polynomial
-# 
-# Clearly the function is symmetric under 
-# \f$ x\leftrightarrow y \f$ transformmation: \f$f(x,y) = f(y,x) \f$ 
+#  \f[ f(x,y) = \frac{1}{2}
+#   \left( \Phi^{(N)}_{k,n}(x;x_{low},x_{high}) \Phi_{k,n-1}(y,y_{low},m_{max}-x) 
+#        + \Phi^{(N)}_{k,n}(y;y_{low},y_{high}) \Phi_{k,n-1}(x,x_{low},m_{max}-y) 
+#   \right) \f]
+#  where 
+#  - \f$ \Phi_{i,j}(z;z_{low},z_{high}\f$ are normalized phase space functions
+#    for mass of \f$i\f$-particles from \f$j\f$-body decays
+#  - \f$\Phi^{(N)}_{i,j}(z;z_{low},z_{high}\f$ are normalized phase space functions
+#    for mass of \f$i\f$-particles from \f$j\f$-body decays, modulated by
+#        1D positive benrstein polynomial of degree \f$N\f$
+#  - \f$m_{max}\f$ is a maximal allowed mass for \f$x+y\f$
+#
+#  Clearly the function is symmetric:  \f$f(y,x)=f(x,y)\f$                             
 #  @see Ostap::Models::PS2DPolSym
 #  @see Ostap::Math::PS2DPolSym
 #  @see Ostap::Math::PhaseSpaceNL 

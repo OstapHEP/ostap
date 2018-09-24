@@ -432,7 +432,7 @@ class ROOTIgnore( object ) :
 #  @code
 #  with NoContext() :
 #  ...  do_something() 
-#  @endocode 
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  date 2013-01-12
 class NoContext(object) :

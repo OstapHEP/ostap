@@ -383,7 +383,7 @@ if not hasattr ( math , 'acoth' ) :
 
 # =============================================================================
 ## @class EtaVsP
-#  very simple function \f$ \eta = \eta(p) \$  for the fixed transverse momentum
+#  very simple function \f$ \eta = \eta(p) \f$  for the fixed transverse momentum
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-07-19
 class EtaVsP(object) :
@@ -398,7 +398,7 @@ class EtaVsP(object) :
 
 # =============================================================================
 ## @class EtaVsPt
-#  very simple function \f$ \eta = \eta(p_T) \$  for the fixed momentum
+#  very simple function \f$ \eta = \eta(p_T) \f$  for the fixed momentum
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-07-19
 class EtaVsPt(object) :

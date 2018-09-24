@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/math/linag.py
+## @file ostap/math/linalg.py
 #  Few utilities to simplify linear algebra manipulations 
 #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
 #  @date 2009-09-12
@@ -615,6 +615,7 @@ def _m_to_numpy_ ( self ) :
 #  m = ...
 #  v = ...
 #  m.sim ( v )
+#  @endcode 
 def  _ms_sim_ ( m , v ) :
     """ construct ``similarity'' with ``vector-like'' object
     >>> m = ...

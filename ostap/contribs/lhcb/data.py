@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# $Id$
-# =============================================================================
-## @file data.py 
+## @file contrib/lhcb/data.py 
 #
 #  Useful utilities to get access to datafiles & chains
 #  Actualy it is just a little bit modified version (with globbing) of
@@ -27,9 +25,6 @@
 #  @author Alexander BARANOV a.baranov@cern.ch
 #  @date   2014-06-08
 #
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """ Useful utilities to get access to datafiles & chains
 

@@ -87,15 +87,15 @@ namespace Ostap
     template <unsigned short N, unsigned short K>
     struct Stirling1 ;
     // ========================================================================
-    /// stop recursion: \f$ S^0_0 = 1 \$
+    /// stop recursion: \f$ S^0_0 = 1 \f$
     template <>
     struct Stirling1<0,0> { enum _ :  unsigned long long { value = 1 } ; } ;    
     // ========================================================================
-    /// stop recursion \f$ S^n_0 = 0 \$
+    /// stop recursion \f$ S^n_0 = 0 \f$
     template <unsigned short N>
     struct Stirling1<N,0> { enum _ : unsigned long long { value = 0 } ; } ;    
     // ========================================================================
-    /// stop recursion \f$ S^0_s = 0 \$
+    /// stop recursion \f$ S^0_s = 0 \f$
     template <unsigned short K>
     struct Stirling1<0,K> { enum _ : unsigned long long { value = 0 } ; } ;
     /// start recursion  \f$ S^{n+1}_k = n S^n_k + S^n_{k-1}\f$ 

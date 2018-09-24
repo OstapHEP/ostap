@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file test_reweigt2.py
+## @file ostap/tools/tests/test_reweight2.py
 #
 #  Test for 2D-reweighting machinery
 # 

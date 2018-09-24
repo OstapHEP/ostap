@@ -1983,7 +1983,7 @@ namespace Ostap
     // ========================================================================    
     /** @class QGaussian  
      *  q-Gaussian distribution:
-     *  \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
+     *  \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)  \f$, 
      *  where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
      *  @see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
      *  If is equal to 

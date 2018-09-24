@@ -187,9 +187,17 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PhaseSpacePol
-     *  simple function to represent the product of N-body phase space
+     *  Function to represent the product of l/n-body phase space
      *  and positive polynomial
+     *  \f[ \Phi_{l,n}^{(N)(x)} \equiv 
+     *      \Phi_{l,n}(x;x_{low},x_{high}) P_{N}(x) \f]
+     *  where :
+     *  -  \f$  \Phi_{l,n}(x;x_{low},x_{high}) \f$  is a phase space of 
+     *     l-particles from n-body decay
+     *  -  \f$ P_{N}(x) \f$ is a positive polynomial of degree N
+     *  
      *  @see Ostap::Math::PhaseSpaceNL
+     *  @see Ostap::Math::Positive
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
@@ -338,7 +346,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /** effective $\chi^2\f$-parameters
+      /** effective \f$ \chi^2 \f$-parameters
        *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
        *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
        */
@@ -417,7 +425,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /** effective $\chi^2\f$-parameters
+      /** effective \f$\chi^2\f$-parameters
        *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
        *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
        */

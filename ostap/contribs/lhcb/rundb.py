@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file contrib/lhcb/rundb.py
 #  Collection of simple utilites to deal with LHCb RunDB via http://lbrundb.cern.ch/api
 #  - thanks to Alex PEARCE 
 #  Run this script to get example of run/fill information that could be
@@ -49,18 +49,19 @@ run_url  = 'http://lbrundb.cern.ch/api/run/{0}/'  ## pattern for runs
 fill_url = 'http://lbrundb.cern.ch/api/fill/{0}/' ## pattern for fills 
 # =============================================================================
 ## get run info for the given run from LHCb runDB
+#
 #  @code
 #  run  =  169064
 #  rinfo = run_info ( run ) 
 #  print 'Run Info %s ' %  rinfo
 #  print 'Magnet: %s' % rinfo['magnetState']
 #  print 'Velo  : %s' % rinfo['veloPosition']
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2015-01-12
+#  @endcode
+#
 #  @param run_number  run number
 #  @return run information from LHCb RunDB 
-#  @code
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-01-12
 def run_info ( run_num ) :
     """Get run info for the given run from LHCb runDB
     >>> run  =  169064
@@ -91,6 +92,7 @@ def run_info ( run_num ) :
 
 # =============================================================================
 ## get fill info for the given run from LHCb runDB
+#
 #  @code
 #  fill  =  4691
 #  finfo = fill_info ( fill ) 
@@ -98,12 +100,12 @@ def run_info ( run_num ) :
 #  print 'Colliding bunches : %s' % finfo ['nCollidingBunches']
 #  print 'Beam-1 bunches    : %s' % finfo ['nBunchesB1']
 #  print 'Beam-2 bunches    : %s' % finfo ['nBunchesB2']
-#  @endcode 
+#  @endcode
+#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-01-12
 #  @param fill_num  fill number
 #  @return fill information from LHCb RunDB 
-#  @code
 def fill_info ( fill_num ) :
     """Get fill info for the given run from LHCb runDB
     >>> fill  =  4691

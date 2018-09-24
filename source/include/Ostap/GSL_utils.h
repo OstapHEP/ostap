@@ -9,7 +9,7 @@
 #include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
 // =============================================================================
-/** @file Ostap/GLS_utils.h
+/** @file Ostap/GSL_utils.h
  *  utilities for GSL 
  */
 // =============================================================================

@@ -17,7 +17,8 @@
 // ============================================================================
 #include "local_gsl.h"
 // ============================================================================
-/** @file implementation file for class Ostap::Math::Workspace
+/** @file 
+ *  Implementation file for class Ostap::Math::Workspace
  */
 // ============================================================================
 // constructor

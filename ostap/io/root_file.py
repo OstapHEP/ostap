@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/io/roo_file.py
+## @file ostap/io/root_file.py
 #  Module with decoration of TFile objects for efficient use in python
 #  It provides TFile (well, actually any TDirectory) with python-like protocol
 #  @code
@@ -490,7 +490,7 @@ def _rd_get_ ( rdir , name , default = None ) :
 #  rfile = ...
 #  for r,d,o in rfile.walk() :
 #    print 'root dir: %s, %d subdirs, %d objects' % ( r , len ( d ) , len( o ) )
-#  @endocode
+#  @endcode
 def _rd_walk_ ( rdir , topdown = True ) :
     """``walk'' through the directory and its content
     >>> rfile = ...

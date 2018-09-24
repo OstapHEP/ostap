@@ -105,7 +105,7 @@ Point = collections.namedtuple('Point', ( 'x','fx' ) )
 #  for i in  range ( 10 ) :
 #      x = halley_newton ( fun , x , deriv )
 #      print i, x
-#  @eendcode 
+#  @endcode 
 def halley_newton ( fun            ,    ## the function 
                     x              ,    ## x 
                     deriv1         ,    ## the first derivative 
