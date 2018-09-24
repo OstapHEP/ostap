@@ -6,11 +6,6 @@
 #include <cmath>
 #include <array>
 // ============================================================================
-// GSL
-// ============================================================================
-#include "gsl/gsl_errno.h"
-#include "gsl/gsl_integration.h"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/PhaseSpace.h"
@@ -23,6 +18,7 @@
 #include "Exception.h"
 #include "local_math.h"
 #include "local_gsl.h"
+#include "Integrator1D.h"
 // ============================================================================
 /** @file 
  *  implementation of useful models for describing signal peaks with the natural width \
@@ -41,16 +37,6 @@ namespace
 {
   // ==========================================================================
   // Breit-Wigner & Co 
-  // ==========================================================================
-  /** helper function for integration of Breit-Wigner shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double breit_wigner_GSL ( double x , void* params )
-  {
-    const Ostap::Math::BreitWigner* bw = (Ostap::Math::BreitWigner*) params ;
-    return (*bw)(x) ;
-  }
   // ==========================================================================
   /// get the complex Breit amplitude
   std::complex<double> breit_amp
@@ -95,128 +81,6 @@ namespace
     if ( 0 >= r0 )           { return 0 ; }  // RETURN
     //
     return gam0 * Ostap::Math::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
-  }
-  // ==========================================================================
-  // Flatte & Co 
-  // ==========================================================================
-  /** helper function for integration of Flatte shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double flatte_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Flatte* f = (Ostap::Math::Flatte*) params ;
-    return (*f)(x) ;
-  }
-  // ==========================================================================
-  // LASS, Bugg & other beasts  
-  // ==========================================================================
-  /** helper function for integration of LASS shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2013-10--5
-   */
-  double LASS_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::LASS* lass = (Ostap::Math::LASS*) params ;
-    //
-    return (*lass)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of Bugg shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2012-05-23
-   */
-  double Bugg_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Bugg* bugg = (Ostap::Math::Bugg*) params ;
-    return (*bugg)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of Swanson shape (cusp)
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2016-06-11
-   */
-  double swanson_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Swanson* sw = (Ostap::Math::Swanson*) params ;
-    return (*sw)(x) ;
-  }
-
-  // ==========================================================================
-  // Voigt & Co 
-  // ==========================================================================
-  /** helper function for integration of Voigt shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double voigt_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Voigt* f = (Ostap::Math::Voigt*) params ;
-    return (*f)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of PseudoVoigt shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2016-06-13
-   */
-  double pseudovoigt_GSL ( double x , void* params )
-  {
-    const Ostap::Math::PseudoVoigt* f = (Ostap::Math::PseudoVoigt*) params ;
-    return (*f)(x) ;
-  }
-
-  // ==========================================================================
-  // "2-from-3"   family of shapes 
-  // ==========================================================================
-  /** helper function for integration of BW23L shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2012-05-23
-   */
-  double BW_23L_GSL ( double x , void* params )
-  {
-    const Ostap::Math::BW23L* bw = (Ostap::Math::BW23L*) params ;
-    return (*bw)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of Flatte23L shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2012-05-24
-   */
-  double Flatte_23L_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Flatte23L* f = (Ostap::Math::Flatte23L*) params ;
-    return (*f)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of LASS23L shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double LASS_23L_GSL ( double x , void* params )
-  {
-    const Ostap::Math::LASS23L* lass = (Ostap::Math::LASS23L*) params ;
-    return (*lass)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of Bugg23L shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2012-05-23
-   */
-  double Bugg_23L_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Bugg23L* bugg = (Ostap::Math::Bugg23L*) params ;
-    return (*bugg)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of Gounaris23L shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2012-05-24
-   */
-  double Gounaris_23L_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Gounaris23L* f = (Ostap::Math::Gounaris23L*) params ;
-    return (*f)(x) ;
   }
   // ==========================================================================
   /** @var s_BUKIN
@@ -772,34 +636,24 @@ double  Ostap::Math::BreitWigner::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<BreitWigner> s_integrator {} ;
+  static char s_message[] = "Integral(BreitWigner)" ;
   //
-  gsl_function F                 ;
-  F.function = &breit_wigner_GSL ;
-  const BreitWigner* _bw = this  ;
-  F.params   = const_cast<BreitWigner*> ( _bw ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL :
       s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::BreitWigner::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -811,40 +665,28 @@ double  Ostap::Math::BreitWigner::integral () const
   //
   // split into reasonable sub intervals
   //
-  const double x1     = m_m0 - 10 * m_gam0 ;
-  const double x2     = m_m0 + 10 * m_gam0  ;
+  const double x1     = std::max ( m_m1  + m_m2 , m_m0 - 10 * m_gam0 ) ;
+  const double x2     = std::max ( m_m1  + m_m2 , m_m0 + 10 * m_gam0 ) ;
   const double x_high = std::max ( x1 , x2 ) ;
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<BreitWigner> s_integrator {} ;
+  static char s_message[] = "Integral(BreitWigner/tail)" ;
   //
-  gsl_function F                 ;
-  F.function = &breit_wigner_GSL ;
-  const BreitWigner* _bw = this  ;
-  F.params   = const_cast<BreitWigner*> ( _bw ) ;
-  //
-  //
-  // right tail:
-  //
-  double result  =  0.0 ;
-  double error   = -1.0 ;
-  //
-  const int ierror = gsl_integration_qagiu
-    ( &F                ,         // the function
-      x_high            ,         // "low" edge
-      s_PRECISION       ,         // absolute precision
-      s_PRECISION_TAIL  ,         // relative precision
-      s_SIZE            ,         // size of workspace
-      workspace ( m_workspace ) , // workspace
-      &result           ,         // the result
-      &error            ) ;       // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::BreitWigner::QAGIU" , __FILE__ , __LINE__ , ierror ) ;
-    result = 0.0 ;
-  }
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate
+    ( &F , 
+      x_high              ,          // low edge
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION_TAIL    ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result + integral ( m_m1 + m_m2 , x_high );
 }
@@ -1086,34 +928,24 @@ double  Ostap::Math::Flatte::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Flatte> s_integrator {} ;
+  static char s_message[] = "Integral(Flatte)" ;
   //
-  gsl_function F                 ;
-  F.function = &flatte_GSL ;
-  const Flatte* _f = this  ;
-  F.params   = const_cast<Flatte*> ( _f ) ;
-  //
-  double result   =  1.0 ;
-  double error    = -1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
       s_PRECISION       ,            // absolute precision
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL :
       s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Flatte::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -1125,7 +957,6 @@ double  Ostap::Math::Flatte::integral () const
   //
   // split into reasonable sub intervals
   //
-  //
   const double x_low  = threshold () ;
   const double x_high = m_m0
     + 15 * std::abs ( m_m0g1 / m_m0           )
@@ -1133,34 +964,22 @@ double  Ostap::Math::Flatte::integral () const
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Flatte> s_integrator {} ;
+  static char s_message[] = "Integral(Flatte/tail)" ;
   //
-  gsl_function F                 ;
-  F.function = &flatte_GSL ;
-  const Flatte* _f = this  ;
-  F.params   = const_cast<Flatte*> ( _f ) ;
-  //
-  // right tail:
-  //
-  double result  =  0.0 ;
-  double error   = -1.0 ;
-  //
-  const int ierror = gsl_integration_qagiu
-    ( &F                ,         // the function
-      x_high            ,         // "low" edge
-      s_PRECISION       ,         // absolute precision
-      s_PRECISION_TAIL  ,         // relative precision
-      s_SIZE            ,         // size of workspace
-      workspace ( m_workspace ) , // workspace
-      &result           ,         // the result
-      &error            ) ;       // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Flatte::QAGIU" ,
-                __FILE__ , __LINE__ , ierror ) ;
-    result = 0.0 ;
-  }
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate
+    ( &F , 
+      x_high   ,                     // high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION_TAIL    ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result + integral ( x_low , x_high );
 }
@@ -1419,31 +1238,22 @@ double  Ostap::Math::LASS::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<LASS> s_integrator {} ;
+  static char s_message[] = "Integral(LASS)" ;
   //
-  gsl_function F                 ;
-  F.function         = &LASS_GSL ;
-  const LASS* _ps    = this  ;
-  F.params           = const_cast<LASS*> ( _ps ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::LASS::QAG" , __FILE__ , __LINE__ , ierror ) ;
-  }
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -1687,31 +1497,22 @@ double  Ostap::Math::Bugg::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Bugg> s_integrator {} ;
+  static char s_message[] = "Integral(Bugg)" ;
   //
-  gsl_function F                 ;
-  F.function         = &Bugg_GSL ;
-  const Bugg*    _ps = this  ;
-  F.params           = const_cast<Bugg*> ( _ps ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Bugg::QAG" ,__FILE__ , __LINE__ , ierror ) ;
-  }
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -1922,32 +1723,23 @@ double  Ostap::Math::Swanson::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Swanson> s_integrator {} ;
+  static char s_message[] = "Integral(Swanson)" ;
   //
-  gsl_function F                 ;
-  F.function = &swanson_GSL ;
-  const Swanson* _sw = this  ;
-  F.params   = const_cast<Swanson*> ( _sw ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
       ( x10  <= low  ) ? s_PRECISION_TAIL :
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Swanson::QAG" , __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -2029,38 +1821,27 @@ double  Ostap::Math::Voigt::integral
       integral ( 0.5 *  ( high + low ) ,          high         ) ;
   }
   //
-  // use GSL to evaluate the integral
-  //
-  Sentry sentry ;
-  //
-  gsl_function F                 ;
-  F.function = &voigt_GSL ;
-  const Voigt* _f = this  ;
-  F.params   = const_cast<Voigt*> ( _f ) ;
-  //
-  //
-  double result   =  1.0 ;
-  double error    = -1.0 ;
-  //
-  const double in_tail = 
+  const bool in_tail = 
     ( low  > m_m0 + 10 * width ) || ( high < m_m0 + 10 * width ) ;
   //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Voigt> s_integrator {} ;
+  static char s_message[] = "Integral(Voigt)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Voigt::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -2339,38 +2120,27 @@ double  Ostap::Math::PseudoVoigt::integral
       integral ( 0.5 *  ( high + low ) ,          high         ) ;
   }
   //
-  // use GSL to evaluate the integral
-  //
-  Sentry sentry ;
-  //
-  gsl_function F                 ;
-  F.function = &pseudovoigt_GSL ;
-  const PseudoVoigt* _f = this  ;
-  F.params   = const_cast<PseudoVoigt*> ( _f ) ;
-  //
-  //
-  double result   =  1.0 ;
-  double error    = -1.0 ;
-  //
-  const double in_tail = 
+  const bool in_tail = 
     ( low  > m_m0 + 10 * width ) || ( high < m_m0 + 10 * width ) ;
   //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<PseudoVoigt> s_integrator {} ;
+  static char s_message[] = "Integral(PseudoVoigt)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::PseudoVoigt::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -2539,32 +2309,22 @@ double  Ostap::Math::BW23L::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<BW23L> s_integrator {} ;
+  static char s_message[] = "Integral(BW23L)" ;
   //
-  gsl_function F                   ;
-  F.function         = &BW_23L_GSL ;
-  const BW23L* _ps   = this  ;
-  F.params           = const_cast<BW23L*> ( _ps ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::BW23L::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -2670,32 +2430,22 @@ double  Ostap::Math::Flatte23L::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Flatte23L> s_integrator {} ;
+  static char s_message[] = "Integral(Flatte23L)" ;
   //
-  gsl_function F                   ;
-  F.function             = &Flatte_23L_GSL ;
-  const Flatte23L* _ps   = this  ;
-  F.params               = const_cast<Flatte23L*> ( _ps ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
       s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::BW23L::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -2860,31 +2610,22 @@ double  Ostap::Math::Gounaris23L::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Gounaris23L> s_integrator {} ;
+  static char s_message[] = "Integral(Gounaris23L)" ;
   //
-  gsl_function F                   ;
-  F.function             = &Gounaris_23L_GSL ;
-  const Gounaris23L* _ps = this  ;
-  F.params               = const_cast<Gounaris23L*> ( _ps ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION     ,            // absolute precision
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
       s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Gounaris23L::QAG" , __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -2995,32 +2736,22 @@ double  Ostap::Math::LASS23L::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<LASS23L> s_integrator {} ;
+  static char s_message[] = "Integral(LASS23L)" ;
   //
-  gsl_function F                 ;
-  F.function         = &LASS_23L_GSL ;
-  const LASS23L* _ps = this  ;
-  F.params           = const_cast<LASS23L*> ( _ps ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
       s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::LASS23L::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -3123,32 +2854,22 @@ double  Ostap::Math::Bugg23L::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Bugg23L> s_integrator {} ;
+  static char s_message[] = "Integral(Bugg23L)" ;
   //
-  gsl_function F                 ;
-  F.function         = &Bugg_23L_GSL ;
-  const Bugg23L* _ps = this  ;
-  F.params           = const_cast<Bugg23L*> ( _ps ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace      
+      s_PRECISION         ,          // absolute precision
       s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::BUGG23L::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }

@@ -13,14 +13,12 @@
 // ============================================================================
 // GSL
 // ============================================================================
-#include "gsl/gsl_errno.h"
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_log.h"
 #include "gsl/gsl_sf_erf.h"
 #include "gsl/gsl_sf_gamma.h"
 #include "gsl/gsl_sf_psi.h"
 #include "gsl/gsl_sf_zeta.h"
-#include "gsl/gsl_integration.h"
 #include "gsl/gsl_randist.h"
 #include "gsl/gsl_cdf.h"
 // ============================================================================
@@ -44,6 +42,7 @@
 #include "Exception.h"
 #include "local_math.h"
 #include "local_gsl.h"
+#include "Integrator1D.h"
 // ============================================================================
 /** @file
  *  Implementation file for functions from the file Ostap/Models.h
@@ -55,79 +54,12 @@
 namespace
 {
   // ==========================================================================
-  
-
-  // ==========================================================================
-  /** helper function for itegration of Sigmoid function
-   *  @see Ostap::Math::Sigmoid
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double sigmoid_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::Sigmoid* sigmoid =
-      (Ostap::Math::Sigmoid*) params ;
-    //
-    return (*sigmoid)(x) ;
-  }
-  // ==========================================================================
   /** @var x_sqrt2
    *  \f$\sqrt{2}\f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
   const double s_sqrt2  = s_SQRT2 ;
-  // ==========================================================================
-  /** helper function for integration of Gram-Charlier A function
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double gram_charlier_A_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::GramCharlierA* gca =
-      (Ostap::Math::GramCharlierA*) params ;
-    //
-    return (*gca)(x) ;
-  }
-  /** helper function for integration of Tsallis shape 
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2015-07-11
-   */
-  double tsallis_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::Tsallis* f = (Ostap::Math::Tsallis*) params ;
-    //
-    return (*f)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of QGSM shape 
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2015-07-11
-   */
-  double qgsm_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::QGSM* f = (Ostap::Math::QGSM*) params ;
-    //
-    return (*f)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for itegration of PhaseSpacePol shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2014-05-05
-   */
-  double phase_space_POL_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::PhaseSpacePol* ps =
-      (Ostap::Math::PhaseSpacePol*) params ;
-    //
-    return (*ps)(x) ;
-  }
-
   // ==========================================================================
 } //                                                 end of anonymous namespace
 // ============================================================================
@@ -289,9 +221,8 @@ double Ostap::Math::GramCharlierA::integral
   const double high ) const
 {
   //
-  if      ( s_equal ( low , high ) ) { return                  0.0 ; } // RETURN
-  else if (           low > high   ) { return - integral ( high ,
-                                                           low   ) ; } // RETURN
+  if      ( s_equal ( low , high ) ) { return                         0.0 ; } // RETURN
+  else if (           low > high   ) { return - integral ( high , low   ) ; } // RETURN
   //
   const double x_low  = m_mean - 5 * m_sigma ;
   const double x_high = m_mean + 5 * m_sigma ;
@@ -324,33 +255,24 @@ double Ostap::Math::GramCharlierA::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<GramCharlierA> s_integrator ;
+  static const char s_message[] = "Ingegral(GramCharlierA)" ;
   //
-  gsl_function F                ;
-  F.function = &gram_charlier_A_GSL ;
-  F.params   = const_cast<GramCharlierA*> ( this ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low   , high      ,                                     // low & high edges
+      workspace ( m_workspace ) ,                             // workspace
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
-      ( x_high <=   low  ) ? s_PRECISION_TAIL :
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::GramCharlierA::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      ( x_high <=   low  ) ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      ( high   <= x_low  ) ? s_PRECISION_TAIL :
+      ( x_high <=   low  ) ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      s_SIZE              ,                                   // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -505,44 +427,26 @@ double  Ostap::Math::PhaseSpacePol::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<PhaseSpacePol> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpacePol)" ;
   //
-  gsl_function F                 ;
-  F.function = &phase_space_POL_GSL ;
-  const PhaseSpacePol* _ps = this  ;
-  F.params                 = const_cast<PhaseSpacePol*> ( _ps ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      xlow   , xhigh    ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      xlow   , xhigh      ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::PhaseSpacePol::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
 // ============================================================================
-
-
-
-
-
-
-
-
 
 
 // ============================================================================
@@ -1851,34 +1755,22 @@ double Ostap::Math::Sigmoid::integral
   if ( low < a2 && a2 < high ) { return integral ( low , a2 ) + integral ( a2 , high ) ; }
   //
   //
-  // use GSL to evaluate the integral
+  static const Ostap::Math::GSL::Integrator1D<Sigmoid> s_integrator {} ;
+  static char s_message[] = "Integral(Sigmoid)" ;
   //
-  Sentry sentry ;
-  //
-  gsl_function F                   ;
-  F.function             = &sigmoid_GSL ;
-  const Sigmoid*     _ps = this  ;
-  F.params               = const_cast<Sigmoid*> ( _ps ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
       low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
       workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Sigmoid::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -2227,28 +2119,22 @@ double Ostap::Math::Tsallis::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Tsallis> s_integrator {} ;
+  static char s_message[] = "Integral(Tsallis)" ;
   //
-  gsl_function F                ;
-  F.function = &tsallis_GSL ;
-  F.params   = const_cast<Tsallis*> ( this ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      _low   , high     ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low   , high      ,            // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  { gsl_error ( "Ostap::Math::Tsallis::QAG" , __FILE__ , __LINE__ , ierror ) ; }
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
   //
@@ -2331,28 +2217,22 @@ double Ostap::Math::QGSM::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<QGSM> s_integrator {} ;
+  static char s_message [] = "Integral(QGSM)" ;
   //
-  gsl_function F                ;
-  F.function = &qgsm_GSL ;
-  F.params   = const_cast<QGSM*> ( this ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      _low   , high     ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low   , high      ,            // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  { gsl_error ( "Ostap::Math::QGSM::QAG" , __FILE__ , __LINE__ , ierror ) ; }
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
   //

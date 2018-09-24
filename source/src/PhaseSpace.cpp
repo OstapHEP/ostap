@@ -17,81 +17,12 @@
 // ============================================================================
 #include "local_gsl.h"
 #include "local_math.h"
+#include "Integrator1D.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes from the file Ostap/PhaseSpace.h
  *  @author Vanya Belyaev
  */  
-// ============================================================================
-namespace 
-{
-   // ==========================================================================
-  /** helper function for integration of PhaseSpace2 shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double phase_space_2_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::PhaseSpace2* ps =
-      (Ostap::Math::PhaseSpace2*) params ;
-    //
-    return (*ps)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of PhaseSpace shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double phase_space_3_1_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::PhaseSpace3* ps =
-      (Ostap::Math::PhaseSpace3*) params ;
-    //
-    return ps -> ps2_aux (x) ;
-  }
-  // ==========================================================================
-  /** helper function for itegration of PhaseSpace shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double phase_space_3_2_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::PhaseSpace3* ps =
-      (Ostap::Math::PhaseSpace3*) params ;
-    //
-    return (*ps)(x) ;
-  }
-  // ==========================================================================  
-  /** helper function for integration of PhaseSpaceNL shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double phase_space_NL_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::PhaseSpaceNL* ps =
-      (Ostap::Math::PhaseSpaceNL*) params ;
-    //
-    return (*ps)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of PhaseSpace23L shape
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double phase_space_23L_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::PhaseSpace23L* ps23L =
-      (Ostap::Math::PhaseSpace23L*) params ;
-    //
-    return (*ps23L)(x) ;
-  }
-  // ==========================================================================
-} //                                             The end of anonymous namespace 
 // ============================================================================
 // constructor from two masses
 // ============================================================================
@@ -138,32 +69,22 @@ double  Ostap::Math::PhaseSpace2::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<PhaseSpace2> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpace2)" ;
   //
-  gsl_function F                  ;
-  F.function = &phase_space_2_GSL ;
-  const PhaseSpace2* _ps = this  ;
-  F.params   = const_cast<PhaseSpace2*> ( _ps ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,             // the function
-      xlow   , xhigh    ,             // low & high edges
-      s_PRECISION       ,             // absolute precision
-      s_PRECISION       ,             // relative precision
-      s_SIZE            ,             // size of workspace
-      GSL_INTEG_GAUSS31 ,             // integration rule
-      workspace ( m_workspace ) ,     // workspace
-      &result           ,             // the result
-      &error            ) ;           // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::PhaseSpace2::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      xlow , xhigh        ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -180,7 +101,8 @@ Ostap::Math::PhaseSpace2::q1_ ( const double x ) const
 { return q1 ( x , m1() , m2() ) ; }
 // ============================================================================
 /* calculate the phase space for   m -> m1 + m2
- *  \f$ \Phi = \frac{1}{8\pi} \frac{ \lambda^{\frac{1}{2}} \left( m^2 , m_1^2, m_2_2 \right) }{ m^2 }\f$,
+ *  \f$ \Phi = \frac{1}{8\pi} \frac{ \lambda^{\frac{1}{2}} 
+ *  \left( m^2 , m_1^2, m_2_2 \right) }{ m^2 }\f$,
  *  where \f$\lambda\f$ is a triangle function
  */
 // ============================================================================
@@ -292,6 +214,19 @@ Ostap::Math::PhaseSpace3::~PhaseSpace3 () {}
 // ============================================================================
 // evaluate 3-body phase space
 // ============================================================================
+namespace 
+{
+  // ==========================================================================
+  struct PS32aux 
+  {
+    PS32aux (  const Ostap::Math::PhaseSpace3* ps ) : m_ps ( ps ) {} ;
+    PS32aux () = delete ;
+    double operator () ( const double x ) const { return  m_ps->ps2_aux( x ) ; }
+    const Ostap::Math::PhaseSpace3* m_ps ;
+  } ;
+  // ==========================================================================
+}
+// ============================================================================
 double Ostap::Math::PhaseSpace3::operator () ( const double x ) const
 {
   //
@@ -307,32 +242,23 @@ double Ostap::Math::PhaseSpace3::operator () ( const double x ) const
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<PS32aux> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpace3/2aux)" ;
   //
-  gsl_function F                 ;
-  F.function = &phase_space_3_1_GSL ;
-  const PhaseSpace3* _ps = this  ;
-  F.params   = const_cast<PhaseSpace3*> ( _ps ) ;
-  //
+  const PS32aux aux { this } ;
+  const auto F = s_integrator.make_function ( &aux ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low  , high         ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::PhaseSpace3::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -378,32 +304,22 @@ double  Ostap::Math::PhaseSpace3::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<PhaseSpace3> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpace3)" ;
   //
-  gsl_function F                 ;
-  F.function = &phase_space_3_2_GSL ;
-  const PhaseSpace3* _ps = this  ;
-  F.params   = const_cast<PhaseSpace3*> ( _ps ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,             // the function
-      low   , high      ,             // low & high edges
-      s_PRECISION       ,             // absolute precision
-      s_PRECISION       ,             // relative precision
-      s_SIZE            ,             // size of workspace
-      GSL_INTEG_GAUSS31 ,             // integration rule
-      workspace ( m_workspace2 ) ,    // workspace
-      &result           ,             // the result
-      &error            ) ;           // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::PhaseSpace3::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -650,32 +566,22 @@ double  Ostap::Math::PhaseSpaceNL::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<PhaseSpaceNL> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpaceNL)" ;
   //
-  gsl_function F                 ;
-  F.function = &phase_space_NL_GSL ;
-  const PhaseSpaceNL* _ps = this  ;
-  F.params   = const_cast<PhaseSpaceNL*> ( _ps ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
       low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
       workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::PhaseSpaceNL::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -772,32 +678,22 @@ double  Ostap::Math::PhaseSpace23L::integral
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<PhaseSpace23L> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpace23L)" ;
   //
-  gsl_function F                 ;
-  F.function               = &phase_space_23L_GSL ;
-  const PhaseSpace23L* _ps = this  ;
-  F.params                 = const_cast<PhaseSpace23L*> ( _ps ) ;
-  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
       low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
       workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::PhaseSpace23L::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }

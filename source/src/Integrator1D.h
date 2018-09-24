@@ -122,11 +122,11 @@ namespace Ostap
           //
           double    result =  1.0 ;
           double    error  = -1.0 ;
-          if      ( limit <= 0                ) { limit =  workspace->limit() ; }
-          else if ( limit >  workspace->limit ) { limit =  workspace->limit() ; }
+          if      ( limit <= 0                ) { limit =  workspace->limit ; }
+          else if ( limit >  workspace->limit ) { limit =  workspace->limit ; }
           //
           const int ierror = gsl_integration_qagiu 
-            ( func               ,   // the function
+            ( const_cast<gsl_function*> ( func ) ,   // the function
               xlow               ,   // low 
               aprecision         ,   // absolute precision
               rprecision         ,   // relative precision
@@ -156,11 +156,11 @@ namespace Ostap
           //
           double    result =  1.0 ;
           double    error  = -1.0 ;
-          if      ( limit <= 0                ) { limit =  workspace->limit() ; }
-          else if ( limit >  workspace->limit ) { limit =  workspace->limit() ; }
+          if      ( limit <= 0                ) { limit =  workspace->limit ; }
+          else if ( limit >  workspace->limit ) { limit =  workspace->limit ; }
           //
           const int ierror = gsl_integration_qagil 
-            ( func               ,   // the function
+            ( const_cast<gsl_function*> ( func ) ,   // the function
               xhigh              ,   // high edges
               aprecision         ,   // absolute precision
               rprecision         ,   // relative precision

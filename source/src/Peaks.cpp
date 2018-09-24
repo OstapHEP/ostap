@@ -9,7 +9,6 @@
 // ============================================================================
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_gamma.h"
-#include "gsl/gsl_integration.h"
 #include "gsl/gsl_randist.h"
 #include "gsl/gsl_cdf.h"
 // ============================================================================
@@ -23,6 +22,7 @@
 #include "local_math.h"
 #include "local_gsl.h"
 #include "gauss.h"      
+#include "Integrator1D.h"      
 // ============================================================================
 /** @file 
  *  implmentation file for classes from the file Ostap/Peaks.h
@@ -1064,59 +1064,28 @@ double Ostap::Math::Bukin::integral
   if ( low < m_peak  && m_peak < high )
   { return integral (  low , m_peak ) + integral ( m_peak , high ) ; }
   //
-  // the left tail
-  //
-  if ( high <= std::min ( m_x1 , m_x2 ) )  // left tail
-  {
-    const double d =  m_peak - m_x1 ;
-    return  0.5 * details::gaussian_int     ( m_rho_L * m_rho_L / ( d * d ) ,
-                                              m_L     / m_sigma  ,
-                                              low  - m_x1        ,
-                                              high - m_x1        ) ;
-  }
-  //
-  // the right tail:
-  //
-  if ( low >= std::max ( m_x1 , m_x2  ) )  // right tail
-  {
-    const double d = m_peak - m_x2 ;
-    return 0.5 * details::gaussian_int    ( m_rho_R * m_rho_R / ( d * d )  ,
-                                            -1 * m_R  / m_sigma ,
-                                            low  - m_x2         ,
-                                            high - m_x2         ) ;
-  }
-  //
-  // use GSL to evaluate the integral
-  //
-  Sentry sentry ;
-  //
-  gsl_function F                ;
-  F.function = &bukin_GSL ;
-  F.params   = const_cast<Bukin*> ( this ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
   const bool in_tail = 
     ( high < m_x1 - 5 * std::abs ( m_x2 - m_x1 ) )  || 
     ( low  > m_x2 + 5 * std::abs ( m_x2 - m_x1 ) ) ; 
   //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Bukin> s_integrator {} ;
+  static char s_message[] = "Integral(Bukin)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F  , 
+      low , high  ,                  // low & high edges
+      workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    //
-    gsl_error ( "Ostap::Math::Bukin::QAG" , __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
   //
@@ -1127,25 +1096,41 @@ double Ostap::Math::Bukin::integral
 double Ostap::Math::Bukin::integral () const
 {
   //
-  double result = 0 ;
-  // left tail:
-  {
-    const double d     = m_peak - m_x1     ;
-    const double alpha = m_rho_L / d / d   ;
-    const double beta  = m_L     / m_sigma ;
-    //
-    result +=  0.5 * details::gaussian_int_L ( alpha , beta , 0 ) ;
-  }
-  // right tail
-  {
-    const double d     =    m_peak - m_x2     ;
-    const double alpha =    m_rho_R / d / d   ;
-    const double beta  =  - m_R     / m_sigma ;
-    //
-    result += 0.5 * details::gaussian_int_R ( alpha , beta  , 0 ) ;
-  }
+  // Tails
   //
-  return result + integral ( m_x1 , m_x2 ) ;
+  static const Ostap::Math::GSL::Integrator1D<Bukin> s_integrator {} ;
+  static char s_message1[] = "Integral(Bukin/left)"  ;
+  static char s_message2[] = "Integral(Bukin/right)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  //
+  int    ierror1  =  0 ;
+  double result1  =  1 ;
+  double error1   = -1 ;
+  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate
+    ( &F   , 
+      m_x1 ,                         // low edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION_TAIL    ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message1          , 
+      __FILE__ , __LINE__ ) ;
+  //
+  int    ierror2  =  0 ;
+  double result2  =  1 ;
+  double error2   = -1 ;
+  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate
+    ( &F   , 
+      m_x2 ,                         // high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION_TAIL    ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message1          , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result1 + result2 + integral ( m_x1 , m_x2 ) ;
   //
 }
 // ============================================================================
@@ -1284,36 +1269,26 @@ double Ostap::Math::Novosibirsk::integral
       integral ( 0.5 *  ( high + low ) ,          high         ) ;
   }
   //
-  //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Novosibirsk> s_integrator {} ;
+  static char s_message[] = "Integral(Novosibirsk)" ;
   //
-  gsl_function F                ;
-  F.function = &novosibirsk_GSL ;
-  F.params   = const_cast<Novosibirsk*> ( this ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F , 
+      low , high          ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL :
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Novosibirsk::QAG" ,
-                __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -1343,60 +1318,39 @@ void Ostap::Math::Novosibirsk::integrate()
   //
   // use GSL to evaluate the tails:
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Novosibirsk> s_integrator {} ;
+  static char s_message1[] = "Integral(Novosibirsk/left)"  ;
+  static char s_message2[] = "Integral(Novosibirs/right)" ;
   //
-  gsl_function F                ;
-  F.function = &novosibirsk_GSL ;
-  F.params   = const_cast<Novosibirsk*> ( this ) ;
+  const auto F = s_integrator.make_function ( this ) ;
   //
-  // left tail:
+  int    ierror1  =  0 ;
+  double result1  =  1 ;
+  double error1   = -1 ;
+  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate
+    ( &F    , 
+      x_low ,                        // low edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION_TAIL    ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message1          , 
+      __FILE__ , __LINE__ ) ;
   //
-  double tail_l   =  0.0 ;
-  double error_l  = -1.0 ;
+  int    ierror2  =  0 ;
+  double result2  =  1 ;
+  double error2   = -1 ;
+  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate
+    ( &F     , 
+      x_high ,                       // high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION_TAIL    ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message1          , 
+      __FILE__ , __LINE__ ) ;
   //
-  const int ierror_l = gsl_integration_qagil
-    ( &F                ,         // the function
-      x_low             ,         // "high" edge
-      s_PRECISION       ,         // absolute precision
-      s_PRECISION_TAIL  ,         // relative precision
-      s_SIZE            ,         // size of workspace
-      workspace ( m_workspace ) , // workspace
-      &tail_l           ,         // the result
-      &error_l          ) ;        // the error in result
-  //
-  if ( ierror_l )
-  {
-    gsl_error ( "Ostap::Math::Novosibirsk::QAGIL" ,
-                __FILE__ , __LINE__ , ierror_l ) ;
-    tail_l = 0.0 ;
-  }
-  //
-  //
-  // right tail:
-  //
-  double tail_r   =  0.0 ;
-  double error_r  = -1.0 ;
-  //
-  const int ierror_r = gsl_integration_qagiu
-    ( &F                ,         // the function
-      x_high            ,         // "low" edge
-      s_PRECISION       ,         // absolute precision
-      s_PRECISION_TAIL  ,         // relative precision
-      s_SIZE            ,         // size of workspace
-      workspace ( m_workspace ) , // workspace
-      &tail_r           ,         // the result
-      &error_r          ) ;       // the error in result
-  //
-  if ( ierror_r )
-  {
-    gsl_error ( "Ostap::Math::Novosibirsk::QAGIU" ,
-                __FILE__ , __LINE__ , ierror_r ) ;
-    tail_r = 0.0 ;
-  }
-  //
-  // get the final result
-  //
-  m_integral = tail_l + integral ( x_low , x_high ) + tail_r ;
+  m_integral = result1 + result2 + integral ( x_low ,  x_high ) ;
   //
 }
 
@@ -2069,35 +2023,25 @@ double Ostap::Math::Apolonios::integral
   if ( x0 <= low  )
   {
     //
-    //
     // use GSL to evaluate the integral
     //
-    Sentry sentry ;
+    static const Ostap::Math::GSL::Integrator1D<Apolonios> s_integrator {} ;
+    static char s_message[] = "Integral(Apolonios)" ;
     //
-    gsl_function F                ;
-    F.function = &apolonios_GSL ;
-    F.params   = const_cast<Apolonios*> ( this ) ;
-    //
-    double result   = 1.0 ;
-    double error    = 1.0 ;
-    //
-    const int ierror = gsl_integration_qag
-      ( &F                ,            // the function
-        low   , high      ,            // low & high edges
-        s_PRECISION       ,            // absolute precision
-        s_PRECISION       ,            // relative precision
-        s_SIZE            ,            // size of workspace
-        GSL_INTEG_GAUSS31 ,            // integration rule
+    const auto F = s_integrator.make_function ( this ) ;
+    int    ierror   =  0 ;
+    double result   =  1 ;
+    double error    = -1 ;
+    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+      ( &F  , 
+        low , high  ,                  // low & high edges
         workspace ( m_workspace ) ,    // workspace
-        &result           ,            // the result
-        &error            ) ;          // the error in result
-    //
-    if ( ierror )
-    {
-      gsl_error ( "Ostap::Math::Apolonios::QAG" ,
-                  __FILE__ , __LINE__ , ierror ) ;
-    }
-    //
+        s_PRECISION         ,          // absolute precision
+        s_PRECISION         ,          // relative precision
+        s_SIZE              ,          // size of workspace
+        s_message           , 
+        __FILE__ , __LINE__ ) ;
+    //  
     return result ;
   }
   //
@@ -2224,34 +2168,26 @@ double Ostap::Math::Apolonios2::integral
   if ( low < xL && xL < high ) 
   { return integral ( low , xL ) + integral ( xL , high ) ; }
   //
+  const double in_tail = ( low >= xR || high <= xL ) ;
+  //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Apolonios2> s_integrator {} ;
+  static char s_message[] = "Integral(Apolonios2)" ;
   //
-  gsl_function F               ;
-  F.function = &apolonios2_GSL ;
-  F.params   = const_cast<Apolonios2*> ( this ) ;
-  //
-  const double tail = ( low >= xR || high <= xL ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //  
-  const int ierror = gsl_integration_qag
-    ( &F                ,                     // the function
-      low   , high      ,                     // low & high edges
-      tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
-      tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE            ,                     // size of workspace
-      GSL_INTEG_GAUSS31 ,                     // integration rule
-      workspace ( m_workspace ) ,             // workspace
-      &result           ,                     // the result
-      &error            ) ;                   // the error in result
-  //
-  if ( ierror )
-  {
-    gsl_error ( "Ostap::Math::Apolonios2::QAG" , __FILE__ , __LINE__ , ierror ) ;
-  }
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F  , 
+      low , high  ,                  // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -2328,36 +2264,26 @@ double Ostap::Math::Atlas::integral ( const double low  ,
   if ( low < right  && right  < high ) 
   { return integral ( low , right  ) + integral ( right  , high ) ; }
   //
+  const bool in_tail = ( high <= left || low >= right ) ;
   //
   // use GSL to evaluate the integral
   //
-  Sentry sentry ;
+  static const Ostap::Math::GSL::Integrator1D<Atlas> s_integrator {} ;
+  static char s_message[] = "Integral(Atlas)" ;
   //
-  gsl_function F                ;
-  F.function = &atlas_GSL ;
-  F.params   = const_cast<Atlas*> ( this ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
-  const bool in_tail = ( high <= left || low >= right ) ;
-  //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      low   , high      ,            // low & high edges
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F  , 
+      low , high  ,                  // low & high edges
+      workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    //
-    gsl_error ( "Ostap::Math::Atlas::QAG" , __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -3390,50 +3316,33 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
     xlow  = std::max ( xmin , xlow  ) ;
     xhigh = std::min ( xmax , xhigh ) ;
   }
-  
-
-  //
-  // use GSL to evaluate the integral
-  //
-  Sentry sentry ;
-  //
-  gsl_function F                ;
-  F.function = &qgauss_GSL ;
-  F.params   = const_cast<QGaussian*> ( this ) ;
-  //
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  //
   //  are we already in the tail? 
   const bool in_tail = 
     std::min ( std::abs ( xhigh - m_mean ) , std::abs ( m_mean - xlow ) )  > 5 * m_scale ;   
   //
-  const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      xlow    , xhigh   ,            // low & high edges
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<QGaussian> s_integrator {} ;
+  static char s_message[] = "Integral(QGaussian)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( &F  , 
+      low , high  ,                  // low & high edges
+      workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( m_workspace ) ,    // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
-  //
-  if ( ierror )
-  {
-    //
-    gsl_error ( "Ostap::Math::QGaussian::QAG" , __FILE__ , __LINE__ , ierror ) ;
-  }
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
-
-
- 
-
-
-  
-// ======================================================================
+// ============================================================================
  
 
 // ============================================================================
