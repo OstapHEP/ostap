@@ -155,7 +155,7 @@ class PDF2 (PDF) :
                 dataset  = None ,
                 nbins    = 100  ,
                 silent   = True ,
-                in_range = None , *args , **kwargs ) :
+                in_range = None , **kwargs ) :
         """ Draw the projection over 1st variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
@@ -176,8 +176,7 @@ class PDF2 (PDF) :
                            nbins    = nbins    ,
                            ybins    = 20       , ## fake 
                            silent   = silent   ,
-                           in_range = in_range ,
-                           args     = args     , **kwargs )
+                           in_range = in_range , **kwargs )
     
     # =========================================================================
     ## draw the projection over 2nd variable
@@ -196,8 +195,7 @@ class PDF2 (PDF) :
                 dataset  = None ,
                 nbins    = 100  ,
                 silent   = True ,
-                in_range = None ,
-                args     = ()   , **kwargs ) :
+                in_range = None , **kwargs ) :
         """
         Draw the projection over 2nd variable
         
@@ -219,8 +217,7 @@ class PDF2 (PDF) :
                            nbins    = nbins    ,
                            ybins    = 20       , ## fake
                            silent   = silent   ,
-                           in_range = in_range ,
-                           args     =  args    , **kwargs )
+                           in_range = in_range , **kwargs )
 
     # =========================================================================
     ## draw as 2D-histograms 

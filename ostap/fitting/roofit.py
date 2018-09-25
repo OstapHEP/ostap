@@ -335,16 +335,27 @@ def _rad_iter_ ( self ) :
 
 # =============================================================================
 ## access to the entries in  RooAbsData
+#  @code
+#  dataset = ...
+#  event   = dataset[4]
+#  events  = dataset[0:1000]
+#  @eendcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
 def _rad_getitem_ ( self , i ) :
     """Get the entry from RooDataSet
     >>> dataset = ...
-    >>> event = dataset[4]
+    >>> event  = dataset[4]
+    >>> events = dataset[0:1000]
     """
-    if 0<= i < len ( self ) :
+    if   isinstance ( i , slice ) :
+        start , stop , step = i.indices ( len ( self ) )
+        if 0 > start : raise IndexError('Invalid start %s' % start ) 
+        if 1 != step : raise IndexError('Invalid step  %s' % step  )
+        return self.reduce ( ROOT.RooFit.EventRange( start , stop ) )
+    elif isinstance ( i , ( int , long ) ) and 0<= i < len ( self ) :
         return self.get ( i )
-    raise IndexError 
+    raise IndexError ( 'Invalid index %s'% i )
 
 # =============================================================================
 ## Get variables in form of RooArgList 
