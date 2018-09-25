@@ -403,8 +403,8 @@ def _rad_iadd_ ( self , another ) :
     >>> dset2  = ...
     >>> dset1 += dset2
     """
-    if hasattr ( self , ROOT.RooDataSet ) :
-        if hasattr ( another , ROOT.RooDataSet ) :
+    if isinstance ( self , ROOT.RooDataSet ) :
+        if isinstance ( another , ROOT.RooDataSet ) :
             self.append ( another )
             return self
         
