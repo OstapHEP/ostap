@@ -103,7 +103,7 @@ def _ral_iter_ ( self ) :
         yield self[i]
 
 # =============================================================================
-## check presence of eleemnt or inndex in nthe list
+## check presence of element or index in the list
 def _ral_contains_ ( self , i ) :
     """Check the presence of element or index in the list
     """
@@ -424,11 +424,13 @@ def _rad_add_ ( self , another ) :
     >>> dset2  = ...
     >>> dset   = dset1 + dset2 
     """
-    result = self.emptyClone( dsID() ) 
-    result.append ( self    )
-    result.append ( another )
-    #
-    return result 
+    if isinstance ( self , ROOT.RooDataSet ) :
+        if isinstance ( another , ROOT.RooDataSet ) :    
+            result = self.emptyClone( dsID() ) 
+            result.append ( self    )
+            result.append ( another )
+    
+    return NotImplemented
 
 
 # =============================================================================
