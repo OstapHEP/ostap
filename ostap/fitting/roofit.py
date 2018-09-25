@@ -403,8 +403,12 @@ def _rad_iadd_ ( self , another ) :
     >>> dset2  = ...
     >>> dset1 += dset2
     """
-    self.append ( another )
-    return self
+    if hasattr ( self , ROOT.RooDataSet ) :
+        if hasattr ( another , ROOT.RooDataSet ) :
+            self.append ( another )
+            return self
+        
+    return NotImplemented
 
 # =============================================================================
 ## merge/append two datasets into a single one
@@ -543,7 +547,7 @@ ROOT.RooAbsData . __iter__      = _rad_iter_
 ROOT.RooAbsData . __getitem__   = _rad_getitem_ 
 
 ROOT.RooAbsData . __add__       = _rad_add_
-ROOT.RooAbsData . __iadd__      = _rad_iadd_
+ROOT.RooDataSet . __iadd__      = _rad_iadd_
 
 ROOT.RooAbsData . __mul__       = _rad_mul_
 ROOT.RooAbsData . __rmul__      = _rad_mul_
@@ -571,6 +575,9 @@ _new_methods_ += [
    ROOT.RooAbsData . __contains__  ,
    ROOT.RooAbsData . __iter__      ,
    ROOT.RooAbsData . __getitem__   ,
+   #
+   ROOT.RooAbsData . __add__       ,
+   ROOT.RooDataSet . __iadd__      ,
    #
    ROOT.RooAbsData . __mul__       ,
    ROOT.RooAbsData . __rmul__      ,
