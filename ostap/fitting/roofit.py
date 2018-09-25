@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/fitting/roofit.py
-#  Module with decoration of asome RooFit objects for efficient use in python
+#  Module with decoration of some RooFit objects for efficient use in python
 #  - iterators  for RooArgList
 #  - iterators  for RooArgSet
 #  - iterators  for RooAbsData
@@ -30,7 +30,7 @@ __all__     = (
     'SETVAR'     , ## context manager to preserev the current value for RooRealVar
     ) 
 # =============================================================================
-import ROOT
+import ROOT, random
 from   ostap.core.core import cpp, Ostap, VE, hID, dsID , valid_pointer  
 # =============================================================================
 # logging 
@@ -339,6 +339,7 @@ def _rad_iter_ ( self ) :
 #  dataset = ...
 #  event   = dataset[4]
 #  events  = dataset[0:1000]
+#  events  = dataset[0:-1:10]
 #  @eendcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
@@ -347,14 +348,21 @@ def _rad_getitem_ ( self , i ) :
     >>> dataset = ...
     >>> event  = dataset[4]
     >>> events = dataset[0:1000]
+    >>> events = dataset[0:-1:10]
     """
     if   isinstance ( i , slice ) :
+        
         start , stop , step = i.indices ( len ( self ) )
-        if 0 > start : raise IndexError('Invalid start %s' % start ) 
-        if 1 != step : raise IndexError('Invalid step  %s' % step  )
-        return self.reduce ( ROOT.RooFit.EventRange( start , stop ) )
+                              
+        if 1 == step : return self.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
+        
+        result = self.emptyClone( dsID() )
+        for j in xrange ( start , stop , step ) : result.add ( self [j] ) 
+        return result
+    
     elif isinstance ( i , ( int , long ) ) and 0<= i < len ( self ) :
         return self.get ( i )
+    
     raise IndexError ( 'Invalid index %s'% i )
 
 # =============================================================================
@@ -382,6 +390,145 @@ def _rad_contains_ ( self , aname ) :
     return aname in vset 
 
 # =============================================================================
+## merge/append two datasets into a single one
+# @code
+# dset1  = ...
+# dset2  = ...
+# dset1 += dset2
+# @endcode 
+def _rad_iadd_ ( self , another ) :
+    """ Merge/append two datasets into a single one
+    - two datasets must have identical structure 
+    >>> dset1  = ...
+    >>> dset2  = ...
+    >>> dset1 += dset2
+    """
+    self.append ( another )
+    return self
+
+# =============================================================================
+## merge/append two datasets into a single one
+#  @code
+#  dset1  = ...
+#  dset2  = ...
+#  dset   = dset1 + dset2 
+#  @endcode 
+def _rad_add_ ( self , another ) :
+    """ Merge/append two datasets into a single one
+    - two datasets must have identical structure 
+    >>> dset1  = ...
+    >>> dset2  = ...
+    >>> dset   = dset1 + dset2 
+    """
+    result = self.emptyClone( dsID() ) 
+    result.append ( self    )
+    result.append ( another )
+    #
+    return result 
+
+
+# =============================================================================
+# merge/append two datasets into a single one 
+def _rad_imul_ ( self , another ) :
+    """ Merge/append two datasets into a single one
+    - two datasets must have the  same number of entries!
+    >>> dset1  = ...
+    >>> dset2  = ...
+    >>> dset1 *= dset2
+    """
+    if  isinstance ( another , ROOT.RooAbsData ) :
+        if len ( self ) == len ( another ) :
+            self.merge ( another )
+            return self
+        
+    return NotImplemented 
+
+# =============================================================================
+## merge two dataset (of same  length) OR get small (random) fraction of  dataset
+#  @code
+#  ## get smaller dataset:
+#  dataset = ....
+#  small   = dataset * 0.1
+#  ## merge two dataset of the same lenth
+#  merged  = dataset1 * dataset2 
+#  @endcode
+def _rad_mul_ ( self , another ) :
+    """
+    - (1) Get small (random) fraction of  dataset:
+    >>> dataset = ....
+    >>> small   = 0.1 * dataset
+    - (2) Merge two dataset (of the same length)
+    >>> dataset3 = dataset1 * dataset2 
+    """
+
+    if isinstance ( another , ROOT.RooAbsData ) :
+        
+        if len ( self ) == len ( another ) :
+            
+            result  = self.emptyClone( dsID() )
+            result.append ( self    )
+            result.merge  ( another )
+            return result
+
+        return NotImplemented 
+    
+    fraction = another    
+    if  isinstance ( fraction , float ) and 0 < fraction < 1 :
+
+        res = self.emptyClone()
+        l    = len ( self )
+        for i in xrange ( l ) :
+            if random.uniform(0,1) < fraction : res.add ( self[i] ) 
+        return res
+    
+    elif 1 == fraction : return self.clone      ()
+    elif 0 == fraction : return self.emptyClone () 
+
+    return NotImplemented
+
+
+# =============================================================================
+## get small (random) fraction of  dataset
+#  @code
+#  dataset = ....
+#  small   = dataset / 10  
+#  @endcode
+def  _rad_div_ ( self , fraction ) :
+    """ Get small (random) fraction
+    >>> dataset = ....
+    >>> small   = dataset / 10 
+    """
+    if  isinstance ( fraction , ( int , long ) ) and 1 < fraction :
+        return _rad_mul_ ( self , 1.0 / fraction )
+    elif 1 == fraction : return self.clone      ()
+    
+    return NotImplemented
+
+
+# =============================================================================
+## get small (fixed) fraction of  dataset
+#  @code
+#  dataset = ....
+#  small   = dataset % 10  
+#  @endcode
+def  _rad_mod_ ( self , fraction ) :
+    """ Get small (fixed) fraction of  dataset
+    >>> dataset = ....
+    >>> small   = dataset % 10 
+    """
+    if  isinstance ( fraction , ( int , long ) ) and 1 < fraction :
+
+        res = self.emptyClone()
+        s    = slice ( 0 , -1 , fraction )
+        for i in xrange ( *s.indices ( len ( self ) ) ) : 
+            res.add ( self[i] ) 
+        return res 
+        
+    elif 1 == fraction : return self.clone      ()
+
+    return NotImplemented
+
+# =============================================================================
 ## some decoration over RooDataSet 
 ROOT.RooAbsData . varlist       = _rad_vlist_
 ROOT.RooAbsData . varlst        = _rad_vlist_
@@ -395,12 +542,22 @@ ROOT.RooAbsData . __contains__  = _rad_contains_
 ROOT.RooAbsData . __iter__      = _rad_iter_ 
 ROOT.RooAbsData . __getitem__   = _rad_getitem_ 
 
+ROOT.RooAbsData . __add__       = _rad_add_
+ROOT.RooAbsData . __iadd__      = _rad_iadd_
+
+ROOT.RooAbsData . __mul__       = _rad_mul_
+ROOT.RooAbsData . __rmul__      = _rad_mul_
+ROOT.RooAbsData . __imul__      = _rad_imul_
+ROOT.RooAbsData . __div__       = _rad_div_
+ROOT.RooAbsData . __mod__       = _rad_mod_
+
 from ostap.trees.trees import _stat_var_, _stat_cov_ , _stat_covs_ , _sum_var_, _sum_var_old_
 ROOT.RooAbsData . sumVar        = _sum_var_ 
 ROOT.RooAbsData . sumVar_       = _sum_var_old_ 
 ROOT.RooAbsData . statVar       = _stat_var_ 
 ROOT.RooAbsData . statCov       = _stat_cov_ 
 ROOT.RooAbsData . statCovs      = _stat_covs_ 
+
 
 _new_methods_ += [
    ROOT.RooAbsData . varlist       ,
@@ -414,6 +571,12 @@ _new_methods_ += [
    ROOT.RooAbsData . __contains__  ,
    ROOT.RooAbsData . __iter__      ,
    ROOT.RooAbsData . __getitem__   ,
+   #
+   ROOT.RooAbsData . __mul__       ,
+   ROOT.RooAbsData . __rmul__      ,
+   ROOT.RooAbsData . __imul__      ,
+   ROOT.RooAbsData . __div__       ,
+   ROOT.RooAbsData . __mod__       ,
    #
    ROOT.RooAbsData . statVar       ,
    ROOT.RooAbsData . sumVar        ,
