@@ -1,4 +1,48 @@
-image: mazurov/cern-root-ostap:1.0.1
-build:
-    script:
-      - ./scripts/bootstrap
+stages:
+  - build
+  - test
+
+variables:
+  CMTCONFIG: x86_64-slc6-gcc62-dbg
+
+local-build:
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest
+  tags:
+    - cvmfs
+  stage: build
+  script:
+    - . /cvmfs/lhcb.cern.ch/lib/group_login.sh
+    - lb-run -c ${CMTCONFIG} --ext Python --ext pytools --ext pyanalysis --ext ROOT LCG/93 bash --norc
+    - mkdir build 
+    - cd build 
+    - cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/
+    - make
+    - make install
+    - cd .. 
+    - mkdir logs1   
+    - done
+  artifacts:
+    paths:
+      - logs1
+    when: always
+    expire_in: 1 week
+
+run-tests:
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest
+  tags:
+    - cvmfs
+  stage: test
+  script:
+    - . /cvmfs/lhcb.cern.ch/lib/group_login.sh
+    - lb-run -c ${CMTCONFIG} --ext Python --ext pytools --ext pyanalysis --ext ROOT LCG/93 bash --norc
+    - source build/INSTALL/thisostap.sh 
+    - cd build 
+    - make test
+    - cd .. 
+    - mkdir logs2   
+    - done
+  artifacts:
+    paths:
+      - logs2
+    when: always
+    expire_in: 1 week
