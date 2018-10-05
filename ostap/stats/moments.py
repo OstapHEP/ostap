@@ -453,7 +453,7 @@ class Median(RMS) :
             if isinstance ( xmin , float ) : xmn = max ( xmn , xmin ) 
             if isinstance ( xmax , float ) : xmx = min ( xmx , xmax )
             #
-            result = findroot ( ifun , xmn , xmx )
+            result = findroot ( ifun , xmn  , xmx  )
         except :
             result = findroot ( ifun , xmin , xmax )
             
@@ -543,8 +543,10 @@ class Quantile(Median) :
 #  mode      = Mode ( xmin,xmax )  ## specify min/max
 #  value     = mode ( math.sin  )
 #  @endcode 
+#  @see https://en.wikipedia.org/wiki/Mode_(statistics)#Comparison_of_mean,_median_and_mode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
+#  @attention it is not very efficient, could be (and should be) improved 
 class Mode(Median) :
     """Calculate the mode for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
@@ -556,27 +558,78 @@ class Mode(Median) :
 
     ## calculate the mode 
     def __call__ ( self , func , *args ) :
-        
-        ## use mean    as intial approximation for mode 
-        m1     = Mean   .__call__ ( self , func , *args )
-        
-        ## use median as intial approximation for mode 
-        ## m2     = Median.__call__ ( self , func , *args )
-        
-        ## use the point intermediate between mean and median as approximation 
-        ## m0     = 0.5 * ( m1 + m2 )
 
-        m0 = m1 
+        ## mean
+        _mean     = Mean   .__call__ ( self , func , *args )
+        ## median 
+        _median   = Median .__call__ ( self , func , *args )
+        ## rms 
+        _sigma    = RMS    .__call__ ( self , func , *args )
+
+        _imin = _median - 1.75 * _sigma
+        _imax = _median + 1.75 * _sigma
+        
+        mn = max ( _imin , self._xmin )
+        mx = min ( _imax , self._xmax )
+
+        mm = Mode ( mn , mx )
+        _median   = Median.__call__ ( mm , func , *args )
+        _sigma    = RMS   .__call__ ( mm , func , *args )
+        
+        ## readjust the interval 
+        mn        = max ( mn , _median - 1.75 * _sigma )
+        mx        = min ( mx , _median + 1.75 * _sigma )
+
+        mm = Mode ( mn , mx ) 
+        _mean     = Mean  .__call__ ( mm , func , *args )
+        _median   = Median.__call__ ( mm , func , *args )
+
+        ## use the empirical approximation 
+        _mode = 3.0 * _median - 2.0 * _mean
+        _fnm  = func ( _mode ,  *args )
+
+        ## make interval small enough 
+        for i in range ( 10 ) :
+            
+            if mn < _mode < mx and func ( mn , *args ) < _fnm and func ( mx , *args ) < _fnm :
+                
+                x1 = 0.5 * ( mn + _mode )
+                x2 = 0.5 * ( mx + _mode )
+                
+                f1 = func ( x1 , *args )
+                f2 = func ( x2 , *args )
+                
+                if f1 < _fnm and f2 < _fnm :
+                    mn = x1
+                    mx = x2
+                elif f1 < _fnm : mn = x1
+                elif f2 < _fnm : mx = x2
+                else :
+                    break
+
+                mm = Mode ( mn , mx )
+                _mean     = Mean  .__call__ ( mm , func , *args )
+                _median   = Median.__call__ ( mm , func , *args )
+                _new_mode = 3.0 * _median - 2.0 * _mean
+
+                _new_fnm  = func ( _new_mode , *args ) 
+                if  mn  < _new_mode < mx and func ( mn , *args ) < _new_fnm and func ( mx , *args ) < _new_fnm :
+                    _mode = _new_mode
+                    _fnm  = _new_fnm
+                    
+            else :
+                break 
+
         ifun = lambda x,*a : -1.0 * float( func ( x , *a ) )
         
         from ostap.math.minimize import minimize_scalar as _ms 
         result = _ms (
-            ifun                                   , 
-            x0     = float ( m0 )                  ,
-            bounds = [ (self._xmin , self._xmax) ] ,
+            ifun                     , 
+            ## x0     = float ( m0 ) ,
+            bounds = [ mn , mx ]     ,
             args   = args )
         
-        return result.x[0]
+        return result.x
     
     def __str__ ( self ) :
         return "Mode(%s,%s)" % ( self._xmin , self._xmax )
