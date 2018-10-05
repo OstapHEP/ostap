@@ -14,12 +14,9 @@
 #  - Quantile 
 #  - Mode
 #  - Width
+#  - Mode
 #  - symmetric and asymmetric "confidence intervals"
 #  For these quantities numerical integration and root-findinng are  used.
-#  In case scipy is not available, hand-made replacements are in use.
-#
-#  <code>scipy.optimise.minimize</code> is needed for:
-#  - Mode
 #
 #  All objects exists as classes/functors and as standalone simple functions
 #  - moment
@@ -51,10 +48,6 @@
 - Width
 - symmetric and asymmetric ``confidence intervals''
 For these quantities numerical integration and root-finding are used.
-In case scipy is not available, hand-made replacements are in in use
-
-`scipy.optimise.minimize` is needed for:
-- Mode
 
 All objects exists as classes/functors and as standalone simlpe functions
 - moment
@@ -550,7 +543,6 @@ class Quantile(Median) :
 #  mode      = Mode ( xmin,xmax )  ## specify min/max
 #  value     = mode ( math.sin  )
 #  @endcode 
-#  @attention scipy.optimize.minimize is used 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Mode(Median) :
@@ -558,7 +550,6 @@ class Mode(Median) :
     >>> xmin,xmax = 0,math.pi 
     >>> mode      = Mode ( xmin,xmax )  ## specify min/max
     >>> value     = mode ( math.sin  )
-    - scipy.optimize.minimize is used 
     """
     def __init__ ( self , xmin , xmax ) :
         Median.__init__ ( self , xmin , xmax )
@@ -578,8 +569,8 @@ class Mode(Median) :
         m0 = m1 
         ifun = lambda x,*a : -1.0 * float( func ( x , *a ) )
         
-        from scipy import optimize
-        result = optimize.minimize (
+        from ostap.math.minimize import minimize_scalar as _ms 
+        result = _ms (
             ifun                                   , 
             x0     = float ( m0 )                  ,
             bounds = [ (self._xmin , self._xmax) ] ,

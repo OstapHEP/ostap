@@ -277,7 +277,6 @@ from random import gauss as _gauss
 #    >>> for j in range ( 0, 100 ) : print v.gauss( lambda s : s > 0 )
 #
 #  @endcode
-#  @attention scipy is needed! 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-08-10
 # 
@@ -319,7 +318,6 @@ from ostap.math.random_ext import poisson as _poisson
 #    >>> for j in range ( 0, 100 ) : print v.poisson ( fluctuate = False  )
 #
 #  @endcode
-#  @attention scipy is needed! 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-08-10   
 def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :

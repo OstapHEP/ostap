@@ -1753,7 +1753,7 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
 #  @endcode 
 #  @see Ostap::Math::LegendreSum
 #  @author Vanya Belyaev Ivan.Belyaev@iter.ru
-#  It is not very CPU efficient (scipy is used for integration), but stable enough...
+#  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
 def _h1_legendre_sum_ ( h1 , N , **kwargs ) :
     """Make a histogram representation in terms of Legendre polynomials
@@ -1762,7 +1762,7 @@ def _h1_legendre_sum_ ( h1 , N , **kwargs ) :
     >>> print fsum
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    It is not very CPU efficient (scipy is used for integration), but stable enough...
+    It is not very CPU efficient, but stable enough...
     """
     ##
     xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
@@ -1781,7 +1781,7 @@ def _h1_legendre_sum_ ( h1 , N , **kwargs ) :
 #  @endcode 
 #  @see Ostap::Math::ChebyshevSum
 #  @author Vanya Belyaev Ivan.Belyaev@iter.ru
-#  It is not very CPU efficient (scipy is used for integration), but stable enough...
+#  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
 def _h1_chebyshev_sum_ ( h1 , N , **kwargs ) :
     """Make a histogram representation in terms of Chebyshev polynomials

@@ -16,7 +16,7 @@
  - hToGraph'    : convert histogram to graph 
  - hToGraph2'   : convert histogram to graph 
  - hToGraph3'   : convert histogram to graph
- - lw_graph'    : make Laffery-Wyatt's graph  (require scipy.optimize,brentq)
+ - lw_graph'    : make Laffery-Wyatt's graph 
  - fill_area'   : create a graph for the area between two curves/functions
 """
 # =============================================================================
@@ -32,7 +32,7 @@ __all__     = (
     'hToGraph'    , # convert histogram to graph 
     'hToGraph2'   , # convert histogram to graph 
     'hToGraph3'   , # convert histogram to graph
-    'lw_graph'    , # make Laffery-Wyatt's graph  (require scipy.optimize,brentq)
+    'lw_graph'    , # make Laffery-Wyatt's graph 
     'fill_area'   , # create a graph for the area between two curves/functions
     ##
     ) 
@@ -682,13 +682,13 @@ def _gr_call_ ( graph , x , spline = None , opts = '' ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
-def _gr_integral_ ( graph , xlow , xhigh , scipy = True ) :
+def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
     """Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
     It is not very efficient, but OK 
     >>> graph = ...
     >>> i     = graph.integral ( 0 , 1 )
     """
-    if scipy :
+    if numerical :
         from ostap.math.integral import integral 
         return integral ( graph , xlow , xhigh )
     
@@ -1708,8 +1708,8 @@ def _lw_graph_ ( histo , func ) :
     ## start actual evaluations
     #
     
-    from ostap.math.intergal import integral as _integral 
-    from scipy import optimize 
+    from ostap.math.intergal   import integral as _integral 
+    from ostap.math.rootfinder import findroot 
     
     for item in histo.iteritems () :
 
@@ -1746,10 +1746,10 @@ def _lw_graph_ ( histo , func ) :
             r0 = x.value()
         else :
             ##  solve the equation f(x) - 1/dx*int(f,xmin,xmax) = 0 
-            r0 = optimize.brentq ( lambda x : (float(func(x))-fx)  ,
-                                   xmn               ,
-                                   xmx               ,
-                                   xtol = 0.005 * dx )
+            r0 = findroot ( lambda x :   ( float ( func ( x ) ) - fx ) ,
+                            xmn               ,
+                            xmx               ,
+                            xtol = 0.005 * dx )
             
         ## fill graph
             
