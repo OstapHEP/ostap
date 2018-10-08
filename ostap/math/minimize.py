@@ -22,8 +22,21 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2018-10-05"
 __all__     = (
     'scalar_minimize' , ## local copy of minimize_scalar from scipy 
-    'minimize_scalar' , ## the main entry 
+    'minimize_scalar' , ## the main entry
+    ## helper functions:
+    'sp_minimum_1D'     , 
+    'sp_maximum_1D'     , 
+    'sp_minimum_2D'     , 
+    'sp_maximum_2D'     , 
+    'sp_minimum_3D'     , 
+    'sp_maximum_3D'     , 
     )
+# =============================================================================
+# logging 
+# =============================================================================
+from   ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.minimize' )
+else                       : logger = getLogger ( __name__              )
 # =============================================================================
 import math, warnings
 from math import sqrt
@@ -769,9 +782,158 @@ def bracket(func, xa=0.0, xb=1.0, args=(), grow_limit=110.0, maxiter=1000):
 try :
     from scipy.optimize import minimize_scalar as ms 
     minimize_scalar = ms  
+    scipy_available = True 
 except ImportError :
     minimize_scalar = scalar_minimize 
+    scipy_available = False 
 
+# =============================================================================
+
+
+if not scipy_available :
+    
+    sp_minimum_1D = None
+    sp_maximum_1D = None
+    sp_minimum_2D = None
+    sp_maximum_2D = None
+    sp_minimum_3D = None
+    sp_maximum_3D = None
+    
+else :
+        
+    # =========================================================================
+    ## get a minimum for 1D-function
+    #  @code
+    #  model = ...
+    #  x = model.minimum() 
+    #  @endcode 
+    def sp_minimum_1D ( fun , xmin , xmax , x0 = None , *args ) :
+        """Get a minimum for 1D-function
+        >>> model = ...
+        >>> x = model.minimum () 
+        >>>
+        """
+        if x0 == None : x0 = 0.5 * ( xmin + xmax )
+        
+        import numpy as np
+        x0     = np.array ( [ x0 ] )
+        
+        bounds = [ ( xmin , xmax ) ]
+        
+        import scipy.optimize as spo
+        res    = spo.minimize ( fun , x0 = x0 , bounds = bounds )
+        if not res.success :
+            logger.error ( "Can't minimize the function: %s" % res.message )
+        return res.x[0]
+        
+    # =========================================================================
+    ## get a maximum for 1D-function
+    #  @code
+    #  model = ...
+    #  x = model.maximum() 
+    #  @endcode 
+    def sp_maximum_1D ( fun , xmin , xmax , x0 = None , *args ) :
+        """Get a maximum for 1D-function
+        >>> model = ...
+        >>> x = model.maximum () 
+        >>>
+        """
+        funmin = lambda x , *a : -1.0 * ( float ( fun ( x , *a ) ) )
+        return sp_minimum_1D ( funmin , xmin ,  xmax , x0 , *args )
+    
+    # =========================================================================
+    ## get a minimum for 2D-function
+    #  @code
+    #  model2 = ...
+    #  x , y = model2.minimum () 
+    #  @endcode 
+    def sp_minimum_2D ( fun  ,
+                        xmin , xmax ,
+                        ymin , ymax , x0 = () , *args ) :
+        """Get a maximum for 2D-function
+        >>> model2 = ...
+        >>> x , y = model2.maximum() 
+        >>>
+        """
+        if not x0 :  x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) 
+        import numpy as np
+        x0     = np.array ( *x0  )
+        
+        bounds = [ ( xmin , xmax ) , ( ymin , ymax ) ]
+        
+        import scipy.optimize as spo
+        res    = spo.minimize ( fun , x0 = x0 , bounds = bounds )
+        if not res.success :
+            logger.error ( "Can't minimize the function: %s" % res.message )
+        return res.x[0] , res.x[1] 
+            
+    # =========================================================================
+    ## get a maximum for 2D-function
+    #  @code
+    #  model2 = ...
+    #  x , y = model2.maximum() 
+    #  @endcode 
+    def sp_maximum_2D ( fun ,
+                        xmin , xmax ,
+                        ymin , ymax , x0 = () , *args ) :
+        """Get a maximum for 2D-function
+        >>> model2 = ...
+        >>> x , y = model2.maximum () 
+        >>>
+        """
+        funmin = lambda x , y , *a : -1.0 * ( float ( fun ( x , y , *a ) ) )
+        return sp_minimum_2D  ( funmin ,
+                                xmin , xmax ,
+                                ymin , ymax , x0 , *args )
+    
+    # =========================================================================
+    ## get a minimum for 3D-function
+    #  @code
+    #  model3 = ...
+    #  x , y , z = model2.minimum () 
+    #  @endcode 
+    def sp_minimum_3D ( fun  ,
+                        xmin , xmax ,
+                        ymin , ymax ,
+                        zmin , zmax , x0 = () , *args ) :
+        """Get a minimum for 3D-function
+        >>> model3 = ...
+        >>> x , y , z = model3.minimum() 
+        >>>
+        """
+        if not x0 :  x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) , 0.5 * ( zmin + zmax ) 
+        import numpy as np
+        x0     = np.array ( *x0  )
+        
+        bounds = [ ( xmin , xmax ) , ( ymin , ymax ) , ( zmin , zmax ) ]
+        
+        import scipy.optimize as spo
+        res    = spo.minimize ( fun , x0 = x0 , bounds = bounds )
+        if not res.success :
+            logger.error ( "Can't minimize the function: %s" % res.message )
+        return res.x[0] , res.x[1] , res.x[2] 
+        
+    # =========================================================================
+    ## get a maximum for 3D-function
+    #  @code
+    #  model3 = ...
+    #  x , y , z = model3.maximum() 
+    #  @endcode 
+    def sp_maximum_3D ( fun ,
+                        xmin , xmax ,
+                        ymin , ymax ,
+                        zmin , zmax , x0 = () , *args ) :
+        """Get a maximum for 3D-function
+        >>> model3 = ...
+        >>> x, y , z  = model3.maximum () 
+        >>>
+        """
+        funmin = lambda x , y , z , *a : -1.0 * ( float ( fun ( x , y , z , *a ) ) )
+        return sp_minimum_3D  ( funmin ,
+                                xmin ,  xmax ,
+                                ymin ,  ymax ,
+                                zmin ,  zmax , x0 , *args )
+    
 # =============================================================================
 if '__main__' == __name__ :
     

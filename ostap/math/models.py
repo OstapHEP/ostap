@@ -332,7 +332,7 @@ for t in ( Ostap.Math.Positive      ,
 
 
 # =============================================================================
-## try to get max-value using exisint mode function
+## try to get max-value using existing mode function
 #  @code
 #  f = ...
 #  mx = f.max()
@@ -622,6 +622,8 @@ def sp_integrate_3D_  ( pdf   ,
     return func.sp_integrate_3D ( xmin , xmax , ymin , ymax , zmin , zmax , *args , **kwargs ) 
 
 
+
+
 from ostap.stats.moments import moment   as sp_moment
 from ostap.stats.moments import mean     as sp_mean
 from ostap.stats.moments import variance as sp_variance
@@ -684,7 +686,10 @@ def _tf3_getattr_ ( self , attr ) :
     
     raise AttributeError
 
-    
+
+from ostap.math.minimize import sp_minimum_1D, sp_maximum_1D 
+
+
 # =============================================================================
 ## decorate 1D-models/functions 
 # =============================================================================
@@ -792,8 +797,11 @@ for model in ( Ostap.Math.Chebyshev              ,
     if not hasattr ( model , 'median'   ) : model.median   = sp_median
     if not hasattr ( model , 'mode'     ) : model.mode     = sp_mode 
     if not hasattr ( model , 'moment'   ) : model.moment   = sp_moment
-    if not hasattr ( model , 'quantile' ) : model.quantile = sp_quantile 
-
+    if not hasattr ( model , 'quantile' ) : model.quantile = sp_quantile
+    
+    if sp_minimum_1D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_1D
+    if sp_maximum_1D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_1D
+    
 # =======================================================================================
 ## Special ``getattr'' for Bernstein dual basis functions: delegate the stuff to
 #  the underlying bernstein polynomial
@@ -897,6 +905,8 @@ for t in ( Ostap.Math.BSpline          ,
 Ostap.Math.Spline2D    = Ostap.Math.PositiveSpline2D   
 Ostap.Math.Spline2DSym = Ostap.Math.PositiveSpline2DSym
 
+from ostap.math.minimize import sp_minimum_2D, sp_maximum_2D 
+
 for model in ( Ostap.Math.BSpline2D           ,
                Ostap.Math.BSpline2DSym        , 
                Ostap.Math.PositiveSpline2D    ,
@@ -923,6 +933,12 @@ for model in ( Ostap.Math.BSpline2D           ,
     model.sp_integrate_x  = sp_integrate_2Dx
     model.sp_integrate_y  = sp_integrate_2Dy
 
+    if sp_minimum_2D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_2D
+    if sp_maximum_2D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_2D
+    
+
+from ostap.math.minimize import sp_minimum_3D, sp_maximum_3D 
+
 # =============================================================================
 ## Decorate 3D models
 # ============================================================================= 
@@ -943,9 +959,25 @@ for model in ( Ostap.Math.Bernstein3D    ,
     model.sp_integrate_yz = sp_integrate_3Dyz
     model.__getattr__     = _tf3_getattr_
 
+    if sp_minimum_2D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_2D
+    if sp_maximum_2D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_2D
+    
+# ===============================================================================
+def sp_minimum_1D_ ( pdf , xmin , xmax , x0 , *args ) :
+    if hasattr ( pdf , 'setPars' ) : pdf.setPars()
+    fun = pdf.function()
+    return  sp_minimum_1D ( fun , xmin , xmax , x0 , *args )
+
+def sp_maximum_1D_ ( pdf , xmin , xmax , x0 , *args ) :
+    if hasattr ( pdf , 'setPars' ) : pdf.setPars()
+    fun = pdf.function()
+    return  sp_maximum_1D ( fun , xmin , xmax , x0 , *args ) 
+
 # =============================================================================
 ## decorate 1D-PDFs
 # =============================================================================
+
+                 
 
 for pdf in ( Ostap.Models.BreitWigner          , 
              Ostap.Models.Flatte             ,
@@ -1010,7 +1042,29 @@ for pdf in ( Ostap.Models.BreitWigner          ,
              ) :
 
     pdf.sp_integrate = sp_integrate_1D_
-
+    if sp_minimum_1D and not hasattr ( pdf , 'minimum' ) : pdf . minimum = sp_minimum_1D_
+    if sp_maximum_1D and not hasattr ( pdf , 'maximum' ) : pdf . maximum = sp_maximum_1D_
+    
+    
+# ===============================================================================
+def sp_minimum_2D_ ( pdf  ,
+                     xmin , xmax ,
+                     ymin , ymax ,
+                     x0  = () , *args ) :
+    if hasattr ( pdf , 'setPars' ) : pdf.setPars()
+    fun = pdf.function()
+    return  sp_minimum_2D ( fun ,
+                            xmin , xmax ,
+                            ymin , ymax , x0 , *args )
+# ===============================================================================
+def sp_maximum_2D_ ( pdf  ,
+                     xmin , xmax ,
+                     ymin , ymax , x0  = () , *args ) :
+    if hasattr ( pdf , 'setPars' ) : pdf.setPars()
+    fun = pdf.function()
+    return  sp_maximum_2D ( fun  ,
+                            xmin , xmax ,
+                            ymin , ymax , x0 , *args ) 
 
 # =============================================================================
 ## decorate 2D-PDFs
@@ -1031,7 +1085,32 @@ for pdf in ( Ostap.Models.Poly2DPositive     ,
              Ostap.Models.Spline2DSym        ) :
     
     pdf.sp_integrate = sp_integrate_2D_
+    if sp_minimum_2D and not hasattr ( pdf , 'minimum' ) : pdf.minimum = sp_minimum_2D_
+    if sp_maximum_2D and not hasattr ( pdf , 'maximum' ) : pdf.maximum = sp_maximum_2D_
 
+
+# ===============================================================================
+def sp_minimum_3D_ ( pdf  ,
+                     xmin , xmax ,
+                     ymin , ymax ,
+                     zmin , zmax , x0  = () , *args ) :
+    if hasattr ( pdf , 'setPars' ) : pdf.setPars()
+    fun = pdf.function()
+    return  sp_minimum_3D ( fun ,
+                            xmin , xmax ,
+                            ymin , ymax ,
+                            zmin , zmax , x0 , *args )
+# ===============================================================================
+def sp_maximum_3D_ ( pdf  ,
+                     xmin , xmax ,
+                     ymin , ymax ,
+                     zmin , zmax , x0  = () , *args ) :
+    if hasattr ( pdf , 'setPars' ) : pdf.setPars()
+    fun = pdf.function()
+    return  sp_maximum_3D ( fun  ,
+                            xmin , xmax ,
+                            ymin , ymax ,
+                            zmin , zmax , x0 , *args ) 
 
 # =============================================================================
 ## decorate 3D-PDFs
@@ -1042,6 +1121,8 @@ for pdf in ( Ostap.Models.Poly3DPositive    ,
              Ostap.Models.Poly3DMixPositive ) :
     
     pdf.sp_integrate = sp_integrate_3D_
+    if sp_minimum_3D and not hasattr ( pdf , 'minimum' ) : pdf.minimum = sp_minimum_3D_
+    if sp_maximum_3D and not hasattr ( pdf , 'maximum' ) : pdf.maximum = sp_maximum_3D_
 
 # =============================================================================
 ## set, get & iterator

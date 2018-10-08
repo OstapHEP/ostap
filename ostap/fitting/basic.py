@@ -1200,8 +1200,57 @@ class PDF (MakeVar) :
         from ostap.math.derivative import derivative as _derivatve
         return _derivative ( self , x )
 
+    # ==========================================================================
+    ## get a minimum of PDF for certain interval
+    #  @code
+    #  pdf = ...
+    #  x   = pdf.minimum() 
+    #  @endcode 
+    def minimum ( self , xmin = None , xmax = None , x0 = None ) :
+        """Get a minimum of PDF for certain interval
+        >>> pdf = ...
+        >>> x = pdf.minimum()
+        """
+        if xmin is None : xmin = self.xminmax()[0]
+        if xmax is None : xmax = self.xminmax()[1]
+        if self.xminmax() :
+            xmin =  max ( xmin , self.xminmax()[0] )
+            xmax =  min ( xmax , self.xminmax()[1] )
+            
+        if x0 is None           : x0 = 0.5 * ( xmin + xmax )
+        
+        if not xmin <= x0 <= xmax :
+            logger.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
+        
+        from ostap.math.minimize import sp_minimum_1D
+        return sp_minimum_1D (  self , xmin , xmax , x0 )
 
+    # ==========================================================================
+    ## get a maximum of PDF for certain interval
+    #  @code
+    #  pdf = ...
+    #  x   = pdf.maximum() 
+    #  @endcode 
+    def maximum ( self , xmin = None , xmax = None , x0 = None ) :
+        """Get a maximum of PDF for certain interval
+        >>> pdf = ...
+        >>> x = pdf.maximum()
+        """
+        if xmin is None : xmin = self.xminmax()[0]
+        if xmax is None : xmax = self.xminmax()[1]
+        if self.xminmax() :
+            xmin =  max ( xmin , self.xminmax()[0] )
+            xmax  = min ( xmax , self.xminmax()[1] )
+            
+        if x0 is None           : x0 = 0.5 * ( xmin + xmax )
 
+        if not xmin <= x0 <= xmax :
+            logger.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
+        
+        from ostap.math.minimize import sp_maximum_1D
+        return sp_maximum_1D (  self , xmin , xmax , x0 )
+
+        
     # ==========================================================================
     ## convert PDF into TF1 object, e.g. to profit from TF1::Draw options
     #  @code

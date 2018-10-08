@@ -572,6 +572,82 @@ class PDF2 (PDF) :
         from ostap.math.integral import integral2 as _integral2
         return _integral2 ( self , xmin , xmax , ymin , ymax )
 
+
+    # ==========================================================================
+    ## get a minimum of PDF for certain interval
+    #  @code
+    #  pdf2 = ...
+    #  x ,y = pdf2.minimum() 
+    #  @endcode 
+    def minimum ( self ,
+                  xmin = None , xmax = None ,
+                  ymin = None , ymax = None , x0 = () ) :
+        """Get a minimum of PDF for certain interval
+        >>> pdf2 = ...
+        >>> x, y = pdf2.minimum()
+        """
+        
+        if xmin is None : xmin = self.xminmax()[0]
+        if xmax is None : xmax = self.xminmax()[1]
+        if self.xminmax() :
+            xmin =  max ( xmin , self.xminmax()[0] )
+            xmax =  min ( xmax , self.xminmax()[1] )
+
+        if ymin is None : ymin = self.yminmax()[0]
+        if ymax is None : ymax = self.yminmax()[1]
+        if self.yminmax() :
+            ymin =  max ( ymin , self.yminmax()[0] )
+            ymax =  min ( ymax , self.yminmax()[1] )
+            
+        if not x0 : x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax )
+        
+        if not xmin <= x0[0] <= xmax :
+            logger.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
+
+        if not ymin <= x0[1] <= ymax : 
+            logger.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
+        
+        from ostap.math.minimize import sp_minimum_2D
+        return sp_minimum_2D (  self ,
+                                xmin , xmax ,
+                                ymin , ymax , x0 )
+
+    # ==========================================================================
+    ## get a maximum of PDF for certain interval
+    #  @code
+    #  pdf2 = ...
+    #  x,y  = pdf2.maximum() 
+    #  @endcode 
+    def maximum ( self , xmin = None , xmax = None , x0 = None ) :
+        """Get a maximum of PDF for certain interval
+        >>> pdf2  = ...
+        >>> x , y  = pdf2.maximum()
+        """
+        if xmin is None : xmin = self.xminmax()[0]
+        if xmax is None : xmax = self.xminmax()[1]
+        if self.xminmax() :
+            xmin =  max ( xmin , self.xminmax()[0] )
+            xmax =  min ( xmax , self.xminmax()[1] )
+
+        if ymin is None : ymin = self.yminmax()[0]
+        if ymax is None : ymax = self.yminmax()[1]
+        if self.yminmax() :
+            ymin =  max ( ymin , self.yminmax()[0] )
+            ymax =  min ( ymax , self.yminmax()[1] )
+            
+        if not x0 : x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax )
+
+        if not xmin <= x0[0] <= xmax :
+            logger.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
+
+        if not ymin <= x0[1] <= ymax : 
+            logger.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
+
+        from ostap.math.minimize import sp_maximum_2D
+        return sp_maximum_2D (  self ,
+                                xmin , xmax ,
+                                ymin , ymax , x0 )
+    
     # ==========================================================================
     ## convert PDF into TF2 object, e.g. to profit from TF2::Draw options
     #  @code

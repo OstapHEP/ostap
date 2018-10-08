@@ -538,6 +538,108 @@ class PDF3 (PDF2) :
                             zmin , zmax )
     
     # ==========================================================================
+    ## get a minimum of PDF for certain interval
+    #  @code
+    #  pdf2 = ...
+    #  x , y , z = pdf3.minimum() 
+    #  @endcode 
+    def minimum ( self ,
+                  xmin = None , xmax = None ,
+                  ymin = None , ymax = None ,
+                  zmin = None , zmax = None , x0 = () ) :
+        """Get a minimum of PDF for certain interval
+        >>> pdf3 = ...
+        >>> x, y , z = pdf3.minimum()
+        """
+        
+        if xmin is None : xmin = self.xminmax()[0]
+        if xmax is None : xmax = self.xminmax()[1]
+        if self.xminmax() :
+            xmin =  max ( xmin , self.xminmax()[0] )
+            xmax =  min ( xmax , self.xminmax()[1] )
+
+        if ymin is None : ymin = self.yminmax()[0]
+        if ymax is None : ymax = self.yminmax()[1]
+        if self.yminmax() :
+            ymin =  max ( ymin , self.yminmax()[0] )
+            ymax =  min ( ymax , self.yminmax()[1] )
+
+        if zmin is None : zmin = self.zminmax()[0]
+        if zmax is None : zmax = self.zminmax()[1]
+        if self.zminmax() :
+            zmin =  max ( zmin , self.zminmax()[0] )
+            zmax =  min ( zmax , self.zminmax()[1] )
+            
+        if not x0 : x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) , 0.5 * ( zmin + zmax )
+
+        if not xmin <= x0[0] <= xmax :
+            logger.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
+
+        if not ymin <= x0[1] <= ymax : 
+            logger.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
+        
+        if not zmin <= x0[2] <= zmax : 
+            logger.error("Wrong zmin/x0[2]/zmax: %s/%s/%s"   % ( zmin , x0[2] , zmax ) )
+
+        from ostap.math.minimize import sp_minimum_3D
+        return sp_minimum_3D (  self ,
+                                xmin , xmax ,
+                                ymin , ymax ,
+                                zmin , zmax , x0 )
+    
+
+    # ==========================================================================
+    ## get a maximum of PDF for certain interval
+    #  @code
+    #  pdf2 = ...
+    #  x , y , z = pdf3.maximum() 
+    #  @endcode 
+    def minimum ( self ,
+                  xmin = None , xmax = None ,
+                  ymin = None , ymax = None ,
+                  zmin = None , zmax = None , x0 = () ) :
+        """Get a maximum of PDF for certain interval
+        >>> pdf3 = ...
+        >>> x, y , z = pdf3.maximum()
+        """
+        
+        if xmin is None : xmin = self.xminmax()[0]
+        if xmax is None : xmax = self.xminmax()[1]
+        if self.xminmax() :
+            xmin =  max ( xmin , self.xminmax()[0] )
+            xmax =  min ( xmax , self.xminmax()[1] )
+
+        if ymin is None : ymin = self.yminmax()[0]
+        if ymax is None : ymax = self.yminmax()[1]
+        if self.yminmax() :
+            ymin =  max ( ymin , self.yminmax()[0] )
+            ymax =  min ( ymax , self.yminmax()[1] )
+
+        if zmin is None : zmin = self.zminmax()[0]
+        if zmax is None : zmax = self.zminmax()[1]
+        if self.zminmax() :
+            zmin =  max ( zmin , self.zminmax()[0] )
+            zmax =  min ( zmax , self.zminmax()[1] )
+            
+        if not x0 : x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) , 0.5 * ( zmin + zmax )
+
+        if not xmin <= x0[0] <= xmax :
+            logger.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
+
+        if not ymin <= x0[1] <= ymax : 
+            logger.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
+        
+        if not zmin <= x0[2] <= zmax : 
+            logger.error("Wrong zmin/x0[2]/zmax: %s/%s/%s"   % ( zmin , x0[2] , zmax ) )
+
+        from ostap.math.minimize import sp_maximum_3D
+        return sp_maximum_3D ( self ,
+                               xmin , xmax ,
+                               ymin , ymax ,
+                               zmin , zmax , x0 )
+    
+
+    # ==========================================================================
     ## convert PDF into TF2 object, e.g. to profit from TF3::Draw options
     #  @code
     #  pdf = ...
