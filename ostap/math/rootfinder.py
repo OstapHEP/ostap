@@ -1248,6 +1248,22 @@ try :
 except ImportError :
     logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
     findroot = find_root
+
+
+# =============================================================================
+## solve equation \f$ f(x)=C \f$
+#  @code
+#  fun = ...
+#  x = solve ( fun ,  0.0 , 1.0 ) 
+#  @endcode 
+def sp_solve ( fun , xmin ,  xmax , C = 0 , args = () ) :
+    """Solve equation fun(x)=C
+    >>> fun = ...
+    >>> x   = solve ( fun , 0.0 ) 
+    """
+    func = lambda x , *a : fun(x,*a)-C
+    return findroot ( func , xmin ,  xmax , args = args )
+
     
 # =============================================================================
 if '__main__' == __name__ :

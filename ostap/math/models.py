@@ -622,8 +622,6 @@ def sp_integrate_3D_  ( pdf   ,
     return func.sp_integrate_3D ( xmin , xmax , ymin , ymax , zmin , zmax , *args , **kwargs ) 
 
 
-
-
 from ostap.stats.moments import moment   as sp_moment
 from ostap.stats.moments import mean     as sp_mean
 from ostap.stats.moments import variance as sp_variance
@@ -687,8 +685,8 @@ def _tf3_getattr_ ( self , attr ) :
     raise AttributeError
 
 
-from ostap.math.minimize import sp_minimum_1D, sp_maximum_1D 
-
+from ostap.math.minimize   import sp_minimum_1D, sp_maximum_1D 
+from ostap.math.rootfinder import sp_solve 
 
 # =============================================================================
 ## decorate 1D-models/functions 
@@ -801,6 +799,7 @@ for model in ( Ostap.Math.Chebyshev              ,
     
     if sp_minimum_1D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_1D
     if sp_maximum_1D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_1D
+    if sp_solve      and not hasattr ( model , 'solve'   ) : model.solve   = sp_solve
     
 # =======================================================================================
 ## Special ``getattr'' for Bernstein dual basis functions: delegate the stuff to
