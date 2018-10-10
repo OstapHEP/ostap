@@ -1,14 +1,15 @@
-# Core 
+# Statistics 
 
 * [ostap.stats](README.md)
 
 Utilities to make certain statistical calculations:
-  -  Utility to combine several measurements, including correlated and uncorrelated uncertainties
-  -  counters :
+  - [combine.py](combine.py): utility to combine several measurements, including correlated and uncorrelated uncertainties
+      - [P.Avery *Combining measurements with correlated errors*, CBX 95 55](http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz)
+  - [counters.py](counters.py) :
       - `SE`  : `Ostap::StatEntity`, regular counter, that keeps total sum, number of entries, min/max-values, mean and rms 
       - `WSE` : `Ostap::WStatEntity`, counter with the *weight*, also keeps the total sum, number of entries, min/max values, mean and rms, and also statistics of *weights* 
       - `NSE` : `Ostap::NStatEntity`, *running counter*, useful to keep the statistics of last N-entries 
-  - calculation of various *statistic* for generic functions/distributions. All utilities exist in two variants: classes and standalone  functions, *e.g.* `Mode` and `mode`, `Mean` and `mean`, `Median` and `median`, etc...
+  - [moments.py](moments.py): calculation of various *statistic* for generic functions/distributions. All utilities exist in two variants: classes and standalone  functions, *e.g.* `Mode` and `mode`, `Mean` and `mean`, `Median` and `median`, etc...
       - moments 
       - central moments 
       - mean 
@@ -19,7 +20,7 @@ Utilities to make certain statistical calculations:
       - *width/FWHM*
       - quantiles
       - symmetric and asymmetric *confidence intervals* 
-  - calculation of statistics for variables/expressions from `TTree`, `RooAbsData` or `ROOT::DataFrame`
+  - [statvars.py](statvars.py): calculation of statistics for variables/expressions from `TTree`, `RooAbsData` or `ROOT::DataFrame`
       - `data_get_moment`     : calculate the moments 
       - `data_moment`         : calculate the moments with uncertainty
       - `data_central_moment` : calculate the central moments with uncertainty
@@ -37,6 +38,7 @@ Utilities to make certain statistical calculations:
       - `data_quartiles`      : calculate three quartiles 
       - `data_quintiles`      : calculate four  quintiles 
       - `data_deciles`        : calculate nine  deciles
-  - *U-statistics*, useful for *goodness-of-fit* tests
-  - 2D-decorrelation transformation
+  - [ustat.py](ustat.py() *U-statistics*, useful for *goodness-of-fit* tests
+      - [M.Williams *How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics*](https://doi.org/10.1088/1748-0221/5/09/P09004)
+  - [corr2d.py](corr2d.py) : 2D-decorrelation transformation for pair of variables from `TTree` or `RooAbsData`
 

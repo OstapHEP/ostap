@@ -5,8 +5,7 @@
 #
 # Helper module to get ``U-statistics'' useful for ``Goodnes-Of-Fit'' tests
 #
-# This is a simple translation of
-#   the original C++ lines written by Greig Cowan into python
+# This is a simple translation of the original C++ lines written by Greig Cowan into python
 #
 # Usage is fairly trivial:
 #
@@ -24,14 +23,20 @@
 #
 #  @endcode
 #
+# @see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
+# @see https://doi.org/10.1088/1748-0221/5/09/P09004
+# @see http://arxiv.org/abs/arXiv:1003.1768
 # @author Vanya Belyaev Ivan.Belyaev@cern.ch
 # @date 2011-09-21
 #
 # ============================================================================
 """ ``U-statistics'' useful for ``Goodness-Of-Fit'' tests
 
-This is a simple translation of
-  the original C++ lines written by Greig Cowan into Python
+This is a simple translation of the original C++ lines written by Greig Cowan into Python
+
+- see M.Williams, ``How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics''
+- see https://doi.org/10.1088/1748-0221/5/09/P09004
+- see http://arxiv.org/abs/arXiv:1003.1768
 
 Usage is fairly trivial:
 
