@@ -2,19 +2,44 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file  combine.py
-#  Few helper utilities for combining correlated measurements
+#  Few helper utilities for combining the correlated measurements
 #  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
 #  @see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
 #  @see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+#
+#  @see Ostap::Math::Combine
+#  @code
+#  x = VE ( 0.95 , 0.08**2 )        ## the first  measurement (with stat uncertainty)
+#  y = VE ( 1.08 , 0.08**2 )        ## the second measurement (with stat uncertainty)
+#  syst = Ostap.Math.SymMatrix2x2() ## systematic uncertainty (correlated and uncorrelated)
+#  syst [0,0] = 0.10**2
+#  syst [0,1] = 0.08**2
+#  syst [1,1] = 0.10**2
+#  combiner = Combine ( [x,y] , syst )
+#  print combiner.result(), combiner.errComponents()
+#  @endcode 
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-09-28
 #  
 # =============================================================================
-""" Few helper utilities for combining correlated measurements
+""" Few helper utilities for combining the correlated measurements
 - see P.Avery ``Combining measurements with correlated errors'', CBX 95 55
 - see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
 - see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+
+
+- see Ostap::Math::Combine
+
+>>> x = VE ( 0.95 , 0.08**2 ) ## the first measurement   (with stat uncertainty)
+>>> y = VE ( 1.08 , 0.08**2 ) ## the second measurement  (with stat uncertainty)
+>>> syst = Ostap.Math.SymMatrix2x2() ## syst uncertainty (correlated and uncorrelated)
+>>> syst [0,0] = 0.10**2
+>>> syst [0,1] = 0.08**2
+>>> syst [1,1] = 0.10**2
+>>> combiner = Combine ( [x,y] , syst )
+>>> print combiner.result(), combiner.errComponents()
+
 """
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-09-29"
@@ -40,21 +65,47 @@ else                       : logger = getLogger ( __name__              )
 #  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
 #  @see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
 #  @see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+#  @see Ostap::Math::Combine
+#  @code
+#  x = VE ( 0.95 , 0.08**2 ) ## the first  measurement (with stat uncertainty)
+#  y = VE ( 1.08 , 0.08**2 ) ## the second measurement (with stat uncertainty)
+#  ## systematic uncertainty (correlated and uncorrelated)
+#  syst = Ostap.Math.SymMatrix2x2()
+#  syst [0,0] = 0.10**2
+#  syst [0,1] = 0.08**2
+#  syst [1,1] = 0.10**2
+#  combiner = Combine ( [x,y] , syst )
+#  print combiner.result(), combiner.errComponents()
+#  @endcode 
 #  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
 #  @date 2015-09-29
 class Combine(object) :
-    """Helper class to combine correlated measurements
+    """Helper class to combine the correlated measurements
     - see P.Avery ``Combining measurements with correlated errors'', CBX 95 55
     - see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
     - see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+    - see Ostap::Math::Combine
+    
+    >>> x = VE ( 0.95 , 0.08**2 ) ## the first measurement   (with stat uncertainty)
+    >>> y = VE ( 1.08 , 0.08**2 ) ## the second measurement  (with stat uncertainty)
+    >>> syst = Ostap.Math.SymMatrix2x2() ## syst uncertainty (correlated and uncorrelated)
+    >>> syst [0,0] = 0.10**2
+    >>> syst [0,1] = 0.08**2
+    >>> syst [1,1] = 0.10**2
+    >>> combiner = Combine ( [x,y] , syst )
+    >>> print combiner.result(), combiner.errComponents()
     """
     def __init__ ( self , data , cov2 , *args ) :
-        ## types involved
+        """Create the combiner
+        - data : vector of data (floats or VE-objects)
+        - cov2 : covariance matrix
+        - args : additional covariance matrices for different uncertainty components
+        """
 
         N        = len ( data )
-        COMBINER = Ostap.Math.Combine( N , 'double' )
-        DATA     = Ostap.Vector      ( N ) 
-        COV2     = Ostap.SymMatrix   ( N ) 
+        COMBINER = Ostap.Math.Combine ( N , 'double' )
+        DATA     = Ostap.Vector       ( N ) 
+        COV2     = Ostap.SymMatrix    ( N ) 
 
         self.cov2 = None  
         if isinstance  ( data , DATA ) : self.data = data
@@ -83,20 +134,38 @@ class Combine(object) :
 
         self.combiner = COMBINER( self.data , self.cov2 )
 
-    ##  get final result: combined measurement with total uncertainty 
+    ## get the final result: combined measurement with total uncertainty
+    #  @code 
+    #  combiner = Combiner ( ... )
+    #  print combiner.result()
+    #  @endcode
     def result  ( self ) :
-        """get final result: combined measurement with total uncertainty"""
+        """Get the final result: combined measurement with total combined uncertainty
+        >>> combiner = Combiner ( ... )
+        >>> print combiner.result() 
+        """
         return self.combiner.result  ()
 
-    ## get weigts used to get the result  
+    ## get the weights used to get the result  
+    #  @code
+    #  combiner = Combiner ( ... )
+    #  print combiner.weights ()
+    #  @endcode 
     def weight  ( self ) :
-        """get weigts used to get the result"""
+        """Get the weights used to get the result
+        >>> combiner = Combiner ( ... )
+        >>> print combiner.weights ()         
+        """
         return self.combiner.weights ()
 
-    ## get the decomposition of the final variance 
+    ## get the decomposition of the final variances 
+    #  @code
+    #  combiner = Combiner ( ... ) 
+    #  print c.result(), c.covComponents()
+    #  @endcode
     def covComponents ( self ) :
-        """Get the decomposition of the final variance
-        >>> c = ...
+        """Get the decomposition of the final variances
+        >>> combiner = Combiner ( ... ) 
         >>> print c.result(), c.covComponents() 
         """
         r = []
@@ -107,11 +176,15 @@ class Combine(object) :
             
         return tuple ( r ) 
                     
-    ## get the decomposition of the final variance 
+    ## get the decomposition of the final uncertainty
+    #  @code 
+    #  combiner = ...
+    #  print combiner.result(), combiner.errComponents()
+    #  @endcode 
     def errComponents ( self ) :
         """Get the decomposition of the final uncertainty
-        >>> c = ...
-        >>> print c.result(), c.errComponents() 
+        >>> combiner = ...
+        >>> print combiner.result(), combiner.errComponents()
         """
         
         import math
@@ -131,7 +204,7 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    logger.info ( 'Example from Avery:' ) 
+    logger.info ( ' - Example from Avery:' ) 
     
     x = VE ( 0.95 , 0.08**2 )
     y = VE ( 1.08 , 0.08**2 )
@@ -148,10 +221,16 @@ if '__main__' == __name__ :
     c1 = Combine( [x,y] , syst1 )
     c2 = Combine( [x,y] , syst2 )
 
-    logger.info ( 'CORRELATED  : %s %s ' % ( c2.combiner.result(), c2.errComponents() ) ) 
-    logger.info ( 'UNCORRELATED: %s %s ' % ( c1.combiner.result(), c1.errComponents() ) ) 
+    r1 = c1.result()
+    e1 = c1.errComponents()
+
+    r2 = c2.result()
+    e2 = c2.errComponents()
+
+    logger.info ( 'CORRELATED  : %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r2.value() , r2.error()  , r2.value() , e2[0] , e2[1] ) ) 
+    logger.info ( 'UNCORRELATED: %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r1.value() , r1.error()  , r1.value() , e1[0] , e1[1] ) ) 
     
-    logger.info ( 'Lb mass average:' ) 
+    logger.info ( ' - Lambda_b mass average:' ) 
 
     x = VE(5619.44 , 0.70**2 )
     y = VE(5619.44 , 0.13**2 )
@@ -168,11 +247,16 @@ if '__main__' == __name__ :
 
     c1 = Combine( [x,y] , syst1 )
     c2 = Combine( [x,y] , syst2 )
-    
-    logger.info ( 'CORRELATED  : %s %s ' % ( c2.combiner.result(), c2.errComponents() ) ) 
-    logger.info ( 'UNCORRELATED: %s %s ' % ( c1.combiner.result(), c1.errComponents() ) ) 
 
-    
+    r1 = c1.result()
+    e1 = c1.errComponents()
+
+    r2 = c2.result()
+    e2 = c2.errComponents()
+
+    logger.info ( 'CORRELATED  : %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r2.value() , r2.error()  , r2.value() , e2[0] , e2[1] ) ) 
+    logger.info ( 'UNCORRELATED: %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r1.value() , r1.error()  , r1.value() , e1[0] , e1[1] ) ) 
+
     logger.info ( 80*'*' ) 
     
     
