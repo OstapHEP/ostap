@@ -2,12 +2,14 @@
 
 * [ostap.tools](README.md)
 
-High-level tools:
+Collection of high-level analysis tools:
 
-  - code to simplify comunications with `TMVA` (small modification of the original code by Albert PUIG)
-  - *chopping* utulity for TMVA
-  - tool for relatively easy *reweighting*
-
-
-
-
+  - [tmva.py](tmva.py): code to simplify communications with [`TMVA`](https://root.cern.ch/tmva), *The Toolkit for Multivariate Data Analysis with ROOT*.
+     - small modification of the original code by *Albert PUIG*
+  - [chopping.py](chopping.py): *chopping* utulity for `TMVA` 
+     - splits sample into several non-overlapping categories and performs separate `TMVA` training/testing/using for subsamples.
+     - it is needed to  avouid of usage of the same events in `TMVA` training and using 
+  - [reweight.py](reweight.py) : tool for relatively easy *reweighting*
+     - getting as the input the desired distributions for e.g. *data* sample, performs *reweighting* of *simulated* sample to achive the same shapes  
+     - input *data* distributions are specified as collection of 1D or 2D distributions
+ 
