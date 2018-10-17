@@ -27,8 +27,12 @@ Collection of various utilities that simplify  the communications with [`RooFit`
    - many widely knows distibutions 
 
 
-- [rootfit.py](roofit.py): *head* module for varioud decorations of `RooFit`-objects 
-   - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases:
+## [rootfit.py](roofit.py)
+
+The main module for various decorations of `RooFit`-objects 
+
+### [variables.py](variables.py) 
+Collections of decorations for `RooAbsReal`, `RooRealVar` and related clases:
       - trivial math-operations  (`ValueWithError` as return value) 
       - other useful methods and properties 
       - useful context manager `SETVAR` to preserve the value of `RooRealVar`
@@ -70,7 +74,9 @@ with SETVAR ( var ) :
     print float(var)
 print float(var) 
 ```
-   - [dataset.py](dataset.py) -  collections of decorations for `RooAbsData`, `RooDataSet` and related clases
+
+### [dataset.py](dataset.py) 
+Collection of decorations for `RooAbsData`, `RooDataSet` and related clases
       * iterators, getters, slices, trivial operatorr
       * statistic for the variables and expressions 
  
