@@ -29,7 +29,21 @@ Collection of various utilities that simplify  the communications with [`RooFit`
 
  - [rootfit.py](roofit.py): *head* module for varioud decorations of `RooFit`-objects 
      - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases
-        * the classes get many new methods: 
+       * trivial math-operations  (`ValueWithError` as return value)
+```python
+var + 1.0 
+var - 2.1 
+var * 3.2
+var / 4.6
+5.1 + var 
+6.2 - var 
+7.3 * var 
+8.4 / var 
+var ** 9.5 
+1.2 ** var```
+
+
+       * other new useful methods: 
 ```python
 var = ...
 var.fix(1.0)  ## fix it at value=1.0
@@ -45,22 +59,10 @@ if 2.5 in var3 :  ## check if  2.5 is within min/max range
 mn , mx = var. minmax() ## get min/max range, is applicable 
 mn , mx = var.xminmax() ## ditto
 
-h  = var.histo( bins = 50 ) ## create the correspondiong histogram```
+h = var.histo( bins = 50 ) ## create the correspondiong histogram
+```
 
 
-         * trivial math-operations  (`ValueWithError` as return value)
-
-```python
-var + 1.0 
-var - 2.1 
-var * 3.2
-var / 4.6
-5.1 + var 
-6.2 - var 
-7.3 * var 
-8.4 / var 
-var ** 9.5 
-1.2 ** var```
          
           * also trivial properties are defined:
              *  `value`  (returns `float` or `ValueWithError`, depending on the type) 
