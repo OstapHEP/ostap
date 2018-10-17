@@ -28,7 +28,7 @@ Collection of various utilities that simplify  the communications with [`RooFit`
 
 
 - [rootfit.py](roofit.py): *head* module for varioud decorations of `RooFit`-objects 
-   - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases, e.g. trivial math-operations  (`ValueWithError` as return value) and other useful methods and properties: 
+   - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases, e.g. trivial math-operations  (`ValueWithError` as return value) and other useful methods and properties and useful context manager `SETVAR` to preserve the value of `RooRealVar`
 ```python
 var + 1.0 
 var - 2.1 
@@ -60,7 +60,12 @@ h = var.histo( bins = 50 ) ## create the correspondiong histogram
 var.value 
 var.error
 var.value = 10
+
+print float(var)
+with SETVAR ( var ) : 
+    var.value = 10 
+    print float(var)
+print float(var) 
 ```
-   - SETVAR - useful context manager to preserve the value of `RooRealVar`
 
      
