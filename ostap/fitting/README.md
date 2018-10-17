@@ -27,8 +27,8 @@ Collection of various utilities that simplify  the communications with [`RooFit`
    - many widely knows distibutions 
 
 
- - [rootfit.py](roofit.py): *head* module for varioud decorations of `RooFit`-objects 
-     - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases, e.g. trivial math-operations  (`ValueWithError` as return value) and other useful methods and properties: 
+- [rootfit.py](roofit.py): *head* module for varioud decorations of `RooFit`-objects 
+   - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases, e.g. trivial math-operations  (`ValueWithError` as return value) and other useful methods and properties: 
 ```python
 var + 1.0 
 var - 2.1 
@@ -61,7 +61,6 @@ var.value
 var.error
 var.value = 10
 ```
-
-        * `SETVAR` - useful context manager to preserve the value of `RooRealVar`
+   - SETVAR - useful context manager to preserve the value of `RooRealVar`
 
      
