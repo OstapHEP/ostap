@@ -8,7 +8,7 @@ Collection of various utilities that simplify  the communications with [`RooFit`
    - collections : `RooArgSet`, `RooArgList` , ...
    - datasets    : `RooAbsData`, `RooDataSet`, `RooDataHist`
    - minuit 
-   - auxilalry classes : `RooFitResults`, ... 
+   - auxillary classes : `RooFitResults`, ... 
  - utilities for easy creation of fitting models and easy fitting and plotting  
    - base classes : `PDF`, `MASS`, ... 
    - compound ( signal(s) + background(s) ) models:
@@ -25,5 +25,18 @@ Collection of various utilities that simplify  the communications with [`RooFit`
    - generic smooth background 
    - physics-inspired smooth background models 
    - many widely knows distibutions 
+
+
+  - [rootfit.py](roofit.py): *head* module for varioud decorations of `RooFit`-objects 
+     - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases
+        -   the classes get many new methods
+             - fixing and releasing parameters 
+```
+var = ..
+var.fix(1.0)  ## fix it at value=1.0
+var.fix()     ## fix it at the curreent value 
+var.release()
+```
+
 
 

@@ -4,7 +4,7 @@
 
 Collection of various small utilities 
 
-  - [basic.py](basic.py): small  set of veyr basic tiny utilities 
+  - [basic.py](basic.py): small  set of very basic tiny utilities 
      - `isatty` : is `sys.stdout` attached to terminal or not  ?
      - `with_ipython` : do we run `ipython` or *plain* `python` ?
      - `terminal_size` : get the terminal console size
