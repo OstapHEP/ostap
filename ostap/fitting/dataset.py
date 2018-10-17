@@ -1264,7 +1264,6 @@ for t in ( ROOT.RooDataSet , ) :
 _new_methods_ += [
     ROOT.RooDataSet.table    , 
     ROOT.RooDataSet.pprint   , 
-    ROOT.RooDataSet.pprint   , 
     ROOT.RooDataSet.__repr__ ,
     ROOT.RooDataSet.__str__  ,
     ]
