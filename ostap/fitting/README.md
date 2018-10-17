@@ -29,11 +29,11 @@ Collection of various utilities that simplify  the communications with [`RooFit`
 
  - [rootfit.py](roofit.py): *head* module for varioud decorations of `RooFit`-objects 
      - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases
-        -   the classes get many new methods: 
-           - fixing and releasing parameters, 
-           - conversion to `ValueWithError`
-           - implicit conversion to `float`  via `__float__`-method 
-           - checking the range  
+        - the classes get many new methods: 
+          1. fixing and releasing parameters 
+          1. conversion to `ValueWithError`
+          1. implicit conversion to `float`  via `__float__`-method 
+          1. checking the range  
 ```
 var = ..
 var.fix(1.0)  ## fix it at value=1.0
@@ -49,10 +49,10 @@ if 2.5 in var3 :  ## checking if  2.5 is within min/max range
 
 mn , mx = var. minmax() ## get min/max range, is applicable 
 mn , mx = var.xminmax() ## ditto 
-
 ```
            - create the correspondiong histogram: `h = var.histo ( bins = 200 )` 
            - trivial math-operations  (`ValueWithError` as return value)
+
 ```
 var + 1.0 
 var - 2.1 
@@ -65,8 +65,8 @@ var / 4.6
 var ** 9.5 
 1.2 ** var  
 ```         - also trivial properties are defined:
-               -  `value`  (returns `float` or `ValueWithError`, depending on the type) 
-               -  `error`  (returns `float`)
+               1.  `value`  (returns `float` or `ValueWithError`, depending on the type) 
+               1.  `error`  (returns `float`)
 ```
 var.value 
 var.erorr
