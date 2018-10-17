@@ -130,8 +130,8 @@ ROOT.RooAbsReal. minmax  = lambda s : ()
 ROOT.RooAbsReal.xminmax  = lambda s : ()
 ROOT.RooAbsRealLValue  . xmin            = lambda s : s.getMin()
 ROOT.RooAbsRealLValue  . xmax            = lambda s : s.getMax()
-ROOT.RooAbsRealLValue  . minmax          = lambda s : (s.xmin(),s.xmax()) 
-ROOT.RooAbsRealLValue  .xminmax          = lambda s : (s.xmin(),s.xmax()) 
+ROOT.RooAbsRealLValue  . minmax          = lambda s : ( s.xmin() , s.xmax() ) 
+ROOT.RooAbsRealLValue  .xminmax          = lambda s : ( s.xmin() , s.xmax() ) 
 
 
 _new_methods_ += [
