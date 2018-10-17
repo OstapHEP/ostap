@@ -28,8 +28,7 @@ Collection of various utilities that simplify  the communications with [`RooFit`
 
 
  - [rootfit.py](roofit.py): *head* module for varioud decorations of `RooFit`-objects 
-     - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases
-       * trivial math-operations  (`ValueWithError` as return value)
+     - [variables.py](variables.py) -  collections of decorations for `RooAbsReal`, `RooRealVar` and related clases, e.g. trivial math-operations  (`ValueWithError` as return value) and other useful methods and properties: 
 ```python
 var + 1.0 
 var - 2.1 
@@ -40,11 +39,8 @@ var / 4.6
 7.3 * var 
 8.4 / var 
 var ** 9.5 
-1.2 ** var```
+1.2 ** var
 
-
-       * other new useful methods: 
-```python
 var = ...
 var.fix(1.0)  ## fix it at value=1.0
 var.fix()     ## fix it at the curreent value 
@@ -60,17 +56,11 @@ mn , mx = var. minmax() ## get min/max range, is applicable
 mn , mx = var.xminmax() ## ditto
 
 h = var.histo( bins = 50 ) ## create the correspondiong histogram
-```
 
-
-         
-          * also trivial properties are defined:
-             *  `value`  (returns `float` or `ValueWithError`, depending on the type) 
-             *  `error`  (returns `float`)
-```python
 var.value 
 var.error
-var.value = 10```
+var.value = 10
+```
 
         * `SETVAR` - useful context manager to preserve the value of `RooRealVar`
 
