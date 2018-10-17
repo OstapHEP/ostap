@@ -26,14 +26,15 @@ __all__     = (
     'ExpoPol2Dsym_pdf', ## Symmetric version of above
     ##
     'Spline2D_pdf'    , ## 2D generic   positive spline 
-    'Spline2Dsym_pdf' , ## 2D symmetric positive spline 
+    'Spline2Dsym_pdf' , ## 2D symmetric positive spline
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core     import cpp, Ostap
-from   ostap.math.base     import iszero
-from   ostap.fitting.utils import Phases
-from   ostap.fitting.fit2d import PDF2 
+from   ostap.core.core       import cpp, Ostap
+from   ostap.math.base       import iszero
+from   ostap.fitting.utils   import Phases
+from   ostap.fitting.fit2d   import PDF2
+from   ostap.fitting.signals import Gauss_pdf, CB2_pdf 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_2d' )
@@ -56,7 +57,7 @@ class PolyBase2(PDF2,Phases) :
 #   \sum^{n}_{i=0} \sum{k}_{j=0} a_{ij} B^n_i(x) B^k_j(y)
 #  \f] 
 #  where
-#  - \f$ B^n_i(x)\f$ denotes the basic bersntein polynomial
+#  - \f$ B^n_i(x)\f$ denotes the basic Bersntein polynomial
 #  - \f$ a_{ij} \ge 0 \f$
 #  - \f$ \sum_{i,j} a_{ij} = 1 \f$
 #  @see Ostap::Models::Poly2DPositive
@@ -1549,7 +1550,7 @@ for t in ( PolyPos2D_pdf    ,
            ExpoPol2Dsym_pdf ) :
 
     t.pars = _2d_get_pars_ 
-        
+                
 # =============================================================================
 if '__main__' == __name__ : 
          

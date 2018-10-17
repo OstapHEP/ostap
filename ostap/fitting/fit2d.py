@@ -1055,11 +1055,12 @@ class H2D_pdf(H2D_dset,PDF2) :
 #  @param  bkg_2x    x-background component for B(x)*B(y) term, if <code>bkg_2D</code> is not specified 
 #  @param  bkg_2y    y-background component for B(x)*B(y) term, if <code>bkg_2D</code> is not specified 
 #  @param  bkg_2D    PDF for 2D-background component for B(x,y)    term
+#  @param  sig_2D    PDF for 2D-signal component for S(x,y)        term
 #  @param  ss        the yield of  S(x)*S(y) component
 #  @param  sb        the yield of  S(x)*B(y) component
 #  @param  bs        the yield of  B(x)*S(y) component
 #  @param  bb        the yield of  B(x,y)    component
-#  @param  othercomponens list of other 2D-components
+#  @param  componens list of other 2D-components
 #  @param  xvar      the x-variable
 #  @param  yvar      the y-variable
 #  @param  name      the name of PDF 
@@ -1083,9 +1084,9 @@ class Fit2D (PDF2) :
     """The actual model for 2D-fits
     
     It consists of four main components :
-    1. pure signal :        S(x)*S(y)
+    1. pure signal :        S(x,y)
     2. signal x background: S(x)*B(y)
-    3. signal x bakcgronud: B(x)*S(y)
+    3. signal x backgronud: B(x)*S(y)
     4. pure backrground:    B(x,y) or B(x)*B(y) 
     Other 2D-components could be specified in addition
     
@@ -1099,11 +1100,12 @@ class Fit2D (PDF2) :
     - bkg_2x          : x-background component for B(x)*B(y) term, if bkg2D is not specified 
     - bkg_2y          : y-background component for B(x)*B(y) term, if bkg2D is not specified 
     - bkg_2D          : PDF for 2D-background component for B(x,y)    term
-    - ss              : the yield of  S(x)*S(y) component
+    - sig_2D          : PDF for 2D-signal component S(x,y) term
+    - ss              : the yield of  S(x,y)    component
     - sb              : the yield of  S(x)*B(y) component
     - bs              : the yield of  B(x)*S(y) component
     - bb              : the yield of  B(x,y)    component
-    - othercomponents : the list of other 2D-components
+    - components      : the list of other 2D-components
     - xvar            : the x-variable
     - yvar            : the y-variable
     - name            : the name of PDF
@@ -1134,6 +1136,7 @@ class Fit2D (PDF2) :
                    bkg_2y     = None  ,
                    #
                    bkg_2D     = None  ,
+                   sig_2D     = None  , ## 2D-signal component 
                    #
                    ## main components :
                    ss         = None  , ## signal    (1) * signal     (2)
@@ -1155,6 +1158,7 @@ class Fit2D (PDF2) :
             'bkg_2x'     : bkg_2x     ,
             'bkg_2y'     : bkg_2y     ,
             'bkg_2D'     : bkg_2D     ,
+            'sig_2D'     : sig_2D     ,
             'components' : components ,
             ##
             'ss'         : ss ,
@@ -1197,11 +1201,18 @@ class Fit2D (PDF2) :
         # =====================================================================
         ## First component: Signal(1) and Signal(2)
         # =====================================================================
-        
-        self.__ss_cmp = Model2D ( "SS_pdf" + suffix ,
-                                  self.__signal_x   ,
-                                  self.__signal_y   , 
-                                  title = "Signal(x) x Signal(y)" )
+
+        if   sig_2D and isinstance ( sig_2D , PDF2 ) :
+            self.__ss_cmp = sig_2D
+        elif sig_2D and isinstance ( sig_2D , ROOT.RooAbsPdf ) :
+            self.__ss_cmp = Gneric2D_pdf ( sig_2D , self.xvar , self.yvar , 'SS_pdf' )
+        elif not sig_2D : 
+            self.__ss_cmp = Model2D ( "SS_pdf" + suffix ,
+                                      self.__signal_x   ,
+                                      self.__signal_y   , 
+                                      title = "Signal(x) x Signal(y)" )
+        else :
+            raise TypeError("Fit2D: can't create Signal(x,y)-component!")
         
         # =====================================================================
         ## Second component: Background(1) and Signal(2)
@@ -1248,9 +1259,34 @@ class Fit2D (PDF2) :
         self.__bkg_2x = None 
         self.__bkg_2y = None 
 
-        if   isinstance ( bkg_2D , PDF2           ) : self.__bb_cmp = bkg_2D  
-        elif isinstance ( bkg_2D , ROOT.RooAbsPdf ) :
+        if   isinstance ( bkg_2D , PDF2             ) : self.__bb_cmp = bkg_2D        
+        elif isinstance ( bkg_2D , ROOT.RooAbsPdf   ) : ## generic PDF 
             self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )
+            
+        elif isinstance ( bkg_2D , ( tuple , list ) ) : ## polynomials 
+            
+            assert 2 == len ( bkg_2D ), 'bkg_2D must be of length of 2!'
+            nx = bkg_2D [ 0 ]
+            ny = bkg_2D [ 1 ]
+            assert isinstance ( nx , ( int , long ) ) , 'Invalid nx-type %s' % nx
+            assert isinstance ( ny , ( int , long ) ) , 'Invalid ny-type %s' % ny
+
+            if   0 == nx and 0 == ny :
+                
+                self.__bb_cmp = Flat2D ( name = 'BB_pdf' , xvar = self.xvar , yvar = self.yvar )
+                
+            elif 0 >= nx and 0 >= ny :
+                
+                from ostap.fitting.models_2d import PolyPos2D_pdf as _BB_pdf 
+                self.__bb_cmp = _BB_pdf ( "BB_pdf" + suffix , self.xvar , self.yvar , abs ( nx ) , abs ( ny ) )
+                
+            else :
+                
+                from ostap.fitting.models_2d import ExpoPol2D_pdf as _BB_pdf 
+                self.__bb_cmp = _BB_pdf ( "BB_pdf" + suffix , self.xvar , self.yvar , abs ( nx ) , abs ( ny ) )
+                if 0 > nx : self.__bb_cmp.taux.fix ( 0 )
+                if 0 > ny : self.__bb_cmp.tauy.fix ( 0 )
+                
         else     :            
             
             self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
@@ -1264,8 +1300,8 @@ class Fit2D (PDF2) :
         ## coefficients/yields 
         # =====================================================================
     
-        self.__ss = self.make_var ( ss   , "SS"                      + suffix ,
-                                    "Signal(x)&Signal(y)"     + suffix , None , 1000  , 0 , 1.e+7 )
+        self.__ss = self.make_var ( ss   , "SS"                       + suffix ,
+                                    "Signal(x,y)"             + suffix , None , 1000  , 0 , 1.e+7 )
         self.__sb = self.make_var ( sb   ,  "SB"                      + suffix ,
                                     "Signal(x)&Background(y)" + suffix , None ,  100  , 0 , 1.e+7 )
         self.__bs = self.make_var ( bs   , "BS"                      + suffix ,
@@ -1334,6 +1370,7 @@ class Fit2D (PDF2) :
             'bkg_2x'     : self.bkg_2x          , 
             'bkg_2y'     : self.bkg_2y          , 
             'bkg_2D'     : self.bkg_2D          ,
+            'sig_2D'     : self.sig_2D          ,
             'ss'         : self.SS              ,
             'sb'         : self.SB              ,
             'bs'         : self.BS              ,
@@ -1485,9 +1522,14 @@ class Fit2D (PDF2) :
 
     @property
     def bkg_2D( self ) :
-        """``bkg_2D'': The PDF for Backgroud(x,y) component/PDF"""
+        """``bkg_2D'': The PDF for Backgroud(x,y) component/PDF (same as cmp_BB)"""
         return self.__bb_cmp
- 
+
+    @property
+    def sig_2D( self ) :
+        """``sig_2D'': The PDF for Signal(x,y) component/PDF (same as cmp_SS)"""
+        return self.__ss_cmp 
+
     @property
     def more_components ( self ) :
         """additional ``other'' components"""
@@ -1500,7 +1542,7 @@ class Fit2D (PDF2) :
     
     @property
     def cmp_SS ( self ) :
-        """``cmp_SS'' : Signal(x)xSignal(y)     component in the fit (PDF)"""
+        """``cmp_SS'' : Signal(x&y))            component in the fit (PDF)"""
         return self.__ss_cmp
     @property
     def cmp_SB ( self ) :
@@ -1518,8 +1560,8 @@ class Fit2D (PDF2) :
 # =============================================================================
 ## @class Fit2DSym
 #  The actual model for symmetric 2D-fits. It consists of three main components :
-#  1. pure signal :        S(x)*S(y)
-#  2. signal x background & backgroun x   signal:  S(x)*B(y) + B(x)*S(y)
+#  1. pure signal :        S(x,y)
+#  2. signal x background & background x signal:  S(x)*B(y) + B(x)*S(y)
 #  3. pure backrground:    B(x,y) or B(x)*B(y) 
 #  Other 2D-components could be specified in addition
 #  @param  signal_x  PDF for the S(x)-signal component
@@ -1527,14 +1569,15 @@ class Fit2D (PDF2) :
 #  @param  suffix    suffix to be used for the PDF and variable names
 #  @param  bkg_1x    x-background component for B(x)*S(y) term, B(y) is cloned 
 #  @param  bkg_2x    x-background component for B(x)*B(y) term, if bkg2D is not specified, B(y) is cloned  
-#  @param  bkg_2D    PDF for (symmetric) 2D-background component for B(x,y)    term
-#  @param  ss        the yield of  S(x)*S(y) component
-#  @param  sb        the yield of  S(x)*B(y)+B(x)*S(y)component
-#  @param  bb        the yield of  B(x,y)    component
-#  @param  othercomponens list of other 2D-components
-#  @param  xvar      the x-variable
-#  @param  yvar      the y-variable
-#  @param  name      the name of PDF 
+#  @param  bkg_2D     PDF for (symmetric) 2D-background component for B(x,y)    term
+#  @param  sig_2D     PDF for (symmetric) 2D-signal     component for S(x,y)    term
+#  @param  ss         the yield of  S(x)*S(y) component
+#  @param  sb         the yield of  S(x)*B(y)+B(x)*S(y)component
+#  @param  bb         the yield of  B(x,y)    component
+#  @param  components list of other 2D-components
+#  @param  xvar       the x-variable
+#  @param  yvar       the y-variable
+#  @param  name       the name of PDF 
 
 #  @code
 # 
@@ -1571,10 +1614,11 @@ class Fit2DSym (PDF2) :
     - bkg_1x         : x-background component for B(x)*S(y) term; B(y) is cloned 
     - bkg_2x         : x-background component for B(x)*B(y) term, if bkg2D is not specified; B(y) is   cloned  
     - bkg_2D         : PDF for (symmetric) 2D-background component for B(x,y)    term
+    - sig_2D         : PDF for (symmetric) 2D-signal     component for S(x,y)    term
     - ss             : the yield of  S(x)*S(y) component
     - sb             : the yield of  S(x)*B(y)+B(x)*S(y)component
     - bb             : the yield of  B(x,y)    component
-    - othercomponens : the list of other 2D-components
+    - componens      : the list of other 2D-components
     - xvar           : the x-variable
     - yvar           : the y-variable
     - name           : the name of PDF 
@@ -1601,6 +1645,7 @@ class Fit2DSym (PDF2) :
                    bkg_1x     = None  ,
                    bkg_2x     = None  ,
                    bkg_2D     = None  ,
+                   sig_2D     = None  ,
                    #
                    ## main components :
                    ss         = None  , ## signal (1) * signal     (2)
@@ -1619,6 +1664,7 @@ class Fit2DSym (PDF2) :
             'bkg_1x'     : bkg_1x     , 
             'bkg_2x'     : bkg_2x     , 
             'bkg_2D'     : bkg_2D     ,
+            'sig_2D'     : sig_2D     ,
             'components' : components ,
             ##
             'ss'         : ss         ,
@@ -1662,10 +1708,17 @@ class Fit2DSym (PDF2) :
         ## First component: Signal(1) and Signal(2)
         # =====================================================================
 
-        self.__ss_cmp = Model2D ( "SS_pdf" + suffix         ,
-                                  self.__signal_x           ,
-                                  self.__signal_y           , 
-                                  title = "Signal(x) x Signal(y)" )
+        if   sig_2D and isinstance ( sig_2D , PDF2 ) :
+           self.__ss_cmp = sig_2D
+        elif sig_2D and isinstance ( sig_2D , ROOT.RooAbsPdf ) :
+            self.__ss_cmp = Gneric2D_pdf ( sig_2D , self.xvar , self.yvar , 'SS_pdf' )
+        elif not sig_2D : 
+            self.__ss_cmp = Model2D ( "SS_pdf" + suffix ,
+                                      self.__signal_x   ,
+                                      self.__signal_y   , 
+                                      title = "Signal(x) x Signal(y)" )
+        else :
+            raise TypeError("Fit2D: can't create Signal(x,y)-component!")
         
         self.__bkg_1x = self.make_bkg (        bkg_1x , 'Bkg1X_BS' + suffix , self.xvar )
         self.__bkg_1y = self.make_bkg ( self.__bkg_1x , 'Bkg1Y_SB' + suffix , self.yvar )
@@ -1797,6 +1850,7 @@ class Fit2DSym (PDF2) :
             'bkg_1x'     : self.bkg_1x          , 
             'bkg_2x'     : self.bkg_2x          , 
             'bkg_2D'     : self.bkg_2D          ,
+            'sig_2D'     : self.sig_2D          ,
             'ss'         : self.SS              ,
             'sb'         : self.SB              ,
             'bb'         : self.BB              ,
@@ -1940,8 +1994,13 @@ class Fit2DSym (PDF2) :
 
     @property
     def bkg_2D( self ) :
-        """``bkgh_2D'': The PDF for Backgroud(x&y) component/PDF"""
+        """``bkg_2D'': The PDF for Backgroud(x&y) component/PDF (same as cmp_BB)"""
         return self.__bb_cmp
+
+    @property
+    def sig_2D( self ) :
+        """``sig_2D'': The PDF for Signal(x&y) component/PDF (same as cmp_SS)"""
+        return self.__ss_cmp
  
     @property
     def more_components ( self ) :
@@ -1955,7 +2014,7 @@ class Fit2DSym (PDF2) :
     
     @property
     def cmp_SS ( self ) :
-        """``cmp_SS'' : Sig(1)xSig(2) component in the fit (PDF)"""
+        """``cmp_SS'' : Sig(1&2) component in the fit (PDF)"""
         return self.__ss_cmp
     @property
     def cmp_SB ( self ) :

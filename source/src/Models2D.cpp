@@ -12,7 +12,7 @@
 #include <array>
 #include <tuple>
 #include <iostream>
-#include <mutex>
+#include <functional>
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -29,18 +29,10 @@
 //  Local 
 // ============================================================================
 #include "Exception.h"
-#include "local_gsl.h"
 #include "local_math.h"
+#include "local_hash.h"
 #include "Integrator1D.h"
 #include "Integrator2D.h"
-// ============================================================================
-// Local cubature 
-// ============================================================================
-#include "cubature.h"
-// ============================================================================
-// Synced cache
-// ============================================================================
-#include "syncedcache.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes  from  file Ostap/Models2D.h
@@ -77,19 +69,7 @@ namespace
     // ========================================================================== 
   };
   // ==========================================================================
-  // Synced cache
-  // ==========================================================================
-  typedef std::tuple<const Ostap::Math::PhaseSpaceNL*,  // phase-space object
-                     const Ostap::Math::Bernstein*,     // bernstein polynomial
-                     double, double> KEY1 ;             // low/high edges
-  typedef SyncedCache<std::map<KEY1,double>>           MAP1 ;
-  // ==========================================================================
-  /** @var s_map1 
-   *  local (sssynced)  cache to keep integration results 
-   */
-  MAP1 s_map1 {} ;
-  // ==========================================================================
-  /// make 1D integration of the product of phase space and bernstein polynomial
+  /// make 1D integration of the product of the phase space and the bernstein polynomial
   double _integral_
   ( const Ostap::Math::PhaseSpaceNL&    ps        , 
     const Ostap::Math::Bernstein&       bp        ,
@@ -114,18 +94,8 @@ namespace
     //
     if ( 1 == bp.npars() ) { return bp.par(0) * ps.integral ( xlow , xhigh ) ; }
     //
-    // check the cache
-    const KEY1 key { std::make_tuple ( &ps  , &bp  , low  , high ) } ;
-    //
-    // ========================================================================
-    { // look into the cache ==================================================
-      MAP1::Lock lock { s_map1.mutex() } ;
-      auto it = s_map1->find  ( key ) ;
-      if ( s_map1->end() != it ) {  return it->second ; }  // AVOID calculation
-    } // ======================================================================
-    // ========================================================================
-    //
-    // use GSL to evaluate the integral 
+    // construct the hash 
+    const std::size_t tag = std::hash_combine ( bp.tag () , ps.tag () ) ;
     //
     /// integrator for class PSBERN 
     static const Ostap::Math::GSL::Integrator1D<PSBERN> s_integrator ;
@@ -134,11 +104,14 @@ namespace
     const PSBERN ps_bern { &ps , &bp } ;
     const auto F     = s_integrator.make_function ( &ps_bern ) ;
     //
+    // use GSL to evaluate the integral 
+    //
     int    ierror    =  0   ;
     double result    =  1.0 ;
     double error     = -1.0 ;
-    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate  
-      ( &F                   ,   // the function
+    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+      ( tag                  , 
+        &F                   ,   // the function
         xlow   , xhigh       ,   // low & high edges
         workspace ( work )   ,   // workspace
         s_PRECISION          ,   // absolute precision
@@ -146,119 +119,10 @@ namespace
         s_SIZE               ,   // maximum number of subintervals
         message              ,   // message 
         __FILE__  , __LINE__ ) ; // filename & line number 
-    // ========================================================================
-    { // update the cache =====================================================
-      MAP1::Lock lock  { s_map1.mutex() } ;
-      // clear the cache is too large
-      if ( s_CACHESIZE < s_map1->size() ) { s_map1->clear() ; }
-      // update the cache
-      s_map1->insert ( std::make_pair ( key , result ) ) ;
-    } // ======================================================================
     //
     return result ;
   }
   // ==========================================================================
-  template <class T>
-  inline void hash_combine(std::size_t& seed, const T& v)
-  {
-    std::hash<T> hasher;
-    seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
-  }
-  // ==========================================================================
-  std::size_t hash ( const Ostap::Math::PS2DPol2* ps ) 
-  {
-    if ( 0 == ps ) { return 0 ; }
-    std::size_t seed = 0 ;
-    typedef std::vector<double> VCT ;
-    const VCT& pars = ps->pars() ;
-    for ( VCT::const_iterator i = pars.begin() ; pars.end() != i ; ++i ) 
-    { hash_combine  ( seed , *i ) ; }
-    hash_combine ( seed , ps->mmax () ) ;
-    return seed ;
-  } 
-  // =========================================================================
-  std::size_t hash ( const Ostap::Math::PS2DPol2Sym* ps ) 
-  {
-    if ( 0 == ps ) { return 0 ; }
-    std::size_t seed = 0 ;
-    typedef std::vector<double> VCT ;
-    const VCT& pars = ps->pars() ;
-    for ( VCT::const_iterator i = pars.begin() ; pars.end() != i ; ++i ) 
-    { hash_combine  ( seed , *i ) ; }
-    hash_combine ( seed , ps->mmax () ) ;
-    return seed ;
-  } 
-  // =========================================================================
-  std::size_t hash ( const Ostap::Math::PS2DPol3* ps ) 
-  {
-    if ( 0 == ps ) { return 0 ; }
-    std::size_t seed = 0 ;
-    typedef std::vector<double> VCT ;
-    const VCT& xpars = ps->xpars() ;
-    for ( VCT::const_iterator i = xpars.begin() ; xpars.end() != i ; ++i ) 
-    { hash_combine  ( seed , *i ) ; }
-    const VCT& ypars = ps->ypars() ;
-    for ( VCT::const_iterator i = ypars.begin() ; ypars.end() != i ; ++i ) 
-    { hash_combine  ( seed , *i ) ; }
-    hash_combine ( seed , ps->mmax () ) ;
-    return seed ;
-  } 
-  // =========================================================================
-  std::size_t hash ( const Ostap::Math::PS2DPol3Sym* ps ) 
-  {
-    if ( 0 == ps ) { return 0 ; }
-    std::size_t seed = 0 ;
-    typedef std::vector<double> VCT ;
-    const VCT& pars = ps->pars() ;
-    for ( VCT::const_iterator i = pars.begin() ; pars.end() != i ; ++i ) 
-    { hash_combine  ( seed , *i ) ; }
-    hash_combine ( seed , ps->mmax () ) ;
-    return seed ;
-  } 
-  // =========================================================================
-  // cache-maps 
-  typedef std::tuple<const Ostap::Math::PS2DPol2*   ,double,double,double,double,std::size_t> KEY2  ;
-  typedef std::tuple<const Ostap::Math::PS2DPol2*   ,double,double,double,std::size_t>        KEY2X ;
-  typedef std::tuple<const Ostap::Math::PS2DPol2*   ,double,double,double,std::size_t>        KEY2Y ;
-  // ==========================================================================
-  typedef std::tuple<const Ostap::Math::PS2DPol2Sym*,double,double,double,double,std::size_t> KEY3  ;
-  typedef std::tuple<const Ostap::Math::PS2DPol2Sym*,double,double,double,std::size_t>        KEY3X ;
-  // ==========================================================================
-  typedef std::tuple<const Ostap::Math::PS2DPol3*   ,double,double,double,double,std::size_t> KEY4  ;
-  typedef std::tuple<const Ostap::Math::PS2DPol3*   ,double,double,double,std::size_t>        KEY4X ;
-  typedef std::tuple<const Ostap::Math::PS2DPol3*   ,double,double,double,std::size_t>        KEY4Y ;
-  // ==========================================================================
-  typedef std::tuple<const Ostap::Math::PS2DPol3Sym*,double,double,double,double,std::size_t> KEY5  ;
-  typedef std::tuple<const Ostap::Math::PS2DPol3Sym*,double,double,double,std::size_t>        KEY5X ;
-  // ==========================================================================
-  typedef SyncedCache<std::map<KEY2 ,double>> MAP2  ;
-  typedef SyncedCache<std::map<KEY2X,double>> MAP2X ;
-  typedef SyncedCache<std::map<KEY2Y,double>> MAP2Y ;
-  // ==========================================================================
-  typedef SyncedCache<std::map<KEY3 ,double>> MAP3  ;
-  typedef SyncedCache<std::map<KEY3X,double>> MAP3X ;
-  // ==========================================================================
-  typedef SyncedCache<std::map<KEY4 ,double>> MAP4  ;
-  typedef SyncedCache<std::map<KEY4X,double>> MAP4X ;
-  typedef SyncedCache<std::map<KEY4Y,double>> MAP4Y ;
-  // ==========================================================================
-  typedef SyncedCache<std::map<KEY5 ,double>> MAP5  ;
-  typedef SyncedCache<std::map<KEY5X,double>> MAP5X ;
-  // ==========================================================================
-  MAP2  s_map2  {} ;
-  MAP2X s_map2x {} ;
-  MAP2Y s_map2y {} ;
-  // =========================================================================
-  MAP3  s_map3  {} ;
-  MAP3X s_map3x {} ;
-  // =========================================================================
-  MAP4  s_map4  {} ;
-  MAP4X s_map4x {} ;
-  MAP4Y s_map4y {} ;
-  // =========================================================================
-  MAP5  s_map5  {} ;
-  MAP5X s_map5x {} ;
-  // =========================================================================
 }
 // ===========================================================================
 // constructor from the order
@@ -437,6 +301,11 @@ double Ostap::Math::PS2DPol::integrateX
   return calculate  ( fx  , fy )  ;
 }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PS2DPol::tag () const 
+{ return std::hash_combine ( m_positive.tag () , m_psx.tag () , m_psy.tag () ) ; }
+// ============================================================================
 
 
 
@@ -580,6 +449,11 @@ double Ostap::Math::PS2DPolSym::integrateX
   const double xlow , const double xhigh ) const 
 { return integrateY ( y , xlow , xhigh ) ; }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PS2DPolSym::tag () const 
+{ return std::hash_combine ( m_positive.tag () , m_ps.tag () ) ; }
+// ============================================================================
 
 
 // ===========================================================================
@@ -674,15 +548,6 @@ double Ostap::Math::PS2DPol2::integral
   //
   if ( x_low + y_low >= m_mmax ) { return 0 ; }
   //
-  const KEY2 key { nullptr , x_low , x_high , y_low , y_high , ::hash ( this ) } ;
-  // 
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP2::Lock lock { s_map2.mutex() } ;
-    auto it = s_map2->find  ( key ) ;
-    if ( s_map2->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
   // use cubature   
   static const Ostap::Math::GSL::Integrator2D<PS2DPol2> s_cubature{} ;
   static const char s_message[] = "Integral(PS2DPol2)" ;
@@ -691,17 +556,9 @@ double Ostap::Math::PS2DPol2::integral
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature 
-    ( &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
+  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache 
+    ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
-  { // update the cache =======================================================
-    MAP2::Lock lock { s_map2.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map2->size() ) { s_map2->clear() ; }
-    // update the cache
-    s_map2->insert ( std::make_pair ( key , result ) ) ;
-  } // ========================================================================
-  //
   return result ;
 }
 // ============================================================================
@@ -721,16 +578,6 @@ double Ostap::Math::PS2DPol2::integrateY
   const double  y_high = std::min ( std::min ( m_psy.highEdge() , m_positive.ymax() ) , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  const KEY2X key { nullptr , x , y_low , y_high , ::hash(this) } ;
-  //
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP2X::Lock lock { s_map2x.mutex() } ;
-    auto it = s_map2x->find  ( key ) ;
-    if ( s_map2x->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
-  //
   typedef Ostap::Math::IntegrateY<PS2DPol2> IY ;
   static const Ostap::Math::GSL::Integrator1D<IY> s_integrator ;
   static const char message[] = "IntegrateY(PS2DPol2)" ;
@@ -741,8 +588,9 @@ double Ostap::Math::PS2DPol2::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate  
-    ( &F                        ,   // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+    ( tag ()                    , 
+      &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
@@ -751,15 +599,6 @@ double Ostap::Math::PS2DPol2::integrateY
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
   //
-  // ==========================================================================
-  { // update the cache =======================================================
-    MAP2X::Lock lock { s_map2x.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map2x->size() ) { s_map2x->clear() ; }
-    // update the cache
-    s_map2x->insert ( std::make_pair ( key , result ) ) ;
-  } // ========================================================================
-  // 
   return result ;
 }
 // ============================================================================
@@ -780,15 +619,6 @@ double Ostap::Math::PS2DPol2::integrateX
   const double  x_high = std::min ( std::min ( m_psx.highEdge() , m_positive.xmax() ) , xhigh ) ;
   if ( x_low >= x_high ) { return 0 ; }
   //
-  const KEY2Y key { nullptr , y , x_low , x_high , ::hash(this) } ;
-  //
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP2Y::Lock lock ( s_map2y.mutex() ) ;
-    auto it = s_map2y->find  ( key ) ;
-    if ( s_map2y->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
   //
   typedef Ostap::Math::IntegrateX<PS2DPol2> IX ;
   static const Ostap::Math::GSL::Integrator1D<IX> s_integrator ;
@@ -800,8 +630,9 @@ double Ostap::Math::PS2DPol2::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate  
-    ( &F                        ,   // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+    ( tag  ()                   , 
+      &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
@@ -810,19 +641,16 @@ double Ostap::Math::PS2DPol2::integrateX
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
   //
-  // ==========================================================================
-  { // update the cache =======================================================
-    MAP2Y::Lock lock { s_map2y.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map2y->size() ) { s_map2y->clear() ; }
-    // update the cache
-    s_map2y->insert ( std::make_pair ( key , result ) )  ;
-  } // ========================================================================
-  // 
   return result ;
 }
 // ============================================================================
-
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PS2DPol2::tag () const 
+{ return std::hash_combine ( m_positive. tag () , 
+                             m_psx     . tag () , 
+                             m_psy     . tag () , m_mmax ) ; }
+// ============================================================================
 
 // ===========================================================================
 // constructor from the order
@@ -901,15 +729,6 @@ double Ostap::Math::PS2DPol2Sym::integral
   //
   if ( x_low + y_low >= m_mmax ) { return 0 ; }
   //
-  const KEY3 key { nullptr , x_low , x_high , y_low , y_high , ::hash ( this ) } ;
-  //
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP3::Lock lock { s_map3.mutex() } ;
-    auto it = s_map3->find  ( key ) ;
-    if ( s_map3->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
   // use cubature   
   static const Ostap::Math::GSL::Integrator2D<PS2DPol2Sym> s_cubature{} ;
   static const char s_message[] = "Integral(PS2DPol2Sym)" ;
@@ -918,17 +737,9 @@ double Ostap::Math::PS2DPol2Sym::integral
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature 
-    ( &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
+  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache 
+    ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
-  { // update the cache =======================================================
-    MAP3::Lock lock { s_map3.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map3->size() ) { s_map3->clear() ; }
-    // update the cache
-    s_map3->insert ( std::make_pair ( key , result ) ) ;
-  } // ========================================================================
-  //
   return  result ;
 }
 // ============================================================================
@@ -949,15 +760,6 @@ double Ostap::Math::PS2DPol2Sym::integrateY
   const double  y_high = std::min ( std::min ( m_ps.highEdge() , m_positive.ymax() ) , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  const KEY3X key { nullptr , x , y_low , y_high , ::hash(this) } ;
-  //
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP3X::Lock lock { s_map3x.mutex() } ;
-    auto it = s_map3x->find  ( key ) ;
-    if ( s_map3x->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
   typedef Ostap::Math::IntegrateY<PS2DPol2Sym> IY ;
   static const Ostap::Math::GSL::Integrator1D<IY> s_integrator ;
   static const char message[] = "IntegrateY(PS2DPol2Sym)" ;
@@ -968,8 +770,9 @@ double Ostap::Math::PS2DPol2Sym::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate  
-    ( &F                        ,   // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+    ( tag  ()                   , 
+      &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
@@ -977,16 +780,7 @@ double Ostap::Math::PS2DPol2Sym::integrateY
       s_SIZE                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
-  //
   // ==========================================================================
-  { // update the cache =======================================================
-    MAP3X::Lock lock { s_map3x.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map3x->size() ) { s_map3x->clear() ; }
-    // update the cache
-    s_map3x->insert ( std::make_pair ( key , result ) ) ;
-  } // ========================================================================
-  //
   return result ;
 }
 // ============================================================================
@@ -995,7 +789,11 @@ double Ostap::Math::PS2DPol2Sym::integrateX
   const double xlow , const double xhigh ) const 
 { return integrateY ( y , xlow , xhigh ) ; }
 // ============================================================================
-
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PS2DPol2Sym::tag () const 
+{ return std::hash_combine ( m_positive.tag()  , m_ps.tag () , m_mmax ) ; }
+// ============================================================================
 
 
 
@@ -1116,15 +914,6 @@ double Ostap::Math::PS2DPol3::integral
   //
   if ( x_low + y_low >= m_mmax ) { return 0 ; }
   //
-  const KEY4 key { nullptr , x_low , x_high , y_low , y_high , ::hash ( this ) } ;
-  // 
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP4::Lock lock { s_map4.mutex() } ;
-    auto it = s_map4->find  ( key ) ;
-    if ( s_map4->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
   // use cubature   
   static const Ostap::Math::GSL::Integrator2D<PS2DPol3> s_cubature{} ;
   static const char s_message[] = "Integral(PS2DPol3)" ;
@@ -1133,17 +922,9 @@ double Ostap::Math::PS2DPol3::integral
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature 
-    ( &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
+  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache  
+    ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
-  { // update the cache =======================================================
-    MAP4::Lock lock { s_map4.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map4->size() ) { s_map4->clear() ; }
-    // update the cache
-    s_map4->insert ( std::make_pair ( key , result ) ) ;
-  } // ========================================================================
-  //
   return result ;
 }
 // ============================================================================
@@ -1162,16 +943,6 @@ double Ostap::Math::PS2DPol3::integrateY
   const double  y_high = std::min ( ymax () , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  const KEY4X key { nullptr , x , y_low , y_high , ::hash(this) } ;
-  //
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP4X::Lock lock { s_map4x.mutex() } ;
-    auto it = s_map4x->find  ( key ) ;
-    if ( s_map4x->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
-  //
   typedef Ostap::Math::IntegrateY<PS2DPol3> IY ;
   static const Ostap::Math::GSL::Integrator1D<IY> s_integrator ;
   static const char message[] = "IntegrateY(PS2DPol3)" ;
@@ -1182,8 +953,9 @@ double Ostap::Math::PS2DPol3::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate  
-    ( &F                        ,   // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache   
+    ( tag  ()                   , 
+      &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
@@ -1191,16 +963,7 @@ double Ostap::Math::PS2DPol3::integrateY
       s_SIZE                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
-  //
   // ==========================================================================
-  { // update the cache =======================================================
-    MAP4X::Lock lock { s_map4x.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map4x->size() ) { s_map4x->clear() ; }
-    // update the cache
-    s_map4x->insert ( std::make_pair ( key , result ) ) ;
-  } // ========================================================================
-  // 
   return result ;
 }
 // ============================================================================
@@ -1219,16 +982,6 @@ double Ostap::Math::PS2DPol3::integrateX
   const double  x_high = std::min ( xmax () , xhigh ) ;
   if ( x_low >= x_high ) { return 0 ; }
   //
-  const KEY4Y key { nullptr , y , x_low , x_high , ::hash(this) } ;
-  //
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP4Y::Lock lock ( s_map4y.mutex() ) ;
-    auto it = s_map4y->find  ( key ) ;
-    if ( s_map4y->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
-  //
   typedef Ostap::Math::IntegrateX<PS2DPol3> IX ;
   static const Ostap::Math::GSL::Integrator1D<IX> s_integrator ;
   static const char message[] = "IntegrateX(PS2DPol3)" ;
@@ -1239,8 +992,9 @@ double Ostap::Math::PS2DPol3::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate  
-    ( &F                        ,   // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+    ( tag  ()                   , 
+      &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
@@ -1248,19 +1002,16 @@ double Ostap::Math::PS2DPol3::integrateX
       s_SIZE                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
-  //
   // ==========================================================================
-  { // update the cache =======================================================
-    MAP4Y::Lock lock { s_map4y.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map4y->size() ) { s_map4y->clear() ; }
-    // update the cache
-    s_map4y->insert ( std::make_pair ( key , result ) )  ;
-  } // ========================================================================
-  // 
   return result ;
 }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PS2DPol3::tag () const 
+{ return std::hash_combine ( m_psx.tag () , m_psy.tag () , m_mmax ) ; }
+// ============================================================================
+
 
 // ===========================================================================
 // constructor from the order
@@ -1340,15 +1091,6 @@ double Ostap::Math::PS2DPol3Sym::integral
   //
   if ( x_low + y_low >= m_mmax ) { return 0 ; }
   //
-  const KEY5 key { nullptr , x_low , x_high , y_low , y_high , ::hash ( this ) } ;
-  //
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP5::Lock lock { s_map5.mutex() } ;
-    auto it = s_map5->find  ( key ) ;
-    if ( s_map5->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
   // use cubature   
   static const Ostap::Math::GSL::Integrator2D<PS2DPol3Sym> s_cubature{} ;
   static const char s_message[] = "Integral(PS2DPol3Sym)" ;
@@ -1357,18 +1099,9 @@ double Ostap::Math::PS2DPol3Sym::integral
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature 
-    ( &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
-  //
+  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache 
+    ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
-  { // update the cache =======================================================
-    MAP5::Lock lock { s_map5.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map5->size() ) { s_map5->clear() ; }
-    // update the cache
-    s_map5->insert ( std::make_pair ( key , result ) ) ;
-  } // ========================================================================
-  //
   return  result ;
 }
 // ============================================================================
@@ -1387,16 +1120,6 @@ double Ostap::Math::PS2DPol3Sym::integrateY
   const double  y_high = std::min ( ymax (), yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  const KEY5X key { nullptr , x , y_low , y_high , ::hash(this) } ;
-  //
-  // ==========================================================================
-  { // look into the cache ====================================================
-    MAP5X::Lock lock { s_map5x.mutex() } ;
-    auto it = s_map5x->find  ( key ) ;
-    if ( s_map5x->end() != it ) {  return it->second ; }  // AVOID calculation
-  } // ========================================================================
-  //
-  //
   typedef Ostap::Math::IntegrateY<PS2DPol3Sym> IY ;
   static const Ostap::Math::GSL::Integrator1D<IY> s_integrator ;
   static const char message[] = "IntegrateY(PS2DPol3Sym)" ;
@@ -1407,8 +1130,9 @@ double Ostap::Math::PS2DPol3Sym::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate  
-    ( &F                        ,   // the function
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag  ()                   , 
+      &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
@@ -1416,16 +1140,7 @@ double Ostap::Math::PS2DPol3Sym::integrateY
       s_SIZE                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
-  //
   // ==========================================================================
-  { // update the cache =======================================================
-    MAP5X::Lock lock { s_map5x.mutex() } ;
-    // clear the cache is too large
-    if ( s_CACHESIZE < s_map5x->size() ) { s_map5x->clear() ; }
-    // update the cache
-    s_map5x->insert ( std::make_pair ( key , result ) ) ;
-  } // ========================================================================
-  //
   return result ;
 }
 // ============================================================================
@@ -1433,6 +1148,11 @@ double Ostap::Math::PS2DPol3Sym::integrateX
 ( const double y                         , 
   const double xlow , const double xhigh ) const 
 { return integrateY ( y , xlow , xhigh ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PS2DPol3Sym::tag () const 
+{ return std::hash_combine ( m_ps.tag () , m_mmax ) ; }
 // ============================================================================
 
 
@@ -1630,6 +1350,11 @@ double Ostap::Math::ExpoPS2DPol::integrateX
   return calculate ( fx  , fy ) ;
 }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::ExpoPS2DPol::tag () const 
+{ return std::hash_combine ( m_positive.tag() , m_psy.tag () , m_tau ) ; }
+// ============================================================================
 
 
 // ===========================================================================
@@ -1812,7 +1537,11 @@ double Ostap::Math::Expo2DPol::integrateX
   return calculate  ( fx  , fy ) ;
 }
 // ============================================================================
-
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Expo2DPol::tag () const 
+{ return std::hash_combine ( m_positive.tag () , m_tauX , m_tauY ) ; }
+// ============================================================================
 
 // ===========================================================================
 // constructor from the order
@@ -1947,6 +1676,11 @@ double Ostap::Math::Expo2DPolSym::integrateX
 ( const double y    , 
   const double xlow , const double xhigh ) const 
 { return integrateY ( y , xlow , xhigh ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Expo2DPolSym::tag () const 
+{ return std::hash_combine ( m_positive.tag () , m_tau ) ; }
 // ============================================================================
 
 

@@ -152,10 +152,9 @@ from ostap.stats.statvars import  data_decorate
 data_decorate ( DataFrame )
 del data_decorate
 
-
-from ostap.fitting.roofit import _ds_draw_, _ds_project_
-DataFrame.draw    = _ds_draw_
-DataFrame.project = _ds_project_
+from ostap.fitting.dataset import ds_draw , ds_project
+DataFrame.draw    = ds_draw
+DataFrame.project = ds_project
 
 # =============================================================================
 
@@ -164,12 +163,14 @@ _decorated_classes_ = (
     )
 
 _new_methods_       = (
-    
     DataFrame.__len__          ,
     DataFrame.__repr__         ,
     DataFrame.__str__          ,
     DataFrame.columns          , 
     DataFrame.branches         ,
+    #
+    DataFrame.draw             , 
+    DataFrame.project          ,
     #
     DataFrame.nEff             ,
     DataFrame.statVar          ,

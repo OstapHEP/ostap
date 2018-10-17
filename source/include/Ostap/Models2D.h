@@ -6,6 +6,7 @@
 // ============================================================================
 // STD & STL
 // ============================================================================
+#include <cmath>
 #include <vector>
 #include <complex>
 // ============================================================================
@@ -13,6 +14,7 @@
 // ============================================================================
 #include "Ostap/Models.h"
 #include "Ostap/Bernstein2D.h"
+#include "Ostap/Integrator.h"
 // ============================================================================
 /** @file Ostap/Models2D.h
  *  collection of 2D-models
@@ -137,6 +139,11 @@ namespace Ostap
       const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
       const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ====================================== ===============================
     private: // helper function to make the calculations
       // ======================================================================
       /// helper function to make calculations
@@ -150,13 +157,13 @@ namespace Ostap
       /// Phase space
       Ostap::Math::PhaseSpaceNL m_psx      ;
       Ostap::Math::PhaseSpaceNL m_psy      ;
-      // ======================================================================
+      // ====================================================================== 
     private:
       // ======================================================================
-      /// workspace
-      Ostap::Math::WorkSpace m_workspace   ;
+      /// workspace for numerical integration
+      Ostap::Math::WorkSpace m_workspace    ;
       // ======================================================================
-    };
+   };
     // ========================================================================
     /** @class PS2DPolSym
      *  The symmetric 2D-function, that represent a cross-product 
@@ -266,6 +273,11 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL&  phasespaceY () const { return psY()      ; }
       const Ostap::Math::Positive2DSym& positive    () const { return m_positive ; }
       const Ostap::Math::Positive2DSym& polynom     () const { return m_positive ; }
+      // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag 
+      std::size_t tag () const ;
       // ====================================== ===============================
     private: // helper functions to make the calculations
       // ======================================================================
@@ -405,6 +417,11 @@ namespace Ostap
       const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
       const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag
+      std::size_t tag () const ;
+      // ====================================== ===============================
     private:
       // ======================================================================
       /// the actual (positive) bernstein polynomial in 2D
@@ -542,6 +559,11 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL&  phasespaceY () const { return psY()      ; }
       const Ostap::Math::Positive2DSym& positive    () const { return m_positive ; }
       const Ostap::Math::Positive2DSym& polynom     () const { return m_positive ; }
+      // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag 
+      std::size_t tag () const ;
       // ====================================== ===============================
     private:
       // ======================================================================
@@ -707,6 +729,11 @@ namespace Ostap
       const Ostap::Math::PhaseSpacePol& phasespaceX () const { return psX () ; }
       const Ostap::Math::PhaseSpacePol& phasespaceY () const { return psY () ; }
       // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ====================================== ===============================
     private:
       // ======================================================================
       /// Phase space
@@ -854,6 +881,11 @@ namespace Ostap
       const Ostap::Math::PhaseSpacePol& phasespaceX () const { return psX () ; }
       const Ostap::Math::PhaseSpacePol& phasespaceY () const { return psY () ; }
       // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ====================================== ===============================
     private:
       // ======================================================================
       /// Phase space
@@ -977,6 +1009,11 @@ namespace Ostap
       const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
       const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ====================================== ===============================
     private: // helper function to make the calculations
       // ======================================================================
       /// helper function to make calculations
@@ -1096,6 +1133,11 @@ namespace Ostap
       const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
       const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ====================================== ===============================
     private: // helper function to make the calculations
       // ======================================================================
       /// helper function to make calculations
@@ -1178,6 +1220,7 @@ namespace Ostap
        */
       double integral ( const double xlow , const double xhigh ,
                         const double ylow , const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
@@ -1186,8 +1229,9 @@ namespace Ostap
        */
       double integrateX ( const double y    ,
                           const double xlow , const double xhigh ) const ;
-      /** integral over x-dimension
-       *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
+      // ======================================================================
+      /** integral over y-dimension
+       *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
@@ -1199,6 +1243,11 @@ namespace Ostap
       // ======================================================================
       const Ostap::Math::Positive2DSym& positive () const { return m_positive ; }
       const Ostap::Math::Positive2DSym& polynom  () const { return m_positive ; }
+      // ====================================== ===============================
+    public:
+      // ====================================== ===============================
+      /// get the tag 
+      std::size_t tag () const ;
       // ====================================== ===============================
     private: // helper function to make the calculations
       // ======================================================================

@@ -363,6 +363,11 @@ namespace Ostap
       /// swap two Bernstein polynomials   
       void swap ( Bernstein3D& right ) ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag value 
+      std::size_t tag () const ; // get the tag value 
+      // ======================================================================
     private: // helper functions to make calculations
       // ======================================================================
       /// helper function to make calculations
@@ -760,6 +765,11 @@ namespace Ostap
       /// swap two Bernstein polynomials   
       void swap ( Bernstein3DSym& right ) ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag value 
+      std::size_t tag () const ; // get the tag value 
+      // ======================================================================
     private: // helper functions to make calculations
       // ======================================================================
       /// helper function to make calculations
@@ -1141,6 +1151,11 @@ namespace Ostap
       /// swap two Bernstein polynomials   
       void swap ( Bernstein3DMix& right ) ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag value 
+      std::size_t tag () const ; // get the tag value 
+      // ======================================================================
     private: // helper functions to make calculations
       // ======================================================================
       /// helper function to make calculations
@@ -1451,6 +1466,11 @@ namespace Ostap
       /// swap two Bernstein polynomials   
       void swap ( Positive3D& right ) ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag value 
+      std::size_t tag () const { return m_bernstein.tag () ; }
+      // ======================================================================
     private:
       // ======================================================================
       /// update bernstein coefficients
@@ -1716,6 +1736,11 @@ namespace Ostap
       // ======================================================================
       /// swap two Bernstein polynomials   
       void swap ( Positive3DSym& right ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag value 
+      std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -1986,6 +2011,11 @@ namespace Ostap
       // ======================================================================
       /// swap two Bernstein polynomials   
       void swap ( Positive3DMix& right ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag value 
+      std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
     private:
       // ======================================================================

@@ -21,6 +21,7 @@
 // ============================================================================
 #include "local_math.h"
 #include "local_gsl.h"
+#include "local_hash.h"
 #include "gauss.h"      
 #include "Integrator1D.h"      
 // ============================================================================
@@ -52,16 +53,6 @@ namespace
    */
   constexpr double s_ln2 = std::log ( 2.0 ) ;
   // ==========================================================================
-  /** helper function for itegration of Bukin's function
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  double bukin_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Bukin* bukin = (Ostap::Math::Bukin*) params ;
-    return (*bukin)(x) ;
-  }
-  // ==========================================================================
   // Novosibirsk & Co
   // ==========================================================================
   /** @var s_Novosibirsk
@@ -70,29 +61,6 @@ namespace
    *  @date 2010-04-19
    */
   const double s_Novosibirsk = std::sqrt ( std::log ( 4.0 ) ) ;
-  // ==========================================================================
-  /** helper function for itegration of Novosibirsk's function
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  double novosibirsk_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::Novosibirsk* novosibirsk =
-      (Ostap::Math::Novosibirsk*) params ;
-    //
-    return (*novosibirsk)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for itegration of QGaussian function
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2018-03-04
-   */
-  double qgauss_GSL ( double x , void* params )
-  {
-    const Ostap::Math::QGaussian* qgauss = (Ostap::Math::QGaussian*) params ;
-    return (*qgauss)(x) ;
-  }
   // ==========================================================================
   /** evaluate the helper function \f[ f = \frac{\sinh (x) }{x} \f]
    *  it allows to calculate Novosibirsk's function in efficient and regular way
@@ -176,32 +144,6 @@ namespace
                      std::pow ( y_low  , 1 - N ) ) / ( 1 - N ) ;
   }
   // ========================================================================== 
-  // Apolonious & Co
-  // ==========================================================================
-  /** helper function for integration of Apolonios shape 
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2013-12-1
-   */
-  double apolonios_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::Apolonios* f = (Ostap::Math::Apolonios*) params ;
-    //
-    return (*f)(x) ;
-  }
-  // ==========================================================================
-  /** helper function for integration of Apolonios2 shape 
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2013-12-1
-   */
-  double apolonios2_GSL ( double x , void* params )
-  {
-    //
-    const Ostap::Math::Apolonios2* f = (Ostap::Math::Apolonios2*) params ;
-    //
-    return (*f)(x) ;
-  }
-  // ==========================================================================
   // Atlas/Zeus& Co 
   // ==========================================================================
   /** @var S_ATLAL 
@@ -211,16 +153,6 @@ namespace
    *  @date 2015-08-21
    */   
   const double s_ATLAS = 3.052369876253939 ;
-  // ==========================================================================
-  /** helper function for itegration of Atlas's function
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2015-08-21
-   */
-  double atlas_GSL ( double x , void* params )
-  {
-    const Ostap::Math::Atlas* atlas = (Ostap::Math::Atlas*) params ;
-    return (*atlas)(x) ;
-  }
   // ==========================================================================
   // Sinh-asinh 
   // ==========================================================================
@@ -338,6 +270,11 @@ double Ostap::Math::BifurcatedGauss::integral ( const double low  ,
     integral ( low    , m_peak ) +
     integral ( m_peak , high   ) ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::BifurcatedGauss::tag () const 
+{ return std::hash_combine ( m_peak , m_sigmaL , m_sigmaR ) ; }
 // ============================================================================
 
 // ============================================================================
@@ -496,6 +433,96 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
   //
   return  0.5 * ( f1 * ( r1 + 1  ) + f2 * ( r2  + 1 ) ) ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::DoubleGauss::tag () const 
+{ return std::hash_combine ( m_peak , m_sigma , m_fraction , m_scale ) ; }
+// ============================================================================
+
+
+
+
+
+// ============================================================================
+// Gauss
+// ============================================================================
+/*  constructor from all parameters
+ *  @param peak    the peak posiion
+ *  @param sigma_L (left sigma)
+ *  @param sigma_R (right sigma)
+ */
+// ============================================================================
+Ostap::Math::Gauss::Gauss
+( const double peak   ,
+  const double sigma  )
+  : m_peak  ( peak )
+  , m_sigma ( std::fabs ( sigma ) )
+    //
+{}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Math::Gauss::~Gauss (){}
+// ============================================================================
+// evaluate Bifurcated Gaussian
+// ============================================================================
+double Ostap::Math::Gauss::evaluate ( const double x ) const
+{
+  const double dx   = ( x - m_peak ) / m_sigma ;
+  const double norm = s_SQRTPIHALF * m_sigma  ;
+  //
+  return my_exp ( -0.5 * dx * dx ) / norm ;
+}
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::Gauss::integral () const { return 1 ; }
+// ============================================================================
+//  get CDF 
+// ============================================================================
+double Ostap::Math::Gauss::cdf ( const double x ) const 
+{
+  const double dx =  s_SQRT2i * ( x - m_peak ) / m_sigma ;
+  return 0.5 * ( 1 + std::erf ( dx ) ) ;
+}
+// ============================================================================
+// get the integral between low and high limits
+// ============================================================================
+double Ostap::Math::Gauss::integral ( const double low  ,
+                                      const double high ) const 
+{
+  if ( s_equal ( low , high ) ) { return 0 ; }                         // RETURN
+  //
+  const double c = s_SQRT2i / m_sigma ;
+  const double l = c * ( low  - m_peak ) ;
+  const double h = c * ( high - m_peak ) ;
+  //
+  return 0.5 * ( std::erf ( h ) - std::erf ( l ) ) ;
+}
+// ============================================================================
+bool Ostap::Math::Gauss::setSigma ( const double value )
+{
+  const double value_ = std::fabs ( value ) ;
+  if ( s_equal ( m_sigma , value_ ) ) { return false ; }
+  m_sigma = value_ ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Gauss::setPeak ( const double value )
+{
+  if ( s_equal ( m_peak , value ) ) { return false ; }
+  m_peak   = value  ;
+  return true ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Gauss::tag () const 
+{ return std::hash_combine ( m_peak , m_sigma ) ; }
+// ============================================================================
+
+
 
 
 
@@ -620,6 +647,11 @@ double  Ostap::Math::GenGaussV1::kurtosis () const
   //
   return my_exp ( result ) - 3 ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::GenGaussV1::tag () const 
+{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
 // ============================================================================
 
 
@@ -768,6 +800,15 @@ double Ostap::Math::GenGaussV2::kurtosis () const
     + 3 * Ostap::Math::pow ( ek2 , 2 ) - 6 ;
 }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::GenGaussV2::tag () const 
+{ return std::hash_combine ( m_xi , m_alpha , m_kappa ) ; }
+// ============================================================================
+
+
+
+// ============================================================================
 /*  constructor from all agruments 
  *  @param xi     location/peak posiiton 
  *  @param omega  "scale" parameter 
@@ -866,6 +907,11 @@ double Ostap::Math::SkewGauss::kurtosis () const
 // ============================================================================
 double Ostap::Math::SkewGauss::sigma  () const 
 { return std::sqrt ( variance () ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::SkewGauss::tag () const 
+{ return std::hash_combine ( m_xi , m_omega , m_alpha ) ; }
 // ============================================================================
 
 
@@ -1077,9 +1123,10 @@ double Ostap::Math::Bukin::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F  , 
-      low , high  ,                  // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag () , 
+      &F     ,  
+      low    , high  ,               // low & high edges
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
@@ -1107,9 +1154,10 @@ double Ostap::Math::Bukin::integral () const
   int    ierror1  =  0 ;
   double result1  =  1 ;
   double error1   = -1 ;
-  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate
-    ( &F   , 
-      m_x1 ,                         // low edges
+  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate_with_cache
+    ( tag () , 
+      &F     , 
+      m_x1   ,                       // low edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
@@ -1120,19 +1168,25 @@ double Ostap::Math::Bukin::integral () const
   int    ierror2  =  0 ;
   double result2  =  1 ;
   double error2   = -1 ;
-  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate
-    ( &F   , 
-      m_x2 ,                         // high edges
+  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate_with_cache
+    ( tag () , 
+      &F     , 
+      m_x2   ,                       // high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
       s_SIZE              ,          // size of workspace
-      s_message1          , 
+      s_message2          , 
       __FILE__ , __LINE__ ) ;
   //
   return result1 + result2 + integral ( m_x1 , m_x2 ) ;
   //
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Bukin::tag () const 
+{ return std::hash_combine ( m_peak , m_sigma , m_xi , m_rho_L , m_rho_R ) ; }
 // ============================================================================
 
 
@@ -1278,9 +1332,10 @@ double Ostap::Math::Novosibirsk::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag () , 
+      &F     , 
+      low    , high             ,    // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
@@ -1327,9 +1382,10 @@ void Ostap::Math::Novosibirsk::integrate()
   int    ierror1  =  0 ;
   double result1  =  1 ;
   double error1   = -1 ;
-  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate
-    ( &F    , 
-      x_low ,                        // low edges
+  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate_with_cache
+    ( tag () , 
+      &F     , 
+      x_low  ,                       // low edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
@@ -1340,19 +1396,26 @@ void Ostap::Math::Novosibirsk::integrate()
   int    ierror2  =  0 ;
   double result2  =  1 ;
   double error2   = -1 ;
-  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate
-    ( &F     , 
+  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate_with_cache 
+    ( tag () , 
+      &F     , 
       x_high ,                       // high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
       s_SIZE              ,          // size of workspace
-      s_message1          , 
+      s_message2          , 
       __FILE__ , __LINE__ ) ;
   //
   m_integral = result1 + result2 + integral ( x_low ,  x_high ) ;
   //
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Novosibirsk::tag () const 
+{ return std::hash_combine ( m_m0 , m_sigma , m_tau ) ; }
+// ============================================================================
 
 
 // ============================================================================
@@ -1519,6 +1582,12 @@ double Ostap::Math::CrystalBall::integral () const
   return m_B + integral ( m0 () + left     * sigma() , 
                           m0 () - alpha () * sigma() ) ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::CrystalBall::tag () const 
+{ return std::hash_combine ( m_m0 , m_sigma , m_alpha , m_n ) ; }
+// ============================================================================
 
 
 // ============================================================================
@@ -1578,6 +1647,12 @@ bool Ostap::Math::Needham::setA2 ( const double value )
 double Ostap::Math::Needham::pdf ( const double x ) const
 { return m_cb ( x ) ; }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Needham::tag () const 
+{ return std::hash_combine ( m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; }
+// ============================================================================
+
 
 // ============================================================================
 /*  constructor from all parameters
@@ -1619,6 +1694,11 @@ double Ostap::Math::CrystalBallRightSide::integral
 double Ostap::Math::CrystalBallRightSide::integral () const 
 { return m_cb.integral () ; }
 // =========================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::CrystalBallRightSide::tag () const 
+{ return std::hash_combine ( m_cb.tag() ,  -1 ) ; }
+// ============================================================================
 
 
 // ============================================================================
@@ -1872,6 +1952,13 @@ double Ostap::Math::CrystalBallDoubleSided::integral () const
 
 }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const 
+{ return std::hash_combine ( m_m0      , m_sigma , 
+                             m_alpha_L , m_n_L   , 
+                             m_alpha_R , m_n_R   ) ; }
+// ============================================================================
 
 
 
@@ -2032,9 +2119,10 @@ double Ostap::Math::Apolonios::integral
     int    ierror   =  0 ;
     double result   =  1 ;
     double error    = -1 ;
-    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-      ( &F  , 
-        low , high  ,                  // low & high edges
+    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+      ( tag () , 
+        &F     , 
+        low    , high  ,               // low & high edges
         workspace ( m_workspace ) ,    // workspace
         s_PRECISION         ,          // absolute precision
         s_PRECISION         ,          // relative precision
@@ -2056,6 +2144,13 @@ double Ostap::Math::Apolonios::integral
   //
   return result ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Apolonios::tag () const 
+{ return std::hash_combine ( m_m0      , m_sigma , 
+                             m_alpha   , m_n     , m_b ) ; }
+// ============================================================================
 
 // ============================================================================
 // apolonios2 
@@ -2179,8 +2274,9 @@ double Ostap::Math::Apolonios2::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F  , 
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag () , 
+      &F     , 
       low , high  ,                  // low & high edges
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
@@ -2191,6 +2287,11 @@ double Ostap::Math::Apolonios2::integral
   //
   return result ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Apolonios2::tag () const 
+{ return std::hash_combine ( m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; }
 // ============================================================================
 
 
@@ -2275,9 +2376,10 @@ double Ostap::Math::Atlas::integral ( const double low  ,
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F  , 
-      low , high  ,                  // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag () , 
+      &F     , 
+      low    , high  ,               // low & high edges
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
@@ -2291,6 +2393,11 @@ double Ostap::Math::Atlas::integral ( const double low  ,
 // overall integral, not exact but precise enough...
 // ============================================================================
 double Ostap::Math::Atlas::integral () const { return 1 ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Atlas::tag () const 
+{ return std::hash_combine ( m_mean , m_sigma ) ; }
 // ============================================================================
 
 
@@ -2369,6 +2476,12 @@ double Ostap::Math::Sech::quantile ( const double p ) const
     1 <= p || s_equal ( p , 1 ) ? +s_INFINITY : 
     m_mean + m_sigma * 2 / M_PI * std::log( std::tan ( M_PI * p /  2 ) ) ; }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Sech::tag () const 
+{ return std::hash_combine ( m_mean , m_sigma ) ; }
+// ============================================================================
+
 
 // ============================================================================
 // Logistic
@@ -2447,6 +2560,12 @@ double Ostap::Math::Logistic::quantile ( const double p ) const
     0 >= p || s_zero  ( p     ) ? -s_INFINITY :
     1 <= p || s_equal ( p , 1 ) ? +s_INFINITY : 
     m_mean + m_sigma * s_SQRT3overPI * std::log ( p / ( 1 - p ) ) ; }
+// ===========================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Logistic::tag () const 
+{ return std::hash_combine ( m_mean , m_sigma ) ; }
+// ============================================================================
 
 
 
@@ -2559,7 +2678,14 @@ double Ostap::Math::StudentT::integral
   return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
-// Student-T 
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::StudentT::tag () const 
+{ return std::hash_combine ( m_M , m_s , m_n ) ; }
+// ============================================================================
+
+// ============================================================================
+// Bifurcated Student-T 
 // ============================================================================
 /*  constructor from mass, resolution and "n"-parameter 
  *  @param M     mass 
@@ -2724,6 +2850,12 @@ double Ostap::Math::BifurcatedStudentT::integral
   return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::BifurcatedStudentT::tag () const 
+{ return std::hash_combine ( m_M , m_sL , m_sR  , m_nL , m_nR ) ; }
+// ============================================================================
+
 
 // ============================================================================
 /*  constructor with all parameters
@@ -2786,7 +2918,7 @@ double Ostap::Math::SinhAsinh::pdf ( const double x ) const
   //
   const double r = s_SQRT2PIi * delta() 
     // * std::sqrt  ( ( 1.0 + z * z ) / ( 1.0 + y * y )  ) 
-    *    std::hypot ( 1 ,z )          / std::hypot ( 1 , y )  
+    *    std::hypot ( 1 , z )          / std::hypot ( 1 , y )  
     *    my_exp ( -0.5 * z * z ) ;
   //
   return  r / sigma() ;
@@ -2811,6 +2943,13 @@ double Ostap::Math::SinhAsinh::integral ( const double low  ,
   if ( s_equal ( low , high ) ) { return 0 ; }
   return cdf ( high ) - cdf ( low ) ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::SinhAsinh::tag () const 
+{ return std::hash_combine ( m_mu , m_sigma , m_epsilon , m_delta ) ; }
+// ============================================================================
+
 // ============================================================================
 // Johnson-SU
 // ============================================================================
@@ -2918,6 +3057,12 @@ double Ostap::Math::JohnsonSU::integral
 ( const double low  ,
   const double high ) const 
 { return  s_equal ( low , high ) ? 0.0 : ( cdf ( high ) - cdf ( low ) ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::JohnsonSU::tag () const 
+{ return std::hash_combine ( m_xi , m_lambda , m_delta , m_gamma ) ; }
+// ============================================================================
 
 
 
@@ -3000,6 +3145,11 @@ double Ostap::Math::Slash::integral
 ( const double low  ,
   const double high ) const 
 { return s_equal ( low ,  high ) ? 0.0 : cdf ( high ) - cdf ( low ) ; }
+// ===========================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Slash::tag () const 
+{ return std::hash_combine ( m_mu , m_scale ) ; }
 // ============================================================================
 
 
@@ -3093,6 +3243,11 @@ double Ostap::Math::RaisingCosine::integral
   return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::RaisingCosine::tag () const 
+{ return std::hash_combine ( m_mu , m_s ) ; }
+// ============================================================================
 
 
 
@@ -3169,6 +3324,11 @@ double Ostap::Math::AsymmetricLaplace::integral
 ( const double low  ,
   const double high ) const 
 { return s_equal ( low ,  high ) ? 0.0 : cdf ( high ) - cdf ( low ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::AsymmetricLaplace::tag () const 
+{ return std::hash_combine ( m_mu , m_lambdaL , m_lambdaR ) ; }
 // ============================================================================
 
 
@@ -3330,9 +3490,10 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F  , 
-      low , high  ,                  // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag () , 
+      &F     , 
+      low    , high  ,               // low & high edges
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
@@ -3342,6 +3503,11 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
   //
   return result ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::QGaussian::tag () const 
+{ return std::hash_combine ( m_mean , m_q , m_scale ) ; }
 // ============================================================================
  
 

@@ -168,10 +168,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// helper phase space ("23L")
-      double ps2_aux ( const double m12 ) const ;
+      double ps2_aux  ( const double m12  ) const ;
       /// get the integral between low and high limits
       double integral ( const double low  ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag ()  const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -344,6 +349,11 @@ namespace Ostap
       double integral ( const double low  ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag  
+      std::size_t tag () const ; // get the hash 
+      // ======================================================================
     private:
       // ======================================================================
       /// the threshold
@@ -354,7 +364,7 @@ namespace Ostap
       /// number of particles
       unsigned short m_L          ; // number of particles
       /// normalization
-      double m_norm               ; // normalization
+      double         m_norm       ; // normalization
       // ======================================================================
     private:
       // ======================================================================
@@ -431,6 +441,11 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral ( const double low  ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag  
+      std::size_t tag () const ; // get the hash 
       // ======================================================================
     private:
       // ======================================================================

@@ -17,6 +17,7 @@
 // ============================================================================
 #include "local_gsl.h"
 #include "local_math.h"
+#include "local_hash.h"
 #include "Integrator1D.h"
 // ============================================================================
 /** @file 
@@ -250,9 +251,10 @@ double Ostap::Math::PhaseSpace3::operator () ( const double x ) const
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low  , high         ,          // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag () , 
+      &F     , 
+      low    , high ,                // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
@@ -262,6 +264,11 @@ double Ostap::Math::PhaseSpace3::operator () ( const double x ) const
   //
   return result ;
 }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PhaseSpace3::tag ()  const 
+{ return std::hash_combine ( m_m1 , m_m2 , m_m3 , m_l1 , m_l2 ) ; }
 // ============================================================================
 // helper function to get the phase space as
 // ============================================================================
@@ -311,8 +318,9 @@ double  Ostap::Math::PhaseSpace3::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag () , 
+      &F     , 
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
@@ -323,8 +331,7 @@ double  Ostap::Math::PhaseSpace3::integral
   //
   return result ;
 }
-
-
+// ============================================================================
 
 // ============================================================================
 // constructor from threshold and number of particles
@@ -388,13 +395,9 @@ double Ostap::Math::PhaseSpaceLeft::integral
 // ============================================================================
 bool Ostap::Math::PhaseSpaceLeft::setThreshold ( const double x )
 {
-  //
   if ( s_equal ( x , m_threshold ) ) { return false ; } // RETURN
-  //
   m_threshold = x ;
-  //
   return true ;
-  //
 }
 // ============================================================================
 // constructor from threshold and number of particles
@@ -434,9 +437,7 @@ double Ostap::Math::PhaseSpaceRight::integral
   const double xhigh  = std::min ( xmax , m_threshold ) ;
   //
   const double n      = 1.5 * ( m_N - m_L ) - 1 ;
-  //
   const double thigh  = m_threshold - xlow ;
-  //
   const double tlow   = m_threshold - xhigh ;
   //
   return ( std::pow ( thigh , n + 1 ) - 
@@ -573,9 +574,10 @@ double  Ostap::Math::PhaseSpaceNL::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low   , high      ,            // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag ()        ,
+      &F            , 
+      low           , high      ,    // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
@@ -591,7 +593,11 @@ double  Ostap::Math::PhaseSpaceNL::integral
 double  Ostap::Math::PhaseSpaceNL::integral() const
 { return integral ( m_threshold1 , m_threshold2 ) ; }
 // ============================================================================
-
+// get the tag  
+// ============================================================================
+std::size_t Ostap::Math::PhaseSpaceNL::tag () const  // get the tag
+{ return std::hash_combine ( m_L , m_N , m_threshold1 , m_threshold2 ) ; }
+// ============================================================================
 
 
 // ============================================================================
@@ -685,9 +691,10 @@ double  Ostap::Math::PhaseSpace23L::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low   , high      ,            // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag () , 
+      &F     , 
+      low    , high      ,           // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
@@ -702,6 +709,11 @@ double  Ostap::Math::PhaseSpace23L::integral
 // ============================================================================
 double  Ostap::Math::PhaseSpace23L::integral () const
 { return integral ( lowEdge () , highEdge() ) ; }
+// ============================================================================
+// get the tag  
+// ============================================================================
+std::size_t Ostap::Math::PhaseSpace23L::tag () const  // get the tag
+{ return std::hash_combine ( m_m1 , m_m2 , m_m3 , m_m , m_l , m_L ) ; }
 // ============================================================================
 
 // ============================================================================

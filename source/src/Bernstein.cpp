@@ -24,6 +24,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "local_hash.h"
 // ============================================================================
 /** @file 
  *  Implementation file for functions, related to Bernstein's polynomnials 
@@ -1640,7 +1641,7 @@ Ostap::Math::Bernstein::Bernstein
     } 
   }  
   //
-  // 2: tramsform from shifted poly basis:
+  // 2: transform from shifted poly basis:
   //
   for ( unsigned short i = 0 ; i < np ; ++i ) 
   { 
@@ -1654,6 +1655,13 @@ Ostap::Math::Bernstein::Bernstein
   //
 }
 // ============================================================================
+std::size_t Ostap::Math::Bernstein::tag () const 
+{
+  std::size_t seed = 0 ;
+  for ( const double p : m_pars ) { std::_hash_combine ( seed , p ) ; }
+  return std::hash_combine ( seed , degree () , m_xmin , m_xmax ) ;
+}
+// ======================================================================
 
 // ============================================================================
 /* get the integral between 0 and 1 for a product of basic  Bernstein
@@ -2357,7 +2365,7 @@ Ostap::Math::Interpolation::bernstein
                      Abscissas ( N , xmin , xmax , Abscissas::Lobatto ) , 
                      xmin , xmax ) ; }
 // ============================================================================
-
+ 
 // ============================================================================
 // The END 
 // ============================================================================

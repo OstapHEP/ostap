@@ -11,7 +11,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class WorkSpace Ostap/Workspace.h
-     *  helper utility to keep the integration workspace fro GSL integration
+     *  helper utility to keep the integration workspace for GSL integration
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2011-12-03
      */

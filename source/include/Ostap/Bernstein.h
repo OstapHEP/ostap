@@ -521,6 +521,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      // calculate the unique tag for this polynomial using parameters 
+      std::size_t tag () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the underlying Bernstein polynomial  (self here)
       const Ostap::Math::Bernstein& bernstein () const { return *this ; }
       // ======================================================================
@@ -735,7 +740,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// swap  them!
-      void swap (  BernsteinDualBasis& right ) ;
+      void swap ( BernsteinDualBasis& right ) ;
+      ///  get the tag 
+      std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
     private:
       // ======================================================================

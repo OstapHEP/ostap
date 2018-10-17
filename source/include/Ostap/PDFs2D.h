@@ -9,6 +9,8 @@
 #include "Ostap/Models2D.h"
 #include "Ostap/Bernstein2D.h"
 #include "Ostap/BSpline.h"
+#include "Ostap/Peaks.h"
+#include "Ostap/Rotated.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -1209,11 +1211,294 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    
+    // ========================================================================
+    // "rotated peaks"
+    // ========================================================================
+
+    // ========================================================================
+    /** @class RotatedProduct
+     *  helper base class for implementations of rotated produt of two models
+     *  @see Ostap::Math::RotatedProduct
+     */
+    template <class SIGNAL1, class SIGNAL2=SIGNAL1>
+    class RotatedProduct : public RooAbsPdf 
+    {
+    public:
+      // =======================================================================
+      typedef Ostap::Math::RotatedProduct<SIGNAL1,SIGNAL2> Function2D ;
+      typedef typename Function2D::Signal1                 Function1  ;
+      typedef typename Function2D::Signal2                 Function2  ;
+      // =======================================================================
+    public:
+      // =======================================================================
+      /// constructor  
+      RotatedProduct 
+      ( const char*                             name      ,
+        const char*                             title     ,        
+        RooRealVar&                             x         ,
+        RooRealVar&                             y         ,
+        RooAbsReal&                             phi       , 
+        const Function1&                        fun1      , 
+        const Function2&                        fun2      )
+        : RooAbsPdf  ( name ,  title ) 
+        , m_x        ( "x"    , "Observable-X"   , this , x   ) 
+        , m_y        ( "y"    , "Observable-Y"   , this , y   ) 
+        , m_phi      ( "phi"  , "Rotation angle" , this , phi )
+        , m_function ( fun1 , fun2 , phi.getVal() ) 
+      {}
+      /// copy constructor 
+      RotatedProduct
+      ( const RotatedProduct& right     ,
+        const char*           name = 0  ) 
+        : RooAbsPdf  ( right , name ) 
+        , m_x        ( "x"    , this , right.m_x   ) 
+        , m_y        ( "y"    , this , right.m_y   )  
+        , m_phi      ( "phi"  , this , right.m_phi )
+        , m_function ( right.m_function ) 
+      {}
+      /// destructor
+      virtual ~RotatedProduct () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      RotatedProduct() {}
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      /// declate "analytical" integrations 
+      Int_t getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override
+      {
+        if      ( this->matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+        else if ( this->matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+        else if ( this->matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
+        //
+        return 0 ;
+      }
+      // ======================================================================
+      /// make "analytical" integration
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override
+      {  
+        return 
+          1 == code ? this->m_function.integral   (        m_x.min ( rangeName ) , m_x.max ( rangeName ) , 
+                                                           m_y.min ( rangeName ) , m_y.max ( rangeName ) ) : 
+          2 == code ? this->m_function.integrateX ( m_y  , m_x.min ( rangeName ) , m_x.max ( rangeName ) ) : 
+          3 == code ? this->m_function.integrateY ( m_x  , m_y.min ( rangeName ) , m_y.max ( rangeName ) ) : 0.0 ;  
+      }    
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to the underlying functions: 2D
+      const Function2D& function  () const { return m_function           ; }
+      /// access to the underlying functions: 1
+      const Function1&  function1 () const { return m_function.signal1() ; }
+      /// access to the underlying functions: 2
+      const Function2&  function2 () const { return m_function.signal2() ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x       ; // observable 
+      RooRealProxy m_y       ; // observable 
+      RooRealProxy m_phi     ; // rotation angle 
+      // ======================================================================
+    protected:
+      // ======================================================================
+      /// the actual function
+      mutable Function2D m_function { } ;       // the function
+      // ======================================================================      
+    };
+    // ========================================================================
+    /** @class Rotated2Gaussians
+     *  "rotated product" of two Gaussian functions 
+     *  @see Ostap::Math::RotatedProduct
+     *  @see Ostap::Math::Gauss
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+     *  @date 2018-10-11
+     */
+    class Rotated2Gaussians : public RotatedProduct<Ostap::Math::Gauss>
+    {
+      // ======================================================================
+    private:
+      // ======================================================================
+      typedef Ostap::Math::Gauss                 GAUSS      ;
+      typedef RotatedProduct<Ostap::Math::Gauss> BASE       ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      using BASE::Function2D ;
+      using BASE::Function1  ;
+      using BASE::Function2  ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::Rotated2Gaussians, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// linear
+      Rotated2Gaussians
+      ( const char*                             name      ,
+        const char*                             title     ,        
+        RooRealVar&                             x         ,
+        RooRealVar&                             y         ,
+        RooRealVar&                             phi       ,   // rotation phase 
+        // the  first peak 
+        RooAbsReal&                             m1        ,
+        RooAbsReal&                             sigma1    ,    //
+        // the  second peak 
+        RooAbsReal&                             m2        ,
+        RooAbsReal&                             sigma2    ) ;  //
+      /// copy
+      Rotated2Gaussians
+      ( const Rotated2Gaussians& right     ,
+        const char*              name = 0  ) ;
+      /// destructor
+      virtual ~Rotated2Gaussians () ;
+      /// clone
+      Rotated2Gaussians* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Rotated2Gaussians () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // parameters of the  first component
+      // ======================================================================
+      RooRealProxy m_m01     ;
+      RooRealProxy m_sigma1  ;
+      // ======================================================================
+      // parameters of the second component
+      // ======================================================================
+      RooRealProxy m_m02     ;
+      RooRealProxy m_sigma2  ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Rotated2CrystalBalls
+     *  "rotated product" of two double-sided Crystall-Ball functions 
+     *  @see Ostap::Math::RotatedProduct
+     *  @see Ostap::Math::CrystalBallDoubleSided
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+     *  @date 2018-10-11
+     */
+    class Rotated2CrystalBalls 
+      : public RotatedProduct<Ostap::Math::CrystalBallDoubleSided>
+    {
+      // ======================================================================
+    private:
+      // ======================================================================
+      typedef Ostap::Math::CrystalBallDoubleSided CB2   ;
+      typedef RotatedProduct<CB2>                 BASE  ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      using BASE::Function2D ;
+      using BASE::Function1  ;
+      using BASE::Function2  ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::Rotated2CrystalBalls, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// linear
+      Rotated2CrystalBalls 
+      ( const char*                             name      ,
+        const char*                             title     ,        
+        RooRealVar&                             x         ,
+        RooRealVar&                             y         ,
+        RooRealVar&                             phi       , // rotation phase 
+        // the  first peak 
+        RooAbsReal&                             m1         ,
+        RooAbsReal&                             sigma1     ,  //
+        RooAbsReal&                             alphaL1    ,  // alpha_L
+        RooAbsReal&                             nL1        ,  //     n_L - 1
+        RooAbsReal&                             alphaR1    ,  // alpha_R - 1
+        RooAbsReal&                             nR1        , //     n_R
+        // the  second peak 
+        RooAbsReal&                             m2         ,
+        RooAbsReal&                             sigma2     ,  //
+        RooAbsReal&                             alphaL2    ,  // alpha_L
+        RooAbsReal&                             nL2        ,  //     n_L - 1
+        RooAbsReal&                             alphaR2    ,  // alpha_R - 1
+        RooAbsReal&                             nR2        ); //     n_R
+      /// copy
+      Rotated2CrystalBalls 
+      ( const Rotated2CrystalBalls& right     ,
+        const char*                 name = 0  ) ;
+      /// destructor
+      virtual ~Rotated2CrystalBalls () ;
+      /// clone
+      Rotated2CrystalBalls* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Rotated2CrystalBalls () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // parameters of the  first component
+      // ======================================================================
+      RooRealProxy m_m01     ;
+      RooRealProxy m_sigma1  ;
+      RooRealProxy m_alphaL1 ;
+      RooRealProxy m_nL1     ;
+      RooRealProxy m_alphaR1 ;
+      RooRealProxy m_nR1     ;
+      // ======================================================================
+      // parameters of the second component
+      // ======================================================================
+      RooRealProxy m_m02     ;
+      RooRealProxy m_sigma2  ;
+      RooRealProxy m_alphaL2 ;
+      RooRealProxy m_nL2     ;
+      RooRealProxy m_alphaR2 ;
+      RooRealProxy m_nR2     ;
+      // ======================================================================
+    } ;
+    // ========================================================================
   } //                                   The end of  namespace Ostap::Models
   // ==========================================================================
 } //                                              The end of namespace Analysis 
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
-#endif // ANALYSIS_MODELS2D_H
+#endif // OSTAP_PDFS2D_H
 // ============================================================================

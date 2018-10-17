@@ -18,6 +18,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "local_hash.h"
 // ============================================================================
 /** @file 
  *  Implementation file for functions, related to Bernstein's polynomnials 
@@ -432,7 +433,17 @@ Ostap::Math::Bernstein2D
 Ostap::Math::Bernstein2D::__neg__ ()  const
 { return -(*this); }
 // ============================================================================
+// get the tag value 
+// ============================================================================
+std::size_t Ostap::Math::Bernstein2D::tag () const  // get the tag value 
+{
+  std::size_t seed = 0 ;
+  for ( const double  p : m_pars ) { std::_hash_combine ( seed , p ) ; }
+  return std::hash_combine ( seed , m_nx , m_ny , m_xmin , m_xmax , m_ymin , m_ymax ) ;
+}
+// ============================================================================
 
+  
 
 
 
@@ -758,6 +769,15 @@ Ostap::Math::Bernstein2DSym:: __div__   ( const double value ) const
 Ostap::Math::Bernstein2DSym
 Ostap::Math::Bernstein2DSym::__neg__ ()  const
 { return -(*this); }
+// ============================================================================
+// get the tag value 
+// ============================================================================
+std::size_t Ostap::Math::Bernstein2DSym::tag () const  // get the hash value 
+{
+  std::size_t seed = 0 ;
+  for ( const double  p : m_pars ) { std::_hash_combine ( seed , p ) ; }
+  return std::hash_combine ( seed , m_n , m_xmin , m_xmax ) ;
+}
 // ============================================================================
 
 

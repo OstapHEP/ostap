@@ -158,6 +158,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the tag 
+      std::size_t tag () const { return m_bernstein.tag () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// convert to normal bernstein polynomial
       const Bernstein& bernstein() const { return m_bernstein ; }
       /// convert to normal bernstein polynomial
@@ -327,6 +332,11 @@ namespace Ostap
       /// Negate Bernstein polynomial
       Bernstein __neg__   () const { return -m_bernstein ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag
+      std::size_t tag () const { return m_bernstein.tag () ; }
+      // ======================================================================
     protected:
       // ======================================================================
       /// update bernstein coefficiencts
@@ -477,6 +487,11 @@ namespace Ostap
       BernsteinEven __rsub__  ( const double value ) const { return value  - m_even ; }
       /// Divide Bernstein polynomial by a constant
       BernsteinEven __div__   ( const double value ) const { return m_even / value  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const { return m_even.tag () ; }
       // ======================================================================
     protected:
       // ======================================================================

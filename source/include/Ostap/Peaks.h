@@ -14,7 +14,7 @@
 // ============================================================================
 /** @file Ostap/Peaks.h
  *
- *  set of useful peak-like models
+ *  Collection of useful peak-like models
  *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
@@ -97,6 +97,11 @@ namespace Ostap
       ///  get CDF 
       double cdf      ( const double x    ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private: // parameters
       // ======================================================================
       /// the peak position
@@ -141,7 +146,9 @@ namespace Ostap
       /// peak position
       double peak     () const { return m_peak    ; }
       /// peak position
-      double m0       () const { return peak()    ; }
+      double mean     () const { return peak ()   ; }
+      /// peak position
+      double m0       () const { return peak ()   ; }
       /// sigma 
       double sigma    () const { return m_sigma   ; }
       /// sigma-1
@@ -178,6 +185,11 @@ namespace Ostap
       double integral ( const double low  ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private: // parameters
       // ======================================================================
       /// the peak position
@@ -188,6 +200,79 @@ namespace Ostap
       double m_fraction ;       // fraction
       /// scale
       double m_scale    ;       // scale
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class  Gauss 
+     *  trivial gaussian , just for completeness 
+     */
+    class Gauss
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param peak    the peak posiion
+       *  @param sigmaL  (left  sigma)
+       *  @param sigmaR  (right sigma)
+       */
+      Gauss
+      ( const double peak  = 0 ,
+        const double sigma = 1 ) ;
+      // ======================================================================
+      /// destructor
+      ~Gauss() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate Bifurcated Gaussian
+      double evaluate   ( const double x ) const ;
+      /// evaluate Bifurcated Gaussian
+      double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Bifurcated Gaussian
+      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// peak position
+      double peak    () const { return m_peak    ; }
+      /// peak position
+      double m0      () const { return peak()    ; }
+      /// sigma
+      double sigma   () const { return m_sigma   ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// peak position 
+      bool setPeak    ( const double value ) ;
+      /// peak position 
+      bool setM0      ( const double value ) { return setPeak ( value ) ; }
+      /// peak position 
+      bool setMass    ( const double value ) { return setPeak ( value ) ; }
+      /// left sigma 
+      bool setSigma   ( const double value ) ;
+      // ======================================================================
+    public: // integrals & CDF
+      // ======================================================================
+      /// get the integral
+      double integral () const ;
+      /// get the integral between low and high limits
+      double integral ( const double low  ,
+                        const double high ) const ;
+      ///  get CDF 
+      double cdf      ( const double x    ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private: // parameters
+      // ======================================================================
+      /// the peak position
+      double m_peak   ;       //                              the peak position
+      /// sigma 
+      double m_sigma  ;       // sigma
       // ======================================================================
     } ;
     // ========================================================================
@@ -285,6 +370,11 @@ namespace Ostap
       double integral ( const double low  ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// location 
@@ -370,6 +460,11 @@ namespace Ostap
       double integral   ( const double low  ,
                           const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       double  y ( const double x ) const ;
@@ -449,6 +544,11 @@ namespace Ostap
       double integral   ( const double low  ,
                           const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       double m_xi     ;  // location
@@ -524,6 +624,11 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral ( const double low  ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private: // parameters
       // ======================================================================
@@ -609,6 +714,11 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral ( const double low  ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private: // recalculate constants
       // ======================================================================
@@ -716,6 +826,11 @@ namespace Ostap
       double integral ( const double low ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the peak position
@@ -726,6 +841,9 @@ namespace Ostap
       double m_alpha    ;  // parameter alpha
       /// parameter n
       double m_n        ;  // parameter n
+      // ======================================================================
+    private :
+      // ======================================================================
       /// helper constants
       double m_A        ;  // exp(-0.5*alpha^2)
       double m_B        ;  // integral over the gaussian part
@@ -808,6 +926,11 @@ namespace Ostap
                         const double high ) const
       { return m_cb.integral ( low , high ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the function itself
@@ -875,6 +998,11 @@ namespace Ostap
       /// get the integral between low and high
       double integral ( const double low ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -947,6 +1075,11 @@ namespace Ostap
       double integral ( const double low  ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the peak position
@@ -961,6 +1094,9 @@ namespace Ostap
       double m_alpha_R  ;  // parameter alpha
       /// parameter N_R
       double m_n_R      ;  // parameter N
+      // ======================================================================
+    private:
+      // ======================================================================
       /// helper constants
       double m_AL       ;  // exp(-0.5*alpha_L^2)
       double m_AR       ;  // exp(-0.5*alpha_R^2)
@@ -1052,6 +1188,11 @@ namespace Ostap
       /// get the integral between low and high
       double integral ( const double low ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1151,6 +1292,11 @@ namespace Ostap
       double integral ( const double low ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the peak position
@@ -1243,6 +1389,11 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral ( const double low  ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1345,6 +1496,11 @@ namespace Ostap
       double integral ( const double low  ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// mass
@@ -1421,6 +1577,8 @@ namespace Ostap
       double epsilon  () const { return m_epsilon ; }
       double delta    () const { return m_delta   ; }
       // ======================================================================
+      double peak     () const { return m_mu      ; }
+      // ======================================================================
     public: // setters
       // ======================================================================
       bool setLocation ( const double value ) { return setMu    ( value ) ; }
@@ -1435,6 +1593,11 @@ namespace Ostap
       double cdf      ( const double x    ) const ;
       double integral ( const double low  ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1521,6 +1684,11 @@ namespace Ostap
       double integral ( const double low  ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       double m_xi      ;
@@ -1566,8 +1734,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// peak position
+      double peak     () const { return mean () ; }
       /// get mode
-      double mode     () const { return mean() ; }
+      double mode     () const { return mean () ; }
       /// get variance:  good numerical approximation
       double variance () const ;
       /// get rms :  good numerical approximation
@@ -1585,10 +1755,15 @@ namespace Ostap
       /// integral from -infinity to +infinity
       double integral () const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// parameteter "mu", mean, mode
-      double m_mean  ; // parameter mu,mean,mode
+      double m_mean  ; // parameter mu , mean , mode
       /// parameter   "sigma"
       double m_sigma ; // parameter sigma
       // ======================================================================
@@ -1639,9 +1814,10 @@ namespace Ostap
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double mean   () const { return m_mean   ; }
+      double mean   () const { return m_mean    ; }
+      double peak   () const { return   mean () ; }
       /// get parameters "sigma"
-      double sigma  () const { return m_sigma  ; }
+      double sigma  () const { return m_sigma   ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1675,6 +1851,11 @@ namespace Ostap
       double integral () const ;
       /// evaluate atlas function
       double cdf      ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1724,6 +1905,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get peak
+      double peak     () const { return peak () ; }
       /// get mode
       double mode     () const { return mean () ; }
       /// get median
@@ -1756,6 +1939,11 @@ namespace Ostap
       double integral () const ;
       /// evaluate Logistc CDF function
       double cdf      ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1800,6 +1988,7 @@ namespace Ostap
     public: //   derived getters  
       // ======================================================================
       double mean     () const { return mu ()   ; }
+      double peak     () const { return mu ()   ; }
       double location () const { return mu ()   ; }
       // ======================================================================
     public: // direct setters
@@ -1819,6 +2008,11 @@ namespace Ostap
       double integral () const { return 1 ; }
       /// evaluate sslash CDF function
       double cdf      ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1867,6 +2061,7 @@ namespace Ostap
     public: //   derived getters  
       // ======================================================================
       double mean     () const { return mu ()   ; }
+      double peak     () const { return mu ()   ; }
       double location () const { return mu ()   ; }
       // ======================================================================
     public: // the standard parameterization (slopes are inverse)
@@ -1893,6 +2088,11 @@ namespace Ostap
       double integral () const {  return  1 ; }
       /// evaluate CDF function
       double cdf      ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1937,6 +2137,7 @@ namespace Ostap
     public: // derived getters 
       // ======================================================================
       double location () const { return mu () ; }
+      double peak     () const { return mu () ; }
       double scale    () const { return s  () ; }
       // ======================================================================
     public: //  setters 
@@ -1971,6 +2172,11 @@ namespace Ostap
       /// evaluate the integral
       double integral ( const double low  , 
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -2020,13 +2226,14 @@ namespace Ostap
       // ======================================================================
     public : // derived getters 
       // ======================================================================
+      double peak     () const { return mean  () ; }
       double mu       () const { return mean  () ; }
       double mode     () const { return mean  () ; }
       double median   () const { return mean  () ; }
       double location () const { return mean  () ; }
       double sigma    () const { return scale () ; }
       /// get the original beta 
-      double beta     () const { return 0.5 / (m_scale*m_scale ) ; }
+      double beta     () const { return 0.5 / ( m_scale * m_scale ) ; }
       // ======================================================================
     public : // primay getters 
       // ======================================================================
@@ -2050,6 +2257,11 @@ namespace Ostap
       /// get the integral 
       double integral ( const double low  , 
                         const double high ) const ;      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     private :
       // ======================================================================

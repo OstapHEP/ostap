@@ -41,6 +41,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "local_hash.h"
 #include "local_gsl.h"
 #include "Integrator1D.h"
 // ============================================================================
@@ -157,7 +158,12 @@ double Ostap::Math::Gumbel::integral ( const double low  ,
     std::exp ( -std::exp ( -zmin ) ) - std::exp ( -std::exp ( -zmax ) ) ;
 }
 // ============================================================================
-
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Gumbel::tag () const 
+{ return std::hash_combine ( m_mu , m_beta ) ; }
+// ============================================================================
+ 
 
 
 
@@ -262,9 +268,10 @@ double Ostap::Math::GramCharlierA::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low   , high      ,                                     // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag  () , 
+      &F      , 
+      low     , high ,                                        // low & high edges
       workspace ( m_workspace ) ,                             // workspace
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
@@ -315,6 +322,11 @@ bool Ostap::Math::GramCharlierA::setKappa4 ( const double value )
   //
   return false ;
 }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GramCharlierA::tag () const 
+{ return std::hash_combine ( m_mean , m_sigma , m_kappa3 , m_kappa4 ) ; }
 // ============================================================================
 
 
@@ -434,8 +446,9 @@ double  Ostap::Math::PhaseSpacePol::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag () ,  
+      &F     , 
       xlow   , xhigh      ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
@@ -447,6 +460,13 @@ double  Ostap::Math::PhaseSpacePol::integral
   return result ;
 }
 // ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::PhaseSpacePol::tag () const 
+{ return std::hash_combine ( m_phasespace.tag () , m_positive.tag () ) ; }
+// ============================================================================
+
+
 
 
 // ============================================================================
@@ -497,7 +517,11 @@ double Ostap::Math::ExpoPositive::integral ( const double low  ,
   return Ostap::Math::integrate ( m_positive.bernstein() , m_tau , low ,high ) ;
 }
 // ============================================================================
-
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::ExpoPositive::tag () const 
+{ return std::hash_combine ( m_positive.tag () , m_tau ) ; }
+// ============================================================================
 
 
 
@@ -606,10 +630,15 @@ double Ostap::Math::GammaDist::quantile ( const double p ) const
   return gsl_cdf_gamma_Pinv ( p , m_k , m_theta ) ;
 }
 // ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GammaDist::tag () const 
+{ return std::hash_combine ( m_k , m_theta ) ; }
+// ============================================================================
 
 
 // ============================================================================
-// Generalaize Gamma distribtions 
+// Generalized Gamma distribtion
 // ============================================================================
 /*  constructor
  *  param k     \f$k\f$ parameter      (shape)
@@ -698,6 +727,11 @@ double Ostap::Math::GenGammaDist::integral ( const double low  ,
   if ( s_equal ( low , high ) ) { return 0 ; }
   return cdf ( high ) - cdf ( low ) ;  
 }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GenGammaDist::tag () const 
+{ return std::hash_combine ( m_k , m_theta , m_p , m_low ) ; }
 // ============================================================================
 
 
@@ -868,6 +902,16 @@ double Ostap::Math::Amoroso::sigma () const
   return std::sqrt ( variance() ) ;
 }
 // ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Amoroso::tag () const 
+{ return std::hash_combine ( m_a , m_theta , m_alpha , m_beta ) ; }
+// ============================================================================
+
+
+
+
+// ============================================================================
 /* constructor from scale & shape parameters
  *  param k      \f$k\f$ parameter (shape)
  *  param theta  \f$\theta\f$ parameter (scale)
@@ -922,6 +966,12 @@ double Ostap::Math::LogGammaDist::quantile ( const double p ) const
   return my_log ( gsl_cdf_gamma_Pinv ( p , k() , theta() ) ) ;
 }
 // ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::LogGammaDist::tag () const 
+{ return std::hash_combine ( 1 , m_gamma.tag () ) ; }
+// ============================================================================
+
 
 // ============================================================================
 /* constructor form scale & shape parameters
@@ -962,6 +1012,11 @@ double Ostap::Math::Log10GammaDist::quantile ( const double p ) const
   else if ( p >= 1 ) { return  s_INFINITY ; }
   return LogGammaDist::quantile ( p ) / s_LN10 ;
 }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Log10GammaDist::tag () const 
+{ return std::hash_combine ( 10 , m_gamma.tag () ) ; }
 // ============================================================================
 
 
@@ -1077,6 +1132,11 @@ double Ostap::Math::LogGamma::kurtosis () const
   const double l_p1 = gsl_sf_psi_1 (     alpha () ) ; 
   return l_p3 / ( l_p1 * l_p1) ;
 }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::LogGamma::tag () const 
+{ return std::hash_combine ( m_nu , m_lambda , m_alpha ) ; }
 // ============================================================================
 
 
@@ -1222,6 +1282,11 @@ double Ostap::Math::BetaPrime::skewness  () const
   return 2 * ( 2 * a + b - 1 ) / ( b - 3 ) * std::sqrt( ( b - 2 ) / a / ( a + b - 1 ) ) ;
 }
 // ===========================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BetaPrime::tag () const 
+{ return std::hash_combine ( m_alpha , m_beta , m_scale , m_shift ) ; }
+// ============================================================================
 
 
 // ============================================================================
@@ -1433,6 +1498,16 @@ double Ostap::Math::Landau::integral ( const double low  ,
   //
   return cdf ( high ) - cdf ( low ) ;
 }
+// ===========================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Landau::tag () const 
+{ return std::hash_combine ( m_scale , m_shift ) ; }
+// ============================================================================
+
+
+
+
 // ============================================================================
 // Weibull
 // ============================================================================
@@ -1532,6 +1607,12 @@ double Ostap::Math::Weibull::variance () const
 // rms  
 // ============================================================================
 double Ostap::Math::Weibull::rms () const { return  std::sqrt ( variance () ) ; }
+// ===========================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Weibull::tag () const 
+{ return std::hash_combine ( m_scale , m_shape , m_shift ) ; }
+// ============================================================================
 
 
 // namespace 
@@ -1593,15 +1674,15 @@ bool Ostap::Math::Argus::setHigh ( const double value )
 // ============================================================================
 namespace 
 {
-  //
+  // ==========================================================================
   inline double phi_ ( const double x ) 
   { return gsl_ran_gaussian_pdf  ( x , 1 ) ; }
   inline double Phi_ ( const double x ) 
   { return gsl_cdf_ugaussian_P   ( x     ) ; }
   inline double Psi_ ( const double x ) 
   { return Phi_ ( x ) - x * phi_ ( x ) - 0.5 ; } 
-  //
-}
+  // ==========================================================================
+} // ==========================================================================
 // ============================================================================
 double Ostap::Math::Argus::pdf ( const double x ) const 
 {
@@ -1648,6 +1729,11 @@ double Ostap::Math::Argus::integral ( const double low  ,
   //
   return cdf ( high ) - cdf ( low ) ;
 }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Argus::tag () const 
+{ return std::hash_combine ( m_shape , m_high , m_low ) ; }
 // ============================================================================
 
 
@@ -1762,9 +1848,10 @@ double Ostap::Math::Sigmoid::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low   , high      ,            // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag  () , 
+      &F      , 
+      low     , high ,               // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
@@ -1775,6 +1862,17 @@ double Ostap::Math::Sigmoid::integral
   return result ;
 }
 // ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Sigmoid::tag () const 
+{ return std::hash_combine ( m_positive.tag () , m_alpha , m_x0 ) ; }
+// ============================================================================
+
+
+
+
+
+
 
 
 // ============================================================================
@@ -1945,6 +2043,11 @@ double Ostap::Math::TwoExpos::derivative
       Ostap::Math::pow ( b , N ) *  std::exp ( b * dx ) ) / n0 ;
 }
 // ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::TwoExpos::tag () const 
+{ return std::hash_combine ( m_alpha , m_delta , m_x0 ) ; }
+// ============================================================================
 
 
 // ============================================================================
@@ -2028,6 +2131,11 @@ double Ostap::Math::TwoExpoPositive::integral
   //
   return ( r1 - r2 ) / _moment_ ( alpha() , delta () , 0 ) ;
 }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::TwoExpoPositive::tag () const 
+{ return std::hash_combine ( m_positive.tag () , m_2exp.tag () ) ; }
 // ============================================================================
 
 
@@ -2126,9 +2234,10 @@ double Ostap::Math::Tsallis::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low   , high      ,            // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag  () , 
+      &F      , 
+      low     , high  ,              // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
@@ -2139,6 +2248,12 @@ double Ostap::Math::Tsallis::integral
   return result ;
   //
 }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Tsallis::tag () const 
+{ return std::hash_combine ( m_mass , m_n , m_T ) ; }
+// ============================================================================
 
 
 
@@ -2224,9 +2339,10 @@ double Ostap::Math::QGSM::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low   , high      ,            // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag  () , 
+      &F      , 
+      low     , high      ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
@@ -2237,6 +2353,11 @@ double Ostap::Math::QGSM::integral
   return result ;
   //
 }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::QGSM::tag () const 
+{ return std::hash_combine ( m_mass , m_b ) ; }
 // ============================================================================
 
 

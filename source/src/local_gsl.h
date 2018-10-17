@@ -1,3 +1,4 @@
+// ============================================================================
 #ifndef LOCAL_GSL_H 
 #define LOCAL_GSL_H 1
 // ============================================================================
@@ -37,18 +38,21 @@ namespace
   // ==========================================================================
   /** @var s_SIZE
    *  the workspace size parameter for GSL-integration
+   *  @see https://www.gnu.org/software/gsl/doc/html/integration.html
+   *  quote: "The maximum number of subintervals is given by limit,
+   *  which may not exceed the allocated size of the workspace."  
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const std::size_t s_SIZE = 500 ;
+  const std::size_t s_SIZE  = 600 ;
   // ==========================================================================
   /** @var s_PRECISION
    *  the default precision for various calculations,
-   *       in particular GSL integration
+   *  in particular GSL integration
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_PRECISION     = 1.e-8 ;
+  const double s_PRECISION  = 1.e-8 ;
   // ==========================================================================
   /** @var s_PRECISION_TAIL
    *  the low-relative precision for tails in GSL integration
