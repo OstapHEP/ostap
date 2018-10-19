@@ -268,7 +268,7 @@ def _rad_sample_ ( self , num ) :
     >>> subset =  data.sample ( 0.01 )  ## get 1% of events 
     """
     if   0 == num : return self.emptyClone ( dsID () ) 
-    elif instance ( num , (  int , long ) ) and 0 < num :
+    elif isinstance ( num , (  int , long ) ) and 0 < num :
         num = min ( num , len ( self ) )
     elif isinstance ( num , float ) and 0 < num < 1 :
         from ostap.math.random_ext import poisson 
