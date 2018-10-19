@@ -589,7 +589,7 @@ double Ostap::Math::PS2DPol2::integrateY
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
-    ( tag ()                    , 
+    (std::hash_combine ( tag() , 'X' , x )                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -631,7 +631,7 @@ double Ostap::Math::PS2DPol2::integrateX
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
-    ( tag  ()                   , 
+    (std::hash_combine ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -771,7 +771,7 @@ double Ostap::Math::PS2DPol2Sym::integrateY
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
-    ( tag  ()                   , 
+    ( std::hash_combine ( tag() , 'X' , x )                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -993,7 +993,7 @@ double Ostap::Math::PS2DPol3::integrateX
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
-    ( tag  ()                   , 
+    (std::hash_combine ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -1131,7 +1131,7 @@ double Ostap::Math::PS2DPol3Sym::integrateY
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
-    ( tag  ()                   , 
+    ( std::hash_combine ( tag() , 'X' , x )                  , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
