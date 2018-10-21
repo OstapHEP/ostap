@@ -793,6 +793,7 @@ class Data2(Data):
         ##
         self.chain1  = self.chain 
 
+
 # =============================================================================
 ## @class DataAndLumi
 #  Simple utility to access to certain chain in the set of ROOT-files
@@ -807,6 +808,7 @@ class DataAndLumi(Data2):
     >>> lumi  = data.lumi
     >>> print data.getLumi() 
     """
+
     def __init__( self                ,
                   chain               ,
                   files       = []    ,
@@ -835,21 +837,23 @@ class DataAndLumi(Data2):
         ## suppress Warning/Error messages from ROOT 
         from ostap.logger.utils import rootError
         with rootError() :
-            from   ostap.contrib.lhcb.lumi import getLumi
-            return getLumi ( self.chain2  )
-     
+            try :
+                from   ostap.contribs.lhcb.lumi import getLumi
+                return getLumi ( self.chain2  )
+            except ImportError :
+                logger.error('DataAndLumi:getLumi is not avaiilabe!')
+                return -1.e+6
+                
     ## printout 
     def __str__(self):
         
-        from ostap.logger.utils import rootWarning
-        with rootWarning() :
-            l   = self.getLumi()
-            nf  = len ( self.files   )
-            nf2 = len ( self.files2  )
-            nc  = len ( self.chain   )
-            ne  = len ( self.e_list1 )
-            ne2 = len ( self.e_list2 )
-            
+        l   = self.getLumi()
+        nf  = len ( self.files   )
+        nf2 = len ( self.files2  )
+        nc  = len ( self.chain   )
+        ne  = len ( self.e_list1 )
+        ne2 = len ( self.e_list2 )
+        
         sf  = set(self.files) == set(self.files2)
         
         if not self.e_list1 and not self.e_list2 :            
@@ -858,6 +862,7 @@ class DataAndLumi(Data2):
         else :            
             return "<Luminosity: {}pb-1; #files: {}; Entries: {}; No/empty: {}/{}>"   .format( l , nf ,       nc , ne , ne2 ) if sf else \
                    "<Luminosity: {}pb-1; #files: {}/{}; Entries: {}; No/empty: {}/{}>".format( l , nf , nf2 , nc , ne , ne2 )
+
 
     ## get an intersection of two datasets 
     def __and__ (  self , other ) :
@@ -895,6 +900,8 @@ class DataAndLumi(Data2):
         for f in result.files2 : result.chain2.Add ( f ) 
             
         return result
+
+
 
     ## clone it !
     def clone  ( self ) :
@@ -937,10 +944,6 @@ class DataAndLumi(Data2):
         ##
         self.chain1  = self.chain 
         self.lumi    = self.chain2 
-            
-# =============================================================================
-
-
  
 # =============================================================================
 

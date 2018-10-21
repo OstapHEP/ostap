@@ -30,7 +30,8 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core     import rootID 
+from   ostap.core.core     import rootID
+from   ostap.logger.utils  import roo_silent  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )

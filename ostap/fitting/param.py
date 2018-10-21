@@ -384,7 +384,6 @@ ROOT.TH1D . integral = _h1_integral_
 ROOT.TH2F . integral = _h2_integral_ 
 ROOT.TH2D . integral = _h2_integral_
 
-
 # =============================================================================
 _decorated_classes_ = (
     Ostap.Math.Bernstein        ,

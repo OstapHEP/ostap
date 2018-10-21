@@ -12,12 +12,13 @@ __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
-    'Bkg_pdf'         , ## An exponential function, modulated by positive polynomial
-    'PSPol_pdf'       , ## A phase space  function, modulated by positive polynomial
-    'PolyPos_pdf'     , ## A positive polynomial
-    'PolyEven_pdf'    , ## A positive even polynomial
-    'Monotonic_pdf'  , ## A positive monotonic polynomial
-    'Convex_pdf'      , ## A positive polynomial with fixed sign first and second derivatives 
+    'Bkg_pdf'           , ## An exponential function, modulated by positive polynomial
+    'PSPol_pdf'         , ## A phase space  function, modulated by positive polynomial
+    'PSLeftExpoPol_pdf' , ## A phase space function, modulated by positive polynomial and exponent
+    'PolyPos_pdf'       , ## A positive polynomial
+    'PolyEven_pdf'      , ## A positive even polynomial
+    'Monotonic_pdf'     , ## A positive monotonic polynomial
+    'Convex_pdf'        , ## A positive polynomial with fixed sign first and second derivatives 
     'ConvexOnly_pdf'  , ## A positive polynomial with fixed sign second derivatives 
     'Sigmoid_pdf'     , ## Background: sigmoid modulated by positive polynom 
     'TwoExpoPoly_pdf' , ## difference of two exponents, modulated by positive polynomial
@@ -43,7 +44,7 @@ from   ostap.fitting.basic import PDF
 from   ostap.fitting.utils import Phases 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_bkg' )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 models = []
@@ -546,6 +547,108 @@ class PSPol_pdf(PolyBase) :
         return self.__ps 
 
 models.append ( PSPol_pdf ) 
+
+
+
+# =============================================================================
+## @class  PSLeftExpoPol_pdf
+#  Left Phase space factor, exponent and the positive polynomial 
+#   \f[ f(x) \propto 
+#      \Phi_{l}(x;x_{low}) \mathrm{e}^{-\left|\tau\right| x } P_{N}(x) \f]
+#  where :
+#   -  \f$  \Phi_{l}(x;x_{low}) \f$  is a phase space of 
+#     l-particles near the threshold 
+#   -  \f$ P_{N}(x) \f$ is a positive polynomial of degree N
+#  @see Ostap::Models::PhaseSpaceLeftExpoPol
+#  @see Ostap::Math::PhaseSpaceLeftExpoPol
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-07-25
+class PSLeftExpoPol_pdf(PolyBase) :
+    r"""The phase space function modified with positive polynomial 
+    
+    # f(x) ~ Phi_{l}(x;x_{low}) \mathrm{e}^{-\left|\tau\right| x } P_{N}(x) 
+    where :
+    - \Phi_{l}(x;x_{low}) is a phase space of l-particles near the threshold 
+    -  P_{N}(x) is a positive polynomial of degree N
+
+    >>>  mass = ROOT.RooRealVar( ... )
+    >>>  ps   = Ostap.Math.PhaseSpaceLeft ( low , high , 3 , 4 )  
+    >>>  bkg  = PSPol_pdf ( 'B' , mass , ps , power = 2 )    
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,  ## the name 
+                   xvar             ,  ## the varibale 
+                   phasespace       ,  ## Ostap::Math::PhaseSpaceNL 
+                   power    = 2     ,  ## degree of the polynomial
+                   tau      = None  ,  ## the exponent 
+                   the_phis = None  ) :         
+        #
+        #
+        PolyBase.__init__  ( self , name , power , xvar , the_phis )
+        #
+        assert isinstance ( phasespace , Ostap.Math.PhaseSpaceLeft ), \
+               'Illegal type of "phasespace" parameter'
+        
+        self.__ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
+        self.__power = power
+        
+        limits_tau = () 
+        if self.xminmax() : 
+            mn , mx     = self.xminmax()
+            delta       = 0.5 * ( mx - mn ) 
+            limits_tau  = -500.0/delta , 500.0/delta
+
+        #
+        ## the exponential slope
+        #
+        self.__tau  = self.make_var ( tau              ,
+                                      "tau_%s"  % name ,
+                                      "tau(%s)" % name , tau , 0 , *limits_tau  )
+        
+        self.pdf  = Ostap.Models.PhaseSpaceLeftExpoPol (
+            'pslepol_%s'                % name ,
+            'PhaseSpaceLeftExpoPol(%s)' % name ,
+            self.xvar            ,
+            self.phasespace      ,  ## Ostap::Math::PhaseSpaceLeft
+            self.tau             , 
+            self.phi_list        )
+        
+        ## save configuration 
+        self.config = {
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'phasespace' : self.phasespace ,            
+            'power'      : self.power      ,            
+            'tau'        : self.tau        ,            
+            'the_phis'   : self.phis       ,            
+            }
+
+    @property 
+    def mass ( self ) :
+        """``mass''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        return self.xvar
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for PSLeftExpoPol-function"""
+        return self.__power
+    @property
+    def phasespace ( self ) :
+        """``phasespace''-function for PS*pol function"""
+        return self.__ps
+    @property
+    def tau ( self ) :
+        """``tau''-parameter - exponential slope"""
+        return self.__tau
+    @tau.setter
+    def tau ( self , value ) :
+        value = float ( value )
+        self.__tau.setVal ( value )
+    
+
+models.append ( PSLeftExpoPol_pdf ) 
+
+
 # =============================================================================
 ## @class  TwoExpoPoly_pdf
 #  Difference of two exponents, modulated by positive polynomial 

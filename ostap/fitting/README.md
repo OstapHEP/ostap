@@ -76,12 +76,11 @@ print float(var)
 ```
 
 ### [dataset.py](dataset.py) 
-Collection of decorations for `RooAbsData`, `RooDataSet` and related clases
-      * iterators, getters, slices, trivial operatorr
+Collection of decorations for `RooAbsData`, `RooDataSet` and related clases:
+      * iterators, getters, slices, trivial operators
+      * drawing and projections 
       * statistic for the variables and expressions 
  
-
-
 ```python
 data    = ...
 entry   = data[14]            ## get certain tenr
@@ -145,3 +144,56 @@ print data                            ## print dataset as table
 print data.table  ()                  ## print dataset (another format) 
 print data.pprint ()                  ## print dataset (another format)
 ```
+
+### [roocollections.py](roocollections.py) 
+Collection of decorations for `RooArgSet`, `RooArgList` and related clasese
+    * iterators, getters, printing, some operators, ...
+```python
+argset = ...
+for a in argset : print a 
+
+argset['pt'] ## get ittem 
+argset.pt    ## get attribute/ditto  
+
+if  'pt' in argset : ...  ## check the presence 
+
+arglist = ...
+for a in arglist : print a 
+
+arglist[1] ## get the item 
+```
+
+### [roofitresult.py](roofitresult.py) 
+Collection of decorations for `RooFitResult` clasese
+    * printing, access to fit parameters, operations with fit parameters
+```python
+result = ... ## RooFitResult instance 
+
+print result.params()                      ## get parameters 
+print result.params( float_only = False )  ## get parameters 
+
+results.params()['Signal'][0]  ## parameter value (+error) as ValueWithError
+results.params()['Signal'][1]  ## parameter as RooAbsReal/RooRealVar
+
+results.param('Signal')[0]  ## parameter value (+error) as ValueWithError
+results.param('Signal')[1]  ## parameter as RooAbsReal/RooRealVar
+
+print result.Signal  ## get parameter as attribute 
+
+for p in reuslts : print p                       ## loop over parameters 
+
+for name,v in results.iteritems() : print name,v ## loop over parameters
+
+c = result.corr ('Signal','Mean') ## correlation coefficient betweem two parameters 
+
+cov = result.cov_matrix('Signal', 'Mean', 'Sigma') ## get correlarion sub-matrix 
+cov = result.cov('Mean', 'Sigma') ## get covariance for two elements 
+
+
+v = result.sum      ('Signal','Background') ## calculate sum for two parameters 
+v = result.multiply ('Signal','Background') ## calculate 
+v = result.divide   ('Signal','Background') ## calculate 
+v = result.subtract ('Signal','Background') ## calculate 
+v = result.fraction ('Signal','Background') ## calculate Signal/(Signal+Background)
+```
+

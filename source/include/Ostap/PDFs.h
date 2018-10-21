@@ -2479,14 +2479,95 @@ namespace Ostap
       RooRealProxy m_x    ;
       RooListProxy m_phis ;
       // ======================================================================
-      TIterator* m_iterator;  //! do not persist
-      // ======================================================================
     private:
       // ======================================================================
       /// the actual phase space function
       mutable Ostap::Math::PhaseSpacePol m_ps ;  // the actual function
       // ======================================================================
     } ;
+
+    // ========================================================================
+    /** @class PhaseSpaceLeftExpoPol
+     *  The mass-ditribuion of L-particles 
+     *  modulate with non-negative polynomial end the  exponent 
+     *  \f[ f(x) \propto
+     *      \Phi_{l}(x;x_{low}) \mathrm{e}^{-\left|\tau\right| x } P_{N}(x) \f]
+     *  where :
+     *  -  \f$  \Phi_{l}(x;x_{low}) \f$  is a phase space of 
+     *     l-particles near the threshold 
+     *  -  \f$ P_{N}(x) \f$ is a positive polynomial of degree N
+     *  @see Ostap::Math::PhaseSpaceLeftExpoPol
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2018-10-21
+     */
+    class PhaseSpaceLeftExpoPol : public RooAbsPdf
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::PhaseSpaceLeftExpoPol, 1) ;
+      // ======================================================================
+      /// constructor from all parameters
+      PhaseSpaceLeftExpoPol
+      ( const char*                        name   ,
+        const char*                        title  ,
+        RooRealVar&                        x      ,
+        const Ostap::Math::PhaseSpaceLeft& ps     ,
+        RooAbsReal&                        tau    ,
+        RooArgList&                        phis   ) ;
+      // ======================================================================
+      // "copy" constructor
+      // ======================================================================
+      PhaseSpaceLeftExpoPol ( const PhaseSpaceLeftExpoPol& right    ,
+                              const char*                  name = 0 ) ;
+      /// destructor
+      virtual ~PhaseSpaceLeftExpoPol () ;
+      /// clone
+      PhaseSpaceLeftExpoPol* clone( const char* name )  const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      PhaseSpaceLeftExpoPol () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Double_t evaluate () const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      const Ostap::Math::PhaseSpaceLeftExpoPol& function() const { return m_ps ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      RooRealProxy m_x    ;
+      RooListProxy m_phis ;
+      RooRealProxy m_tau  ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual phase space function
+      mutable Ostap::Math::PhaseSpaceLeftExpoPol m_ps ;  // the actual function
+      // ======================================================================
+    } ;
+
+
+
+
     // ========================================================================
     /** @class PhaseSpace23L
      *  simple model for 2-body phase space from 3-body decays with
@@ -3019,8 +3100,6 @@ namespace Ostap
       RooRealProxy m_x    ;
       RooRealProxy m_tau  ;
       RooListProxy m_phis ;
-      // ======================================================================
-      TIterator* m_iterator;  //! do not persist
       // ======================================================================
     private:
       // ======================================================================

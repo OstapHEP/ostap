@@ -400,6 +400,13 @@ bool Ostap::Math::PhaseSpaceLeft::setThreshold ( const double x )
   return true ;
 }
 // ============================================================================
+// get the tag  
+// ============================================================================
+std::size_t Ostap::Math::PhaseSpaceLeft::tag () const  // get the tag
+{ return std::hash_combine ( m_threshold , m_num ) ; }
+// ============================================================================
+
+// ============================================================================
 // constructor from threshold and number of particles
 // ============================================================================
 Ostap::Math::PhaseSpaceRight::PhaseSpaceRight
@@ -448,14 +455,16 @@ double Ostap::Math::PhaseSpaceRight::integral
 // ============================================================================
 bool Ostap::Math::PhaseSpaceRight::setThreshold ( const double x )
 {
-  //
   if ( s_equal ( x , m_threshold ) ) { return false ; } // RETURN
-  //
   m_threshold = x ;
-  //
   return true ;
-  //
 }
+// ============================================================================
+// get the tag  
+// ============================================================================
+std::size_t Ostap::Math::PhaseSpaceRight::tag () const  // get the tag
+{ return std::hash_combine ( m_threshold , m_N , m_L  ) ; }
+// ============================================================================
 
 // ============================================================================
 // constructor from thresholds and number of particles

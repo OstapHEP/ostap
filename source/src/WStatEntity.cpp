@@ -76,6 +76,11 @@ Ostap::WStatEntity::add
 double Ostap::WStatEntity::sum   () const  // sum_i weight_i * value_i
 { return 0 < n () ? m_mu * sumw () : 0.0 ; }
 // ============================================================================
+// sum_i weight_i*(value_i**2)
+// ============================================================================
+double Ostap::WStatEntity::sum2  () const  // sum_i weight_i * (value_i**2)
+{ return 1 < n () ? ( dispersion () + std::pow ( mean () , 2 ) ) * sumw () : 0.0 ; }
+// ============================================================================
 // get the sample mean
 // ============================================================================
 double Ostap::WStatEntity::meanErr () const

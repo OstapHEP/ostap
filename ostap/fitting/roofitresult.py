@@ -44,8 +44,8 @@ def _rfr_params_ (self , float_only = True ) :
     """GetParameters from RooFitResult:
     >>> result = ...
     >>> params = results
-    >>> p0     = params['A'][0]  ## get the value
-    >>> p0s    = params['A'][1]  ## get the parameter itself     
+    >>> p0     = params()['A'][0]  ## get the value
+    >>> p0s    = params()['A'][1]  ## get the parameter itself     
     """
     pars  = self.floatParsFinal()
     pars_ = {}

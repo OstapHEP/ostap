@@ -317,8 +317,162 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    
+    // ========================================================================
+    /** @class PhaseSpaceLeftExpoPol
+     *  Function to represent the product of l-body phase space, 
+     *  positive polynomial and the exponential function 
+     *  \f[ \Phi_{l}^{(N)(x)} \propto
+     *      \Phi_{l}(x;x_{low}) \mathrm{e}^{-\left|\tau\right| x } P_{N}(x) \f]
+     *  where :
+     *  -  \f$  \Phi_{l}(x;x_{low}) \f$  is a phase space of 
+     *     l-particles near the threshold 
+     *  -  \f$ P_{N}(x) \f$ is a positive polynomial of degree N
+     *  
+     *  @see Ostap::Math::PhaseSpaceLeft
+     *  @see Ostap::Math::Positive
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2018-10-21
+     */
+    class PhaseSpaceLeftExpoPol final
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from threshold and number of particles
+       *  @param threshold_L the low-mass  threshold
+       *  @param l           how many particles we consider
+       *  @param N           degree of polynomial
+       *  @param tau         the exponent 
+       *  @param xhigh       the high edge 
+       */
+      PhaseSpaceLeftExpoPol ( const double         threshold_L =  0 ,   // low threshold 
+                              const unsigned short l           =  2 ,   // number of particles 
+                              const unsigned short N           =  1 ,   // degree of polynomial
+                              const double         tau         =  0 ,   // the exponent 
+                              const double         xhigh       =  1 ) ; // high edge 
+      // =====================================================================
+      /** constructor from threshold and number of particles
+       *  @param threshold_L the low-mass  threshold
+       *  @param l           how many particles we consider
+       *  @param N           degree of polynomial
+       *  @param tau         the exponent 
+       *  @param xlow        the low  edge 
+       *  @param xhigh       the high edge 
+       */
+      PhaseSpaceLeftExpoPol ( const double         threshold_L ,   // low threshold 
+                              const unsigned short l           ,   // number of particles 
+                              const unsigned short N           ,   // degree of polynomial
+                              const double         tau         ,   // the exponent 
+                              const double         xlow        ,   // low edge 
+                              const double         xhigh       ) ; // high edge 
+      // =====================================================================
+      /** constructor from the phase space and polynomial degree
+       *  @param ps          phase space factor
+       *  @param N           degree of polynomial
+       *  @param tau         the exponent 
+       *  @param xhigh       the high edge 
+       */
+      PhaseSpaceLeftExpoPol ( const PhaseSpaceLeft& ps        ,
+                              const unsigned short  N     = 1 ,   // degree of polynomial
+                              const double          tau   = 0 ,   // the exponent 
+                              const double          xhigh = 1 ) ; // high edge 
+      // =========================================================================
+      /** constructor from the phase space and polynomial degree
+       *  @param ps          phase space factor
+       *  @param N           degree of polynomial
+       *  @param tau         the exponent 
+       *  @param xlow        the low  edge 
+       *  @param xhigh       the high edge 
+       */
+      PhaseSpaceLeftExpoPol ( const PhaseSpaceLeft& ps    ,
+                              const unsigned short  N     ,   // degree of polynomial
+                              const double          tau   ,   // the exponent 
+                              const double          xlow  ,   // low edge 
+                              const double          xhigh ) ; // high edge
+      // ======================================================================
+      /// destructor 
+      ~PhaseSpaceLeftExpoPol() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate modulated phase space
+      double evaluate    ( const double x ) const ;
+      /// evaluate modulated phase space
+      double operator () ( const double x ) const  
+      { return evaluate ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const Ostap::Math::PhaseSpaceLeft& phasespace () const { return m_phasespace ; }
+      const Ostap::Math::Positive&       polynom    () const { return m_positive   ; }
+      const Ostap::Math::Positive&       positive   () const { return m_positive   ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get number of parameters
+      std::size_t npars   () const { return m_positive.npars () ; }
+      /// set k-parameter
+      bool setPar         ( const unsigned short k , const double value )
+      { return m_positive.setPar ( k , value ) ; }
+      /// set k-parameter
+      bool setParameter   ( const unsigned short k , const double value )
+      { return setPar     ( k , value ) ; }
+      /// get the parameter value
+      double  par         ( const unsigned short k ) const
+      { return m_positive.par ( k ) ; }
+      /// get the parameter value
+      double  parameter   ( const unsigned short k ) const
+      { return m_positive.par ( k ) ; }
+      ///  get all parameters 
+      const  std::vector<double>& pars() const { return m_positive.pars() ; }
+      // get the order of polynomial 
+      unsigned short n   () const { return m_positive.degree() ; }
+      /// get the exponent 
+      double   tau       () const { return m_tau ; }
+      /// get the threshold  
+      double   threshold () const { return m_phasespace.threshold() ; }
+      // ======================================================================
+      double xmin () const { return m_positive.xmin() ; }
+      double xmax () const { return m_positive.xmax() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set the new exponent 
+      bool setTau ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between low and high limits
+      double integral ( const double low  ,
+                        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const Ostap::Math::PhaseSpaceLeft* operator->() const 
+      { return &m_phasespace ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the phase space
+      Ostap::Math::PhaseSpaceLeft m_phasespace ; // the phase space
+      Ostap::Math::Positive       m_positive   ; // the positive polynom
+      double                      m_tau        ; // the exponent
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace      m_workspace {} ; // integration workspace
+      // ======================================================================
+    } ;
+    // ========================================================================
 
-   // ========================================================================
+    // ========================================================================
     /** @class GammaDist
      *  Gamma-distribution shape/scale parameters
      *  http://en.wikipedia.org/wiki/Gamma_distribution

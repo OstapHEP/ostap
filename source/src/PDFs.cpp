@@ -3272,6 +3272,118 @@ Double_t Ostap::Models::PhaseSpacePol::analyticalIntegral
 
 
 
+#include <iostream>
+// ============================================================================
+//  PhaseSpaceLeft x expo x pol 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol 
+( const char*                        name      , 
+  const char*                        title     ,
+  RooRealVar&                        x         ,
+  const Ostap::Math::PhaseSpaceLeft& ps        , 
+  RooAbsReal&                        tau       ,
+  RooArgList&                        phis      )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x        ( "x"       , "Observable"   , this , x   ) 
+  , m_tau      ( "tau"     , "Exponent"     , this , tau )
+  , m_phis     ( "phi"     , "Coefficients" , this )
+    //
+  , m_ps       ( ps , phis.getSize() , 0.0 , x.getMin() , x.getMax() ) 
+{
+  //
+  RooAbsArg*   coef = 0 ;
+  unsigned     num  = 0 ;
+  Ostap::Utils::Iterator   tmp ( phis ) ;
+  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_ps.npars() )
+  {
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
+    if ( 0 == r ) { continue ; }
+    m_phis.add ( *coef ) ;
+  }
+  //
+  std::cout << " N1/N2=" << m_ps.npars() << "/" << m_phis.getSize() << std::ends ;
+  //
+  setPars() ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol::~PhaseSpaceLeftExpoPol () {}
+// ======================================================================
+// "copy" constructor 
+// ======================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol 
+( const Ostap::Models::PhaseSpaceLeftExpoPol& right , 
+  const char*                                 name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x        ( "x"      , this , right.m_x    ) 
+  , m_tau      ( "tau"    , this , right.m_tau  )
+  , m_phis     ( "phis"   , this , right.m_phis ) 
+    //
+  , m_ps       ( right.m_ps       ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol* 
+Ostap::Models::PhaseSpaceLeftExpoPol::clone ( const char* name ) const 
+{ return new Ostap::Models::PhaseSpaceLeftExpoPol ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::PhaseSpaceLeftExpoPol::setPars () const 
+{
+  //
+  m_ps.setTau ( m_tau ) ;
+  RooAbsArg*       phi   = 0 ;
+  const RooArgSet* nset  = m_phis.nset() ;
+  //
+  unsigned short k = 0 ;
+  Ostap::Utils::Iterator it ( m_phis ) ;
+  while ( ( phi = (RooAbsArg*) it.next() ) )
+  {
+    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
+    if ( 0 == r ) { continue ; }
+    const double phi   = r->getVal ( nset ) ;
+    m_ps.setPar ( k  , phi ) ;
+    ++k ;
+  }
+  //
+}
+// ============================================================================
+// evaluate the function
+// ============================================================================
+Double_t Ostap::Models::PhaseSpaceLeftExpoPol::evaluate () const 
+{
+  setPars () ;
+  return m_ps ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::PhaseSpaceLeftExpoPol::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::PhaseSpaceLeftExpoPol::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_ps.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
 // ============================================================================
 // generic polinomial
 // ============================================================================
@@ -6943,10 +7055,11 @@ ClassImp(Ostap::Models::PhaseSpaceLeft     )
 ClassImp(Ostap::Models::PhaseSpaceRight    ) 
 ClassImp(Ostap::Models::PhaseSpaceNL       ) 
 ClassImp(Ostap::Models::PhaseSpacePol      ) 
+ClassImp(Ostap::Models::PhaseSpaceLeftExpoPol ) 
 ClassImp(Ostap::Models::PhaseSpace23L      ) 
 ClassImp(Ostap::Models::PolyPositive       ) 
 ClassImp(Ostap::Models::PolyPositiveEven   ) 
-ClassImp(Ostap::Models::PolyMonotonic     ) 
+ClassImp(Ostap::Models::PolyMonotonic      ) 
 ClassImp(Ostap::Models::PolyConvex         ) 
 ClassImp(Ostap::Models::PolyConvexOnly     ) 
 ClassImp(Ostap::Models::ExpoPositive       ) 
@@ -6977,7 +7090,7 @@ ClassImp(Ostap::Models::Weibull            )
 ClassImp(Ostap::Models::RaisingCosine      )
 ClassImp(Ostap::Models::QGaussian          )
 ClassImp(Ostap::Models::PositiveSpline     ) 
-ClassImp(Ostap::Models::MonotonicSpline   ) 
+ClassImp(Ostap::Models::MonotonicSpline    ) 
 ClassImp(Ostap::Models::ConvexOnlySpline   )
 ClassImp(Ostap::Models::ConvexSpline       )
 // ============================================================================

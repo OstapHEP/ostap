@@ -107,7 +107,7 @@ def _globWithEOS( self , pattern ) :
 
 # =============================================================================
 ## replace the default method 
-DATA.Files.globPattern = _globWithEOS
+## DATA.Files.globPattern = _globWithEOS
 
 # =============================================================================
 ## @class DataAndLumi
@@ -141,7 +141,7 @@ class DataAndLumi(Data2):
     def getLumi ( self ):
         """Get the luminosity
         """
-        from   Ostap.GetLumi import getLumi
+        from   ostap.contrib.lhcb.lumi import getLumi
         return getLumi ( self.chain2  )
 
     ## printout 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/contrib/lhcb/lumi.py
 #  Helper function to extract luminosity 
 #
 #  @code

@@ -159,6 +159,7 @@ __all__ = (
     'Sigmoid_pdf'          , ## Background: sigmoid modulated by positive polynom
     'TwoExpoPoly_pdf'      , ## Background: difference of two exponents modulated by polynom
     'PSPol_pdf'            , ## phase space modulated by positive polynomial
+    'PSLeftExpoPol_pdf'    , ## phase space modulated by positive polynomial
     'PS2_pdf'              , ## 2-body phase space (no parameters)
     'PSLeft_pdf'           , ## Low  edge of N-body phase space 
     'PSRight_pdf'          , ## High edge of L-body phase space from N-body decays  

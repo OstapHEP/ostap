@@ -470,6 +470,181 @@ std::size_t Ostap::Math::PhaseSpacePol::tag () const
 
 
 // ============================================================================
+/* constructor from threshold and number of particles
+ *  @param threshold_L the low-mass  threshold
+ *  @param l           how many particles we consider
+ *  @param N           degree of polynomial
+ *  @param tau         the exponent 
+ *  @param xhigh       the high edge 
+ */
+// ============================================================================
+Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
+( const double         threshold_L ,   // low threshold 
+  const unsigned short l           ,   // number of particles 
+  const unsigned short N           ,   // degree of polynomial
+  const double         tau         ,   // the exponent 
+  const double         xhigh       )   // high edge 
+  : PhaseSpaceLeftExpoPol ( threshold_L , l , N , tau , threshold_L , xhigh ) 
+{}
+// ============================================================================
+/*  constructor from the phase space and polynomial degree
+ *  @param ps          phase space factor
+ *  @param N           degree of polynomial
+ *  @param tau         the exponent 
+ *  @param xhigh       the high edge 
+ */
+// ============================================================================
+Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
+( const Ostap::Math::PhaseSpaceLeft& ps ,
+  const unsigned short  N     ,   // degree of polynomial
+  const double          tau   ,   // the exponent 
+  const double          xhigh )   // high edge 
+  : PhaseSpaceLeftExpoPol ( ps , N , tau , ps.threshold () , xhigh ) 
+{}
+// ============================================================================
+/* constructor from threshold and number of particles
+ *  @param threshold_L the low-mass  threshold
+ *  @param l           how many particles we consider
+ *  @param N           degree of polynomial
+ *  @param tau         the exponent 
+ *  @param xlow        the low  edge 
+ *  @param xhigh       the high edge 
+ */
+// ============================================================================
+Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
+( const double         threshold_L ,   // low threshold 
+  const unsigned short l           ,   // number of particles 
+  const unsigned short N           ,   // degree of polynomial
+  const double         tau         ,   // the exponent 
+  const double         xlow        ,   // low edge 
+  const double         xhigh       )   // high edge 
+  : PhaseSpaceLeftExpoPol ( Ostap::Math::PhaseSpaceLeft ( threshold_L , l ) , 
+                            N , tau , xlow , xhigh ) 
+{}
+// ============================================================================
+/* constructor from the phase space and polynomial degree
+ *  @param ps          phase space factor
+ *  @param N           degree of polynomial
+ *  @param tau         the exponent 
+ *  @param xlow        the low  edge 
+ *  @param xhigh       the high edge 
+ */
+// ============================================================================
+Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
+( const PhaseSpaceLeft& ps    ,
+  const unsigned short  N     ,   // degree of polynomial
+  const double          tau   ,   // the exponent 
+  const double          xlow  ,   // low edge 
+  const double          xhigh )  // high edge
+  : m_phasespace  ( ps ) 
+  , m_positive    ( N  ,
+                    std::max ( ps.threshold () , std::min ( xlow , xhigh ) ) , 
+                    std::max ( xlow , xhigh ) ) 
+  , m_tau         ( std::abs ( tau ) )
+  , m_workspace   ( ) 
+{
+  Ostap::Assert ( m_phasespace.threshold() <= m_positive.xmin () , 
+                  "Invalid setting of threshold/xmin/xmax" ,
+                  "Ostap::Math::PhaseSpaceLeftPol" ) ;  
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Math::PhaseSpaceLeftExpoPol::~PhaseSpaceLeftExpoPol(){}
+// ============================================================================
+// evaluate the modulated phase space
+// ============================================================================
+double Ostap::Math::PhaseSpaceLeftExpoPol::evaluate ( const double x ) const 
+{
+  if  ( x <= xmin () || x >= xmax () ) { return 0 ; }
+  const double xc = 0.5 * ( xmin() + xmax() ) ;
+  return  
+    m_phasespace ( x  ) * 
+    // m_phasespace ( xc ) *  
+    m_positive   ( x  ) *  
+    std::exp     ( -1 * m_tau  * ( x - xc ) ) ;
+}
+// ============================================================================
+// set tau-parameter
+// ============================================================================
+bool Ostap::Math::PhaseSpaceLeftExpoPol::setTau ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_tau ) ) { return false ; }
+  m_tau = avalue ;
+  return true ;
+}
+// =============================================================================
+// get the integral between low and high limits
+// =============================================================================
+double Ostap::Math::PhaseSpaceLeftExpoPol::integral 
+( const double low  ,
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; } // return 
+  else if ( high < low             ) { return -1 * integral ( high , low ) ; } // RETURN
+  else if ( high <= xmin ()        ) { return 0 ; }
+  else if ( low  >= xmax ()        ) { return 0 ; }
+  //
+  const double xlow  = std::max ( low  , xmin () ) ;
+  const double xhigh = std::min ( high , xmax () ) ;
+  //
+  // if the exponent plays important role, split the interval 
+  if ( !s_zero ( m_tau ) ) 
+  {
+    if  ( 2 < ( xhigh - xlow ) * m_tau )  
+    {
+      const double xc = 0.5 * ( xhigh + xlow ) ;
+      return integral ( xlow , xc ) + integral ( xc , xhigh ) ;
+    }
+  }
+  //
+  /// split near-threshold region 
+  const double delta =  xmax() - threshold() ;
+  const double len   =  xhigh  -  xlow  ;
+  const double x1 = threshold () + 0.05 * delta ;
+  if ( 0.05 * delta < len && xlow < x1 && x1 < xhigh ) 
+  { return integral ( xlow , x1 ) + integral ( x1 , xhigh ) ; }
+  const double x2 = threshold () + 0.15 * delta ;
+  if ( 0.10 * delta < len && xlow < x2 && x2 < xhigh ) 
+  { return integral ( xlow , x2 ) + integral ( x2 , xhigh ) ; }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<PhaseSpaceLeftExpoPol> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpaceLeftExpoPol)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag () ,  
+      &F     , 
+      xlow   , xhigh      ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::PhaseSpaceLeftExpoPol::tag () const 
+{ return std::hash_combine ( m_phasespace.tag () , m_positive.tag () , m_tau ) ; }
+// ============================================================================
+
+
+
+
+
+
+// ============================================================================
 // constructor from the order
 // ============================================================================
 Ostap::Math::ExpoPositive::ExpoPositive
