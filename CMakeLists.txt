@@ -69,10 +69,19 @@ if ( EXISTS "${DOXYGEN_EXECUTABLE}" )
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen (could be time consuming O(15-20'))"
         VERBATIM)
+
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc/html)
  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc/html DESTINATION doc)
+endif()
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc/man)
  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc/man  DESTINATION doc)
+endif()
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/ROOT.tag)
  install(FILES     ${CMAKE_CURRENT_BINARY_DIR}/ROOT.tag         DESTINATION doc)
+endif()
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/ostap_doxy.tag)
  install(FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_doxy.tag   DESTINATION doc)
+endif()
 endif() 
 endif(BUILD_DOC)
 
