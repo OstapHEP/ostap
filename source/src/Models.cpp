@@ -593,7 +593,7 @@ double Ostap::Math::PhaseSpaceLeftExpoPol::integral
   // if the exponent plays important role, split the interval 
   if ( !s_zero ( m_tau ) ) 
   {
-    if  ( 2 < ( xhigh - xlow ) * m_tau )  
+    if  ( 3 < ( xhigh - xlow ) * m_tau )  
     {
       const double xc = 0.5 * ( xhigh + xlow ) ;
       return integral ( xlow , xc ) + integral ( xc , xhigh ) ;

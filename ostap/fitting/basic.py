@@ -556,6 +556,9 @@ class PDF (MakeVar) :
             ## draw invizible data (for normalzation of fitting curves)
             #
             data_options = kwargs.pop ( 'data_options' , FD.data_options )
+            if dataset and dataset.isWeighted() and dataset.isNonPoissonWeighted() : 
+                data_options = data_options + ( ROOT.RooFit.DataError( ROOT.RooAbsData.SumW2 ) )
+                
             if dataset : dataset .plotOn ( frame , ROOT.RooFit.Invisible() , *data_options )
 
             ## draw various ``background'' terms
@@ -2032,7 +2035,7 @@ class Fit1D (PDF) :
                 self.alist1.add ( self.__all_signals[0]  )
                 self.__nums_signals.append ( sf ) 
             elif 2 <= ns : 
-                fis = self.make_fracs ( ns , 'S[%%d]%s' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False )
+                fis = self.make_fracs ( ns , 'S{%%d}%s' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False )
                 for s in self.__all_signals : self.alist1.add ( s )
                 for f in fis                : self.__nums_signals.append ( f ) 
 
@@ -2042,7 +2045,7 @@ class Fit1D (PDF) :
                 self.alist1.add ( self.__all_backgrounds[0]  )
                 self.__nums_backgrounds.append ( bf ) 
             elif 2 <= nb :
-                fib = self.make_fracs ( nb , 'B[%%d]%s' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False )
+                fib = self.make_fracs ( nb , 'B{%%d}%s' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False )
                 for b in self.__all_backgrounds : self.alist1.add ( b )
                 for f in fib                    : self.__nums_backgrounds.append ( f ) 
 
@@ -2052,7 +2055,7 @@ class Fit1D (PDF) :
                 self.alist1.add  ( self.__all_components[0]  )
                 self.__nums_components.append ( cf ) 
             elif 2 <= nc : 
-                fic = self.make_fracs ( nc , 'C[%%d]%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False )
+                fic = self.make_fracs ( nc , 'C{%%d}%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False )
                 for c in self.__all_components : self.alist1.add ( c )
                 for f in fic                   : self.__nums_components.append ( f )
 
@@ -2070,7 +2073,7 @@ class Fit1D (PDF) :
             for b in self.__all_backgrounds : self.alist1.add ( b )
             for c in self.__all_components  : self.alist1.add ( c )
             
-            fic = self.make_fracs ( ns + nb + nc , 'f[%%d]%s' % suffix , 'f(%%d)%s'  % suffix ,
+            fic = self.make_fracs ( ns + nb + nc , 'f{%%d}%s' % suffix , 'f(%%d)%s'  % suffix ,
                                     fractions  = True , recursive = self.recursive )
             
             for f in fic                    : self.__nums_fractions.append ( f )   
