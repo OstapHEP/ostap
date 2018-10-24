@@ -774,7 +774,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,
-               Ostap.Math.MonotonicSpline       ,
+               Ostap.Math.MonotonicSpline        ,
                Ostap.Math.ConvexSpline           ,
                Ostap.Math.ConvexOnlySpline       ,
                #

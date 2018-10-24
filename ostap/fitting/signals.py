@@ -2852,18 +2852,18 @@ class Flatte_pdf(MASS) :
                                                '#gamma_{2}/#gamma_{1}(%s)' % name ,
                                                g2og1    ,  1  ,  0.01  , 100  ) 
                 
-                self.__lst1   = ROOT.RooArgList ( self.m0g1 , self.m0 ) 
+                self.__lst1   = ROOT.RooArgList ( self.m0g1  , self.m0     ) 
                 self.__gamma1 = ROOT.RooRealVar ( 
                     'g1_%s'          % name ,
                     '#gamma_{1}(%s)' % name ,
-                    '%s / %s '  % ( self.m0g1.GetName() , self.m0.GetName() )
-                    self._lst1  )
+                    '%s / %s '  % ( self.m0g1.GetName() , self.m0.GetName() ) , 
+                    self.__lst1  )
                 self.__lst2   = ROOT.RooArgList ( self.g2og1 , self.gamma1 ) 
                 self.__gamma2 = ROOT.RooRealVar ( 
                     'g2_%s'          % name ,
                     '#gamma_{2}(%s)' % name ,
-                    '%s * %s '  % ( self.g2og1.GetName() , self.gamma1.GetName() )
-                    self._lst2 )
+                    '%s * %s '  % ( self.g2og1.GetName() , self.gamma1.GetName() ) , 
+                    self.__lst2 )
 
             elif gamma1 is None : raise TypeError ( 'Flatte_pdf: gamma1 is not specified!' ) 
             elif gamma2 is None : raise TypeError ( 'Flatte_pdf: gamma2 is not specified!' ) 
@@ -2884,13 +2884,13 @@ class Flatte_pdf(MASS) :
                                                   self.gamma.getMin () ,
                                                   self.gamma.getMax () )
                 
-                self.__lst1  = ROOT.RooArgList ( self.m0 , self.gamma1 ) 
+                self.__lst1  = ROOT.RooArgList ( self.m0     , self.gamma1 ) 
                 self.__m0g1  = ROOT.RooFormulaVar (
                     'm0g1_%s' % name ,
                     'm_{0}*\gamma_{1}(%s)' % name ,
                     '%s * %s ' % ( self.m0.GetName() , self.gamma1.GetName() ) ,
                     self.__lst1 )
-                self.__lst2  = ROOT.RooArgList ( self.gamma1 , self.gamma2 ) 
+                self.__lst2  = ROOT.RooArgList ( self.gamma2 , self.gamma1 ) 
                 self.__g2og1 = ROOT.RooFormulaVar ( 
                     'g2og1_%s'                  % name ,
                     '#gamma_{2}/#gamma_{1}(%s)' % name , g2og1 ,

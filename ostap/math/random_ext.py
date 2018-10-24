@@ -22,6 +22,7 @@ __all__ = (
     'poisson'  ,  ## poisson (missing in python random module) 
     )
 # =============================================================================
+import sys
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.math.random_ext')
 else                      : logger = getLogger ( __name__               ) 
@@ -48,11 +49,28 @@ def _bifur_ ( self , mu , sigma1 , sigma2 ) :
     if _aux <= _frac : return mu + sigma1 * _gau
     else             : return mu + sigma2 * _gau 
 
+
+# ==============================================================================
+_fmin = 1000 * sys.float_info.min 
+# =============================================================================
+## generate Cauchy random numbers 
+#  - rely on the distribution of the ratio for two Gaussian variables 
+#  @see https://en.wikipedia.org/wiki/Cauchy_distribution
+def _cauchy_ ( self , mu , gamma ) :
+    """Generate Cauchy random numbers 
+    - rely on the distribution of the ratio for two Gaussian variables 
+    - see https://en.wikipedia.org/wiki/Cauchy_distribution
+    """
+    g1 = self.gauss ( 0.0 , 1.0 )
+    while abs ( g1 ) < _fmin : g1 = self.gauss ( 0.0 , 1.0 )
+    g2 = self.gauss ( 0.0 , 1.0 )
+    return 1.0 * mu + ( 1.0 * g2 / g1 ) * gamma 
+    
 # =============================================================================
 ## generate bifurcated gaussian using Value
 #  @see Ostap::Math::ValueWithError
 def _ve_gauss_ ( self , val ) :
-    """Generate the gaussian accoridng to Ostap.Math.ValueWithError
+    """Generate the gaussian according to Ostap.Math.ValueWithError
     >>> ve    = VE ( 1 , 2 ) 
     >>> value = ve_gauss ( ve  )
     """
@@ -97,10 +115,13 @@ if not hasattr ( random.Random , 've_gauss'  ) : random.Random.ve_gauss  = _ve_g
 if not hasattr ( random        , 've_gauss'  ) : random.ve_gauss         = random._inst.ve_gauss
 if not hasattr ( random.Random , 'poisson'   ) : random.Random.poisson   = _poisson_
 if not hasattr ( random        , 'poisson'   ) : random.poisson          = random._inst.poisson
+if not hasattr ( random.Random , 'cauchy'    ) : random.Random.cauchy    = _cauchy_
+if not hasattr ( random        , 'cauchy'    ) : random.cauchy           = random._inst.cauchy
 
 bifur    = random.bifur
 ve_gauss = random.ve_gauss
 poisson  = random.poisson
+cauchy   = random.cauchy
 
 # =============================================================================
 if '__main__' == __name__  :

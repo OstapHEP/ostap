@@ -802,7 +802,7 @@ double Ostap::Math::Rho0FromEtaPrime::operator() ( const double x ) const
 // ============================================================================
 //               Flatte
 // ============================================================================
-/* constructor  from three parameters
+/*  constructor  from three parameters
  *  @param m0    the mass
  *  @param m0g1  parameter \f$ m_0\times g_1\f$
  *  @param g2og2 parameter \f$ g2/g_1       \f$
@@ -1024,8 +1024,6 @@ bool Ostap::Math::Flatte::setG2oG1  ( const double x )
 }
 // ============================================================================
 
-
-
 // ============================================================================
 //               Flatte-2
 // ============================================================================
@@ -1046,9 +1044,11 @@ Ostap::Math::Flatte2::Flatte2
   : Ostap::Math::Flatte ( m0 , m0g1 , g2og1 , mA1 , mA2 , mB1 , mB2 )
 {}
 // ============================================================================
+// constructor  from Flatte
+// ============================================================================
 Ostap::Math::Flatte2::Flatte2
-( const Ostap::Math::Flatte& flatte ) 
-  : Ostap::Math::Flatte ( flatte )
+( const Ostap::Math::Flatte& flatte )
+  : Ostap::Math::Flatte ( flatte ) 
 {}
 // ============================================================================
 // destructor
