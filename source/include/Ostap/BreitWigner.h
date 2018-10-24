@@ -361,6 +361,8 @@ namespace Ostap
                 const double mA2   = 139.6 ,
                 const double mB1   = 493.7 ,
                 const double mB2   = 493.7 ) ;
+      /// copy constructor 
+      Flatte ( const Flatte& right ) = default ;
       /// destructor
       virtual ~Flatte () ;
       // ======================================================================
@@ -491,7 +493,9 @@ namespace Ostap
                 const double mB1   = 493.7 ,
                 const double mB2   = 493.7 ) ;
       /// constructor  from Flatte
-      Flatte2 ( const Flatte& flatte ) ;
+      Flatte2 ( const Flatte&  flatte ) ;
+      /// copy constructor 
+      Flatte2 ( const Flatte2& flatte ) = default ;
       /// destructor
       virtual ~Flatte2 () ;
       /// clone it!

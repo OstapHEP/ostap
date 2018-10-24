@@ -2812,46 +2812,97 @@ class Flatte_pdf(MASS) :
     """
     def __init__ ( self              ,
                    name              ,
-                   flatte            , ## Ostap::Math::Flatte/Flatte2
+                   flatte            ,    ## Ostap::Math::Flatte/Flatte2
                    xvar              ,
-                   m0_980   = None   ,    ## mass  of f0(980) resonance
-                   m0g1     = 165000 ,    ## m0(f0(980))*gamma_1 
-                   g2og1    = 4.21   ) :  ## gamma2/gamma1 
+                   m0       = None   ,    ## the pole 
+                   m0g1     = None   ,    ## m0*gamma_1 
+                   g2og1    = None   ,    ## gamma2/gamma1 
+                   gamma1   = None   ,    ## gamma1 
+                   gamma2   = None   ) :  ## gamma2 
         
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , m0_980 , None )
+        MASS.__init__  ( self , name , xvar , m0 , None )
 
-        self.__flatte =   flatte
+        self.__flatte = flatte
             
-        self.__m0_980 = self.mean
-        if self.m0_980 != m0_980 : 
+        self.__m0 = self.mean
+        if self.m0 != m0 : 
             sname  = self.mean.GetName  ()
             stitle = self.mean.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'm0_980' )
-            gtitle = stitle.replace ( 'mean' , 'm0_980' )
-            self.m0_980.SetName  ( gname  ) 
-            self.m0_980.SetTitle ( gtitle ) 
-            
-        self.__m0g1 = self.make_var  ( m0g1                          ,
-                                 'm0g1_%s'              % name ,
-                                 'm_{0}*\gamma_{1}(%s)' % name , m0g1 ,
-                                 165                           ,
-                                 1.e-5                         ,
-                                 1.e+5                         )
-        
-        self.__g2og1 = self.make_var ( g2og1    ,
-                                 'g2og1_%s'                  % name ,
-                                 '#gamma_{2}/#gamma_{1}(%s)' % name , g2og1 , 
-                                 4.21     , 
-                                 0.01     , 100 ) 
+            gname  = sname .replace ( 'mean' , 'm0' )
+            gtitle = stitle.replace ( 'mean' , 'm0' )
+            self.m0.SetName  ( gname  ) 
+            self.m0.SetTitle ( gtitle ) 
+
+            if   gamma1 is None and gamma2 is None :
+
+                vmin = 0.2 * self.mean.getMin () * self.gamma.getMin ()
+                vmin = 0.2 * self.mean.getMin () * self.gamma.getMin ()
+                vmax = 2.0 * self.mean.getMax () * self.gamma.getMax ()
+                
+                self.__m0g1 = self.make_var  ( m0g1                          ,
+                                               'm0g1_%s'              % name ,
+                                               'm_{0}*\gamma_{1}(%s)' % name ,
+                                               m0g1 , m0g1 , vmin , xmax )
+                
+                self.__g2og1 = self.make_var ( g2og1    ,
+                                               'g2og1_%s'                  % name ,
+                                               '#gamma_{2}/#gamma_{1}(%s)' % name ,
+                                               g2og1    ,  1  ,  0.01  , 100  ) 
+                
+                self.__lst1   = ROOT.RooArgList ( self.m0g1 , self.m0 ) 
+                self.__gamma1 = ROOT.RooRealVar ( 
+                    'g1_%s'          % name ,
+                    '#gamma_{1}(%s)' % name ,
+                    '%s / %s '  % ( self.m0g1.GetName() , self.m0.GetName() )
+                    self._lst1  )
+                self.__lst2   = ROOT.RooArgList ( self.g2og1 , self.gamma1 ) 
+                self.__gamma2 = ROOT.RooRealVar ( 
+                    'g2_%s'          % name ,
+                    '#gamma_{2}(%s)' % name ,
+                    '%s * %s '  % ( self.g2og1.GetName() , self.gamma1.GetName() )
+                    self._lst2 )
+
+            elif gamma1 is None : raise TypeError ( 'Flatte_pdf: gamma1 is not specified!' ) 
+            elif gamma2 is None : raise TypeError ( 'Flatte_pdf: gamma2 is not specified!' ) 
+            else :
+                
+                self.__gamma1 =  self.make_var  ( gamma1                   ,
+                                                  'g1_%s'           % name ,
+                                                  '#gamma_{1}(%s)' % name ,
+                                                  gamma1               ,
+                                                  self.gamma.getVal () ,
+                                                  self.gamma.getMin () ,
+                                                  self.gamma.getMax () )            
+                self.__gamma2 =  self.make_var  ( gamma2                   ,
+                                                  'g2_%s'           % name ,
+                                                  '#gamma_{2}(%s)' % name ,
+                                                  gamma2   ,
+                                                  self.gamma.getVal () ,
+                                                  self.gamma.getMin () ,
+                                                  self.gamma.getMax () )
+                
+                self.__lst1  = ROOT.RooArgList ( self.m0 , self.gamma1 ) 
+                self.__m0g1  = ROOT.RooFormulaVar (
+                    'm0g1_%s' % name ,
+                    'm_{0}*\gamma_{1}(%s)' % name ,
+                    '%s * %s ' % ( self.m0.GetName() , self.gamma1.GetName() ) ,
+                    self.__lst1 )
+                self.__lst2  = ROOT.RooArgList ( self.gamma1 , self.gamma2 ) 
+                self.__g2og1 = ROOT.RooFormulaVar ( 
+                    'g2og1_%s'                  % name ,
+                    '#gamma_{2}/#gamma_{1}(%s)' % name , g2og1 ,
+                    '%s / %s '  % ( self.gamma2.GetName() , self.gamma1.GetName() ) ,
+                    self.__lst2 )
+                
         ## create PDF 
         self.pdf = Ostap.Models.Flatte ( 
             "flatte_"    + name ,
             "Flatte(%s)" % name ,
             self.xvar    ,
-            self.m0_980  ,
+            self.m0      ,
             self.m0g1    ,
             self.g2og1   ,
             self.flatte  )
@@ -2861,19 +2912,24 @@ class Flatte_pdf(MASS) :
             'name'        : self.name    ,
             'flatte'      : self.flatte  ,
             'xvar'        : self.xvar    ,
-            'm0_980'      : self.m0_980  ,
-            'm0g1'        : self.m0g1    ,
-            'g2og1'       : self.g2og1   ,
+            'm0'          : self.m0      ,
             }
+        if gamma1 is None  and gamma2 is None : 
+            self.config.update ( { 'm0g1'   : self.m0g1   , 
+                                   'g2og1'  : self.g2og1  } )
+        else : 
+            self.config.update ( { 'gamma1' : self.gamma1 ,
+                                   'gamma2' : self.gamma2 } )
+            
 
     @property
-    def m0_980 ( self ) :
+    def m0 ( self ) :
         """``m0''-parameter for Flatte-function (same as ``mean'')"""
-        return self.__m0_980
-    @m0_980.setter
-    def m0_980 ( self, value ) :
+        return self.__m0
+    @m0.setter
+    def m0  ( self, value ) :
         value = float ( value )
-        self.__m0_980.setVal ( value ) 
+        self.__m0.setVal ( value ) 
 
     @property
     def m0g1 ( self ) :
@@ -2881,6 +2937,8 @@ class Flatte_pdf(MASS) :
         return self.__m0g1
     @m0g1.setter
     def m0g1 ( self, value ) :
+        assert not isinstance ( self.__m0g1 , ROOT.RooFormulaVar ),\
+               "``m0g1''-parameter can't be set!"
         value = float ( value )
         self.__m0g1.setVal ( value ) 
 
@@ -2890,10 +2948,34 @@ class Flatte_pdf(MASS) :
         return self.__g2og1
     @g2og1.setter
     def g2og1 ( self, value ) :
+        assert not isinstance ( self.__g2og1 , ROOT.RooFormulaVar ),\
+               "``g2og1''-parameter can't be set!"        
         value = float ( value )
         assert 0 < value, "``g2/g1''-parameter for Flatte-function must be positive"
-        self.__g2og1.setVal ( value ) 
+        self.__g2og1.setVal ( value )
 
+    @property
+    def gamma1 ( self ) :
+        "``gamma1''-parameter for Flatte-function"
+        return self.__gamma1
+    @gamma1.setter
+    def gamma1 ( self , value ) :
+        assert not isinstance ( self.__gamma1 , ROOT.RooFormulaVar ),\
+               "``gamma1''-parameter can't be set!"
+        value = float ( value )
+        self.__gamma1.setVal ( value ) 
+
+    @property
+    def gamma2 ( self ) :
+        "``gamma2''-parameter for Flatte-function"
+        return self.__gamma2
+    @gamma2.setter
+    def gamma2 ( self , value ) :
+        assert not isinstance ( self.__gamma2 , ROOT.RooFormulaVar ),\
+               "``gamma2''-parameter can't be set!"
+        value = float ( value )
+        self.__gamma2.setVal ( value ) 
+        
     @property
     def flatte ( self ) :
         """The Flatte function itself"""

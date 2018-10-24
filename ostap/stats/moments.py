@@ -96,7 +96,7 @@ __all__     = (
     "quantile"      , ## calculate "quantile" for functions/distribitions, etc 
     "mode"          , ## calculate "mode"     for functions/distribitions, etc 
     "width"         , ## calculate "width"    for functions/distribitions, etc 
-    "cl_symm"       , ## calculate symmetrical confidence intervals            
+    "cl_symm"       , ## calculate symmetrical  confidence intervals            
     "cl_asymm"      , ## calculate asymmetrical confidence intervals           
     ##
     ) 
@@ -132,54 +132,81 @@ class Moment(object) :
         if not isinstance ( N , ( int , long ) ) or 0 > N  :
             raise TypeError('Moment: illegal order')
         
-        self._N    = N 
-        self._xmin = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
-        self._xmax = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
-        self._x0   = x0  
-        self._err  = err
-        self._args = args
-        self._moms = {}
+        self.__N     = N 
+        self.__xmin  = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
+        self.__xmax  = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
+        self.__err   = err
+        self.__args  = args
+        self.__x0    = x0  
 
     ## make an integral 
     def _integral_ ( self , func , xmn , xmx , *args ) :
         from ostap.math.integral import IntegralCache 
-        integrator = IntegralCache ( func , xmn , err = self._err , args = args )
+        integrator = IntegralCache ( func , xmn , err = self.err , args = args )
         return integrator ( xmx , *args )
     
     ## calculate un-normalized 0-moment  
     def _moment0_ ( self , func , *args ) :
         """Calculate un-normalized 0-moment
         """
-        return self._integral_ ( func , self._xmin , self._xmax , *args )
+        return self._integral_ ( func , self.xmin , self.xmax , *args )
     
     ## calculate un-normalized k-moment  
     def _momentK_ ( self , k , func , mu = None , *args ) :
         """Calculate unnormalized k-moment
         """
-        x0     = self._x0 if mu is None else mu 
+        x0     = self.x0 if mu is None else mu 
         func_N = lambda x,*a : func( x , *a ) * ( ( x - x0 ) ** k  )
-        return self._integral_ ( func_N , self._xmin , self._xmax , *args )
+        return self._integral_ ( func_N , self.xmin , self.xmax , *args )
     
     ## calculate the moment 
     def __call__ ( self , func , *args ) :
         ##
-        args   = args if args else self._args
+        args   = args if args else self.args
         ##
         
-        n0  = self._moment0_ (            func ,            *args ) 
-        nN  = self._momentK_ ( self._N  , func , self._x0 , *args ) 
+        n0  = self._moment0_ (          func ,           *args ) 
+        nN  = self._momentK_ ( self.N , func , self.x0 , *args ) 
         ##
         return nN/n0
 
     ## print it!
     def __str__ ( self ) :
-        return "Moment(%d,%s,%s,%s,%s)" % ( self._N    ,
-                                            self._xmin ,
-                                            self._xmax ,
-                                            self._err  ,
-                                            self._x0   )                                            
+        return "Moment(%d,%s,%s,%s,%s)" % ( self.N    ,
+                                            self.xmin ,
+                                            self.xmax ,
+                                            self.err  ,
+                                            self.x0   )                                            
                                             
+    @property
+    def args ( self ) :
+        "``args'' - other arguments for the function call"
+        return self.__args
+    
+    @property
+    def  err( self ) :
+        "``err''- evaluate the error/uncrtaity?"
+        return self.__err
 
+    @property
+    def  xmin ( self ) :
+        "``xmin''- low edge of the interval"
+        return self.__xmin
+    @property
+    def  xmax ( self ) :
+        "``xmax''- high edge of the interval"
+        return self.__xmax
+    
+    @property
+    def N ( self ) :
+        "``N''- the moment order"
+        return self.__N
+    @property
+    def x0 ( self ) :
+        "``x0''- the center"
+        return self.__x0
+    
+    
 # =============================================================================
 ## @class CentralMoment
 #  Calculate the N-th central moment for the distribution 
@@ -206,23 +233,23 @@ class CentralMoment(Moment) :
     ## calculate the central moment
     def __call__ ( self , func , *args ) :
         ## 
-        args   = args if args else self._args
+        args   = args if args else self.args
         ##
-        n0  = self._moment0_ (     func ,             *args ) 
-        n1  = self._momentK_ ( 1 , func , mu = 0.0  , *args )
+        n0  = self._moment0_ (          func ,             *args ) 
+        n1  = self._momentK_ ( 1      , func , mu = 0.0  , *args )
         ## get mean
-        mu  = float(n1/n0)
+        mu  = float( n1 / n0 )
         ## use it 
-        nN  = self._momentK_ ( self._N  , func , mu , *args ) 
+        nN  = self._momentK_ ( self.N , func , mu , *args ) 
         ##
-        return nN/n0
+        return nN / n0
 
     ## print it!
     def __str__ ( self ) :
-        return "CentralMoment(%d,%s,%s,%s)" % ( self._N    ,
-                                                self._xmin ,
-                                                self._xmax ,
-                                                self._err  )
+        return "CentralMoment(%d,%s,%s,%s)" % ( self.N    ,
+                                                self.xmin ,
+                                                self.xmax ,
+                                                self.err  )
                                                 
 # =============================================================================
 ## @class Mean
@@ -247,9 +274,9 @@ class Mean(Moment) :
         Moment.__init__ ( self , 1 , xmin , xmax , err )
 
     def __str__ ( self ) :
-        return "Mean(%s,%s,%s)" % ( self._xmin ,
-                                    self._xmax ,
-                                    self._err  )                                            
+        return "Mean(%s,%s,%s)" % ( self.xmin ,
+                                    self.xmax ,
+                                    self.err  )                                            
 
 # =============================================================================
 ## @class Variance
@@ -272,7 +299,7 @@ class Variance(Mean) :
     ## calculate the variance 
     def __call__ ( self , func , *args ) :
         ## 
-        args   = args if args else self._args
+        args   = args if args else self.args
         ##
         n0 = self._moment0_ (     func ,            *args ) ## moment-0
         n1 = self._momentK_ ( 1 , func , mu = 0.0 , *args ) ## moment-1 
@@ -284,9 +311,9 @@ class Variance(Mean) :
         return m2/n0
     
     def __str__ ( self ) :
-        return "Variance(%s,%s,%s)" % ( self._xmin ,
-                                        self._xmax ,
-                                        self._err  )                                            
+        return "Variance(%s,%s,%s)" % ( self.xmin ,
+                                        self.xmax ,
+                                        self.err  )                                            
 
 # =============================================================================
 ## @class RMS
@@ -312,16 +339,16 @@ class RMS(Variance) :
         """Calculate the RMS for the distribution or function          
         """
         ##
-        args   = args if args else self._args
+        args   = args if args else self.args
         ##
         var2 = Variance.__call__ ( self , func , *args )
         import ostap.math.math_ve as ME 
         return ME.sqrt ( var2 ) 
 
     def __str__ ( self ) :
-        return "RMS(%s,%s,%s)" % ( self._xmin ,
-                                   self._xmax ,
-                                   self._err  )                                            
+        return "RMS(%s,%s,%s)" % ( self.xmin ,
+                                   self.xmax ,
+                                   self.err  )                                            
 
 # =============================================================================
 ## @class Skewness
@@ -346,7 +373,7 @@ class Skewness(Variance) :
     ## calculate the variance 
     def __call__ ( self , func , *args ) :
         ## 
-        args   = args if args else self._args
+        args   = args if args else self.args
         ##
         n0 = self._moment0_ (     func ,          *args ) ## norm
         n1 = self._momentK_ ( 1 , func , mu = 0 , *args ) ## m1
@@ -362,9 +389,9 @@ class Skewness(Variance) :
         return m3/(m2**(3.0/2))
     
     def __str__ ( self ) :
-        return "Skewness(%s,%s,%s)" % ( self._xmin ,
-                                        self._xmax ,
-                                        self._err  )                                            
+        return "Skewness(%s,%s,%s)" % ( self.xmin ,
+                                        self.xmax ,
+                                        self.err  )                                            
 
 # =============================================================================
 ## @class  Kurtosis
@@ -388,7 +415,7 @@ class Kurtosis(Skewness) :
     ## calculate the kurtosis
     def __call__ ( self , func , *args ) :
         ## 
-        args   = args if args else self._args
+        args   = args if args else self.args
         ##
         n0 = self._moment0_ (     func ,          *args ) ## norm
         n1 = self._momentK_ ( 1 , func , mu = 0 , *args ) ## m1
@@ -404,9 +431,9 @@ class Kurtosis(Skewness) :
         return m4/(m2*m2)-3.0 
     
     def __str__ ( self ) :
-        return "Kurtosis(%s,%s,%s)" % ( self._xmin ,
-                                        self._xmax ,
-                                        self._err  )                                            
+        return "Kurtosis(%s,%s,%s)" % ( self.xmin ,
+                                        self.xmax ,
+                                        self.err  )                                            
 
 
 # =============================================================================
@@ -461,10 +488,10 @@ class Median(RMS) :
 
     ## calculate the median 
     def __call__ ( self , func , *args ) :
-        return self._median_ ( func , self._xmin , self._xmax ,  *args )
+        return self._median_ ( func , self.xmin , self.xmax ,  *args )
 
     def __str__ ( self ) :
-        return "Median(%s,%s)" % ( self._xmin , self._xmax )
+        return "Median(%s,%s)" % ( self.xmin , self.xmax )
     
 # =============================================================================
 ## get the quantile
@@ -485,30 +512,30 @@ class Quantile(Median) :
     def __init__ ( self , Q , xmin , xmax ) :
         Median.__init__ ( self , xmin , xmax )
         #
-        if Q < 0 : raise ArrtibuteError ( 'Quantile is invalid %s' % Q )
-        if Q > 1 : raise ArrtibuteError ( 'Quantile is invalid %s' % Q )
-        self._Q = float( Q ) 
+        assert 0 <= Q <=  1, 'Quantile is invalid %s' % Q 
+
+        self.__Q = float( Q ) 
         
     def __str__ ( self ) :
-        return "Quantile(%s,%s,%s)" % ( self._Q , self._xmin , self._xmax )
+        return "Quantile(%s,%s,%s)" % ( self.Q , self.xmin , self.xmax )
 
     ## calculate the median 
     def __call__ ( self , func , *args ) :
         ##
 
-        if    0.5 == self._Q : return Median.__call__ ( self , func , *args ) 
-        elif  0.0 == self._Q : return self._xmin
-        elif  1.0 == self._Q : return self._xmax
+        if    0.5 == self.Q : return Median.__call__ ( self , func , *args ) 
+        elif  0.0 == self.Q : return self.xmin
+        elif  1.0 == self.Q : return self.xmax
 
         ## need to know the integral
         from ostap.math.integral import IntegralCache
-        iint = IntegralCache ( func, self._xmin, err = False ,  args = args )
-        quan = 1.0 / iint    (  self._xmax ) / self._Q 
+        iint = IntegralCache ( func, self.xmin, err = False ,  args = args )
+        quan = 1.0 / iint    (  self.xmax ) / self.Q 
         
         ifun   = lambda x : iint( x ) * quan - 1.0
 
-        xmn = self._xmin
-        xmx = self._xmax
+        xmn = self.xmin
+        xmx = self.xmax
 
         p   = 0.5
         l   = 0.5
@@ -519,11 +546,11 @@ class Quantile(Median) :
             l /= 2            
             m = self._median_ ( func , xmn , xmx , *args ) 
             
-            if   self._Q < p :
+            if   self.Q < p :
                 xmn   = xmn 
                 xmx   = float( m ) 
                 p    -= l 
-            elif self._Q > p :
+            elif self.Q > p :
                 xmn   = float ( m ) 
                 xmx   = xmx
                 p    +=  l  
@@ -534,6 +561,12 @@ class Quantile(Median) :
         result = findroot ( ifun , xmn , xmx )
             
         return result
+
+    @property
+    def  Q ( self ) :
+        "``Q''-quantile level"
+        return self.__Q
+    
 
 # =============================================================================
 ## @class Mode
@@ -569,8 +602,8 @@ class Mode(Median) :
         _imin = _median - 1.75 * _sigma
         _imax = _median + 1.75 * _sigma
         
-        mn = max ( _imin , self._xmin )
-        mx = min ( _imax , self._xmax )
+        mn = max ( _imin , self.xmin )
+        mx = min ( _imax , self.xmax )
 
         mm = Mode ( mn , mx )
         _median   = Median.__call__ ( mm , func , *args )
@@ -590,6 +623,8 @@ class Mode(Median) :
 
         ## make interval small enough 
         for i in range ( 10 ) :
+
+            if abs ( mx - mn ) * 20 < abs ( self.xmax -  self.xmin ) : break
             
             if mn < _mode < mx and func ( mn , *args ) < _fnm and func ( mx , *args ) < _fnm :
                 
@@ -618,21 +653,23 @@ class Mode(Median) :
                     _fnm  = _new_fnm
                     
             else :
-                break 
-
+                
+                break
+            
         ifun = lambda x,*a : -1.0 * float( func ( x , *a ) )
         
         from ostap.math.minimize import minimize_scalar as _ms 
         result = _ms (
             ifun                     , 
             ## x0     = float ( m0 ) ,
+            method = 'bounded'       , 
             bounds = [ mn , mx ]     ,
             args   = args )
         
         return result.x
     
     def __str__ ( self ) :
-        return "Mode(%s,%s)" % ( self._xmin , self._xmax )
+        return "Mode(%s,%s)" % ( self.xmin , self.xmax )
 
 # =============================================================================
 ## @class Width
@@ -672,13 +709,13 @@ class Width(Mode) :
         ifun = lambda x,*a : float(func (x,*a))-vheight
 
         from ostap.math.rootfinder import findroot
-        x1 = findroot ( ifun , self._xmin , m0         , args = args )
-        x2 = findroot ( ifun , m0         , self._xmax , args = args ) 
+        x1 = findroot ( ifun , self.xmin , m0        , args = args )
+        x2 = findroot ( ifun , m0        , self.xmax , args = args ) 
         
         return x1,x2
 
     def __str__ ( self ) :
-        return "Width(%s,%s,%s)" % ( self._xmin , self._xmax , self._hfactor)
+        return "Width(%s,%s,%s)" % ( self.xmin , self.xmax , self._hfactor)
     
 
 # =============================================================================
@@ -706,20 +743,22 @@ class CL_symm(object) :
         if not 0.0 < prob < 1.0 :
             raise AttributeError ("Invalid value of prob/CL=%g" % prob)
 
-        self._prob = prob 
-        self._xmin = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
-        self._xmax = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
-        self._x0   = float ( x0   ) if isinstance ( x0   , ( int , long ) ) else x0  
-        self._args = args
+        self.__prob = prob 
+        self.__xmin = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
+        self.__xmax = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
+        self.__x0   = float ( x0   ) if isinstance ( x0   , ( int , long ) ) else x0  
+        self.__args = args
         
     def __str__ ( self ) :
-        return "CL_sym(%s,%s,%s,%s)" % ( self._prob ,
-                                         self._xmin , self._xmax , self._x0   )
+        return "CL_sym(%s,%s,%s,%s)" % ( self.prob ,
+                                         self.xmin ,
+                                         self.xmax ,
+                                         self.x0   )
 
     def __call__ ( self , func , *args ) :
 
         ## additional arguments
-        args   = args if args else self._args
+        args   = args if args else self.args
 
         #
         ## define integration rules
@@ -733,12 +772,12 @@ class CL_symm(object) :
         #
         ## xmin/max
         #
-        xmin,xmax = self._xmin, self._xmax
+        xmin,xmax = self.xmin, self.xmax
         
         #
         ## calculate x0 as "mean"-value
         #
-        x0 = self._x0 
+        x0 = self.x0 
         if x0 is None :
             if hasattr ( func , 'mean' ) : x0 = func.mean()
             else                         :
@@ -761,7 +800,7 @@ class CL_symm(object) :
         #
         ## Equation:  ifun(x) \equiv \int_{x0-x}^{x0+x}f(t)dt - N*prob = 0   
         #
-        yval  = self._prob * norm
+        yval  = self.prob * norm
         def ifun ( x ) :
             if 0 >= x : return -yval 
             return _integral_ ( func , max ( xmin , x0 - x ) , min ( xmax , x0 + x )  ) - yval  
@@ -772,6 +811,26 @@ class CL_symm(object) :
         from ostap.math.ve import VE 
         return VE ( x0 , s * s )
 
+    @property
+    def args ( self ) :
+        "``args'' - other arguments for the function call"
+        return self.__args
+    @property
+    def  xmin ( self ) :
+        "``xmin''- low edge of the interval"
+        return self.__xmin
+    @property
+    def  xmax ( self ) :
+        "``xmax''- high edge of the interval"
+        return self.__xmax
+    @property
+    def prob ( self ) :
+        "``prop'' - confidence level"
+        return self.__prob
+    @property
+    def x0 ( self ) :
+        "``x0''- the center"
+        return self.__x0
 
 # =============================================================================
 ## @class CL_asymm
@@ -805,13 +864,13 @@ class CL_asymm(object) :
         if not 0.0 < prob < 1.0 :
             raise AttributeError ("Invalid value of prob/CL=%g" % prob)
 
-        self._prob = prob 
-        self._xmin = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
-        self._xmax = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
-        self._args = args
+        self.__prob = prob 
+        self.__xmin = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
+        self.__xmax = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
+        self.__args = args
 
     def __str__ ( self ) :
-        return "CL_asymm(%s,%s,%s)" % ( self._prob , self._xmin , self._xmax )
+        return "CL_asymm(%s,%s,%s)" % ( self.prob , self.xmin , self.xmax )
 
     ## solve equation f(x)=a 
     def _solve_  ( self , func , fval , xmn , xmx , *args ) :
@@ -824,7 +883,7 @@ class CL_asymm(object) :
     def __call__ ( self , func , *args ) :
 
         ## additional arguments
-        args   = args if args else self._args
+        args   = args if args else self.args
         
         #
         ## define integration rules
@@ -838,7 +897,7 @@ class CL_asymm(object) :
         #
         ## xmin/max
         #
-        xmin,xmax = self._xmin, self._xmax
+        xmin,xmax = self.xmin, self.xmax
         
         #
         # calculate mode
@@ -880,7 +939,7 @@ class CL_asymm(object) :
             from ostap.math.rootfinder import findroot 
             return findroot (  ifun , xmn , xmx , args = args )
 
-        yval = self._prob * norm
+        yval = self.prob * norm
         fm   = func ( xmode ) 
         def iifun ( f ) :
 
@@ -899,6 +958,23 @@ class CL_asymm(object) :
 
         return x1 , x2 
 
+    @property
+    def args ( self ) :
+        "``args'' - other arguments for the function call"
+        return self.__args
+    @property
+    def  xmin ( self ) :
+        "``xmin''- low edge of the interval"
+        return self.__xmin
+    @property
+    def  xmax ( self ) :
+        "``xmax''- high edge of the interval"
+        return self.__xmax
+    @property
+    def prob ( self ) :
+        "``prop'' - confidence level"
+        return self.__prob
+    
 # =============================================================================
 ## calculate some statistical quantities of variable,
 #  considering function to be PDF 

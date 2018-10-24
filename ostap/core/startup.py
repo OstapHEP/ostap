@@ -56,11 +56,11 @@ from ostap.utils.basic import with_ipython
 ## check if the file is actually "empty"
 def _empty_ ( fname ) :
     
-    import os 
-    if not os.path.exists ( fname ) or 0 == os.path.getsize( fname ) : return True
-
     try :
-        
+
+        import os 
+        if not os.path.exists ( fname ) or 0 == os.path.getsize( fname ) : return True
+                
         ## find at least one non-empty line not starting from '#'
         with open ( fname , 'r' ) as f :
             for l in f :
@@ -68,10 +68,9 @@ def _empty_ ( fname ) :
                 l1 = l.strip()
                 if     l1 and '#' != l1[0] : return False 
             
-        return True
-        
-    except IOError :
-        pass
+    except IOError : pass
+
+    return True
      
 # =============================================================================
 import datetime, time 
@@ -139,7 +138,8 @@ def write_history ( fname ) :
     curdir   = os.getcwd() 
     
     delta    = time.time() - start_time_
-    
+
+    written  = False 
     if with_ipython() :
 
         try :
@@ -152,19 +152,24 @@ def write_history ( fname ) :
                 f.write( '# Command from CWD=%s \n# %s\n' % ( curdir , command  ) ) 
                 for record in ip.history_manager.get_range() :
                     f.write( record[2] + '\n' )
-                f.write( '# Ostap  session by %s   ended at %s [%.1fs]\n' % ( me ,   end_time.strftime('%c' ) , delta ) )  
+                f.write( '# Ostap  session by %s   ended at %s [%.1fs]\n' % ( me ,   end_time.strftime('%c' ) , delta ) )
                 
-            if os.path.exists( fname ) :
-                if os.path.isfile ( fname ) :
-                    if not _empty_ ( fname ) :
-                        logger.info ( 'Ostap  history file: %s' % __history__ )
-                        return
+            if os.path.exists( fname ) and os.path.isfile ( fname ) :
+                if not _empty_ ( fname ) :
+                    logger.info ( 'Ostap  history file: %s' % __history__ )
+                    return                
+            written = False            
         except:
-            pass
+            written = False 
             
-    ## use 'old-style' history 
-    readline.write_history_file ( fname )
-    if os.path.exists( fname ) and os.path.isfile ( fname ) and not _empty_ ( fname ) : 
+    ## use 'old-style' history
+    try :
+        readline.write_history_file ( fname )
+        written = True 
+    except :
+        written = False
+    
+    if written and os.path.exists( fname ) and os.path.isfile ( fname ) and not _empty_ ( fname ) : 
         logger.info ( 'Ostap  history file: %s' % __history__ )
     
 # =============================================================================

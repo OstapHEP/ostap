@@ -622,13 +622,17 @@ def sp_integrate_3D_  ( pdf   ,
     return func.sp_integrate_3D ( xmin , xmax , ymin , ymax , zmin , zmax , *args , **kwargs ) 
 
 
-from ostap.stats.moments import moment   as sp_moment
-from ostap.stats.moments import mean     as sp_mean
-from ostap.stats.moments import variance as sp_variance
-from ostap.stats.moments import rms      as sp_rms 
-from ostap.stats.moments import median   as sp_median
-from ostap.stats.moments import quantile as sp_quantile
-from ostap.stats.moments import mode     as sp_mode 
+from ostap.stats.moments import moment           as sp_moment
+from ostap.stats.moments import central_moment   as sp_central_moment
+from ostap.stats.moments import mean             as sp_mean
+from ostap.stats.moments import variance         as sp_variance
+from ostap.stats.moments import rms              as sp_rms 
+from ostap.stats.moments import median           as sp_median
+from ostap.stats.moments import quantile         as sp_quantile
+from ostap.stats.moments import mode             as sp_mode 
+from ostap.stats.moments import width            as sp_width
+from ostap.stats.moments import cl_symm          as sp_cl_symm
+from ostap.stats.moments import cl_asymm         as sp_cl_asymm
 
 # =============================================================================
 ## helper function to delegate some methods/attributes to TF1
@@ -789,13 +793,17 @@ for model in ( Ostap.Math.Chebyshev              ,
         if hasattr ( model , 'mode' ) :
             model.max = _f_max_mode_ 
 
-    if not hasattr ( model , 'mean'     ) : model.mean     = sp_mean 
-    if not hasattr ( model , 'variance' ) : model.variance = sp_variance 
-    if not hasattr ( model , 'rms'      ) : model.rms      = sp_rms  
-    if not hasattr ( model , 'median'   ) : model.median   = sp_median
-    if not hasattr ( model , 'mode'     ) : model.mode     = sp_mode 
-    if not hasattr ( model , 'moment'   ) : model.moment   = sp_moment
-    if not hasattr ( model , 'quantile' ) : model.quantile = sp_quantile
+    if not hasattr ( model , 'mean'             ) : model.mean             = sp_mean 
+    if not hasattr ( model , 'variance'         ) : model.variance         = sp_variance 
+    if not hasattr ( model , 'rms'              ) : model.rms              = sp_rms  
+    if not hasattr ( model , 'median'           ) : model.median           = sp_median
+    if not hasattr ( model , 'mode'             ) : model.mode             = sp_mode 
+    if not hasattr ( model , 'width'            ) : model.width            = sp_width
+    if not hasattr ( model , 'moment'           ) : model.moment           = sp_moment
+    if not hasattr ( model , 'central_moment'   ) : model.central_moment   = sp_central_moment
+    if not hasattr ( model , 'quantile'         ) : model.quantile         = sp_quantile
+    if not hasattr ( model , 'cl_symm'          ) : model.cl_symm          = sp_cl_symm
+    if not hasattr ( model , 'cl_asymm'         ) : model.cl_asymm         = sp_cl_asymm
     
     if sp_minimum_1D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_1D
     if sp_maximum_1D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_1D
