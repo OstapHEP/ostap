@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
-PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd )"
-BUILD_DIR=$PROJECT_DIR/build
-
-mkdir -p $BUILD_DIR
-cd $BUILD_DIR
-export DYLD_LIBRARY_PATH=$BUILD_DIR/lib:$DYLD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$BUILD_DIR/lib:$LD_LIBRARY_PATH
-cmake .. && make install && python ../examples/python/example.py && \
- cd ../examples/root && root -b -q example.C
-
+. /cvmfs/lhcb.cern.ch/lib/group_login.sh
+export CMTCONFIG=x86_64-slc6-gcc62-opt
+source /cvmfs/sft.cern.ch/lcg/views/LCG_93/${CMTCONFIG}/setup.sh 
+mkdir build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make && make install
