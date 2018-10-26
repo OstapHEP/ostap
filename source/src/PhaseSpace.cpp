@@ -19,6 +19,7 @@
 #include "local_math.h"
 #include "local_hash.h"
 #include "Integrator1D.h"
+#include "Exception.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes from the file Ostap/PhaseSpace.h
@@ -90,6 +91,26 @@ double  Ostap::Math::PhaseSpace2::integral
   return result ;
 }
 // ============================================================================a
+//  set the first mass
+// ============================================================================a
+bool Ostap::Math::PhaseSpace2::setM1 ( const double value )
+{
+  const double a = std::abs ( value ) ;
+  if ( s_equal ( a , m_m1 ) ) { return false ; }
+  m_m1 = a ;
+  return true ;
+}
+// ============================================================================a
+//  set the second mass
+// ============================================================================a
+bool Ostap::Math::PhaseSpace2::setM2 ( const double value )
+{
+  const double a = std::abs ( value ) ;
+  if ( s_equal ( a , m_m2 ) ) { return false ; }
+  m_m2 = a ;
+  return true ;
+}
+// ============================================================================a
 // get the momentum at center of mass 
 // ============================================================================a
 double Ostap::Math::PhaseSpace2::q_  ( const double x ) const 
@@ -101,7 +122,10 @@ std::complex<double>
 Ostap::Math::PhaseSpace2::q1_ ( const double x ) const 
 { return q1 ( x , m1() , m2() ) ; }
 // ============================================================================
-/* calculate the phase space for   m -> m1 + m2
+std::size_t Ostap::Math::PhaseSpace2::tag() const 
+{ return std::hash_combine ( m_m1 , m_m2 ) ; }
+// ============================================================================
+/*  calculate the phase space for   m -> m1 + m2
  *  \f$ \Phi = \frac{1}{8\pi} \frac{ \lambda^{\frac{1}{2}} 
  *  \left( m^2 , m_1^2, m_2_2 \right) }{ m^2 }\f$,
  *  where \f$\lambda\f$ is a triangle function
@@ -252,7 +276,7 @@ double Ostap::Math::PhaseSpace3::operator () ( const double x ) const
   double result   = 1.0 ;
   double error    = 1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
-    ( tag () , 
+    ( std::hash_combine ( tag () , x ) , 
       &F     , 
       low    , high ,                // low & high edges
       workspace ( m_workspace ) ,    // workspace
@@ -338,26 +362,56 @@ double  Ostap::Math::PhaseSpace3::integral
 // ============================================================================
 Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 ( const double         threshold ,
-  const unsigned short num       )
+  const unsigned short num       , 
+  const double         scale     ) 
   : m_threshold ( std::abs ( threshold ) )
   , m_num       ( num )
-{}
-// ============================================================================
-// constructor from list of masses
-// ============================================================================
-Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
-( const std::vector<double>& masses )
-  : m_threshold ( 0              )
-  , m_num       ( masses.size()  )
+  , m_ps2       () 
 {
-  //
-  for ( std::vector<double>::const_iterator im = masses.begin() ;
-        masses.end() != im ; ++im )
-  { m_threshold += std::abs ( *im ) ; }
-  //
+  Ostap::Assert ( 2 <= m_num , 
+                  "Invalid number of particles" , 
+                  "Ostap::Math::PhaseSpaceLeft" ) ;
 }
 // ============================================================================
-// desctructor
+// constructor from the list of masses
+// ============================================================================
+Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
+( const std::vector<double>& masses ,
+  const double               scale  )
+  : m_threshold (  0 )
+  , m_num       ( masses.size()      )
+  , m_ps2       () 
+{
+  Ostap::Assert ( 2 <= m_num                    , 
+                  "Invalid number of particles" , 
+                  "Ostap::Math::PhaseSpaceLeft" ) ;
+  if ( 2 == m_num ) 
+  {
+    m_ps2.setM1 ( std::abs ( masses[0] ) ) ;
+    m_ps2.setM2 ( std::abs ( masses[1] ) ) ;
+    m_threshold = m_ps2.lowEdge() ;
+  }
+  else 
+  {
+    for ( std::vector<double>::const_iterator im = masses.begin() ;
+          masses.end() != im ; ++im )
+    { m_threshold += std::abs ( *im ) ; }
+  }
+}
+// ============================================================================
+// special case: true 2-body phasespace 
+// ============================================================================
+Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*  /* tag */   , 
+  const double m1          , 
+  const double m2          ,
+  const double scale       ) 
+  : m_threshold ( std::abs ( m1 ) + std::abs ( m2 ) ) 
+  , m_num       ( 0 ) 
+  , m_ps2 ( m1 , m2 ) 
+{}
+// ============================================================================
+// destructor
 // ============================================================================
 Ostap::Math::PhaseSpaceLeft::~PhaseSpaceLeft(){}
 // ============================================================================
@@ -366,44 +420,72 @@ Ostap::Math::PhaseSpaceLeft::~PhaseSpaceLeft(){}
 double Ostap::Math::PhaseSpaceLeft::operator () ( const double x ) const
 {
   //
-  if ( m_threshold >= x ) { return 0 ; }
+  const double  t = threshold ()  ;
+  if ( t >= x ) { return 0 ; }
   //
-  return std::pow ( x - m_threshold , 3 * 0.5 * m_num - 5 * 0.5  ) ;
+  const double y = t + m_scale * ( x - t ) ;
+  //
+  if ( 0 == m_num ) { return m_ps2 ( y ) ; }
+  //
+  return std::pow ( y - t , 3 * 0.5 * m_num - 5 * 0.5  ) ;
 }
 // ============================================================================
 double Ostap::Math::PhaseSpaceLeft::integral 
 ( const double xmin , const double xmax ) const 
 {
   //
+  const double t = threshold () ;
+  //
   if      ( s_equal ( xmin , xmax ) ) { return  0 ; }
   else if (           xmin > xmax   ) { return -1 * integral ( xmax , xmin ) ; }
-  else if ( xmax <= m_threshold     ) { return  0 ; }
+  else if ( xmax <= t               ) { return  0 ; }
   //
-  const double xlow   = std::max ( xmin , m_threshold ) ;
-  const double xhigh  = std::max ( xmax , m_threshold ) ;
+  const double xlow  = std::max ( xmin , t ) ;
+  const double xhigh = std::max ( xmax , t ) ;
+  //
+  if ( 0 == m_num ) { return m_ps2.integral ( xlow , xhigh ) ; }
   //
   const double n      =  ( 3 * m_num - 5 ) * 0.5 ;
   //
-  const double tlow   = xlow  - m_threshold ;
-  const double thigh  = xhigh - m_threshold ;
+  const double tlow   =  ( xlow  - t ) ;
+  const double thigh  =  ( xhigh - t ) ;
   //
   return ( std::pow ( thigh , n + 1 ) - 
-           std::pow ( tlow  , n + 1 ) ) / ( n + 1 ) ;
+           std::pow ( tlow  , n + 1 ) ) / ( n + 1 ) * std::pow ( m_scale , n ) ;
+}
+// ============================================================================
+// set the new value for scale
+// ============================================================================
+bool Ostap::Math::PhaseSpaceLeft::setScale  ( const double value  )
+{
+  const double a = std::abs  ( value ) ;
+  if ( s_equal ( a , m_scale ) ) { return false ; } //  RETURN
+  m_scale = a ;
+  return true ;  
 }
 // ============================================================================
 // set the new value for threshold
 // ============================================================================
-bool Ostap::Math::PhaseSpaceLeft::setThreshold ( const double x )
+bool Ostap::Math::PhaseSpaceLeft::setThreshold ( const double value )
 {
-  if ( s_equal ( x , m_threshold ) ) { return false ; } // RETURN
-  m_threshold = x ;
+  const double a = std::abs  ( value ) ;
+  const double t = threshold (       ) ;
+  if ( s_equal ( a , t ) ) { return false ; } // RETURN
+  ///
+  if ( 0 == m_num ) 
+  {
+    m_ps2.setM1 ( m_ps2.m1 () * ( a / t ) ) ;
+    m_ps2.setM2 ( m_ps2.m2 () * ( a / t ) ) ;
+    return true  ;
+  }
+  m_threshold = a ;
   return true ;
 }
 // ============================================================================
 // get the tag  
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpaceLeft::tag () const  // get the tag
-{ return std::hash_combine ( m_threshold , m_num ) ; }
+{ return std::hash_combine ( m_threshold , m_num , m_scale , m_ps2.tag () ) ; }
 // ============================================================================
 
 // ============================================================================

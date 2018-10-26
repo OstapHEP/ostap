@@ -3272,7 +3272,6 @@ Double_t Ostap::Models::PhaseSpacePol::analyticalIntegral
 
 
 
-#include <iostream>
 // ============================================================================
 //  PhaseSpaceLeft x expo x pol 
 // ============================================================================
@@ -3282,11 +3281,13 @@ Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   RooRealVar&                        x         ,
   const Ostap::Math::PhaseSpaceLeft& ps        , 
   RooAbsReal&                        tau       ,
+  RooAbsReal&                        scale     ,
   RooArgList&                        phis      )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x        ( "x"       , "Observable"   , this , x   ) 
-  , m_tau      ( "tau"     , "Exponent"     , this , tau )
+  , m_x        ( "x"       , "Observable"   , this , x     ) 
+  , m_tau      ( "tau"     , "Exponent"     , this , tau   )
+  , m_scale    ( "scale"   , "Scale-factor" , this , scale )
   , m_phis     ( "phi"     , "Coefficients" , this )
     //
   , m_ps       ( ps , phis.getSize() , 0.0 , x.getMin() , x.getMax() ) 
@@ -3302,8 +3303,6 @@ Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
     m_phis.add ( *coef ) ;
   }
   //
-  std::cout << " N1/N2=" << m_ps.npars() << "/" << m_phis.getSize() << std::ends ;
-  //
   setPars() ;
 }
 // ============================================================================
@@ -3318,9 +3317,10 @@ Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   const char*                                 name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x        ( "x"      , this , right.m_x    ) 
-  , m_tau      ( "tau"    , this , right.m_tau  )
-  , m_phis     ( "phis"   , this , right.m_phis ) 
+  , m_x        ( "x"      , this , right.m_x     ) 
+  , m_tau      ( "tau"    , this , right.m_tau   )
+  , m_scale    ( "scale"  , this , right.m_scale )
+  , m_phis     ( "phis"   , this , right.m_phis  ) 
     //
   , m_ps       ( right.m_ps       ) 
 {
@@ -3336,7 +3336,9 @@ Ostap::Models::PhaseSpaceLeftExpoPol::clone ( const char* name ) const
 void Ostap::Models::PhaseSpaceLeftExpoPol::setPars () const 
 {
   //
-  m_ps.setTau ( m_tau ) ;
+  m_ps.setTau    ( m_tau   ) ;
+  m_ps.setScale  ( m_scale ) ;
+  //
   RooAbsArg*       phi   = 0 ;
   const RooArgSet* nset  = m_phis.nset() ;
   //

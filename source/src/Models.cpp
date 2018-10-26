@@ -559,8 +559,8 @@ double Ostap::Math::PhaseSpaceLeftExpoPol::evaluate ( const double x ) const
   if  ( x <= xmin () || x >= xmax () ) { return 0 ; }
   const double xc = 0.5 * ( xmin() + xmax() ) ;
   return  
-    m_phasespace ( x  ) * 
-    // m_phasespace ( xc ) *  
+    m_phasespace ( x  ) / 
+    m_phasespace ( xc ) * 
     m_positive   ( x  ) *  
     std::exp     ( -1 * m_tau  * ( x - xc ) ) ;
 }
@@ -574,7 +574,7 @@ bool Ostap::Math::PhaseSpaceLeftExpoPol::setTau ( const double value )
   m_tau = avalue ;
   return true ;
 }
-// =============================================================================
+// ============================================================================
 // get the integral between low and high limits
 // =============================================================================
 double Ostap::Math::PhaseSpaceLeftExpoPol::integral 

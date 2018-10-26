@@ -2513,6 +2513,7 @@ namespace Ostap
         RooRealVar&                        x      ,
         const Ostap::Math::PhaseSpaceLeft& ps     ,
         RooAbsReal&                        tau    ,
+        RooAbsReal&                        scale  ,
         RooArgList&                        phis   ) ;
       // ======================================================================
       // "copy" constructor
@@ -2554,9 +2555,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      RooRealProxy m_x    ;
-      RooListProxy m_phis ;
-      RooRealProxy m_tau  ;
+      RooRealProxy m_x     ;
+      RooListProxy m_phis  ;
+      RooRealProxy m_tau   ;
+      RooRealProxy m_scale ;
       // ======================================================================
     private:
       // ======================================================================

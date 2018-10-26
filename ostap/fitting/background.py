@@ -579,17 +579,22 @@ class PSLeftExpoPol_pdf(PolyBase) :
     def __init__ ( self             ,
                    name             ,  ## the name 
                    xvar             ,  ## the varibale 
-                   phasespace       ,  ## Ostap::Math::PhaseSpaceNL 
+                   phasespace       ,  ## Ostap::Math::PhaseSpace(Left/2)
                    power    = 2     ,  ## degree of the polynomial
                    tau      = None  ,  ## the exponent 
+                   scale    = 1     ,  ## the exponent 
                    the_phis = None  ) :         
         #
         #
         PolyBase.__init__  ( self , name , power , xvar , the_phis )
         #
+        if isinstance ( phasespace , Ostap.Math.PhaseSpace2 ) :
+            ps         = phasespace 
+            phasespace = Ostap.Math.PhaseSpaceLeft ( 'a' , ps.m1() , ps.m2 () , 1 )
+            
         assert isinstance ( phasespace , Ostap.Math.PhaseSpaceLeft ), \
                'Illegal type of "phasespace" parameter'
-        
+
         self.__ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
         self.__power = power
         
@@ -605,6 +610,13 @@ class PSLeftExpoPol_pdf(PolyBase) :
         self.__tau  = self.make_var ( tau              ,
                                       "tau_%s"  % name ,
                                       "tau(%s)" % name , tau , 0 , *limits_tau  )
+
+        #
+        ## the scale factor 
+        #
+        self.__scale = self.make_var ( scale             ,
+                                      "scale_%s"  % name ,
+                                      "scale(%s)" % name , scale , 1 , 1.e-3 , 1.e+3 )
         
         self.pdf  = Ostap.Models.PhaseSpaceLeftExpoPol (
             'pslepol_%s'                % name ,
@@ -612,6 +624,7 @@ class PSLeftExpoPol_pdf(PolyBase) :
             self.xvar            ,
             self.phasespace      ,  ## Ostap::Math::PhaseSpaceLeft
             self.tau             , 
+            self.scale           , 
             self.phi_list        )
         
         ## save configuration 
@@ -621,6 +634,7 @@ class PSLeftExpoPol_pdf(PolyBase) :
             'phasespace' : self.phasespace ,            
             'power'      : self.power      ,            
             'tau'        : self.tau        ,            
+            'scale'      : self.scale      ,            
             'the_phis'   : self.phis       ,            
             }
 
@@ -634,8 +648,8 @@ class PSLeftExpoPol_pdf(PolyBase) :
         return self.__power
     @property
     def phasespace ( self ) :
-        """``phasespace''-function for PS*pol function"""
-        return self.__ps
+        """``phasespace''-function for PS*exp*pol function"""
+        return self.__ps    
     @property
     def tau ( self ) :
         """``tau''-parameter - exponential slope"""
@@ -644,8 +658,16 @@ class PSLeftExpoPol_pdf(PolyBase) :
     def tau ( self , value ) :
         value = float ( value )
         self.__tau.setVal ( value )
+        
+    @property
+    def scale( self ) :
+        """``scale''-parameter - scale factor for phase space function"""
+        return self.__scale
+    @scale.setter
+    def scale ( self , value ) :
+        value = float ( value )
+        self.__scale.setVal ( value )
     
-
 models.append ( PSLeftExpoPol_pdf ) 
 
 

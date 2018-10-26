@@ -439,7 +439,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// set the new exponent 
-      bool setTau ( const double value ) ;
+      bool setTau   ( const double value ) ;
+      /// set the   scale  
+      bool setScale ( const double value ) 
+      { return m_phasespace.setScale ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================

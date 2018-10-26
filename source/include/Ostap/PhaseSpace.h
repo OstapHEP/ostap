@@ -56,9 +56,22 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      double m1      () const { return m_m1 ; }
-      double m2      () const { return m_m2 ; }
-      double lowEdge () const { return m1() + m2() ; }
+      double m1        () const { return m_m1 ; }
+      double m2        () const { return m_m2 ; }
+      double lowEdge   () const { return m1 () + m2 () ; }
+      double threshold () const { return m1 () + m2 () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///  set the first mass 
+      bool setM1  ( const double value ) ; // set the  first mass 
+      ///  set the second mass 
+      bool setM2  ( const double value ) ; // set the second  mass 
+     // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag 
+      std::size_t tag() const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -215,36 +228,46 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor from threshold and number of particles
-      PhaseSpaceLeft ( const double         threshold = 0 ,
-                       const unsigned short num       = 2 ) ;
-      /// constructor from list of masses
-      PhaseSpaceLeft ( const std::vector<double>& masses ) ;
-      /// deststructor
-      ~PhaseSpaceLeft() ;                                       // deststructor
+      /// constructor from threshold and number of particles and  scale
+      PhaseSpaceLeft ( const double                    threshold = 0 ,
+                       const unsigned short            num       = 2 , 
+                       const double                    scale     = 1 ) ;      
+      /// constructor from the list of masses
+      PhaseSpaceLeft ( const std::vector<double>&      masses        , 
+                       const double                    scale     = 1 ) ;      
+      /// special case: true 2-body phasespace 
+      PhaseSpaceLeft ( const char*  /* tag */   , 
+                       const double m1          , 
+                       const double m2          ,
+                       const double scale    =  1 ) ;
+      /// destructor
+      ~PhaseSpaceLeft () ;                                       // destructor
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate N-body phase space near left threhsold
-      double operator () ( const double x    ) const ;
+      /// evaluate N-body phase space near the left threhsold
+      double operator   () ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the threshold 
-      double threshold() const { return  m_threshold ; }
+      double threshold  () const { return m_threshold ; }
+      /// get the scale 
+      double scale      () const { return m_scale     ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
-      double integral ( const double xmin , const double xmax ) const ;
+      double integral   ( const double xmin , const double xmax ) const ;
       // ======================================================================
     public:
       // ======================================================================
       bool setThreshold ( const double x ) ;
+      bool setScale     ( const double x ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the tag  
-      std::size_t tag () const ; // get the hash 
+      std::size_t tag   () const ; // get the hash 
       // ======================================================================
     private:
       // ======================================================================
@@ -252,6 +275,10 @@ namespace Ostap
       double         m_threshold ; // the threshold
       /// number of particles
       unsigned short m_num       ; // number of particles
+      /// the scale  factor 
+      double         m_scale     ; // the scale factor
+      /// true 2-body phase-space 
+      PhaseSpace2    m_ps2       ;
       // ======================================================================
     } ;
     // ========================================================================
