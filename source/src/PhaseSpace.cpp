@@ -427,7 +427,7 @@ double Ostap::Math::PhaseSpaceLeft::operator () ( const double x ) const
   //
   if ( 0 == m_num ) { return m_ps2 ( y ) ; }
   //
-  return std::pow ( y - t , 3 * 0.5 * m_num - 5 * 0.5  ) ;
+  return std::pow ( ( y - t ) / y , 3 * 0.5 * m_num - 5 * 0.5  ) ;
 }
 // ============================================================================
 double Ostap::Math::PhaseSpaceLeft::integral 
@@ -445,13 +445,35 @@ double Ostap::Math::PhaseSpaceLeft::integral
   //
   if ( 0 == m_num ) { return m_ps2.integral ( xlow , xhigh ) ; }
   //
-  const double n      =  ( 3 * m_num - 5 ) * 0.5 ;
+   // use GSL to evaluate the integral
   //
-  const double tlow   =  ( xlow  - t ) ;
-  const double thigh  =  ( xhigh - t ) ;
+  static const Ostap::Math::GSL::Integrator1D<PhaseSpaceLeft> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpaceLeft)" ;
   //
-  return ( std::pow ( thigh , n + 1 ) - 
-           std::pow ( tlow  , n + 1 ) ) / ( n + 1 ) * std::pow ( m_scale , n ) ;
+  const auto F = s_integrator.make_function ( this) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag () , 
+      &F     , 
+      xlow   , xhigh ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+  // const double n      =  ( 3 * m_num - 5 ) * 0.5 ;
+  // //
+  // const double tlow   =  ( xlow  - t ) ;
+  // const double thigh  =  ( xhigh - t ) ;
+  // //
+  // return ( std::pow ( thigh , n + 1 ) - 
+  //          std::pow ( tlow  , n + 1 ) ) / ( n + 1 ) * std::pow ( m_scale , n ) ;
 }
 // ============================================================================
 // set the new value for scale
