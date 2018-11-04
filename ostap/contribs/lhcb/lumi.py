@@ -44,7 +44,12 @@ import ROOT
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.contrib.lhcb.lumi' )
 else                       : logger = getLogger ( __name__        )
-# =============================================================================
+# ==============================================================================
+lumi_tree = 'GetIntegratedLuminosity/LumiTuple'
+lumi      = 'IntegratedLuminosity'
+lumi_err  = 'IntegratedLuminosityErr'
+lumi_cuts = '0<=%s && 0<=%s' % ( lumi , lumi_err )
+# ==============================================================================
 ## get luminosity from Lumi tuple
 #
 #  @param data  (INPUT) tree, chain, file, filename or sequence
@@ -72,7 +77,6 @@ def getLumi ( data , *args ) :
     >>> l4 = getLumi ( file  )
     >>> l5 = getLumi ( [ any sequence of above ]  )
     """
-    tree_name = 'GetIntegratedLuminosity/LumiTuple'
     #
     from   ostap.core.core      import VE, hID
     import ostap.io.root_file
@@ -92,50 +96,43 @@ def getLumi ( data , *args ) :
         data = os.path.expandvars ( data )
         
         try :    
-            tree = ROOT.TChain ( tree_name ) 
+            tree = ROOT.TChain ( lumi_tree ) 
             tree.Add ( data )   
-            lumi = getLumi ( tree )
-            return lumi
+            return getLumi ( tree )
         except :
-            logger.error('Unable to get lumi(1) for %s' % data )
+            logger.error('Unable to get lumi/1 for %s' % data )
             return VE()
         
         #
     if isinstance ( data , ROOT.TFile ) :
         try :
-            tree = data.Get( tree_name ) 
+            tree = data.Get( lumi_tree ) 
             return getLumi ( tree ) 
         except:
-            logger.error('Unable to get lumi(2) for %s' % data.GetName() )
+            logger.error('Unable to get lumi/2 for %s' % data.GetName() )
             return VE()
         
     if isinstance ( data , ROOT.TTree ) :
 
         ## print data
         from ostap.logger.utils import rootError 
-        
+
         try:
-            #
-            
+
             with rootError() : ## suppress errors from ROOT
                 
-                ## @attention here we are using sumVar! 
-                l1 = data.sumVar ( '1.0*IntegratedLuminosity+0.0*IntegratedLuminosityErr' , '0<=IntegratedLuminosity' )
-                l2 = data.sumVar ( '1.0*IntegratedLuminosity+1.0*IntegratedLuminosityErr' , '0<=IntegratedLuminosity' )
-                l3 = data.sumVar ( '1.0*IntegratedLuminosity-1.0*IntegratedLuminosityErr' , '0<=IntegratedLuminosity' )            
-                #
-                l1.setError ( 0.5 * abs ( l2.value () - l3.value () ) )
-                #
-                l0 = data.sumVar ( 'IntegratedLuminosity' , '0 >IntegratedLuminosity'      )
-                if 0 != l0.value() : logger.error( 'Something weird happens with Lumi/1: %s' % l0 )  
-                l0 = data.sumVar ( 'IntegratedLuminosity' , 'IntegratedLuminosity>100000'  )
-                if 0 != l0.value() : logger.error( 'Something weird happens with Lumi/2: %s' % l0 )  
-                l0 = data.sumVar ( 'IntegratedLuminosity' , '0>IntegratedLuminosityErr'    )
-                if 0 != l0.value() : logger.error( 'Something weird happens with Lumi/3: %s' % l0 )  
-                # 
-                return l1
+                if hasattr ( data , 'pstatVar' ) : 
+                    stat = data.pstatVar ( [ lumi , lumi_err ] , lumi_cuts , chunk_size = -1 , max_files = 3 )
+                else  :
+                    stat = data. statVar ( [ lumi , lumi_err ] , lumi_cuts )
+                ##
+                s1 = stat[ lumi     ]
+                s2 = stat[ lumi_err ]
+                ##
+                return VE ( s1.sum() , s2.sum() **2 )
+
         except :
-            logger.error('Unable to get lumi(3) for %s' % data.GetName() )
+            logger.error('Unable to get lumi/3 for %s' % data.GetName() )
             return VE()
         
     l = VE() 

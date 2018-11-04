@@ -3,6 +3,10 @@
 // ============================================================================
 // Include files  
 // ============================================================================
+//   STD&STL
+// ============================================================================
+#include <memory>
+// ============================================================================
 // ROOT 
 // ============================================================================
 #include "TObject.h"
@@ -47,6 +51,12 @@ namespace  Ostap
       Notifier ( ITERATOR  begin ,
                  ITERATOR  end   , 
                  TTree*    tree  ) ;
+      // templated constructor 
+      template <class ITERATOR>
+      Notifier ( ITERATOR  begin ,
+                 ITERATOR  end   ,
+                 TObject*  obj   , 
+                 TTree*    tree  ) ;
       /// virtual destructor 
       virtual        ~Notifier () ; // virtual destructor 
       /// the main method 
@@ -57,11 +67,17 @@ namespace  Ostap
       // add object to the notification list 
       inline bool add  ( TObject* o )
       {
-        if ( nullptr == o || this == o ) { return false ;}
-        m_objects.push_back ( o )  ;
+        if ( nullptr == o || this == o ) { return false ; }
+        this->m_objects.push_back ( o )  ;
         return true ;
       }
-      // exit from  noification 
+      // ======================================================================
+      // add object to the notification list 
+      template <class TYPE>
+      inline bool add  ( std::unique_ptr<TYPE>& o ) 
+      { return this -> add ( o.get() ) ; }
+      // ======================================================================
+      // exit from  notification
       bool exit() ;
       // ======================================================================
     private:
@@ -82,6 +98,7 @@ namespace  Ostap
       // ========================================================================
     } ;
     // ========================================================================
+    // templated constructor 
     template <class ITERATOR>
     Notifier::Notifier ( ITERATOR  begin ,
                          ITERATOR  end   , 
@@ -91,9 +108,25 @@ namespace  Ostap
       , m_old     ( nullptr )
       , m_objects () 
     {
-      this->_pre_action  () ;
+      this -> _pre_action  () ;
       for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
-      this->_post_action () ;
+      this -> _post_action () ;
+    }
+    // templated constructor 
+    template <class ITERATOR>
+    Notifier::Notifier ( ITERATOR  begin ,
+                         ITERATOR  end   , 
+                         TObject*  obj   , 
+                         TTree*    tree  ) 
+      : TObject   () 
+      , m_tree    ( tree    ) 
+      , m_old     ( nullptr )
+      , m_objects () 
+    {
+      this -> _pre_action  () ;
+      for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+      this -> add  ( obj )    ;
+      this -> _post_action () ;
     }
     // ========================================================================
   } //                                        The end of namespace Ostap::Utils

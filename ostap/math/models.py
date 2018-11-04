@@ -195,7 +195,6 @@ def _amp_ ( self , x ) :
     >>> a = fun.amp ( x )    
     """
     v = self.amplitude ( x )
-    #
     return complex( v.real () , v.imag () ) 
 
 Ostap.Math.LASS        . amp = _amp_

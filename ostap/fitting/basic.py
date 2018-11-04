@@ -61,7 +61,7 @@ class PDF (MakeVar) :
         self.__fit_result  = None
         self.__vars        = ROOT.RooArgSet  ()
         
-        if   isinstance ( xvar, ROOT.TH1    ) : xvar = xvar.xminmax()
+        if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
             
         self.__xvar = None 
@@ -264,7 +264,13 @@ class PDF (MakeVar) :
         conf.update ( kwargs )
 
         KLASS = self.__class__
-        return KLASS ( **conf )
+        cloned = KLASS ( **conf )
+        
+        ## if PDF is adjusted, adjust it!
+        if self.adjustment :
+            cloned.adjust ( self.adjustment.fraction )
+            
+        return cloned 
 
     # =========================================================================
     ## make a copy/clone for the given PDF 
@@ -321,7 +327,7 @@ class PDF (MakeVar) :
             return
 
         ## create adjustment object and  use it to adjust PDF:
-        self.__adjustment = Adjust ( self.name , self.xvar , self.pdf , value )
+        self.__adjustment = Adjust1D ( self.name , self.xvar , self.pdf , value )
         ## replace original PDF  with  adjusted one:
         self.pdf          = self.__adjustment.pdf
 
@@ -1630,7 +1636,7 @@ class MASS(PDF) :
             if not m1 <= value <= m2 :
                 self.warning ("``mean'' %s is outside the interval  %s,%s"  % ( value , m1 , m2 ) )                
         self.mean.setVal ( value )
-    
+        
     @property
     def location ( self ):
         """``location/mean''-variable (the same as ``mean'')"""

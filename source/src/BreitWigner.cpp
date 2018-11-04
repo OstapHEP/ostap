@@ -815,17 +815,61 @@ Ostap::Math::Flatte::Flatte
   const double mA1   ,
   const double mA2   ,
   const double mB1   ,
-  const double mB2   )
-  : m_m0    ( std::fabs ( m0    ) )
-  , m_m0g1  ( std::fabs ( m0g1  ) )
-  , m_g2og1 ( std::fabs ( g2og1 ) )
-  , m_A1    ( std::fabs ( mA1   ) )
-  , m_A2    ( std::fabs ( mA2   ) )
-  , m_B1    ( std::fabs ( mB1   ) )
-  , m_B2    ( std::fabs ( mB2   ) )
+  const double mB2   ,
+  const double g0    )
+  : m_m0    ( std::abs ( m0    ) )
+  , m_m0g1  ( std::abs ( m0g1  ) )
+  , m_g2og1 ( std::abs ( g2og1 ) )
+  , m_A1    ( std::abs ( mA1   ) )
+  , m_A2    ( std::abs ( mA2   ) )
+  , m_B1    ( std::abs ( mB1   ) )
+  , m_B2    ( std::abs ( mB2   ) )
+  , m_g0    ( std::abs ( g0    ) )
     //
   , m_workspace ()
 {}
+// ============================================================================
+/**  a bit more intuitive ``a'la BreitWigner'' constructor 
+ *   @param flag  the flag 
+ *   @param m0    the mass 
+ *   @param gtot  width parameter     \f$ \Gamma_1 + \Gamma_2 + \Gamma_0 \f$ 
+ *   @param mA1   mass of A1
+ *   @param mA2   mass of A2
+ *   @param mB1   mass of B1
+ *   @param mB2   mass of B2
+ *   @param g2og1 the width ratio     \f$ \Gamma_2 / \Gamma_1 \f$ 
+ *   @param br0   the width fraction  \f$ \frac{\Gamma_0}{\Gamma_1+\Gamma_2+\Gamma_0}\f$ 
+ */
+// ============================================================================
+Ostap::Math::Flatte::Flatte
+( const char* /* flag */   ,
+  const double  m0         ,  // m0 
+  const double  gtot       ,  // gamma1 + gamma2 + gamma_0  
+  const double  mA1        ,
+  const double  mA2        ,
+  const double  mB1        ,
+  const double  mB2        ,               
+  const double  g2og1      ,  // gamma2 /   gamma1 
+  const double  br0        )  // gamma0 / ( gamma0 + gamma1 + gamma2)
+  : Flatte ( m0                                      , 
+             m0 * ( 1 - br0 ) * gtot / ( 1 + g2og1 ) , 
+             g2og1                                   ,
+             mA1                                     , 
+             mA2                                     , 
+             mB1                                     , 
+             mB2                                     , 
+             br0 * gtot                              ) 
+{
+  Ostap::Assert ( 0 <= br0 && br0 < 1.0 , 
+                  "Invalid value for ``br0''-parameter , must be [0,1)"     , 
+                  "Ostap::Math::Flatte" ) ; 
+  Ostap::Assert ( 0 < gtot   , 
+                  "Invalid value for ``gtot''-parameter, must be positive"  , 
+                  "Ostap::Math::Flatte" ) ; 
+  Ostap::Assert ( 0 < g2og1   , 
+                  "Invalid value for ``g2og1''-parameter, must be positive" , 
+                  "Ostap::Math::Flatte" ) ; 
+}
 // ============================================================================
 // destructor
 // ============================================================================
@@ -839,10 +883,9 @@ Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; 
 double Ostap::Math::Flatte::operator() ( const double x ) const
 { return flatte ( x ) ; }
 // ============================================================================
-  // get the complex Flatte amplitude
+/// get the running width (complex!)
 // ============================================================================
-std::complex<double> Ostap::Math::Flatte::flatte_amp
-( const double x     )  const
+std::complex<double> Ostap::Math::Flatte::gamma ( const double x ) const 
 {
   //
   const std::complex<double> rho_AA =
@@ -850,10 +893,22 @@ std::complex<double> Ostap::Math::Flatte::flatte_amp
   const std::complex<double> rho_BB =
     Ostap::Math::PhaseSpace2::q1 ( x , mB1 () , mB2  () )  ;
   //
+  return m0g1 () * ( rho_AA + g2og1 () * rho_BB ) / m0 () + g0 () ;
+}
+// ======================================================================
+
+// ============================================================================
+// get the complex Flatte amplitude
+// ============================================================================
+std::complex<double> Ostap::Math::Flatte::flatte_amp
+( const double x     )  const
+{
+  //
   static const std::complex<double> s_j ( 0 , 1 ) ;
   //
+  const double mm = m0() ;
   const std::complex<double> v =
-    m0() * m0 () - x * x - s_j * m0g1() * ( rho_AA + g2og1 () * rho_BB ) ;
+    mm * mm - x * x - s_j * mm * gamma ( x ) ;
   //
   return  1.0 / v ;
 }
@@ -866,7 +921,7 @@ double Ostap::Math::Flatte::flatte ( const double x ) const
   if ( thresholdA () >= x ) { return 0 ; }
   //
   // get the amplitude...
-  std::complex<double> amp = flatte_amp ( x ) ;
+  const std::complex<double> amp = flatte_amp ( x ) ;
   //
   const double ps = Ostap::Math::PhaseSpace2::phasespace ( x ,  mA1() , mA2() ) ;
   //
@@ -989,11 +1044,8 @@ double  Ostap::Math::Flatte::integral () const
 bool Ostap::Math::Flatte::setM0     ( const double x )
 {
   const double v = std::abs ( x ) ;
-  //
   if ( s_equal ( v , m_m0 ) ) { return false ; }
-  //
   m_m0 = v ;
-  //
   return true ;
 }
 // ============================================================================
@@ -1002,11 +1054,8 @@ bool Ostap::Math::Flatte::setM0     ( const double x )
 bool Ostap::Math::Flatte::setM0G1   ( const double x )
 {
   const double v = std::abs ( x ) ;
-  //
   if ( s_equal ( v , m_m0g1 ) ) { return false ; }
-  //
   m_m0g1 = v ;
-  //
   return true ;
 }
 // ============================================================================
@@ -1015,11 +1064,18 @@ bool Ostap::Math::Flatte::setM0G1   ( const double x )
 bool Ostap::Math::Flatte::setG2oG1  ( const double x )
 {
   const double v = std::abs ( x ) ;
-  //
   if ( s_equal ( v , m_g2og1 ) ) { return false ; }
-  //
   m_g2og1 = v ;
-  //
+  return true ;
+}
+// ============================================================================
+// set G0
+// ============================================================================
+bool Ostap::Math::Flatte::setG0  ( const double x )
+{
+  const double v = std::abs ( x ) ;
+  if ( s_equal ( v , m_g0 ) ) { return false ; }
+  m_g0 = v ;
   return true ;
 }
 // ============================================================================

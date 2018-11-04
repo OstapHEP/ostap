@@ -115,6 +115,21 @@ namespace Ostap
     WStatEntity& update 
     ( const double value      ,  
       const double weight = 1 ) { return add ( value , weight ) ; }
+    /** add another counter 
+     *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
+     *  @see https://doi.org/10.1007/s00180-015-0637-z
+     */
+    WStatEntity& add ( const WStatEntity& stat ) ;
+    /// add another counter 
+    WStatEntity& add ( const  StatEntity& stat ) 
+    { return add ( WStatEntity (   stat ) ) ; }
+    /** add another counter 
+     *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
+     *  @see https://doi.org/10.1007/s00180-015-0637-z
+     */
+    WStatEntity& update ( const WStatEntity& stat ) { return add ( stat ) ; }
+    /// add another counter 
+    WStatEntity& update ( const  StatEntity& stat ) { return add ( stat ) ; }
     // ======================================================================
   public:
     // ======================================================================
@@ -122,10 +137,9 @@ namespace Ostap
      *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
      *  @see https://doi.org/10.1007/s00180-015-0637-z
      */
-    WStatEntity& operator+= ( const  WStatEntity& other ) ;
+    WStatEntity& operator+= ( const WStatEntity& other ) { return add ( other ) ; }
     /// add another counter 
-    WStatEntity& operator+= ( const   StatEntity& other ) 
-    { return (*this)+= WStatEntity ( other ) ; }
+    WStatEntity& operator+= ( const  StatEntity& other ) { return add ( other ) ; }
     // ======================================================================
   private: /// the basic quantities 
     // ======================================================================

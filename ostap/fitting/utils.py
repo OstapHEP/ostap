@@ -550,8 +550,8 @@ class Adjust1D(MakeVar) :
         
         self.name      = name 
         self.__old_pdf = pdf
-
-        from otap.fitting.basic import Flat1D 
+        
+        from ostap.fitting.basic import Flat1D 
         self.__flat    = Flat1D  ( xvar  , name = 'flat_' + name ) 
         self.__frac    = self.make_var ( value , 'fracA_%s'                     % name ,
                                          'small  fraction of flat component %s' % name ,

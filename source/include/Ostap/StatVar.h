@@ -44,8 +44,8 @@ namespace Ostap
     // ========================================================================
   public: 
     // ========================================================================
-    static_assert (std::numeric_limits<unsigned long>::is_specialized   ,
-                   "Numeric_limist<unsigned long> are not specialized!" ) ;
+    static_assert ( std::numeric_limits<unsigned long>::is_specialized   ,
+                    "Numeric_limist<unsigned long> are not specialized!" ) ;
     static constexpr unsigned long LAST { std::numeric_limits<unsigned long>::max() } ;
     // ========================================================================
   public:
@@ -106,7 +106,64 @@ namespace Ostap
       const std::string&  expression        , 
       const TCut&         cuts              ,
       const unsigned long first      = 0    ,
-      const unsigned long entries    = LAST ) ;
+      const unsigned long last       = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** build statistic for the <code>expressions</code>
+     *  @param tree        (INPUT)  the tree 
+     *  @param result      (UPDATE) the output statistics for specified expressions 
+     *  @param expressions (INPUT)  the list of  expressions
+     *  @param first       (INPUT)  the first entry to process 
+     *  @param last        (INPUT)  the last entry to process (not including!)
+     *  @return number of processed entries 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2018-11-04
+     */
+    static unsigned long statVars
+    ( TTree*                          tree              , 
+      std::vector<Statistic>&         result            , 
+      const std::vector<std::string>& expressions       ,
+      const unsigned long             first      = 0    ,
+      const unsigned long             last       = LAST ) ;
+    // ========================================================================
+    /** build statistic for the <code>expressions</code>
+     *  @param tree        (INPUT)  the tree 
+     *  @param result      (UPDATE) the output statistics for specified expressions 
+     *  @param expressions (INPUT)  the list of  expressions
+     *  @param cuts        (INPUT)  the selection criteria 
+     *  @param first       (INPUT)  the first entry to process 
+     *  @param last        (INPUT)  the last entry to process (not including!)
+     *  @return number of processed entries 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2018-11-04
+     */
+    static unsigned long statVars
+    ( TTree*                          tree               ,       
+      std::vector<Statistic>&         result             , 
+      const std::vector<std::string>& expressions        ,
+      const std::string&              cuts               ,
+      const unsigned long             first       = 0    ,
+      const unsigned long             last        = LAST ) ;
+    // ========================================================================    
+    /** build statistic for the <code>expressions</code>
+     *  @param tree        (INPUT)  the tree 
+     *  @param result      (UPDATE) the output statistics for specified expressions 
+     *  @param expressions (INPUT)  the list of  expressions
+     *  @param cuts        (INPUT)  the selection criteria 
+     *  @param first       (INPUT)  the first entry to process 
+     *  @param last        (INPUT)  the last entry to process (not including!)
+     *  @return number of processed entries 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2018-11-04
+     */
+    static unsigned long statVars
+    ( TTree*                          tree               ,       
+      std::vector<Statistic>&         result             , 
+      const std::vector<std::string>& expressions        ,
+      const TCut&                     cuts               ,
+      const unsigned long             first       = 0    ,
+      const unsigned long             last        = LAST ) ;
     // ========================================================================
   public:
     // ========================================================================

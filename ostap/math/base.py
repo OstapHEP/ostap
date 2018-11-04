@@ -53,7 +53,7 @@
                C++ namespaces: Ostap & Ostap::Math
 
   >>> Ostap = cpp.Ostap                          ## get C++ namespace Gaudi
-  >>> p3 = Ostap.XYZPoint(0,1,2)                  ## use C++ type Gaudi::XYZPoint
+  >>> p3 = Ostap.XYZPoint(0,1,2)                 ## use C++ type Gaudi::XYZPoint
 
   >>> dir( Ostap.Math )
   >>> dir( Ostap      )
@@ -82,7 +82,8 @@ __all__     = (
     'uints'          , ## construct std::vector<unsigned int>
     'longs'          , ## construct std::vector<long>
     'ulongs'         , ## construct std::vector<unsigned long>
-    'complexes'      , ## construct std::vector<ssstd::complex<double>>
+    'complexes'      , ## construct std::vector<std::complex<double>>
+    'strings'        , ## construct std::vector<std::string>
     ##
     'vDoubles'       , ## std::vector<double>
     'vFloats'        , ## std::vector<float>

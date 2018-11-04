@@ -145,7 +145,7 @@ std::string Ostap::WStatEntity::toString () const
  */
 // ============================================================================
 Ostap::WStatEntity& 
-Ostap::WStatEntity::operator+= ( const Ostap::WStatEntity& other ) 
+Ostap::WStatEntity::add ( const Ostap::WStatEntity& other ) 
 {
   // treat the trivial cases  
   if      ( 0 == other.n () ) { return *this ; }

@@ -15,6 +15,10 @@ excluded_varnames = ['HOSTNAME', 'SSH_CLIENT', 'SSH_CONNECTION', 'DISPLAY']
 import sys, os, time, copy
 import multiprocessing
 
+from ostap.utils.progress_bar import ProgressBar
+from ostap.logger.logger      import getLogger 
+logger  = getLogger('ostap.parallel.mp_gaudi')
+
 def _prefunction( f, task, item) :
     return f((task,item))
 def _ppfunction( args ) :
@@ -96,6 +100,7 @@ class Task(object) :
         output =  (type(self.output) is dict) and self.output.values() or self.output
         for o in output :
             if hasattr(o, 'Reset'): o.Reset()
+            
 
 
 class WorkManager(object) :
@@ -129,32 +134,40 @@ class WorkManager(object) :
         # --- Schedule all the jobs ....
         if self.mode == 'cluster' :
             jobs = [self.server.submit(_prefunction, (_ppfunction, task, item), (), ('GaudiMP.Parallel','time')) for item in items]
-            for job in jobs :
-                result, stat = job()
-                task._mergeResults(result)
-                self._mergeStatistics(stat)
+
+            with ProgressBar ( max_value = len ( items ) , description = "# Job execution:" ,  silent = self.silent ) as bar :              
+                for job in jobs :
+                    result, stat = job()
+                    task._mergeResults(result)
+                    self._mergeStatistics(stat)
+                    bar += 1
+                    
             self._printStatistics()
             self.server.print_stats()
         elif self.mode == 'multicore' :
             start = time.time()
-            jobs = self.pool.map_async(_ppfunction, zip([task for i in items] , items ))
-            for result, stat in  jobs.get(timeout) :
-                task._mergeResults(result)
-                self._mergeStatistics(stat)
+            jobs  = self.pool.map_async(_ppfunction, zip([task for i in items] , items ))
+            
+            with ProgressBar ( max_value = len ( items ) , description = "# Job execution:" ,  silent = self.silent ) as bar :              
+                for result, stat in  jobs.get(timeout) :
+                    task._mergeResults(result)
+                    self._mergeStatistics(stat)
+                    bar += 1
+                    
             end = time.time()
             if not self.silent : 
                 self._printStatistics()
-                print 'Time elapsed since server creation %f' %(end-start)
+                logger.info ( 'Time elapsed since server creation %f' % ( end - start ) ) 
         # --- Call the Local Finalize
         task.finalize()
     def _printStatistics(self):
         njobs = 0
         for stat in self.stats.values():
             njobs += stat.njob
-        print 'Job execution statistics:'
-        print 'job count | % of all jobs | job time sum | time per job | job server'
+        logger.info ( 'Job execution statistics:' ) 
+        logger.info ( 'job count | % of all jobs | job time sum | time per job | job server' ) 
         for name, stat  in self.stats.items():
-            print '       %d |        %6.2f |     %8.3f |    %8.3f | %s' % (stat.njob, 100.*stat.njob/njobs, stat.time, stat.time/stat.njob, name)
+            logger.info ( '   %6d |        %6.2f |   %10.3f |   %10.3f | %s' % (stat.njob, 100.*stat.njob/njobs, stat.time, stat.time/stat.njob, name) ) 
 
     def _mergeStatistics(self, stat):
         if stat.name not in self.stats : self.stats[stat.name] = Statistics()

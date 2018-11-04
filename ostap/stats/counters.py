@@ -55,6 +55,57 @@ SE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2()       )
 SE. minmax  = lambda s :    ( s.min()         , s.max()        ) 
 SE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
 
+# ==============================================================================
+## Update the counter
+#  @code
+#  >>> cnt  = ...
+#  >>> cnt += value
+#  @endcode
+def _se_iadd_ ( self , other ) :
+    """Update the counter
+    >>> cnt  = ...
+    >>> cnt += value 
+    """
+    return self.add ( other )
+
+# ==============================================================================
+## add two counters
+#  @code
+#  >>> cnt1 = ...
+#  >>> cnt2 = ...
+#  >>> cnt  = cnt1 +  cnt2 
+#  @endcode
+def _se_add_ ( self , other ) :
+    """Update the counter
+    >>> cnt  = ...
+    >>> cnt += value 
+    """
+    r  = SE ( self )
+    r.add ( other )
+    return r
+
+# ==============================================================================
+## add two counters
+#  @code
+#  >>> cnt1 = ...
+#  >>> cnt2 = ...
+#  >>> cnt  = cnt1 +  cnt2 
+#  @endcode
+def _wse_add_ ( self , other ) :
+    """Update the counter
+    >>> cnt  = ...
+    >>> cnt += value 
+    """
+    r = WSE ( self )
+    r.add ( other )
+    return r
+# =============================================================================
+
+SE  .__iadd__ =  _se_iadd_
+WSE .__iadd__ =  _se_iadd_
+SE  .__add__  =  _se_add_
+WSE .__add__  = _wse_add_
+
 # =============================================================================
 # minor decoration for WStatEntity 
 # ============================================================================= 

@@ -331,6 +331,7 @@ namespace Ostap
                RooAbsReal&                m0        ,
                RooAbsReal&                m0g1      ,
                RooAbsReal&                g2og1     ,
+               RooAbsReal&                g0        ,
                const Ostap::Math::Flatte& flatte    ) ;
       /// "copy" constructor
       Flatte ( const Flatte& , const char* name = 0 ) ;
@@ -377,6 +378,7 @@ namespace Ostap
       RooRealProxy m_m0    ;
       RooRealProxy m_m0g1  ;
       RooRealProxy m_g2og1 ;
+      RooRealProxy m_g0    ;
       // ======================================================================
     protected:
       // ======================================================================

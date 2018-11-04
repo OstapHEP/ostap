@@ -18,7 +18,7 @@ __all__     = (
   ) 
 # =============================================================================
 import ROOT
-from ostap.core.core    import cpp, VE, hID
+from ostap.core.core    import std , Ostap, VE, hID
 from ostap.logger.utils import multicolumn
 from ostap.utils.basic  import terminal_size, isatty 
 # =============================================================================
@@ -72,7 +72,7 @@ def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False ) :
     #
     last = min ( last , len ( self )  )
     
-    pit = cpp.Ostap.PyIterator ( self , cuts , first , last )
+    pit = Ostap.PyIterator ( self , cuts , first , last )
     if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
     #
     from ostap.utils.progress_bar import ProgressBar 
@@ -145,7 +145,7 @@ def _tc_call_ ( self , first = 0 , last = -1  , cuts = None , progress = False )
         pit = 1 
         if cuts :
             
-            pit = cpp.Ostap.PyIterator ( self , cuts , first , last )
+            pit = Ostap.PyIterator ( self , cuts , first , last )
             if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
             #
             
@@ -333,7 +333,6 @@ def _tt_project_ ( tree               ,
 ROOT.TTree .project = _tt_project_
 ROOT.TChain.project = _tt_project_
 
-
 # =============================================================================
 ## get the statistic for certain expression in Tree/Dataset
 #  @code
@@ -351,20 +350,77 @@ def _stat_var_ ( tree , expression , *cuts ) :
     >>> stat2 = tree.statVar ( 'S_sw/effic' ,'pt>1000')
     
     """
-    return cpp.Ostap.StatVar.statVar ( tree , expression , *cuts )
 
+    if isinstance ( expression , str ) :
+        from ostap.core.core import split_string
+        expression = split_string ( expression , ',;:' ) 
+        
+    if 1 != len ( expression ) :
+        return _stat_vars_ ( tree ,  expression , *cuts )
+    
+    expression = expression[0] 
+    
+    return Ostap.StatVar.statVar ( tree , expression , *cuts )
+    
 ROOT.TTree     . statVar = _stat_var_
 ROOT.TChain    . statVar = _stat_var_
+
+# =============================================================================
+## get the statistic for certain expressions in Tree/Dataset
+#  @code
+#  tree  = ... 
+#  stat1 = tree.statVars( [ 'S_sw/effic', 'pt1' , 'pt2' ] ) 
+#  stat2 = tree.statVars( [ 'S_sw/effic', 'pt1' , 'pt2' ] , 'mass>10') 
+#  @endcode
+#  It is more efficient than getting statistics individually for each expression
+#  @see Ostap::Math::StatVar 
+#  @see Ostap::Math::StatVar::statVars 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-11-03
+def _stat_vars_ ( tree , expressions , *cuts ) :
+    """Get the statistic for certain expressions in Tree/Dataset
+    >>> tree  = ... 
+    >>> stat1 = tree.statVars( [ 'S_sw/effic', 'pt1' , 'pt2' ] ) 
+    >>> stat2 = tree.statVars( [ 'S_sw/effic', 'pt1' , 'pt2' ] , 'mass>10') 
+    - It is more efficient than getting statistics individually for each expression
+    - see Ostap::Math::StatVar
+    - see Ostap::Math::StatVar::statVars 
+    """
+    from ostap.core.core import std, strings, split_string, WSE 
+    
+    if isinstance ( expressions , str ) :
+        expressions = split_string ( expressions , ',;:' ) 
+
+    if not expressions : return {}    
+    if 1 == len ( expressions ) :
+        return _stat_var_ ( tree , expressions[0] , *cuts )
+    
+    vct = strings ( *expressions )
+    res = std.vector(WSE)() 
+
+    ll  = Ostap.StatVar.statVars ( tree , res , vct , *cuts )
+    assert res.size() == vct.size(), 'Invalid size of structures!'
+
+    N = res.size()
+    results = {} 
+
+    for i in range(N) :
+        results[ vct[i] ] = WSE ( res[i] ) 
+
+    return results 
+
+ROOT.TTree     . statVars = _stat_vars_
+ROOT.TChain    . statVars = _stat_vars_
 
 # =============================================================================
 ## get the statistic for pair of expressions in Tree/Dataset
 #  @code
 #  tree  = ...
-#  stat1 , stat2 , cov2 , len = tree.statCov( 'x' , 'y' )
+#  stat1 , stat2 , cov2 , len = tree.statCov ( 'x' , 'y' )
 #  # apply some cuts 
-#  stat1 , stat2 , cov2 , len = tree.statCov( 'x' , 'y' , 'z>0' )
+#  stat1 , stat2 , cov2 , len = tree.statCov ( 'x' , 'y' , 'z>0' )
 #  # use only subset of events
-#  stat1 , stat2 , cov2 , len = tree.statCov( 'x' , 'y' , 'z>0' , 100 , 10000 )
+#  stat1 , stat2 , cov2 , len = tree.statCov ( 'x' , 'y' , 'z>0' , 100 , 10000 )
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-09-15
@@ -384,27 +440,27 @@ def _stat_cov_ ( tree        ,
     >>> stat1 , stat2 , cov2 , len = tree.statCov( 'x' , 'y' , 'z>0' , 100 , 10000 )
     """
     import ostap.math.linalg 
-    stat1  = cpp.Ostap.WStatEntity       ()
-    stat2  = cpp.Ostap.WStatEntity       ()
-    cov2   = cpp.Ostap.Math.SymMatrix2x2 ()
+    stat1  = Ostap.WStatEntity       ()
+    stat2  = Ostap.WStatEntity       ()
+    cov2   = Ostap.Math.SymMatrix2x2 ()
 
     if cuts : 
-        length = cpp.Ostap.StatVar.statCov ( tree        ,
-                                             expression1 ,
-                                             expression2 ,
-                                             cuts        ,
-                                             stat1       ,
-                                             stat2       ,
-                                             cov2        , 
-                                             *args       )
+        length = Ostap.StatVar.statCov ( tree        ,
+                                         expression1 ,
+                                         expression2 ,
+                                         cuts        ,
+                                         stat1       ,
+                                         stat2       ,
+                                         cov2        , 
+                                         *args       )
     else :
-        length = cpp.Ostap.StatVar.statCov ( tree        ,
-                                             expression1 ,
-                                             expression2 ,
-                                             stat1       ,
-                                             stat2       ,
-                                             cov2        ,
-                                             *args       )
+        length = Ostap.StatVar.statCov ( tree        ,
+                                         expression1 ,
+                                         expression2 ,
+                                         stat1       ,
+                                         stat2       ,
+                                         cov2        ,
+                                         *args       )
         
     return stat1 , stat2 , cov2, length
 
@@ -440,31 +496,31 @@ def _stat_covs_ ( tree        ,
     
     import ostap.math.linalg 
     
-    _SV    = cpp.std.vector('std::string')
+    _SV    = std.vector('std::string')
     _vars  = _SV()
     vars   = expressions
     for e in vars : _vars.push_back( e )
     
-    WSE    = cpp.Ostap.WStatEntity
-    _WV    = cpp.std.vector( WSE )
+    WSE    = Ostap.WStatEntity
+    _WV    = std.vector( WSE )
     _stats = _WV()
-    _DV    = cpp.std.vector('double')
+    _DV    =  std.vector('double')
     _cov2  = _DV()
 
     if cuts : 
-        length = cpp.Ostap.StatVar._statCov ( tree   ,
-                                              _vars  ,
-                                              cuts   ,
-                                              _stats ,
-                                              _cov2  ,
-                                              *args  ) 
+        length = Ostap.StatVar._statCov ( tree   ,
+                                          _vars  ,
+                                          cuts   ,
+                                          _stats ,
+                                          _cov2  ,
+                                          *args  ) 
     else :
-        length = cpp.Ostap.StatVar._statCov ( tree   ,
-                                              _vars  ,
-                                              _stats ,
-                                              _cov2  ,
-                                              *args  )
-
+        length = Ostap.StatVar._statCov ( tree   ,
+                                          _vars  ,
+                                          _stats ,
+                                          _cov2  ,
+                                          *args  )
+        
     l = len(_vars)
     if 0 == length : 
         return None , None , 0 
@@ -479,7 +535,7 @@ def _stat_covs_ ( tree        ,
     stats = tuple ( [ WSE(s) for s in _stats ] ) 
     
     import ostap.math.linalg
-    COV2 = cpp.Ostap.Math.SymMatrix ( l )
+    COV2 = Ostap.Math.SymMatrix ( l )
     cov2 = COV2 () 
 
     for i in range( l ) :
@@ -507,8 +563,13 @@ def _tc_minmax_ ( tree , var , cuts = '' , delta = 0.0 )  :
     >>> mn,mx = chain.vminmax('pt')
     >>> mn,mx = chain.vminmax('pt','y>3')
     """
-    if cuts : s = tree.statVar ( var , cuts )
-    else    : s = tree.statVar ( var )
+    if hasattr ( tree , 'pstatVar' ) : 
+        if cuts : s = tree.pstatVar ( var , cuts )
+        else    : s = tree.pstatVar ( var )
+    else :
+        if cuts : s = tree.statVar  ( var , cuts )
+        else    : s = tree.statVar  ( var )
+
     mn,mx = s.minmax()
     if mn < mn and 0.0 < delta :
         dx   = delta * 1.0 * ( mx - mn )  
@@ -580,7 +641,10 @@ def _sum_var_ ( tree , expression , *cuts ) :
     >>> n_corr_pt  = dataset.sumVar ( 'S_sw/effic' , 'pt>1')
     
     """
-    w = tree.statVar ( expression , *cuts )
+    ## if hasattr ( tree , 'pStatVar' ) : w = tree.pStatVar ( expression , *cuts )
+    ## else                             : w = tree. statVar ( expression , *cuts )
+    w = tree. statVar ( expression , *cuts )
+    ##
     return VE ( w.sum() , w.sum2() )
 
 ROOT.TTree      . sumVar = _sum_var_
@@ -774,22 +838,60 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
 
     ## collect information
     _vars = []
-    s0    = tree.statVar ( '1' , cuts , *args )
+    if hasattr ( tree , 'pstatVar' ) : s0 = tree.pstatVar ( '1' , cuts , *args )
+    else                             : s0 = tree. statVar ( '1' , cuts , *args )
     n0    = s0.nEntries  ()
 
     ## no entries passed the cuts 
     brs   = () if 0 == n0 else brs
+
+    ## from ostap.utils.progress_bar import ProgressBar 
+    ## progress = ProgressBar ( max_value = len ( brs ) )
+
+    ## get the interesting branches:
     
+    bbs     = []
+    selvars = 0 
     for b in brs :
-
-
+        
         l = tree.leaf ( b )
 
         if not l :
             logger.warning ("table: can't get the leaf  \"%s\"" % b )
             continue
         
-        tn = l.GetTypeName ()
+        tn       = l.GetTypeName ()
+        typename = tn
+
+        selvars += 1 
+        if not __in_types ( tn ) : continue
+        
+        bbs.append ( b ) 
+
+    report  = '# %s("%s","%s"' % ( tree.__class__.__name__ , tree.GetName  () , tree.GetTitle () )
+    if tree.GetDirectory() :  report += ',%s' % tree.GetDirectory().GetName()
+    report += ')'
+    if tree.topdir :  report += '\n# top-dir:%s' % tree.topdir.GetName()
+    report += '\n# ' + allright ( '%d entries; %d/%d variables (selected/total)' % ( len ( tree  ) ,
+                                                                                     selvars       ,
+                                                                                     len ( tree.branches() ) ) )
+
+    if hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
+    else                             : bbstats = tree. statVar ( bbs , cuts , *args )
+
+    from ostap.stats.counters import WSE 
+    if isinstance ( bbstats , WSE )  : bbstats = { bbs[0] : bbstats } 
+    
+    for b in brs :
+
+        
+        l = tree.leaf ( b )
+
+        if not l :
+            logger.warning ("table: can't get the leaf  \"%s\"" % b )
+            continue
+        
+        tn       = l.GetTypeName ()
         typename = tn
         
         br = l.GetBranch()
@@ -803,32 +905,28 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
                 else      : typename = '%s %s' % ( tn , n[p:  ] )            
             else          : typename = '%s'    %   tn  
 
+        typename = typename.replace ( 'Float_t'  , 'float'  ) 
+        typename = typename.replace ( 'Double_t' , 'double' ) 
+        typename = typename.replace ( 'Bool_t'   , 'bool'   )
+        
         rr = [ b , typename ]
-
         
-        if __in_types ( tn ) :
-
-            try :   
-                s = tree.statVar ( b , cuts , *args )
-                n    = s.nEntries() 
-                mnmx = s.minmax ()
-                mean = s.mean   () 
-                rms  = s.rms    ()
-                rr += [ ( '%+.5g' % mean.value() ).strip()                 , ## 2
-                        ( '%.5g'  % rms          ).strip()                 , ## 3 
-                        ( '%+.5g' % mnmx[0]      ).strip()                 , ## 4
-                        ( '%+.5g' % mnmx[1]      ).strip()                 , ## 5
-                        '' if  n == n0 else '%.3g' % ( float ( n ) / n0 ) ] ## 6
-                
-            except :
-                logger.warning ("table: can't get info for the leaf \"%s\"" % b )
-                rr +=  5*[ '' ]
-        
+        stat = bbstats.get ( b , None  )
+        if stat :  
+            n    = stat.nEntries() 
+            mnmx = stat.minmax ()
+            mean = stat.mean   () 
+            rms  = stat.rms    ()
+            rr += [ ( '%+.5g' % mean.value() ).strip()                  , ## 2
+                    ( '%.5g'  % rms          ).strip()                  , ## 3 
+                    ( '%+.5g' % mnmx[0]      ).strip()                  , ## 4
+                    ( '%+.5g' % mnmx[1]      ).strip()                  , ## 5
+                    '' if  n == n0 else '%.3g' % ( float ( n ) / n0 ) ]   ## 6            
         else :
+            ## logger.warning ("table: can't get info for the leaf \"%s\"" % b )
             rr +=  [ '-' , '-' , '-' , '-' , '' ]
-
+            
         _vars.append ( tuple  ( rr ) )
-        
         
     _vars.sort() 
     name_l  = len ( 'Variable' )  
@@ -877,14 +975,6 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
         max_l  ,
         num_l  )
     
-    report  = '# %s("%s","%s"' % ( tree.__class__.__name__ , tree.GetName  () , tree.GetTitle () )
-    if tree.GetDirectory() :  report += ',%s' % tree.GetDirectory().GetName()
-    report += ')'
-    if tree.topdir :  report += '\n# top-dir:%s' % tree.topdir.GetName()
-    report += '\n# ' + allright ( '%d entries; %d/%d variables (selected/total)' % ( len ( tree  ) ,
-                                                                                     len ( _vars ) ,
-                                                                                     len ( tree.branches() ) ) )
-
     header  = fmt % ( 'Variable' ,
                       'type'     , 
                       'mean'     ,
@@ -977,9 +1067,8 @@ ROOT.TTree.table    = _rt_table_
 
 
 # =============================================================================
-## get lst of files used for the given chain
+## get list of files used for the given chain
 #  @code
-#
 #  >>> chain = ... ## get the files 
 #  >>> files = chain.files() 
 #  @endcode
@@ -996,6 +1085,25 @@ def _rc_files_ ( chain ) :
 
 
 ROOT.TChain. files = _rc_files_
+
+# =============================================================================
+## get number of used for the given chain
+#  @code
+#  >>> chain = ... ## get the files 
+#  >>> n = chain.nFiles() 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-02-04
+def _rc_nfiles_ ( chain ) :
+    """Get number of of files used for the chain
+    
+    >>> chain = ... ## get the files 
+    >>> n = chain.nFiles()
+    """
+    lst = chain.GetListOfFiles()
+    return lst.GetEntries()
+
+ROOT.TChain. nFiles = _rc_nfiles_
 
 # =============================================================================
 ## get the chain of reduced size (in terms of number of input files)
@@ -1020,6 +1128,43 @@ def _rc_getslice_ ( self , start , stop , *step ) :
     return _chain
 
 ROOT.TChain.__getslice__ = _rc_getslice_
+
+# =============================================================================
+## Get the chain corresponding to the subset of files
+#  @code
+#  chain  = ...
+#  chain1 = chain[2 ] ## the third file only  
+#  chain2 = chain[:2] ## the first three files  
+#  chain3 = chain[-1] ## the last file 
+#  chain4 = chain[0:-1:2] ## every 2nd file 
+#  @endcode
+def _rc_getitem_ ( self , index ) :
+    """ Get the chain corresponding to the subset of files
+    >>> chain = ...
+    >>> chain1 = chain[2 ] ## the third file only  
+    >>> chain2 = chain[:2] ## the first three files  
+    >>> chain3 = chain[-1] ## the last file 
+    >>> chain4 = chain[0:-1:2] ## every 2nd file 
+    """
+    
+    _files = self.files()
+    
+    if isinstance ( index , ( int , long ) ) :
+        
+        assert 0 <= index < len ( _files ), "Invalid index %s" % index
+        _c = ROOT.TChain( self.GetName() , self.GetTitle() )
+        _c.Add ( _files[ index] )
+        return _c 
+        
+    if isinstance ( index , slice ) :
+        _fs = _files [ index ] 
+        _c  = ROOT.TChain( self.GetName() , self.GetTitle() )
+        for _f in _fs :_c.Add ( _f  )
+        return _c 
+
+    raise TypeError("Invalid index type %s/%s" % ( index  , type ( index ) ) )
+
+ROOT.TChain.__getitem__ = _rc_getitem_
 
 # =============================================================================
 ## get "slice" from TTree in a form of numpy.array
@@ -1208,12 +1353,17 @@ class Chain(CleanUp) :
                     
     def __init__ ( self , tree = None ,  name = None , files = [] , first = 0 , nevents = -1  ) :
 
-        assert ( name and files ) or valid_pointer  ( tree )  , 'Invalid arguments %s/%s/%s' % ( tree , name , files )        
-        assert isinstance ( first , int ) and 0<= first       , "Invalid ``first'' %s" % first
+        assert ( name and files                  ) or \
+               ( name and files and tree is True ) or \
+               ( isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree  ) ) ,  \
+               "Invalid tree/name/files combination: %s/%s%s" % ( tree , name , files    )
+        assert isinstance ( first , int ) and  0 <= first     , \
+               "Invalid ``first'' %s/%s"                      % ( first , type ( first ) ) 
 
-        self.__first   =  int ( first )  
-        self.__nevents =  nevents if 0 <= nevents < ROOT.TChain.kMaxEntries else -1 
-
+        self.__first   = int ( first )  
+        self.__nevents = nevents if 0 <= nevents < ROOT.TChain.kMaxEntries else -1 
+        self.__chain   = None
+        
         if files and isinstance ( files , str ) : files = files,
 
         if name and files :
@@ -1221,28 +1371,26 @@ class Chain(CleanUp) :
             self.__name  = name
             self.__files = files
 
-            chain = self.__create_chain() 
-            assert valid_pointer ( chain ), 'Invalid TChain!'
-            assert len ( files ) == len( chain.files() ) , 'Invalid length of files'
-
-            self.__chain = chain 
+            if not tree is True : 
+                chain = self.__create_chain() 
+                assert valid_pointer ( chain ), 'Invalid TChain!'
+                assert len ( files ) == len( chain.files() ) , 'Invalid length of files'
+                self.__chain = chain 
             
-        elif valid_pointer ( tree  ) :
+        elif valid_pointer ( tree ) :
             
             self.__name = tree.GetName()
             
-            if isinstance ( tree ,  ROOT.TChain ) :
+            if   isinstance ( tree ,  ROOT.TChain ) :
                 
-                self.__files = tree.files()
-                self.__files = tuple ( self.__files )
+                self.__files = tuple ( tree.files() ) 
                 self.__chain = tree
                 
             elif isinstance ( tree ,  ROOT.TTree ) :
                 
                 topdir = tree.topdir
-                if isinstance ( topdir , ROOT.TFile ) :
-                    self.__files = topdir.GetName() ,
-
+                
+                if isinstance ( topdir , ROOT.TFile ) : self.__files = topdir.GetName() ,
                 else :
                     
                     fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree_' )
@@ -1254,28 +1402,29 @@ class Chain(CleanUp) :
                             tname = tree.GetName() 
                             rfile[ tname ] = tree 
                             rfile.ls()
-                    self.__files    = fname ,
+                    self.__files   =   fname ,
                     self.tmpfiles += [ fname ]
                     
                 chain = ROOT.TChain( tree.GetName() )
                 chain.Add ( self.__files[0] )
                 tmp = chain
-                assert len ( chain  ) == len ( tree ) , 'Somethnig wron happens here :-( '
+                assert len ( chain ) == len ( tree ) , 'Something wrong happens here :-( '
                 self.__chain = chain
 
-        ##  last adjustment
-        ll = len ( self )  
-        if  ll < self.__first :
-            logger.warning ( 'Tree/Chain will be empty %s/%s' %   ( self.__first , ll ) )
-            self.__first   = ll
-            self.__nevents = 0
+        ## ##  last adjustment
+        ## ll = len ( self )  
+        ## if  ll < self.__first :
+        ##     logger.warning ( 'Tree/Chain will be empty %s/%s' %   ( self.__first , ll ) )
+        ##     self.__first   = ll
+        ##     self.__nevents = 0
                         
         ## if number of events is specified: 
-        if 0 < self.__nevents :
-            self.__nevents = min ( self.__nevents , ll - self.__first )   
+        ## if 0 < self.__nevents :
+        ##    ll = len ( self )  
+        ##    self.__nevents = min ( self.__nevents , ll - self.__first )
 
-    ## split the chain for several chains  with max=chunk entries
-    def split ( self , chunk_size = 200000  ) :
+    ## split the chain for several chains  with at most chunk_size entries
+    def slow_split ( self , chunk_size = 200000 ) :
         """Split the tree for several trees with chunk_size entries
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
@@ -1305,14 +1454,54 @@ class Chain(CleanUp) :
             
             ievt += ll
             nevt += nevents if 0 <= nevents else ll 
-            
+
         return tuple ( trees ) 
+
+    ## simple generator split lst into chunks 
+    def get_slices ( self , first , last , chunk_size ) :
+        """Split ``lst'' into  chunks
+        """
+        for i in range ( 0 , last - first , chunk_size ) :
+            ## yield lst [ i : min ( i + chunk_size , list_size ) ] 
+            yield slice ( first + i , first + min ( i + chunk_size , last -first  ) ) 
+                       
+    ## split the chain for several chains with at most chunk_size entries
+    def split ( self , chunk_size = -1 , max_files = 10 ) :
+        """Split the tree for several trees with chunk_size entries
+        >>> tree = ....
+        >>> trees = tree.split ( chunk_size = 1000000 ) 
+        """
+
+        if 0 != self.first or 0 < self.__nevents :
+            return self.slow_split ( chunk_size )
         
+        ## first split on per-file basis
+        fs     = self.files
+        chains = [ Chain ( tree = True , name = self.name , files = fs[c] ) for c in self.get_slices ( 0 , len(fs) , max_files ) ]
+        ## chains = [ Chain ( self.chain[c] ) for c in self.get_slices ( 0 , len(fs) , max_files ) ]
+
+        if chunk_size < 0 : return tuple ( chains )
+        
+        result = []  
+        for ch in chains :
+
+            size = len ( ch ) 
+            if   size > chunk_size and 1 == ch.nFiles : 
+                tree    = Tree ( ch.chain , name = ch.name , file = ch.files[0] , first = ch.first , nevents = ch.nevents ) 
+                result += tree.split ( chunk_size )
+            elif size > chunk_size : result += ch.slow_split ( chunk_size )                     
+            else                   : result.append ( ch ) 
+
+        return  tuple ( result ) 
+
+
     ##  number of entries in the Tree/Chain
-    def __len__ ( self ) : return len ( self.__chain )
+    def __len__ ( self ) :
+        if self.__chain is None : self.__chain = self.__create_chain () 
+        return len ( self.__chain )
     
     def __create_chain ( self ) :
-        """``chain'' : get the underlyinng tree/chain"""
+        """``chain'' : get the underlying tree/chain"""
         c = ROOT.TChain ( self.__name )
         for f in self.__files  : c.Add ( f )
         return c
@@ -1320,8 +1509,7 @@ class Chain(CleanUp) :
     @property
     def chain ( self ) :
         """``chain'' : get the underlying tree/chain"""
-        if self.__chain : return self.__chain
-        self.__chain = self.__create_chain () 
+        if self.__chain is None : self.__chain = self.__create_chain () 
         return self.__chain
 
     @property
@@ -1331,7 +1519,11 @@ class Chain(CleanUp) :
     @property
     def files   ( self ) :
         """``files''   : the files"""
-        return tuple(self.__files)
+        return self.__files
+    @property
+    def nFiles   ( self ) :
+        """``nFiles''   : the numer of files"""
+        return len(self.__files)
     @property
     def first   ( self ) :
         """``first'' : the first event to process"""
@@ -1344,7 +1536,7 @@ class Chain(CleanUp) :
     @property
     def nevents ( self ) :
         """``nevents'' : number of events to process"""
-        return self.__nevents if 0<= self.__nevents else ROOT.TChain.kMaxEntries
+        return self.__nevents
 
     ## get DataFrame 
     def  frame ( self , *vars ) :
@@ -1360,8 +1552,8 @@ class Chain(CleanUp) :
         return DataFrame ( self.name , fnames , vnames ) 
         
     def __str__ ( self ) :
-        r = "Chain('%s',%s" % ( self.name , self.files )
-        if 0 != self.__first or 0 <= self.nevents : r += ",%s,%s" % ( self.first , self.last - self.first )            
+        r = "Chain('%s',%s" % ( self.name , self.__files )
+        if 0 != self.first or 0 <= self.__nevents : r += ",%s,%s" % ( self.first , self.__nevents )            
         return r + ")"
     __repr__ = __str__
     
@@ -1386,13 +1578,13 @@ class Tree(Chain) :
             if isinstance ( tree , ROOT.TChain ) :
                 assert 1 == len (  tree.files() ) , 'Tree is for ROOT.TTree only!'
                 
-        Chain.__init__ ( self , tree , name  ,files =  [ file ]  , first = first , nevents = nevents )
+        Chain.__init__ ( self , tree , name  , files = [ file ] , first = first , nevents = nevents )
         
-        assert 1 == len ( self.files ), 'Invalid number of files!'
+        assert 1 == self.nFiles , 'Invalid number of files!'
 
-    ## split the tree for several trees with max=chunk entries
+    ## split the tree for several trees with max=chunk_size entries
     def split ( self , chunk_size = 200000  ) :
-        """Split the tree for several trees with max=chunk entries
+        """Split the tree for several trees with max=chunk_size entries
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
@@ -1403,29 +1595,50 @@ class Tree(Chain) :
         
         ## no splitting ?
         if 0 >= chunk_size : return  self,
+        
+        ll   = len ( self )
+        last = min ( ll , self.first + self.nevents if 0 <= self.nevents else ROOT.TChain.kMaxEntries ) 
 
-        cs = chunk_size 
+        result = [] 
+        for s in self.get_slices ( self.first , last , chunk_size ) :
+            start , stop , stride = s.indices ( ll )
+            if start < stop : 
+                t = Tree ( tree = self.chain , name = self.name , file = self.file , first = start , nevents = stop - start ) 
+                result.append ( t ) 
+                
+        return tuple ( result ) 
 
-        total   = min ( len ( self ) , self.nevents ) 
-        nchunks , rest = divmod  ( total , cs  ) 
+    ## get a slice for the tree 
+    def __getslice__ ( self , start , stop ) :
+        """ Get a slice for the given tree 
+        >>> tree  = ...
+        >>> tree1 = tree[:1000]  ## the first 1000 events 
+        """
+        s  = slice ( start , stop )
+        ll = len   ( self  )
+        
+        if self.first < ll : start , stop = 0 , 0
 
-        results = []
-        for i in range ( nchunks ) :
-            results.append ( Tree ( name  = self.name  , file = self.file , first = self.first +       i * cs , nevents  = cs    ) )
-        if rest :
-            results.append ( Tree ( name  = self.name  , file = self.file , first = self.first + nchunks * cs , nevents  = rest  ) )
-            
-        return tuple ( results ) 
+        last = self.first + self.nevents if 0 < self.nevents else ll
+        last = min ( last , ll )
+        
+        start, stop , stride = s.indices ( last - self.first )
+        
+        start += self.first
+        stop  += self.first
+        
+        return Tree ( name = self.name , file = self.file , first = start , nevents = stop )
         
     @property
     def file ( self ) :
         """``file''   : the file name """
-        assert 1 == len  ( self.files ) , 'Invalid number of files %s' % len ( self.files ) 
-        return self.files[0] 
+        fs = self.files 
+        assert 1 == len  ( fs ) , 'Invalid number of files %s' % len ( fs ) 
+        return fs [0] 
 
     def __str__ ( self ) :
-        r = "Tree('%s',%s" % ( self.name , self.file )
-        if 0 != self.first or 0 <= self.nevents : r += ",%s,%s" % ( self.first , self.last - self.first )            
+        r = "Tree('%s','%s'" % ( self.name , self.file )
+        if 0 != self.first or 0 <= self.__nevents : r += ",%s,%s" % ( self.first , self.__nevents )            
         return r + ")"
     __repr__ = __str__
 
@@ -1440,7 +1653,7 @@ def _rt_nEff_  ( self , cuts = '' , *args ) :
     >>> data = ...
     >>> neff = data.nEff('b1*b1')
     """
-    return cpp.Ostap.StatVar.nEff ( self , cuts , *args )
+    return Ostap.StatVar.nEff ( self , cuts , *args )
 
 ROOT.TTree.nEff = _rt_nEff_ 
 # =============================================================================

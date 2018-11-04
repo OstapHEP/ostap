@@ -31,10 +31,11 @@ else :
 with timing('Prepare data') :
     logger.info('Prepare data, it could take some time')
     from ostap.utils.utils import CleanUp
-    tmpdir = CleanUp().tmpdir 
+    tmpdir  = CleanUp().tmpdir 
     import prepare_test_kisa as PTK
-    ##data   = PTK.prepare_data ( tmpdir , nfiles = 250 , nentries = 200000, silent = False ) 
-    data   = PTK.prepare_data ( tmpdir , nfiles = 10 , nentries = 100 , silent = False ) 
+    ## data = PTK.prepare_data ( tmpdir , nfiles = 250 , nentries = 200000 , silent = False ) 
+    data    = PTK.prepare_data ( tmpdir , nfiles = 100 , nentries = 50000  , silent = False ) 
+    ## data = PTK.prepare_data ( tmpdir , nfiles = 10  , nentries = 100    , silent = False ) 
     logger.info    ( 'DATA %s' % data  )
 
 # =============================================================================
@@ -99,7 +100,7 @@ def test_kisa2 () :
             selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
             silence   = True 
             )
-        st = data.chain.pprocess ( selector , silent = False , chunk_size = -1 )
+        st = data.chain.pprocess ( selector , silent = False , chunk_size = -1 , max_files = 1 )
         ds = selector.data 
         del selector 
     ##logger.info ( 'Dataset: %s' % ds )

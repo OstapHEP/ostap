@@ -312,13 +312,15 @@ Ostap::Models::Flatte::Flatte
   RooAbsReal&                m0        ,
   RooAbsReal&                m0g1      ,
   RooAbsReal&                g2og1     ,
+  RooAbsReal&                g0        ,
   const Ostap::Math::Flatte& flatte    ) 
   : RooAbsPdf ( name , title ) 
 //
-  , m_x      ( "x"     , "Observable" , this , x     ) 
-  , m_m0     ( "m0"    , "Peak"       , this , m0    ) 
-  , m_m0g1   ( "m0g1"  , "M0*G1"      , this , m0g1  )
-  , m_g2og1  ( "g2og1" , "G2/G1"      , this , g2og1 )
+  , m_x      ( "x"     , "Observable"    , this , x     ) 
+  , m_m0     ( "m0"    , "Peak"          , this , m0    ) 
+  , m_m0g1   ( "m0g1"  , "M0*Gamma1"     , this , m0g1  )
+  , m_g2og1  ( "g2og1" , "Gamma2/Gamma1" , this , g2og1 )
+  , m_g0     ( "g0"    , "Gamma0"        , this , g0    )
     //
   , m_flatte ( flatte.clone () ) 
 {
@@ -336,6 +338,7 @@ Ostap::Models::Flatte::Flatte
   , m_m0    ( "m0"    , this , right.m_m0    ) 
   , m_m0g1  ( "m0g1"  , this , right.m_m0g1  )
   , m_g2og1 ( "g2og1" , this , right.m_g2og1 )
+  , m_g0    ( "g0"    , this , right.m_g0    )
     //
   , m_flatte ( right.m_flatte->clone() ) 
 {
@@ -354,20 +357,17 @@ Ostap::Models::Flatte::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::Flatte::setPars () const 
 {
-  //
   m_flatte->setM0     ( m_m0    ) ;
   m_flatte->setM0G1   ( m_m0g1  ) ;
   m_flatte->setG2oG1  ( m_g2og1 ) ;
-  //
+  m_flatte->setG0     ( m_g0    ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
 Double_t Ostap::Models::Flatte::evaluate() const 
 {
-  //
   setPars () ;
-  //
   return (*m_flatte) ( m_x ) ;
 }
 // ============================================================================
@@ -395,15 +395,9 @@ Double_t Ostap::Models::Flatte::analyticalIntegral
 // ===========================================================================
 std::complex<double> Ostap::Models::Flatte::amplitude () const  
 {
-  //
   setPars () ;
-  //
   return m_flatte->amplitude ( m_x ) ;
 }
-
-
-
-
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================

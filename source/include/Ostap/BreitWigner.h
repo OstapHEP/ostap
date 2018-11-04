@@ -354,13 +354,35 @@ namespace Ostap
        *  @param mB1   mass of B1
        *  @param mB2   mass of B2
        */
-      Flatte  ( const double m0    = 980   ,
-                const double m0g1  = 165   ,
-                const double g2og1 = 4.21  ,
-                const double mA1   = 139.6 ,
-                const double mA2   = 139.6 ,
-                const double mB1   = 493.7 ,
-                const double mB2   = 493.7 ) ;
+      Flatte ( const double m0    = 980   ,
+               const double m0g1  = 165   ,
+               const double g2og1 = 4.21  ,
+               const double mA1   = 139.6 ,
+               const double mA2   = 139.6 ,
+               const double mB1   = 493.7 ,
+               const double mB2   = 493.7 , 
+               const double g0    = 0     ) ; // the constant width for "other" decays
+      // ======================================================================
+      /**  a bit more intuitive ``a'la BreitWigner'' constructor 
+       *   @param flag  the flag 
+       *   @param m0    the mass 
+       *   @param gtot  width parameter \f$ \Gamma_1 + \Gamma_2 + \Gamma_0 \f$ 
+       *   @param mA1   mass of A1
+       *   @param mA2   mass of A2
+       *   @param mB1   mass of B1
+       *   @param mB2   mass of B2
+       *   @param g2og1 the width ratio \f$ \Gamma_2 / \Gamma_1 \f$ 
+       *   @param br0   the width fraction  \f$\frac{\Gamma_0}{\Gamma_1+\Gamma_2+\Gamma_0}\f$ 
+       */
+      Flatte ( const char* /* flag */   ,
+               const double  m0         ,   // m0 
+               const double  gtot       ,   // gamma1 + gamma2 + gamma_0  
+               const double  mA1        ,
+               const double  mA2        ,
+               const double  mB1        ,
+               const double  mB2        ,               
+               const double  g2og1 = 1  ,   // gamma2/ gamma1 
+               const double  br0   = 0  ) ; // gamma0 / (gamma0+gamma1+gamma2)
       /// copy constructor 
       Flatte ( const Flatte&  right ) = default ;
       /// destructor
@@ -409,13 +431,32 @@ namespace Ostap
       double mB1    () const { return m_B1      ; }
       /// mass of the second daughter in for the coupled channel
       double mB2    () const { return m_B2      ; }
+      /// the constant width for "other" decays 
+      double g0     () const { return m_g0      ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the total running width (complex!)
+      std::complex<double> gamma ( const double x ) const ;
+      /// get the value of total (complex!) width at the pole 
+      std::complex<double> gamma () const { return gamma ( m0 () ) ; }
+      // ======================================================================
+    public: // derived quantities
+      // ======================================================================
+      double gamma0      () const { return g0     ()                  ; }
+      double gamma1      () const { return m0g1   () / m0     ()      ; }
+      double gamma2      () const { return g2og1  () * gamma1 ()      ; }      
+      double gamma_total () const { return gamma1 () + gamma2 () + gamma0 () ; }
+      double br1         () const { return gamma1 () / gamma_total () ; }
+      double br2         () const { return gamma2 () / gamma_total () ; }
+      double br0         () const { return gamma0 () / gamma_total () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// the thereshold 
-      double thresholdA () const { return mA1() + mA2() ; }
+      double thresholdA () const { return mA1 () + mA2 () ; }
       /// the threshold for the coupled channel 
-      double thresholdB () const { return mB1() + mB2() ; }
+      double thresholdB () const { return mB1 () + mB2 () ; }
       /// minimal threshold 
       double threshold  () const
       { return std::min ( thresholdA () , thresholdB () ) ; }
@@ -432,6 +473,8 @@ namespace Ostap
       bool setM0G1   ( const double x ) ;
       /// set g2/g1 
       bool setG2oG1  ( const double x ) ;
+      /// set g0
+      bool setG0     ( const double x ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -450,6 +493,7 @@ namespace Ostap
       double m_A2     ;
       double m_B1     ;
       double m_B2     ;
+      double m_g0     ;
       // ======================================================================
     private:
       // ======================================================================

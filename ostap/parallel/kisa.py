@@ -4,7 +4,6 @@
 ## @file
 #  Module with some multiprocessing functionality for Ostap 
 #  Currently it is not loaded on default, and requires manual activation
-#
 #  @see GaudiMP.Parallel
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
@@ -67,7 +66,7 @@ class GenericTask(Parallel.Task) :
         self.__processor   = processor
         self.__merger      = merger
         self.__initializer = initializer
-
+        
     # =========================================================================
     ## local initialization (executed once in parent process)
     def initializeLocal   ( self ) :
@@ -79,6 +78,7 @@ class GenericTask(Parallel.Task) :
     def process  ( self , item ) :
         """The actual processing of the single item"""
         self.output = self.processor ( item )
+        
     # =========================================================================
     ## merge results 
     def _mergeResults ( self , result ) :
@@ -176,7 +176,8 @@ class ProjectTask(Parallel.Task) :
                                      self.what  , self.cuts      ,
                                      ''         ,
                                      nevents    , first          )
-
+        del item
+        
     ## finalization (executed at the end at parent process)
     def finalize ( self ) : pass 
 
@@ -363,6 +364,8 @@ class  FillTask(Parallel.Task) :
         ##del      selector        
         logger.debug ( 'Processed %s and filled %d entries ' % ( item , len( self.output ) ) )
 
+        del item
+
     def finalize ( self ) : pass 
 
     ## merge results/datasets 
@@ -384,10 +387,91 @@ class  FillTask(Parallel.Task) :
             del result            
             logger.debug ( 'Merging: %d entries ' % len( self.output[0] ) )
         else :
-            logger.error("No valid results for merging")
-            
+            logger.error ( "No valid results for merging" )
+
+# =============================================================================
+## The simple task object collect statistics for loooooong chains 
+#  @see GaudiMP.Parallel
+#  @see GaudiMP.Parallel.Task
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-09-23
+class StatVarTask(Parallel.Task) :
+    """The simple task object collect statistics for loooooong chains 
+    """
+    ## constructor: histogram 
+    def __init__ ( self , what , cuts = '' ) :
+        """Constructor        
+        >>> task  = StatVarTask ( 'mass' , 'pt>0') 
+        """
+        self.what  = what 
+        self.cuts  = str(cuts) 
+        
+    ## local initialization (executed once in parent process)
+    def initializeLocal   ( self ) :
+        """Local initialization (executed once in parent process)
+        """
+        from ostap.stats.counters import WSE
+        self.output = None 
+        
+    def _resetOutput(self):
+        self.output = None 
+ 
+    ## remote initialization (executed for each sub-processs)
+    def initializeRemote  ( self ) : pass 
+    
+    ## the actual processing
+    #   ``params'' is assumed to be a tuple/list :
+    #  - the file name
+    #  - the tree name in the file
+    #  - the variable/expression/expression list of quantities to project
+    #  - the selection/weighting criteria 
+    #  - the first entry in tree to process
+    #  - number of entries to process
+    def process ( self , item ) :
+        """The actual processing
+        ``params'' is assumed to be a tuple-like entity:
+        - the file name
+        - the tree name in the file
+        - the variable/expression/expression list of quantities to project
+        - the selection/weighting criteria 
+        - the first entry in tree to process
+        - number of entries to process
+        """
+
+        import ROOT
+        from ostap.logger.utils import logWarning
+        with logWarning() : import ostap.core.pyrouts 
+
+        chain   = item.chain 
+        first   = item.first
+        last    = min ( n_large , first + item.nevents if 0 < item.nevents else n_large )
+        
+        from ostap.trees.trees  import _stat_vars_
+        self.output = _stat_vars_ ( chain , self.what , self.cuts , first , last )
+        
+    ## finalization (executed at the end at parent process)
+    def finalize ( self ) : pass 
+
+    ## merge results 
+    def _mergeResults ( self , result ) :
+        
+        from ostap.stats.counters import WSE
+
+        if not self.output : self.output = result
+        else               :
+            assert type( self.output ) == type ( result ) , 'Invalid types for merging!'
+            if isinstance ( self.output , dict ) : 
+                for key in result : 
+                    if self.output.has_key ( key ) : self.output[key] += result[key]
+                    else                           : self.output[key]  = result[key] 
+            else :
+                self.output += result
+                    
+                    
 # ===================================================================================
 ## @class ChopperTraining
+#  parallel procession for TMVA chopping
+#  @see ostap/tools/chopping.py
 class ChopperTraining(Parallel.Task) :
     def __init__          ( self ) : self.output = ()
     def initializeLocal   ( self ) : self.output = () 
@@ -428,7 +512,7 @@ class ChopperTraining(Parallel.Task) :
 #  selector =  ...
 #  chain.pprocess ( selector )
 #  @endcode 
-def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  , chunk_size = 100000 , ppservers = () , silent = False ) :
+def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  , chunk_size = 100000 , ppservers = () , max_files = 10 , silent = False ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -443,7 +527,7 @@ def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  
     variables = selector.variables
     trivial   = selector.trivial
     
-    all = 0 == first and ( 0 > nevents or len(chain) <= nevents )
+    all = 0 == first and ( 0 > nevents or len ( chain ) <= nevents )
     
     if all and trivial and 1 < len( ch.files ) :
         logger.info ("Configuration is ``trivial'': redefine ``chunk-size'' to -1")
@@ -451,7 +535,9 @@ def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  
         
     task  = FillTask ( variables , selection , trivial )
     wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
-    wmgr.process( task , ch.split ( chunk_size = chunk_size ) )
+    trees = ch.split ( chunk_size = chunk_size , max_files = max_files )
+    wmgr.process( task , trees )
+    del trees
     
     dataset, stat = task.output 
 
@@ -474,6 +560,52 @@ def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  
     
 ROOT.TChain.pprocess =  _pprocess_ 
 ROOT.TTree.pprocess  =  _pprocess_ 
+
+
+
+
+# ===================================================================================
+## parallel processing of loooong chain/tree 
+#  @code
+#  chain    = ...
+#  chain.pStatVar ( .... ) 
+#  @endcode 
+def _pStatVar_ ( chain        , what , cuts = ''    ,
+                 nevents = -1 ,
+                 first   =  0 , chunk_size = 100000 , max_files = 10 , ppservers = () , silent = True ) :
+    """ Parallel processing of loooong chain/tree 
+    >>> chain    = ...
+    >>> chain.pstatVar( 'mass' , 'pt>1') 
+    """
+    
+    ## few special/trivial cases
+
+    last = min ( n_large , first + nevents if 0 < nevents else n_large )
+    
+    if 0 <= first and 0 < nevents < chunk_size :
+        return chain.statVar ( what , cuts , first , last )
+    elif isinstance ( chain , ROOT.TChain ) : 
+        if chain.nFiles() < 5 and len ( chain ) < chunk_size :
+            return chain.statVar ( what , cuts , first , last )                         
+    elif isinstance ( chain , ROOT.TTree  ) and len ( chain ) < chunk_size :
+        return chain.statVar ( what , cuts , first , last ) 
+    
+    from ostap.trees.trees import Chain
+    ch     = Chain ( chain , first = first , nevents = nevents )
+
+    task   = StatVarTask ( what , cuts )
+    wmgr   = Parallel.WorkManager ( ppservers = ppservers , silent = silent )
+    trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
+    
+    wmgr.process ( task , trees )
+
+    del trees
+    del ch    
+
+    return task.output 
+
+ROOT.TChain.pstatVar = _pStatVar_ 
+ROOT.TTree .pstatVar = _pStatVar_ 
 
 # =============================================================================
 if '__main__' == __name__ :

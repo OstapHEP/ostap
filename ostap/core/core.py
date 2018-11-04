@@ -46,6 +46,9 @@ __all__     = (
     ##
     'valid_pointer'    ,  ## Is it a valid C++ pointer?
     ##
+    'strings'          , ## construct std::vector<std::string>
+    'split_string'     , ## split the string  according to separators 
+    ##
     'StatusCode'       ,  ## status code
     'SUCCESS'          ,  ## status code SUCCESS 
     'FAILURE'          ,  ## status code FAILURE 
@@ -63,7 +66,7 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
-from ostap.math.base      import ( cpp      , Ostap   ,
+from ostap.math.base      import ( Ostap    ,
                                    iszero   , isequal ,
                                    isint    , islong  ,
                                    inrange  , strings , 
@@ -71,7 +74,7 @@ from ostap.math.base      import ( cpp      , Ostap   ,
                                    natural_entry      )
 
 from ostap.math.ve        import VE
-from ostap.stats.counters import SE,WSE 
+from ostap.stats.counters import SE , WSE 
 #
 binomEff        = Ostap.Math.binomEff
 binomEff2       = Ostap.Math.binomEff2
@@ -252,6 +255,29 @@ _tn_title_doc_ = "``title'' of the object using GetTitle/SetTitle"
 ROOT.TNamed.name  = property ( _tn_name_get_  ,  _tn_name_set_  , None , _tn_name_doc_  ) 
 ROOT.TNamed.title = property ( _tn_title_get_ ,  _tn_title_set_ , None , _tn_title_doc_ ) 
 
+
+# =============================================================================
+## split string using separators: blanks,
+#  @code
+#  split_string ( ' a b cde,fg;jq', ',;:' )
+#  @endcode
+def split_string ( line , separators = ',;:' ) :
+    """Split the string using separators
+    >>> split_string ( ' a b cde,fg;jq', ',;:' )
+    """
+    items = line.split()
+    for s in separators :
+        result = []
+        for item in items :
+            if s in item : result += item.split(s)
+            else         : result.append ( item ) 
+        items = result
+
+    ## remove empty items 
+    while '' in items: items.remove ( '' )
+
+    return items 
+    
 # =============================================================================
 if '__main__' == __name__ :
     

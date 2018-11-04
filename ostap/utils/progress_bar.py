@@ -212,7 +212,7 @@ class ProgressBar(object):
         ##
 
         ncols         = columns () - 12
-        self.width    = ncols if ncols > 5 else width
+        self.width    = ncols if ncols > 10 else width
         
         self.prefix   = kwargs.get('description','' )  ## description
         self.width    = self.width - len(self.prefix)

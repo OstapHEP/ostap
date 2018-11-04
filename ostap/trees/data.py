@@ -77,6 +77,17 @@ protocols = (
     'https:/',    
     )
 # =============================================================================
+class DataProcessor (object) :
+    def __init__   ( self , data  )  :
+        self.data = data
+    def initialize ( self ) :
+        return self.data.clone()
+    def __call__ ( self , items )  :
+        print 'processing:', items 
+        data = self.data.clone() 
+        data.add_files ( items )
+        return data
+# =============================================================================
 ## @class Files
 #  Simple utility to pickup the list of files 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -91,7 +102,7 @@ class Files(object):
                   files                 ,
                   description = ""      ,
                   maxfiles    = -1      ,
-                  silent      = False   ) :  
+                  silent      = False   ) :
         #
         from copy import deepcopy
         #
@@ -102,9 +113,38 @@ class Files(object):
         self.description  = description
         self.maxfiles     = maxfiles
         self.silent       = silent 
-        #
-        self.add_files ( deepcopy ( files ) )
         
+        # =====================================================================
+        # convert list of patterns into the list of files 
+        # =====================================================================
+        
+        _files   = set()
+        for pattern in  self.patterns :
+            
+            _added = False  
+            for p in protocols :
+                if p in pattern : 
+                    if not pattern in self.files :
+                        _files.add  ( pattern )
+                    _added = True
+                    break
+                
+            if not _added : 
+                for f in glob.iglob ( pattern ) :
+                    if not f in self.files :
+                        _files.add ( f )
+                        
+        if not self.silent :
+            logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description   ,
+                                                                   len(self.patterns) , 
+                                                                   len( _files )    ) )
+
+        self.add_files ( _files )
+
+        if not self.silent :
+            logger.info ('Loaded: %s' % self )
+            
+                                   
     def __getstate__ ( self ) :
 
         return {
@@ -124,48 +164,22 @@ class Files(object):
 
 
     ## add files 
-    def add_files ( self , patterns ) :
+    def add_files ( self , files ) :
         """ Add files/patterns to data collector
         """
         
-        if isinstance ( patterns , str ) : patterns = [ patterns ]
-        
-        _files  = set ()
-        for pattern in patterns :
-
-            _added = False  
-            for p in protocols :
-                if p in pattern : 
-                    if not pattern in self.files :
-                        _files.add  ( pattern )
-                    _added = True
-                    break
-                
-            if not _added : 
-                for f in glob.iglob ( pattern ) :
-                    if not f in self.files :
-                        _files.add ( f )
-                        
-        if not self.silent :
-            logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description ,
-                                                                   len(patterns)    , 
-                                                                   len( _files )    ) )
-        ## update list of patterns
-        self.patterns += patterns
+        if isinstance ( files  , str ) : files  = [ files  ]
         
         from ostap.utils.progress_bar import ProgressBar 
-        with ProgressBar ( max_value = len(_files) , silent = self.silent ) as bar :
+        with ProgressBar ( max_value = len ( files ) , silent = self.silent ) as bar :
             self.progress = bar 
-            for f in _files :
+            for f in files :
                 if   0 >= self.maxfiles                 : self.treatFile ( f ) 
                 elif len ( self.files ) < self.maxfiles : self.treatFile ( f )
                 else :
                     logger.debug ('Maxfiles limit is reached %s ' % self.maxfiles )
                     break
                 
-        if not self.silent :
-            logger.info ('Loaded: %s' % self )
-            
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         self.files.append ( the_file )
@@ -326,9 +340,9 @@ class Data(Files):
         if not description : description = self.chain.GetName()
         ##
         if not quick : 
-            Files.__init__( self , files , description  , maxfiles , silent )
+            Files.__init__( self , files , description  , maxfiles , silent = silent )
         else :
-            Files.__init__( self , []    , description  , maxfiles , silent = True )
+            Files.__init__( self , []    , description  , maxfiles , silent = True   )
             self.silent = silent
             self.files  = self._quick_add_ ( self.chain ,  files )
             if not self.silent : logger.info ('Loaded: %s' % self )
@@ -559,7 +573,7 @@ class Data2(Data):
         self.files  = []
         self.files2 = []
         if not quick : 
-            Data.__init__( self , chain1 , files , description , maxfiles , silent , quick = False)
+            Data.__init__( self , chain1 , files , description , maxfiles , silent , quick = False )
             self.chain1  = self.chain 
             self.files   = self.chain .files()[:]
             self.files2  = self.chain2.files()[:]

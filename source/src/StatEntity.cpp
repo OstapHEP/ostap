@@ -153,7 +153,7 @@ double Ostap::StatEntity::efficiencyErr () const
  */
 // ============================================================================
 Ostap::StatEntity& 
-Ostap::StatEntity::operator+=( const Ostap::StatEntity& other )
+Ostap::StatEntity::add ( const Ostap::StatEntity& other )
 {
   /// trivial updates:
   if      ( 0 == other.m_n ) { return *this ; }

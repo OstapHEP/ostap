@@ -30,9 +30,7 @@ Ostap::Formula::Formula
   const std::string& expression ,
   TTree*             tree       ) 
 : TTreeFormula ( name.c_str() , expression.c_str() , tree )
-{
-  
-}
+{}
 // ============================================================================
 Ostap::Formula::Formula
 ( const std::string& name       , 
@@ -82,7 +80,6 @@ Int_t Ostap::Formula::evaluate ( std::vector<double>& results )
   for ( Int_t i = 0 ; i < d ; ++i ) { results [ i ] = EvalInstance ( i ) ; }
   return d ;  
 }
-
 // ============================================================================
 // The END 
 // ============================================================================

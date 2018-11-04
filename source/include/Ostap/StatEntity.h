@@ -224,7 +224,7 @@ namespace Ostap
      *  @endcode
      *  @param f counter increment
      */
-    StatEntity& operator-= ( const double   f ) { add ( -f ) ; return *this ; }
+    StatEntity& operator-= ( const double   f ) { return add ( -f ) ; }
     // ======================================================================
     /** Pre-decrement operator for the flag
      *  Could be used for easy manipulation with StatEntity object:
@@ -265,7 +265,7 @@ namespace Ostap
      *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
      *  @see https://doi.org/10.1007/s00180-015-0637-z
      */
-    StatEntity& operator+= ( const StatEntity& other ) ;
+    StatEntity& operator+= ( const StatEntity& other ) { return add  ( other ) ; }
     // ======================================================================
   public:
     // ======================================================================
@@ -285,10 +285,27 @@ namespace Ostap
      *  @param value (INPUT) value to be added
      *  @return self-reference 
      */
-    StatEntity& add    ( const double value ) ;
+    StatEntity& add    ( const double      value ) ;
     // ========================================================================
-    /// ditto
-    StatEntity& update ( const double value ) { return add ( value ) ; };
+    /** increment with other counter
+     *  @code
+     *  const StatEntity second = ... ;
+     *  StatEntity first = ... ;
+     *  first += second ;
+     *  @endcode
+     *  @param other counter to be added
+     *  @return self-reference
+     *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
+     *  @see https://doi.org/10.1007/s00180-015-0637-z
+     */
+    StatEntity& add    ( const StatEntity& value ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /// update counter 
+    StatEntity& update ( const double      value ) { return add ( value ) ; };
+    /// update counter 
+    StatEntity& update ( const StatEntity& value ) { return add ( value ) ; };
     // ========================================================================
   public: // various technical helper methods  
     // ========================================================================

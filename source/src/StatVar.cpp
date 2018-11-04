@@ -779,7 +779,7 @@ Ostap::StatVar::statVar
   //
   if ( cuts.empty() ) { return statVar( tree , expression , first , last ) ; }
   //
-  Ostap::WStatEntity result ;
+  Ostap::StatVar::Statistic result ;
   if ( 0 == tree || last <= first ) { return result ; }  // RETURN
   Ostap::Formula selection ( "" , cuts      , tree ) ;
   if ( !selection.ok () ) { return result ; }            // RETURN
@@ -835,10 +835,173 @@ Ostap::StatVar::statVar
   const unsigned long first      ,
   const unsigned long last       )
 {
-  //
   const std::string _cuts = cuts.GetTitle() ;
-  //
   return statVar ( tree , expression , _cuts , first , last ) ;
+}
+// ============================================================================
+/*  build statistic for the <code>expressions</code>
+ *  @param tree        (INPUT)  the tree 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2018-11-04
+ */
+// ============================================================================
+unsigned long Ostap::StatVar::statVars
+( TTree*                                  tree        ,  
+  std::vector<Ostap::StatVar::Statistic>& result      ,  
+  const std::vector<std::string>&         expressions ,
+  const unsigned long                     first       ,
+  const unsigned long                     last        ) 
+{
+  //
+  const unsigned int N = expressions.size() ;
+  //
+  result.resize ( N ) ;
+  for ( auto& r : result ) { r.reset () ; }
+  //
+  if ( 0 == tree || last <= first ) { return 0 ; }  // RETURN
+  if ( expressions.empty()        ) { return 0 ; }  // RETURN  
+  //
+  typedef std::unique_ptr<Ostap::Formula> UOF ;
+  std::vector<UOF> formulas ; formulas.reserve ( N ) ;
+  //
+  for ( const auto& e : expressions  ) 
+  {
+    auto p = std::make_unique<Ostap::Formula>( "" , e , tree ) ;
+    if ( !p || !p->ok() ) { return 0 ; }
+    formulas.push_back ( std::move ( p ) ) ;  
+  }
+  //
+  Ostap::Assert ( N == formulas.size()           , 
+                  "Inconsistent size of structures" , 
+                  "Ostap::StatVar::statVars"        ) ;
+  //
+  Ostap::Utils::Notifier notify ( formulas.begin() , formulas.end() , tree ) ;
+  //
+  const unsigned long nEntries =
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  std::vector<double>  results {} ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+  {
+    //
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return entry - first ; }                // RETURN
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return entry - first  ; }                // RETURN
+    //
+    for ( unsigned int i = 0 ; i < N ; ++i ) 
+    {
+      formulas[i]->evaluate ( results ) ;
+      for ( const double r : results ) { result[i] += r ; }
+    }
+  }
+  //
+  return results.empty() ? 0 : result[0].nEntries() ;
+}
+// =============================================================================
+/*  build statistic for the <code>expressions</code>
+ *  @param tree        (INPUT)  the tree 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param cuts        (INPUT)  the selection criteria 
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2018-11-04
+ */
+// ============================================================================
+unsigned long Ostap::StatVar::statVars
+( TTree*                                  tree        ,  
+  std::vector<Ostap::StatVar::Statistic>& result      ,  
+  const std::vector<std::string>&         expressions ,
+  const std::string&                      cuts        ,
+  const unsigned long                     first       ,
+  const unsigned long                     last        ) 
+{
+  //
+  if ( cuts.empty() ) { return statVars ( tree , result , expressions , first , last ) ; }
+  //
+  const unsigned int N = expressions.size() ;
+  //
+  result.resize ( N ) ; 
+  for ( auto& r : result ) { r.reset () ; }
+  //
+  if ( 0 == tree || last <= first ) { return 0 ; }  // RETURN
+  if ( expressions.empty()        ) { return 0 ; }  // RETURN  
+  //
+  Ostap::Formula selection ( "" , cuts , tree ) ;
+  if ( !selection .ok ()          ) { return 0 ; }  // RETURN
+  //
+  typedef std::unique_ptr<Ostap::Formula> UOF ;
+  std::vector<UOF> formulas ; formulas.reserve ( N ) ;
+  for ( const auto& e : expressions  ) 
+  {
+    auto p = std::make_unique<Ostap::Formula>( "" , e , tree ) ;
+    if ( !p || !p->ok() ) { return 0 ; }
+    formulas.push_back ( std::move ( p ) ) ;
+  }
+  //
+  Ostap::Assert ( N == formulas.size()              , 
+                  "Inconsistent size of structures" , 
+                  "Ostap::StatVar::statVars"        ) ;
+  //
+  Ostap::Utils::Notifier notify ( formulas.begin() , formulas.end() , &selection , tree ) ;
+  //
+  const unsigned long nEntries =
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  std::vector<double>  results {} ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+  {
+    //
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return entry - first ; }                // RETURN
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return entry - first ; }                // RETURN
+    //
+    const double w = selection.evaluate() ;
+    if ( !w ) { continue  ; }
+    //
+    for ( unsigned int i = 0 ; i < N ; ++i ) 
+    {
+      formulas[i]->evaluate ( results ) ;
+      for ( const double r : results ) { result[i].add ( r , w ) ; }
+    }
+  }
+  //
+  return results.empty() ? 0 : result[0].nEntries() ;
+}
+// ============================================================================
+/** build statistic for the <code>expressions</code>
+ *  @param tree        (INPUT)  the tree 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param cuts        (INPUT)  the selection criteria 
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2018-11-04
+ */
+// ============================================================================
+unsigned long Ostap::StatVar::statVars
+( TTree*                                  tree        ,  
+  std::vector<Ostap::StatVar::Statistic>& result      ,  
+  const std::vector<std::string>&         expressions ,
+  const TCut&                             cuts        ,
+  const unsigned long                     first       ,
+  const unsigned long                     last        ) 
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return statVars ( tree , result , expressions , _cuts , first , last ) ;
 }
 // ============================================================================
 /*  calculate the covariance of two expressions
