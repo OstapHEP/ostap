@@ -563,7 +563,7 @@ class PDF (MakeVar) :
             #
             data_options = kwargs.pop ( 'data_options' , FD.data_options )
             if dataset and dataset.isWeighted() and dataset.isNonPoissonWeighted() : 
-                data_options = data_options + ( ROOT.RooFit.DataError( ROOT.RooAbsData.SumW2 ) )
+                data_options = data_options + ( ROOT.RooFit.DataError( ROOT.RooAbsData.SumW2 ) , )
                 
             if dataset : dataset .plotOn ( frame , ROOT.RooFit.Invisible() , *data_options )
 

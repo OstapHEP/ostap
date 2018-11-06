@@ -1690,7 +1690,6 @@ class Fit2DSym (PDF2) :
             self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
         elif yvar and not signal_y :
             self.__signal_y = self.__signal_x.clone ( xvar = yvar , name = 'SY' )
-            self.debug('signal y-component is cloned from the signal x-component')
         else : raise AttributeError ( "Invalid ``signal_y'' argument: %s" % signal_y )
             
         #
