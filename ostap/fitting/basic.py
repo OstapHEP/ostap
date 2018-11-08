@@ -44,6 +44,7 @@ else                       : logger = getLogger ( __name__              )
 class PDF (MakeVar) :
     """Useful helper base class for implementation of various PDF-wrappers 
     """
+    __name = 'Unnamed'
     def __init__ ( self , name ,  xvar = None , special = False ) :
         
         self.__name        = name

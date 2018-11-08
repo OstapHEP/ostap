@@ -1268,6 +1268,66 @@ _new_methods_ += [
     ROOT.RooDataSet.__str__  ,
     ]
 
+
+
+
+# =============================================================================
+## make symmetrization/randomization of the dataset
+#  @code
+#  ds     = ...
+#  ds_sym = ds.symmetrize ( 'var1' , 'var2' )
+#  ds_sym = ds.symmetrize ( 'var1' , 'var2' , 'var3')
+#  @endcode
+def _ds_symmetrize_ ( ds , var1 , var2 , *vars ) :
+    """Make symmetrization/randomization of the dataset
+    >>> ds     = ...
+    >>> ds_sym = ds.symmetrize ( 'var1' , 'var2' )
+    >>> ds_sym = ds.symmetrize ( 'var1' , 'var2' , 'var3')
+    """
+    
+    varset = ds.varset() 
+    lvars  = [ var1 , var2 ] + list ( vars )
+    nvars  = [] 
+    for v in lvars :
+        if not v in varset : raise NameError ( "Variable %s not in dataset" % v )
+        if not isinstance ( v , ROOT.RooAbsReal ) : v = varset[ v ]
+        nvars.append ( v )
+
+    mnv = min ( [ v.getMin () for v in nvars if hasattr ( v , 'getMin' ) ] ) 
+    mxv = max ( [ v.getMax () for v in nvars if hasattr ( v , 'getMax' ) ] ) 
+
+    names   = [ v.name for v in nvars ]
+
+    nds     = ds.emptyClone ()
+    nvarset = nds.varset    ()
+    
+    for v in nvarset :
+        if v.name in names : 
+            if hasattr ( v ,  'setMin' ) : v.setMin ( mnv )
+            if hasattr ( v ,  'setMax' ) : v.setMax ( mxv )        
+    
+    ## loop over the data set 
+    for entry in ds :
+
+        values = [ v.getVal() for v in entry if v in varset ]
+        random.shuffle ( values )
+
+        for v in nvarset :
+            n = v.name 
+            if not n in names : v.setVal ( entry[n].value )                
+            else              : v.setVal ( values.pop()   )
+
+        nds.add ( nvarset )
+        
+    return nds
+
+
+ROOT.RooDataSet.symmetrize = _ds_symmetrize_
+
+_new_methods_ += [
+    ROOT.RooDataSet.symmetrize , 
+    ]
+
 # =============================================================================
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.RooAbsData )

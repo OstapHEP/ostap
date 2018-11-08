@@ -1261,34 +1261,11 @@ class Fit2D (PDF2) :
 
         if   isinstance ( bkg_2D , PDF2             ) : self.__bb_cmp = bkg_2D        
         elif isinstance ( bkg_2D , ROOT.RooAbsPdf   ) : ## generic PDF 
-            self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )
-            
+            self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )            
         elif isinstance ( bkg_2D , ( tuple , list ) ) : ## polynomials 
-            
-            assert 2 == len ( bkg_2D ), 'bkg_2D must be of length of 2!'
-            nx = bkg_2D [ 0 ]
-            ny = bkg_2D [ 1 ]
-            assert isinstance ( nx , ( int , long ) ) , 'Invalid nx-type %s' % nx
-            assert isinstance ( ny , ( int , long ) ) , 'Invalid ny-type %s' % ny
-
-            if   0 == nx and 0 == ny :
-                
-                self.__bb_cmp = Flat2D ( name = 'BB_pdf' , xvar = self.xvar , yvar = self.yvar )
-                
-            elif 0 >= nx and 0 >= ny :
-                
-                from ostap.fitting.models_2d import PolyPos2D_pdf as _BB_pdf 
-                self.__bb_cmp = _BB_pdf ( "BB_pdf" + suffix , self.xvar , self.yvar , abs ( nx ) , abs ( ny ) )
-                
-            else :
-                
-                from ostap.fitting.models_2d import ExpoPol2D_pdf as _BB_pdf 
-                self.__bb_cmp = _BB_pdf ( "BB_pdf" + suffix , self.xvar , self.yvar , abs ( nx ) , abs ( ny ) )
-                if 0 > nx : self.__bb_cmp.taux.fix ( 0 )
-                if 0 > ny : self.__bb_cmp.tauy.fix ( 0 )
-                
-        else     :            
-            
+            from ostap.fitting.models_2D import make_B2D
+            self.__bb_cmp = make_B2D ( "BB_pdf" + suffix , self.xvar , self.yvar , *bkg_2D )
+        else     :                       
             self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
             self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_BB' + suffix , self.yvar )            
             self.__bb_cmp = Model2D ( "BB_pdf" + suffix         ,
@@ -1690,11 +1667,12 @@ class Fit2DSym (PDF2) :
             self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
         elif yvar and not signal_y :
             self.__signal_y = self.__signal_x.clone ( xvar = yvar , name = 'SY' )
+            self.debug('signal y-component is cloned from the signal_x component')
         else : raise AttributeError ( "Invalid ``signal_y'' argument: %s" % signal_y )
             
-        #
+        # =====================================================================
         ## initialize base class
-        #
+        # =====================================================================
         if not name :
             name = "%s&%s" % ( self.__signal_x.name , self.__signal_y.name )
             if suffix : name += '_'+ suffix
@@ -1767,8 +1745,12 @@ class Fit2DSym (PDF2) :
         if   isinstance ( bkg_2D , PDF2           ) : self.__bb_cmp = bkg_2D  
         elif isinstance ( bkg_2D , ROOT.RooAbsPdf ) :
             self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )
-        else     :            
-            
+        elif isinstance ( bkg_2D , int ) :
+
+            from ostap.fitting.models_2D import make_B2Dsym
+            self.__bb_cmp = make_B2Dsym ( "BB_pdf" + suffix , self.xvar , self.yvar , bkg_2D )
+
+        else     :                        
             self.__bkg_2x = self.make_bkg (        bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
             self.__bkg_2y = self.make_bkg ( self.__bkg_2x , 'Bkg2Y_BB' + suffix , self.yvar )
             self.__bb_cmp = Model2D ( "BB_pdf" + suffix         ,
