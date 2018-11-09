@@ -409,7 +409,7 @@ class PDF3 (PDF2) :
 
     # ====================================================================================
     ## simple 'function-like' interface 
-    def __call__ ( self , x , y , z ) :
+    def __call__ ( self , x , y , z , error = False ) :
         
         if     isinstance ( self.xvar , ROOT.RooRealVar ) and \
                isinstance ( self.yvar , ROOT.RooRealVar ) and \
@@ -442,7 +442,7 @@ class PDF3 (PDF2) :
         >>> mn , mx = pdf.minmax()        
         """
         ## try to get minmax directly from pdf/function 
-        if hasattr ( self.pdf , 'function' ) :
+        if self.tricks and hasattr ( self.pdf , 'function' ) :
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
             f = self.pdf.function()
             if hasattr ( f , 'minmax' ) :
@@ -519,7 +519,7 @@ class PDF3 (PDF2) :
         zmax = min ( zmax , zmx )
         
         ## make a try to use analytical integral (could be fast)
-        if hasattr ( self , 'pdf' ) :
+        if self.tricks and hasattr ( self , 'pdf' ) :
             _pdf = self.pdf 
             if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
             try: 
@@ -1358,6 +1358,9 @@ class Fit3D (PDF3) :
             self.__bkg_2xy = bkg_2xy
         elif bkg_2xy and isinstance ( bkg_2xy , ROOT.RooAbsPdf ) : 
             self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar )
+        elif bkg_2xy and isinstance ( bkg_2xy , ( tuple , list ) ) :            
+            from ostap.fitting.models_2d import make_B2D
+            self.__bkg_2xy = make_B2D ( 'Bkg2XY' + suffix , self.xvar , self.yvar , *bkg_2xy )
         else :
 
             if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )    
@@ -1371,6 +1374,9 @@ class Fit3D (PDF3) :
             self.__bkg_2xz = bkg_2xz
         elif bkg_2xz and isinstance ( bkg_2xz , ROOT.RooAbsPdf ) : 
             self.__bkg_2xz = Generic2D_pdf ( bkg_2xz  , self.xvar , self.zvar )
+        elif bkg_2xz and isinstance ( bkg_2xz , ( tuple , list ) ) :            
+            from ostap.fitting.models_2d import make_B2D
+            self.__bkg_2xz = make_B2D ( 'Bkg2XZ' + suffix , self.xvar , self.zvar , *bkg_2xz )
         else :
             if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )    
             if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , 'Bkg2Z_S2B' + suffix , self.zvar )                                
@@ -1383,6 +1389,9 @@ class Fit3D (PDF3) :
             self.__bkg_2yz = bkg_2yz
         elif bkg_2yz and isinstance ( bkg_2yz , ROOT.RooAbsPdf ) : 
             self.__bkg_2yz = Generic2D_pdf ( bkg_2yz  , self.yvar , self.zvar)
+        elif bkg_2yz and isinstance ( bkg_2yz , ( tuple , list ) ) :            
+            from ostap.fitting.models_2d import make_B2D
+            self.__bkg_2yz = make_B2D ( 'Bkg2YZ' + suffix , self.yvar , self.zvar , *bkg_2yz )
         else :            
             if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )    
             if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , 'Bkg2Z_S2B' + suffix , self.zvar )                                
@@ -1440,6 +1449,10 @@ class Fit3D (PDF3) :
             self.__bbb_cmp = bkg_3D
         elif bkg_3D and isinstance ( bkg_3D , ROOT.RooAbsPdf ) : 
             self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar )
+        elif bkg_3D and isinstance ( bkg_3D , (  tuple , list ) ) :
+            from ostap.fitting.models_3d import make_B3D 
+            self.__bbb_cmp = make_B3D ( 'BBB_pdf' + suffix ,
+                                        self.xvar , self.yvar , self.zvar , *bkg_3D )
         else :
             
             self.__bkg_3x = self.make_bkg ( bkg_3x , 'Bkg3X_BBB' + suffix , self.xvar )
@@ -1932,19 +1945,19 @@ class Fit3DSym (PDF3) :
         PDF to describe (1D)-signal in Z-direction
     suffix   : string
         An optional suffix to be  added to the names of created PDFs and variables
-    bkg_1x   : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
+    bkg_1x   : RooFit/PDF, Ostap/PDF, integer, RooRealVar or None
         1D x-background for SSB-terms
         Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
-    bkg_2x  : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
+    bkg_2x  : RooFit/PDF, Ostap/PDF, integer, RooRealVar or None
         1D x-background for SBB-terms
         Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
-    bkg_2xy : RooFit/PDF or Ostap/PDF
-        2D x,y-background for SBB-terms
+    bkg_2xy : RooFit/PDF, Ostap/PDF, list/tuple or None 
+        2D (x,y)-background for SBB-terms
         Use directly RooFit/PDF or Ostap/PDF
     bkg_3x  : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
         1D x-background for BBB-term
         Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
-    bkg_3D  : RooFit/PDF or Ostap/PDF
+    bkg_3D  : RooFit/PDF, Ostap/PDF, list/tuple or None 
         3D x,y,z-background for BBB-term
         Use directly RooFit/PDF or Ostap/PDF
         
@@ -2129,11 +2142,21 @@ class Fit3DSym (PDF3) :
             
             self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar )
             self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2XZ_pdf' + suffix ,
-                                                    xvar = self.xvar            ,
-                                                    yvar = self.zvar            )
+                                                    xvar = self.xvar             ,
+                                                    yvar = self.zvar             )
             self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2YZ_pdf' + suffix ,
-                                                    xvar = self.yvar            ,
-                                                    yvar = self.zvar            )
+                                                    xvar = self.yvar             ,
+                                                    yvar = self.zvar             )
+        elif bkg_2xy and isinstance ( bkg_2xy , ( tuple , list ) ) :
+
+            from ostap.fitting.models_2d import make_B2Dsym 
+            self.__bkg_2xy = make_B2Dsym ( 'Bkg2XY_pdf' , self.xvar , self.yvar  , *bkg_2xy )
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2XZ_pdf' + suffix ,
+                                                    xvar = self.xvar             ,
+                                                    yvar = self.zvar             )
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2YZ_pdf' + suffix ,
+                                                    xvar = self.yvar             ,
+                                                    yvar = self.zvar             )              
         else :
 
             self.__bkg_2x  = self.make_bkg (        bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )        
@@ -2194,6 +2217,9 @@ class Fit3DSym (PDF3) :
             self.__bbb_cmp = bkg_3D
         elif bkg_3D and isinstance ( bkg_3D , ROOT.RooAbsPdf ) : 
             self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar )
+        elif bkg_3D and isinstance ( bkg_3D , (  tuple , list )  ) :
+            from ostap.fitting.models_3d import make_B3Dsym
+            self.__bbb_cmp = make_B3Dsym ( 'BBB_pdf' , self.xvar , self.yvar , self.zvar , *bkg_3D )
         else :
             
             self.__bkg_3x  = self.make_bkg (        bkg_3x , 'Bkg3X_BBB' + suffix , self.xvar )        
@@ -2603,9 +2629,6 @@ class Fit3DSym (PDF3) :
         return self.__bbs_cmp_raw
 
 
-
-
-
 # =============================================================================
 ## @class Fit3DMix
 #  The actual model for fully "mixed-symemtry" 3D-fits  (symmetric for y<-->z)
@@ -2614,13 +2637,13 @@ class Fit3DSym (PDF3) :
 #  @param signal_y (RooFit/PDF, Ostap/PDF or None) PDF to describe (1D)-signal in Y-direction
 #  @param signal_z (RooFit/PDF, Ostap/PDF or None) PDF to describe (1D)-signal in Z-direction
 #  @param suffix   (string) An optional suffix to be  added to the names of created PDFs and variables
-#  @param bkg1     (RooFit/PDF, Ostap/PDF,  integer, RooRealVar or None)
+#  @param bkg_1x   (RooFit/PDF, Ostap/PDF,  integer, RooRealVar or None)
 #                  1D x-background for SSB-terms
 #                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
-#  @param bkg2     (RooFit/PDF, Ostap/PDF,integer, RooRealVar or None)
+#  @param bkg_1y   (RooFit/PDF, Ostap/PDF,integer, RooRealVar or None)
 #                  1D x-background for SBB-terms, if <code>bkg2D</code> is not specified. 
 #                  Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
-#  @param bkg2D    (RooFit/PDF or Ostap/PDF)
+#  @param bkg_2x   (RooFit/PDF or Ostap/PDF)
 #                   2D x,y-background for SBB-terms
 #                   Use directly RooFit/PDF or Ostap/PDF
 #  @param bkg3     (RooFit/PDF, Ostap/PDF,integer, RooRealVar or None)
@@ -2666,7 +2689,7 @@ class Fit3DSym (PDF3) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-25
 class Fit3DMix (PDF3) :
-    """The actual model for  y<->z-symmetric 3D-fits
+    """The actual model for y<->z-symmetric 3D-fits
     
     >>>  model   = Models.Fit3DSym (
     ...      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
@@ -2691,21 +2714,36 @@ class Fit3DMix (PDF3) :
         PDF to describe (1D)-signal in Z-direction
     suffix   : string
         An optional suffix to be  added to the names of created PDFs and variables
-    bkg1    : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
-        1D x-background for SSB-terms
+    bkg_1x   : RooFit/PDF, Ostap/PDF, integer, RooRealVar or None
+        1D x-background for BSS-terms
         Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
-    bkg2    : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
-        1D x-background for SBB-terms
+    bkg_1y   : RooFit/PDF, Ostap/PDF, integer, RooRealVar or None
+        1D y-background for BSS-terms
         Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
-    bkg2D   : RooFit/PDF or Ostap/PDF
-        2D x,y-background for SBB-terms
-        Use directly RooFit/PDF or Ostap/PDF
-    bkg3    : RooFit/PDF, Ostap/PDF, integer integer, RooRealVar or None
-        1D x-background for BBB-term
+    bkg_2x   : RooFit/PDF, Ostap/PDF, integer, RooRealVar or None
+        1D x-background for BBS-terms
         Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
-    bkg3D   : RooFit/PDF or Ostap/PDF
-        3D x,y,z-background for BBB-term
-        Use directly RooFit/PDF or Ostap/PDF
+    bkg_2y   : RooFit/PDF, Ostap/PDF, integer, RooRealVar or None
+        1D y-background for BBS-terms
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
+    bkg_2xy  : RooFit/PDF, Ostap/PDF, list/tuple or None
+        2D (x,y)-background for BBS-terms
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created 
+    bkg_2yz  : RooFit/PDF, Ostap/PDF, list/tuple or None
+        2D (y,z)-background for BBS-termsm must be symmetric! 
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created
+    bkg_3x   : RooFit/PDF, Ostap/PDF, integer, RooRealVar or None
+        1D x-background for BBB-terms
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
+    bkg_3y   : RooFit/PDF, Ostap/PDF, integer, RooRealVar or None
+        1D y-background for BBB-terms
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created via self.make_bkg
+    bkg_3yz  : RooFit/PDF, Ostap/PDF, list/tuple or None
+        2D (y,z)-background for BBB-terms (must be symmetric!)
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created 
+    bkg_3D   : RooFit/PDF, Ostap/PDF, list/tuple or None
+        3D (x,y,z)-background for BBB-terms (must be symmetric for  y<-->z !)
+        Use directly RooFit/PDF or Ostap/PDF, otherwise PDF is created 
         
     sss      : None, RooRealVar, non-negative float or tuple
          Variable for the yield of SSS component
@@ -2740,13 +2778,12 @@ class Fit3DMix (PDF3) :
                    bkg_2x  = None  , ## 1D     x-background for SBB-terms
                    bkg_2y  = None  , ## 1D     y-background for SBB-terms,   z-background is cloned
                    # background for  SBB-terms:
-                   bkg_2xy = None  , ## 2D   x,y-background for SBB-terms, x,z-backgroud is cloned 
+                   bkg_2xy = None  , ## 2D   x,y-background for SBB-terms, (x,z)-backgroud is cloned 
                    bkg_2yz = None  , ## 3D   y,z-background for SBB-terms, must be SYMMETRIC!
                    # background for  BBB-terms:
                    bkg_3x  = None  , ## 1D     x-background for SBB-terms
                    bkg_3y  = None  , ## 1D     y-background for SBB-terms,   z-background is cloned
-                   # background for  SBB-terms:
-                   #bkg_3xy = None , ## 2D   x,y-background for SBB-terms, x,z-backgroud is cloned 
+                   # background for  BBB-terms:
                    bkg_3yz = None  , ## 3D   y,z-background for SBB-terms, must be SYMMETRIC!
                    bkg_3D  = None  , ## 3D x,y,z-background for B(x,y,z) term (symmetric) 
                    ## Yields of the main components :
@@ -2757,7 +2794,7 @@ class Fit3DMix (PDF3) :
                    bbs     = None  , ## B(x)*[S(y)*B(z)+B(y)*S(z)] component 
                    bbb     = None  , ## B(x,y,z)                   component    
                    ## additional components 
-                   components = []    , ## the list additional components 
+                   components = [] , ## the list additional components 
                    xvar    = None  , ## x-variable 
                    yvar    = None  , ## y-variable 
                    zvar    = None  , ## z-variable                   
@@ -2780,7 +2817,6 @@ class Fit3DMix (PDF3) :
             ##
             'bkg_3x'     : bkg_3x     ,
             'bkg_3y'     : bkg_3y     ,
-            ##  'bkg_3xy'    : bkg_3xy    , not yet 
             'bkg_3yz'    : bkg_3yz    ,
             ##
             'bkg_3D'     : bkg_3D     ,
@@ -2905,11 +2941,13 @@ class Fit3DMix (PDF3) :
             self.__bkg_2yz = bkg_2yz            
         elif bkg_2yz and isinstance ( bkg_2yz , ROOT.RooAbsPdf ) :            
             self.__bkg_2yz = Generic2D_pdf ( bkg_2yz  , self.yvar , self.zvar , name = bkg2D.name )
+        elif bkg_2yz and isinstance ( bkh_2yz , (  tuple , list ) ) :
+            from ostap.fitting.models_2d import make_B2Dsym
+            self.__bkg_2yz = make_B2Dsym ( 'Bkg2YZ' + suffix , self.yvar , self.zvar , *bkg_2yz  )            
         else :
             self.__bkg_2y = self.make_bkg (        bkg_2y , 'Bkg2Y_S2B' + suffix , self.yvar )        
-            self.__bkg_2z = self.make_bkg ( self.__bkg_2y , 'Bkg2Z_S2B' + suffix , self.zvar )
-            
-            self.__bkg_2yz = Model2D ( 'Bkg2YZ' + suffix ,
+            self.__bkg_2z = self.make_bkg ( self.__bkg_2y , 'Bkg2Z_S2B' + suffix , self.zvar )            
+            self.__bkg_2yz = Model2D ( 'Bkg2YZ_pdf' + suffix ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     , title =  'Background2(y,z)' )
             
@@ -2931,6 +2969,12 @@ class Fit3DMix (PDF3) :
             self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2XZ' + suffix ,
                                                     xvar = self.xvar         ,
                                                     yvar = self.zvar         )  
+        elif bkg_2xy and isinstance ( bkg_2xy ,  ( tuple , list )  ) :
+            from ostap.fitting.models_2d import make_B2D
+            self.__bkg_2xy = make_B2D ( 'Bkg2XY' + suffix , self.xvar , self.yvar , *bkg_2xy  )
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2XZ' + suffix ,
+                                                    xvar = self.xvar         ,
+                                                    yvar = self.zvar         )          
         else :
             
             if not self.__bkg_2x : self.__bkg_2x = self.make_bkg (        bkg_2x , 'Bkg2X_S2B' + suffix , self.xvar )        
@@ -3000,6 +3044,9 @@ class Fit3DMix (PDF3) :
             self.__bbb_cmp = bkg_3D
         elif bkg_3D and isinstance ( bkg_3D , ROOT.RooAbsPdf ) : 
             self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar )
+        elif bkg_3D and isinstance ( bkg_2D ,  ( tuple , list )  ) :
+            from ostap.fitting.models_2d import make_B2DmixYZ 
+            self.__bkg_3D = make_B2DmixYZ ( 'BBB_pdf' + suffix , self.xvar , self.yvar , self.zvar , *bkg_3D )
         else :
 
             if   bkg_3yz and isinstance ( bkg_3yz , PDF2 ) :

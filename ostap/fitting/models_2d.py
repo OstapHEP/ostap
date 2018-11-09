@@ -1562,29 +1562,29 @@ for t in ( PolyPos2D_pdf    ,
 #  @code
 #  xvar = ...
 #  yvar = ...
-#  bkg  = make_B2D ( 'BB' , xvar , yvar , -1 , -1 ) ## create PolyPol2D 
-#  bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 ,  1 ) ## create ExpoPol2D 
-#  bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 , -1 ) ## create ExpoPol2D, fix tau_y 
-#  bkg  = make_B2D ( 'BB' , xvar , yvar , -1 ,  1 ) ## create ExpoPol2D, fix tau_x  
+#  bkg  = make_B2D ( 'BB' , xvar , yvar , -1 , -1 ) ## create PolyPos2D_pdf 
+#  bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 ,  1 ) ## create ExpoPol2D_pdf 
+#  bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 , -1 ) ## create ExpoPol2D_pdf, fix tau_y 
+#  bkg  = make_B2D ( 'BB' , xvar , yvar , -1 ,  1 ) ## create ExpoPol2D_pdf, fix tau_x  
 #  bkg  = make_B2D ( 'BB' , xvar , yvar ,  0 ,  0 ) ## create Flat2D 
 #  endcode
 def make_B2D ( name , xvar , yvar , nx , ny ) :
     """Easy creation of  2D function for background
     >>> xvar = ...
     >>> yvar = ...
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar , -1 , -1 ) ## create PolyPol2D 
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 ,  1 ) ## create ExpoPol2D 
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 , -1 ) ## create ExpoPol2D, fix tau_y 
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar , -1 ,  1 ) ## create ExpoPol2D, fix tau_x  
+    >>> bkg  = make_B2D ( 'BB' , xvar , yvar , -1 , -1 ) ## create PolyPos2D_pdf
+    >>> bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 ,  1 ) ## create ExpoPol2D_pdf 
+    >>> bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 , -1 ) ## create ExpoPol2D_pdf, fix tau_y 
+    >>> bkg  = make_B2D ( 'BB' , xvar , yvar , -1 ,  1 ) ## create ExpoPol2D_pdf, fix tau_x  
     >>> bkg  = make_B2D ( 'BB' , xvar , yvar ,  0 ,  0 ) ## create Flat2D     
     """
     
     if   0 == nx and 0 == ny :
         return Flat2D        ( name = name , xvar = xvar , yvar = yvar )
     elif 0 >= nx and 0 >= ny : 
-        return PolyPos2D_pdf ( name = name , xvar = xvar , yvar = yvar , abs ( nx ) , abs ( ny ) )     
+        return PolyPos2D_pdf ( name = name , xvar = xvar , yvar = yvar , nx = abs ( nx ) , ny = abs ( ny ) )     
 
-    fun2 = ExpoPol2D_pdf      ( name = name , xvar = xvar , yvar = yvar , abs ( nx ) , abs ( ny ) )
+    fun2 = ExpoPol2D_pdf     ( name = name , xvar = xvar , yvar = yvar , nx = abs ( nx ) , ny = abs ( ny ) )
     if 0 > nx : fun2.taux.fix ( 0 )
     if 0 > ny : fun2.tauy.fix ( 0 )
     
@@ -1595,29 +1595,25 @@ def make_B2D ( name , xvar , yvar , nx , ny ) :
 #  @code
 #  xvar = ...
 #  yvar = ...
-#  bkg  = make_B2Dsym ( 'BB' , xvar , yvar , -1 , -1 ) ## create PolyPol2D 
-#  bkg  = make_B2Dsym ( 'BB' , xvar , yvar ,  1 ,  1 ) ## create ExpoPol2D 
-#  bkg  = make_B2Dsym ( 'BB' , xvar , yvar ,  1 , -1 ) ## create ExpoPol2D, fix tau_y 
-#  bkg  = make_B2Dsym ( 'BB' , xvar , yvar , -1 ,  1 ) ## create ExpoPol2D, fix tau_x  
-#  bkg  = make_B2Dsym ( 'BB' , xvar , yvar ,  0 ,  0 ) ## create Flat2D 
+#  bkg  = make_B2Dsym ( 'BB' , xvar , yvar , -1 ) ## create PolyPol2Dsym_pdf 
+#  bkg  = make_B2Dsym ( 'BB' , xvar , yvar ,  1 ) ## create ExpoPol2Dsym_pdf 
+#  bkg  = make_B2Dsym ( 'BB' , xvar , yvar ,  0 ) ## create Flat2D 
 #  endcode
 def make_B2Dsym ( name , xvar , yvar , n ) :
     """Easy creation of symmetric 2D function for background
     >>> xvar = ...
     >>> yvar = ...
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar , -1 , -1 ) ## create PolyPol2D 
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 ,  1 ) ## create ExpoPol2D 
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar ,  1 , -1 ) ## create ExpoPol2D, fix tau_y 
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar , -1 ,  1 ) ## create ExpoPol2D, fix tau_x  
-    >>> bkg  = make_B2D ( 'BB' , xvar , yvar ,  0 ,  0 ) ## create Flat2D     
+    >>> bkg  = make_B2Dsym ( 'BB' , xvar , yvar , -1 ) ## create PolyPol2Dsym_pdf 
+    >>> bkg  = make_B2Dsym ( 'BB' , xvar , yvar ,  1 ) ## create ExpoPol2Dsym_pdf 
+    >>> bkg  = make_B2Dsym ( 'BB' , xvar , yvar ,  0 ) ## create Flat2D 
     """
     
     if   0 == 0 :
         return Flat2D           ( name = name , xvar = xvar , yvar = yvar )
     elif 0 >= n : 
-        return PolyPos2DSym_pdf ( name = name , xvar = xvar , yvar = yvar , abs ( n ) )     
+        return PolyPos2DSym_pdf ( name = name , xvar = xvar , yvar = yvar , n = abs ( n ) )     
 
-    fun2 = ExpoPol2Dsym_pdf     ( name = name , xvar = xvar , yvar = yvar , abs ( n ) )
+    fun2 = ExpoPol2Dsym_pdf     ( name = name , xvar = xvar , yvar = yvar , n = abs ( n ) )
     
     return fun2
 

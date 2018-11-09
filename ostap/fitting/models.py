@@ -194,33 +194,39 @@ __all__ = (
     #
     ## models for Pt-spectra fitting
     #
-    'Tsallis_pdf'     , ## useful model for fitting pT-spectra 
-    'QGSM_pdf'        , ## useful model for fitting pT-spectra
+    'Tsallis_pdf'       , ## useful model for fitting pT-spectra 
+    'QGSM_pdf'          , ## useful model for fitting pT-spectra
     # 
     ## helpers
     #
-    'H1D_dset'        , ## convertor of 1D-histogram to dataset 
-    'H1D_pdf'         , ## convertor of 1D-histogram to PDF 
-    'H2D_dset'        , ## convertor of 2D-histogram to dataset 
-    'H2D_pdf'         , ## convertor of 2D-histogram to PDF 
+    'H1D_dset'          , ## convertor of 1D-histogram to dataset 
+    'H1D_pdf'           , ## convertor of 1D-histogram to PDF 
+    'H2D_dset'          , ## convertor of 2D-histogram to dataset 
+    'H2D_pdf'           , ## convertor of 2D-histogram to PDF 
     #
-    'Adjust'          , ## adjust PDF to avoid zeroes (well, actually add a flat component)
-    'Convolution'     , ## helper uitlity to build convolution 
+    'Adjust'            , ## adjust PDF to avoid zeroes (well, actually add a flat component)
+    'Convolution'       , ## helper uitlity to build convolution 
     # 
-    'Fit1D'           , ## generic model for                1D-fit
-    'Fit2D'           , ## generic model for                2D-fit
-    'Fit2DSym'        , ## generic model for (symmetric)    2D-fit
-    'Fit3D'           , ## generic model for                3D-fit
-    'Fit3DSym'        , ## generic model for (symmetric)    3D-fit
-    'Fit3DMix'        , ## generic model for (mix-symmetry) 3D-fit
+    'Fit1D'             , ## generic model for                1D-fit
+    'Fit2D'             , ## generic model for                2D-fit
+    'Fit2DSym'          , ## generic model for (symmetric)    2D-fit
+    'Fit3D'             , ## generic model for                3D-fit
+    'Fit3DSym'          , ## generic model for (symmetric)    3D-fit
+    'Fit3DMix'          , ## generic model for (mix-symmetry) 3D-fit
     ##
-    'Generic1D_pdf'   , ## wrapper over imported RooFit (1D)-pdf  
-    'Generic2D_pdf'   , ## wrapper over imported RooFit (2D)-pdf
-    'Generic3D_pdf'   , ## wrapper over imported RooFit (2D)-pdf
+    'PolyPos3D_pdf'     , ## A positive polynomial in 3D  
+    'PolyPos3Dsym_pdf'  , ## A positive symmetric polynomial in 3D
+    'PolyPos3DmixXY_pdf', ## A positive partly symmetric (x<-->y) polynomial in 3D 
+    'PolyPos3DmixYZ_pdf', ## A positive partly symmetric (y<-->z) polynomial in 3D 
+    'PolyPos3DmixXZ_pdf', ## A positive partly symmetric (x<-->z) polynomial in 3D 
+    ## 
+    'Generic1D_pdf'     , ## wrapper over imported RooFit (1D)-pdf  
+    'Generic2D_pdf'     , ## wrapper over imported RooFit (2D)-pdf
+    'Generic3D_pdf'     , ## wrapper over imported RooFit (2D)-pdf
     ##
-    'Convolution_pdf' , ## generic convolution PDF
+    'Convolution_pdf'   , ## generic convolution PDF
     ##
-    'PyPDF'           , ## helper class to implement ``pure-python'' PDF 
+    'PyPDF'              , ## helper class to implement ``pure-python'' PDF 
     )
 # =============================================================================
 import ROOT, math

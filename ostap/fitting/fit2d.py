@@ -487,7 +487,7 @@ class PDF2 (PDF) :
         >>> mn , mx = pdf.minmax()        
         """
         ## try to get minmax directly from pdf/function 
-        if hasattr ( self.pdf , 'function' ) :
+        if self.tricks and hasattr ( self.pdf , 'function' ) :
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
             f = self.pdf.function()
             if hasattr ( f , 'minmax' ) :
@@ -557,7 +557,7 @@ class PDF2 (PDF) :
         ymax = min ( ymax , ymx )
 
         ## make a try to use analytical integral (could be fast)
-        if hasattr ( self , 'pdf' ) :
+        if sef.tricks and hasattr ( self , 'pdf' ) :
             _pdf = self.pdf 
             if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
             try: 

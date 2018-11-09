@@ -47,20 +47,20 @@ class PDF (MakeVar) :
     __name = 'Unnamed'
     def __init__ ( self , name ,  xvar = None , special = False ) :
         
-        self.__name        = name
-        
-        self.__signals     = ROOT.RooArgList ()
-        self.__backgrounds = ROOT.RooArgList ()
-        self.__components  = ROOT.RooArgList ()
-        self.__crossterms1 = ROOT.RooArgSet  () 
-        self.__crossterms2 = ROOT.RooArgSet  () 
+        self.__name         = name        
+        self.__signals      = ROOT.RooArgList ()
+        self.__backgrounds  = ROOT.RooArgList ()
+        self.__components   = ROOT.RooArgList ()
+        self.__crossterms1  = ROOT.RooArgSet  () 
+        self.__crossterms2  = ROOT.RooArgSet  () 
         ## take care about sPlots 
-        self.__splots      = []
-        self.__histo_data  = None
-        self.__draw_var    = None
-        self.__special     = True if special else False 
-        self.__fit_result  = None
-        self.__vars        = ROOT.RooArgSet  ()
+        self.__splots       = []
+        self.__histo_data   = None
+        self.__draw_var     = None
+        self.__special      = True if special else False 
+        self.__fit_result   = None
+        self.__vars         = ROOT.RooArgSet  ()
+        self.__tricks       = True
         
         if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
@@ -136,7 +136,18 @@ class PDF (MakeVar) :
     def special ( self ) :
         """``special'' : is this PDF ``special''   (does nor conform some requirements)?"""
         return self.__special
-    
+
+    @property
+    def tricks ( self ) :
+        """``tricks'' : flag to allow some  tricks&shortcuts """
+        return self.__tricks
+    @tricks.setter
+    def tricks ( self , value ) :
+        val = True if value else False 
+        if val and not self.__tricks :
+            raise ValueError("Can't allow tricks&shortcuts!")
+        self.__tricks = val
+
     @property
     def pdf  ( self ) :
         """The actual PDF (ROOT.RooAbsPdf)"""
@@ -928,7 +939,7 @@ class PDF (MakeVar) :
         >>> mn , mx = pdf.minmax()        
         """
         ## try to get minmax directly from pdf/function 
-        if hasattr ( self.pdf , 'function' ) :
+        if self.tricks and hasattr ( self.pdf , 'function' ) :
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
             f = self.pdf.function()
             if hasattr ( f , 'minmax' ) :
@@ -997,7 +1008,7 @@ class PDF (MakeVar) :
         pdf         = self.pdf
         xmin , xmax = self.xminmax()
         
-        if hasattr ( pdf , 'function' ) :    
+        if self.tricks and hasattr ( pdf , 'function' ) :    
             fun = pdf.function()
             if   hasattr ( pdf  , 'setPars'   ) : pdf.setPars()             
         else :
@@ -1017,7 +1028,7 @@ class PDF (MakeVar) :
         if   hasattr ( pdf , 'rms'            ) : return pdf.rms()        
         elif hasattr ( pdf , 'Rms'            ) : return pdf.Rms()        
         elif hasattr ( pdf , 'RMS'            ) : return pdf.RMS()        
-        elif hasattr ( pdf , 'function'       ) :
+        elif self.tricks and hasattr ( pdf , 'function' ) :
             
             fun = pdf.function()
             if   hasattr ( pdf , 'setPars'    ) : pdf.setPars() 
@@ -1168,7 +1179,7 @@ class PDF (MakeVar) :
             xmax = max ( xmax , mn )
  
         ## make a try to use analytical integral 
-        if hasattr ( self , 'pdf' ) :
+        if self.tricks and hasattr ( self , 'pdf' ) :
             _pdf = self.pdf 
             if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
             try: 
@@ -1195,7 +1206,7 @@ class PDF (MakeVar) :
         if hasattr ( self.xvar , 'getMax' ) and x > self.xvar.getMax() : return 0.
 
         ## make a try to use analytical derivatives 
-        if hasattr ( self , 'pdf' ) :
+        if self.tricks  and hasattr ( self , 'pdf' ) :
             _pdf = self.pdf 
             if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
             try: 
@@ -1206,7 +1217,7 @@ class PDF (MakeVar) :
             except:
                 pass
             
-        ## use numerical ingeration
+        ## use numerical derivatives 
         from ostap.math.derivative import derivative as _derivatve
         return _derivative ( self , x )
 

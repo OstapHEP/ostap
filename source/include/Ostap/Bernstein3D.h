@@ -901,8 +901,7 @@ namespace Ostap
       double  parameter ( const unsigned int k ) const 
       { return par ( k ) ; }
       /// get all parameters at once
-      const std::vector<double>& pars() const 
-      { return m_pars ; }
+      const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
     public:  // convert (i,j,k) into single index 
       // ======================================================================

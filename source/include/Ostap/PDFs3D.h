@@ -221,18 +221,18 @@ namespace Ostap
       // ======================================================================
       /// linear
       Poly3DMixPositive
-        ( const char*          name      ,
-          const char*          title     ,
-          RooRealVar&          x         ,
-          RooRealVar&          y         ,
-          RooRealVar&          z         ,
-          const unsigned short n         ,
-          const unsigned short nz        ,
-          RooArgList&          phis      ) ; // at least (n+1)*(n+2)*(nz+1)/2-1 elements
+      ( const char*          name      ,
+        const char*          title     ,
+        RooRealVar&          x         ,
+        RooRealVar&          y         ,
+        RooRealVar&          z         ,
+        const unsigned short n         ,
+        const unsigned short nz        ,
+        RooArgList&          phis      ) ; // at least (n+1)*(n+2)*(nz+1)/2-1 elements
       /// copy
       Poly3DMixPositive
-        ( const Poly3DMixPositive&     right     ,
-          const char*          name = 0  ) ;
+      ( const Poly3DMixPositive&     right     ,
+        const char*          name = 0  ) ;
       /// destructor
       virtual ~Poly3DMixPositive() ;
       /// clone
