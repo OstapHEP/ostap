@@ -327,10 +327,10 @@ class  FillTask(Parallel.Task) :
 
         import ROOT
         from ostap.logger.logger import logWarning
-        with logWarning() : import ostap.core.pyrouts
+        with logWarning() :
+            import ostap.core.pyrouts            
+            import ostap.trees.trees
 
-        import ostap.trees.trees
-        from   ostap.fitting.selectors import SelectorWithVars
         
         ## reconstruct chain from the item 
         chain    = item.chain
@@ -346,13 +346,15 @@ class  FillTask(Parallel.Task) :
             self.output = chain.make_dataset ( self.variables , self.selection , silent = True ) 
             return
 
+        from   ostap.fitting.selectors import SelectorWithVars
+        
         ## use selector  
         selector = SelectorWithVars ( self.variables ,
                                       self.selection ,
                                       silence = True )
         
         args = ()  
-        if not all  :  args  = nevents, first 
+        if not all : args  = nevents , first 
             
         num = chain.process ( selector , *args , shortcut = all and self.trivial )
         self.output = selector.data, selector.stat  
@@ -440,11 +442,14 @@ class StatVarTask(Parallel.Task) :
 
         import ROOT
         from ostap.logger.utils import logWarning
-        with logWarning() : import ostap.core.pyrouts 
+        with logWarning() :
+            import ostap.core.pyrouts 
+            import ostap.trees.trees 
 
         chain   = item.chain 
         first   = item.first
-        last    = min ( n_large , first + item.nevents if 0 < item.nevents else n_large )
+        ## last    = min ( n_large , first + item.nevents if 0 < item.nevents else n_large )
+        last    = n_large
         
         from ostap.trees.trees  import _stat_vars_
         self.output = _stat_vars_ ( chain , self.what , self.cuts , first , last )
@@ -525,7 +530,8 @@ def _pprocess_ ( chain , selector , nevents = -1 , first = 0 , shortcut = True  
 
     selection = selector.selection
     variables = selector.variables
-    trivial   = selector.trivial
+
+    trivial   = selector.trivial_vars and not selector.morecuts 
     
     all = 0 == first and ( 0 > nevents or len ( chain ) <= nevents )
     
@@ -577,11 +583,14 @@ def _pStatVar_ ( chain        , what , cuts = ''    ,
     >>> chain    = ...
     >>> chain.pstatVar( 'mass' , 'pt>1') 
     """
-    
+
+    print 'PSTAT(0)'
     ## few special/trivial cases
 
     last = min ( n_large , first + nevents if 0 < nevents else n_large )
     
+    print 'PSTAT(1)'
+
     if 0 <= first and 0 < nevents < chunk_size :
         return chain.statVar ( what , cuts , first , last )
     elif isinstance ( chain , ROOT.TChain ) : 
@@ -595,8 +604,9 @@ def _pStatVar_ ( chain        , what , cuts = ''    ,
 
     task   = StatVarTask ( what , cuts )
     wmgr   = Parallel.WorkManager ( ppservers = ppservers , silent = silent )
+
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
-    
+
     wmgr.process ( task , trees )
 
     del trees

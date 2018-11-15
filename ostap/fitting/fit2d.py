@@ -1263,7 +1263,7 @@ class Fit2D (PDF2) :
         elif isinstance ( bkg_2D , ROOT.RooAbsPdf   ) : ## generic PDF 
             self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )            
         elif isinstance ( bkg_2D , ( tuple , list ) ) : ## polynomials 
-            from ostap.fitting.models_2D import make_B2D
+            from ostap.fitting.models_2d import make_B2D
             self.__bb_cmp = make_B2D ( "BB_pdf" + suffix , self.xvar , self.yvar , *bkg_2D )
         else     :                       
             self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
@@ -1747,7 +1747,7 @@ class Fit2DSym (PDF2) :
             self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )
         elif isinstance ( bkg_2D , int ) :
 
-            from ostap.fitting.models_2D import make_B2Dsym
+            from ostap.fitting.models_2d import make_B2Dsym
             self.__bb_cmp = make_B2Dsym ( "BB_pdf" + suffix , self.xvar , self.yvar , bkg_2D )
 
         else     :                        

@@ -29,7 +29,7 @@ import ROOT, math,  random
 import ostap.fitting.roofit 
 from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
 from   ostap.fitting.roofit import SETVAR, PDF_fun
-from   ostap.logger.utils   import roo_silent   , rootWarning
+from   ostap.logger.utils   import roo_silent   , rootWarning , numcpu 
 from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , 
                                      fit_status , cov_qual , Adjust1D , H1D_dset ) 
 # =============================================================================
@@ -552,7 +552,7 @@ class PDF (MakeVar) :
         - base_signal_color       ## base color for signal     component(s)
         - base_component_color    ## base color for other      component(s)
 
-        Pther options:
+        Other options:
         -  residual               ## make also residual frame
         -  pull                   ## make also residual frame
         
@@ -1615,9 +1615,9 @@ class MASS(PDF) :
         #
         ## sigma
         #
-        self.__sigma = self.make_var ( sigma              ,
-                                       "sigma_%s"  % name ,
-                                       "sigma(%s)" % name , sigma , *limits_sigma )
+        self.__sigma = self.make_var ( sigma               ,
+                                       "sigma_%s"   % name ,
+                                       "#sigma(%s)" % name , sigma , *limits_sigma )
         
         ## save the configuration
         self.config = {

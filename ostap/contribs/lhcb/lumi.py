@@ -117,23 +117,23 @@ def getLumi ( data , *args ) :
         ## print data
         from ostap.logger.utils import rootError 
 
-        try:
+        ## try :
+        with rootError() : ## suppress errors from ROOT
+            
+            if hasattr ( data , 'pstatVar' ) :
+                stat = data.pstatVar ( [ lumi , lumi_err ] , lumi_cuts , chunk_size = -1 , max_files = 10 )
+            else  :
+                stat = data. statVar ( [ lumi , lumi_err ] , lumi_cuts )
 
-            with rootError() : ## suppress errors from ROOT
-                
-                if hasattr ( data , 'pstatVar' ) : 
-                    stat = data.pstatVar ( [ lumi , lumi_err ] , lumi_cuts , chunk_size = -1 , max_files = 3 )
-                else  :
-                    stat = data. statVar ( [ lumi , lumi_err ] , lumi_cuts )
-                ##
-                s1 = stat[ lumi     ]
-                s2 = stat[ lumi_err ]
-                ##
-                return VE ( s1.sum() , s2.sum() **2 )
-
-        except :
-            logger.error('Unable to get lumi/3 for %s' % data.GetName() )
-            return VE()
+            ##
+            s1 = stat[ lumi     ]
+            s2 = stat[ lumi_err ]
+            ##
+            return VE ( s1.sum() , s2.sum() **2 )
+        
+        ##except :
+        ##    logger.error('Unable to get lumi/3 for %s' % data.GetName() )
+        ##    return VE()
         
     l = VE() 
     for i in data :

@@ -58,7 +58,7 @@ class Bd_pdf(CB2_pdf) :
     """B0: double-sided Crystal Ball function
     """
     def __init__ ( self                   ,
-                   mass                   ,   ## mass is mandatory here! 
+                   xvar                   ,   ## mass is mandatory here! 
                    name      = 'Bd'       ,
                    mean      = 5.2791e+00 ,   ## to be released later 
                    sigma     = 7.2938e-03 ,   ## to be released later 
@@ -69,7 +69,7 @@ class Bd_pdf(CB2_pdf) :
         ## 
         CB2_pdf.__init__ ( self             ,
                            name             ,
-                           mass             , 
+                           xvar             , 
                            mean             ,
                            sigma            ,
                            alphaL           ,
@@ -78,7 +78,7 @@ class Bd_pdf(CB2_pdf) :
                            nR               )
         ## save configuration
         self.config = {
-            'mass'   : self.xvar  ,
+            'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma , 
@@ -101,7 +101,7 @@ class Bu_pdf(CB2_pdf) :
     """B+: double-sided Crystal Ball function
     """
     def __init__ ( self                   ,
-                   mass                   ,   ## mass is mandatory here! 
+                   xvar                   ,   ## mass is mandatory here! 
                    name      = 'Bu'       ,
                    mean      = 5.2791e+00 ,   ## to be released later 
                    sigma     = 7.2938e-03 ,   ## to be released later 
@@ -112,7 +112,7 @@ class Bu_pdf(CB2_pdf) :
         ## 
         CB2_pdf.__init__ ( self             ,
                            name             ,
-                           mass             , 
+                           xvar             , 
                            mean             ,
                            sigma            ,
                            alphaL           ,
@@ -121,7 +121,7 @@ class Bu_pdf(CB2_pdf) :
                            nR               )
         ## save configuration
         self.config = {
-            'mass'   : self.xvar  ,
+            'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma , 
@@ -143,7 +143,7 @@ class Bs_pdf(CB2_pdf) :
     """Bs: double-sided Crystal Ball function
     """
     def __init__ ( self                   ,
-                   mass                   ,    ## mass is mandatory here! 
+                   xvar                   ,    ## mass is mandatory here! 
                    name      = 'Bs'       ,
                    mean      = 5.3661e+00 ,    ## to be released later 
                    sigma     = 7.2938e-03 ,    ## to be released later 
@@ -154,7 +154,7 @@ class Bs_pdf(CB2_pdf) :
         ## 
         CB2_pdf.__init__ ( self             ,
                            name             ,
-                           mass             , 
+                           xvar             , 
                            mean             ,
                            sigma            ,
                            alphaL           ,
@@ -163,7 +163,7 @@ class Bs_pdf(CB2_pdf) :
                            nR               )
         ## save configuration
         self.config = {
-            'mass'   : self.xvar  ,
+            'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma , 
@@ -185,7 +185,7 @@ class Bc_pdf(CB2_pdf) :
     """Bc: double-sided Crystal Ball function
     """
     def __init__ ( self                   ,
-                   mass                   ,   ## mass is mandatory here! 
+                   xvar                   ,   ## mass is mandatory here! 
                    name      = 'Bc'       ,
                    mean      = 6.267e+00  ,   ## to be released later 
                    sigma     = 7.2938e-03 ,   ## to be released later 
@@ -196,7 +196,7 @@ class Bc_pdf(CB2_pdf) :
         ## 
         CB2_pdf.__init__ ( self             ,
                            name             ,
-                           mass             , 
+                           xvar             , 
                            mean             ,
                            sigma            ,
                            alphaL           ,
@@ -205,7 +205,7 @@ class Bc_pdf(CB2_pdf) :
                            nR               )
         ## save configuration
         self.config = {
-            'mass'   : self.xvar  ,
+            'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma , 
@@ -229,7 +229,7 @@ class D0_pdf(Bukin_pdf) :
     """D0: Bukin function 
     """
     def __init__ ( self                 ,
-                   mass                 , ## mass is mandatory here! 
+                   xvar                 , ## mass is mandatory here! 
                    name   = 'D0'        ,
                    mean   =  1.8648e+00 , 
                    sigma  =  7.3651e-03 , 
@@ -239,7 +239,7 @@ class D0_pdf(Bukin_pdf) :
         
         Bukin_pdf.__init__ ( self          ,
                              name          ,
-                             mass          , 
+                             xvar          , 
                              mean          ,
                              sigma         ,
                              xi            , 
@@ -247,7 +247,7 @@ class D0_pdf(Bukin_pdf) :
                              rhoR          ) 
         ## save configuration
         self.config = {
-            'mass'   : self.xvar  ,
+            'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma , 
@@ -269,7 +269,7 @@ class Dp_pdf(Bukin_pdf) :
     """D+: Bukin function 
     """
     def __init__ ( self                    ,
-                   mass                    , ## mass is mandatory here 
+                   xvar                    , ## mass is mandatory here 
                    name     = 'Dp'         ,
                    mean     =  1.869       , 
                    sigma    =  7.1183e-03  ,
@@ -279,7 +279,7 @@ class Dp_pdf(Bukin_pdf) :
 
         Bukin_pdf.__init__ ( self          ,
                              name          ,
-                             mass          ,
+                             xvar          ,
                              mean          ,
                              sigma         ,
                              xi            ,                            
@@ -287,7 +287,7 @@ class Dp_pdf(Bukin_pdf) :
                              rhoR          ) 
         ## save configuration
         self.config = {
-            'mass'   : self.xvar  ,
+            'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma , 
@@ -307,7 +307,7 @@ class Ds_pdf(Bukin_pdf) :
     """Ds: Bukin function 
     """
     def __init__ ( self                    , 
-                   mass                    , ## mass is mandatory 
+                   xvar                    , ## mass is mandatory 
                    name     = 'Ds'         ,
                    mean     =  1.969       ,
                    sigma    =  0.0068      ,
@@ -317,7 +317,7 @@ class Ds_pdf(Bukin_pdf) :
         
         Bukin_pdf.__init__ ( self          ,
                              name          ,
-                             mass          , 
+                             xvar          , 
                              mean          ,
                              sigma         ,
                              xi            ,
@@ -325,7 +325,7 @@ class Ds_pdf(Bukin_pdf) :
                              rhoR          ) 
         ## save configuration
         self.config = {
-            'mass'   : self.xvar  ,
+            'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma , 
@@ -347,7 +347,7 @@ class Lc_pdf(Bukin_pdf) :
     """Lc: Bukin function 
     """
     def __init__ ( self                     ,
-                   mass                     , 
+                   xvar                     , 
                    name     = 'Lc'          ,                   
                    mean     =  2.28590e+00  ,
                    sigma    =  5.11874e-03  ,
@@ -357,7 +357,7 @@ class Lc_pdf(Bukin_pdf) :
         
         Bukin_pdf.__init__ ( self     ,
                              name     ,
-                             mass     , 
+                             xvar     , 
                              mean     ,
                              sigma    ,
                              xi       ,
@@ -365,7 +365,7 @@ class Lc_pdf(Bukin_pdf) :
                              rhoR     ) 
         ## save configuration
         self.config = {
-            'mass'   : self.xvar  ,
+            'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma , 

@@ -27,6 +27,9 @@ __all__     = (
     #
     'component_similar' , ## Should one use ``similar'' component?
     'component_clone'   , ## Should one use ``cloned'' component?
+    # 
+    'numcpu'            , ## number of CPUs
+    'ncpu'              , ## fuction to builf ROOT.RooFit.NumCPU 
     )
 # =============================================================================
 import ROOT, math

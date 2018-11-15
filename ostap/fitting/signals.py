@@ -2651,8 +2651,8 @@ class BreitWigner_pdf(MASS) :
         if gamma is not self.sigma :
             sname  = self.sigma.GetName  ()
             stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'gamma' )
-            gtitle = stitle.replace ( 'sigma' , 'gamma' )
+            gname  = sname .replace ( 'sigma' , 'Gamma' )
+            gtitle = stitle.replace ( 'sigma' , 'Gamma' )
             self.sigma.SetName  ( gname  ) 
             self.sigma.SetTitle ( gtitle )
             if  self.xminmax () and self.sigma.minmax() : 
@@ -2706,7 +2706,14 @@ class BreitWigner_pdf(MASS) :
     @gamma.setter
     def gamma ( self, value ) :
         self.sigma = value 
-        return self.gamma.getVal ()
+    
+    @property
+    def Gamma ( self ) :
+        """``Gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        return self.gamma 
+    @Gamma.setter
+    def Gamma ( self, value ) :
+        self.sigma = value 
 
     @property
     def breitwigner ( self ) :

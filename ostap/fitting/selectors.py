@@ -260,9 +260,9 @@ class Variable(object) :
             var = var.strip() 
             assert isinstance ( description , str ) , \
                    "Variable: illegal type for ``description''"     % ( description , type ( desctiption ) ) 
-            assert isinstance ( vmin ,  ( int,long,float) ) , \
+            assert isinstance ( vmin ,  ( int , long , float ) ) , \
                    "Variable: illegal type for ``vmin'' %s/%s"      % ( vmin        , type ( vmin        ) )
-            assert isinstance ( vmax ,  ( int,long,float) ) , \
+            assert isinstance ( vmax ,  ( int , long , float ) ) , \
                    "Variable: illegal type for ``vmax'' %s/%s"      % ( vmax        , type ( vmax        ) )
             assert vmin < vmax, \
                    "Variable: invalid ``minmax'' range (%g,%g)"     % ( vmin , vmax ) 
@@ -277,12 +277,12 @@ class Variable(object) :
             varname  = var.GetName()
             accessor = varname
             
-        self.__formula = False
+        self.__formula = None
         if isinstance  ( accessor , str ) :
             accessor = accessor.strip() 
             if accessor  : 
                 from ostap.trees.funcs import FormulaFunc as FuncVar
-                self.__formula  =  accessor 
+                self.__formula  = accessor 
                 accessor = FuncVar ( accessor ) 
 
         assert callable ( accessor ), \
@@ -313,7 +313,7 @@ class Variable(object) :
         return self.__accessor
     @property
     def formula ( self ) :
-        """``formula'' - formual for this variable (if applicable)?"""
+        """``formula'' - formula for this variable (when applicable)?"""
         return self.__formula
     @property
     def trivial ( self ) :
@@ -490,20 +490,24 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__variables = [] 
         self.__varset    = ROOT.RooArgSet() 
 
-        self.__triv_vars = True 
+        self.__triv_vars = True
+        vvars = set() 
         for v in variables :
 
-            if   isinstance ( v , str              ) : v  = Variable (   v ) 
-            elif isinstance ( v , ROOT.RooAbsReal  ) : v  = Variable (   v )
-            elif isinstance ( v , ( tuple , list ) ) : v  = Variable (  *v )
-            elif isinstance ( v , dict             ) : v  = Variable ( **v )
+            vv = v 
+            if   isinstance ( v , str              ) : vv = Variable (   v ) 
+            elif isinstance ( v , ROOT.RooAbsReal  ) : vv = Variable (   v )
+            elif isinstance ( v , ( tuple , list ) ) : vv = Variable (  *v )
+            elif isinstance ( v , dict             ) : vv = Variable ( **v )
+            elif isinstance ( v , Variable         ) : vv = v  
 
-            assert isinstance  ( v , Variable ), 'Invalid variable %s/%s' % ( v , type(v) )
+            assert isinstance  ( vv , Variable ), 'Invalid variable %s/%s' % ( vv , type ( vv ) )
 
-            self.__variables.append ( v     )
-            self.__varset   .add    ( v.var )
+            self.__variables.append ( vv     )
+            self.__varset   .add    ( vv.var )
             if not v.trivial : self.__triv_vars = False
-
+            vvars.add ( vv ) 
+            
         self.__variables = tuple( self.__variables ) 
 
         self.__triv_sel  = valid_formula ( selection , self.__varset ) 
@@ -603,6 +607,7 @@ class SelectorWithVars(SelectorWithCuts) :
     def trivial_sel( self ) :
         """``trivial_sel'' : is the selection ``trivial'' (suitable for fast-processing)?"""
         return self.__triv_sel
+    
     @property
     def trivial ( self ) :
         """``trivial'' : Are variables/selection/cuts ``trivial'' (suitable for fast-processing)?"""
@@ -997,7 +1002,6 @@ class SelectorWithVarsCached(SelectorWithVars) :
 
         return 1
 
-
 # =============================================================================
 ## Create the dataset from the tree
 #  @code 
@@ -1014,26 +1018,61 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
 
     cuts   = ROOT.TCut ( selection )
     varset = ROOT.RooArgSet()
+    vars   = set() 
     for v in variables :
 
-        if   isinstance  ( v  , str              ) : v = Variable (   v )
-        elif isinstance  ( v  , ( tuple , list ) ) : v = Variable (  *v )
-        elif isinstance  ( v  , dict             ) : v = Variable ( **v )
+        if   isinstance  ( v , str              ) : vv = Variable (   v )
+        elif isinstance  ( v , ROOT.RooRealVar  ) : vv = Variable (   v )
+        elif isinstance  ( v , ( tuple , list ) ) : vv = Variable (  *v )
+        elif isinstance  ( v , dict             ) : vv = Variable ( **v )
+        elif isinstance  ( v , Variable         ) : vv = v 
+        else :
+            logger.error("Do not know how to treat the variable %s/%s, skip it" % ( v , type ( v ) ) )
+            continue
 
-        assert isinstance  ( v , Variable  )  , "Can't create Variable from %s/%s" % ( v , type ( v ) )
-        assert v.trivial                      , "Variable %s is not ``trivial''"   % v.name   
-        assert hasattr     ( tree , v.name )  , "Tree/Chain has no branch ``%s''"  % v.name
+        assert vv.trivial                     , "Variable %s is not ``trivial''"  % vv.name   
+        assert hasattr     ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
 
-        varset.add  ( v.var )
-        mn , mx = v.minmax
-        if _minv < mn : cuts &= "%.16g <= %s" % ( mn      , v.name   )
-        if _maxv > mx : cuts &= "%s <= %.16g" % ( v.name  , mx       )
+        varset.add  ( vv.var )
+        mn , mx = vv.minmax
+        if _minv < mn : cuts &= "%.16g <= %s" % ( mn      , vv.name )
+        if _maxv > mx : cuts &= "%s <= %.16g" % ( vv.name , mx      )
+        vars.add ( vv )
 
+    ## extended varset
+    stor    = set() 
+    varsete = ROOT.RooArgSet()
+    for v in varset : varsete.add ( v )
+    if selection :
+        
+        tt = None 
+        if isinstance ( tree , ROOT.TChain ) :
+            nf = len ( tree.files() )
+            for i in range ( nf ) :
+                tt = tree[i]
+                if tt : break 
+        if not tt : tt = tree
+        
+        from   ostap.core.core import fID
+        tf   = ROOT.TTreeFormula ( fID () , str ( selection ) , tt )
+        i    = 0 
+        leaf = tf.GetLeaf( i )
+        while leaf :
+            lname = leaf.GetName()
+            if not lname in varsete :
+                v = Variable ( lname )
+                varsete.add  ( v.var )
+                stor.add ( v ) 
+            i   += 1
+            leaf = tf.GetLeaf( i )
+
+        del tf 
+
+    
     if not name :
         from ostap.core.core import dsID 
         name = '%s_%s' % ( dsID() , tree.GetName() )
     if not title : title = '%s/%s' % ( name , tree.GetTitle() )
-
 
     total     = len ( tree )
     processed = tree.statVar ( '1' , selection    ).nEntries()
@@ -1044,8 +1083,14 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
     from ostap.logger.utils import rooSilent, rootError  
     with rooSilent ( ROOT.RooFit.ERROR  , True ) :
         with rootError( ROOT.kWarning ) :
-            ds = ROOT.RooDataSet ( name  , title , tree , varset , str( cuts ) )
+            ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
 
+    if len  ( varset ) != len ( varsete ) :
+        ds1 = ds.reduce ( varset )
+        ds.clear()
+        del ds
+        ds = ds1
+        
     if not silent : 
         skipped = 'Skipped:%d' % stat[2]
         skipped = '/' + attention ( skipped ) if stat[2] else '' 
@@ -1116,12 +1161,15 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     ## process all events? 
     all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
 
-    if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) and selector.trivial :
-        if not silent : logger.info ( "Make try to use the shortcut!" )
-        ds , stat  = self.make_dataset( variables = selector.variables , selection = selector.selection , silent = silent )
-        selector.data = ds
-        selector.stat = stat 
-        return 1 
+
+    if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
+        trivial = selector.trivial_vars and not selector.morecuts
+        if trivial : 
+            if not silent : logger.info ( "Make try to use the shortcut!" )
+            ds , stat  = self.make_dataset( variables = selector.variables , selection = selector.selection , silent = silent )
+            selector.data = ds
+            selector.stat = stat 
+            return 1 
                             
     import ostap.fitting.roofit
     
@@ -1159,8 +1207,7 @@ for t in ( ROOT.TTree , ROOT.TChain , ROOT.RooAbsData ) : t.process  = _process_
 
 # =============================================================================
 if '__main__' == __name__ :
-    
-     
+         
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     

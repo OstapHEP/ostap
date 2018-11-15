@@ -1430,6 +1430,8 @@ class Chain(CleanUp) :
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
 
+        if chunk_size <= 0 : chunk_size = ROOT.TChain.kMaxEntrie
+        
         trees = []
 
         ievt = 0
@@ -1471,7 +1473,9 @@ class Chain(CleanUp) :
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
-
+        if chunk_size <= 0 : chunk_size = ROOT.TChain.kMaxEntries
+        if max_files  <= 0 : max_files  = 1 
+        
         if 0 != self.first or 0 < self.__nevents :
             return self.slow_split ( chunk_size )
         
