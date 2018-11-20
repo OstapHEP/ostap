@@ -1608,7 +1608,7 @@ def make_B2Dsym ( name , xvar , yvar , n ) :
     >>> bkg  = make_B2Dsym ( 'BB' , xvar , yvar ,  0 ) ## create Flat2D 
     """
     
-    if   0 == 0 :
+    if   0 == n :
         return Flat2D           ( name = name , xvar = xvar , yvar = yvar )
     elif 0 >= n : 
         return PolyPos2DSym_pdf ( name = name , xvar = xvar , yvar = yvar , n = abs ( n ) )     

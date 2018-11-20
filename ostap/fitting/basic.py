@@ -29,8 +29,8 @@ import ROOT, math,  random
 import ostap.fitting.roofit 
 from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
 from   ostap.fitting.roofit import SETVAR, PDF_fun
-from   ostap.logger.utils   import roo_silent   , rootWarning , numcpu 
-from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , 
+from   ostap.logger.utils   import roo_silent   , rootWarning 
+from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , numcpu   , 
                                      fit_status , cov_qual , Adjust1D , H1D_dset ) 
 # =============================================================================
 from   ostap.logger.logger import getLogger

@@ -250,11 +250,10 @@ class D0_pdf(Bukin_pdf) :
             'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
-            'sigma'  : self.sigma , 
-            'alphaL' : self.aL    ,
-            'alphaR' : self.aR    ,
-            'nL'     : self.nL    ,
-            'nR'     : self.nR    ,            
+            'sigma'  : self.sigma ,
+            'xi'     : self.xi    ,
+            'rhoL'   : self.rhoL  ,
+            'rhoR'   : self.rhoR  ,
             }
 
                              
@@ -328,11 +327,10 @@ class Ds_pdf(Bukin_pdf) :
             'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
-            'sigma'  : self.sigma , 
-            'alphaL' : self.aL    ,
-            'alphaR' : self.aR    ,
-            'nL'     : self.nL    ,
-            'nR'     : self.nR    ,            
+            'sigma'  : self.sigma ,
+            'xi'     : self.xi    ,
+            'rhoL'   : self.rhoL  ,
+            'rhoR'   : self.rhoR  ,
             }
 
         
@@ -368,11 +366,10 @@ class Lc_pdf(Bukin_pdf) :
             'xvar'   : self.xvar  ,
             'name'   : self.name  ,
             'mean'   : self.mean  ,
-            'sigma'  : self.sigma , 
-            'alphaL' : self.aL    ,
-            'alphaR' : self.aR    ,
-            'nL'     : self.nL    ,
-            'nR'     : self.nR    ,            
+            'sigma'  : self.sigma ,
+            'xi'     : self.xi    ,
+            'rhoL'   : self.rhoL  ,
+            'rhoR'   : self.rhoR  ,
             }
 
         

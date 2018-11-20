@@ -584,12 +584,10 @@ def _pStatVar_ ( chain        , what , cuts = ''    ,
     >>> chain.pstatVar( 'mass' , 'pt>1') 
     """
 
-    print 'PSTAT(0)'
     ## few special/trivial cases
 
     last = min ( n_large , first + nevents if 0 < nevents else n_large )
     
-    print 'PSTAT(1)'
 
     if 0 <= first and 0 < nevents < chunk_size :
         return chain.statVar ( what , cuts , first , last )

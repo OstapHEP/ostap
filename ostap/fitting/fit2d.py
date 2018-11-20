@@ -557,7 +557,7 @@ class PDF2 (PDF) :
         ymax = min ( ymax , ymx )
 
         ## make a try to use analytical integral (could be fast)
-        if sef.tricks and hasattr ( self , 'pdf' ) :
+        if self.tricks and hasattr ( self , 'pdf' ) :
             _pdf = self.pdf 
             if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
             try: 
@@ -1771,7 +1771,8 @@ class Fit2DSym (PDF2) :
         self.__sb = self.make_var ( sb , "SB"             + suffix ,
                                     "Signal(x)&Background(y)+Background(x)&Signal(y)" + suffix , None ,  100  , 0 ,  1.e+7 )
         
-        ## duplicate 
+        ## duplicate
+        
         self.__bs = self.__sb
         
         self.alist1 = ROOT.RooArgList (
