@@ -1311,7 +1311,7 @@ class PDF (MakeVar) :
                 nbins    = 100   , xmin = None , xmax = None ,
                 hpars    = ()    , 
                 histo    = None  ,
-                intergal = False ,
+                integral = False ,
                 errors   = False , 
                 density  = False ) :
         """Convert PDF to the 1D-histogram
