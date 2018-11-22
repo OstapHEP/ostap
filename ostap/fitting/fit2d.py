@@ -25,7 +25,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random 
-from   ostap.core.core      import dsID , VE , Ostap 
+from   ostap.core.core      import dsID , VE , Ostap, hID 
 from   ostap.fitting.roofit import SETVAR
 from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
 from   ostap.fitting.basic  import PDF , Flat1D 
@@ -692,7 +692,7 @@ class PDF2 (PDF) :
                 ybins    = 20    , ymin = None , ymax = None ,
                 hpars    = ()    , 
                 histo    = None  ,
-                intergal = False ,
+                integral = False ,
                 errors   = False , 
                 density  = False ) :
         """Convert PDF to the 2D-histogram
