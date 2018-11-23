@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/contrib/lhcb/lumi.py
-#  Helper function to extract luminosity 
+#  Helper function to extract luminosity (LHCb specific)
 #
 #  @code
 #
@@ -17,7 +17,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-16
 # =============================================================================
-"""Helper function to extract luminosity 
+"""Helper function to extract luminosity (LHCb specific)
 
 Get lumi :
 
@@ -34,16 +34,21 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2012-10-16"
 # =============================================================================
 __all__     = (
-    'getLumi'  ,  ## get the lumi
+    'getLumi'     ,  ## get the lumi
     )
 # =============================================================================
-import ROOT 
+import ROOT, os  
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.contrib.lhcb.lumi' )
+from ostap.logger.logger   import getLogger 
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.contribs.lhcb.lumi' )
 else                       : logger = getLogger ( __name__        )
+# ==============================================================================
+import ostap.trees.trees 
+import ostap.io.root_file
+from   ostap.logger.utils  import rootError 
+from   ostap.core.core     import VE, hID
 # ==============================================================================
 lumi_tree = 'GetIntegratedLuminosity/LumiTuple'
 lumi      = 'IntegratedLuminosity'
@@ -78,10 +83,6 @@ def getLumi ( data , *args ) :
     >>> l5 = getLumi ( [ any sequence of above ]  )
     """
     #
-    from   ostap.core.core      import VE, hID
-    import ostap.io.root_file
-    import ostap.trees.trees 
-    #
     if args :
         data = [ data ]
         for a in args : data.append ( a )
@@ -89,7 +90,6 @@ def getLumi ( data , *args ) :
         
     if isinstance ( data , str ) :
         ## expand the actual file name
-        import os 
         data = os.path.expandvars ( data )
         data = os.path.expanduser ( data )
         data = os.path.expandvars ( data )
@@ -113,9 +113,6 @@ def getLumi ( data , *args ) :
             return VE()
         
     if isinstance ( data , ROOT.TTree ) :
-
-        ## print data
-        from ostap.logger.utils import rootError 
 
         ## try :
         with rootError() : ## suppress errors from ROOT
