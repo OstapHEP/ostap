@@ -4,4 +4,4 @@ export CMTCONFIG=x86_64-slc6-gcc62-opt
 source /cvmfs/sft.cern.ch/lcg/views/LCG_93/${CMTCONFIG}/setup.sh 
 mkdir build
 cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make && make install
+cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install
