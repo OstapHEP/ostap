@@ -19,11 +19,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    ) 
-#__version__ = "$Revision$"
-__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
-__date__    = "2011-06-07"
-__all__     = (
+    'KeepArgs'  , ## context manager to preserve the content of the list
     ) 
 # =============================================================================
 import ROOT, random
@@ -249,12 +245,17 @@ def _ral_radd_ ( self , other ) :
 
 # ============================================================================
 def _ral_clone_  ( self , name = '' ) :
-    return self.Clone(name)
+    return self.Clone( name )
 
-
+# ============================================================================
+def _ral_clear_ ( self ) :
+    """Clear the container
+    """
+    return self.removeAll() 
 # =============================================================================
 for t in ( ROOT.RooArgList , ROOT.RooArgSet , ROOT.RooLinkedList ) :
     t. clone    =  _ral_clone_ 
+    t. clear    =  _ral_clear_ 
     t. __add__  =  _ral_add_
     t.__iadd__  = _ral_iadd_
     t.__radd__  = _ral_radd_
@@ -278,7 +279,54 @@ _new_methods_ += [
     ROOT.RooLinkedList . append   ,
     ]
 
+# =============================================================================
+## @class KeepArg
+#  Simple contect manager for temporary redefitnnnonn of some mutable collection
+#  @code
+#  signals = ...
+#  new_signals = ...
+#  print signals 
+#  with KeepArgs ( signals , new_signals ) :
+#      print signals
+#  print signals 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+class  KeepArgs(object) :
+    """Simple contect manager for temporary redefitnnnonn of some mutbale collection
+    
+    >>> signals = ...
+    >>> new_signals = ...
+    >>> print signals 
+    >>> with KeepArgs ( signals , new_signals ) :
+    ...     print signals
+    >>> print signals 
+    """
+    def __init__ ( self , old_list , new_list ) :
 
+        self.__old_list = old_list
+        self.__new_list = new_list
+        self.__content = []
+        
+    def __enter__ ( self ) :
+
+        ## preserve the content of old list 
+        self.__content = [ i for i in self.__old_list ]
+        ## cleat the old list 
+        self.__old_list.clear ()
+        ## fill it with the content of new list 
+        for i in self.__new_list : self.__old_list.add ( i )
+        
+        return self
+
+    def __exit__ ( self , *_ ) :
+
+        ## clear old list 
+        self.__old_list.clear()
+        ##  restore it content 
+        for i in self.__content : self.__old_list.add ( i )
+        ##
+        self.__old_list = None 
+    
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooArgSet     , 

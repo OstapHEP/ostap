@@ -110,8 +110,8 @@ def _rfr_iteritems_ ( self , float_only = False ) :
 ## get the correlation coefficient
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _rfr_corr_  ( self , name1 , name2 ) :
-    """Get correlation coefficient for two parameter 
+def _rfr_corr_  ( self , var1 , var2 ) :
+    """Get correlation coefficient for two parameters 
     >>> result = ...
     >>> corr = results.corr('Signal', 'Background')
     >>> print corr

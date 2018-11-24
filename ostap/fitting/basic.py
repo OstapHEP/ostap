@@ -482,7 +482,6 @@ class PDF (MakeVar) :
         ## 
         return result, frame 
 
-    
     ## helper method to draw set of components 
     def _draw ( self , what , frame , options , base_color , step_color = 1 ) :
         """ Helper method to draw set of components
@@ -559,6 +558,7 @@ class PDF (MakeVar) :
         For default values see ostap.plotting.fit_draw 
         """
         #
+        
         import ostap.plotting.fit_draw as FD
         #
         ## again the context
@@ -576,7 +576,7 @@ class PDF (MakeVar) :
             data_options = kwargs.pop ( 'data_options' , FD.data_options )
             if dataset and dataset.isWeighted() and dataset.isNonPoissonWeighted() : 
                 data_options = data_options + ( ROOT.RooFit.DataError( ROOT.RooAbsData.SumW2 ) , )
-                
+
             if dataset : dataset .plotOn ( frame , ROOT.RooFit.Invisible() , *data_options )
 
             ## draw various ``background'' terms
@@ -614,7 +614,7 @@ class PDF (MakeVar) :
             #
             ## the total fit curve
             #
-            self.pdf .plotOn ( frame , *kwargs.pop ( 'total_fit_options' , FD. total_fit_options  ) )
+            self.pdf .plotOn ( frame , *kwargs.pop ( 'total_fit_options' , FD. total_fit_options ) )
             
             #
             ## draw data once more

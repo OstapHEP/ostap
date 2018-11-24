@@ -25,7 +25,7 @@ namespace Ostap
     /** @class Iterator  Ostap/Iterator.h
      *  helper class to simplify manipulations with ROOT-iterator
      *  @see TIterator 
-     *  @author Vanay BELYAEV  Ivan.Belyaev@=itep.ru
+     *  @author Vanay BELYAEV  Ivan.Belyaev@.itep.ru
      *  @date 2015-02-015
      */
     class Iterator 
@@ -38,6 +38,8 @@ namespace Ostap
       Iterator  ( const TCollection&      collection ) ;    
       /// standard constructor: create and keep the ietrator 
       Iterator  ( const RooLinkedList&    collection ) ;    
+      /// standard constructor: create from existing iterator  
+      Iterator  (       TIterator*        iterator   ) ;    
       // ======================================================================
     public:
       // ======================================================================

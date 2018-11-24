@@ -15,19 +15,23 @@
 // standard constructor: create and keep the ietrator 
 // ============================================================================  
 Ostap::Utils::Iterator::Iterator ( const RooAbsCollection& collection ) 
-  : m_iterator( collection.createIterator() ) 
+  : m_iterator ( collection.createIterator() ) 
 {}
 // ============================================================================  
 // standard constructor: create and keep the ietrator 
 // ============================================================================  
 Ostap::Utils::Iterator::Iterator ( const TCollection& collection ) 
-  : m_iterator( collection.MakeIterator() ) 
+  : m_iterator ( collection.MakeIterator() ) 
 {}
 // ============================================================================  
 // standard constructor: create and keep the ietrator 
 // ============================================================================  
 Ostap::Utils::Iterator::Iterator ( const RooLinkedList& collection ) 
-  : m_iterator( collection.MakeIterator() ) 
+  : m_iterator ( collection.MakeIterator() ) 
+{}
+// ============================================================================  
+Ostap::Utils::Iterator::Iterator ( TIterator* iterator ) 
+  : m_iterator ( iterator )
 {}
 // ============================================================================  
 // invoke TIterator::Next

@@ -197,6 +197,9 @@ __all__ = (
     'Tsallis_pdf'       , ## useful model for fitting pT-spectra 
     'QGSM_pdf'          , ## useful model for fitting pT-spectra
     # 
+    ## simultaneous  fit
+    'Sim1D'             , ## 1D-simultaneous fit 
+    # 
     ## helpers
     #
     'H1D_dset'          , ## convertor of 1D-histogram to dataset 
@@ -256,6 +259,8 @@ logger.debug ("Import 3D background        models from ``models_3d''"    )
 from ostap.fitting.models_3d     import *  
 logger.debug ("Import convolution          models from ``convoltuion''"  )
 from ostap.fitting.convolution   import *  
+logger.debug ("Import simultaneous fit            from ``simfit''"       )
+from ostap.fitting.simfit        import Sim1D
 logger.debug ("Import PyPDF                       from ``pypdf''"        )
 from ostap.fitting.pypdf         import PyPDF
 
