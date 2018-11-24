@@ -20,6 +20,6 @@ steps:
      sudo service autofs restart
      sudo cvmfs_config probe
      docker pull gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest
-     docker run -v /cvmfs:/cvmfs -v ${PWD}:/ostap  --privileged=true  gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest   /bin/bash -c "cp -r ../ostap . && cd ostap && ./scripts/bootstrap && ./scripts/test"
+     docker run -v /cvmfs:/cvmfs -v ${PWD}:/ostap  --privileged=true  gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest   /bin/bash -c "cp -r ../ostap . && cd ostap && ./scripts/bootstrap"
   displayName: 'build stage'
 
