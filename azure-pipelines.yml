@@ -19,7 +19,14 @@ steps:
      echo  "CVMFS_HTTP_PROXY=DIRECT"  | sudo tee -a  /etc/cvmfs/default.local > /dev/null
      sudo service autofs restart
      sudo cvmfs_config probe
+  displayName:'install cvmfs'
+- script: |
      docker pull gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest
-     docker run -v /cvmfs:/cvmfs -v ${PWD}:/ostap  --privileged=true  gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest   /bin/bash -c "cp -r ../ostap . && cd ostap && ./scripts/bootstrap"
+     docker  create -v  osya --name ostap-build  gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest
+     docker cp  $PWD  ostap-build:/osya
+  displayName: 'docker container'
+- script: |
+     docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest /bin/bash -c "cd /osya/ostap && ./scripts/bootstrap"
+     docker cp  ostap-build:/osya/ostap/build .
   displayName: 'build stage'
 
