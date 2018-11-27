@@ -33,12 +33,12 @@ steps:
 #  displayName: 'test stage'
 - script: |
      docker cp  ostap-build:/osya/build . 
-  dependOn: 'build stage'
+  dependsOn: 'build stage'
   condition: Succeeded()
   displayName: 'copy build result'
 - task: PublishPipelineArtifact@0
   inputs:
    artifactName: 'test'
    targetPath: '$(System.DefaultWorkingDirectory)/build'
-   dependOn: 'copy build result'
+   dependsOn: 'copy build result'
    condition: Succeeded()
