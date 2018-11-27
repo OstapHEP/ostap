@@ -37,4 +37,4 @@ steps:
 - task: PublishPipelineArtifact@0
   inputs:
    artifactName: 'test'
-    targetPath: '$(System.DefaultWorkingDirectory)/build'
+   targetPath: '$(System.DefaultWorkingDirectory)/build'
