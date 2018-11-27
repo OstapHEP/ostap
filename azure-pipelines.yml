@@ -32,13 +32,11 @@ steps:
 #     docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest /bin/bash -c "cd /osya/ && ./scripts/test"
 #  displayName: 'test stage'
 - script: |
-     docker cp  ostap-build:/osya/build . 
-  dependsOn: 'build stage'
+     docker cp  ostap-build:/osya/build .
   condition: Succeeded()
   displayName: 'copy build result'
 - task: PublishPipelineArtifact@0
   inputs:
    artifactName: 'test'
    targetPath: '$(System.DefaultWorkingDirectory)/build'
-   dependsOn: 'copy build result'
    condition: Succeeded()
