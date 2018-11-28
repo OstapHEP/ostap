@@ -129,6 +129,7 @@ __all__ = (
     'Voigt_pdf'            , ## Voigt-profile 
     'PseudoVoigt_pdf'      , ## Voigt-profile 
     'BW23L_pdf'            , ## BW23L
+    'BWMC_pdf'             , ## BWMC
     'Swanson_pdf'          , ## Swanson's S-wave cusp
     #
     ## "Other" distributions 

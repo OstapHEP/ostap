@@ -1119,7 +1119,6 @@ class ExpoPSPol2D_pdf(PolyBase2) :
     def tau ( self , value ) :
         value = float ( value )
         self.__tau.setVal ( value )
-        return self.__tau.getVal ()
     
     @property
     def phasespace ( self ) :
@@ -1243,7 +1242,6 @@ class ExpoPol2D_pdf(PolyBase2) :
     def taux ( self , value ) :
         value = float ( value )
         self.__taux.setVal ( value )
-        return self.__taux.getVal ()
 
     @property
     def tauy ( self ) :
@@ -1253,7 +1251,6 @@ class ExpoPol2D_pdf(PolyBase2) :
     def tauy ( self , value ) :
         value = float ( value )
         self.__tauy.setVal ( value )
-        return self.__tauy.getVal ()
     
     @property
     def nx ( self ) :
@@ -1353,16 +1350,6 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
     def tau ( self , value ) :
         value = float ( value )
         self.__tau.setVal ( value )
-        return self.__tau.getVal ()
-
-    @property
-    def tau ( self ) :
-        """``tau-x''-parameters, the exponential slope for x-dimension"""
-        return   self.__tau
-    @tau.setter
-    def taux ( self , value ) :
-        value = float ( value )
-        self.__tau.setVal ( value )
 
     @property
     def taux ( self ) :
@@ -1372,7 +1359,6 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
     def taux ( self , value ) :
         value = float ( value )
         self.__tau.setVal ( value )
-        return self.__tau.getVal ()
 
     @property
     def tauy ( self ) :
@@ -1382,7 +1368,6 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
     def tauy ( self , value ) :
         value = float ( value )
         self.__tau.setVal ( value )
-        return self.__tau.getVal ()
     
     @property
     def n  ( self ) :

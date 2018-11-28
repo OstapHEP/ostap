@@ -64,10 +64,17 @@ def _ral_contains_ ( self , i ) :
 # =============================================================================
 ##  get item form the list 
 def _ral_getitem_ ( self , index ) :
-    """Get item form the list
+    """Get item from the list
     >>>  lst  = ...
     >>>  item = lst[3]
+    Slice notation is also supported (note that  retubned type is python tuple)
+    >>>  res = lst[3:5:2]
     """
+    if isinstance ( index , slice ) :
+        l = len ( self )
+        indices  = index.indices ( l )
+        return tuple ( [ self[i] for i in range( *indices ) ] )
+    
     if not isinstance ( index , int ) or not index in self :
         raise IndexError('List Index %s is out of the range [%d,%d)' % ( index , 0 , len(self) ) )
     return self.at ( index  )

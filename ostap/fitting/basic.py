@@ -462,14 +462,16 @@ class PDF (MakeVar) :
                                  refit  = refit  ,
                                  args   = args   , **kwargs ) 
 
-        ## draw it if requested
-        from ostap.plotting.fit_draw import draw_options
-        draw_opts = draw_options ( **kwargs )
-        if draw_opts and not draw     : draw = draw_opts
-        if isinstance ( draw , dict ) : draw_opts.update( draw )
+        frame = None
         
-        frame = self.draw ( dataset , nbins = nbins , silent = silent , **draw_opts ) if draw else None 
-
+        ## draw it if requested
+        if draw :  
+            from ostap.plotting.fit_draw import draw_options
+            draw_opts = draw_options ( **kwargs )
+            if draw_opts and not draw     : draw = draw_opts
+            if isinstance ( draw , dict ) : draw_opts.update( draw )            
+            frame = self.draw ( dataset , nbins = nbins , silent = silent , **draw_opts ) 
+                        
         if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars()
             
         for s in self.components  : 
@@ -1953,7 +1955,7 @@ class Fit1D (PDF) :
             if   isinstance ( c , PDF            ) : cc = c 
             elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( c ,  self.xvar ) 
             else :
-                self.error ('unknown signal component %s/%s, skip it!' % ( c , type(c) ) )
+                self.error ('unknown signal component %s/%s, skip it!' % ( c , type ( c ) ) )
                 continue  
             self.__more_signals.append ( cc     )
             self.signals.add           ( cc.pdf ) 
@@ -1965,7 +1967,7 @@ class Fit1D (PDF) :
             if   isinstance ( c , PDF            ) : cc = c  
             elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( cs ,  self.xvar ) 
             else :
-                self.error ('unknown background component %s/%s, skip it!' % ( cc , type(cc) ) )
+                self.error ('unknown background component %s/%s, skip it!' % ( c , type ( c ) ) )
                 continue  
             self.__more_backgrounds.append ( cc     )
             self.backgrounds.add           ( cc.pdf ) 
@@ -1977,7 +1979,7 @@ class Fit1D (PDF) :
             if   isinstance ( c , PDF            ) : cc = c  
             elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( cs ,  self.xvar ) 
             else :
-                self.error ("unknown ``other''component %s/%s, skip it!" % ( cc , type(cc) ) )
+                self.error ("unknown ``other''component %s/%s, skip it!" % ( c , type ( c ) ) )
                 continue  
             self.__more_components.append ( cc     )
             self.components.add           ( cc.pdf ) 

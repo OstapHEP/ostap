@@ -97,15 +97,16 @@ __all__ = (
     #
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
     # 
-    'BreitWigner_pdf'      , ## (relativistic) 2-body Breit-Wigner
-    'Flatte_pdf'           , ## Flatte-function  (pipi/KK)
-    'LASS_pdf'             , ## kappa-pole
-    'Bugg_pdf'             , ## sigma-pole
-    'Swanson_pdf'          , ## Swanson's S-wave cusp 
+    'BreitWigner_pdf'        , ## (relativistic) 2-body Breit-Wigner
+    'Flatte_pdf'             , ## Flatte-function  (pipi/KK)
+    'LASS_pdf'               , ## kappa-pole
+    'Bugg_pdf'               , ## sigma-pole
+    'Swanson_pdf'            , ## Swanson's S-wave cusp 
     ##
-    'Voigt_pdf'            , ## Voigt-profile
-    'PseudoVoigt_pdf'      , ## PseudoVoigt-profile
-    'BW23L_pdf'            , ## BW23L
+    'Voigt_pdf'              , ## Voigt-profile
+    'PseudoVoigt_pdf'        , ## PseudoVoigt-profile
+    'BW23L_pdf'              , ## BW23L
+    'BWMC_pdf'               , ## BWMC
     #
     )
 # =============================================================================
@@ -2591,7 +2592,8 @@ models.append ( PseudoVoigt_pdf )
 #  "Remarks on the Phenomenological Analysis of Resonances",
 #  In Nuovo Cimento, Vol. XXXIV, N.6
 #  http://www.springerlink.com/content/q773737260425652/
-#  Optional convolution with resolution function is possible a
+#  - Blatt-Weisskopf forfactors  are also possible
+#  - Optional convolution with resolution function is possible.
 #  @see Ostap::Models::BreitWigner 
 #  @see Ostap::Math::BreitWigner
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2630,8 +2632,10 @@ class BreitWigner_pdf(MASS) :
 
     
     Parameters:
-    - mean  : location
-    - gamma : width of Breight-Wigner function
+    - mean        : location Breigt-Wigner function
+    - gamma       : width of Breigt-Wigner function
+    - convolution : (optional) convolution configuration
+    - useFFT      : (optional) use Fast Fourier Transform for convolution?
     
     """
     def __init__ ( self               ,
@@ -2662,6 +2666,9 @@ class BreitWigner_pdf(MASS) :
                 self.sigma.setMin ( max (  1.e-5 * dm , smn ) )
                 self.sigma.setMax ( min (  2     * dm , smx ) )
         
+        bw = breitwigner 
+        assert isinstance ( bw , Ostap.Math.BreitWigner ), \
+               'Invalid  type of the Breit-Wigner object: %s/%s' % ( bw   , type ( bw ) )
         #
         ## define the actual BW-shape using
         #      Ostap::Math::BreitWeigner object
@@ -2720,7 +2727,270 @@ class BreitWigner_pdf(MASS) :
         """The Breit-Wigner function  itself"""
         return self.__breitwigner
 
-models.append ( BreitWigner_pdf )                          
+models.append ( BreitWigner_pdf )
+
+
+# =============================================================================
+## @class BWMC_pdf
+#  Multi-channel version of Breit-Wigner function
+#  Optional convolution with resolution function is possible 
+#  @see Ostap::Models::BreitWignerMC
+#  @see Ostap::Math::BreitWignerMC
+#  @see Ostap::Math::Channel
+#  @code
+#  m_Kp  =  493.677 * MeV
+#  m_Kz  =  497.614 * MeV
+#  m_phi = 1019.462 * MeV
+#  g_phi =    4.249 * MeV 
+#  br_pm = 0.492
+#  br_00 = 0.340 
+#  br_xx = 1 - br_pm - br_00
+#  ## define three  channels 
+#  ch_pm = Ostap.Math.Channel ( g_phi * br_pm , m_Kp , m_Kp , 1 , 1 )
+#  ch_00 = Ostap.Math.Channel ( g_phi * br_00 , m_Kz , m_Kz , 1 , 1 )
+#  ch_xx = Ostap.Math.Channel ( g_phi * br_xx , 0    , 0    )
+#  ## define the Breit-wigner function
+#  bw    = Ostap.Math.BreitWignerMC ( m_phi , ch_pm , ch_00 , ch_xx )
+#
+#  mKK   = ROOT.RooRealVar ( ... ) 
+#  pdf = BWMC_pdf ( 'BW' , breitwigner = bw ,
+#                    xvar = mKK , mean = m_phi , gamma = g_phi ,
+#                    fractions = [ br_pm , br_00 , br_xx ] ) 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2018-11-25
+class BWMC_pdf(MASS) :
+    """Multi-channel version of Relativistic Breit-Wigner function
+
+    >>> m_Kp  =  493.677 * MeV    ## mass of K+ 
+    >>> m_Kz  =  497.614 * MeV    ## mass of K0
+    >>> m_phi = 1019.462 * MeV    ## mass of phi(1020)
+    >>> g_phi =    4.249 * MeV    ## width of phi(1020)
+    >>> br_pm = 0.492             ## Br ( phi -> K+K-) 
+    >>> br_00 = 0.340             ## Br ( phi -> K0s K0L  )
+    >>> br_xx = 1 - br_pm - br_00 ## Br ( phi ->  anything else )
+    
+    Define three decay channels:
+    
+    >>> ch_pm = Ostap.Math.Channel ( g_phi * br_pm , m_Kp , m_Kp , 1 , 1 )  ## K+ K- 
+    >>> ch_00 = Ostap.Math.Channel ( g_phi * br_00 , m_Kz , m_Kz , 1 , 1 )  ## K0L K0L
+    >>> ch_xx = Ostap.Math.Channel ( g_phi * br_xx , 0    , 0    )          ## light stuff 
+    
+    Define the Breit-Wigner function:
+    
+    >>> bw    = Ostap.Math.BreitWignerMC ( m_phi , ch_pm , ch_00 , ch_xx )
+
+    >>> mKK   = ROOT.RooRealVar ( ... ) 
+    >>> pdf = BWMC_pdf ( 'BW' , breitwigner = bw ,
+    ...                  xvar = mKK , mean = m_phi , gamma = g_phi ,
+    ...                  fractions = [ br_pm , br_00 , br_xx ] ) 
+    
+
+    
+    
+    Parameters:
+    - xvar        : fitting variable/observable  
+    - mean        : location of Breit-Wigner pole
+    - gamma       : total width of Breit-Wigner pole
+    - widths      : partial width for the channels  (mutually exclusive with gamma and fractions)
+    - fractions   : branching fractions 
+    - convolution : (optional) convolution configuration
+    - useFFT      : (optional) use Fast Fourier Transform for convolution?
+    
+    """
+    def __init__ ( self               ,
+                   name               ,
+                   breitwigner        , ## Ostap::Math::BreitWignerMC object
+                   xvar               ,
+                   mean        = None , 
+                   gamma       = None ,
+                   widths      = []   ,
+                   fractions   = []   , 
+                   convolution = None ,
+                   useFFT      = True ) :
+
+        ## correct type of Breit-Wigner function?
+        bw = breitwigner 
+        assert isinstance ( bw , Ostap.Math.BreitWignerMC ), \
+               'Invalid  type of the Breit-Wigner object: %s/%s' % ( bw   , type ( bw ) )
+
+        ## number of channels 
+        nc      = bw.nChannels    ()
+        
+        self.__brfrs  = ROOT.RooArgList()
+        self.__widths = ROOT.RooArgList()
+        
+        case         = None
+        self.__trash = []  ## keep the trash
+
+        ## Valid  cases: 
+        if   widths    and nc == len ( width     ) and gamma is None and not fractions : case = 1
+        elif fractions and nc == len ( fractions )                   and not widths    : case = 2
+        else : raise TypeError ('Gamma/widths/fraction mismatch!')
+
+        ## partial  widths are sepcified:
+        if 1 == case :
+            
+            for i in range ( nc ) : 
+                gi = widths[i] 
+                gg = self.make_var ( gi ,
+                                     'gamma_%d_%s'     % ( i+1 , name ) ,
+                                     '#Gamma_{%d}(%s)' % ( i+1 , name ) , gi , gi )
+                
+                self.__trash.append ( gg )
+                self.widths.add     ( gg )
+
+            self.__trash.append ( self.widths ) 
+            ## construct the total gamma
+            formula = '%s ' % self.widths[0].GetName()
+            for i in range ( 1 , nc ) : formula += ' + %s' % self.widths[i].GetName()  
+            ## for g in self.widths[1:] :
+
+            ## create gamma 
+            gamma = ROOT.RooFormulaVar ( 'gamma_%s'    % name ,
+                                         '#Gamma_(%s)' % name , formula , self.widths )
+            self.__trash.append ( gamma )
+            
+        # =====================================================================
+        ## initialize the base 
+        # =====================================================================
+        MASS.__init__ ( self , name , xvar , mean , gamma )
+        
+        if gamma is not self.sigma :
+            sname  = self.sigma.GetName  ()
+            stitle = self.sigma.GetTitle ()
+            gname  = sname .replace ( 'sigma' , 'Gamma' )
+            gtitle = stitle.replace ( 'sigma' , 'Gamma' )
+            self.sigma.SetName  ( gname  ) 
+            self.sigma.SetTitle ( gtitle )
+            if  self.xminmax () and self.sigma.minmax() : 
+                mn  , mx  = self.xminmax() 
+                dm = mx - mn
+                smn , smx = self.sigma.minmax()                 
+                self.sigma.setMin ( max (  1.e-5 * dm , smn ) )
+                self.sigma.setMax ( min (  2     * dm , smx ) )
+        
+        ## create branching fractions 
+        if 1 == case :
+            
+            for i in range ( nc ) :
+                
+                gi  = self.widths[i]
+                lst = ROOT.RooArgList ( self.gamma ,  gi )
+                self.__formulas_lists.append ( lst ) 
+                br  = ROOT.RooFormulaVar ( 'brfr_%d_%s'  % ( i + 1 , name ) ,
+                                           'Br_{%d}(%s)' % ( i + 1 , name ) ,
+                                           '%s / %s'     % ( gi.GetName() , self.gamma.GetName() ) , lst )
+                self.brfrs.add      ( br )
+                self.__trash.append ( br ) 
+        ##  branching fractions are specified 
+        elif 2 == case : 
+            
+            for i in range ( nc ) :
+                
+                bi = fractions [i] 
+                br = self.make_var       ( bi ,
+                                           'brfr_%d_%s'  % ( i+1 , name ) ,
+                                           'Br_{%d}(%s)' % ( i+1 , name ) , bi , bi ) 
+                self.brfrs.add       ( br )    
+                self.__trash.append  ( br ) 
+                
+                ls = ROOT.RooArgList ( self.gamma ,  br )
+                self.__trash.append  ( ls ) 
+
+                gg  = ROOT.RooFormulaVar ( 'gamma_%d_%s'     % ( i + 1 , name ) ,
+                                           '#Gamma_{%d}(%s)' % ( i + 1 , name ) ,
+                                           '%s * %s'         % ( br.GetName() , self.gamma.GetName() ) , ls )
+                self.widths.add      ( gg )
+                self.__trash.append  ( gg ) 
+            
+
+        self.__gammas    = tuple ( [ i for i in self.widths ] )
+        self.__fractions = tuple ( [ i for i in self.brfrs  ] )
+                       
+        #
+        ## define the actual BW-shape using
+        #      Ostap::Math::BreitWeignerMC object
+        #
+        self.__breitwigner = breitwigner  ## Ostap::Math::BreitWeignerMC object
+        
+        ## create PDF 
+        self.__breit = Ostap.Models.BreitWignerMC ( 
+            "rbwmc_"    + name ,
+            "RBWMC(%s)" % name ,
+            self.xvar        ,
+            self.mean        ,
+            self.widths      , 
+            self.breitwigner )
+
+        
+        self.__convolution = convolution  
+        self.__useFFT      =  useFFT 
+        if  None is convolution : self.pdf = self.__breit
+        else :
+            from ostap.fitting.convolution import Convolution            
+            self.conv = Convolution ( 'RBW' + name  ,
+                                      self.__breit  , self.xvar ,
+                                      convolution   , useFFT    ) 
+            self.pdf  = self.conv.pdf
+            
+        ## save the configuration
+        self.config = {
+            'name'        : self.name          ,
+            'breitwigner' : self.breitwigner   ,
+            'xvar'        : self.xvar          ,
+            'mean'        : self.mean          ,
+            'convolution' : self.__convolution ,
+            'useFFT'      : self.__useFFT      }
+        
+        if   1 == case : self.config.update (  { 'widths'    : self.gammas    ,
+                                                 'fractions' : ()             } )
+        elif 2 == case : self.config.update (  { 'fractions' : self.fractions ,
+                                                 'gamma'     : self.gamma     ,
+                                                 'widths'    : ()             } )
+    @property
+    def gamma ( self ) :
+        """``gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        return self.sigma 
+    @gamma.setter
+    def gamma ( self, value ) :
+        self.sigma = value 
+    
+    @property
+    def Gamma ( self ) :
+        """``Gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        return self.gamma 
+    @Gamma.setter
+    def Gamma ( self, value ) :
+        self.sigma = value 
+
+    @property
+    def breitwigner ( self ) :
+        """The Breit-Wigner function  itself"""
+        return self.__breitwigner
+
+    @property
+    def widths  ( self ) :
+        """``widths''  : partial widths for different decay channels"""
+        return self.__widths
+
+    @property
+    def brfrs   ( self ) :
+        """``brfrs''  : branching fractions for different decay channels"""
+        return self.__brfrs 
+
+    @property
+    def gammas ( self ) :
+        """``gammas''  : partial widths for different decay channels"""
+        return self.__gammas  
+
+    @property
+    def fractions ( self ) :
+        """``fractions''  : branching fractions for different decay channels"""
+        return self.__fractions
+
+models.append ( BWMC_pdf )
+
 # =============================================================================
 ## @class BW23L_pdf
 #  The shape of Breit-Wigner resonace from 2-body decays, e.f.
@@ -2729,7 +2999,7 @@ models.append ( BreitWigner_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-25
 class BW23L_pdf(MASS) :
-    """The shape of Breit-Wigner resonace from 3-body decays, e.f. X -> ( A B ) C
+    """The shape of Breit-Wigner resonance from 3-body decays, e.f. X -> ( A B ) C
     In this case the phase space factors can be modified by the  orbital momentum
     between (AB) and C-systems    
 

@@ -196,6 +196,83 @@ namespace Ostap
       std::unique_ptr<Ostap::Math::BreitWigner> m_bw{}  ; // the actual function
       // ======================================================================
     } ;
+
+
+
+    // ========================================================================
+    /** @class BreitWignerMC
+     *  @see Ostap::Math::BreitWignerMC
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2011-11-30
+     */
+    class  BreitWignerMC : public RooAbsPdf
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::BreitWignerMC, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      BreitWignerMC
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mass      , 
+        RooArgList&          widths    ,
+        const Ostap::Math::BreitWignerMC& bw ) ;
+      /// "copy" constructor
+      BreitWignerMC 
+      ( const BreitWignerMC& , const char* name = 0 ) ;
+      /// virtual destructor
+      virtual ~BreitWignerMC() ;
+      /// clone
+      BreitWignerMC* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      BreitWignerMC () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the amplitude
+      std::complex<double>            amplitude () const  ;
+      /// access to underlying function
+      const Ostap::Math::BreitWignerMC& function  () const { return *m_bw ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_mass   ;
+      RooListProxy m_widths ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      std::unique_ptr<Ostap::Math::BreitWignerMC> m_bw{}  ; // the actual function
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class BW23L
      *

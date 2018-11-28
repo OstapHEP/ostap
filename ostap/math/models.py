@@ -197,14 +197,14 @@ def _amp_ ( self , x ) :
     v = self.amplitude ( x )
     return complex( v.real () , v.imag () ) 
 
-Ostap.Math.LASS        . amp = _amp_
-Ostap.Math.LASS23L     . amp = _amp_
-Ostap.Math.Bugg23L     . amp = _amp_
-Ostap.Math.Flatte      . amp = _amp_
-Ostap.Math.Flatte2     . amp = _amp_
-Ostap.Math.Flatte23L   . amp = _amp_
-Ostap.Math.BreitWigner . amp = _amp_
-Ostap.Math.Swanson     . amp = _amp_
+Ostap.Math.LASS            . amp = _amp_
+Ostap.Math.LASS23L         . amp = _amp_
+Ostap.Math.Bugg23L         . amp = _amp_
+Ostap.Math.Flatte          . amp = _amp_
+Ostap.Math.Flatte2         . amp = _amp_
+Ostap.Math.Flatte23L       . amp = _amp_
+Ostap.Math.BreitWignerBase . amp = _amp_
+Ostap.Math.Swanson         . amp = _amp_
 
 
 # =============================================================================
@@ -725,6 +725,8 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.PhaseSpaceNL           ,
                Ostap.Math.PhaseSpace23L          ,
                Ostap.Math.BreitWigner            ,
+               Ostap.Math.BreitWignerBase        ,
+               Ostap.Math.BreitWignerMC,
                Ostap.Math.Rho0                   ,
                Ostap.Math.Kstar0                 ,
                Ostap.Math.Phi0                   ,
@@ -985,7 +987,8 @@ def sp_maximum_1D_ ( pdf , xmin , xmax , x0 , *args ) :
 
                  
 
-for pdf in ( Ostap.Models.BreitWigner          , 
+for pdf in ( Ostap.Models.BreitWigner        ,
+             Ostap.Models.BreitWignerMC , 
              Ostap.Models.Flatte             ,
              Ostap.Models.Bukin              ,
              Ostap.Models.PhaseSpace2        ,
@@ -1288,13 +1291,13 @@ for p in ( Ostap.Math.Positive3D    ,
 # =============================================================================
 ## add complex amplitudes 
 # =============================================================================
-Ostap.Math.LASS        . amp = _amp_
-Ostap.Math.LASS23L     . amp = _amp_
-Ostap.Math.Bugg23L     . amp = _amp_
-Ostap.Math.Flatte      . amp = _amp_
-Ostap.Math.Flatte2     . amp = _amp_
-Ostap.Math.Flatte23L   . amp = _amp_
-Ostap.Math.BreitWigner . amp = _amp_
+Ostap.Math.LASS            . amp = _amp_
+Ostap.Math.LASS23L         . amp = _amp_
+Ostap.Math.Bugg23L         . amp = _amp_
+Ostap.Math.Flatte          . amp = _amp_
+Ostap.Math.Flatte2         . amp = _amp_
+Ostap.Math.Flatte23L       . amp = _amp_
+Ostap.Math.BreitWignerBase . amp = _amp_
     
 # =============================================================================
 
@@ -1303,6 +1306,27 @@ import ostap.math.integral   as _D2
 for i in ( _D1.Derivative , _D2.Integral , _D2.IntegralCache ) :
     if not hasattr ( i , 'tf1' ) : i.tf1 = _tf1_
 
+# =============================================================================
+def _ff_str_ ( ff ) :
+    """Self-printout for FormFactor"""
+    return ff.describe()
+Ostap.Math.FormFactor.__str__  = _ff_str_
+Ostap.Math.FormFactor.__repr__ = _ff_str_
+Ostap.Math.Channel   .__str__  = _ff_str_
+Ostap.Math.Channel   .__repr__ = _ff_str_
+
+def _bw_str_   ( bw ) :
+    """Self-printout for Breit-Wigner function"""
+    return "BreitWigner  (%s,%s)" % ( bw.m0() , bw.channel  () )
+def _bwmc_str_ ( bw ) :
+    """Self-printout for multi-channel Breit-Wigner function"""
+    return "BreitWignerMC(%s,%s)" % ( bw.m0() , bw.channels () )
+
+Ostap.Math.BreitWigner  .__str__  = _bw_str_
+Ostap.Math.BreitWigner  .__repr__ = _bw_str_
+Ostap.Math.BreitWignerMC.__str__  = _bwmc_str_
+Ostap.Math.BreitWignerMC.__repr__ = _bwmc_str_
+    
 # =============================================================================
 _decorated_classes_ = set( [
     ##
@@ -1324,6 +1348,8 @@ _decorated_classes_ = set( [
     Ostap.Math.Flatte2           , 
     Ostap.Math.Flatte23L         ,
     Ostap.Math.BreitWigner       ,
+    Ostap.Math.BreitWignerBase   ,
+    Ostap.Math.BreitWignerMC ,
     Ostap.Math.Swanson           ,
     ##
     Ostap.Math.Chebyshev              ,
@@ -1356,6 +1382,8 @@ _decorated_classes_ = set( [
     Ostap.Math.PhaseSpaceNL           ,
     Ostap.Math.PhaseSpace23L          ,
     Ostap.Math.BreitWigner            ,
+    Ostap.Math.BreitWignerBase        ,
+    Ostap.Math.BreitWignerMC,
     Ostap.Math.Rho0                   ,
     Ostap.Math.Kstar0                 ,
     Ostap.Math.Phi0                   ,
@@ -1474,6 +1502,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Expo2DPolSym   ,
     ##
     Ostap.Models.BreitWigner        , 
+    Ostap.Models.BreitWignerMC , 
     Ostap.Models.Flatte             ,
     Ostap.Models.Bukin              ,
     Ostap.Models.PhaseSpace2        ,
@@ -1566,7 +1595,9 @@ _decorated_classes_ = set( [
     Ostap.Math.Flatte        ,
     Ostap.Math.Flatte2       , 
     Ostap.Math.Flatte23L     , 
-    Ostap.Math.BreitWigner   ,
+    Ostap.Math.BreitWigner             ,
+    Ostap.Math.BreitWignerBase         ,
+    Ostap.Math.BreitWignerMC ,
     ##
     Ostap.Math.Bernstein3D    ,
     Ostap.Math.Bernstein3DSym ,

@@ -71,7 +71,127 @@ namespace Ostap
       // ======================================================================
     } //                          the end of namespace Ostap::Math::FormFactors
     // ========================================================================
-    /** @class BreitWigner
+    /** @class Channel
+     *  simple definition fo the decay channel 
+     *  - width 
+     *  - massed of  daughet particles
+     *  - orbital momentum 
+     *  - form factor
+     */ 
+    class Channel
+    {
+    public:
+      // ======================================================================
+      /** constrcutor from all parameters and no formfactor
+       *  @param gamma the width 
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       *  @param L     the oribital momentum
+       */
+      Channel  ( const double                  gamma = 0.150 , 
+                 const double                  m1    = 0.139 , 
+                 const double                  m2    = 0.139 , 
+                 const unsigned short          L     = 0     );
+      // ======================================================================
+      /** constructor from all parameters and Jackson's formfactor 
+       *  @param gamma the width 
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       *  @param L     the oribital momentum
+       *  @param r     the Jackson's formfactor 
+       */
+      Channel  ( const double                  gamma         , 
+                 const double                  m1            , 
+                 const double                  m2            , 
+                 const unsigned short          L             ,
+                 const FormFactors::JacksonRho r             ) ;
+      // ======================================================================
+      /** constructor from all parameters and generic formfactor 
+       *  @param gamma the width 
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       *  @param L     the oribital momentum
+       *  @param f     the formfactor 
+       */
+      Channel  ( const double                  gamma         , 
+                 const double                  m1            , 
+                 const double                  m2            , 
+                 const unsigned short          L             ,
+                 const FormFactor&             f             ) ;
+      /// copy constructor 
+      Channel ( const Channel&  right )           ;
+      /// move constructor 
+      Channel (       Channel&& right ) = default ;
+      // ======================================================================
+    public: // trivial accessors  
+      // ======================================================================
+      /// get the gamma 
+      double            gamma0     () const { return m_gamma0 ; }
+      /// get the mass of the 1st daughter 
+      double            m1         () const { return m_m1     ; }
+      /// get the mass of the 2nd daughter 
+      double            m2         () const { return m_m2     ; }
+      /// get the oribital momentum 
+      unsigned short    L          () const { return m_L      ; }        
+      /// get the formfactor 
+      const FormFactor* formfactor () const { return m_formfactor.get() ; }
+      //// get the threshold 
+      double            threshold  () const { return m_m1 + m_m2 ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set new width 
+      bool  setGamma0 ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the mass-dependent width 
+       *  \f[ \Gamma(m) \equiv \Gamma_0 
+       *     \left( \frac{q(m)}{q(m_0)} \right)^2L+1}
+       *     \left( \frac{f(m,m_0,m_1,m_2)}{f(m_0,m_0,m_1,m_2)}\right)}
+       *   \f]
+       *  where 
+       *   - \f$ q(m) \f$ is momentum of daughter particle in the rest frame of mother particle
+       *   - \f$ f( m, m_0, m_1, m_2)\f$ if a formfactor
+       *  @see Ostap::Math::PhaseSpace2::q
+       *  @see Ostap::Math::FormFactor
+       *  @see Ostap::Math::BreitWigner::Channel::gamma 
+       *  @param mass the running mass
+       *  @param m0   the pole posiiton 
+       *  @return mass-dependent width 
+       */
+      double gamma      ( const double mass , 
+                          const double m0   ) const  ; // get the running width
+      // ======================================================================
+      /** get the value of formfactor for  given mass and pole position
+       *  @param mass rinning mass 
+       *  @param m0   pole position 
+       *  @return the value of formfactor for  given mass and pole position
+       */
+      double formfactor ( const double mass ,  
+                          const double m0   ) const ;
+      // ======================================================================
+    public: // print it 
+      // ======================================================================
+      ///  describe the channel 
+      std::string describe () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      // the decay width 
+      double                                   m_gamma0     { 0.150   } ; 
+      // mass of the 1st daughter
+      double                                   m_m1         { 0.139   } ; 
+      // mass of the 2nd daughter 
+      double                                   m_m2         { 0.139   } ; 
+      // orbital momentum 
+      unsigned short                           m_L          { 0       } ; 
+      // the formfactor
+      std::unique_ptr<Ostap::Math::FormFactor> m_formfactor { nullptr } ;
+      // ======================================================================
+    };  
+    // ========================================================================
+    /** @class BreitWignerBase
      *
      *  J.D.Jackson,
      *  "Remarks on the Phenomenological Analysis of Resonances",
@@ -82,42 +202,20 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
-    class  BreitWigner
+    class  BreitWignerBase
     {
     public:
       // ======================================================================
+    public:
+      // ======================================================================
       /// constructor from all parameters
-      BreitWigner ( const double         m0     = 0.770 ,
-                    const double         gam0   = 0.150 ,
-                    const double         m1     = 0.139 ,
-                    const double         m2     = 0.139 ,
-                    const unsigned short L      = 0     ) ;
-      /// constructor from all parameters
-      BreitWigner ( const double         m0       ,
-                    const double         gam0     ,
-                    const double         m1       ,
-                    const double         m2       ,
-                    const unsigned short L        ,
-                    const FormFactors::JacksonRho     r ) ;
-      /// constructor from all parameters
-      BreitWigner ( const double         m0       ,
-                    const double         gam0     ,
-                    const double         m1       ,
-                    const double         m2       ,
-                    const unsigned short L        ,
-                    const FormFactor&    f ) ;
+      BreitWignerBase ( const double   m0      = 1         ,
+                        const Channel& channel = Channel() ) ;
       /// copy constructor
-      BreitWigner ( const BreitWigner&  bw ) ;
-      ///
-      // ======================================================================
-      /// move constructor
-      BreitWigner (       BreitWigner&& bw ) ;
-      // ======================================================================
-      /// destructor
-      virtual ~BreitWigner () ;
+      BreitWignerBase ( const BreitWignerBase&  bw ) = default ;
       // ======================================================================
       /// clone it 
-      virtual BreitWigner* clone() const ;
+      virtual BreitWignerBase* clone() const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -129,36 +227,37 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get breit-wigner amplitude
+      /// get Breit-Wigner amplitude
       std::complex<double> amplitude ( const double x ) const ;
+      /// get Breit-Wigner amplitude with given gamma 
+      std::complex<double> amplitude ( const double x ,
+                                       const double g ) const ;
       // ======================================================================
       double breit_wigner  ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// pole position 
-      double         m0     () const { return m_m0      ; }
+      double         m0        () const { return m_m0      ; }
       /// pole position 
-      double         mass   () const { return   m0   () ; }
+      double         mass      () const { return   m0   () ; }
       /// pole position 
-      double         peak   () const { return   m0   () ; }
+      double         peak      () const { return   m0     () ; }
       /// the width at the pole 
-      double         gam0   () const { return m_gam0    ; }
+      double         gamma0    () const ;
       /// the width at the pole 
-      double         gamma0 () const { return   gam0 () ; }
+      double         gamma     () const { return   gamma0 () ; }
       /// the width at the pole 
-      double         gamma  () const { return   gam0 () ; }
-      /// the width at the pole 
-      double         width  () const { return   gam0 () ; }
-      // ======================================================================
+      double         width     () const { return   gamma0 () ; }
+      // =====================================================================
     public:
-      // ======================================================================
-      /// the mass of the first daughter 
-      double         m1     () const { return m_m1 ; }
-      /// the mass of the second daughter 
-      double         m2     () const { return m_m2 ; }
-      /// relative orbital momentum 
-      unsigned short L      () const { return m_L  ; }
+      // =====================================================================
+      /// get the decay channel 
+      const Channel&              channel   () const { return m_channels.front()    ; }
+      /// get all the channels 
+      const std::vector<Channel>& channels  () const { return m_channels ; }
+      /// get the threshold for the channel 
+      double                      threshold () const { return channel().threshold() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -168,9 +267,9 @@ namespace Ostap
       bool setMass   ( const double x ) { return setM0     ( x ) ; }
       /// set pole position 
       bool setPeak   ( const double x ) { return setM0     ( x ) ; }
-      // set width at pole 
+      // set total width at pole 
       bool setGamma0 ( const double x ) ;
-      // set width at pole 
+      // set ttoal width at pole 
       bool setGamma  ( const double x ) { return setGamma0 ( x ) ; }
       // set width at pole 
       bool setWidth  ( const double x ) { return setGamma0 ( x ) ; }
@@ -179,14 +278,6 @@ namespace Ostap
       // ======================================================================
       /// calculate the current width
       double gamma ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value of formfactor at given m
-      double            formfactor ( const double m ) const ;
-      /// get the formfactor itself
-      const Ostap::Math::FormFactor*
-        formfactor () const { return m_formfactor ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -199,25 +290,11 @@ namespace Ostap
     private:
       // ======================================================================
       /// the mass
-      double m_m0   ; // the mass
-      /// the width
-      double m_gam0 ; // the width
+      double               m_m0       ; // the mass
       // ======================================================================
-    private:
-      // ======================================================================
-      /// the mass of the first  particle
-      double            m_m1         ;
-      /// the mass of the second particle
-      double            m_m2         ;
-      /// the orbital momentum
-      unsigned int      m_L          ; // the orbital momentum
-      /// the formfactor
-      const Ostap::Math::FormFactor* m_formfactor ; // the formfactor
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// assignement operator is disabled
-      BreitWigner& operator=( const BreitWigner& ) ; // no assignement
+    protected:
+      ///  the channel(s) 
+      std::vector<Channel> m_channels ; // the channel(s)
       // ======================================================================
     private:
       // ======================================================================
@@ -225,6 +302,83 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class BreitWigner
+     *
+     *  J.D.Jackson,
+     *  "Remarks on the Phenomenological Analysis of Resonances",
+     *  In Nuovo Cimento, Vol. XXXIV, N.6
+     *
+     *  http://www.springerlink.com/content/q773737260425652/
+     *
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2011-11-30
+     */
+    class  BreitWigner : public BreitWignerBase 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param m0   the pole position 
+       *  @param gam0 the nominal width at the pole 
+       *  @param m1   the mass of the 1st daughter particle 
+       *  @param m2   the mass of the 2nd daughter particle 
+       *  @param L    the orbital momentum 
+       */
+      BreitWigner ( const double         m0     = 0.770 ,
+                    const double         gam0   = 0.150 ,
+                    const double         m1     = 0.139 ,
+                    const double         m2     = 0.139 ,
+                    const unsigned short L      = 0     ) ;
+      /** constructor from all parameters
+       *  @param m0   the pole position 
+       *  @param gam0 the nominal width at the pole 
+       *  @param m1   the mass of the 1st daughter particle 
+       *  @param m2   the mass of the 2nd daughter particle 
+       *  @param L    the orbital momentum 
+       *  @param F    the Jackson's formfactor 
+       */
+      BreitWigner ( const double         m0         ,
+                    const double         gam0       ,
+                    const double         m1         ,
+                    const double         m2         ,
+                    const unsigned short L          ,
+                    const FormFactors::JacksonRho F ) ;
+      /** constructor from all parameters
+       *  @param m0   the pole position 
+       *  @param gam0 the nominal width at the pole 
+       *  @param m1   the mass of the 1st daughter particle 
+       *  @param m2   the mass of the 2nd daughter particle 
+       *  @param L    the orbital momentum 
+       *  @param F    the formfactor 
+       */
+      BreitWigner ( const double         m0    ,
+                    const double         gam0  ,
+                    const double         m1    ,
+                    const double         m2    ,
+                    const unsigned short L     ,
+                    const FormFactor&    F     ) ;
+      /// constrcuctor from the channel 
+      BreitWigner ( const double         m0       ,
+                    const Channel&       channel ) ;
+      /// copy constructor
+      BreitWigner ( const BreitWigner&  bw ) = default ;
+      // ======================================================================
+      /// clone it 
+      virtual BreitWigner* clone() const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the mass of the 1st daughter particle 
+      double         m1 () const { return channel().m1() ; }
+      /// get the mass of the 2nd  daughter particle 
+      double         m2 () const { return channel().m2() ; }
+      /// get the oribital momentum 
+      unsigned short L  () const { return channel().L () ; }
+      // ======================================================================
+    } ;
+
     // ========================================================================
     /** @class Rho0
      *  \f$ \rho^{0} \rightarrow \pi^+ \pi^- \f$
@@ -326,6 +480,94 @@ namespace Ostap
       double m_eta_prime ;
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class BreitWignerMC
+     *  function to describe Breit-Wigner signal with several channels 
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2018-11-30
+     */
+    class  BreitWignerMC : public BreitWignerBase 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from single channel
+       *  @param m0   the pole position 
+       *  @param c1   the 1st channel 
+       */
+      BreitWignerMC 
+      ( const double   m0 = 0.770       ,
+        const Channel& c1 = Channel ( ) ) ;
+      /** constructor from two channels 
+       *  @param m0   the pole position 
+       *  @param c1   the 1st channel 
+       *  @param c2   the 2nd channel 
+       */
+      BreitWignerMC 
+      ( const double   m0 ,
+        const Channel& c1 , 
+        const Channel& c2 ) ;
+      /** constructor from three channels 
+       *  @param m0   the pole position 
+       *  @param c1   the 1st channel 
+       *  @param c2   the 2nd channel 
+       *  @param c3   the 3rd channel 
+       */
+      BreitWignerMC 
+      ( const double   m0 ,
+        const Channel& c1 , 
+        const Channel& c2 ,
+        const Channel& c3 ) ;
+      /** constructor from four channels 
+       *  @param m0   the pole position 
+       *  @param c1   the 1st channel 
+       *  @param c2   the 2nd channel 
+       *  @param c3   the 3rd channel 
+       *  @param c4   the 4th channel 
+       */
+      BreitWignerMC 
+      ( const double   m0 ,
+        const Channel& c1 , 
+        const Channel& c2 ,
+        const Channel& c3 ,
+        const Channel& c4 ) ;
+      /** constructor from the list of channels  
+       *  @param m0   the pole position 
+       *  @param cs   list of channels 
+       */
+      BreitWignerMC 
+      ( const double                m0 ,
+        const std::vector<Channel>& cs ) ;
+      /// copy constructor
+      BreitWignerMC ( const BreitWignerMC&  bw ) = default ;
+      // ======================================================================
+      /// clone it 
+      virtual BreitWignerMC* clone() const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get number of channels 
+      unsigned int nChannels() const { return channels().size()  ; }
+      /// get the nominam total width 
+      double gamma0 () const { return BreitWignerBase::gamma0 () ; }
+      /// get the  gamma for the certain channel 
+      double gamma0 ( unsigned int i ) const 
+      { return i < m_channels.size() ? m_channels[i].gamma0()            : 0.0   ; }
+      /// set the nominal total width 
+      bool   setGamma0 ( const double value ) 
+      { return BreitWignerBase::setGamma0 ( value ) ; }
+      /// set the gamma for the certain decay
+      bool   setGamma0 ( unsigned int i , const double value ) 
+      { return i < m_channels.size() ? m_channels[i].setGamma0 ( value ) : false ; }
+      /// set the gamma for the certain decay
+      bool   setGamma  ( unsigned int i , const double value ) 
+      { return setGamma0 ( i , value ) ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
+
+
+
     // ========================================================================
     /** @class Flatte
      *
@@ -851,7 +1093,9 @@ namespace Ostap
       /// virtual destructor
       virtual ~FormFactor () ;
       /// clone method ("virtual constructor" )
-      virtual  FormFactor* clone() const = 0 ;
+      virtual FormFactor* clone     () const = 0 ;
+      /// describe the formfactor
+      virtual std::string describe  () const = 0 ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -882,10 +1126,15 @@ namespace Ostap
         double operator() ( const double m  , const double m0 ,
                             const double m1 , const double m2 ) const override;
         // ====================================================================
+        /// describe the formfactor 
+        std::string describe () const override { return m_what ; }
+        // ====================================================================
       private:
         // ====================================================================
         /// the finction itself
-        Ostap::Math::FormFactors::rho_fun m_rho ; // the finction itself
+        Ostap::Math::FormFactors::rho_fun m_rho  ; // the finction itself
+        /// print it 
+        std::string                       m_what ;
         // ====================================================================
       } ;
       // ======================================================================
@@ -921,6 +1170,9 @@ namespace Ostap
         double operator() ( const double m  , const double m0 ,
                             const double m1 , const double m2 ) const override;
         // ====================================================================
+        /// describe the formfactor 
+        std::string describe () const override { return m_what ; }
+        // ====================================================================
       protected:
         // ====================================================================
         /// get the barrier factor
@@ -932,6 +1184,8 @@ namespace Ostap
         Case   m_L ; // orbital momentum
         /// Break-up 
         double m_b ; // Break-up 
+        // ====================================================================
+        std::string  m_what ;
         // ====================================================================
       } ;
       // ======================================================================
@@ -1373,19 +1627,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// pole position 
-      double m0     () const { return m_bw-> m0   () ; }
+      double m0     () const { return m_bw-> m0     () ; }
       /// pole position 
-      double mass   () const { return        m0   () ; }
+      double mass   () const { return        m0     () ; }
       /// pole position 
-      double peak   () const { return        m0   () ; }
+      double peak   () const { return        m0     () ; }
       /// width  at the pole 
-      double gam0   () const { return m_bw-> gam0 () ; }
+      double gamma0 () const { return m_bw-> gamma0 () ; }
       /// width  at the pole 
-      double gamma0 () const { return        gam0 () ; }
+      double gamma  () const { return        gamma0 () ; }
       /// width  at the pole 
-      double gamma  () const { return        gam0 () ; }
-      /// width  at the pole 
-      double width  () const { return        gam0 () ; }
+      double width  () const { return        gamma0 () ; }
       // ======================================================================
     public:
       // ======================================================================

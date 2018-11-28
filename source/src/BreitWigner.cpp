@@ -59,13 +59,13 @@ namespace
   // ==========================================================================
   //// calculate the current width
   double gamma_run 
-  ( const double gam0    ,
-    const double x       ,
-    const double m1      ,
-    const double m2      ,
-    const double m0      ,
-    const unsigned int L ,
-    const Ostap::Math::FormFactor* fun  = 0 )
+  ( const double                   gam0  ,
+    const double                   x     ,
+    const double                   m1    ,
+    const double                   m2    ,
+    const double                   m0    ,
+    const unsigned int             L     ,
+    const Ostap::Math::FormFactor* F = 0 )
   {
     //
     if ( m1 + m2 >= x ) { return 0 ; }   // RETURN
@@ -75,8 +75,8 @@ namespace
     //
     if ( 0 >= q || 0 >= q0 ) { return 0 ; }  // RETURN
     //
-    const double r  = 0 != fun ? (*fun) ( x  , m0 , m1 , m2 ) : 1.0 ;
-    const double r0 = 0 != fun ? (*fun) ( m0 , m0 , m1 , m2 ) : 1.0 ;
+    const double r  = nullptr != F ? (*F) ( x  , m0 , m1 , m2 ) : 1.0 ;
+    const double r0 = nullptr != F ? (*F) ( m0 , m0 , m1 , m2 ) : 1.0 ;
     //
     if ( 0 >= r0 )           { return 0 ; }  // RETURN
     //
@@ -223,7 +223,8 @@ Ostap::Math::FormFactor::~FormFactor (){}
 // ============================================================================
 Ostap::Math::FormFactors::Jackson::Jackson() 
   : Ostap::Math::FormFactor() 
-  , m_rho ( nullptr ) 
+  , m_rho  ( nullptr ) 
+  , m_what ( "" )
 {}
 // ============================================================================
 // constructor from enum
@@ -231,22 +232,35 @@ Ostap::Math::FormFactors::Jackson::Jackson()
 Ostap::Math::FormFactors::Jackson::Jackson
 ( const Ostap::Math::FormFactors::JacksonRho rho ) 
   : Ostap::Math::FormFactor() 
-  , m_rho ( nullptr ) 
+  , m_rho  ( nullptr     )
+  , m_what ( "Jackson()" ) 
 {
   switch ( rho )
   {
   case   Ostap::Math::FormFactors::Jackson_0  :
-    m_rho = &Ostap::Math::Jackson::jackson_0  ; break ;
+    m_rho  = &Ostap::Math::Jackson::jackson_0  ; 
+    m_what = "Jackson(Jackson_0)" ;
+    break ;
   case   Ostap::Math::FormFactors::Jackson_A2 :
-    m_rho = &Ostap::Math::Jackson::jackson_A2 ; break ;
+    m_rho  = &Ostap::Math::Jackson::jackson_A2 ; 
+    m_what = "Jackson(Jackson_A2)" ;
+    break ;
   case   Ostap::Math::FormFactors::Jackson_A3 :
-    m_rho = &Ostap::Math::Jackson::jackson_A3 ; break ;
+    m_rho  = &Ostap::Math::Jackson::jackson_A3 ; 
+    m_what = "Jackson(Jackson_A3)" ;
+    break ;
   case   Ostap::Math::FormFactors::Jackson_A4 :
-    m_rho = &Ostap::Math::Jackson::jackson_A4 ; break ;
+    m_rho = &Ostap::Math::Jackson::jackson_A4 ; 
+    m_what = "Jackson(Jackson_A4)" ;
+    break ;
   case   Ostap::Math::FormFactors::Jackson_A5 :
-    m_rho = &Ostap::Math::Jackson::jackson_A5 ; break ;
+    m_rho = &Ostap::Math::Jackson::jackson_A5 ;
+    m_what = "Jackson(Jackson_A5)" ;
+    break ;
   case   Ostap::Math::FormFactors::Jackson_A7 :
-    m_rho = &Ostap::Math::Jackson::jackson_A7 ; break ;
+    m_rho = &Ostap::Math::Jackson::jackson_A7 ; 
+    m_what = "Jackson(Jackson_A7)" ;
+    break ;
   default         :
     m_rho = nullptr ; 
   }
@@ -258,7 +272,8 @@ Ostap::Math::FormFactors::Jackson::Jackson
 Ostap::Math::FormFactors::Jackson::Jackson
 ( const Ostap::Math::FormFactors::rho_fun rho ) 
   : Ostap::Math::FormFactor() 
-  , m_rho ( rho ) 
+  , m_rho  ( rho                ) 
+  , m_what ( "Jackson(rho_fun)" )    
 { if ( !m_rho ) { m_rho = &Ostap::Math::Jackson::jackson_0 ; } }
 // ============================================================================
 // virtual destructor 
@@ -304,6 +319,7 @@ Ostap::Math::FormFactors::BlattWeisskopf::BlattWeisskopf
   : Ostap::Math::FormFactor() 
   , m_L ( L ) 
   , m_b ( b )
+  , m_what ( "BlattWeisskopf(" + std::to_string( (int) L ) + "," + std::to_string ( b ) + ")" )
 {
   switch ( L ) 
   {
@@ -324,8 +340,9 @@ Ostap::Math::FormFactors::BlattWeisskopf::BlattWeisskopf
 // ============================================================================
 Ostap::Math::FormFactors::BlattWeisskopf::BlattWeisskopf()
   : Ostap::Math::FormFactor() 
-  , m_L ( Ostap::Math::FormFactors::BlattWeisskopf::Zero ) 
-  , m_b ( 0.0 )
+  , m_L    ( Ostap::Math::FormFactors::BlattWeisskopf::Zero ) 
+  , m_b    ( 0.0 )
+  , m_what ( "BlattWeisskopf(0,0.0)" )
 {}
 // ============================================================================
 // destructor 
@@ -392,189 +409,225 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
 }
 // ============================================================================
 
-// ============================================================================
-// Breit-Wigner itself 
-// ============================================================================
-
-
 
 // ============================================================================
-// constructor
+// Breit-Wigner Channel 
 // ============================================================================
-Ostap::Math::BreitWigner::BreitWigner
-( const double         m0   ,
-  const double         gam0 ,
-  const double         m1   ,
-  const double         m2   ,
-  const unsigned short L    )
-  : m_m0         (             m0    )
-  , m_gam0       ( std::abs ( gam0 ) )
-  , m_m1         ( std::abs (   m1 ) )
-  , m_m2         ( std::abs (   m2 ) )
-  , m_L          (              L    )
+/*  constructor from all parameters and no formfactor
+ *  @param gamma the width 
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ *  @param L     the oribital momentum
+ */
+// ============================================================================
+Ostap::Math::Channel::Channel 
+( const double                  gamma , 
+  const double                  m1    , 
+  const double                  m2    , 
+  const unsigned short          L     )
+  : m_gamma0 ( std::abs ( gamma ) ) 
+  , m_m1     ( std::abs ( m1    ) )
+  , m_m2     ( std::abs ( m2    ) )
+  , m_L      (            L       )
   , m_formfactor ( nullptr ) 
-    //
-  , m_workspace  ()
-    //
 {}
 // ============================================================================
-// constructor
+/*  constructor from all parameters and no formfactor
+ *  @param gamma the width 
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ *  @param L     the oribital momentum
+ *  @param r     the Jackson's formfactor 
+ */
 // ============================================================================
-Ostap::Math::BreitWigner::BreitWigner
-( const double                                m0   ,
-  const double                                gam0 ,
-  const double                                m1   ,
-  const double                                m2   ,
-  const unsigned short                        L    ,
-  const Ostap::Math::FormFactors::JacksonRho  r    )
-  : m_m0         (             m0    )
-  , m_gam0       ( std::abs ( gam0 ) )
-  , m_m1         ( std::abs (   m1 ) )
-  , m_m2         ( std::abs (   m2 ) )
-  , m_L          (              L    )
-    //
-  , m_formfactor ( new Ostap::Math::FormFactors::Jackson ( r ) ) 
-    //
-  , m_workspace  ()
-    //
+Ostap::Math::Channel::Channel 
+( const double                                gamma , 
+  const double                                m1    , 
+  const double                                m2    , 
+  const unsigned short                        L     ,
+  const Ostap::Math::FormFactors::JacksonRho  r     )
+  : m_gamma0 ( std::abs ( gamma ) ) 
+  , m_m1     ( std::abs ( m1    ) )
+  , m_m2     ( std::abs ( m2    ) )
+  , m_L      (            L       )
+  , m_formfactor ( new Ostap::Math::FormFactors::Jackson ( r ) )  
 {}
 // ============================================================================
-// constructor
+/*  constructor from all parameters and no formfactor
+ *  @param gamma the width 
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ *  @param L     the oribital momentum
+ *  @param r     the Jackson's formfactor 
+ */
 // ============================================================================
-Ostap::Math::BreitWigner::BreitWigner
-( const double                   m0   ,
-  const double                   gam0 ,
-  const double                   m1   ,
-  const double                   m2   ,
-  const unsigned short           L    ,
-  const Ostap::Math::FormFactor& ff   )
-  : m_m0         (             m0    )
-  , m_gam0       ( std::abs ( gam0 ) )
-  , m_m1         ( std::abs (   m1 ) )
-  , m_m2         ( std::abs (   m2 ) )
-  , m_L          (              L    )
-    //
-  , m_formfactor ( ff.clone() ) 
-    //
-  , m_workspace  ()
-    //
+Ostap::Math::Channel::Channel 
+( const double                                gamma , 
+  const double                                m1    , 
+  const double                                m2    , 
+  const unsigned short                        L     ,
+  const Ostap::Math::FormFactor&              ff    )
+  : m_gamma0 ( std::abs ( gamma ) ) 
+  , m_m1     ( std::abs ( m1    ) )
+  , m_m2     ( std::abs ( m2    ) )
+  , m_L      (            L       )
+  , m_formfactor ( ff.clone() )  
 {}
 // ============================================================================
 // copy constructor 
 // ============================================================================
-Ostap::Math::BreitWigner::BreitWigner 
-( const Ostap::Math::BreitWigner& bw ) 
-  : m_m0         ( bw.m_m0    )
-  , m_gam0       ( bw.m_gam0  )
-  , m_m1         ( bw.m_m1    )
-  , m_m2         ( bw.m_m2    )
-  , m_L          ( bw.m_L     )
-    //
-  , m_formfactor ( nullptr == bw.m_formfactor ? nullptr : bw.m_formfactor->clone() ) 
-    //
+Ostap::Math::Channel::Channel 
+( const Ostap::Math::Channel&  right ) 
+  : m_gamma0 ( right.m_gamma0 )
+  , m_m1     ( right.m_m1     ) 
+  , m_m2     ( right.m_m2     ) 
+  , m_L      ( right.m_L      ) 
+  , m_formfactor ( right.m_formfactor ? right.m_formfactor->clone() : nullptr ) 
+{}
+// ============================================================================
+// set new width 
+// ============================================================================
+bool Ostap::Math::Channel::setGamma0 ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_gamma0 ) ) { return false ; } // RETURN
+  m_gamma0  = v ;
+  return true ;
+}
+// ============================================================================
+/* get the mass-dependent width 
+ *  \f[ \Gamma(m) \equiv \Gamma_0 
+ *     \left( \frac{q(m)}{q(m_0)} \right)^2L+1}
+ *     \left( \frac{f(m,m_0,m_1,m_2)}{f(m_0,m_0,m_1,m_2)}\right)}
+ *   \f]
+ *  where 
+ *   - \f$ q(m) \f$ is momentum of daughter particle in the rest frame of mother particle
+ *   - \f$ f( m, m_0, m_1, m_2)\f$ if a formfactor
+ *  @see Ostap::Math::PhaseSpace2::q
+ *  @see Ostap::Math::FormFactor
+ *  @see Ostap::Math::BreitWigner::Channel::gamma 
+ *  @param mass the running mass
+ *  @param m0   the pole posiiton 
+ *  @return mass-dependent width 
+ */
+// ============================================================================
+double Ostap::Math::Channel::gamma
+( const double mass , 
+  const double m0   ) const  // get the running width  
+{ return gamma_run ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
+// ============================================================================
+/*  get the value of formfactor for the given mass and pole position
+ *  @param mass rinning mass 
+ *  @param m0   pole position 
+ *  @return the value of formfactor for  given mass and pole position
+ */
+// ============================================================================
+double Ostap::Math::Channel::formfactor 
+( const double mass ,  
+  const double m0   ) const 
+{ return m_formfactor ? (*m_formfactor)( mass , m0 , m_m1 , m_m2 ) : 1.0 ; }
+// ============================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::Channel::describe() const 
+{
+  return 
+    "Channel(" + std::to_string ( m_gamma0 ) + 
+    ","        + std::to_string ( m_m1     ) + 
+    ","        + std::to_string ( m_m2     ) + 
+    ","        + std::to_string ( m_L      ) +
+    ( m_formfactor ? m_formfactor->describe() : "" ) + ")";
+}
+// ============================================================================
+// Breit-Wigner Base 
+// ============================================================================
+
+// ============================================================================
+// constructor
+// ============================================================================
+Ostap::Math::BreitWignerBase::BreitWignerBase
+( const double         m0   ,
+  const Ostap::Math::Channel& channel ) 
+  : m_m0         ( std::abs ( m0 ) ) 
+  , m_channels   ( 1  , channel    )
   , m_workspace  ()
     //
 {}
 // ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::BreitWigner::BreitWigner 
-( Ostap::Math::BreitWigner&& bw ) 
-  : m_m0         ( bw.m_m0    )
-  , m_gam0       ( bw.m_gam0  )
-  , m_m1         ( bw.m_m1    )
-  , m_m2         ( bw.m_m2    )
-  , m_L          ( bw.m_L     )
-    //
-  , m_formfactor ( bw.m_formfactor ) 
-    //
-  , m_workspace  ()
-    //
-{
-  bw.m_formfactor = nullptr ;
-}
-// ============================================================================
-Ostap::Math::BreitWigner*
-Ostap::Math::BreitWigner::clone() const
-{ return new BreitWigner ( *this ) ; }  
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::BreitWigner::~BreitWigner ()
-{ if ( 0 != m_formfactor ) { delete m_formfactor ; m_formfactor = nullptr ; } }
+Ostap::Math::BreitWignerBase*
+Ostap::Math::BreitWignerBase::clone() const
+{ return new BreitWignerBase ( *this ) ; }  
 // ============================================================================
 //  calculate the Breit-Wigner amplitude
 // ============================================================================
 std::complex<double>
-Ostap::Math::BreitWigner::amplitude ( const double x ) const
+Ostap::Math::BreitWignerBase::amplitude ( const double x ) const
 {
-  //
-  if ( m_m1 + m_m2 >= x ) { return 0 ; }
-  //
+  if ( x < threshold() ) { return 0 ; }
   const double g  = gamma ( x ) ;
-  if ( 0 >= g ) { return 0 ; }
-  //
-  return std::sqrt ( m0 () * gam0 () ) * breit_amp ( x , m0() , g ) ;
+  return g<=  0 ? 0.0 : amplitude ( x , g ) ;  
+}
+// ============================================================================
+//  calculate the Breit-Wigner amplitude
+// ============================================================================
+std::complex<double>
+Ostap::Math::BreitWignerBase::amplitude 
+( const double x , 
+  const double g ) const
+{
+  return threshold() > x || 0 >= g ? 0.0 : 
+  std::sqrt ( m0 () * gamma0 () ) * breit_amp ( x , m0() , g ) ;
 }
 // ============================================================================
 /*  calculate the Breit-Wigner shape
- *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}{ (\omega_0^2-\omega^2)^2-\omega_0^2\Gammma^2(\omega)-}\f$
+ *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}
+ *     { (\omega_0^2-\omega^2)^2-\omega_0^2\Gammma^2(\omega)-}\f$
  */
 // ============================================================================
-double Ostap::Math::BreitWigner::breit_wigner ( const double x ) const
+double Ostap::Math::BreitWignerBase::breit_wigner 
+( const double x ) const
 {
-  //
-  if ( m_m1 + m_m2 >= x ) { return 0 ; }
-  //
-  const double g  = gamma ( x ) ;
+  if ( x < threshold() ) { return 0 ; }
+  // get the partial width  for the first channel 
+  const double g  = m_channels.front().gamma ( x , m_m0 ) ;
   if ( 0 >= g ) { return 0 ; }
   //
+  // get the full Breit-Wigner amplitude 
   std::complex<double> a = amplitude ( x ) ;
   //
-  return 2 * x * std::norm ( a )* g / gam0() / M_PI ;
-  //
-  // const double omega2 = m_m0 * m_m0 ;
-  // const double delta = omega2        -          x * x ;
-  // const double v     = delta * delta + omega2 * g * g ;
-  //
-  // return 2 * x * m_m0 * g / v / M_PI  ;
+  const double gamma_scale = 1.0 / m_channels.front().gamma0 () ;
+  // 
+  return 2 * x * std::norm ( a ) * g * gamma_scale / M_PI  ;
 }
 // ============================================================================
 /*  calculate the Breit-Wigner shape
- *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}{ (\omega_0^2-\omega^2)^2-\omega_0^2\Gammma^2(\omega)-}\f$
+ *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}
+ *      { (\omega_0^2-\omega^2)^2-\omega_0^2\Gammma^2(\omega)-}\f$
  */
 // ============================================================================
-double Ostap::Math::BreitWigner::operator() ( const double x ) const
+double Ostap::Math::BreitWignerBase::operator() ( const double x ) const
 { return breit_wigner ( x ) ; }
+// ============================================================================
+// get the nominal total width at the pole 
+// ============================================================================
+double Ostap::Math::BreitWignerBase::gamma0 () const
+{
+  double gamtot = 0 ;
+  for ( const auto& c : m_channels ) { gamtot += c.gamma0 () ; }
+  return gamtot ;
+}
 // ============================================================================
 // calculate the current width
 // ============================================================================
-double Ostap::Math::BreitWigner::gamma ( const double x ) const
+double Ostap::Math::BreitWignerBase::gamma ( const double x ) const
 {
-  //
-  return gamma_run ( m_gam0       ,
-                     x            ,
-                     m_m1         ,
-                     m_m2         ,
-                     m_m0         ,
-                     m_L          ,
-                     m_formfactor ) ;
-  //
-}
-// ===========================================================================
-// get the value of formfactor at given m 
-// ============================================================================
-double Ostap::Math::BreitWigner::formfactor ( const double m ) const 
-{ 
-  return 
-    nullptr == m_formfactor ? 1. : 
-    (*m_formfactor)( m , m_m0 , m_m1 , m_m2 ) ; 
+  if ( x < threshold() ) { return 0 ; }
+  double gamtot = 0 ;
+  for ( const auto& c : m_channels ) { gamtot += c.gamma ( x , m_m0 ) ; }
+  return gamtot ;
 }
 // ============================================================================
-
-
-// ============================================================================
-bool Ostap::Math::BreitWigner::setM0     ( const double x )
+bool Ostap::Math::BreitWignerBase::setM0     ( const double x )
 {
   const double v       = std::abs ( x ) ;
   if ( s_equal ( v , m_m0 ) ) { return false ; } // RETURN
@@ -582,17 +635,19 @@ bool Ostap::Math::BreitWigner::setM0     ( const double x )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::BreitWigner::setGamma0 ( const double x )
+bool Ostap::Math::BreitWignerBase::setGamma0 ( const double x )
 {
-  const double v       = std::abs ( x ) ;
-  if ( s_equal ( v , m_gam0 ) ) { return false ; } // RETURN
-  m_gam0  = v ;
+  const double v = std::abs ( x ) ;
+  const double g = gamma0 () ;
+  if ( s_equal ( v , g  ) ) { return false ; } // RETURN
+  const double scale = v / g ;
+  for ( auto& c : m_channels ) { c.setGamma0 ( c.gamma0 () *  scale ) ; }
   return true ;
 }
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
-double  Ostap::Math::BreitWigner::integral
+double  Ostap::Math::BreitWignerBase::integral
 ( const double low  ,
   const double high ) const
 {
@@ -600,14 +655,16 @@ double  Ostap::Math::BreitWigner::integral
   if (           low > high   ) { return - integral ( high ,
                                                       low  ) ; } // RETURN
   //
-  if ( m_m1 + m_m2 >= high ) { return                              0   ; }
-  if ( m_m1 + m_m2 >  low  ) { return integral  ( m_m1 + m_m2 , high ) ; }
-  //
+  const double t = threshold() ;
+  if ( t >= high ) { return                    0   ; }
+  if ( t >  low  ) { return integral  ( t , high ) ; }
   //
   // split into reasonable sub intervals
   //
-  const double x1     = m_m0 - 10 * m_gam0 ;
-  const double x2     = m_m0 + 10 * m_gam0  ;
+  const double g0 = gamma0 () ;
+  //
+  const double x1     = m_m0 - 10 * g0  ;
+  const double x2     = m_m0 + 10 * g0  ;
   const double x_low  = std::min ( x1 , x2 ) ;
   const double x_high = std::max ( x1 , x2 ) ;
   //
@@ -626,7 +683,7 @@ double  Ostap::Math::BreitWigner::integral
   //
   // split, if interval too large
   //
-  const double width = std::max ( m_gam0 , 0.0 ) ;
+  const double width = std::max ( g0 , 0.0 ) ;
   if ( 0 < width &&  3 * width < high - low  )
   {
     return
@@ -636,8 +693,8 @@ double  Ostap::Math::BreitWigner::integral
   //
   // use GSL to evaluate the integral
   //
-  static const Ostap::Math::GSL::Integrator1D<BreitWigner> s_integrator {} ;
-  static char s_message[] = "Integral(BreitWigner)" ;
+  static const Ostap::Math::GSL::Integrator1D<BreitWignerBase> s_integrator {} ;
+  static char s_message[] = "Integral(BreitWignerBase)" ;
   //
   const auto F = s_integrator.make_function ( this ) ;
   int    ierror   =  0 ;
@@ -660,19 +717,22 @@ double  Ostap::Math::BreitWigner::integral
 // ============================================================================
 // get the integral b
 // ============================================================================
-double  Ostap::Math::BreitWigner::integral () const
+double  Ostap::Math::BreitWignerBase::integral () const
 {
   //
   // split into reasonable sub intervals
   //
-  const double x1     = std::max ( m_m1  + m_m2 , m_m0 - 10 * m_gam0 ) ;
-  const double x2     = std::max ( m_m1  + m_m2 , m_m0 + 10 * m_gam0 ) ;
+  const double t      = threshold () ;
+  const double g0     = gamma0 () ;
+  //
+  const double x1     = std::max ( t , m_m0 - 10 * g0 ) ;
+  const double x2     = std::max ( t , m_m0 + 10 * g0 ) ;
   const double x_high = std::max ( x1 , x2 ) ;
   //
   // use GSL to evaluate the integral
   //
-  static const Ostap::Math::GSL::Integrator1D<BreitWigner> s_integrator {} ;
-  static char s_message[] = "Integral(BreitWigner/tail)" ;
+  static const Ostap::Math::GSL::Integrator1D<BreitWignerBase> s_integrator {} ;
+  static char s_message[] = "Integral(BreitWignerBase/tail)" ;
   //
   const auto F = s_integrator.make_function ( this ) ;
   int    ierror   =  0 ;
@@ -688,8 +748,180 @@ double  Ostap::Math::BreitWigner::integral () const
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
-  return result + integral ( m_m1 + m_m2 , x_high );
+  return result + integral ( t  , x_high );
 }
+
+
+// ============================================================================
+// Breit-Wigner iself 
+// ============================================================================
+/*  constructor from all parameters
+ *  @param m0   the pole position 
+ *  @param gam0 the nominal width at the pole 
+ *  @param m1   the mass of the 1st daughter particle 
+ *  @param m2   the mass of the 2nd daughter particle 
+ *  @param L    the orbital momentum 
+ */
+// ============================================================================
+Ostap::Math::BreitWigner::BreitWigner
+( const double         m0     ,
+  const double         gam0   ,
+  const double         m1     ,
+  const double         m2     ,
+  const unsigned short L      ) 
+  : BreitWignerBase ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L ) )
+{}
+// ============================================================================
+/*  constructor from all parameters
+ *  @param m0   the pole position 
+ *  @param gam0 the nominal width at the pole 
+ *  @param m1   the mass of the 1st daughter particle 
+ *  @param m2   the mass of the 2nd daughter particle 
+ *  @param L    the orbital momentum 
+ *  @param F    the Jackson's formfactor 
+ */
+// ============================================================================
+Ostap::Math::BreitWigner::BreitWigner
+( const double                               m0   , 
+  const double                               gam0 ,
+  const double                               m1   ,
+  const double                               m2   ,
+  const unsigned short                       L    ,
+  const Ostap::Math::FormFactors::JacksonRho F    )  
+  : BreitWignerBase ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) )
+{}
+// ============================================================================
+/*  constructor from all parameters
+ *  @param m0   the pole position 
+ *  @param gam0 the nominal width at the pole 
+ *  @param m1   the mass of the 1st daughter particle 
+ *  @param m2   the mass of the 2nd daughter particle 
+ *  @param L    the orbital momentum 
+ *  @param F    the formfactor 
+ */
+// ============================================================================
+Ostap::Math::BreitWigner::BreitWigner
+( const double                               m0   , 
+  const double                               gam0 ,
+  const double                               m1   ,
+  const double                               m2   ,
+  const unsigned short                       L    ,
+  const Ostap::Math::FormFactor&             F    )  
+  : BreitWignerBase ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) )
+{}
+// ============================================================================
+/*  constructor from all parameters
+ *  @param m0   the pole position 
+ *  @param c    the channel 
+ */
+// ============================================================================
+Ostap::Math::BreitWigner::BreitWigner
+( const double                m0 , 
+  const Ostap::Math::Channel& c  )  
+  : BreitWignerBase ( m0 , c )
+{}
+// ============================================================================
+// clone it 
+// ============================================================================
+Ostap::Math::BreitWigner*
+Ostap::Math::BreitWigner::clone() const 
+{ return new Ostap::Math::BreitWigner ( *this ) ; }
+
+
+// ============================================================================
+// multi-channel version of Breit-Wigner
+// ===========================================================================
+/*  constructor from single channel
+ *  @param m0   the pole position 
+ *  @param c1   the 1st channel 
+ */
+// ===========================================================================
+Ostap::Math::BreitWignerMC::BreitWignerMC 
+( const double                m0 ,
+  const Ostap::Math::Channel& c1 )
+  : BreitWignerBase ( m0 , c1 )
+{}
+// ===========================================================================
+/*  constructor from two channels 
+ *  @param m0   the pole position 
+ *  @param c1   the 1st channel 
+ *  @param c2   the 2nd channel 
+ */
+// ===========================================================================
+Ostap::Math::BreitWignerMC::BreitWignerMC 
+( const double                m0 ,
+  const Ostap::Math::Channel& c1 , 
+  const Ostap::Math::Channel& c2 ) 
+  : BreitWignerBase ( m0 , c1 )
+{ 
+  m_channels.push_back ( c2 ) ; 
+}
+// ===========================================================================
+/*  constructor from three channels 
+ *  @param m0   the pole position 
+ *  @param c1   the 1st channel 
+ *  @param c2   the 2nd channel 
+ *  @param c3   the 3rd channel 
+ */
+// ===========================================================================
+Ostap::Math::BreitWignerMC::BreitWignerMC 
+( const double                m0 ,
+  const Ostap::Math::Channel& c1 , 
+  const Ostap::Math::Channel& c2 ,
+  const Ostap::Math::Channel& c3 ) 
+  : BreitWignerBase ( m0 , c1 )
+{ 
+  m_channels.push_back ( c2 ) ; 
+  m_channels.push_back ( c3 ) ; 
+}
+// ===========================================================================
+/*  constructor from four channels 
+ *  @param m0   the pole position 
+ *  @param c1   the 1st channel 
+ *  @param c2   the 2nd channel 
+ *  @param c3   the 3rd channel 
+ *  @param c4   the 4th channel 
+ */
+// ===========================================================================
+Ostap::Math::BreitWignerMC::BreitWignerMC 
+( const double                m0 ,
+  const Ostap::Math::Channel& c1 , 
+  const Ostap::Math::Channel& c2 ,
+  const Ostap::Math::Channel& c3 , 
+  const Ostap::Math::Channel& c4 ) 
+  : BreitWignerBase ( m0 , c1 )
+{ 
+  m_channels.push_back ( c2 ) ; 
+  m_channels.push_back ( c3 ) ; 
+  m_channels.push_back ( c4 ) ; 
+}
+// ============================================================================
+/*  constructor from the list of channels  
+ *  @param m0   the pole position 
+ *  @param cs   list of channels 
+ */
+// ============================================================================
+Ostap::Math::BreitWignerMC::BreitWignerMC 
+( const double                             m0 ,
+  const std::vector<Ostap::Math::Channel>& cs )
+  : BreitWignerBase ( m0 )
+{
+  Ostap::Assert ( !cs.empty() ,
+                  "BreitWignedMC:empty list of channels!" ,
+                  "Ostap::Math::BReitWignerMC" );
+  m_channels.clear() ;
+  for ( const auto& c : cs ) { m_channels.push_back ( c ) ; }
+}
+// ============================================================================
+// clone it 
+// ============================================================================
+Ostap::Math::BreitWignerMC*
+Ostap::Math::BreitWignerMC::clone() const 
+{ return new  Ostap::Math::BreitWignerMC (*this )  ;}
+// ============================================================================
+
+   
+
 
 
 
@@ -1748,7 +1980,7 @@ double Ostap::Math::Swanson::swanson ( const double x ) const
   //
   const std::complex<double> a = amplitude ( x ) ;
   //
-  return 2 * x * std::norm ( a ) * g / m_bw.gam0() / M_PI ;
+  return 2 * x * std::norm ( a ) * g / m_bw.gamma0() / M_PI ;
 }
 // ============================================================================
 // get the integral between low and high limits
@@ -1761,7 +1993,7 @@ double  Ostap::Math::Swanson::integral
   if (           low > high   ) { return - integral ( high ,
                                                       low  ) ; } // RETURN
   //
-  const double x_min  = m_bw.m1() + m_bw.m2() ;
+  const double x_min  = m_bw.channel().m1() + m_bw.channel().m2() ;
   if ( x_min >= high ) { return                        0   ; }
   if ( x_min >  low  ) { return integral  ( x_min , high ) ; }
   //
@@ -2302,7 +2534,7 @@ Ostap::Math::BW23L::BW23L
   const unsigned short            L2 )
   //
   : m_bw ( bw.clone () ) 
-  , m_ps ( bw.m1() , bw.m2() , m3  , m  , L2 , bw. L())
+  , m_ps ( bw.channel().m1() , bw.channel().m2() , m3  , m  , L2 , bw.channel(). L() )
     //
   , m_workspace ()
 {}

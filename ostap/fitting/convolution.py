@@ -54,7 +54,7 @@ class Convolution(object):
                    xvar              ,   ## the axis variable
                    resolution        ,   ## the    resolution
                    useFFT  = True    ,   ## use FFT ? 
-                   nbins   = 1000000 ,   ##  #bins for FFT
+                   nbins   = 50000   ,   ##  #bins for FFT
                    buffer  = 0.25    ,   ## buffer fraction ## setBufferFraction
                    nsigmas = 6       ) : ## number of sigmas for setConvolutionWindow
 
