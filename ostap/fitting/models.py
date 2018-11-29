@@ -264,6 +264,8 @@ logger.debug ("Import simultaneous fit            from ``simfit''"       )
 from ostap.fitting.simfit        import Sim1D
 logger.debug ("Import PyPDF                       from ``pypdf''"        )
 from ostap.fitting.pypdf         import PyPDF
+logger.debug ("Import modifiers                   from ``modifiers''"    )
+from ostap.fitting.modifiers     import *
 
 models = []
 from ostap.fitting.signals       import models as _models 

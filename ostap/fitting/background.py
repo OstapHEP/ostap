@@ -47,7 +47,7 @@ from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-models = []
+models  = []
 # =============================================================================
 ##  @class PolyBase
 #   helper base class to implement various polynomial-like shapes
@@ -59,6 +59,7 @@ class PolyBase(PDF,Phases) :
         xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
         PDF   .__init__ ( self , name  , xvar      )
         Phases.__init__ ( self , power , the_phis  )
+        
 # =============================================================================        
 ## @class  Bkg_pdf
 #  The exponential modified with the positive polynomial 
@@ -80,6 +81,8 @@ class Bkg_pdf(PolyBase) :
                    xvar             ,   ## the variable
                    power    = 0     ,   ## degree of polynomial
                    tau      = None  ,   ## exponential slope 
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max 
                    the_phis = None  ) : ## the phis...
         
         ##            
@@ -87,17 +90,18 @@ class Bkg_pdf(PolyBase) :
         #                
         self.__power = power
         #
-        limits_tau = () 
-        if self.xminmax() : 
-            mn , mx     = self.xminmax()
-            mmax        = max ( abs ( mn ) , abs ( mx ) )
-            limits_tau  = -500. / mmax ,  500. / mmax             
+        ## xmin/xmax
+        xmin , xmax = self.xmnmx ( xmin , xmax )
+        #
+        ## limits for |tau|
+        mmax        = max ( abs ( xmin ) , abs ( xmax ) )
+        limits_tau  = -500. / mmax ,  500. / mmax             
         # 
         ## the exponential slope
         #
         self.__tau  = self.make_var ( tau              ,
-                                "tau_%s"  % name ,
-                                "tau(%s)" % name , tau , 0 , *limits_tau  )
+                                      "tau_%s"  % name ,
+                                      "tau(%s)" % name , tau , 0 , *limits_tau  )
         
         self.pdf  = Ostap.Models.ExpoPositive (
             'expopos_%s'  % name ,
@@ -105,7 +109,8 @@ class Bkg_pdf(PolyBase) :
             self.xvar            ,
             self.tau             ,
             self.phi_list        ,
-            *self.xminmax ()     )
+            xmin                 ,
+            xmax                 )
 
         ## save configuration 
         self.config = {
@@ -114,6 +119,8 @@ class Bkg_pdf(PolyBase) :
             'power'    : self.power ,            
             'tau'      : self.tau   ,            
             'the_phis' : self.phis  ,            
+            'xmin'     : xmin       ,
+            'xmax'     : xmax       ,            
             }
         
     @property
@@ -155,15 +162,20 @@ class PolyPos_pdf(PolyBase) :
     ## constructor
     def __init__ ( self             ,
                    name             ,  ## the name 
-                   xvar             ,  ## the varibale 
+                   xvar             ,  ## the variable 
                    power = 1        ,  ## degree of the polynomial
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max 
                    the_phis = None  ) : 
         #
         PolyBase.__init__ ( self , name , power , xvar , the_phis )
         #
         self.__power = power
         #
-        xmin, xmax = self.xminmax () 
+        ## xmin/xmax
+        xmin , xmax = self.xmnmx ( xmin , xmax )
+        #
+        ## build the model
         self.pdf   = Ostap.Models.PolyPositive (
             'pp_%s'            % name ,
             'PolyPositive(%s)' % name ,
@@ -176,7 +188,9 @@ class PolyPos_pdf(PolyBase) :
             'name'     : self.name  ,
             'xvar'     : self.xvar  ,
             'power'    : self.power ,            
-            'the_phis' : self.phis  ,            
+            'the_phis' : self.phis  ,
+            'xmin'     : xmin       ,
+            'xmax'     : xmax       ,            
             }
                 
     @property
@@ -211,12 +225,17 @@ class PolyEven_pdf(PolyBase) :
                    name             , ## the name 
                    xvar             , ## the varibale 
                    power = 1        , ## (half)degree of the polynomial
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max 
                    the_phis = None  ) :
         #
         PolyBase.__init__ ( self , name , power , xvar , the_phis )
         self.__power = power
-        ##
-        xmin , xmax = self.xminmax() 
+        #        
+        ## xmin/xmax
+        xmin , xmax = self.xmnmx ( xmin , xmax )
+        #
+        ## build PDF 
         self.pdf  = Ostap.Models.PolyPositiveEven (
             'ppe_%s'               % name ,
             'PolyPositiveEven(%s)' % name ,
@@ -231,6 +250,8 @@ class PolyEven_pdf(PolyBase) :
             'xvar'     : self.xvar  ,
             'power'    : self.power ,            
             'the_phis' : self.phis  ,            
+            'xmin'     : xmin       ,
+            'xmax'     : xmax       ,            
             }
                 
     @property
@@ -264,10 +285,12 @@ class Monotonic_pdf(PolyBase) :
     """
     ## constructor
     def __init__ ( self              ,
-                   name              ,   ## the name 
-                   xvar              ,   ## the variable
-                   power      = 2    ,   ## degree of the polynomial
-                   increasing = True ,   ## increasing or decreasing ?
+                   name              ,  ## the name 
+                   xvar              ,  ## the variable
+                   power      = 2    ,  ## degree of the polynomial
+                   increasing = True ,  ## increasing or decreasing ?
+                   xmin       = None ,  ## optional x-min
+                   xmax       = None ,  ## optional x-max 
                    the_phis   = None ) : 
         #
         PolyBase.__init__ ( self , name , power , xvar )
@@ -275,7 +298,10 @@ class Monotonic_pdf(PolyBase) :
         self.__power      = power
         self.__increasing = True if increasing else False 
         #
-        xmin,  xmax = self.xminmax() 
+        ## xmin/xmax
+        xmin , xmax = self.xmnmx ( xmin , xmax )
+        #
+        ## build PDF
         self.pdf  = Ostap.Models.PolyMonotonic (
             'pp_%s'              % name ,
             'PolyMonotonic(%s)' % name ,
@@ -291,8 +317,10 @@ class Monotonic_pdf(PolyBase) :
             'xvar'       : self.xvar       ,
             'power'      : self.power      ,            
             'increasing' : self.increasing , 
-            'the_phis'   : self.phis       ,            
-            }
+            'the_phis'   : self.phis       ,             
+            'xmin'       : xmin            ,
+            'xmax'       : xmax            ,            
+           }
 
     @property
     def power ( self ) :
@@ -346,6 +374,8 @@ class Convex_pdf(PolyBase) :
                    power = 2         ,   ## degree of the polynomial
                    increasing = True ,   ## increasing or decreasing ?
                    convex     = True ,   ## convex or concave ?
+                   xmin       = None ,   ## optional x-min
+                   xmax       = None ,   ## optional x-max 
                    the_phis   = None ) : ## 
         #
         PolyBase.__init__ ( self , name , power , xvar )
@@ -354,8 +384,10 @@ class Convex_pdf(PolyBase) :
         self.__increasing = True if increasing else False 
         self.__convex     = True if convex     else False 
         #
-        xmin,xmax = self.xminmax()
-        
+        ## xmin/xmax
+        xmin , xmax = self.xmnmx ( xmin , xmax )
+        #
+        ## build PDF 
         self.pdf  = Ostap.Models.PolyConvex (
             'pp_%s'          % name ,
             'PolyConvex(%s)' % name ,
@@ -374,6 +406,8 @@ class Convex_pdf(PolyBase) :
             'increasing' : self.increasing , 
             'convex'     : self.convex     , 
             'the_phis'   : self.phis       ,            
+            'xmin'       : xmin            ,
+            'xmax'       : xmax            ,            
             }
 
     @property
@@ -428,6 +462,8 @@ class ConvexOnly_pdf(PolyBase) :
                    xvar             ,   ## the variable
                    power    = 2     ,   ## degree of the polynomial
                    convex   = True  ,   ## convex or concave ?
+                   xmin     = None  ,   ## optional x-min
+                   xmax     = None  ,   ## optional x-max 
                    the_phis = None  ) :
         #
         PolyBase.__init__ ( self , name , power , xvar , the_phis )
@@ -435,7 +471,10 @@ class ConvexOnly_pdf(PolyBase) :
         self.__power      = power
         self.__convex     = True if convex else False 
         #
-        xmin,xmax = self.xminmax() 
+        ## xmin/xmax
+        xmin , xmax = self.xmnmx ( xmin , xmax )
+        #
+        ## build PDF 
         self.pdf  = Ostap.Models.PolyConvexOnly (
             'pp_%s'          % name ,
             'PolyConvex(%s)' % name ,
@@ -452,6 +491,8 @@ class ConvexOnly_pdf(PolyBase) :
             'power'      : self.power      ,            
             'convex'     : self.convex     , 
             'the_phis'   : self.phis       ,            
+            'xmin'       : xmin            ,
+            'xmax'       : xmax            ,            
             }
     
     @property
@@ -692,28 +733,30 @@ class TwoExpoPoly_pdf(PolyBase) :
     def __init__ ( self             ,
                    name             ,   ## the name 
                    xvar             ,   ## the variable
-                   alpha = None     ,   ## the slope of the first exponent 
-                   delta = None     ,   ## (alpha+delta) is the slope of the first exponent
-                   x0    = 0        ,   ## f(x)=0 for x<x0 
-                   power = 0        ,   ## degree of polynomial
+                   alpha    = None  ,   ## the slope of the first exponent 
+                   delta    = None  ,   ## (alpha+delta) is the slope of the first exponent
+                   x0       = 0     ,   ## f(x)=0 for x<x0 
+                   power    = 0     ,   ## degree of polynomial
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max                    
                    the_phis = None  ) : 
         #
         PolyBase.__init__  ( self , name , power , xvar , the_phis )
         #                
         self.__power = power
         #
+        ## xmin/xmax
+        xmin , xmax = self.xmnmx ( xmin , xmax )
+        #
         ## the exponential slope
         #
-        limits_alpha = () 
-        limits_delta = ()
-        limits_x0    = ()
-        if self.xminmax() : 
-            mn , mx      = self.xminmax()
-            dm           = mx - mn 
-            mmax         = max ( abs ( mn ) , abs ( mx ) )
-            limits_alpha = 1.e-6 , 1.e-16 , 300. / mmax             
-            limits_delta = 1.e-6 , 1.e-16 , 300. / mmax             
-            limits_x0    = mn , mn - 10 * dm , mx + 10 * dm 
+        mn , mx      = xmin , xmax 
+        dm           = mx - mn 
+        mmax         = max ( abs ( mn ) , abs ( mx ) )
+        limits_alpha = 1.e-6 , 1.e-16 , 300. / mmax             
+        limits_delta = 1.e-6 , 1.e-16 , 300. / mmax             
+        limits_x0    = mn , mn - 10 * dm , mx + 10 * dm 
+
 
         self.__alpha  = self.make_var ( alpha               ,
                                   "alpha_%s"   % name ,
@@ -747,7 +790,9 @@ class TwoExpoPoly_pdf(PolyBase) :
             'delta'      : self.delta      , 
             'x0'         : self.x0         , 
             'power'      : self.power      ,            
-            'the_phis'   : self.phis       ,            
+            'the_phis'   : self.phis       ,
+            'xmin'       : xmin            , 
+            'xmax'       : xmax            , 
             }
         
     @property
@@ -803,31 +848,35 @@ class Sigmoid_pdf(PolyBase) :
     """
     ## constructor
     def __init__ ( self             ,
-                   name             ,   ## the name 
-                   xvar             ,   ## the variable
-                   power    = 2     ,   ## degree of the polynomial
-                   alpha    = None  ,   ## 
-                   x0       = None  ,
+                   name             ,  ## the name 
+                   xvar             ,  ## the variable
+                   power    = 2     ,  ## degree of the polynomial
+                   alpha    = None  ,  ## 
+                   x0       = None  ,  ## x0
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max 
                    the_phis = None  ) :
         #
         #
         PolyBase.__init__ ( self , name , power , xvar , the_phis )
         #
         self.__power      = power
+        #
+        ## xmin/xmax
+        xmin , xmax = self.xmnmx ( xmin , xmax )
+        ## 
+        mn, mx       = xmin , xmax 
+        dx           = mx - mn 
+        alpmx        = 20
+        limits_alpha = -1000./dx, +1000./dx
+        limits_x0    = 0.5 * ( mn + mx ) , mn - 0.2 *  dx , mx + 0.2 * dx
 
-        limits_alpha = ()
-        limits_x0    = ()
-        if self.xminmax() :
-            mn, mx       = self.xminmax() 
-            dx           = mx - mn 
-            alpmx        = 20
-            limits_alpha = -1000./dx, +1000./dx
-            limits_x0    = 0.5 * ( mn + mx ) , mn - 0.2 *  dx , mx + 0.2 * dx
-            
+        ## alpha 
         self.__alpha  = self.make_var ( alpha               ,
                                   'alpha_%s'  % name  ,
                                   'alpha(%s)' % name  , alpha , *limits_alpha )
-        
+
+        ## x0 
         self.__x0    = self.make_var  ( x0                  ,
                                   'x0_%s'     % name  ,
                                   'x0(%s)'    % name  , x0    , *limits_x0    )
@@ -845,12 +894,14 @@ class Sigmoid_pdf(PolyBase) :
         
         ## save configuration 
         self.config = {
-            'name'       : self.name       ,
-            'xvar'       : self.xvar       ,
-            'power'      : self.power      ,            
-            'alpha'      : self.alpha      , 
-            'x0'         : self.x0         , 
-            'the_phis'   : self.phis       ,            
+            'name'       : self.name  ,
+            'xvar'       : self.xvar  ,
+            'power'      : self.power ,            
+            'alpha'      : self.alpha , 
+            'x0'         : self.x0    , 
+            'the_phis'   : self.phis  ,
+            'xmin'       : xmin       ,
+            'xmax'       : xmax       ,                        
             }
 
     @property

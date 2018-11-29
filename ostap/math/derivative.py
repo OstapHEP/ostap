@@ -60,8 +60,9 @@ if not 0.75 < _eps_ * 2**52 < 1.25 :
     import warnings
     warnings.warn ('"epsilon" in not in the expected range!Math could be suboptimal')
 # =============================================================================
-from ostap.math.base import cpp , iszero , isequal
-from ostap.math.ve   import VE 
+from ostap.math.base  import cpp , iszero , isequal
+from ostap.core.types import num_types,  is_integer
+from ostap.math.ve    import VE 
 # =============================================================================
 _next_double_ = cpp.Ostap.Math.next_double
 _mULPs_       = 1000 
@@ -449,7 +450,7 @@ class Partial(Derivative) :
         >>> print ' f(%f,%f)=%f    ' % ( x , y , func( x, y ) ) 
         >>> print ' dFdX=%f dFdY=%f' % ( dFdX(x,y), dFdY ( x, y ) ) 
         """
-        if isinstance ( index , (int,long) ) and 0 <= index :
+        if is_integer ( index ) and 0 <= index :
             self._index = index
         else :
             raise AttributeError("Invalid variable index %s" % index)
@@ -567,9 +568,9 @@ class EvalVE(object) :
         val  = self._value_ ( x , *args )
         #
         ## no uncertainties? 
-        if   isinstance ( x , ( float , int , long ) )   : return VE ( val , 0 )
+        if   isinstance ( x , num_types          ) : return VE ( val , 0 )
         # ignore small or invalid uncertanties 
-        elif 0 >= x.cov2() or iszero ( x.cov2()  )       : return VE ( val , 0 )
+        elif 0 >= x.cov2() or iszero ( x.cov2()  ) : return VE ( val , 0 )
         # evaluate the derivative  
         d    = self._deriv ( float ( x ) , *args )
         ## calculate the variance 

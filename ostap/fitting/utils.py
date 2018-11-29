@@ -536,7 +536,8 @@ class H3D_dset(MakeVar) :
         return self.__dset
 
 # =============================================================================
-## simple class to adjust certaint PDF to avoid zeroes 
+## @class Adjust1D
+#  simple class to adjust certain PDF to avoid zeroes 
 class Adjust1D(MakeVar) :
     """Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
@@ -597,7 +598,8 @@ class Adjust1D(MakeVar) :
 
 
 # =============================================================================
-## simple class to adjust certaint PDF to avoid zeroes 
+## @class Adjust2D
+#  simple class to adjust certain PDF to avoid zeroes 
 class Adjust2D(MakeVar) :
     """Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
@@ -658,7 +660,8 @@ class Adjust2D(MakeVar) :
         return self.__old_pdf
     
 # =============================================================================
-## simple class to adjust certaint PDF to avoid zeroes 
+## @class Adjust3D
+#  simple class to adjust certain PDF to avoid zeroes 
 class Adjust3D(MakeVar) :
     """Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
@@ -723,7 +726,8 @@ class Adjust3D(MakeVar) :
 
 # =============================================================================
 ## @class Phases
-#  helper class to build/keep the list of ``phi''-arguments (needed e.g. for polynomial functions)
+#  helper class to build/keep the list of ``phi''-arguments
+#   - needed e.g. for polynomial functions
 class Phases(MakeVar) :
     """Helper class to build/keep the list of ``phi''-arguments (needed e.g. for polynomial functions)
     """

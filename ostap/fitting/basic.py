@@ -28,6 +28,7 @@ __all__     = (
 import ROOT, math,  random
 import ostap.fitting.roofit 
 from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
+from   ostap.core.types     import is_good_number, is_integer
 from   ostap.fitting.roofit import SETVAR, PDF_fun
 from   ostap.logger.utils   import roo_silent   , rootWarning 
 from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , numcpu   , 
@@ -92,9 +93,34 @@ class PDF (MakeVar) :
 
         self.config = { 'name' : self.name , 'xvar' : self.xvar }
         
+    ## Min/max values for x-variable (when applicable)
     def xminmax ( self ) :
-        """Min/max values for x-variable"""
-        return self.__xvar.minmax()
+        """Min/max values for x-variable (when applicable)"""
+        return self.__xvar.minmax() if self.__xvar else () 
+
+    ## get the proper xmin/xmax range 
+    def xmnmx    ( self , xmin , xmax ) :
+        """Get the proper xmin/xmax range
+        """
+        if self.xminmax() :
+            
+            xmn , xmx = self.xminmax ()
+            
+            if   is_good_number ( xmin ) : xmin = max ( xmin , xmn )
+            else                         : xmin = xmn
+            
+            if   is_good_number ( xmax ) : xmax = min ( xmax , xmx )
+            else                         : xmax = xmx
+            
+        assert is_good_number ( xmin ),\
+               'Invalid type of ``xmin'' %s/%s'  %  ( xmin , type ( xmin ) )
+        assert is_good_number ( xmax ),\
+               'Invalid type of ``xmin'' %s/%s'  %  ( xmin , type ( xmin ) )
+
+        assert xmin < xmax, 'Invalid xmin/xmax range: %s/%s' % ( xmin , xmax )
+
+        return xmin , xmax 
+        
 
     @property 
     def vars ( self ) :
@@ -179,6 +205,11 @@ class PDF (MakeVar) :
     def name ( self , value ) :
         assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type(value) ) 
         self.__name = value
+
+    @property
+    def title ( self ) :
+        """``title'' : get the title for RooAbsPdf"""
+        return self.pdf.title if self.pdf else self.name 
     
     @property
     def alist1 ( self ) :
@@ -453,8 +484,8 @@ class PDF (MakeVar) :
         #
         if refit and for_refit :
             self.info ( 'fitTo: call for refit:  %s/%s'  % ( for_refit , refit ) ) 
-            if isinstance ( refit , ( int , long ) )  : refit -= 1
-            else                                      : refit  = False
+            if   is_integer ( refit ) : refit -= 1
+            else                      : refit  = False
             return  self.fitTo ( dataset         ,
                                  draw   = draw   ,
                                  nbins  = nbins  ,
@@ -850,7 +881,9 @@ class PDF (MakeVar) :
         >>> r,f = model.fitTo ( dataset )
         >>> model.sPlot ( dataset ) 
         """
-        assert self.alist2, "PDF(%s) has empty ``alist2''/(list of components), no sPlot is possible" % self.name 
+        assert self.alist2,\
+               "PDF(%s) has empty ``alist2''/(list of components)" + \
+               "no sPlot is possible" % self.name 
         
         with roo_silent ( silent ) :
             
@@ -1346,7 +1379,7 @@ class PDF (MakeVar) :
         # explicit construction from (#bins,min,max)-triplet  
         else :
             
-            assert isinstance ( nbins , ( int , long) ) and 0 < nbins, \
+            assert is_integer ( nbins ) and 0 < nbins, \
                    "Wrong ``nbins''-argument %s" % nbins 
             if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
             if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
@@ -1428,7 +1461,7 @@ class PDF (MakeVar) :
     def make_fracs ( self , N , pname , ptitle , fractions = True , recursive = True )  :
         """Make list of variables/fractions for compound PDF
         """
-        assert isinstance ( N , ( int , long ) ) and 2 <= N , \
+        assert is_integer ( N ) and 2 <= N , \
                "PDF.make_fracs: Invalid N=%s/%s" % ( N, type ( N ) )
         ##
         fracs    = [] 

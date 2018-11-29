@@ -47,6 +47,7 @@ __all__     = (
 # =============================================================================
 import  ROOT, math  
 from    ostap.core.core      import cpp, Ostap, funID
+from    ostap.core.types     import is_integer
 from    ostap.math.base      import iszero, isequal, signum, doubles
 import  ostap.math.bernstein 
 # =============================================================================
@@ -600,7 +601,7 @@ def _p2_set_par_ ( o , index , value ) :
     >>> fun[1]   = 10.0
     >>> fun[1,2] = 15.0
     """
-    if isinstance ( index , ( int , long ) ) :                  
+    if is_integer ( index ) :                  
         n = o.npars() 
         if   index <  0 :  index += n
         if not 0 <= index < n :
@@ -637,7 +638,7 @@ def _p2_get_par_ ( o , index ) :
     >>> print fun[:3]
     >>> print fun[2::3]
     """
-    if isinstance ( index , ( int , long ) ) :                      
+    if is_integer ( index ) :                      
         n = o.npars() 
         if  isinstance ( index , slice ) :
             return tuple ( o.par(i) for i in range( *index.indices ( n ) ) )

@@ -36,8 +36,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.math_ve' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from   ostap.math.ve   import VE
-from   ostap.math.base import cpp, iszero, isequal
+from   ostap.math.ve    import VE
+from   ostap.math.base  import cpp, iszero, isequal
+from   ostap.core.types import num_types, is_integer 
+
 _ln2_i = 1/math.log(2.0)                 ## useful constant 
 # =============================================================================
 
@@ -411,13 +413,13 @@ def pochhammer ( x , n ) :
     \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
     @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
     """
-    assert isinstance ( n , ( int , long ) ) and  0<= n <2**16, \
+    assert is_integer ( n ) and  0<= n < 2**16, \
            "pochhammer: invalid n=%s" % n
     
     fun = getattr ( x , '__pochhammer__' , None )
     if fun : return fun()
 
-    _x = x if isinstance ( x ,  ( float , int , long ) ) else VE ( x )
+    _x = x if isinstance ( x , num_types ) else VE ( x )
     
     return _pochhammer ( _x , n ) 
 

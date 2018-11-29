@@ -41,7 +41,8 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.kinematic' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
-from ostap.math.base import cpp , COMPLEX 
+from ostap.math.base  import cpp , COMPLEX 
+from ostap.core.types import num_types
 
 ## C++ namespace Ostap 
 Ostap = cpp.Ostap
@@ -391,7 +392,7 @@ class EtaVsP(object) :
     Very simple function \f$ \eta = \eta(p) \$  for the fixed transverse momentum
     """
     def __init__ ( self , pt ) :
-        assert isinstance ( pt , (int,long,float) ) and 0<=pt , "PT is invalid!"
+        assert isinstance ( pt , num_types ) and 0<=pt , "PT is invalid!"
         self.pt = float ( pt )
     def __call__ ( self , p )  :
         return _acosh ( max ( p , self.pt )  / self.pt )
@@ -404,7 +405,7 @@ class EtaVsP(object) :
 class EtaVsPt(object) :
     """Very simple function \f$ \eta = \eta(p_T) \$  for the fixed momentum"""
     def __init__ ( self , p  ) :
-        assert isinstance ( p , (int,long,float) ) and 0<=p , "P is invalid!"
+        assert isinstance ( p , num_types ) and 0<=p , "P is invalid!"
         self.p = float ( p )
     def __call__ ( self , pt )  :
         return _acosh ( self.p / min ( pt , self.p ) ) 
@@ -414,8 +415,8 @@ class EtaVsPt(object) :
 class YvsP(object) :
     """Rapidity as function of P for fixed pt and mass"""
     def __init__ ( self , pt , mass ) :
-        assert isinstance ( pt   , (int,long,float) ) and 0<=pt   , "PT is invalid!"
-        assert isinstance ( mass , (int,long,float) ) and 0<=mass , "M  is invalid!"
+        assert isinstance ( pt   , num_types ) and 0<=pt   , "PT is invalid!"
+        assert isinstance ( mass , num_types ) and 0<=mass , "M  is invalid!"
         self.pt2 = float ( pt   ) * float ( pt   ) 
         self.m2  = float ( mass ) * float ( mass )
         
@@ -432,8 +433,8 @@ class YvsP(object) :
 class YvsPt(object) :
     """Rapidity as function of Pt for fixed p and mass"""
     def __init__ ( self , p , mass ) :
-        assert isinstance ( p    , (int,long,float) ) and 0<=p    , "P  is invalid!"
-        assert isinstance ( mass , (int,long,float) ) and 0<=mass , "M  is invalid!"
+        assert isinstance ( p    , num_types ) and 0<=p    , "P  is invalid!"
+        assert isinstance ( mass , num_types ) and 0<=mass , "M  is invalid!"
         self.p2  = float ( p    ) * float ( p    ) 
         self.m2  = float ( mass ) * float ( mass )
         self.e2  = self.p2 + self.m2

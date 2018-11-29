@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file 
+## @file ostap/core/core.py
 #  Core objects for ostap 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -254,7 +254,6 @@ def _tn_title_set_ ( self , value ) : self.SetTitle( value )
 _tn_title_doc_ = "``title'' of the object using GetTitle/SetTitle"
 ROOT.TNamed.name  = property ( _tn_name_get_  ,  _tn_name_set_  , None , _tn_name_doc_  ) 
 ROOT.TNamed.title = property ( _tn_title_get_ ,  _tn_title_set_ , None , _tn_title_doc_ ) 
-
 
 # =============================================================================
 ## split string using separators: blanks,

@@ -80,6 +80,7 @@ __all__     = (
 # =============================================================================
 import  ROOT, math  
 from    ostap.core.core   import cpp, Ostap
+from    ostap.core.types  import is_integer
 from    ostap.math.base   import iszero, isequal, doubles 
 # =============================================================================
 
@@ -250,7 +251,7 @@ def _p_getitem_ ( self , i ) :
     >>> x1 = a[1]
     >>> a1 = a[:10]
     """
-    if   isinstance ( i , ( int , long ) ) :
+    if   is_integer ( i ) :
         
         if 0 <= i < self.n () :
             return self.x ( i ) , self.y ( i )
@@ -358,7 +359,7 @@ def _w_getitem_ ( self , i ) :
     >>> x1 = a[1]
     >>> a1 = a[:10]
     """
-    if   isinstance ( i , ( int , long ) ) :
+    if   is_integer ( i ) :
         
         if 0 <= i < self.n () :
             return self.x ( i ) , self.w ( i )
@@ -516,7 +517,7 @@ def _b_getitem_ ( self , i ) :
     >>> x1 = a[1]
     >>> a1 = a[:10]
     """
-    if   isinstance ( i , ( int , long ) ) :
+    if   is_integer ( i ) :
         
         if 0 <= i < self.n () :
             return self.x ( i ) , self.y ( i )

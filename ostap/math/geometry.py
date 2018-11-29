@@ -22,6 +22,9 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.geometry' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
+from ostap.core.types import num_types
+
+## global C++ namespace 
 cpp = cppyy.gbl 
 
 ## C++ namespace Ostap 
@@ -312,7 +315,7 @@ def _v3_mul_ ( self , other ) :
     # VECTOR * VECTOR = NUMBER
     if   isinstance ( other , _V3D ) : return self.Dot ( other )
     # VECTOR * NUMBER = NUMBER 
-    elif isinstance ( other , ( float , int , long ) ) :  
+    elif isinstance ( other , num_types ) :  
         tmp  = _V3D ( self )
         tmp *= other
         return tmp

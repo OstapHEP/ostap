@@ -23,6 +23,8 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg' )
 else                       : logger = getLogger ( __name__            )
 # =============================================================================
+from ostap.math.base  import isequal,iszero
+from ostap.core.types import num_types, is_integer
 
 cpp   = cppyy.gbl
 
@@ -36,7 +38,6 @@ Ostap = cpp.Ostap
 _RM = ROOT.ROOT.Math
 
 a   = Ostap.Math.ValueWithError()
-from ostap.math.base import isequal,iszero
 # =============================================================================
 ## try to pickup the vector
 @staticmethod
@@ -45,6 +46,7 @@ def _vector_ ( i , typ = 'double' ) :
     >>> V3   = Ostap.Math.Vector(3)
     >>> vct  = V3 ()
     """
+    assert is_integer ( i ) and 0 <= i , 'Invalid vector size %s' % i
     v = _RM.SVector ( typ , i )
     return deco_vector ( v ) 
 
@@ -56,6 +58,8 @@ def _matrix_ ( i , j , typ = 'double' ) :
     >>> M3x4   = Ostap.Math.Matrix(3,4)
     >>> matrix = M3x4 ()    
     """
+    assert is_integer ( i ) and 0 <= i , 'Invalid matrix size (%s,%s)' % ( i , j )
+    assert is_integer ( j ) and 0 <= j , 'Invalid matrix size (%s,%s)' % ( i , j )
     m = _RM.SMatrix ( "%s,%d,%d" % ( typ , i , j ) )
     return deco_matrix( m )  
 
@@ -67,6 +71,7 @@ def _sym_matrix_ ( i , typ = 'double' ) :
     >>> SymM3  = Ostap.Math.SymMatrix(3)
     >>> matrix = SymM3 ()
     """
+    assert is_integer ( i ) and 0 <= i , 'Invalid matrix size %s' %  i 
     m = _RM.SMatrix('%s,%d,%d,ROOT::Math::MatRepSym<%s,%d>' %  ( typ , i , i , typ , i ) )
     return deco_symmatrix  ( m ) 
 
@@ -224,7 +229,7 @@ def _linalg_mul_ ( a  , b ) :
     >>> print matrix1 * 2
     """
     ## simple cases: multiply by a constant 
-    if isinstance ( b , ( int , long , float ) ) :
+    if isinstance ( b , num_types ) :
         b  = float( b )
         v  = a.__class__( a )
         v *= b
@@ -251,7 +256,7 @@ def _linalg_rmul_ ( a , b ) :
     >>> print 2 * vector
     >>> print 2 * matrix
     """
-    if isinstance ( b , ( int , long , float ) ) :
+    if isinstance ( b , num_types ) :
         b  = float( b )
         v  = a.__class__( a )
         v *= b
@@ -274,7 +279,7 @@ def _linalg_div_ ( a  , b ) :
     >>> print vector / 2 
     >>> print matrix / 2 
     """
-    if isinstance ( b , ( int , long , float ) ) :
+    if isinstance ( b , num_types ) :
         b  = float( b )
         v  = a.__class__( a )
         v /= b

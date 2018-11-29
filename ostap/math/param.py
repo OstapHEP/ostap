@@ -89,6 +89,7 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Some parameterization utilities')
 # =============================================================================
 from   ostap.core.core   import cpp, Ostap
+from   ostap.core.types  import is_integer, num_types
 import ostap.math.models
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
@@ -99,7 +100,7 @@ def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
     """ Helper function to catch xmin/xmax from histogram/function 
     """
     ## xmin 
-    if not isinstance ( xmin , ( int , long , float ) ) :
+    if not isinstance ( xmin , num_types ) :
         if   hasattr ( func , 'xmin'     ) : xmin = func.xmin     () 
         elif hasattr ( func , 'GetXmin'  ) : xmin = func.GetXmin  ()
         elif hasattr ( func , 'GetXaxis' ) : xmin = func.GetXaxis ().GetXmin()
@@ -112,7 +113,7 @@ def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
             raise AttributeError( "%s: unable to catch xmin %s" % ( name , xmin ) )
         
     ## xmax 
-    if not isinstance ( xmax , ( int , long , float ) ) :
+    if not isinstance ( xmax , num_types ) :
         if   hasattr ( func , 'xmax'     ) : xmax = func.xmax     () 
         elif hasattr ( func , 'GetXmax'  ) : xmax = func.GetXmax  () 
         elif hasattr ( func , 'GetXaxis' ) : xmax = func.GetXaxis ().GetXmax()  
@@ -150,9 +151,8 @@ def legendre_sum ( func , N , xmin , xmax , **kwargs ) :
     see Gaudi::Math::LegendreSum
     """
     from copy import deepcopy
-    
-    if not isinstance ( N , (int,long) ) or 0 > N :
-        raise AttributeError( "legendre_sum: invalid N %s " % N )
+
+    assert is_integer ( N ) and 0 <= N, "legendre_sum: invalid N %s " % N 
 
     xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'legendre_sum' )
 
@@ -203,8 +203,7 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
     see Gaudi::Math::ChebyshevSum
     """
-    if not isinstance ( N , (int,long) ) or 0 > N :
-        raise AttributeError( "chebyshev_sum: invalid N %s " % N )
+    assert is_integer ( N ) and 0 <= N, "chebyshev_sum: invalid N %s " % N 
 
     xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'chebyshev_sum' )
 
@@ -257,8 +256,7 @@ def fourier_sum ( func , N , xmin , xmax , fejer = False ) :
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
     """
-    if not isinstance ( N , (int,long) ) or 0 > N :
-        raise AttributeError( "fourier_sum: invalid N %s " % N )
+    assert is_integer ( N ) and 0 <= N , "fourier_sum: invalid N %s " % N 
 
     xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'fourier_sum' )
 
@@ -324,8 +322,7 @@ def cosine_sum ( func , N , xmin , xmax , fejer = False ) :
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
     """
-    if not isinstance ( N , (int,long) ) or 0 > N :
-        raise AttributeError( "cosine_sum: invalid N %s " % N )
+    assert is_integer ( N ) and 0 <= N , "cosine_sum: invalid N %s " % N 
 
     xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'cosine_sum' )
 
@@ -380,8 +377,7 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
     """
-    if not isinstance ( N , (int,long) ) or 0 > N :
-        raise AttributeError( "bezier_sum: invalid N %s " % N )
+    assert is_integer ( N ) and 0 <= N , "bezier_sum: invalid N %s " % N 
     
     xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'bezier_sum' )
 
@@ -447,8 +443,7 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
     """
-    if not isinstance ( N , ( int , long ) ) or 0 > N :
-        raise AttributeError( "beziereven_sum: invalid N %s " % N )
+    assert is_integer ( N ) and 0 <= N , "beziereven_sum: invalid N %s " % N 
     
     xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'beziereven_sum' )
 
