@@ -17,6 +17,9 @@ import ostap.fitting.roofit
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import Ostap, std, VE, dsID
 from   ostap.logger.utils   import rooSilent 
+import ostap.io.zipshelve   as     DBASE
+from ostap.utils.timing     import timing 
+
 # =============================================================================
 # logging 
 # =============================================================================
@@ -668,8 +671,6 @@ def test_model_16() :
 # =============================================================================
 def test_db() :
     logger.info('Saving all objects into DBASE')
-    import ostap.io.zipshelve   as     DBASE
-    from ostap.utils.timing     import timing 
     with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
