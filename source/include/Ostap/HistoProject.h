@@ -25,7 +25,11 @@ class RooAbsReal ; // RooFit
 namespace Ostap
 {  
   // ==========================================================================
-  typedef ROOT::Experimental::TDataFrame DataFrame ;
+  #if ROOT_VERSION_CODE< ROOT_VERSION(6,14,4)
+    typedef ROOT::Experimental::TDataFrame DataFrame ;
+  #else
+    typedef ROOT::RDataFrame DataFrame ;
+  #endif
   // ==========================================================================
   /** @class HistoProject Ostap/HistoProject.h
    *  Helper class to project Dataset/DataFrame to histogram 
