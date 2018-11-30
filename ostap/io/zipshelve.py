@@ -26,7 +26,7 @@
 # @code
 #
 # >>> import zipshelve  ## import the ZipShelve module 
-# >>> db = zipShelve.open ('a_db', 'n')    ## create new DB
+# >>> db = zipshelve.open ('a_db', 'n')    ## create new DB
 # ...
 # >>> abcde = ...
 # >>> db['some_key'] =  abcde              ## add information to DB
@@ -40,7 +40,7 @@
 # @code
 #
 # >>> import zipshelve  ## import the ZipShelve module 
-# >>> db = zipShelve.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
+# >>> db = zipshelve.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
 # ...
 # >>> for key in db : print key
 # ...
@@ -52,8 +52,8 @@
 #
 # @code
 #
-# >>> import ZipShelve  ## import the ZipShelve module 
-# >>> db = zipShelve.open ('a_db' )    ## access existing dbase in update mode
+# >>> import ziphelve  ## import the ZipShelve module 
+# >>> db = zipshelve.open ('a_db' )    ## access existing dbase in update mode
 # ...
 # >>> for key in db : print key
 # ...
@@ -141,7 +141,7 @@ try:
 except ImportError:
     from  StringIO import StringIO
 # ==============================================================================
-import os
+import os, sys
 import zlib        ## use zlib to compress DB-content 
 import shelve      ## 
 import shutil
@@ -173,7 +173,8 @@ _modes_ = {
     }
 _dbases = []
 # =============================================================================
-## Zipped-version of ``shelve''-database
+## @class ZipShelf
+#  Zipped-version of ``shelve''-database
 #    Modes: 
 #    - 'r' Open existing database for reading only
 #    - 'w' Open existing database for reading and writing
@@ -205,7 +206,15 @@ class ZipShelf(shelve.Shelf):
         if not mode :
             logger.warning("Unknown opening mode '%s', replace with 'c'")
             mode = 'c'
- 
+
+        ## save arguments for pickling....
+        self.__init_args = ( filename    ,
+                             'c' if mode == 'n' else mode ,
+                             protocol    ,
+                             compress    ,
+                             writeback   ,
+                             silent      )
+
         #
         ## expand the actual file name 
         filename  = os.path.expandvars ( filename )
@@ -269,23 +278,56 @@ class ZipShelf(shelve.Shelf):
         
         self.compresslevel = compress
         self.__opened      = True
-
+        self.__mode        = mode
+        
         ## keep in the list of known/opened databases 
         #_dbases.append ( self )
 
-    def filename ( self ) : return self.__filename
-    def opened   ( self ) : return self.__opened
+    ## needed for proper (un)pickling 
+    def __getinitargs__ ( self ) :
+        """for proper (un_pickling"""
+        return self.__init_args
+
+    ## needed for proper (un)pickling 
+    def __getstate__ ( self ) :
+        """for proper (un)pickling"""
+        self.sync() 
+        return {}
+    
+    ## needed for proper (un)pickling 
+    def __setstate__ ( self , dct ) :
+        """for proper (un)pickling"""
+        pass
+    
+    @property 
+    def filename ( self ) :
+        "``filename'' :   the actual fiel name for database"
+        return self.__filename
+
+    @property 
+    def opened   ( self ) :
+        "``open'' : is data base opened?"
+        return self.__opened
+
+    @property
+    def mode    ( self ) :
+        "``mode'' : the actual open-mode for the database"
+
+    @property
+    def protocol( self ) :
+        "``protocol'' : pickling protocol"
+        return self._protocol
 
     ## valid, opened DB 
     def __nonzero__ ( self ) :
-        return self.opened() and not isinstance ( self.dict , shelve._ClosedDict ) and not self.dict is None 
+        return self.opened and not isinstance ( self.dict , shelve._ClosedDict ) and not self.dict is None 
     
     ## destructor 
     def __del__ ( self ) :
         """ Destructor 
         """
         ## close if opened 
-        if self.opened () : self.close()  
+        if self.opened : self.close()  
 
     ## iterator over good keys 
     def ikeys ( self , pattern = '' ) :
@@ -310,7 +352,7 @@ class ZipShelf(shelve.Shelf):
 
     ## list the avilable keys 
     def ls    ( self , pattern = '' ) :
-        """List the avilable keys (patterns included).
+        """List the available keys (patterns included).
         Pattern matching is performed accoriding to
         fnmatch/glob/shell rules [it is not regex!] 
 
@@ -319,13 +361,50 @@ class ZipShelf(shelve.Shelf):
         >>> db.ls ('*MC*')        
         
         """
-        for k in self.ikeys( pattern ): print k
+        n  = os.path.basename ( self.filename )
+        ap = os.path.abspath  ( self.filename ) 
+        ll = getLogger ( n )
+        
+        try :
+            fs = os.path.getsize ( self.filename )
+        except :
+            fs = -1
+            
+        if    fs < 0            : size = "???"
+        elif  fs < 1024         : size = str(fs)
+        elif  fs < 1024  * 1024 :
+            size = '%.2fkB' % ( float ( fs ) / 1024 )
+        elif  fs < 1024  * 1024 * 1024 :
+            size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
+        else :
+            size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
+            
+        ll.info ( 'Database: %s #keys: %d size: %s' % ( ap , len ( self ) , size ) )
+                
+        keys = [] 
+        for k in self.ikeys ( pattern ): keys.append ( k )
+        keys.sort()
+        if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
+        else    : mlen = 2 
+        fmt = ' --> %%-%ds : %%s' % mlen 
+        for k in keys :
+            ss = len ( self.dict[k] ) ##  compressed size 
+            if    ss < 1024 : size = '%7d' % ss 
+            elif  ss < 1024  * 1024 :
+                size = '%7.3f kB' %  ( float ( ss ) / 1024 )
+            elif  ss < 1024  * 1024 * 1024 :
+                size = '%7.3f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
+            else :
+                size = '%7.3f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
+            
+            ll.info ( fmt  % ( k , size ) ) 
+        
         
     ## close and gzip (if needed)
     def close ( self ) :
         """ Close the file (and gzip it if required) 
         """
-        if not self.opened() : return 
+        if not self.opened : return 
         ##
         shelve.Shelf.close ( self )
         self.__opened = False  
@@ -459,11 +538,11 @@ class ZipShelf(shelve.Shelf):
         else :
             kname = '%s.%s' % (  kls.__module__ , kls.__name__ ) 
         
-        if   self and len(self) :
-            return "%s('%s'): %d object(s)" % ( kname , self.filename(), len(self) ) 
+        if   self and len ( self ) :
+            return "%s('%s'): %d object(s)" % ( kname , self.filename , len(self) ) 
         elif self :
-            return "%s('%s'): empty"        % ( kname , self.filename() ) 
-        return "Invalid/Closed %s('%s')"    % ( kname , self.filename() )
+            return "%s('%s'): empty"        % ( kname , self.filename ) 
+        return "Invalid/Closed %s('%s')"    % ( kname , self.filename )
     
     __str__ = __repr__
     
@@ -527,7 +606,7 @@ def _db_rrshift_ ( db , object ) :
 ZipShelf.__rrshift__ = _db_rrshift_
 
 # =============================================================================
-## helper finction to access ZipShelve data base#
+## helper finction to access ZipShelve data base
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
 def open ( filename                                   ,
@@ -558,7 +637,8 @@ def open ( filename                                   ,
 
 
 # =============================================================================
-## TEMPORARY Zipped-version of ``shelve''-database
+## @class TmpZipShelf
+#  TEMPORARY Zipped-version of ``shelve''-database
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
 class TmpZipShelf(ZipShelf):

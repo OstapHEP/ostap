@@ -13,12 +13,13 @@ __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
-    'Sim1D'         , ## simultaneous 1D-fit
-    'combined_data' , ## prepare combined dataset for simultaneous fit
+    'Sim1D'          , ## fit model for simultaneous 1D-fit
+    'combined_data'  , ## prepare combined dataset for the simultaneous fit
+    'combined_hdata' , ## prepare combined binned dataset for the simultaneous fit
     )
 # =============================================================================
 import ROOT, math,  random
-from   ostap.core.core     import Ostap , dsID 
+from   ostap.core.core     import std , Ostap , dsID 
 from   ostap.fitting.basic import PDF , Generic1D_pdf  
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -68,9 +69,19 @@ def _rc_labels_ ( self ) :
 ROOT.RooCategory.labels = _rc_labels_
 
 # =============================================================================
-## create combined  dataset for simultaneous fit
+## Create combined dataset for simultaneous fit
 #  @code
-#  ...
+#  sample = ROOT.RooCategory ( 'sample' , 'sample' , 'cc' , 'zz' )
+#  vars   = ROOT.RooArgSet   ( m2c )
+#  ds_cmb = combined_data ( sample  ,
+#                vars    , { 'cc' : ds_cc ,  'zz' : ds_00 } )
+#  @endcode
+#  - weighted variant:
+#  @code
+#  wvars = ROOT.RooArgSet ( m2c , SS_sw ) 
+#  dsw_cmb   = combined_data ( sample ,
+#                 wvars  , { 'cc' : dsn_cc ,  'zz' : dsn_00 } ,
+#                 args = ( ROOT.RooFit.WeightVar( 'SS_sw' ) , ) )
 #  @endcode
 def combined_data ( sample        ,
                     varset        , 
@@ -78,6 +89,22 @@ def combined_data ( sample        ,
                     name     = '' ,
                     title    = '' ,
                     args     = () ) :
+    """
+     Create combined  dataset for simultaneous fit
+
+     >>> sample = ROOT.RooCategory ( 'sample' , 'sample' , 'cc' , 'zz' )
+     >>> vars   = ROOT.RooArgSet   ( m2c )
+     >>> ds_cmb = combined_data ( sample  ,
+     ...          vars    , { 'cc' : ds_cc ,  'zz' : ds_00 } )
+     
+     Weighted variant:
+     
+     >>> wvars = ROOT.RooArgSet ( m2c , SS_sw ) 
+     >>> dsw_cmb   = combined_data ( sample ,
+     ...             wvars  , { 'cc' : dsn_cc ,  'zz' : dsn_00 } ,
+     ...             args = ( ROOT.RooFit.WeightVar( 'SS_sw' ) , ) )
+     
+     """
     
     labels = sample.labels()
     
@@ -101,8 +128,39 @@ def combined_data ( sample        ,
     name  = name  if name  else dsID()
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
 
-    args = args + tuple ( largs )  
-    return ROOT.RooDataSet ( name , title , varset , *args )
+    args = args + tuple ( largs )
+
+    vars = ROOT.RooArgSet()
+    if   isinstance ( varset , ROOT.RooArgSet  ) : vars = varset
+    elif isinstance ( varset , ROOT.RooAbsReal ) : vars.add ( varset )
+    else :
+        for v in varset : vars.add ( v )
+        
+    return ROOT.RooDataSet ( name , title , vars , *args )
+
+# =============================================================================
+## create combined binned dataset for simultaneous fit
+def combined_hdata ( sample        ,
+                     varset        ,
+                     histograms    ,
+                     name     = '' ,
+                     title    = '' ) :
+
+    MAP  = std.map  ( 'std::string'       , 'TH1*' )
+    PAIR = std.pair ( 'const std::string' , 'TH1*' )
+    mm   = MAP()
+    for key in histograms : 
+        mm.insert ( PAIR ( key , histograms [ key ] ) ) 
+        
+    name  = name  if name  else dsID()
+    title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
+
+    varlst = ROOT.RooArgList()
+    if isinstance ( varset , ROOT.RooAbsReal ) : varlst.add ( varset )
+    else :  
+        for v in varset : varlst.add ( v )
+    
+    return ROOT.RooDataHist ( name , title , varlst , sample  , mm ) 
     
 # =============================================================================        
 ## @class Sim1D
