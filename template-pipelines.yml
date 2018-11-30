@@ -35,9 +35,9 @@ jobs:
      docker cp  ostap-build:/osya/build .
     displayName: 'build stage'
   - script: |
-     docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/test"
+     docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/test ${{ parameters.LCG }}"
     displayName: 'test stage'
-   - script: |
+  - script: |
      docker cp  ostap-build:/osya/build .
     condition: always()
     displayName: 'copy build result'
