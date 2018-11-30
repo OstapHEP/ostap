@@ -27,7 +27,7 @@ add_subdirectory(source)
 add_subdirectory(ostap)
 add_subdirectory(examples)
 add_subdirectory(scripts)
-
+configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
 # first we can indicate the documentation build as an option and set it to ON by default
 option(BUILD_DOC "Build documentation?" ON)
 
