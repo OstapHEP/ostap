@@ -666,7 +666,7 @@ class TmpZipShelf(ZipShelf):
     ## close and delete the file 
     def close ( self )  :
         ## close the shelve file
-        fname = self.filename() 
+        fname = self.filename 
         ZipShelf.close ( self )
         ## delete the file 
         if os.path.exists ( fname ) :
