@@ -556,7 +556,8 @@ class PDF (MakeVar) :
     def draw ( self ,
                dataset               = None ,
                nbins                 = 100  ,   ## Frame binning
-               silent                = True ,   ## silent mode ?               
+               silent                = True ,   ## silent mode ?
+               style                 = None ,   ## use another style ? 
                **kwargs                     ) :
         """  Visualize the fits results
         >>> r,f = model.draw ( dataset )
@@ -593,10 +594,13 @@ class PDF (MakeVar) :
         #
         
         import ostap.plotting.fit_draw as FD
+
+        from ostap.plotting.style import useStyle 
+        
         #
         ## again the context
         # 
-        with roo_silent ( silent ) :
+        with roo_silent ( silent ) , useStyle ( style ) :
 
             drawvar = self.draw_var if self.draw_var else self.xvar  
 
@@ -716,7 +720,13 @@ class PDF (MakeVar) :
     #  histo = ...
     #  r,f = model.fitHisto ( histo , draw = True ) 
     #  @endcode 
-    def fitHisto ( self , histo , draw = False , silent = False , density = True , chi2 = False , args = () , **kwargs ) :
+    def fitHisto ( self            ,
+                   histo           ,
+                   draw    = False ,
+                   silent  = False ,
+                   density = True  ,
+                   chi2    = False ,
+                   args    = () , **kwargs ) :
         """Fit the histogram (and draw it)
 
         >>> histo = ...

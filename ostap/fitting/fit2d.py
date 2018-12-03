@@ -115,8 +115,12 @@ class PDF2 (PDF) :
         if isinstance ( dataset , ROOT.TH2 ) :
             density = kwargs.pop ( 'density' , True  ) 
             chi2    = kwargs.pop ( 'chi2'    , False ) 
-            return self.fitHisto ( dataset   , draw , silent , density , chi2 , *args , **kwargs )
-
+            return self.fitHisto ( dataset   ,
+                                   draw    = draw    ,
+                                   silent  = silent  ,
+                                   density = density ,
+                                   chi2    = chi2    ,
+                                   args    =  args   , **kwargs )
 
         result,f = PDF.fitTo ( self            ,
                                dataset         ,
@@ -129,11 +133,11 @@ class PDF2 (PDF) :
             return result , None
         
         ## 2D 
-        if 1< nbins and isinstance ( ybins , ( int , long ) ) and 1<ybins :
+        if 1 < nbins and isinstance ( ybins , ( int , long ) ) and 1 < ybins :
             return result, self.draw ( None , dataset , nbins , ybins , silent = silent )
         
-        if     1<= nbins : return result, self.draw1 ( dataset ,  nbins , silent = silent )
-        elif  -1>= nbins : return result, self.draw2 ( dataset , -nbins , silent = silent )
+        if     1 <= nbins : return result, self.draw1 ( dataset ,  nbins , silent = silent )
+        elif  -1 >= nbins : return result, self.draw2 ( dataset , -nbins , silent = silent )
 
         ## return 2D 
         return result, self.draw ( None , dataset , silent = silent )
@@ -171,12 +175,12 @@ class PDF2 (PDF) :
             with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range[0] , in_range[1] )
             in_range = 'aux_rng2'
             
-        return self.draw ( self.xvar           , 
-                           dataset             ,
-                           nbins    = nbins    ,
-                           ybins    = 20       , ## fake 
-                           silent   = silent   ,
-                           in_range = in_range , **kwargs )
+        return self.draw ( drawvar  = self.xvar , 
+                           dataset  = dataset   ,
+                           nbins    = nbins     ,
+                           ybins    = 20        , ## fake 
+                           silent   = silent    ,
+                           in_range = in_range  , **kwargs )
     
     # =========================================================================
     ## draw the projection over 2nd variable
@@ -212,12 +216,12 @@ class PDF2 (PDF) :
             with rooSilent ( 3 ) : self.xvar.setRange ( 'aux_rng1' , in_range[0] , in_range[1] )
             in_range = 'aux_rng1'
 
-        return self.draw ( self.yvar           ,
-                           dataset             ,
-                           nbins    = nbins    ,
-                           ybins    = 20       , ## fake
-                           silent   = silent   ,
-                           in_range = in_range , **kwargs )
+        return self.draw ( drawvar  = self.yvar ,
+                           dataset  = dataset   ,
+                           nbins    = nbins     ,
+                           ybins    = 20        , ## fake
+                           silent   = silent    ,
+                           in_range = in_range  , **kwargs )
 
     # =========================================================================
     ## draw as 2D-histograms 

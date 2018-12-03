@@ -99,7 +99,8 @@ class PDF3 (PDF2) :
     def fitTo ( self           , 
                 dataset        ,
                 silent = False ,
-                refit  = False , *args , **kwargs ) :
+                refit  = False ,
+                args   = ()    , **kwargs ) :
         """
         Perform the actual fit (and draw it)
         >>> r,f = model.fitTo ( dataset )
@@ -110,15 +111,20 @@ class PDF3 (PDF2) :
         if isinstance ( dataset , ROOT.TH3 ) :
             density = kwargs.pop ( 'density' , True  ) 
             chi2    = kwargs.pop ( 'chi2'    , False ) 
-            return self.fitHisto ( dataset   , draw , silent , density , chi2 , *args , **kwargs )
-
+            return self.fitHisto ( dataset   ,
+                                   draw    = draw    ,
+                                   silent  = silent  ,
+                                   density = dentity ,
+                                   chi2    =  chi2   , args = args , **kwargs )
         
         result,f = PDF2.fitTo ( self    ,
-                                dataset ,
-                                False   , ## false here!
-                                20      , ## fake here..
-                                silent  ,
-                                refit   , *args , **kwargs )
+                                dataset = dataset ,
+                                draw    = False  , ## False here!
+                                nbins   = 50     , ## fake  here!
+                                ybins   = 20     , ## fake  here!
+                                silent  = silent ,
+                                refit   = refit  ,
+                                args    = args , **kwargs )
         
         return result
     
@@ -164,12 +170,12 @@ class PDF3 (PDF2) :
         if in_range2 : in_range.append( in_range2 )
         if in_range3 : in_range.append( in_range3 )
         in_ranage = tuple( in_range ) 
-        return self.draw ( self.xvar , 
-                           dataset   ,
-                           nbins     ,
-                           20        , ## fake 
-                           silent    ,
-                           in_range = in_range , **kwargs )
+        return self.draw ( drawvar  = self.xvar , 
+                           dataset  = dataset   ,
+                           nbins    = nbins     ,
+                           ybins    = 20        , ## fake 
+                           silent   = silent    ,
+                           in_range = in_range  , **kwargs )
 
 
     # =========================================================================
@@ -214,12 +220,12 @@ class PDF3 (PDF2) :
         if in_range1 : in_range.append( in_range1 )
         if in_range3 : in_range.append( in_range3 )
         in_ranage = tuple( in_range ) 
-        return self.draw ( self.yvar , 
-                           dataset   ,
-                           nbins     ,
-                           20        , ## fake 
-                           silent    ,
-                           in_range = in_range , **kwargs )
+        return self.draw ( drawvar  = self.yvar , 
+                           dataset  = dataset   ,
+                           nbins    = nbins     ,
+                           ybins    = 20        , ## fake 
+                           silent   = silent    ,
+                           in_range = in_range  , **kwargs )
 
 
     # =========================================================================
@@ -263,12 +269,12 @@ class PDF3 (PDF2) :
         if in_range1 : in_range.append( in_range1 )
         if in_range2 : in_range.append( in_range2 )
         in_ranage = tuple( in_range ) 
-        return self.draw ( self.zvar , 
-                           dataset   ,
-                           nbins     ,
-                           20        , ## fake 
-                           silent    ,
-                           in_range = in_range , **kwargs )
+        return self.draw ( drawvar  = self.zvar , 
+                           dataste  = dataset   ,
+                           nbins    = nbins     ,
+                           ybins    = 20        , ## fake 
+                           silent   = silent    ,
+                           in_range = in_range  , **kwargs )
 
     # =========================================================================
     ## fit the 3D-histogram (and draw it)
