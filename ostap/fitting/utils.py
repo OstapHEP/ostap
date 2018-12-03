@@ -186,11 +186,15 @@ def fitArgs ( name , dataset = None , *args , **kwargs ) :
                             'PARAMS'      ,
                             'PARAMETER'   ,
                             'PARAMETERS'  ) :
-            if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
-            elif isinstance ( a , (tuple,list)   ) :
-                for ia in a :
-                    if isinstance ( ia , ROOT.RooCmdArg ) : _args.append ( ia )
-                    else : logger.warning( '%s skip keyword argument [%s] : %s' % ( name , k , a ) )
+            if   isinstance ( a , ROOT.RooCmdArg   ) : _args.append ( a )
+            elif isinstance ( a , ROOT.RooArgSet   ) :
+                _args.append ( ROOT.RooFit.ExternalConstraints  ( a ) )
+            elif isinstance ( a , ROOT.RooAbsReal  ) :
+                _args.append ( ROOT.RooFit.ExternalConstraints  ( ROOT.RooArgSet ( a ) ) )
+            elif isinstance ( a , ( tuple , list ) ) :
+                c = ROOT.RooArgSet ( )
+                for ia in a : c.add ( ia )
+                _args.append (  ROOT.RooFit.ExternalConstraints  ( c ) )
             else : logger.warning( '%s skip keyword argument %s: %s' % ( name , k , a ) )
                                         
         else : 

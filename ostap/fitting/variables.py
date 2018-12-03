@@ -17,11 +17,16 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'SETVAR'  , ## context manager to preserve the current value for RooRealVar
+    'SETVAR'          , ## context manager to preserve the current value for RooRealVar
+    'scale_var'       , ## construct "easy" RooFormulaVar  
+    'add_var'         , ## construct "easy" RooFormulaVar
+    'make_constraint' , ## create soft Gaussian constraint
+    'soft_constraint' , ## create soft Gaussian constraint
     ) 
 # =============================================================================
 import ROOT, random
-from   ostap.core.core import VE
+from   ostap.core.core  import VE
+from   ostap.core.types import num_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -160,44 +165,90 @@ _new_methods_ += [
     ]
 
 
+
+# =============================================================================
+## Prepare ``soft'' gaussian constraint for the given variable
+#  @code 
+#  var  = ...                                      ## the variable 
+#  soft = var.soft_constraint( VE ( 1 , 0.1**2 ) ) ## create soft constraint
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-23
+def soft_constraint ( var , value , name = '' ,  title = '' ) :
+    """Prepare ``soft'' gaussian constraint for the variable
+    
+    >>> var  = ...                                   ## the variable 
+    >>> soft = var.soft_constraint ( VE(1,0.1**2 ) ) ## create soft constraint
+    """
+    #
+    ## create gaussian constrains
+    #
+    assert isinstance ( var   , ROOT.RooAbsReal ) ,\
+           "Invalid ``v'': %s/%s"  % ( var , type ( var ) )               
+    assert isinstance ( value , VE ),\
+           "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+
+    name  = name  if name  else 'Constr(%s)'                     %   var.GetName()
+    title = title if title else 'Gauissian constraint(%s) at %s' % ( var.GetName() , value )
+    #
+
+    val = ROOT.RooFit.RooConst ( value.value () )
+    err = ROOT.RooFit.RooConst ( value.error () )
+        
+    gauss = ROOT.RooGaussian ( name , title , var , val , err )
+    
+    if not hasattr ( gauss , '_constraint_aux' ) : gauss._constraint_aux = []
+
+    gauss._constraint_aux.append ( val )
+    gauss._constraint_aux.append ( err )
+
+    if not hasattr ( var , '_constraint_aux' ) : var._constraint_aux = []
+    
+    var._constraint_aux.append ( val   )
+    var._constraint_aux.append ( err   )
+    var._constraint_aux.append ( gauss )
+    
+    var._constraint_error   = err
+    var._constraint_gauss   = gauss 
+    
+    return  gauss 
+
 # =============================================================================
 ## Prepare ``soft'' gaussian constraint for the given variable
 #  @code 
 #    >>> var     = ...                            ## the variable 
-#    >>> extcntr = var.constaint( VE(1,0.1**2 ) ) ## create constrains 
+#    >>> extcntr = var.constraint( VE(1,0.1**2 ) ) ## create constrains 
 #    >>> model.fitTo ( ... , extcntr )            ## use it in the fit 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-23
-def _rar_make_constraint_ ( v , value ) :
+def make_constraint ( var , value , name = '' ,  title = '' ) :
     """Prepare ``soft'' gaussian constraint for the variable
     
     >>> var     = ...                            ## the variable 
     >>> extcntr = var.constaint( VE(1,0.1**2 ) ) ## create constrains 
     >>> model.fitTo ( ... , extcntr )            ## use it in the fit 
     """
-    #
-    #
-    ## create gaussian constrains
-    #
-    vn       = 'Constr(%s)' % v.GetName()
-    vt       = 'Gauissian constraint(%s) at %s' % ( v.GetName() , value )
-    #
-    v._cvv   = ROOT.RooFit.RooConst ( value.value () )  ## NB! 
-    v._cve   = ROOT.RooFit.RooConst ( value.error () )  ## NB! 
-    v._cntr  = ROOT.RooGaussian     ( vn , vt , v , v._cvv , v._cve )
-    #
-    ## keep it 
-    v._cntrs = ROOT.RooArgSet       ( v._cntr )
-    #
-    return ROOT.RooFit.ExternalConstraints ( v._cntrs ) 
 
-ROOT.RooAbsReal. constraint = _rar_make_constraint_
+    ## create the gaussian constraint
+    gauss  = soft_constraint ( var , value , name ,  title ) 
+
+    cnts   = ROOT.RooArgSet ( gauss )
+
+    if not hasattr ( var , '_constraint_aux' ) : var._constraint_aux = []
+    
+    var   ._constraint_aux.append ( cnts )
+
+    return ROOT.RooFit.ExternalConstraints  (  cnts )
+
+
+ROOT.RooAbsReal. soft_constraint = soft_constraint
+ROOT.RooAbsReal.      constraint = make_constraint
 
 _new_methods_ += [
-    ROOT.RooAbsReal. constraint 
+    ROOT.RooAbsReal. soft_constraint , 
+    ROOT.RooAbsReal.      constraint 
     ]
-
 
 # ============================================================================
 ## make a histogram for RooRealVar
@@ -659,6 +710,110 @@ for t in ( ROOT.RooAbsReal       ,
 
     if hasattr ( t , 'getVal' ) and not hasattr ( t , '__float__' ) :
         t.__float__ = lambda s : s.getVal()
+
+
+# =============================================================================
+## 
+def _rar_name_ ( vname ) :
+    #
+    vname = vname.replace('(','Open'  )
+    vname = vname.replace(')','Close' )
+    vname = vname.replace('.','stop'  )
+    #
+    return vname 
+
+# =============================================================================
+## construct (on-flight) RooFormularVar
+#  @code
+#  var1 = ...
+#  var2 = ...
+#  var3 = var1.scale_var ( var2 )
+#  var4 = var1.scale_var ( 2.0  )    
+#  @endcode 
+def scale_var ( var1 , var2 , name = '' , title = '' ) :
+    """Construct (on-flight) RooFormularVar:
+    >>> var1 = ...
+    >>> var2 = ...
+    >>> var3 = var1.scale_var ( var2 )
+    >>> var4 = var1.scale_var ( 2.0  )    
+    """
+    
+    f1 = isinstance ( var1 , num_types )
+    f2 = isinstance ( var2 , num_types )
+    
+    if   f1 and f2 :
+        res  = var1 * var2 
+        return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
+    elif f1 : 
+        var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+        return scale_var ( var1 , var2 , name , title )
+    elif f2 : 
+        var2 = ROOT.RooConstVar ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+        return scale_var ( var1 , var2 , name , title )
+    
+    vnames = var1.name , var2.name 
+    
+    if not name  : name   = 'Product_%s_%s'  % vnames 
+    if not title : title  = '(%s)times(%s)'  % vnames 
+    
+    formula = '(%s*%s)' % vnames
+    varlist = ROOT.RooArgList    ( var1 , var2                     )
+    result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+    #
+    result._varlist = [ var1 , var2 , varlist ]
+    #
+    return result
+
+# =============================================================================
+## construct (on-flight) RooFormularVar
+#  @code
+#  var1 = ...
+#  var2 = ...
+#  var3 = var1.add_var ( var2 )
+#  var4 = var1.add_var ( 2.0  )    
+#  @endcode 
+def add_var ( var1 , var2 , name = '' , title = '' ) :
+    """Construct (on-flight) RooFormularVar:
+    >>> var1 = ...
+    >>> var2 = ...
+    >>> var3 = var1.add_var ( var2 )
+    >>> var4 = var1.add_var ( 2.0  )    
+    """
+    
+    f1 = isinstance ( var1 , num_types )
+    f2 = isinstance ( var2 , num_types )
+    
+    if   f1 and f2 :
+        res  = var1 + var2 
+        return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
+    elif f1 : 
+        var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+        return add_var ( var1 , var2 , name , title )
+    elif f2 : 
+        var2 = ROOT.RooConstVar ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+        return add_var ( var1 , var2 , name , title )
+    
+    vnames = var1.name , var2.name 
+    
+    if not name  : name   = 'Sum_%s_%s'  % vnames 
+    if not title : title  = '(%s)+(%s)'  % vnames 
+    
+    formula = '(%s+%s)' % vnames
+    varlist = ROOT.RooArgList    ( var1 , var2                     )
+    result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+    #
+    result._varlist = [ var1 , var2 , varlist ]
+    #
+    return result
+
+
+ROOT.RooAbsReal.scale_var = scale_var
+ROOT.RooAbsReal.add_var   = add_var
+
+_new_methods_ += [
+    ROOT.RooAbsReal. scale_var ,
+    ROOT.RooAbsReal.   add_var ,    
+    ]
 
 # =============================================================================
 ## @class SETVAR
