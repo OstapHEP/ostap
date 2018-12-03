@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-. /cvmfs/lhcb.cern.ch/lib/group_login.sh
-source /cvmfs/sft.cern.ch/lcg/views/LCG_93/${CMTCONFIG}/setup.sh 
+LCG=$1
+source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh 
 mkdir build
 cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-source /cvmfs/sft.cern.ch/lcg/views/LCG_93/${CMTCONFIG}/setup.sh
+LCG=$1
+source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source build/INSTALL/thisostap.sh 
 cd build 
 ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j 16
