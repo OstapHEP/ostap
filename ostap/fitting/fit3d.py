@@ -27,7 +27,7 @@ __all__     = (
 import ROOT, random
 from   ostap.core.core      import dsID , VE , Ostap 
 from   ostap.logger.utils   import roo_silent , rooSilent
-from   ostap.fitting.utils  import Adjust3D , H3D_dset , component_similar , component_clone
+from   ostap.fitting.utils  import H3D_dset , component_similar , component_clone
 from   ostap.fitting.basic  import PDF  , Flat1D 
 from   ostap.fitting.fit2d  import PDF2 , Model2D 
 from   ostap.fitting.roofit import SETVAR
@@ -319,52 +319,6 @@ class PDF3 (PDF2) :
             else    : return self.fitTo     ( data              ,
                                               silent  = silent  ,
                                               args    =  args   , **kwargs ) 
-
-    # =========================================================================
-    ## adjust PDF a little bit to avoid zeroes
-    #  A tiny  ``flat'' component is added and the orginal PDF is replaced by a new compound PDF.
-    #  The fraction of added  component is fixed and defined by ``value''
-    #  @code
-    #  >>> pdf = ...
-    #  >>> pdf.adjust ( 1.e-6 )
-    #  @endcode
-    #  The  fraction can be changed and/or relesed:
-    #  @code
-    #  >>> pdf.adjustment.fraction = 1.e-4    ## release it
-    #  >>> pdf.adjustment.fraction.release()  ## allow to  vary in the fit 
-    #  @endcode 
-    #  The original PDF is stored as:
-    #  @code
-    #  >>> orig_pdf = pdf.adjustment.old_pdf 
-    #  @endcode
-    def adjust ( self , value =  1.e-5 ) :
-        """``adjust'' PDF a little bit to avoid zeroes
-        A tiny  ``flat'' component is added and the orginal PDF is replaced by a new compound PDF.
-        The fraction of added  component is fixed and defined by ``value''
-
-        >>> pdf = ...
-        >>> pdf.adjust ( 1.e-6 )
-
-        The  fraction can be changed/relesed
-
-        >>> pdf.adjustment.fraction = 1.e-4    ## change the value 
-        >>> pdf.adjustment.fraction.release()  ## release it, allow to vary in the fit 
-        
-        The original PDF is stored as:
-        
-        >>> orig_pdf = pdf.adjustment.old_pdf 
-        
-        """
-        if self.adjustment :
-            self.warning ( "PDF is already adjusted, skip it!")
-            return
-
-        ## create adjustment object and  use it to adjust PDF:
-        self.__adjustment = Adjust3D ( self.name ,
-                                       self.xvar , self.yvar , self.zvar ,
-                                       self.pdf  , value )
-        ## replace the original PDF  with  adjusted one:
-        self.pdf          = self.__adjustment.pdf
 
     # =========================================================================
     ## generate toy-sample according to PDF

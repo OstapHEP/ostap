@@ -32,7 +32,7 @@ from   ostap.core.types     import is_good_number, is_integer
 from   ostap.fitting.roofit import SETVAR, PDF_fun
 from   ostap.logger.utils   import roo_silent   , rootWarning 
 from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , numcpu   , 
-                                     fit_status , cov_qual , Adjust1D , H1D_dset ) 
+                                     fit_status , cov_qual , H1D_dset ) 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -85,7 +85,6 @@ class PDF (MakeVar) :
             
         self.__alist1     = ROOT.RooArgList()
         self.__alist2     = ROOT.RooArgList()
-        self.__adjustment = None
         self.__config     = {}
         self.__pdf        = None
 
@@ -257,11 +256,6 @@ class PDF (MakeVar) :
         return self.__crossterms2
 
     @property
-    def  adjustment ( self ) :
-        """``adjustement'' object for the pdf (``None'' if no adjustment was performed)"""
-        return self.__adjustment 
-
-    @property
     def histo_data  ( self ):
         """Histogram representation as DataSet (RooDataSet)"""
         return self.__histo_data
@@ -309,10 +303,6 @@ class PDF (MakeVar) :
         KLASS = self.__class__
         cloned = KLASS ( **conf )
         
-        ## if PDF is adjusted, adjust it!
-        if self.adjustment :
-            cloned.adjust ( self.adjustment.fraction )
-            
         return cloned 
 
     # =========================================================================
@@ -329,50 +319,6 @@ class PDF (MakeVar) :
         >>> ypdf = copy.copy ( xpdf ) 
         """
         return self.clone()
-
-    # =========================================================================
-    ## adjust PDF a little bit to avoid zeroes
-    #  A tiny  ``flat'' component is added and the orginal PDF is replaced by a new compound PDF.
-    #  The fraction of added  component is fixed and defined by ``value''
-    #  @code
-    #  >>> pdf = ...
-    #  >>> pdf.adjust ( 1.e-6 )
-    #  @endcode
-    #  The  fraction can be changed and/or relesed:
-    #  @code
-    #  >>> pdf.adjustment.fraction = 1.e-4    ## release it
-    #  >>> pdf.adjustment.fraction.release()  ## allow to  vary in the fit 
-    #  @endcode 
-    #  The original PDF is stored as:
-    #  @code
-    #  >>> orig_pdf = pdf.adjustment.old_pdf 
-    #  @endcode
-    def adjust ( self , value =  1.e-5 ) :
-        """``adjust'' PDF a little bit to avoid zeroes
-        A tiny  ``flat'' component is added and the orginal PDF is replaced by a new compound PDF.
-        The fraction of added  component is fixed and defined by ``value''
-
-        >>> pdf = ...
-        >>> pdf.adjust ( 1.e-6 )
-
-        The  fraction can be changed/relesed
-
-        >>> pdf.adjustment.fraction = 1.e-4    ## change the value 
-        >>> pdf.adjustment.fraction.release()  ## release it, allow to vary in the fit 
-        
-        The original PDF is stored as:
-        
-        >>> orig_pdf = pdf.adjustment.old_pdf 
-        
-        """
-        if self.adjustment :
-            self.warning ( "PDF is already adjusted, skip it!")
-            return
-
-        ## create adjustment object and  use it to adjust PDF:
-        self.__adjustment = Adjust1D ( self.name , self.xvar , self.pdf , value )
-        ## replace original PDF  with  adjusted one:
-        self.pdf          = self.__adjustment.pdf
 
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
@@ -857,7 +803,7 @@ class PDF (MakeVar) :
         result = nll
 
         ## make profile? 
-        if profile :
+        if not profile :
             avar    = ROOT.RooArgSet    (  var ) 
             profile = nll.createProfile ( avar )
             result  = profile

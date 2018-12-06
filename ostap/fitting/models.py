@@ -208,9 +208,6 @@ __all__ = (
     'H2D_dset'          , ## convertor of 2D-histogram to dataset 
     'H2D_pdf'           , ## convertor of 2D-histogram to PDF 
     #
-    'Adjust'            , ## adjust PDF to avoid zeroes (well, actually add a flat component)
-    'Convolution'       , ## helper uitlity to build convolution 
-    # 
     'Fit1D'             , ## generic model for                1D-fit
     'Fit2D'             , ## generic model for                2D-fit
     'Fit2DSym'          , ## generic model for (symmetric)    2D-fit
@@ -258,14 +255,16 @@ logger.debug ("Import 3D-fit machinery            from ``fit3d''"        )
 from ostap.fitting.fit3d         import *
 logger.debug ("Import 3D background        models from ``models_3d''"    )
 from ostap.fitting.models_3d     import *  
-logger.debug ("Import convolution          models from ``convoltuion''"  )
-from ostap.fitting.convolution   import *  
 logger.debug ("Import simultaneous fit            from ``simfit''"       )
 from ostap.fitting.simfit        import Sim1D
-logger.debug ("Import PyPDF                       from ``pypdf''"        )
-from ostap.fitting.pypdf         import PyPDF
+logger.debug ("Import convolution          models from ``convolution''"  )
+from ostap.fitting.convolution   import *  
+logger.debug ("Import adjustment           models from ``adjust''"       )
+from ostap.fitting.adjust        import *  
 logger.debug ("Import modifiers                   from ``modifiers''"    )
 from ostap.fitting.modifiers     import *
+logger.debug ("Import PyPDF                       from ``pypdf''"        )
+from ostap.fitting.pypdf         import PyPDF
 
 models = []
 from ostap.fitting.signals       import models as _models 

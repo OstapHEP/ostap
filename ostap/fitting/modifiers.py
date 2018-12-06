@@ -196,7 +196,18 @@ class Modify1D_pdf(Product1D_pdf) :
             'xmax'  : xmin       ,
             'title' : self.title ,            
             }
-        
+
+    @property
+    def old_pdf ( self ):
+        """``old_pdf''  : original (non-modifier) PDF"""
+        return self.__old_pdf 
+    
+    ## redirect any other attributes to original PDF
+    def __getattr__ ( self , attr ) :
+        """Get all extra attributes from the original PDF"""
+        opdf = self.pdf1 
+        return  getattr ( opdf , attr )
+
 # =============================================================================
 if '__main__' == __name__ : 
 

@@ -18,7 +18,8 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
-from   ostap.fitting.basic import PDF, Generic1D_pdf  
+from   ostap.fitting.basic import PDF, Generic1D_pdf
+from   ostap.core.types    import num_types ,  integer_types 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.convolution' )
@@ -52,16 +53,21 @@ class Convolution(object):
                    name              ,
                    pdf               ,   ## the PDF to be convoluted 
                    xvar              ,   ## the axis variable
-                   resolution        ,   ## the    resolution
+                   resolution        ,   ## the resolution
                    useFFT  = True    ,   ## use FFT ? 
-                   nbins   = 50000   ,   ##  #bins for FFT
-                   buffer  = 0.25    ,   ## buffer fraction ## setBufferFraction
+                   nbins   = 5000    ,   ## numbr of bins for FFT
+                   buffer  = 0.25    ,   ## buffer fraction use for setBufferFraction
                    nsigmas = 6       ) : ## number of sigmas for setConvolutionWindow
 
         ## the axis 
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
+        
         self.__xvar   = xvar
-        self.__useFFT = True if  useFFT else False
+        self.__useFFT = True if useFFT else False
+
+        self.__arg_pdf        = pdf
+        self.__arg_resolution = resolution
+        self.__arg_xvar       = xvar
         
         ## pdf itself 
         if   isinstance ( pdf , PDF            ) : self.__old_pdf = pdf
@@ -71,35 +77,37 @@ class Convolution(object):
             raise AttributeError("Convolution: invalid ``pdf'' %s/%s"  % ( pdf , type ( pdf ) ) )
         
         ## resolution  function 
-        if   isinstance ( resolution , PDF            ) : self.__resolution = resolution
+        if   isinstance ( resolution , PDF            ) :
+            self.__resolution = resolution
         elif isinstance ( resolution , ROOT.RooAbsPdf ) :
             self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar ) 
         else :
             ## use   Gaussial resolution
             import ostap.fitting.resolution as OFR 
-            self.__resolution = OFR.ResoGauss ( 'ResoGauss' + name ,
-                                                self.__xvar        ,
-                                                sigma = resolution ,
-                                                mean  = None       )
-
+            self.__resolution = OFR.ResoGauss ( 'Resolution' + name ,
+                                                self.__xvar         ,
+                                                sigma = resolution  ,
+                                                mean  = None        )
         self.__nbins   = nbins
         self.__buffer  = buffer
         self.__nsigmas = nsigmas
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
-            assert isinstance ( nbins  , (long,int) ) and 100  < nbins          , \
-                   "Invalid ``nbins''  parameter  %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
-            assert isinstance ( buffer ,  float     ) and 0.1  < buffer < 0.9   , \
-                   "Invalid ``buffer'' parameter  %s/%s for ``setBufferFraction''"     % ( buffer , type ( buffer ) )
+            assert isinstance ( nbins  , integer_types ) and 100   < nbins         , \
+                   "Invalid ``nbins''  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
+            assert isinstance ( buffer ,  float        ) and 0.05  < buffer < 0.95 , \
+                   "Invalid ``buffer'' parameter %s/%s for ``setBufferFraction''"   % ( buffer , type ( buffer ) )
                    
-            if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() : 
-                mn , mx = xvar.minmax()
+            if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() :
+                mn , mx = self.xvar.minmax()
                 dm  = mx - mn
                 sv  = self.__resolution.sigma.getVal() 
-                dm /= sv 
-                self.__nbins  = max ( self.__nbins , 100 * int ( dm ) )               
-                logger.debug('Convolution: choose #bins %d' % self.__nbins ) 
+                dm /= sv
+                nb  = 100 * ( int ( dm ) + 1  )
+                if nb > self.__nbins : 
+                    self.__nbins  = nb       
+                    logger.info('Convolution: choose #bins %d' % self.__nbins ) 
                 
             self.__xvar.setBins ( self.__nbins , 'cache' )
             
@@ -109,12 +117,11 @@ class Convolution(object):
                 self.__xvar            ,
                 self.__old_pdf    .pdf ,
                 self.__resolution .pdf )            
-            self.__pdf.setBufferFraction ( 0.25 )
+            self.__pdf.setBufferFraction ( self.buffer )
             
         else :           ##  Use plain numerical integration (could be slow)
-
             
-            assert isinstance ( nsigmas  , ( long , int , float ) ) and 2 < nsigmas , \
+            assert isinstance ( nsigmas  , num_types ) and 2.5 <= nsigmas , \
                    "Invalid ``nsigmas''  parameter  %s/%s for ``setConvolutionWindow''"  % ( nsigmas , type ( nsigmas ) )
             
             self.__pdf = ROOT.RooNumConvPdf (
@@ -182,34 +189,45 @@ class Convolution_pdf(PDF) :
     >>> pdfc = Convolution_pdf(  'C' , pdf  , xvar = ... , resolution = ... , useFFT = True )
     """
     def __init__ ( self              ,
-                   name              ,   ## the name 
                    pdf               ,   ## the PDF to be convoluted 
-                   resolution        ,   ## the resolution
+                   resolution        ,   ## the convolution/resolution
                    xvar    = None    ,   ## the axis varable
                    useFFT  = True    ,   ## use  FastFourierTransform?
                    nbins   = 1000000 ,   ## #bins for FFT
                    buffer  = 0.25    ,   ## buffer fraction ## setBufferFraction
-                   nsigmas = 6       ) : ## number of sigmas for setConvolutionWindow
+                   nsigmas = 6       ,   ## number of sigmas for setConvolutionWindow
+                   name    = ''      ) : ## the name 
 
+        self.__arg_pdf        = pdf
+        self.__arg_resolution = resolution 
+        self.__arg_xvar       = xvar
+        
         if   isinstance ( pdf , PDF ) :
+            self.__old_pdf = pdf 
             xvar = pdf.xvar
-        elif isinstance ( pdf , ROOT.RooAbsPdf ) and isinstance ( xvar , ROOT.RooAbsReal ) :
-            pdf  = Generic1D_pdf  ( pdf , xvar )
+        elif isinstance ( pdf , ROOT.RooAbsPdf ) and xvar :
+            self.__old_pdf = Generic1D_pdf  ( pdf , xvar )
         else :
-            raise AttributeError ("Convolution_pdf: invalid pdf/xvar    %s/%s"  % ( pdf , xvar ) ) 
+            raise AttributeError ("Convolution_pdf: invalid pdf/xvar %s/%s"  % ( pdf , xvar ) ) 
 
+        name = name if name else 'Convolution_%s' % pdf.name
+        
         ## initialize the base 
         PDF.__init__ ( self , name , xvar )
-
+        
+        em = pdf.pdf.extendMode()
+        if   1 == em : self.warning ( "PDF  ``canBeExtended''" )
+        elif 2 == em : self.error   ( "PDF ``mustBeExtended''" )
+        
         ## make the actual convolution
-        self.__cnv = Convolution ( name       = name       ,
-                                   pdf        = pdf        ,
-                                   xvar       = xvar       ,
-                                   resolution = resolution ,
-                                   useFFT     = useFFT     ,
-                                   nbins      = nbins      ,
-                                   buffer     = buffer     ,
-                                   nsigmas    = nsigmas    )
+        self.__cnv = Convolution ( name       = name             ,
+                                   pdf        = self.old_pdf.pdf ,
+                                   xvar       = xvar             ,
+                                   resolution = resolution       ,
+                                   useFFT     = useFFT           ,
+                                   nbins      = nbins            ,
+                                   buffer     = buffer           ,
+                                   nsigmas    = nsigmas          )
 
         self.pdf = self.__cnv.pdf 
 
@@ -217,7 +235,7 @@ class Convolution_pdf(PDF) :
         self.config = {
             'name'       : self.name           ,
             'xvar'       : self.xvar           ,
-            'pdf'        : self.cnv.old_pdf    ,
+            'pdf'        : self.old_pdf        ,
             'resolution' : self.cnv.resolution ,
             'useFFT'     : self.cnv.useFFT     ,
             'nbins'      : self.cnv.nbinsFFT   ,
@@ -233,7 +251,18 @@ class Convolution_pdf(PDF) :
     def cnv         ( self ) :
         """``cnv'' : the actual convolution object (same as ``convolution'')"""
         return self.__cnv
+
+    @property
+    def old_pdf ( self ):
+        """``old_pdf''  : original (non-convolved) PDF"""
+        return self.__old_pdf 
         
+    ## redirect any other attributes to original PDF
+    def __getattr__ ( self , attr ) :
+        """Get all extra attributes from the original PDF"""
+        opdf = self.old_pdf 
+        return  getattr ( opdf , attr )
+    
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -241,5 +270,6 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
+

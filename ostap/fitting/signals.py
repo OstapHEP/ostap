@@ -2593,7 +2593,6 @@ models.append ( PseudoVoigt_pdf )
 #  In Nuovo Cimento, Vol. XXXIV, N.6
 #  http://www.springerlink.com/content/q773737260425652/
 #  - Blatt-Weisskopf forfactors  are also possible
-#  - Optional convolution with resolution function is possible.
 #  @see Ostap::Models::BreitWigner 
 #  @see Ostap::Math::BreitWigner
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2611,31 +2610,9 @@ class BreitWigner_pdf(MASS) :
     ...                                  mean  = m_X   ,
     ...                                  gamma = g_X   )
     
-    Optional convolution with the resolution function is possible
-    e.g. use gaussian resoltuion and fast-fourier convolution method:
-    
-    >>> breit = Models.BreitWigner_pdf ( 'BW'          ,
-    ...                                  bw            ,
-    ...                                  xvar  = mass  ,
-    ...                                  mean  = m_X   ,
-    ...                                  gamma = g_X   ,
-    ...                                  convolution = 1*MeV ,
-    ...                                  useFFT      = True  ) 
-    
-    Other resolution functions can be used:
-    
-    >>> resolution_pdf = ...
-    >>> breit = Models.BreitWigner_pdf ( 'BW'          ,
-    ...                                  ...
-    ...                                  convolution = resolution_pdf ,
-    ...                                  useFFT      = True  ) 
-
-    
     Parameters:
     - mean        : location Breigt-Wigner function
     - gamma       : width of Breigt-Wigner function
-    - convolution : (optional) convolution configuration
-    - useFFT      : (optional) use Fast Fourier Transform for convolution?
     
     """
     def __init__ ( self               ,
@@ -2643,9 +2620,7 @@ class BreitWigner_pdf(MASS) :
                    breitwigner        , ## Ostap::Math::BreitWeigner object
                    xvar               ,
                    mean        = None , 
-                   gamma       = None ,
-                   convolution = None ,
-                   useFFT      = True ) :
+                   gamma       = None ) : 
         
         #
         ## initialize the base
@@ -2676,7 +2651,7 @@ class BreitWigner_pdf(MASS) :
         self.__breitwigner = breitwigner  ## Ostap::Math::BreitWeigner object
 
         ## create PDF 
-        self.__breit = Ostap.Models.BreitWigner ( 
+        self.pdf = Ostap.Models.BreitWigner ( 
             "rbw_"    + name ,
             "RBW(%s)" % name ,
             self.xvar        ,
@@ -2684,17 +2659,6 @@ class BreitWigner_pdf(MASS) :
             self.gamma       ,
             self.breitwigner )
 
-        
-        self.__convolution = convolution  
-        self.__useFFT      =  useFFT 
-        if  None is convolution : self.pdf = self.__breit
-        else :
-            from ostap.fitting.convolution import Convolution            
-            self.conv = Convolution ( 'RBW' + name  ,
-                                      self.__breit  , self.xvar ,
-                                      convolution   , useFFT    ) 
-            self.pdf  = self.conv.pdf
-            
         ## save the configuration
         self.config = {
             'name'        : self.name          ,
@@ -2702,8 +2666,6 @@ class BreitWigner_pdf(MASS) :
             'xvar'        : self.xvar          ,
             'mean'        : self.mean          ,
             'gamma'       : self.gamma         ,
-            'convolution' : self.__convolution ,
-            'useFFT'      : self.__useFFT      ,
             }
 
     @property
@@ -2733,7 +2695,6 @@ models.append ( BreitWigner_pdf )
 # =============================================================================
 ## @class BWMC_pdf
 #  Multi-channel version of Breit-Wigner function
-#  Optional convolution with resolution function is possible 
 #  @see Ostap::Models::BreitWignerMC
 #  @see Ostap::Math::BreitWignerMC
 #  @see Ostap::Math::Channel
@@ -2784,18 +2745,13 @@ class BWMC_pdf(MASS) :
     >>> pdf = BWMC_pdf ( 'BW' , breitwigner = bw ,
     ...                  xvar = mKK , mean = m_phi , gamma = g_phi ,
     ...                  fractions = [ br_pm , br_00 , br_xx ] ) 
-    
-
-    
-    
+        
     Parameters:
     - xvar        : fitting variable/observable  
     - mean        : location of Breit-Wigner pole
     - gamma       : total width of Breit-Wigner pole
     - widths      : partial width for the channels  (mutually exclusive with gamma and fractions)
     - fractions   : branching fractions 
-    - convolution : (optional) convolution configuration
-    - useFFT      : (optional) use Fast Fourier Transform for convolution?
     
     """
     def __init__ ( self               ,
@@ -2805,9 +2761,7 @@ class BWMC_pdf(MASS) :
                    mean        = None , 
                    gamma       = None ,
                    widths      = []   ,
-                   fractions   = []   , 
-                   convolution = None ,
-                   useFFT      = True ) :
+                   fractions   = []   ) : 
 
         ## correct type of Breit-Wigner function?
         bw = breitwigner 
@@ -2828,7 +2782,7 @@ class BWMC_pdf(MASS) :
         elif fractions and nc == len ( fractions )                   and not widths    : case = 2
         else : raise TypeError ('Gamma/widths/fraction mismatch!')
 
-        ## partial  widths are sepcified:
+        ## partial  widths are specified:
         if 1 == case :
             
             for i in range ( nc ) : 
@@ -2915,33 +2869,20 @@ class BWMC_pdf(MASS) :
         self.__breitwigner = breitwigner  ## Ostap::Math::BreitWeignerMC object
         
         ## create PDF 
-        self.__breit = Ostap.Models.BreitWignerMC ( 
+        self.pdf = Ostap.Models.BreitWignerMC ( 
             "rbwmc_"    + name ,
             "RBWMC(%s)" % name ,
             self.xvar        ,
             self.mean        ,
             self.widths      , 
             self.breitwigner )
-
-        
-        self.__convolution = convolution  
-        self.__useFFT      =  useFFT 
-        if  None is convolution : self.pdf = self.__breit
-        else :
-            from ostap.fitting.convolution import Convolution            
-            self.conv = Convolution ( 'RBW' + name  ,
-                                      self.__breit  , self.xvar ,
-                                      convolution   , useFFT    ) 
-            self.pdf  = self.conv.pdf
             
         ## save the configuration
         self.config = {
             'name'        : self.name          ,
             'breitwigner' : self.breitwigner   ,
             'xvar'        : self.xvar          ,
-            'mean'        : self.mean          ,
-            'convolution' : self.__convolution ,
-            'useFFT'      : self.__useFFT      }
+            'mean'        : self.mean          }
         
         if   1 == case : self.config.update (  { 'widths'    : self.gammas    ,
                                                  'fractions' : ()             } )

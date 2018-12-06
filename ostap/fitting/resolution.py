@@ -52,16 +52,17 @@ class ResoGauss(RESOLUTION) :
                    mean  = None ) : ## mean-value
         ## initialize the base
         if mean is None : mean = ROOT.RooConstVar(
-            'mean_ResoGauss'     + name ,
-            'mean_ResoGauss(%s)' % name , 0 )                 
+            'mean_%s'  % name ,
+            'mean(%s)' % name , 0 )                 
         super(ResoGauss,self).__init__( name  = name  ,
                                         xvar  = xvar  ,
                                         sigma = sigma ,
                                         mean  = mean  )
         
         ## build gaussian resolution model 
-        self.gauss = ROOT.RooGaussModel(
-            'ResoGauss_'    + name ,
+        # self.gauss = ROOT.RooGaussModel(
+        self.gauss = ROOT.RooGaussian (
+            'ResoGauss_%s'  + name ,
             'ResoGauss(%s)' % name ,
             self.xvar            ,
             self.mean            , 
@@ -96,8 +97,8 @@ class ResoGauss2(RESOLUTION) :
                    mean     = None ) : ## the mean value
         
         if mean is None : mean = ROOT.RooConstVar(
-            'mean_ResoGauss2'     + name ,
-            'mean_ResoGauss2(%s)' % name , 0 )                 
+            'mean_%s'  % name ,
+            'mean(%s)' % name , 0 )                 
         ## initialize the base 
         super(ResoGauss2,self). __init__ ( name  = name  ,
                                            xvar  = xvar  ,
@@ -173,8 +174,8 @@ class ResoApo2(RESOLUTION) :
                    mean  = None ) : ## the mean value 
 
         if mean is None :  mean = ROOT.RooConstVar(
-            'mean_ResoApo2'     + name ,
-            'mean_ResoApo2(%s)' % name , 0 )
+            'mean_%s'  % name ,
+            'mean(%s)' % name , 0 )                 
             
         ##  initlialize the base 
         super(ResoApo2,self).__init__ ( name  = name  ,
@@ -234,8 +235,8 @@ class ResoCB2(RESOLUTION) :
                    mean  = None ) : ## the mean value
 
         if mean is None : mean = ROOT.RooConstVar(
-            'mean_ResoCB2'     + name ,
-            'mean_ResoCB2(%s)' % name , 0 )
+            'mean_%s'  % name ,
+            'mean(%s)' % name , 0 )                 
         
         ## initialize the base 
         super(ResoCB2,self).__init__ ( name  = name  ,
@@ -288,7 +289,6 @@ class ResoCB2(RESOLUTION) :
         value = float ( value )
         assert 0.2<= value<=5 , "``alpha''-parameter must be in 0.2,10 interval"
         self.__alpha.setVal ( value )
-        return self.__alpha.getVal()
 
     @property
     def n ( self  ) :
@@ -299,7 +299,6 @@ class ResoCB2(RESOLUTION) :
         value = float ( value )
         assert 1.e-4 <= value <= 40 , "``n'' must be in [1.e-4,40] interval"
         self.__n.setVal ( value )
-        return self.__n.getVal()
 
 models.add ( ResoCB2 ) 
 

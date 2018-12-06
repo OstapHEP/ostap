@@ -29,7 +29,7 @@ from   ostap.core.core      import dsID , VE , Ostap, hID
 from   ostap.fitting.roofit import SETVAR
 from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
 from   ostap.fitting.basic  import PDF , Flat1D 
-from   ostap.fitting.utils  import ( Adjust2D          , H2D_dset        ,
+from   ostap.fitting.utils  import ( H2D_dset        ,
                                      component_similar , component_clone )
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -48,7 +48,6 @@ class PDF2 (PDF) :
         PDF.__init__ ( self , name , xvar , special = special )
         
         self.__yvar       = None
-        self.__adjustment = None
         
         ## create the variable 
         if isinstance ( yvar , tuple ) and 2 == len(yvar) :  
@@ -364,56 +363,6 @@ class PDF2 (PDF) :
                                               silent  = silent         ,
                                               args    = args           , **kwargs )
             
-    # =========================================================================
-    ## adjust PDF a little bit to avoid zeroes
-    #  A tiny  ``flat'' component is added and the orginal PDF is replaced by a new compound PDF.
-    #  The fraction of added  component is fixed and defined by ``value''
-    #  @code
-    #  >>> pdf = ...
-    #  >>> pdf.adjust ( 1.e-6 )
-    #  @endcode
-    #  The  fraction can be changed and/or relesed:
-    #  @code
-    #  >>> pdf.adjustment.fraction = 1.e-4    ## release it
-    #  >>> pdf.adjustment.fraction.release()  ## allow to  vary in the fit 
-    #  @endcode 
-    #  The original PDF is stored as:
-    #  @code
-    #  >>> orig_pdf = pdf.adjustment.old_pdf 
-    #  @endcode
-    def adjust ( self , value =  1.e-5 ) :
-        """``adjust'' PDF a little bit to avoid zeroes
-        A tiny  ``flat'' component is added and the orginal PDF is replaced by a new compound PDF.
-        The fraction of added  component is fixed and defined by ``value''
-
-        >>> pdf = ...
-        >>> pdf.adjust ( 1.e-6 )
-
-        The  fraction can be changed/relesed
-
-        >>> pdf.adjustment.fraction = 1.e-4    ## change the value 
-        >>> pdf.adjustment.fraction.release()  ## release it, allow to vary in the fit 
-        
-        The original PDF is stored as:
-        
-        >>> orig_pdf = pdf.adjustment.old_pdf 
-        
-        """
-        if self.adjustment :
-            logger.warning ( "PDF is already adjusted, skip it!")
-            return
-
-        ## create adjustment object and  use it to adjust PDF:
-        self.__adjustment = Adjust2D ( self.name , self.xvar , self.yvar , self.pdf , value )
-        ## replace original PDF  with  adjusted one:
-        self.pdf          = self.__adjustment.pdf
-
-    # =========================================================================
-    @property
-    def  adjustment ( self ) :
-        """``adjustement'' object for the pdf (``None'' if no adjustment was performed)"""
-        return self.__adjustment 
-        
     # =========================================================================
     ## generate toy-sample according to PDF
     #  @code

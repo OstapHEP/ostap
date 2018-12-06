@@ -882,8 +882,7 @@ def test_bw () :
         ( name        = 'BW'              ,
           breitwigner = bw                ,     
           xvar        = mass              ,
-          mean        = signal_gauss.mean ,
-          convolution = 0.010             ) , ## CONVOLUTION! 
+          mean        = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgBW', xvar = mass , power = 0 )) 
 
     signal = model.signal 

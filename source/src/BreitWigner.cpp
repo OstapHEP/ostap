@@ -47,7 +47,8 @@ namespace
     //
     static const std::complex<double> s_j ( 0 , 1 ) ;
     //
-    const std::complex<double> v = m0 * m0 - x * x - s_j * m0 * gamma ;
+    // const std::complex<double> v = m0 * m0 - x * x - s_j * m0 * gamma ;
+    const std::complex<double> v = m0 * m0 - x * x - s_j * x * gamma ;
     //
     // attention: normalization factors and phase space are here!
     //
@@ -80,7 +81,7 @@ namespace
     //
     if ( 0 >= r0 )           { return 0 ; }  // RETURN
     //
-    return gam0 * Ostap::Math::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
+    return gam0 * ( m0 / x ) * Ostap::Math::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
   }
   // ==========================================================================
   /** @var s_BUKIN
@@ -385,7 +386,8 @@ double Ostap::Math::FormFactors::BlattWeisskopf::b
     //
     1.0L ;
   //
-  return std::sqrt ( r2 ) ;
+  // return std::sqrt ( r2 ) ;
+  return r2 ;
 }
 // ============================================================================
 // the only important method 
@@ -396,7 +398,7 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
 {
   //
   if ( s_equal ( m , m0 ) ) { return    1   ; }
-  if ( s_zero  ( m_b )    ) { return m0 / m ; }
+  if ( s_zero  ( m_b    ) ) { return m0 / m ; }
   //
   /// get the momenta 
   const double q  = Ostap::Math::PhaseSpace2::q ( m  , m1 , m2 ) ;
@@ -536,7 +538,7 @@ std::string Ostap::Math::Channel::describe() const
     ","        + std::to_string ( m_m1     ) + 
     ","        + std::to_string ( m_m2     ) + 
     ","        + std::to_string ( m_L      ) +
-    ( m_formfactor ? m_formfactor->describe() : "" ) + ")";
+    ( m_formfactor ? ( "," + m_formfactor->describe() ) : "" ) + ")";
 }
 // ============================================================================
 // Breit-Wigner Base 
@@ -565,7 +567,7 @@ Ostap::Math::BreitWignerBase::amplitude ( const double x ) const
 {
   if ( x < threshold() ) { return 0 ; }
   const double g  = gamma ( x ) ;
-  return g<=  0 ? 0.0 : amplitude ( x , g ) ;  
+  return g <= 0 ? 0.0 : amplitude ( x , g ) ;  
 }
 // ============================================================================
 //  calculate the Breit-Wigner amplitude
@@ -826,6 +828,12 @@ Ostap::Math::BreitWigner::BreitWigner
 Ostap::Math::BreitWigner*
 Ostap::Math::BreitWigner::clone() const 
 { return new Ostap::Math::BreitWigner ( *this ) ; }
+// ============================================================================
+// get the value of formfactor ratio
+// ============================================================================
+double Ostap::Math::BreitWigner::formfactor ( const double m ) const 
+{ return   channel().formfactor ( m , m0() ) ; }
+// ============================================================================
 
 
 // ============================================================================
