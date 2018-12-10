@@ -22,6 +22,15 @@ __all__     = (
     'add_var'         , ## construct "easy" RooFormulaVar
     'make_constraint' , ## create soft Gaussian constraint
     'soft_constraint' , ## create soft Gaussian constraint
+    ## simple "inline" formulas
+    'scale_var'       , ## "inline" creation of A*B
+    'add_var'         , ## "inline" creation of A+B
+    'ratio_var'       , ## "inline" creation of A/B
+    'fraction_var'    , ## "inline" creation of A/(A+B)
+    ## ``converters''
+    'total_ratio'     , ## ``converter'': A,B ->  (T,R) == ( A+B , A/B     )
+    'total_ratio'     , ## ``converter'': A,B ->  (T,F) == ( A+B , A/(A+B) ) 
+    'two_yields'      , ## ``converter'': T,F ->  (A,B) == ( R*F , T*(1-F) )
     ) 
 # =============================================================================
 import ROOT, random
@@ -723,26 +732,26 @@ def _rar_name_ ( vname ) :
     return vname 
 
 # =============================================================================
-## construct (on-flight) RooFormularVar
+## construct (on-flight) RooFormularVar A*B
 #  @code
 #  var1 = ...
 #  var2 = ...
 #  var3 = var1.scale_var ( var2 )
-#  var4 = var1.scale_var ( 2.0  )    
+#  var4 = scale_var ( var1 , 2.0  )    
 #  @endcode 
 def scale_var ( var1 , var2 , name = '' , title = '' ) :
-    """Construct (on-flight) RooFormularVar:
+    """Construct (on-flight) RooFormularVar  A*B
     >>> var1 = ...
     >>> var2 = ...
     >>> var3 = var1.scale_var ( var2 )
-    >>> var4 = var1.scale_var ( 2.0  )    
+    >>> var4 = scale_var ( var1 , 2.0  )    
     """
     
     f1 = isinstance ( var1 , num_types )
     f2 = isinstance ( var2 , num_types )
     
     if   f1 and f2 :
-        res  = var1 * var2 
+        res  = float ( var1 ) * float ( var2 ) 
         return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
     elif f1 : 
         var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
@@ -753,8 +762,8 @@ def scale_var ( var1 , var2 , name = '' , title = '' ) :
     
     vnames = var1.name , var2.name 
     
-    if not name  : name   = 'Product_%s_%s'  % vnames 
-    if not title : title  = '(%s)times(%s)'  % vnames 
+    if not name  : name   = 'Product_%s_%s'   % vnames 
+    if not title : title  = '(%s) times (%s)' % vnames 
     
     formula = '(%s*%s)' % vnames
     varlist = ROOT.RooArgList    ( var1 , var2                     )
@@ -765,26 +774,26 @@ def scale_var ( var1 , var2 , name = '' , title = '' ) :
     return result
 
 # =============================================================================
-## construct (on-flight) RooFormularVar
+## construct (on-flight) RooFormularVar  A+B
 #  @code
 #  var1 = ...
 #  var2 = ...
 #  var3 = var1.add_var ( var2 )
-#  var4 = var1.add_var ( 2.0  )    
+#  var4 = add_var ( var1 , 2.0  )    
 #  @endcode 
 def add_var ( var1 , var2 , name = '' , title = '' ) :
-    """Construct (on-flight) RooFormularVar:
+    """Construct (on-flight) RooFormularVar: A+B
     >>> var1 = ...
     >>> var2 = ...
     >>> var3 = var1.add_var ( var2 )
-    >>> var4 = var1.add_var ( 2.0  )    
+    >>> var4 = add_var ( var1 , 2.0  )    
     """
     
     f1 = isinstance ( var1 , num_types )
     f2 = isinstance ( var2 , num_types )
     
     if   f1 and f2 :
-        res  = var1 + var2 
+        res  = float ( var1 ) + float ( var2 ) 
         return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
     elif f1 : 
         var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
@@ -795,8 +804,8 @@ def add_var ( var1 , var2 , name = '' , title = '' ) :
     
     vnames = var1.name , var2.name 
     
-    if not name  : name   = 'Sum_%s_%s'  % vnames 
-    if not title : title  = '(%s)+(%s)'  % vnames 
+    if not name  : name   = 'Sum_%s_%s'       % vnames 
+    if not title : title  = '(%s) plus (%s)'  % vnames 
     
     formula = '(%s+%s)' % vnames
     varlist = ROOT.RooArgList    ( var1 , var2                     )
@@ -806,14 +815,194 @@ def add_var ( var1 , var2 , name = '' , title = '' ) :
     #
     return result
 
+# =============================================================================
+## construct (on-flight) RooFormularVar: A/B
+#  @code
+#  var1 = ...
+#  var2 = ...
+#  var3 = var1.ratio_var ( var2 )
+#  var4 = ratio_var ( var1 , var2 )
+#  @endcode 
+def ratio_var ( var1 , var2 , name = '' , title = '' ) :
+    """Construct (on-flight) RooFormularVar A/B
+    >>> var1 = ...
+    >>> var2 = ...
+    >>> var3 = var1.ratio_var ( var2 )
+    >>> var4 = ratio_var ( var1 , var2 )
+    """
+    
+    f1 = isinstance ( var1 , num_types )
+    f2 = isinstance ( var2 , num_types )
+    
+    if   f1 and f2 :
+        res  = float ( var1 ) / float ( var2 )
+        return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
+    elif f1 : 
+        var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+        return ratio_var ( var1 , var2 , name , title )
+    elif f2 : 
+        var2 = ROOT.RooConstVar ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+        return ratio_var ( var1 , var2 , name , title )
+    
+    vnames = var1.name , var2.name 
+    
+    if not name  : name   = 'Ratio_%s_%s'     % vnames 
+    if not title : title  = '(%s) ratio (%s)' % vnames 
+    
+    formula = '(%s/%s)' % vnames
+    varlist = ROOT.RooArgList    ( var1 , var2                     )
+    result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+    #
+    result._varlist = [ var1 , var2 , varlist ]
+    #
+    return result
 
-ROOT.RooAbsReal.scale_var = scale_var
-ROOT.RooAbsReal.add_var   = add_var
+# =============================================================================
+## construct (on-flight) RooFormularVar: A/(A+B)
+#  @code
+#  var1 = ...
+#  var2 = ...
+#  var3 = var1.fraction_var ( var2 )
+#  var4 = fraction_var ( var1 , var2 ) 
+#  @endcode 
+def fraction_var ( var1 , var2 , name = '' , title = '' ) :
+    """Construct (on-flight) RooFormularVar A/(A+B)
+    >>> var1 = ...
+    >>> var2 = ...
+    >>> var3 = var1.fraction_var ( var2 )
+    >>> var4 = fraction_var ( var1 , var2 )
+    """
+    
+    f1 = isinstance ( var1 , num_types )
+    f2 = isinstance ( var2 , num_types )
+    
+    if   f1 and f2 :
+        res  = float ( var1 ) / float ( var2 )
+        return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
+    elif f1 : 
+        var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+        return ratio_var ( var1 , var2 , name , title )
+    elif f2 : 
+        var2 = ROOT.RooConstVar ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+        return ratio_var ( var1 , var2 , name , title )
+    
+    vnames = var1.name , var2.name 
+    
+    if not name  : name   = 'Fraction_%s_%s'     % vnames 
+    if not title : title  = '(%s) fraction (%s)' % vnames 
+    
+    formula = '(%s/(%s+%s))' % ( var1.name , var1.name , var2.name )
+    varlist = ROOT.RooArgList    ( var1 , var2                     )
+    result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+    #
+    result._varlist = [ var1 , var2 , varlist ]
+    #
+    return result
+
+
+ROOT.RooAbsReal.scale_var    = scale_var
+ROOT.RooAbsReal.add_var      = add_var
+ROOT.RooAbsReal.ratio_var    = ratio_var
+ROOT.RooAbsReal.fraction_var = fraction_var
 
 _new_methods_ += [
-    ROOT.RooAbsReal. scale_var ,
-    ROOT.RooAbsReal.   add_var ,    
+    ROOT.RooAbsReal.   scale_var ,
+    ROOT.RooAbsReal.     add_var ,    
+    ROOT.RooAbsReal.   ratio_var ,    
+    ROOT.RooAbsReal.fraction_var ,    
     ]
+
+# ==============================================================================
+## convert two yields into "total yield" and "ratio"
+#  @code
+#  yield1 = ROOT.RooRelaVar( ... )
+#  yield2 = ROOT.RooRelaVar( ... )
+#  total , ratio = total_ratio (  yield1 , yield2 ) 
+#  @endcode
+def  total_ratio ( var1 , var2 ) :
+    """Convert two yields into ``total yield'' and ``ratio''
+    
+    >>> yield1 = ROOT.RooRelaVar( ... )
+    >>> yield2 = ROOT.RooRelaVar( ... )
+    >>> total , ratio = total_ratio (  yield1 , yield2 ) 
+    """
+    
+    assert isinstance ( var1 , ROOT.RooAbsReal,\
+                        "Invalid type of ``var1'' %s/%s" % ( var1 , type ( var1 ) ) )
+    assert isinstance ( var2 , ROOT.RooAbsReal,\
+                        "Invalid type of ``var2'' %s/%s" % ( var2 , type ( var2 ) ) )
+    
+    name     =  var1.name ,  var2.name 
+    total    = add_var   ( var1 , var2 ,
+                           name  = 'Total_%s_%s'               % names ,
+                           title = 'Total yields of %s and %s' % names )
+    ratio    = ratio_var ( var1 , var2 ,
+                           name  = 'Ratio_%s_%s'               % names ,
+                           title = 'Ratio of %s and %s yields' % names )
+    return total , ratio 
+
+# ==============================================================================
+## convert two yields into "total yield" and "fraction"
+#  @code
+#  yield1 = ROOT.RooRelaVar( ... )
+#  yield2 = ROOT.RooRelaVar( ... )
+#  total , fraction = total_fraction (yield1 , yield2 ) 
+#  @endcode
+def total_fraction ( var1 , var2 ) :
+    """Convert two yields into ``total yield'' and ``fraction''
+    >>> yield1 = ROOT.RooRelaVar( ... )
+    >>> yield2 = ROOT.RooRelaVar( ... )
+    >>> total , fraction = total_fraction (  yield1 , yield2 ) 
+    """
+    
+    assert isinstance ( var1 , ROOT.RooAbsReal,\
+                        "Invalid type of ``var1'' %s/%s" % ( var1 , type ( var1 ) ) )
+    assert isinstance ( var2 , ROOT.RooAbsReal,\
+                        "Invalid type of ``var2'' %s/%s" % ( var2 , type ( var2 ) ) )
+    
+    names    = var1.name ,  var2.name 
+    total    = add_var      ( var1 , var2 ,
+                              name  = 'Total_%s_%s'                  % names ,
+                              title = 'Total yields of %s and %s'    % names )
+    fraction = fraction_var ( var1 , var2 ,
+                              name  = 'Fraction_%s_%s'               % names ,
+                              title = 'Fraction of %s and %s yields' % names )
+    return total , fraction 
+
+# ================================================================================
+## construct two yields from the total yeilds and fraction
+#  @code
+#  total = ...
+#  fraction = ...
+#  y1 , y2 = two_yields ( total , fraction )
+#  @endcode
+def two_yields ( total , fraction ) :
+    """Construct two yields from the total yield and fraction
+    >>> total = ...
+    >>> fraction = ...
+    >>> y1 , y2 = two_yields ( total , fraction )
+    """
+    var1     = total
+    var2     = fraction
+    
+    vnames   = var1.name , var2.name 
+    
+    name     = 'Yield1_%s_%s'          % vnames 
+    title    = 'Yield1 (%s) and (%s)'  % vnames 
+    
+    yield1   = scale_var ( total , fraction , name , title )
+    
+    name     = 'Yield2_%s_%s'          % vnames 
+    title    = 'Yield2 (%s) and (%s)'  % vnames 
+    
+    formula  = '(%s)*(1-(%s))'         % vnames  
+    varlist  = ROOT.RooArgList    ( var1 , var2                      )
+    yield2   = ROOT.RooFormulaVar ( name , title , formula , varlist )
+    
+    yield2._varlist = [ var1 , var2 , varlist ]
+    
+    return yield1 , yield2 
+    
 
 # =============================================================================
 ## @class SETVAR

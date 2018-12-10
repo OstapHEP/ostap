@@ -31,8 +31,8 @@ from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid
 from   ostap.core.types     import is_good_number, is_integer
 from   ostap.fitting.roofit import SETVAR, PDF_fun
 from   ostap.logger.utils   import roo_silent   , rootWarning 
-from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , numcpu   , 
-                                     fit_status , cov_qual , H1D_dset ) 
+from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , numcpu , 
+                                     fit_status , cov_qual , H1D_dset , get_i  ) 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -776,7 +776,7 @@ class PDF (MakeVar) :
         ##
         fargs = []
         ##
-        bins  = kwargs.pop ( 'nbins' , 100 )
+        bins  = kwargs.pop ( 'nbins' , 200 )
         if bins   : fargs.append ( ROOT.RooFit.Bins      ( bins  ) ) 
         ## 
         rng   = kwargs.pop ( 'range' , None )
@@ -1414,7 +1414,7 @@ class PDF (MakeVar) :
     
     # =============================================================================
     ## make list of variables/fractions for compound PDFs 
-    def make_fracs ( self , N , pname , ptitle , fractions = True , recursive = True )  :
+    def make_fracs ( self , N , pname , ptitle , fractions = True , recursive = True , fracs = [] )  :
         """Make list of variables/fractions for compound PDF
         """
         assert is_integer ( N ) and 2 <= N , \
@@ -1434,7 +1434,8 @@ class PDF (MakeVar) :
                     prod *= ( 1.0 - fv )
                 value = fv 
             ## finally create the fraction
-            f = self.make_var ( None , pname % i , ptitle % i , None , value , *vminmax ) 
+            fi = get_i ( fracs , i , None ) 
+            f  = self.make_var ( fi , pname % i , ptitle % i , None , value , *vminmax ) 
             fracs.append ( f )
             
         return fracs
@@ -1878,19 +1879,23 @@ class Fit1D (PDF) :
     >>> pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal ans exponent as background 
     """
     def __init__ ( self                          , 
-                   signal                        ,  ## the main signal 
-                   background          = None    ,  ## the main background 
-                   othersignals        = []      ,  ## additional signal         components
-                   otherbackgrounds    = []      ,  ## additional background     components
-                   others              = []      ,  ## additional non-classified components 
-                   suffix              = ''      ,  ## the suffix 
-                   name                = ''      ,  ## the name 
-                   extended            = True    ,  ## extended fits ?
-                   combine_signals     = False   ,  ## combine signal PDFs into single "SIGNAL"     ? 
-                   combine_backgrounds = False   ,  ## combine signal PDFs into single "BACKGROUND" ?            
-                   combine_others      = False   ,  ## combine signal PDFs into single "COMPONENT"  ?             
-                   recursive           = True    ,  ## recursive fractions for NON-extended models?
-                   xvar                = None    ) : 
+                   signal                        ,    ## the main signal 
+                   background          = None    ,    ## the main background 
+                   othersignals        = []      ,    ## additional signal         components
+                   otherbackgrounds    = []      ,    ## additional background     components
+                   others              = []      ,    ## additional non-classified components 
+                   suffix              = ''      ,    ## the suffix 
+                   name                = ''      ,    ## the name 
+                   extended            = True    ,    ## extended fits ?
+                   combine_signals     = False   ,    ## combine signal PDFs into single "SIGNAL"     ? 
+                   combine_backgrounds = False   ,    ## combine signal PDFs into single "BACKGROUND" ?            
+                   combine_others      = False   ,    ## combine signal PDFs into single "COMPONENT"  ?             
+                   recursive           = True    ,    ## recursive fractions for NON-extended models?
+                   xvar                = None    ,
+                   S                   = []      ,    ## yields for ``signals''
+                   B                   = []      ,    ## yeilds for ``background''
+                   C                   = []      ,    ## yeilds for ``components''
+                   F                   = []      ) :  ## fractions  
 
         ##  save all arguments 
         self.__args = {
@@ -1912,6 +1917,11 @@ class Fit1D (PDF) :
         self.__combine_signals     = True if combine_signals     else False
         self.__combine_backgrounds = True if combine_backgrounds else False
         self.__combine_others      = True if combine_others      else False
+
+        self.__args_S = S
+        self.__args_B = B
+        self.__args_C = C
+        self.__args_F = F
         
         ## wrap signal if needed 
         if   isinstance ( signal , PDF )                     : self.__signal = signal
@@ -2037,34 +2047,36 @@ class Fit1D (PDF) :
         
         ## build models 
         if self.extended :
-            
+
+            if F : self.warning("Non empty list of ``fractions'' is specified: %s, ignore" % F ) 
+
             ns = len ( self.__all_signals )
             if 1 == ns :
-                sf = self.make_var ( None , "S"+suffix , "Signal"     + suffix , None , 1 , 0 , 1.e+7 )
+                sf = self.make_var ( get_i ( S , 0 ) , "S"+suffix , "Signal"     + suffix , None , 1 , 0 , 1.e+7 )
                 self.alist1.add ( self.__all_signals[0]  )
                 self.__nums_signals.append ( sf ) 
             elif 2 <= ns : 
-                fis = self.make_fracs ( ns , 'S{%%d}%s' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False )
+                fis = self.make_fracs ( ns , 'S{%%d}%s' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False , fracs = S )
                 for s in self.__all_signals : self.alist1.add ( s )
                 for f in fis                : self.__nums_signals.append ( f ) 
 
             nb = len ( self.__all_backgrounds )
             if 1 == nb :
-                bf = self.make_var ( None , "B"+suffix , "Background" + suffix , None , 1 , 0 , 1.e+7 )
+                bf = self.make_var ( get_i ( B , 0 ) , "B"+suffix , "Background" + suffix , None , 1 , 0 , 1.e+7 )
                 self.alist1.add ( self.__all_backgrounds[0]  )
                 self.__nums_backgrounds.append ( bf ) 
             elif 2 <= nb :
-                fib = self.make_fracs ( nb , 'B{%%d}%s' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False )
+                fib = self.make_fracs ( nb , 'B{%%d}%s' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False , fracs = B )
                 for b in self.__all_backgrounds : self.alist1.add ( b )
                 for f in fib                    : self.__nums_backgrounds.append ( f ) 
 
             nc = len ( self.__all_components )
             if 1 == nc :
-                cf = self.make_var ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
+                cf = self.make_var ( get_i ( C , 0 )  , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
                 self.alist1.add  ( self.__all_components[0]  )
                 self.__nums_components.append ( cf ) 
             elif 2 <= nc : 
-                fic = self.make_fracs ( nc , 'C{%%d}%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False )
+                fic = self.make_fracs ( nc , 'C{%%d}%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False , fracs = C )
                 for c in self.__all_components : self.alist1.add ( c )
                 for f in fic                   : self.__nums_components.append ( f )
 
@@ -2073,6 +2085,10 @@ class Fit1D (PDF) :
             for c in self.__nums_components  : self.alist2.add ( c ) 
                     
         else :
+
+            if S : self.warning("Non empty list of ``signals''     is specified: %s, ignore" % S ) 
+            if C : self.warning("Non empty list of ``components''  is specified: %s, ignore" % C ) 
+            if B : self.warning("Non empty list of ``backgrounds'' is specified: %s, ignore" % B ) 
 
             ns = len ( self.__all_signals     )
             nb = len ( self.__all_backgrounds )
@@ -2083,7 +2099,7 @@ class Fit1D (PDF) :
             for c in self.__all_components  : self.alist1.add ( c )
             
             fic = self.make_fracs ( ns + nb + nc , 'f{%%d}%s' % suffix , 'f(%%d)%s'  % suffix ,
-                                    fractions  = True , recursive = self.recursive )
+                                    fractions  = True , recursive = self.recursive , fracs = F )
             
             for f in fic                    : self.__nums_fractions.append ( f )   
             for f in self.__nums_fractions  : self.alist2.add ( f ) 
@@ -2128,6 +2144,10 @@ class Fit1D (PDF) :
             'combine_others'      : self.combine_others      ,
             'recursive'           : self.recursive           ,
             'xvar'                : self.xvar                ,
+            'S'                   : S                        ,
+            'B'                   : B                        ,
+            'C'                   : C                        ,
+            'F'                   : F                        ,            
             }
         
     @property

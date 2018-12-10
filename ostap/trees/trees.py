@@ -1642,7 +1642,7 @@ class Tree(Chain) :
 
     def __str__ ( self ) :
         r = "Tree('%s','%s'" % ( self.name , self.file )
-        if 0 != self.first or 0 <= self.__nevents : r += ",%s,%s" % ( self.first , self.__nevents )            
+        if 0 != self.first or 0 <= self.nevents : r += ",%s,%s" % ( self.first , self.nevents )     
         return r + ")"
     __repr__ = __str__
 

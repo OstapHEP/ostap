@@ -23,6 +23,7 @@ __all__     = (
     'fID'              ,  ## global identifier for ROOT functions 
     'histoID'          ,  ## global identifier for ROOT histograms 
     'hID'              ,  ## global identifier for ROOT histograms 
+    'grID'             ,  ## global identifier for ROOT graphs 
     'dsID'             ,  ## global identifier for ROOT/RooFit datasets
     ##
     'VE'               ,  ## shortcut for Gaudi::Math::ValuewithError
@@ -158,6 +159,8 @@ def histID  () : return histoID ( )
 def hID     () : return histoID ( )
 ## global ROOT identified for dataset objects 
 def dsID    () : return rootID  ( 'ds_' )
+## global ROOT identified for graphs objects 
+def grID    () : return rootID  ( 'gr_' )
 
 # ==================================================================================
 ## get current directory in ROOT

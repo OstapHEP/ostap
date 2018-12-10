@@ -31,7 +31,10 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
+import ostap.fitting.variables 
+import ostap.fitting.roocollections
 from   ostap.core.core     import rootID
+from   ostap.core.types    import num_types, list_types
 from   ostap.logger.utils  import roo_silent  
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -633,6 +636,19 @@ def component_clone  ( same ) :
     return False 
 # =============================================================================
 
+
+# =============================================================================
+##  get <code>i</code>-th component from <code>what</code>
+def get_i ( what , i , default = None ) :
+    """
+    """
+    if isinstance   ( what , ROOT.RooArgList ) and i in what             : return what[i]
+    elif isinstance ( what , ROOT.RooAbsReal ) and 0 == i                : return what 
+    elif isinstance ( what , num_types       ) and 0 == i                : return what  
+    elif isinstance ( what , list_types      ) and 0 <= i < len ( what ) : return what[i] 
+
+    return default
+        
 # =============================================================================
 if '__main__' == __name__ :
     

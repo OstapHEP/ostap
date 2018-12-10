@@ -38,7 +38,7 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, cppyy              ## attention here!!
-from ostap.core.core import cpp, VE
+from ostap.core.core import cpp, VE, grID 
 # 
 # =============================================================================
 # logging 
@@ -826,14 +826,14 @@ def _gre_setitem_ ( graph , ipoint , point )  :
 #  graph = ...
 #  fun   = grap.asTF1() 
 #  @endcode
-def _gr_as_TF1_ ( graph ) :
+def _gr_as_TF1_ ( graph , interpolate = 3  ) :
     """ Represent TGraph as TF1
     >>> graph = ...
     >>> fun   = grap.asTF1() 
     """
-    from HParamDeco import _h1_as_fun_ 
-    return _h1_as_fun_ ( graph , lambda x : x ) 
-    
+    from ostap.fitting.param import _h1_as_fun_ 
+    return _h1_as_fun_ ( graph , lambda x : x , interpolate = interpolate ) 
+
 # =============================================================================
 ## iterate over points in TGraphErrors
 #  @code
@@ -1445,6 +1445,40 @@ def _gr2_filter_ ( graph , accept ):
         
     return new_graph
 
+
+# =============================================================================
+## transform the graph
+#  @code
+#  nll = ....
+#  fun = lambda x, y : math.exp ( -1 * y )  
+#  lh  = nll.transform ( fun ) 
+#  @endcode e
+def _gr_transform_ ( graph , fun = lambda x , y : y ) :
+    """Transform the graph
+    
+    >>> nll = ....
+    >>> fun = lambda x, y : math.exp ( -1 * y )  
+    >>> lh  = nll.transform ( fun ) 
+    
+    """
+    
+    if   isinstance ( graph , ROOT.TGraphAsymmErrors ) :
+        raise TypeError("Transformation for ROOT.TGraphAsymmErrors is not defined ")
+    
+    if   isinstance ( graph , ROOT.TGraphErrors ) : new_graph =  ROOT.TGraphErrors ( graph )
+    elif isinstance ( graph , ROOT.TGraph       ) : new_graph =  ROOT.TGraph       ( graph )
+        
+    ## make a copy 
+    copy_graph_attributes ( graph , new_graph )
+    
+    for i in graph :
+        x , y = graph [ i ]
+        v     = fun ( x , y )        
+        new_graph[i] = x , v
+        
+    return new_graph 
+
+
 # =============================================================================
 ROOT.TGraph       . __len__       = ROOT.TGraphErrors . GetN 
 ROOT.TGraph       . __contains__  = lambda s,i : i in range(0,len(s))
@@ -1464,6 +1498,8 @@ ROOT.TGraph       .  minmax       = _gr_yminmax_
 ROOT.TGraph       . __getitem__   = _gr_getitem_ 
 ROOT.TGraph       . __setitem__   = _gr_setitem_
 ROOT.TGraph       . iteritems     = _gr_iteritems_
+
+ROOT.TGraph       . transform     = _gr_transform_
 
 ROOT.TGraphErrors . __getitem__   = _gre_getitem_ 
 ROOT.TGraphErrors . __setitem__   = _gre_setitem_ 
@@ -1492,7 +1528,6 @@ ROOT.TGraphAsymmErrors . xmin        = _grae_xmin_
 ROOT.TGraphAsymmErrors . ymin        = _grae_ymin_ 
 ROOT.TGraphAsymmErrors . xmax        = _grae_xmax_ 
 ROOT.TGraphAsymmErrors . ymax        = _grae_ymax_ 
-
 
 ROOT.TGraph       . integral         = _gr_integral_
 ROOT.TGraph       . asTF1            = _gr_as_TF1_
@@ -1596,7 +1631,7 @@ def _gr_xmax_ ( graph ) :
     return x_
 # =============================================================================
 ## min-value for the graph)
-def _gr_xmin_ ( g ) :
+def _gr_xmin_ ( graph ) :
     """Get x-min for the graph    
     >>> xmin = graph.xmin()    
     """
@@ -1957,6 +1992,8 @@ _new_methods_      = (
     ROOT.TGraph       . __getitem__   ,
     ROOT.TGraph       . __setitem__   ,
     ROOT.TGraph       . iteritems     ,
+    #
+    ROOT.TGraph       . transform     ,
     #
     ROOT.TGraphErrors . __getitem__   ,
     ROOT.TGraphErrors . __setitem__   ,

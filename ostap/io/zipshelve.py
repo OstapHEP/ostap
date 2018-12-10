@@ -389,13 +389,13 @@ class ZipShelf(shelve.Shelf):
         fmt = ' --> %%-%ds : %%s' % mlen 
         for k in keys :
             ss = len ( self.dict[k] ) ##  compressed size 
-            if    ss < 1024 : size = '%7d' % ss 
+            if    ss < 1024 : size = '%8d' % ss 
             elif  ss < 1024  * 1024 :
-                size = '%7.3f kB' %  ( float ( ss ) / 1024 )
+                size = '%8.3f kB' %  ( float ( ss ) / 1024 )
             elif  ss < 1024  * 1024 * 1024 :
-                size = '%7.3f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
+                size = '%8.3f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
             else :
-                size = '%7.3f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
+                size = '%8.3f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
             
             ll.info ( fmt  % ( k , size ) ) 
         
