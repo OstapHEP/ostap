@@ -1242,7 +1242,7 @@ def _ds_table_ (  dataset ,  variables = [] ) :
 ##  print DataSet
 def _ds_print2_ ( dataset ) :
     """Print dataset"""
-    if dataset.isWeighted() :
+    if dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) :
         store = dataset.store()
         if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) : pass
         else : return _ds_print_ ( dataset )        
@@ -1254,7 +1254,7 @@ def _ds_print2_ ( dataset ) :
     return _ds_print_ ( dataset )
 
 
-for t in ( ROOT.RooDataSet , ) :
+for t in ( ROOT.RooDataSet , ROOT.RooDataHist ) :
     t.__repr__    = _ds_print2_
     t.__str__     = _ds_print2_
     t.table       = _ds_table_
@@ -1267,9 +1267,6 @@ _new_methods_ += [
     ROOT.RooDataSet.__repr__ ,
     ROOT.RooDataSet.__str__  ,
     ]
-
-
-
 
 # =============================================================================
 ## make symmetrization/randomization of the dataset

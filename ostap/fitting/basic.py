@@ -983,6 +983,33 @@ class PDF (MakeVar) :
         return mn , mx 
 
     # ========================================================================
+    ## get  the actual minimizer for explicit manipulations
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  m    = pdf.minos  ( data )
+    #  m.migrad()
+    #  m.hesse ()
+    #  m.minos ( param )
+    #  @endcode
+    #  @see RooMinimizer
+    def minuit ( self , dataset ) :
+        """Get  the actual minimizer for explicit manipulations
+        >>> data = ...
+        >>> pdf  = ...
+        >>> m    = pdf.minuit ( data )
+        >>> m.migrad()
+        >>> m.hesse ()
+        >>> m.minos ( param )
+        - see ROOT.RooMinimizer
+        """
+        assert self.pdf, 'Pdf is not yed defined yet!'
+        nll = self.pdf.createNLL ( dataset ,
+                                   ROOT.RooFit.NumCPU ( numcpu() ) ,
+                                   ROOT.RooFit.Offset ( True     ) )  
+        return ROOT.RooMinimizer ( nll ) 
+
+    # ========================================================================
     ## clean some stuff 
     def clean ( self ) :
         self.__splots     = []
