@@ -266,8 +266,11 @@ class Variable(object) :
                    "Variable: illegal type for ``vmax'' %s/%s"      % ( vmax        , type ( vmax        ) )
             assert vmin < vmax, \
                    "Variable: invalid ``minmax'' range (%g,%g)"     % ( vmin , vmax ) 
+
+            if    description                   : pass
+            elif  isinstance ( accessor , str ) : description = accessor
+            else                                : description = "``%s''-variable" % var
             
-            description = description if description else "``%s''-variable" % var
             description = description.replace('\n',' ')
 
             ## create the variable
@@ -287,6 +290,7 @@ class Variable(object) :
 
         assert callable ( accessor ), \
                'Invalid accessor function! %s/%s' % ( accessor , type ( accessor ) )
+        
         self.__var         = var
         self.__minmax      = var.minmax()
         self.__accessor    = accessor
@@ -315,10 +319,11 @@ class Variable(object) :
     def formula ( self ) :
         """``formula'' - formula for this variable (when applicable)?"""
         return self.__formula
+    
     @property
     def trivial ( self ) :
         """``trivial'' - is this variable ``trivial''?"""
-        return self.__formula and self.__formula == self.name
+        return self.__formula ## and self.__formula == self.name
 
 # =============================================================================
 ## is this expression corresponds to valid formula?
@@ -505,7 +510,11 @@ class SelectorWithVars(SelectorWithCuts) :
 
             self.__variables.append ( vv     )
             self.__varset   .add    ( vv.var )
-            if not v.trivial : self.__triv_vars = False
+            #
+            if   v.trivial and v.name == v.formula : pass
+            elif v.formula                         : pass
+            else                                   : self.__triv_vars = False
+            #
             vvars.add ( vv ) 
             
         self.__variables = tuple( self.__variables ) 
@@ -1016,9 +1025,12 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
     import ostap.trees.cuts
     import ostap.fitting.roofit
 
-    cuts   = ROOT.TCut ( selection )
-    varset = ROOT.RooArgSet()
-    vars   = set() 
+    varset   = ROOT.RooArgSet()
+    vars     = set()
+
+    formulas = [] 
+
+    cuts = [ selection ] if selection else [] 
     for v in variables :
 
         if   isinstance  ( v , str              ) : vv = Variable (   v )
@@ -1030,21 +1042,41 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
             logger.error("Do not know how to treat the variable %s/%s, skip it" % ( v , type ( v ) ) )
             continue
 
-        assert vv.trivial                     , "Variable %s is not ``trivial''"  % vv.name   
-        assert hasattr     ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
-
-        varset.add  ( vv.var )
+        if vv.trivial and vv.name == vv.formula : 
+            
+            assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
+            assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
+            
+            varset.add  ( vv.var )
+            vars.add ( vv )
+            
+        elif vv.formula :
+            
+            formulas.append ( vv )
+            continue
+        
+        else :
+            
+            logger.error("Do not know how to treat the variable %s, skip it" % vv.name )
+            continue 
+        
         mn , mx = vv.minmax
-        if _minv < mn : cuts &= "%.16g <= %s" % ( mn      , vv.name )
-        if _maxv > mx : cuts &= "%s <= %.16g" % ( vv.name , mx      )
-        vars.add ( vv )
+        if _minv < mn : cuts.append ( "(%.16g <= %s)" % ( mn      , vv.name ) ) 
+        if _maxv > mx : cuts.append ( "(%s <= %.16g)" % ( vv.name , mx      ) )
+
+    ## 
+    cuts = ROOT.TCut(' && '.join(cuts) ) if cuts else ROOT.TCut() 
 
     ## extended varset
     stor    = set() 
     varsete = ROOT.RooArgSet()
     for v in varset : varsete.add ( v )
-    if selection :
+
+    expressions = [ f.formula for f in formulas ]
+    if selection : expressions.append ( selection ) 
         
+    if expressions :
+
         tt = None 
         if isinstance ( tree , ROOT.TChain ) :
             nf = len ( tree.files() )
@@ -1052,22 +1084,22 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
                 tt = tree[i]
                 if tt : break 
         if not tt : tt = tree
-        
+
         from   ostap.core.core import fID
-        tf   = ROOT.TTreeFormula ( fID () , str ( selection ) , tt )
-        i    = 0 
-        leaf = tf.GetLeaf( i )
-        while leaf :
-            lname = leaf.GetName()
-            if not lname in varsete :
-                v = Variable ( lname )
-                varsete.add  ( v.var )
-                stor.add ( v ) 
-            i   += 1
+        for expression in expressions : 
+            tf   = Ostap.Formula ( fID () , str ( expression ) , tt )
+            assert tf.ok() , 'Invalid formula %s' % expression 
+            i    = 0 
             leaf = tf.GetLeaf( i )
-
-        del tf 
-
+            while leaf :
+                lname = leaf.GetName()
+                if not lname in varsete :
+                    v = Variable ( lname )
+                    varsete.add  ( v.var )
+                    stor.add ( v ) 
+                i   += 1
+                leaf = tf.GetLeaf( i )                    
+            del tf 
     
     if not name :
         from ostap.core.core import dsID 
@@ -1085,7 +1117,44 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
         with rootError( ROOT.kWarning ) :
             ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
 
-    if len  ( varset ) != len ( varsete ) :
+    ## add complex expressions 
+    if formulas :
+        # a
+        vset   = ds.get()
+        vlst = ROOT.RooArgList()
+        for v in vset : vlst.add ( v )
+
+        fcols = ROOT.RooArgList() 
+        
+        ffs   = []
+        fcuts = [] 
+        for f in formulas :            
+            fv = ROOT.RooFormulaVar ( f.name , f.description , f.formula , vlst )
+            assert fv.ok() , 'Invalid formula: %s' % f.formula 
+            ffs.append ( fv )
+            fcols.add  ( fv )
+            mn , mx = f.minmax            
+            if _minv < mn : fcuts.append ( "(%.16g <= %s)" % ( mn      , fv.name ) )
+            if _maxv > mx : fcuts.append ( "(%s <= %.16g)" % ( fv.name , mx      ) )
+
+        ds.addColumns ( fcols )
+
+        ##  apply cuts (if any) forthe  complex expressions 
+        if fcuts :
+            fcuts = ' && '.join ( fcuts )
+            ds1 = ds.reduce     ( fcuts )
+            ds.clear()
+            del ds
+            ds = ds1
+            
+        nvars = ROOT.RooArgSet()
+        for v in varset   : nvars.add ( v     )
+        for v in formulas : nvars.add ( v.var )
+        varset  = nvars 
+        varsete = ds.get() 
+        
+    ##  remove all temporary variables  
+    if len ( varset ) != len ( varsete ) :
         ds1 = ds.reduce ( varset )
         ds.clear()
         del ds
