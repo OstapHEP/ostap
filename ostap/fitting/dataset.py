@@ -1094,36 +1094,48 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
         return report , 120 
 
 
-    weight = None 
-    if dataset.isWeighted() :
-        report += attention ( ' Weighted' )
+    weight = None
+    if   isinstance ( dataset , ROOT.RooDataHist ) :
+        if dataset.isNonPoissonWeighted() : report += attention ( ' Binned/Weighted' )
+        else                              : report += allright  ( ' Binned' )
+    elif dataset.isWeighted () :
+        
+        if dataset.isNonPoissonWeighted() : report += attention ( ' Weighted' )
+        else : report += attention ( ' Weighted(Poisson)' )
 
         dstmp = None 
         wvar  = None
-        
+
         ## 1) try to get the name of the weight variable
         store = dataset.store()
+        
         if not valid_pointer ( store ) : store = None
+
         if store and not isinstance ( store , ROOT.RooTreeDataStore ) :
             dstmp = dataset.emptyClone ()
             dstmp.convertToTreeStore   ()
             store = dstmp.store        ()
             if not valid_pointer ( store ) : store = None
-        if hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) : 
+
+        if store and hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) :
+
             tree = store.tree() 
             branches = set ( tree.branches() )
             vvars    = set ( [ i.GetName() for i in  varset ] )
             wvars    = branches - vvars
+            
             if 1 == len ( wvars ):
-                wvar = wvars.pop() 
-                report += attention ( ' with "%s"' % wvar )
+                wvar = wvars.pop()
+                
+        if not wvar : wvar = Ostap.Utils.getWeight ( dataset )
+        if     wvar : report += attention ( ' with "%s"' % wvar )
                 
         store = None 
-        if not dstmp is None :            
+        if dstmp :            
             dstmp.reset()            
             del dstmp
-            dstmp = None 
-
+            dstmp = None
+            
         ## 2) if weight name is known, try to get information about the weight
         if wvar :
             store = dataset.store()
@@ -1144,20 +1156,21 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
                 cuts , first , last = '' , 0 , 2**62
                 
             if hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) : 
-                tree =  store.tree() 
-                s = tree.statVar ( wvar , cuts , first , last ) ## no cuts here... 
-                mnmx = s.minmax ()
-                mean = s.mean   ()
-                rms  = s.rms    ()
-                weight = '*%s*' % wvar
-                r    = (  weight                           ,   ## 0 
-                         'Weight variable'                 ,   ## 1 
-                         ('%+.5g' % mean.value() ).strip() ,   ## 2
-                         ('%.5g'  % rms          ).strip() ,   ## 3 
-                         ('%+.5g' % mnmx[0]      ).strip() ,   ## 4
-                         ('%+.5g' % mnmx[1]      ).strip() )   ## 5
-                _vars.append ( r ) 
-                with_weight = True
+                tree =  store.tree()
+                if wvar in tree.branches () : 
+                    s = tree.statVar ( wvar , cuts , first , last ) ## no cuts here... 
+                    mnmx = s.minmax ()
+                    mean = s.mean   ()
+                    rms  = s.rms    ()
+                    weight = '*%s*' % wvar
+                    r    = (  weight                           ,   ## 0 
+                              'Weight variable'                 ,   ## 1 
+                              ('%+.5g' % mean.value() ).strip() ,   ## 2
+                              ('%.5g'  % rms          ).strip() ,   ## 3 
+                              ('%+.5g' % mnmx[0]      ).strip() ,   ## 4
+                              ('%+.5g' % mnmx[1]      ).strip() )   ## 5
+                    _vars.append ( r ) 
+                    with_weight = True
                 
             store = None 
             if not dstmp is None :

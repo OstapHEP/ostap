@@ -77,6 +77,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Formula.cpp   
                          src/Fourier.cpp   
                          src/Funcs.cpp   
+                         src/GetWeight.cpp 
                          src/GSL_sentry.cpp 
                          src/GSL_utils.cpp 
                          src/Hesse.cpp

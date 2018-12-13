@@ -28,6 +28,7 @@
 #include "Ostap/GenericMatrixTypes.h"
 #include "Ostap/GenericVectorTypes.h"
 #include "Ostap/GeomFun.h"
+#include "Ostap/GetWeight.h"
 #include "Ostap/GSL_utils.h"
 #include "Ostap/Hesse.h"
 #include "Ostap/HFuncs.h"
