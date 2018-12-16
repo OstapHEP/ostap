@@ -259,6 +259,8 @@ logger.debug ("Import simultaneous fit            from ``simfit''"       )
 from ostap.fitting.simfit        import Sim1D
 logger.debug ("Import convolution          models from ``convolution''"  )
 from ostap.fitting.convolution   import *  
+logger.debug ("Import resoltuion           models from ``resoltuion''"   )
+from ostap.fitting.resolution    import *  
 logger.debug ("Import adjustment           models from ``adjust''"       )
 from ostap.fitting.adjust        import *  
 logger.debug ("Import modifiers                   from ``modifiers''"    )
@@ -274,6 +276,8 @@ models += _models
 from ostap.fitting.distributions import models as _models 
 models += _models
 from ostap.fitting.specific      import models as _models 
+models += _models
+from ostap.fitting.resolution    import models as _models 
 models += _models
 from ostap.fitting.models_2d     import models as _models 
 models += _models

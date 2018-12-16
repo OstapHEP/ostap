@@ -508,7 +508,7 @@ def treat_file ( f ) :
                 logger.error       ("No macros are loaded for '%s' pattern" % f )
 
     ## execute ostap-script 
-    elif fok and name and dot and ext in ( 'ost' , 'ostp' , 'ostap' ) :
+    elif fok and name and dot and ext in ( 'ost' , 'ostp' , 'ostap' , 'opy' ) :
         
         logger.debug  ("Try    to execute '%s'" % f )
         
@@ -522,7 +522,7 @@ def treat_file ( f ) :
             globals().update ( globs )
             del globs 
             
-            python_scripts.append ( f , run_name = '__main__' )
+            python_scripts.append ( f )
             logger.info  ("Executed       '%s'" % f )
             
         except :

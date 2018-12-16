@@ -1003,7 +1003,7 @@ class PDF (MakeVar) :
         >>> m.minos ( param )
         - see ROOT.RooMinimizer
         """
-        assert self.pdf, 'Pdf is not yed defined yet!'
+        assert self.pdf, 'Pdf is not defined yet!'
         nll = self.pdf.createNLL ( dataset ,
                                    ROOT.RooFit.NumCPU ( numcpu() ) ,
                                    ROOT.RooFit.Offset ( True     ) )  

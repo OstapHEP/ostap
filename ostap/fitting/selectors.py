@@ -259,7 +259,7 @@ class Variable(object) :
 
             var = var.strip() 
             assert isinstance ( description , str ) , \
-                   "Variable: illegal type for ``description''"     % ( description , type ( desctiption ) ) 
+                   "Variable: illegal type for ``description''"     % ( description , type ( description ) ) 
             assert isinstance ( vmin ,  ( int , long , float ) ) , \
                    "Variable: illegal type for ``vmin'' %s/%s"      % ( vmin        , type ( vmin        ) )
             assert isinstance ( vmax ,  ( int , long , float ) ) , \
@@ -1017,7 +1017,7 @@ class SelectorWithVarsCached(SelectorWithVars) :
 #  tree = ...
 #  ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
 #  @endcode
-def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' , silent = False ) :
+def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , silent = False ) :
     """Create the dataset from the tree
     >>> tree = ...
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
@@ -1028,8 +1028,11 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
     varset   = ROOT.RooArgSet()
     vars     = set()
 
-    formulas = [] 
-
+    formulas  = []
+    
+    selection = str ( selection ) if isinstance ( selection , ROOT.TCut ) else selection  
+    selection = selection.strip() if isinstance ( selection , str       ) else selection 
+    
     cuts = [ selection ] if selection else [] 
     for v in variables :
 
@@ -1138,11 +1141,12 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
             if _maxv > mx : fcuts.append ( "(%s <= %.16g)" % ( fv.name , mx      ) )
 
         ds.addColumns ( fcols )
-
-        ##  apply cuts (if any) forthe  complex expressions 
+        ##  apply cuts (if any) for the  complex expressions 
         if fcuts :
+            fcuts = [ '(%s)' % f for f in fcuts ]
             fcuts = ' && '.join ( fcuts )
-            ds1 = ds.reduce     ( fcuts )
+            _vars = ds.get()
+            ds1 = ROOT.RooDataSet ( dsID() , ds.title , ds , _vars , fcuts ) 
             ds.clear()
             del ds
             ds = ds1
@@ -1172,7 +1176,7 @@ def _make_dataset_ ( tree , variables , selection = '' , name = '' , title = '' 
         
     return ds , stat 
 
-ROOT.TTree.make_dataset = _make_dataset_ 
+ROOT.TTree.make_dataset = make_dataset
         
 # =============================================================================
 ## define the helper function for proper decoration of ROOT.TTree/TChain
