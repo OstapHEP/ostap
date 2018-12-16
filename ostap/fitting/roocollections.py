@@ -202,7 +202,6 @@ _new_methods_ += [
     ROOT.RooLinkedList . add 
     ]
     
-
 # =============================================================================
 ## add more data into list/set
 def _ral_iadd_ ( self , other ) :
@@ -268,22 +267,116 @@ for t in ( ROOT.RooArgList , ROOT.RooArgSet , ROOT.RooLinkedList ) :
     t.__radd__  = _ral_radd_
     t.append    = _ral_iadd_
 
+# ==============================================================================
+## get an intersection of  two sets e
+#  @code
+#  set1 = ...
+#  set2 = ...
+#  set3 = set1.intersection ( set2 ) 
+#  @endcode 
+def _ras_intersection_ ( self , another ) :
+    """Get an intersection of two sets
+    >>> set1 = ...
+    >>> set2 = ...
+    >>> set3 = set1.intersection ( set2 ) 
+    """
+    Type   = type ( self ) 
+    result = Type ()
+    for arg in self :
+        if arg in another : result.add ( arg )
+    return result
+
+# ==============================================================================
+## get an union of two sets 
+#  @code
+#  set1 = ...
+#  set2 = ...
+#  set3 = set1.union  ( set2 ) 
+#  @endcode 
+def _ras_union_ ( self , another ) :
+    """Get an union of two sets
+    >>> set1 = ...
+    >>> set2 = ...
+    >>> set3 = set1.union ( set2 ) 
+    """
+    Type   = type ( self ) 
+    result = Type ()
+    for arg in self    : result.add ( arg )
+    for arg in another :
+        if not arg in self : result.add ( arg ) 
+    return result
+
+# ================================================================================
+## get a difference fot two sets
+#  @code
+#  set1 = ...
+#  set2 = ...
+#  set3 = set1.difference( set2 )
+#  set3 = set1 - set2 
+#  @endcode 
+def _ras_difference_ (  self , another ) :
+    """Get a difference fot two sets
+    >>> set1 = ...
+    >>> set2 = ...
+    >>> set3 = set1.difference( set2 )
+    >>> set3 = se1 - set2
+    """
+    Type   = type ( self ) 
+    result = Type ()
+    for arg in self    :
+        if not arg in another : result.add ( arg )
+    return result
+
+# ================================================================================
+## get a symmetric difference fot two sets
+#  @code
+#  set1 = ...
+#  set2 = ...
+#  set3 = set1.symmetric_difference( set2 ) 
+#  @endcode 
+def _ras_symmetric_difference_ (  self , another ) :
+    """Get a difference fot two sets
+    >>> set1 = ...
+    >>> set2 = ...
+    >>> set3 = set1.symmetric_difference( set2 )
+    """
+    Type   = type ( self ) 
+    result = Type ()
+    for arg in self    :
+        if not arg in another : result.add ( arg )
+    for arg in another :
+        if not arg in self    : result.add ( arg )        
+    return result
+
+ROOT.RooArgSet . intersection         = _ras_intersection_
+ROOT.RooArgSet . union                = _ras_union_
+ROOT.RooArgSet . difference           = _ras_difference_
+ROOT.RooArgSet . symmetric_difference = _ras_symmetric_difference_
+ROOT.RooArgSet . __sub__              = _ras_difference_ 
+
 _new_methods_ += [
-    ROOT.RooArgList    . clone    ,
-    ROOT.RooArgSet     . clone    ,
-    ROOT.RooLinkedList . clone    ,
-    ROOT.RooArgList    . __add__  ,
-    ROOT.RooArgSet     . __add__  ,
-    ROOT.RooLinkedList . __add__  ,
-    ROOT.RooArgList    . __iadd__ ,
-    ROOT.RooArgSet     . __iadd__ ,
-    ROOT.RooLinkedList . __iadd__ ,
-    ROOT.RooArgList    . __radd__ ,
-    ROOT.RooArgSet     . __radd__ ,
-    ROOT.RooLinkedList . __radd__ ,
-    ROOT.RooArgList    . append   ,
-    ROOT.RooArgSet     . append   ,
-    ROOT.RooLinkedList . append   ,
+    ROOT.RooArgList    . clone        ,
+    ROOT.RooArgSet     . clone        ,
+    ROOT.RooLinkedList . clone        ,
+    ROOT.RooArgList    . __add__      ,
+    ROOT.RooArgSet     . __add__      ,
+    ROOT.RooLinkedList . __add__      ,
+    ROOT.RooArgList    . __iadd__     ,
+    ROOT.RooArgSet     . __iadd__     ,
+    ROOT.RooLinkedList . __iadd__     ,
+    ROOT.RooArgList    . __radd__     ,
+    ROOT.RooArgSet     . __radd__     ,
+    ROOT.RooLinkedList . __radd__     ,
+    ROOT.RooArgList    . append       ,
+    ROOT.RooArgSet     . append       ,
+    ROOT.RooLinkedList . append       ,
+    ##
+    ROOT.RooArgSet     . intersection         ,
+    ROOT.RooArgSet     . union                ,
+    ROOT.RooArgSet     . difference           ,
+    ROOT.RooArgSet     . symmetric_difference ,
+    ROOT.RooArgSet     . __sub__
+    ##
     ]
 
 # =============================================================================

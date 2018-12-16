@@ -1119,7 +1119,8 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
     with rooSilent ( ROOT.RooFit.ERROR  , True ) :
         with rootError( ROOT.kWarning ) :
             ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
-
+            varsete = ds.get()
+            
     ## add complex expressions 
     if formulas :
         # a
@@ -1150,6 +1151,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
             ds.clear()
             del ds
             ds = ds1
+            varsete = ds.get()
             
         nvars = ROOT.RooArgSet()
         for v in varset   : nvars.add ( v     )
