@@ -33,7 +33,7 @@ __all__     = (
 import ROOT, math
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
-from   ostap.core.core     import rootID
+from   ostap.core.core     import rootID, VE 
 from   ostap.core.types    import num_types, list_types
 from   ostap.logger.utils  import roo_silent  
 # =============================================================================
@@ -609,6 +609,26 @@ class Phases(MakeVar) :
         """
         return tuple ( self.__phis )
 
+    @phis.setter
+    def phis ( self , values ) :
+
+        from ostap.core.types import num_types , list_types
+        ##
+        if   isinstance ( values , num_types          ) : values = [ values           ]
+        elif isinstance ( values , VE                 ) : values = [ values.value()   ]
+        elif isinstance ( values , ROOT.RooAbsReal    ) : values = [ float ( values ) ] 
+        elif isinstance ( values , list_types         ) : pass
+        elif isinstance ( values , ROOT.RooArgList    ) : pass
+        else :
+            raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
+        
+        nphi = len ( self.__phis )
+        iphi = 0
+        for v in values :
+            if iphi < nphi :
+                self.__phis[iphi].setVal ( float ( v ) )
+            iphi +=1 
+        
     @property
     def phi_list ( self ) :
         """The list/ROOT.RooArgList of ``phases'', used to parameterize polynomial-like shapes
