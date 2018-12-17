@@ -621,13 +621,13 @@ class Phases(MakeVar) :
         elif isinstance ( values , ROOT.RooArgList    ) : pass
         else :
             raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
-        
+
+        for s , v in  zip ( self.__phis , values ) :
+            vv = float ( v  )
+            if s.minmax() and not vv in s :
+                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )                 
+            s.setVal   ( vv )
         nphi = len ( self.__phis )
-        iphi = 0
-        for v in values :
-            if iphi < nphi :
-                self.__phis[iphi].setVal ( float ( v ) )
-            iphi +=1 
         
     @property
     def phi_list ( self ) :

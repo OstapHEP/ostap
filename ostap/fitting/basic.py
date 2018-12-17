@@ -2291,7 +2291,8 @@ class Fit1D (PDF) :
         for s , v in zip ( ss , value ) :
 
             vv = float ( v  )
-            if not vv in ss : logger.warning("Value %s is outside the allowed region %s"  % ( value , s.minmax() ) ) 
+            if s.minmax() and not vv in s :
+                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
     
     @property
@@ -2328,7 +2329,8 @@ class Fit1D (PDF) :
         for s , v in zip ( ss , value ) :
 
             vv = float ( v  )
-            if not vv in ss : logger.warning("Value %s is outside the allowed region %s"  % ( value , s.minmax() ) ) 
+            if s.minmax() and not vv in s :
+                logger.error ("Value %s is outside the allowed region %s"  % ( vv  , s.minmax() ) ) 
             s.setVal   ( vv ) 
 
     @property
@@ -2364,7 +2366,8 @@ class Fit1D (PDF) :
         for s , v in zip ( ss , value ) :
 
             vv = float ( v  )
-            if not vv in ss : logger.warning("Value %s is outside the allowed region %s"  % ( value , s.minmax() ) ) 
+            if s.minmax() and not vv in s :
+                logger.error("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
 
     @property 
@@ -2394,9 +2397,9 @@ class Fit1D (PDF) :
         for s , v in zip ( ss , value ) :
 
             vv = float ( v  )
-            if not vv in ss : logger.warning("Value %s is outside the allowed region %s"  % ( value , s.minmax() ) ) 
+            if s.minmax() and not vv in s :
+                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
-
 
     @property
     def  yields    ( self ) :
