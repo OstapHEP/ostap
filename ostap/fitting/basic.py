@@ -29,6 +29,7 @@ import ROOT, math,  random
 import ostap.fitting.roofit 
 from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
 from   ostap.core.types     import is_good_number, is_integer
+from   ostap.core.types     import num_types , list_types
 from   ostap.fitting.roofit import SETVAR, PDF_fun
 from   ostap.logger.utils   import roo_silent   , rootWarning 
 from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , numcpu , 
@@ -2259,14 +2260,14 @@ class Fit1D (PDF) :
     def S ( self ) :
         """Get the  yields of signal component(s) (empty for non-extended fits)
         For single signal component:
-        >>> print pdf.S         ## read the single single component 
-        >>> pdf.S = 100         ## assign to it
+        >>> print pdf.S          ## read the single single component 
+        >>> pdf.S = 100          ## assign to it
         For multiple signal components:
-        >>> print pdf.S[4]      ## read the 4th signal component 
-        >>> pdf.S = 4,100       ## assign to it 
+        >>> print pdf.S[4]       ## read the 4th signal component 
+        >>> pdf.S = (1,2,3,4,5,6)## assign to it 
         ... or, alternatively:
-        >>> print pdf.S[4]      ## read the 4th signal component 
-        >>> pdf.S[4].value 100  ## assign to it         
+        >>> print pdf.S[4]       ## read the 4th signal component 
+        >>> pdf.S[4].value = 100 ## assign to it         
         """
         lst = [ i for i in self.__nums_signals ]
         if not lst          : return ()     ## extended fit? 
@@ -2274,32 +2275,37 @@ class Fit1D (PDF) :
         return tuple ( lst )
     @S.setter
     def S (  self , value ) :
-        _n = len ( self.__nums_signals )
-        assert 1 <= _n , "No signals are defined, assignement is impossible"
-        if 1 ==  _n :
-            _s    = self.S 
-            value = float ( value )
-        else :
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid signal index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _s    = self.S[index]
-        ## assign 
-        assert value in _s , "Value %s is outside the allowed region %s"  % ( value , _s.minmax() )
-        _s.setVal ( value )
+        
+        ns = len ( self.__nums_signals )
+        assert 1 <= ns , "No signals are defined, assignement is impossible"
+        
+        ##
+        if   isinstance ( value , num_types          ) : value = [ value           ]
+        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
+        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
+        elif isinstance ( value , list_types         ) : pass
+        elif isinstance ( value , ROOT.RooArgList    ) : pass
+
+        ss = [ self.S ] if 1 == ns else self.S
+
+        for s , v in zip ( ss , value ) :
+
+            vv = float ( v  )
+            if not vv in ss : logger.warning("Value %s is outside the allowed region %s"  % ( value , s.minmax() ) ) 
+            s.setVal   ( vv ) 
     
     @property
     def B ( self ) :
         """Get the  yields of background  component(s) (empty for non-extended fits)
         For single background component:
-        >>> print pdf.B           ## read the single background component 
-        >>> pdf.B = 100           ## assign to it 
+        >>> print pdf.B          ## read the single background component 
+        >>> pdf.B = 100          ## assign to it 
         For multiple background components:
-        >>> print pdf.B[4]        ## read the 4th background component 
-        >>> pdf.B = 4,100         ## assign to it 
+        >>> print pdf.B[4]            ## read the 4th background component 
+        >>> pdf.B = ( 1, 2, 3, 4, 5 ) ## assign to it 
         ... or, alternatively:
-        >>> print pdf.B[4]        ## read the 4th background component 
-        >>> pdf.B[4].value 100    ## assign to it 
+        >>> print pdf.B[4]       ## read the 4th background component 
+        >>> pdf.B[4].value = 100 ## assign to it 
         """
         lst = [ i for i in self.__nums_backgrounds ]
         if not lst          : return ()     ## extended fit? 
@@ -2307,19 +2313,23 @@ class Fit1D (PDF) :
         return tuple ( lst )
     @B.setter
     def B (  self , value ) :
-        _n = len ( self.__nums_backgrounds )
-        assert 1 <= _n , "No backgrounds are defined, assignement is impossible"
-        if 1 ==  _n :
-            _b    = self.B 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid background index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _b    = self.B[index]
-        ## assign 
-        assert value in _b , "Value %s is outside the allowed region %s"  % ( value , _b.minmax() )
-        _b.setVal ( value )
+        
+        nb = len ( self.__nums_backgrounds )
+        assert 1 <= nb , "No backgrounds are defined, assignement is impossible"
+
+        if   isinstance ( value , num_types          ) : value = [ value           ]
+        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
+        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
+        elif isinstance ( value , list_types         ) : pass
+        elif isinstance ( value , ROOT.RooArgList    ) : pass
+
+        ss = [ self.B ] if 1 == nb else self.B
+
+        for s , v in zip ( ss , value ) :
+
+            vv = float ( v  )
+            if not vv in ss : logger.warning("Value %s is outside the allowed region %s"  % ( value , s.minmax() ) ) 
+            s.setVal   ( vv ) 
 
     @property
     def C ( self ) :
@@ -2328,8 +2338,8 @@ class Fit1D (PDF) :
         >>> print pdf.C           ## read the single ``other'' component 
         >>> pdf.C = 100           ## assign to it 
         For multiple ``other'' components:
-        >>> print pdf.C[4]        ## read the 4th ``other'' component 
-        >>> pdf.C = 4,100         ## assign to it 
+        >>> print pdf.C[4]            ## read the 4th ``other'' component 
+        >>> pdf.C = ( 1, 2, 3, 4, 5 ) ## assign to it 
         ... or, alternatively:
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
@@ -2340,19 +2350,22 @@ class Fit1D (PDF) :
         return tuple ( lst )
     @C.setter
     def C (  self , value ) :
-        _n = len ( self.__nums_components )
-        assert 1 <= _n , "No ``other'' components are defined, assignement is impossible"
-        if 1 ==  _n :
-            _c    = self.C 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid ``other'' index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _c    = self.C[index]
-        ## assign 
-        assert value in _c , "Value %s is outside the allowed region %s"  % ( value , _c.minmax() )
-        _c.setVal ( value )
+        nc = len ( self.__nums_components )
+        assert 1 <= nc , "No ``other'' components are defined, assignement is impossible"
+
+        if   isinstance ( value , num_types          ) : value = [ value           ]
+        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
+        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
+        elif isinstance ( value , list_types         ) : pass
+        elif isinstance ( value , ROOT.RooArgList    ) : pass
+
+        ss = [ self.C ] if 1 == nc else self.C
+
+        for s , v in zip ( ss , value ) :
+
+            vv = float ( v  )
+            if not vv in ss : logger.warning("Value %s is outside the allowed region %s"  % ( value , s.minmax() ) ) 
+            s.setVal   ( vv ) 
 
     @property 
     def F ( self ) :
@@ -2362,7 +2375,7 @@ class Fit1D (PDF) :
         >>> pdf.F = 0.1           ## assign to it 
         For multiple fractions (>2 fit components):
         >>> print pdf.F[4]        ## read the 4th fraction
-        >>> pdf.F = 4,0.1         ## assign to it 
+        >>> pdf.F = (0.1,0.2,0.3,0.4,0.6) ## assign to it 
         ... or, alternatively:
         >>> print pdf.F[4]        ## read the 4th fraction
         >>> pdf.F[4].value = 0.1  ## assign to it         
@@ -2373,19 +2386,17 @@ class Fit1D (PDF) :
         return tuple ( lst )
     @F.setter
     def F (  self , value ) :
-        _n = len ( self.__nums_fractions )
-        assert 1 <= _n , "No fractions are defined, assignement is impossible"
-        if 1 ==  _n :
-            _f    = self.F 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid fraction index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _f    = self.F[index]
-        ## assign 
-        assert value in _f , "Value %s is outside the allowed region %s"  % ( value , _f.minmax() )
-        _f.setVal ( value )
+        nf = len ( self.__nums_fractions )
+        assert 1 <= nf , "No fractions are defined, assignement is impossible"
+
+        ss = [ self.F ] if 1 == nf else self.F
+
+        for s , v in zip ( ss , value ) :
+
+            vv = float ( v  )
+            if not vv in ss : logger.warning("Value %s is outside the allowed region %s"  % ( value , s.minmax() ) ) 
+            s.setVal   ( vv ) 
+
 
     @property
     def  yields    ( self ) :
