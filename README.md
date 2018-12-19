@@ -13,9 +13,9 @@ Project started in 2009 from the private collections of python functions used in
 
 Key features include:
 
--   Very easy manipulations with [ROOT](http://root.cern.ch/)  and [RooFit] objects: histograms, trees, datasets, etc
+-   Very easy manipulations with [ROOT](http://root.cern.ch/)  and [RooFit] (https://root.cern.ch/roofit) objects: histograms, trees, datasets, etc
 -   Very easy interface to [RooFit](https://root.cern.ch/roofit) machinery
--   Extended set of models for [RooFit](https://root.cern.ch/roofit)
+-   Extended set of models.PDFs for [RooFit](https://root.cern.ch/roofit)
 -   Powerful, pickle-based persistency for object
 -   Interactive `ostap` analysis environment
 
