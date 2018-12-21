@@ -259,7 +259,13 @@ def _TO_draw_ ( obj , *args , **kwargs ) :
     from ostap.logger.utils import rootWarning, rooSilent 
     with rootWarning() , rooSilent ( 2 ) :
         result = obj.Draw ( *args , **kwargs )
-        if ROOT.gPad : 
+        pad = ROOT.gROOT.GetSelectedPad()
+        if pad and not ROOT.gPad :
+            c = pad.GetCanvas()
+            if c : c.Update()
+        if ROOT.gPad :
+            c = ROOT.gPad
+            if c : c.Update() 
             plot = AutoPlots.plot()
             if plot : ROOT.gPad >> plot
         return result

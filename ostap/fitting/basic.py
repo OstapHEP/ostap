@@ -28,7 +28,7 @@ __all__     = (
 import ROOT, math,  random
 import ostap.fitting.roofit 
 from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
-from   ostap.core.types     import is_good_number, is_integer
+from   ostap.core.types     import is_good_number, is_integer, integer_types
 from   ostap.core.types     import num_types , list_types
 from   ostap.fitting.roofit import SETVAR, PDF_fun
 from   ostap.logger.utils   import roo_silent   , rootWarning 
@@ -994,7 +994,11 @@ class PDF (MakeVar) :
     #  m.minos ( param )
     #  @endcode
     #  @see RooMinimizer
-    def minuit ( self , dataset ) :
+    def minuit ( self , dataset   ,
+                 max_calls = -1   ,
+                 ncpu      = -1   ,
+                 max_iter  = -1   ,
+                 strategy  = None , args = () ) :
         """Get  the actual minimizer for explicit manipulations
         >>> data = ...
         >>> pdf  = ...
@@ -1005,10 +1009,23 @@ class PDF (MakeVar) :
         - see ROOT.RooMinimizer
         """
         assert self.pdf, 'Pdf is not defined yet!'
+
+        if isinstance ( ncpu , int ) and 1 <= ncpu : pass 
+        else                                       : ncpu = numcpu() 
+            
         nll = self.pdf.createNLL ( dataset ,
-                                   ROOT.RooFit.NumCPU ( numcpu() ) ,
-                                   ROOT.RooFit.Offset ( True     ) )  
-        return ROOT.RooMinimizer ( nll ) 
+                                   ROOT.RooFit.NumCPU ( ncpu ) ,
+                                   ROOT.RooFit.Offset ( True ) , *args )
+        
+        m = ROOT.RooMinimizer ( nll )
+        if isinstance  ( max_calls , integer_types ) and 1 < max_calls :
+            m.setMaxFunctionCalls ( max_calls )
+        if isinstance  ( max_iter  , integer_types ) and 1 < max_iter  :
+            m.setMaxIterationns   ( max_iter  )
+        if isinstance  ( strategy , integer_types  ) and 0 <=  strategy <= 2 :
+            m.setStrategy ( strategy )
+            
+        return m  
 
     # ========================================================================
     ## clean some stuff 
@@ -2352,6 +2369,7 @@ class Fit1D (PDF) :
         return tuple ( lst )
     @C.setter
     def C (  self , value ) :
+        
         nc = len ( self.__nums_components )
         assert 1 <= nc , "No ``other'' components are defined, assignement is impossible"
 
@@ -2393,6 +2411,11 @@ class Fit1D (PDF) :
         assert 1 <= nf , "No fractions are defined, assignement is impossible"
 
         ss = [ self.F ] if 1 == nf else self.F
+        if   isinstance ( value , num_types          ) : value = [ value           ]
+        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
+        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
+        elif isinstance ( value , list_types         ) : pass
+        elif isinstance ( value , ROOT.RooArgList    ) : pass
 
         for s , v in zip ( ss , value ) :
 
