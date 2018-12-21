@@ -3,6 +3,7 @@ Ostap Project
 <!--[![Build Status](https://travis-ci.org/OstapHEP/ostap.svg?branch=master)](https://travis-ci.org/OstapHEP/ostap)-->
 [![Build Status](https://dev.azure.com/OstapHep/OstapHep/_apis/build/status/OstapHEP.ostap)](https://dev.azure.com/OstapHep/OstapHep/_build/latest?definitionId=5)
 [![Join the chat at https://gitter.im/OstapHEP/ostap](https://badges.gitter.im/OstapHEP/ostap.svg)](https://gitter.im/OstapHEP/ostap?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![DOI](https://zenodo.org/badge/81464356.svg)](https://zenodo.org/badge/latestdoi/81464356)
 
 <!--[![build status](https://gitlab.cern.ch/amazurov/ostap/badges/master/build.svg)](https://gitlab.cern.ch/amazurov/ostap/commits/master)-->
 
@@ -12,9 +13,9 @@ Project started in 2009 from the private collections of python functions used in
 
 Key features include:
 
--   Very easy manipulations with [ROOT](http://root.cern.ch/)  and [RooFit] objects: histograms, trees, datasets, etc
+-   Very easy manipulations with [ROOT](http://root.cern.ch/)  and [RooFit](https://root.cern.ch/roofit) objects: histograms, trees, datasets, etc
 -   Very easy interface to [RooFit](https://root.cern.ch/roofit) machinery
--   Extended set of models for [RooFit](https://root.cern.ch/roofit)
+-   Extended set of models.PDFs for [RooFit](https://root.cern.ch/roofit)
 -   Powerful, pickle-based persistency for object
 -   Interactive `ostap` analysis environment
 
