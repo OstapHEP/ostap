@@ -14,51 +14,24 @@
 #                                           o888o      
 #                                                    
 #  Simple helper module to get ROOT TCanvas
-# 
-#  This file is a part of 
-#  <a href="http://cern.ch/lhcb-comp/Analysis/Bender/index.html">Bender project</a>
-#  <b>``Python-based Interactive Environment for Smart and Friendly Physics Analysis''</b>
-#
-#  The package has been designed with the kind help from
-#  Pere MATO and Andrey TSAREGORODTSEV. 
-#  And it is based on the 
-#  <a href="http://cern.ch/lhcb-comp/Analysis/LoKi/index.html">LoKi project:</a>
-#  <b>``C++ ToolKit for Smart and Friendly Physics Analysis''</b>
-#
-#  By usage of this code one clearly states the disagreement 
-#  with the smear campaign of Dr.O.Callot et al.: 
-#  ``No Vanya's lines are allowed in LHCb/Gaudi software''
 #
 #  @date   2012-02-15
 #  @author Vanya BELYAEV Ivan.Belyaevitep.ru
-#
 # =============================================================================
 """ Simple helper module to get ROOT TCanvas
-    
-    This file is a part of BENDER project:
-
-  ``Python-based Interactive Environment for Smart and Friendly Physics Analysis''
-
-The project has been designed with the kind help from Pere MATO and Andrey TSAREGORODTSEV. 
-
-And it is based on the LoKi project:
- 
-   ``C++ ToolKit for Smart and Friendly Physics Analysis''
-
-By usage of this code one clearly states the disagreement with the smear campaign 
-of Dr.O.Callot et al.:
-
-   ``No Vanya's lines are allowed in LHCb/Gaudi software''
 """
 # =============================================================================
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2014-10-19"
 __version__ = '$Revision$'
 __all__     = (
-    'getCanvas'   ,
-    'getCanvases' ,
-    'AutoPlots'   , ## context manager to activate the auto-plotting machinery
-    'auto_plots'  , ## ditto, but as function 
+    'getCanvas'        , ## get/create canvas 
+    'getCanvases'      , ## get all created canvases 
+    'canvas_partition' , ## split canvas into several pads with no space between pads 
+    'canvas_pull'      , ## split canvas into two pads with no vertical interspace
+    'draw_pads'        , ## plot sequence of object on sequence of pads, adjustinng axis label size
+    'AutoPlots'        , ## context manager to activate the auto-plotting machinery
+    'auto_plots'       , ## ditto, but as function 
     )
 # =============================================================================
 import ROOT, os, tempfile  
@@ -296,13 +269,370 @@ import atexit
 atexit.register ( _remove_canvases_ )
 
 # =============================================================================
+
+# =============================================================================
+## perform partition of Canvas into
+#  @code
+#  canvas = ...
+#  pads   = canvas.partition ( 3 , 2 )
+#  for i in range(3) :
+#    for j in range(2) :
+#       histo_ij = ...
+#       canvas.cd(0)
+#       pad = pads[i,j]
+#       pad.Draw()
+#       pad.cd()
+#       histo_ij.Draw()
+#  @endcode
+#  @see https://root.cern/doc/master/canvas2_8C.html
+def canvas_partition ( canvas               , 
+                       nx                   ,
+                       ny                   ,
+                       left_margin   = 0.14 ,
+                       right_margin  = 0.05 ,   
+                       bottom_margin = 0.16 ,
+                       top_margin    = 0.05 ,
+                       hSpacing      = 0.0  ,
+                       vSpacing      = 0.0  ) :
+    """Perform partition of Canvas into pads with no inter-margins
+
+    canvas = ...
+    nx = 3 , ny = 2 
+    pads   = canvas.partition ( nx  , ny )
+    for i in range(nx) :
+    ... for j in range(ny) :
+    ... ... histo_ij = ...
+    ... ... canvas.cd(0)
+    ... ... pad = pads[i,j]
+    ... ... pad.Draw()
+    ... ... pad.cd()
+    ... ... histo_ij.Draw()
+    
+    @see https://root.cern/doc/master/canvas2_8C.html
+    
+    """
+
+    if not isinstance ( nx , int ) or nx<= 0 :
+        raise AttributeError('partition: invalid nx=%s' % nx )
+    if not isinstance ( ny , int ) or ny<= 0 :
+        raise AttributeError('partition: invalid ny=%s' % ny )
+
+    ## get the window size
+    wsx = abs ( canvas.GetWindowWidth  () ) 
+    wsy = abs ( canvas.GetWindowHeight () ) 
+
+    #
+    ## if parametes given in the absolute units, convert them into relative coordinates
+    #
+    
+    if   left_margin < 0 :   left_margin = abs (   left_margin ) / wsx
+    if  right_margin < 0 :  right_margin = abs (  right_margin ) / wsx
+    if bottom_margin < 0 : bottom_margin = abs ( bottom_margin ) / wsy
+    if    top_margin < 0 :    top_margin = abs ( bottom_margin ) / wsy
+    
+    if hSpacing      < 0 : hSpacing = abs ( hSpacing ) / wsx
+    if vSpacing      < 0 : vSpacing = abs ( vSpacing ) / wsy
+
+    #
+    ## check consistency 
+    # 
+    if 1 <=   left_margin :
+        raise AttributeError('partition: invalid   left margin=%f' %   left_margin )
+    if 1 <=  right_margin :
+        raise AttributeError('partition: invalid  right margin=%f' %  right_margin )
+    if 1 <= bottom_margin :
+        raise AttributeError('partition: invalid bottom margin=%f' % bottom_margin )
+    if 1 <=    top_margin :
+        raise AttributeError('partition: invalid    top margin=%f' %    top_margin )
+    
+    if   hasattr ( canvas , 'pads' ) and isinstance ( canvas.pads , dict ) :
+        while canvas.pads :
+            i,p = canvas.pads.popitem()
+            if p :
+                logger.verbose ( 'delete pas %s' % p.GetName() )
+                del p
+        del canvas.pads
+        
+    elif hasattr ( canvas , 'pads' ) and isinstance ( canvas.pads , tuple ) :
+        for p in canvas.pads :
+            if p :
+                logger.verbose ( 'delete pas %s' % p.GetName() )
+                del p
+        del canvas.pads
+        
+    ## make new empty dictionary 
+    canvas.pads = {} 
+            
+    vStep    = ( 1.0 - bottom_margin - top_margin   - (ny-1) * vSpacing ) / ny
+    if 0 > vStep : raise AttributeError('partition: v-step=%f' % vStep  )
+        
+    hStep    = ( 1.0 - left_margin   - right_margin - (nx-1) * vSpacing ) / nx 
+    if 0 > hStep : raise AttributeError('partition: h-step=%f' % hStep  )
+
+    hposr, hposl, hmarr, hmarl, hfactor = 0.,0.,0.,0.,0.
+    vposr, vposd, vmard, vmaru, vfactor = 0.,0.,0.,0.,0.
+    
+    for ix in range ( nx ) :
+        
+        if 0 == ix : 
+            hposl   = 0
+            hposr   = left_margin + hStep
+            hfactor = hposr - hposl
+            hmarl   = left_margin / hfactor
+            hmarr   = 0.0 
+        elif nx == ix + 1 :
+            hposl   = hposr + hSpacing 
+            hposr   = hposl + hStep + right_margin
+            hfactor = hposr - hposl 
+            hmarl   = 0.0
+            hmarr   = right_margin / hfactor 
+        else : 
+            hposl   = hposr + hSpacing
+            hposr   = hposl + hStep
+            hfactor = hposr - hposl
+            hmarl   = 0.0
+            hmarr   = 0.0
+
+        for iy in range(ny) :
+            if 0 == iy : 
+                vposd   = 0.0
+                vposu   = bottom_margin + vStep
+                vfactor = vposu - vposd
+                vmard   = bottom_margin / vfactor
+                vmaru   = 0.0 
+            elif ny == iy + 1 : 
+                vposd   = vposu + vSpacing
+                vposu   = vposd + vStep + top_margin
+                vfactor = vposu - vposd;
+                vmard   = 0.0
+                vmaru   = top_margin    / vfactor 
+            else :
+                vposd   = vposu + vSpacing
+                vposu   = vposd + vStep
+                vfactor = vposu - vposd
+                vmard   = 0.0
+                vmaru   = 0.0
+
+            canvas.cd(0)
+            pname = 'pad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
+            pad   = ROOT.gROOT.FindObject ( pname )
+            if pad : del pad
+            pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
+
+            logger.verbose ( ' Create pad[%d,%d]=(%f,%f,%f,%f),[%f,%f,%f,%f] %s ' % (
+                ix    , iy    ,
+                hposl , vposd , hposr , vposu , 
+                hmarl , hmarr , vmard , vmaru , pad.GetName() ) ) 
+                             
+            pad.SetLeftMargin      ( hmarl )
+            pad.SetRightMargin     ( hmarr )
+            pad.SetBottomMargin    ( vmard )
+            pad.SetTopMargin       ( vmaru )
+            
+            pad.SetFrameBorderMode ( 0 )
+            pad.SetBorderMode      ( 0 )
+            pad.SetBorderSize      ( 0 )
+
+            ROOT.SetOwnership ( pad , True )
+            
+            if not hasattr ( canvas , 'pads' ) : canvas.pads = {}
+            canvas.pads[ (ix,iy) ] = pad
+            
+    return canvas.pads 
+
+
+ROOT.TCanvas.partition = canvas_partition
+
+
+
+# ==============================================================================
+##  Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+#  @code
+#  canvas    = ...
+#  pad_u, pud_b= canvas.pull_partition ( 0.20 )    
+#  canvas.cd(0)
+#  pad_u.Draw()
+#  pad_u.cd() 
+#  object1.Draw()    
+#  canvas.cd(0)
+#  pad_b.Draw()
+#  pad_b.cd() 
+#  object2.Draw()
+#  @endcode 
+def canvas_pull ( canvas               ,
+                  ratio         = 0.80 ,
+                  left_margin   = 0.14 ,
+                  right_margin  = 0.05 ,   
+                  bottom_margin = 0.14 ,
+                  top_margin    = 0.05 ,
+                  hSpacing      = 0.0  ,
+                  vSpacing      = 0.0  ) :
+    """Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+    
+    >>> canvas    = ...
+    >>> pad_u, pud_b= canvas.pull_partition ( 0.20 )
+    
+    >>> canvas.cd(0)
+    >>> pad_u.Draw()
+    >>> pad_u.cd() 
+    >>> object1.Draw()
+    
+    >>> canvas.cd(0)
+    >>> pad_b.Draw()
+    >>> pad_b.cd() 
+    >>> object2.Draw()
+    """
+
+    ## get the window size
+    wsx = abs ( canvas.GetWindowWidth  () ) 
+    wsy = abs ( canvas.GetWindowHeight () ) 
+
+    #
+    ## if parametes given in the absolute units, convert them into relative coordinates
+    #
+    
+    if   left_margin < 0 :   left_margin = abs (   left_margin ) / wsx
+    if  right_margin < 0 :  right_margin = abs (  right_margin ) / wsx
+    if bottom_margin < 0 : bottom_margin = abs ( bottom_margin ) / wsy
+    if    top_margin < 0 :    top_margin = abs ( bottom_margin ) / wsy
+    
+    if hSpacing      < 0 : hSpacing = abs ( hSpacing ) / wsx
+    if vSpacing      < 0 : vSpacing = abs ( vSpacing ) / wsy
+    
+    hposr, hposl, hmarr, hmarl, hfactor = 0.,0.,0.,0.,0.
+    vposr, vposd, vmard, vmaru, vfactor = 0.,0.,0.,0.,0.
+
+    nx = 1
+    ny = 2
+    
+    vStep    = ( 1.0 - bottom_margin - top_margin   - ( ny - 1 ) * vSpacing ) / ny
+    if 0 > vStep : raise AttributeError('partition: v-step=%f' % vStep  )
+    
+    hStep    = ( 1.0 - left_margin   - right_margin - ( nx - 1 ) * vSpacing ) / nx 
+    if 0 > hStep : raise AttributeError('partition: h-step=%f' % hStep  )
+    
+    hposl   = 0
+    hposr   = left_margin + hStep
+    hfactor = hposr - hposl
+    hmarl   = left_margin / hfactor
+    hmarr   = 0.0
+    
+    if hasattr ( canvas ,  'pads' ) :
+        del canvas.pads
+
+
+    vStep0 = 2 * vStep * 1     / ( 1 + ratio )
+    vStep1 = 2 * vStep * ratio / ( 1 + ratio )
+    
+    ix = 0 
+    for iy in range(2) :
+        
+        if 0 == iy : 
+            vposd   = 0.0
+            vposu   = bottom_margin + vStep0
+            vfactor = vposu - vposd 
+            vmard   = bottom_margin / vfactor
+            vmaru   = 0.0 
+        else : 
+            vposd   = vposu + vSpacing
+            vposu   = vposd + vStep1 + top_margin
+            vfactor = vposu - vposd
+            vmard   = 0.0
+            vmaru   = top_margin    / vfactor
+            
+        canvas.cd(0)
+        pname = 'pad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
+        pad   = ROOT.gROOT.FindObject ( pname )
+        if pad : del pad
+        pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
+        
+        logger.verbose ( ' Create pad[%d,%d]=(%f,%f,%f,%f),[%f,%f,%f,%f] %s ' % (
+            ix    , iy    ,
+            hposl , vposd , hposr , vposu , 
+            hmarl , hmarr , vmard , vmaru , pad.GetName() ) ) 
+        
+        pad.SetLeftMargin      ( hmarl )
+        pad.SetRightMargin     ( hmarr )
+        pad.SetBottomMargin    ( vmard )
+        pad.SetTopMargin       ( vmaru )
+        
+        pad.SetFrameBorderMode ( 0 )
+        pad.SetBorderMode      ( 0 )
+        pad.SetBorderSize      ( 0 )
+        
+        ROOT.SetOwnership ( pad , True )
+        
+        if not hasattr ( canvas , 'pads' ) : canvas.pads=[]
+        canvas.pads.append ( pad ) 
+        
+    canvas.pads =  tuple ( reversed ( canvas.pads ) )
+    return canvas.pads 
+
+
+ROOT.TCanvas.pull_partition = canvas_pull
+
+# =============================================================================
+## draw sequence of object on sequence of pads,
+#  - the label font size is adjusted to be uniform (in pixels) 
+#  @code
+#  pads   = ...
+#  frames = ...
+#  draw_pads ( frames , pads , fontsize = 25 ) 
+#  @endcode 
+def draw_pads ( objects , pads , fontsize = 25 ) :
+    """Draw sequence of object on sequence of pads,
+    - the label font size is adjusted to be uniform (in pixels)     
+    >>> pads   = ...
+    >>> frames = ...
+    >>> draw_pads ( frames , pads , fontsize = 25 ) 
+    """
+
+    assert isinstance  ( fontsize , int ) and 1 <= fontsize , 'Invalid fontsize %s [pixels] ' % fontsize
+    
+    seq = zip ( objects , pads )
+
+    for obj , pad in seq :
+
+        c = pad.GetCanvas()
+        if c : c.cd(0)
+        
+        pad.draw ()
+        pad.cd   ()
+
+        ## redefne label font and size 
+        for attr in ( 'GetXaxis' , 'GetYaxis' ) :
+            if not hasattr ( obj , attr ) : continue
+            
+            axis = getattr ( obj , attr )()
+            if not axis : continue
+            
+            fnp  = axis.GetLabelFont()
+            fn , prec = divmod  ( fnp , 10 ) 
+            if 3 != prec :
+                ## redefine  label  font 
+                fnp = fn * 10 + 3
+                axis.SetLabelFont ( fnp )
+
+            ## redefine label size 
+            axis.SetLabelSize ( fontsize  )
+
+        ## draw object ob the pad 
+        obj.draw ()
+        
+        if c : c.cd(0)
+        
+        
+# =============================================================================
 _decorated_classes_  = (
     ROOT.TVirtualPad , 
+    ROOT.TCanvas     , 
     ROOT.TObject     , 
     )
 
 _new_methods_        = (
-    ROOT.TVirtualPad.__rshift__ , 
+    ROOT.TVirtualPad.__rshift__ ,
+    ROOT.TCanvas.partition      ,
+    ROOT.TCanvas.pull_partition ,
     ROOT.TObject    .draw       , 
     ROOT.TObject    .draw_with_autoplot, 
     )

@@ -463,22 +463,22 @@ class PDF (MakeVar) :
         return result, frame 
 
     ## helper method to draw set of components 
-    def _draw ( self , what , frame , options , base_color , step_color = 1 ) :
+    def _draw ( self , what , frame , options , color = 1 ) :
         """ Helper method to draw set of components
         """
+
+        from ostap.plotting.fit_draw import Color 
+        if not isinstance  ( color , Color ) :
+            color = Color ( colors = color )
+        
         i = 0
         for cmp in what : 
             cmps = ROOT.RooArgSet( cmp )
-            if 0 <= base_color : 
-                self.pdf .plotOn (
-                    frame ,
-                    ROOT.RooFit.Components ( cmps                        ) ,
-                    ROOT.RooFit.LineColor  ( base_color + i * step_color ) , *options )
-            else :
-                self.pdf .plotOn (
-                    frame ,
-                    ROOT.RooFit.Components ( cmps ) , *options )
-                
+            self.pdf .plotOn (
+                frame ,
+                ROOT.RooFit.Components ( cmps          ) ,
+                ROOT.RooFit.LineColor  ( color  ( i )  ) , *options )
+            
             i += 1
                                             
     # ================================================================================
@@ -565,35 +565,30 @@ class PDF (MakeVar) :
 
             ## draw various ``background'' terms
             boptions = kwargs.pop (     'background_options' , FD.   background_options )
-            bbcolor  = kwargs.pop (  'base_background_color' , FD.base_background_color )
-            bbcstep  = kwargs.pop (  'background_step_color' , 1 )
-            self._draw( self.backgrounds , frame , boptions , bbcolor , bbcstep )
+            bbcolor  = kwargs.pop (       'background_color' , FD.     background_color )
+            self._draw( self.backgrounds , frame , boptions , bbcolor )
 
             ## ugly :-(
             ct1options = kwargs.pop (     'crossterm1_options' , FD.   crossterm1_options )
-            ct1bcolor  = kwargs.pop (  'base_crossterm1_color' , FD.base_crossterm1_color ) 
-            ct1cstep   = kwargs.pop (  'crossterm1_step_color' , 1 )
+            ct1bcolor  = kwargs.pop (       'crossterm1_color' , FD.     crossterm1_color ) 
             if hasattr ( self , 'crossterms1' ) and self.crossterms1 : 
-                self._draw( self.crossterms1 , frame , ct1options , ct1bcolor , ct1cstep )
+                self._draw( self.crossterms1 , frame , ct1options , ct1bcolor )
 
             ## ugly :-(
             ct2options = kwargs.pop (     'crossterm2_options' , FD.   crossterm1_options )
-            ct2bcolor  = kwargs.pop (  'base_crossterm2_color' , FD.base_crossterm1_color )
-            ct2cstep   = kwargs.pop (  'crossterm2_step_color' , 1 )         
+            ct2bcolor  = kwargs.pop (       'crossterm2_color' , FD.     crossterm1_color )
             if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
-                self._draw( self.crossterms2 , frame , ct2options , ct2bcolor , ct2cstep )
+                self._draw( self.crossterms2 , frame , ct2options , ct2bcolor )
 
             ## draw ``other'' components
             coptions   = kwargs.pop (      'component_options' , FD.    component_options  )
-            cbcolor    = kwargs.pop (   'base_component_color' , FD. base_component_color  ) 
-            ccstep     = kwargs.pop (   'component_step_color' , 1 )         
-            self._draw( self.components , frame , coptions , cbcolor , ccstep )
+            cbcolor    = kwargs.pop (        'component_color' , FD.      component_color  ) 
+            self._draw( self.components , frame , coptions , cbcolor )
 
             ## draw ``signal'' components
             soptions   = kwargs.pop (         'signal_options' , FD.      signal_options  )
-            sbcolor    = kwargs.pop (      'base_signal_color' , FD.   base_signal_color  ) 
-            scstep     = kwargs.pop (      'signal_step_color' , 1 )         
-            self._draw( self.signals , frame , soptions , sbcolor , scstep )
+            sbcolor    = kwargs.pop (           'signal_color' , FD.        signal_color  ) 
+            self._draw( self.signals , frame , soptions , sbcolor )
 
             #
             ## the total fit curve
