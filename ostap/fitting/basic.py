@@ -361,7 +361,7 @@ class PDF (MakeVar) :
         ## define silent context
         with roo_silent ( silent ) :
             self.fit_result = None             
-            result          =  self.pdf.fitTo ( dataset , ROOT.RooFit.Save () , *opts ) 
+            result          = self.pdf.fitTo ( dataset , ROOT.RooFit.Save () , *opts ) 
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
@@ -2045,8 +2045,8 @@ class Fit1D (PDF) :
             sig , fracs , sigs = self.add_pdf ( self.signals          ,
                                                 'signal_'    + suffix ,
                                                 'signal(%s)' % suffix ,
-                                                'fS_%%d%s'   % suffix ,
-                                                'fS(%%d)%s'  % suffix , recursive = True )
+                                                'fS%s_%%d'   % suffix ,
+                                                'fS%s_%%d'   % suffix , recursive = True )
             ## new signal
             self.__signal      = Generic1D_pdf   ( sig , self.xvar , 'SIGNAL_' + suffix )
             self.__all_signals = ROOT.RooArgList ( sig )
@@ -2060,8 +2060,8 @@ class Fit1D (PDF) :
             bkg , fracs , bkgs = self.add_pdf ( self.backgrounds          ,
                                                 'background_'    + suffix ,
                                                 'background(%s)' % suffix ,
-                                                'fB_%%d%s'       % suffix ,
-                                                'fB(%%d)%s'      % suffix , recursive = True )
+                                                'fB%s_%%d'       % suffix ,
+                                                'fB%s_%%d'       % suffix , recursive = True )
             ## new background
             self.__background      = Generic1D_pdf   ( bkg , self.xvar , 'BACKGROUND_' + suffix )
             self.__all_backgrounds = ROOT.RooArgList ( bkg )
@@ -2076,8 +2076,8 @@ class Fit1D (PDF) :
             cmp , fracs , cmps = self.add_pdf ( self.components      ,
                                                 'other_'    + suffix ,
                                                 'other(%s)' % suffix ,
-                                                'fC_%%d%s'  % suffix ,
-                                                'fC(%%d)%s' % suffix )
+                                                'fC%s_%%d'  % suffix ,
+                                                'fC%s_%%d'  % suffix )
             ## save old background
             self.__other          = Generic1D_pdf   ( cmp , self.xvar , 'COMPONENT_' + suffix )
             self.__all_components = ROOT.RooArgList ( cmp )
@@ -2101,7 +2101,7 @@ class Fit1D (PDF) :
                 self.alist1.add ( self.__all_signals[0]  )
                 self.__nums_signals.append ( sf ) 
             elif 2 <= ns : 
-                fis = self.make_fracs ( ns , 'S{%%d}%s' % suffix ,  'S(%%d)%s'  % suffix , fractions  = False , fracs = S )
+                fis = self.make_fracs ( ns , 'S%s_%%d' % suffix ,  'S%s_%%d'  % suffix , fractions  = False , fracs = S )
                 for s in self.__all_signals : self.alist1.add ( s )
                 for f in fis                : self.__nums_signals.append ( f ) 
 
@@ -2111,7 +2111,7 @@ class Fit1D (PDF) :
                 self.alist1.add ( self.__all_backgrounds[0]  )
                 self.__nums_backgrounds.append ( bf ) 
             elif 2 <= nb :
-                fib = self.make_fracs ( nb , 'B{%%d}%s' % suffix ,  'B(%%d)%s'  % suffix , fractions  = False , fracs = B )
+                fib = self.make_fracs ( nb , 'B%s_%%d' % suffix ,  'B%s_%%d'  % suffix , fractions  = False , fracs = B )
                 for b in self.__all_backgrounds : self.alist1.add ( b )
                 for f in fib                    : self.__nums_backgrounds.append ( f ) 
 
@@ -2121,7 +2121,7 @@ class Fit1D (PDF) :
                 self.alist1.add  ( self.__all_components[0]  )
                 self.__nums_components.append ( cf ) 
             elif 2 <= nc : 
-                fic = self.make_fracs ( nc , 'C{%%d}%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False , fracs = C )
+                fic = self.make_fracs ( nc , 'C%s_%%d' % suffix ,  'C%s_%%d'  % suffix , fractions  = False , fracs = C )
                 for c in self.__all_components : self.alist1.add ( c )
                 for f in fic                   : self.__nums_components.append ( f )
 
@@ -2142,10 +2142,10 @@ class Fit1D (PDF) :
             for s in self.__all_signals     : self.alist1.add ( s )
             for b in self.__all_backgrounds : self.alist1.add ( b )
             for c in self.__all_components  : self.alist1.add ( c )
-            
-            fic = self.make_fracs ( ns + nb + nc , 'f{%%d}%s' % suffix , 'f(%%d)%s'  % suffix ,
+
+            fic = self.make_fracs ( ns + nb + nc , 'f%s_%%d' % suffix , 'f%s_%%d'  % suffix ,
                                     fractions  = True , recursive = self.recursive , fracs = F )
-            
+                
             for f in fic                    : self.__nums_fractions.append ( f )   
             for f in self.__nums_fractions  : self.alist2.add ( f ) 
 

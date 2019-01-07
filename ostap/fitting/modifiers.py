@@ -54,6 +54,9 @@ class Product1D_pdf(PDF) :
         
         self.__pdf__1 = pdf1
         self.__pdf__2 = pdf2
+
+        self.__pdf1 = None 
+        self.__pdf2 = None
         
         if isinstance ( pdf1 , PDF ) :
             self.__pdf1 = pdf1
@@ -65,8 +68,10 @@ class Product1D_pdf(PDF) :
         else :
             raise TypeError("Illegal setting for ``pdf1'': %s/%s" % ( pdf1 , type ( pdf1 ) ) )
 
+        assert isinstance ( self.__pdf1  , PDF ), 'Invalid pdf1 type'
+
         if isinstance ( pdf2 , PDF ) :
-            self.__pdf1 = pdf2
+            self.__pdf2 = pdf2
             if xvar and not ( xvar is pdf2.xvar ) :
                 self.error ("Mismatch in ``xvar''-observable") 
             elif not xvar : xvar = pdf2.xvar 
@@ -75,9 +80,12 @@ class Product1D_pdf(PDF) :
         else :
             raise TypeError("Illegal setting for ``pdf2'': %s/%s" % ( pdf2 , type ( pdf1 ) ) )
         
+        assert isinstance ( self.__pdf2  , PDF ), 'Invalid pdf2 type'
+        
         assert isinstance ( xvar , ROOT.RooAbsReal ),\
                "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
 
+        
         if not name  : name  = "product_%s_%s"  % ( self.pdf1.name , self.pdf2.name )
         if not title : title = "Product(%s,%s)" % ( self.pdf1.name , self.pdf2.name )
 
@@ -94,7 +102,7 @@ class Product1D_pdf(PDF) :
         elif 1 == em2 : self.warning ( "pdf2  ``can-be-extended''" )
 
         ## finally build PDF 
-        self.pdf = ROOT.RooProdPdf ( name , title , self.pdf1.pdf , self.pdf1.pdf )
+        self.pdf = ROOT.RooProdPdf ( name , title , self.pdf1.pdf , self.pdf2.pdf )
 
         ## save configuration for cloning
         self.config = {
@@ -104,17 +112,21 @@ class Product1D_pdf(PDF) :
             'name'  : self.name  ,
             'title' : self.title ,            
             }
+        print  'I AM PRODUCT'
+        print  'PDF1:', self.pdf1
+        print  'PDF2:', self.pdf2
         
-        @property
-        def pdf1 ( self ) :
-            """``pdf1'' : the first PDF"""
-            return self.__pdf1
-        
-        @property
-        def pdf2 ( self ) :
-            """``pdf2'' : the second PDF"""
-            return self.__pdf2
-
+    @property
+    def pdf1 ( self ) :
+        """``pdf1'' : the first PDF"""
+        print 'I am property pdf1'
+        return self.__pdf1
+    
+    @property
+    def pdf2 ( self ) :
+        """``pdf2'' : the second PDF"""
+        return self.__pdf2
+    
 # =============================================================================
 ## @class Modify1D_pdf
 #  Modify the certain PDF with positive polynomial function
@@ -159,8 +171,8 @@ class Modify1D_pdf(Product1D_pdf) :
         assert isinstance ( xvar , ROOT.RooAbsReal ),\
                "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
 
-        if not name  : name  = "modify_%s_%s"  % ( self.pdf1.name , power )
-        if not title : title = "Modify(%s,%s)" % ( self.pdf1.name , power )
+        if not name  : name  = "modify_%s_%s"  % ( pdf.name , power )
+        if not title : title = "Modify(%s,%s)" % ( pdf.name , power )
 
         from ostap.fitting.background import PolyPos_pdf
         pdf2 = PolyPos_pdf( 'M_%s_%s' % ( pdf.name , power ) ,
@@ -173,19 +185,19 @@ class Modify1D_pdf(Product1D_pdf) :
         
         ## initialize the base
         Product1D_pdf.__init__ ( self          ,
-                                 pdf           ,
-                                 pdf2          , 
+                                 pdf1  = pdf   ,
+                                 pdf2  = pdf2  , 
                                  xvar  = xvar  ,
                                  name  = name  ,
                                  title = title )         
 
         ## for drawing...
         
-        for c in self.pdf1.signals     () : self.signals    .add ( c )
-        for c in self.pdf1.backgrounds () : self.backgrounds.add ( c )
-        for c in self.pdf1.components  () : self.components .add ( c )
-        for c in self.pdf1.crossterms1 () : self.crossterms1.add ( c )
-        for c in self.pdf1.crossterms2 () : self.crossterms2.add ( c )
+        for c in self.pdf1.signals     : self.signals    .add ( c )
+        for c in self.pdf1.backgrounds : self.backgrounds.add ( c )
+        for c in self.pdf1.components  : self.components .add ( c )
+        for c in self.pdf1.crossterms1 : self.crossterms1.add ( c )
+        for c in self.pdf1.crossterms2 : self.crossterms2.add ( c )
         
         self.config = {
             'name'  : self.name  ,
@@ -200,13 +212,14 @@ class Modify1D_pdf(Product1D_pdf) :
     @property
     def old_pdf ( self ):
         """``old_pdf''  : original (non-modifier) PDF"""
-        return self.__old_pdf 
+        return self.pdf1
     
     ## redirect any other attributes to original PDF
-    def __getattr__ ( self , attr ) :
-        """Get all extra attributes from the original PDF"""
-        opdf = self.pdf1 
-        return  getattr ( opdf , attr )
+    ## def __getattr__ ( self , attr ) :
+    ##    """Get all extra attributes from the original PDF"""
+    ##    print 'getting %s attribute' % attr 
+    ##    opdf = self.pdf1
+    ##    return  getattr ( opdf , attr )
 
 # =============================================================================
 if '__main__' == __name__ : 

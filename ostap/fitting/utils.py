@@ -196,10 +196,10 @@ def fitArgs ( name , dataset = None , *args , **kwargs ) :
                 c = ROOT.RooArgSet ( )
                 for ia in a : c.add ( ia )
                 _args.append (  ROOT.RooFit.ExternalConstraints  ( c ) )
-            else : logger.warning( '%s skip keyword argument %s: %s' % ( name , k , a ) )
+            else : logger.error ( '%s skip keyword argument %s: %s' % ( name , k , a ) )
                                         
         else : 
-            logger.warning ( '%s unknown/illegal keyword argument type %s/%s, skip it ' % ( name , k , type ( a ) ) )
+            logger.error ( '%s unknown/illegal keyword argument type %s/%s, skip it ' % ( name , k , type ( a ) ) )
             continue            
         
     if not ncpu_added :
