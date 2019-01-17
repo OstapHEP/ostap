@@ -116,7 +116,7 @@ class Adjust2D(MakeVar) :
         self.__flat    = Flat2D  ( xvar , yvar , name = 'flat_' + name )
         self.__frac    = self.make_var ( fraction , 'fracA_%s'                  % name ,
                                          'small  fraction of flat component %s' % name ,
-                                         value , 1.e-5 , 0 , 1 )
+                                         fraction , 1.e-5 , 0 , 1 )
         
         self.__alist1  = ROOT.RooArgList ( self.__flat.pdf , self.__old_pdf )        
         self.__alist2  = ROOT.RooArgList ( self.__frac     )
@@ -266,7 +266,7 @@ class Adjust1D_pdf(PDF) :
                                        fraction = fraction         )
         
         self.__pdf  = self.adjustment.pdf 
-        
+ 
         self.config = {
             'xvar'     : self.xvar    ,
             'name'     : self.name    ,
@@ -450,7 +450,7 @@ class Adjust3D_pdf(PDF3) :
                                        fraction = fraction         )
         
         self.__pdf  = self.adjustment.pdf 
-        
+
         self.config = {
             'xvar'     : self.xvar    ,
             'yvar'     : self.yvar    ,
