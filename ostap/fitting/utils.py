@@ -205,7 +205,8 @@ def fitArgs ( name , dataset = None , *args , **kwargs ) :
     if not ncpu_added :
         logger.debug  ( '%s: NCPU is added ' % name ) 
         _args.append  (  ncpu ( len ( dataset ) ) )
-            
+
+    ## _args.append ( ROOT.RooFit.Timer ( True  ) ) 
     return tuple ( _args )
 
 # =============================================================================

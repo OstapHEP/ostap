@@ -7,6 +7,7 @@
 """Ostap Style for ROOT-plots"""
 # =============================================================================
 import ROOT
+import ostap.plotting.color 
 __all__ = (
     'UseStyle'    ,  ## context manager  for the style (class) 
     'useStyle'    ,  ## context manager  for the style (function)

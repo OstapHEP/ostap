@@ -2,19 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file canvas.py
-#  
-#     .oooooo.                .                        
-#    d8P'  `Y8b             .o8                        
-#   888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.  
-#   888      888 d88(  "8   888   `P  )88b   888' `88b 
-#   888      888 `"Y88b.    888    .oP"888   888   888 
-#   `88b    d88' o.  )88b   888 . d8(  888   888   888 
-#    `Y8bood8P'  8""888P'   "888" `Y888""8o  888bod8P' 
-#                                            888       
-#                                           o888o      
-#                                                    
 #  Simple helper module to get ROOT TCanvas
-#
 #  @date   2012-02-15
 #  @author Vanya BELYAEV Ivan.Belyaevitep.ru
 # =============================================================================
@@ -35,7 +23,8 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, os, tempfile  
-import ostap.core.core    
+import ostap.core.core
+import ostap.plotting.style  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -288,10 +277,10 @@ atexit.register ( _remove_canvases_ )
 def canvas_partition ( canvas               , 
                        nx                   ,
                        ny                   ,
-                       left_margin   = 0.14 ,
-                       right_margin  = 0.05 ,   
-                       bottom_margin = 0.16 ,
-                       top_margin    = 0.05 ,
+                       left_margin   = 0.10 ,
+                       right_margin  = 0.03 ,   
+                       bottom_margin = 0.10 ,
+                       top_margin    = 0.03 ,
                        hSpacing      = 0.0  ,
                        vSpacing      = 0.0  ) :
     """Perform partition of Canvas into pads with no inter-margins

@@ -463,21 +463,25 @@ class PDF (MakeVar) :
         return result, frame 
 
     ## helper method to draw set of components 
-    def _draw ( self , what , frame , options , color = 1 ) :
+    def _draw ( self , what , frame , options , style = None ) :
         """ Helper method to draw set of components
         """
 
-        from ostap.plotting.fit_draw import Color 
-        if not isinstance  ( color , Color ) :
-            color = Color ( colors = color )
+        from ostap.plotting.fit_draw import Styles, Style
         
+        if isinstance ( options , ROOT.RooCmdArg ) : options = options, 
+        elif not options                           : options = ()
+
+        if   isinstance ( style , Styles     ) : pass
+        elif isinstance ( style , Style      ) : style = Styles ( [ style ] )
+        elif isinstance ( style , list_types ) : style = Styles (   style   )   
+                                  
         i = 0
         for cmp in what : 
             cmps = ROOT.RooArgSet( cmp )
-            self.pdf .plotOn (
-                frame ,
-                ROOT.RooFit.Components ( cmps          ) ,
-                ROOT.RooFit.LineColor  ( color  ( i )  ) , *options )
+            st   = style  ( i ) if callable  ( style ) else () 
+            opts = st + options
+            self.pdf .plotOn ( frame , ROOT.RooFit.Components ( cmps ) , *opts )
             
             i += 1
                                             
@@ -565,30 +569,30 @@ class PDF (MakeVar) :
 
             ## draw various ``background'' terms
             boptions = kwargs.pop (     'background_options' , FD.   background_options )
-            bbcolor  = kwargs.pop (       'background_color' , FD.     background_color )
-            self._draw( self.backgrounds , frame , boptions , bbcolor )
+            bbstyle  = kwargs.pop (       'background_style' , FD.     background_style )
+            self._draw( self.backgrounds , frame , boptions , bbstyle )
 
             ## ugly :-(
             ct1options = kwargs.pop (     'crossterm1_options' , FD.   crossterm1_options )
-            ct1bcolor  = kwargs.pop (       'crossterm1_color' , FD.     crossterm1_color ) 
+            ct1bstyle  = kwargs.pop (       'crossterm1_style' , FD.     crossterm1_style ) 
             if hasattr ( self , 'crossterms1' ) and self.crossterms1 : 
-                self._draw( self.crossterms1 , frame , ct1options , ct1bcolor )
+                self._draw( self.crossterms1 , frame , ct1options , ct1bstyle )
 
             ## ugly :-(
             ct2options = kwargs.pop (     'crossterm2_options' , FD.   crossterm1_options )
-            ct2bcolor  = kwargs.pop (       'crossterm2_color' , FD.     crossterm1_color )
+            ct2bstyle  = kwargs.pop (       'crossterm2_style' , FD.     crossterm1_style )
             if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
-                self._draw( self.crossterms2 , frame , ct2options , ct2bcolor )
+                self._draw( self.crossterms2 , frame , ct2options , ct2bstyle )
 
             ## draw ``other'' components
             coptions   = kwargs.pop (      'component_options' , FD.    component_options  )
-            cbcolor    = kwargs.pop (        'component_color' , FD.      component_color  ) 
-            self._draw( self.components , frame , coptions , cbcolor )
+            cbstyle    = kwargs.pop (        'component_style' , FD.      component_style  )
+            self._draw( self.components , frame , coptions , cbstyle )
 
             ## draw ``signal'' components
             soptions   = kwargs.pop (         'signal_options' , FD.      signal_options  )
-            sbcolor    = kwargs.pop (           'signal_color' , FD.        signal_color  ) 
-            self._draw( self.signals , frame , soptions , sbcolor )
+            sbstyle    = kwargs.pop (           'signal_style' , FD.        signal_style  ) 
+            self._draw( self.signals , frame , soptions , sbstyle )
 
             #
             ## the total fit curve
