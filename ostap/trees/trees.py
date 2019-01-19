@@ -280,15 +280,17 @@ def _tt_project_ ( tree               ,
     if hasattr ( what , '__len__' ) and 1 == len ( what ) and not isinstance ( what , (str, ROOT.TCut) ): 
         what = what[0]
 
-    ## check for comma-separated list of expressions:
-    if isinstance ( what , str ) :
-        what = what.split(',')
-        if 1 == len(what) : what = what[0]
-
     ## check for semicolumn-separated list of expressions:
-    if isinstance ( what , str ) :
+    if isinstance ( what , str ) and ';' in what : 
         what = what.split(';')
         if 1 == len(what) : what = what[0]
+
+    ## check for comma-separated list of expressions:
+    if isinstance ( what , str ) and ',' in what :
+        if '(' in what and ')' in what : pass 
+        else :
+            what = what.split(',')
+            if 1 == len( what ) : what = what[0]
 
     #
     if   isinstance ( what  , str       ) : what =     what 
