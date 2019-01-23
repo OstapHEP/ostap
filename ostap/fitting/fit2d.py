@@ -302,9 +302,9 @@ class PDF2 (PDF) :
             args [  'total_fit_options' ] =  total_fit_options
             
         background_options    = args.pop ( 'background_options'    , FD.background2D_options    )
-        base_background_color = args.pop ( 'base_background_color' , FD.base_background2D_color )
+#        base_background_color = args.pop ( 'base_background_color' , FD.base_background2D_color )
         args [ 'background_options'    ] = background_options
-        args [ 'base_background_color' ] = base_background_color
+ #       args [ 'base_background_color' ] = base_background_color
         
         
         #
