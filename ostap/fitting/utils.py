@@ -304,7 +304,7 @@ class MakeVar ( object ) :
         ## create the variable from parameters 
         if not isinstance ( var , ROOT.RooAbsReal ) : 
             var = ROOT.RooRealVar ( name , comment , *args )
-            self.aux_keep.append ( var )        ##  ATTENTION: store newly created variable
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
         
         ## fix it, if needed
         if   isinstance ( fix , bool                   ) : pass 

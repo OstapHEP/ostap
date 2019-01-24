@@ -46,10 +46,11 @@ else                       : logger = getLogger ( __name__              )
 class PDF (MakeVar) :
     """Useful helper base class for implementation of various PDF-wrappers 
     """
-    __name = 'Unnamed'
     def __init__ ( self , name ,  xvar = None , special = False ) :
+
+        ## name is defined via base class MakeVar 
+        self.name  = name ## name is defines via base class MakeVar 
         
-        self.__name         = name        
         self.__signals      = ROOT.RooArgList ()
         self.__backgrounds  = ROOT.RooArgList ()
         self.__components   = ROOT.RooArgList ()
@@ -121,12 +122,10 @@ class PDF (MakeVar) :
 
         return xmin , xmax 
         
-
     @property 
     def vars ( self ) :
         """``vars'' : fitting variables/observables (as ROOT.RooArgSet)"""
-        return self.__vars
-    
+        return self.__vars    
     @property
     def value ( self ) :
         """``value''  :  get the value of PDF"""
@@ -134,18 +133,15 @@ class PDF (MakeVar) :
         if self.fit_result :
             e = self.pdf.getPropagatedError ( self.fit_result )
             if 0<= e : return  VE ( v ,  e * e )           ## RETURN
-        return  v
- 
+        return  v    
     @property 
     def xvar ( self ) :
         """``x''-variable for the fit (same as ``x'')"""
         return self.__xvar
-
     @property 
     def x    ( self ) :
         """``x''-variable for the fit (same as ``xvar'')"""
         return self.__xvar
-
     @property
     def config ( self ) :
         """The full configuration info for the PDF"""
@@ -157,12 +153,10 @@ class PDF (MakeVar) :
         conf = {}
         conf.update ( value )
         self.__config = conf
-
     @property
     def special ( self ) :
         """``special'' : is this PDF ``special''   (does nor conform some requirements)?"""
         return self.__special
-
     @property
     def tricks ( self ) :
         """``tricks'' : flag to allow some  tricks&shortcuts """
@@ -173,7 +167,6 @@ class PDF (MakeVar) :
         if val and not self.__tricks :
             raise ValueError("Can't allow tricks&shortcuts!")
         self.__tricks = val
-
     @property
     def pdf  ( self ) :
         """The actual PDF (ROOT.RooAbsPdf)"""
@@ -184,7 +177,6 @@ class PDF (MakeVar) :
         if not self.special :
             assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
         self.__pdf = value 
-
     @property
     def fit_result ( self ) :
         """``fit_result'' : (the latest) fit resut (TFitResult)"""
@@ -195,22 +187,11 @@ class PDF (MakeVar) :
                "Invalid value: %s/%s" % ( value , type ( value ) )
         self.__fit_result = None
         if isinstance ( value , ROOT.RooFitResult ) and valid_pointer ( value ) : 
-            self.__fit_result = value
-    
-    @property
-    def name ( self ) :
-        """The name of the PDF"""
-        return self.__name
-    @name.setter
-    def name ( self , value ) :
-        assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type(value) ) 
-        self.__name = value
-
+            self.__fit_result = value    
     @property
     def title ( self ) :
         """``title'' : get the title for RooAbsPdf"""
-        return self.pdf.title if self.pdf else self.name 
-    
+        return self.pdf.title if self.pdf else self.name     
     @property
     def alist1 ( self ) :
         """list/RooArgList of PDF components for compound PDF"""
@@ -219,7 +200,6 @@ class PDF (MakeVar) :
     def alist1 ( self , value ) :
         assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
         self.__alist1 = value
-
     @property
     def alist2 ( self ) :
         """list/RooArgList of PDF  component's fractions (or yields for exteded fits) for compound PDF"""        
@@ -228,7 +208,6 @@ class PDF (MakeVar) :
     def alist2 ( self , value ) :
         assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
         self.__alist2 = value
-
     @property
     def signals     ( self ) :
         """The list/ROOT.RooArgList of all ``signal'' components, e.g. for visualization"""
@@ -495,13 +474,20 @@ class PDF (MakeVar) :
     #  @param nbins    binning scheme for frame/RooPlot 
     #  @param silent   silent mode ?
     #  @param data_options          drawing options for dataset
-    #  @param signal_options        drawing options for `signal'     components    
-    #  @param background_options    drawing options for `background' components 
-    #  @param component_options     drawing options for 'other'      components 
+    #  @param signal_options        drawing options for `signal'        components    
+    #  @param background_options    drawing options for `background'    components 
+    #  @param crossterm1_options    drawing options for `crossterm-1'   components 
+    #  @param crossterm2_options    drawing options for `crossterm-2'   components 
+    #  @param background2D_options  drawing options for `background-2D' components 
+    #  @param component_options     drawing options for 'other'         components 
     #  @param fit_options           drawing options for fit curve    
-    #  @param base_signal_color     base color for signal components 
-    #  @param base_background_color base color for background components
-    #  @param base_component_color  base color for other components 
+    #  @param signal_style          style(s) for signal components 
+    #  @param background_style      style(s) for background components
+    #  @param component_style       style(s) for other components
+    #  @param crossterm1_style      style(s) for ``crossterm-1''   components
+    #  @param crossterm2_style      style(s) for ``crossterm-2''   components
+    #  @param background2D_style    style(s) for ``background-2D'' components
+    
     #  @param data_overlay          draw points atop of fitting curves?  
     #  @see ostap.plotting.fit_draw 
     def draw ( self ,
@@ -522,19 +508,21 @@ class PDF (MakeVar) :
         
         Drawing options:
         - data_options            ## drawing options for dataset  
-        - background_options      ## drawing options for background component(s)
-        - crossterm1_options      ## drawing options for crossterm1 component(s)
-        - crossterm2_options      ## drawing options for crossterm2 component(s)
-        - signal_options          ## drawing options for signal     component(s)
-        - component_options       ## drawing options for other      component(s)
+        - background_options      ## drawing options for background    component(s)
+        - crossterm1_options      ## drawing options for crossterm1    component(s)
+        - crossterm2_options      ## drawing options for crossterm2    component(s)
+        - signal_options          ## drawing options for signal        component(s)
+        - component_options       ## drawing options for other         component(s)
+        - background2D_options    ## drawing options for 2D-background component(s)
         - total_fit_options       ## drawing options for the total fit curve
         
-        Colors:                  
-        - base_background_color   ## base color for background component(s)
-        - base_crossterm1_color   ## base color for crossterm1 component(s)
-        - base_crossterm2_color   ## base color for crossterm2 component(s)
-        - base_signal_color       ## base color for signal     component(s)
-        - base_component_color    ## base color for other      component(s)
+        Style&Colors:                  
+        - background_style        ## style(s) for background component(s)
+        - crossterm1_style        ## style(s) for crossterm1 component(s)
+        - crossterm2_style        ## style(s) for crossterm2 component(s)
+        - signal_style            ## style(s) for signal     component(s)
+        - component_style         ## style(s) for other      component(s)
+        - background2D_style      ## style(s) for background component(s)
 
         Other options:
         -  residual               ## make also residual frame
@@ -907,7 +895,7 @@ class PDF (MakeVar) :
             else :
                 return 0.0                    ## RETURN 
             
-        raise AttributeError, 'something wrong goes here'
+        raise AttributeError('Something wrong goes here')
 
     # ========================================================================
     ## convert to float 
@@ -1206,7 +1194,7 @@ class PDF (MakeVar) :
         """Get integral between xmin and xmax
         >>> pdf = ...
         >>> print pdf.integral ( 0 , 10 )
-        """
+        """[
         ## check limits
         if self.xminmax() :
             mn , mx = self.xminmax() 

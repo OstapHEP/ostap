@@ -1002,6 +1002,28 @@ namespace Ostap
       const ValueWithError& b     , 
       const double          c = 0 ) ;
     // ========================================================================
+    /** calculate the "effective" background-to-signal ratio from the valeu 
+     *  and its uncertainty using the identity
+     *  \f$ \frac{\sigma(S)}{S} = \frac{\sqrt{S}}{S}\sqrt{1+\frac{B}{S}}\f$.
+     *  From this identity one has
+     *  \f$ \left.\frac{B}{S}\right|_{\mathrm{eff}} \equiv \frac{\sigma^2(S)}{S} -1 \f$
+     *  @param v the value 
+     *  @return the effective backround-to-signal ratio or -1 
+     */
+    ValueWithError b2s    ( const ValueWithError& v ) ;
+    // ========================================================================
+    /** calculate the "effective purity" ratio using the identity
+     *  \f$ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f$
+     *  and the effective "background-to-signal" ratio is estimated as 
+     *  \f$ \left.\frac{B}{S}\right|_{\mathrm{eff}} = \frac{\sigma^2(S)}{S} -1 \f$, 
+     *  finally one gets 
+     *  \f$ p_{\mathrm{eff}} \equiv \frac{S}{\sigma^2(S)}\f$
+     *  @see Ostap::Math::b2s 
+     *  @param v the value 
+     *  @return the effective purity or -1 
+     */
+    ValueWithError purity ( const ValueWithError& v ) ;
+    // ========================================================================
     /** calculate "asymmetry" of two elements  \f$ \kappa = \frac{a-b}{a+b}\f$ 
      *  taking into account the correlation coefficient  
      *  @param a  (input) the first value 

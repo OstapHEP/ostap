@@ -106,28 +106,69 @@ for t in ( Ostap.Math.ValueWithError         ,
         t.__repr__  = t.toString
 
 # ============================================================================= 
-## Get background-over-signal ratio B/S estimate from the equation:
-#  \f$ \frac{ \sigma(S)}{S} = \frac{1}{\sqrt{S}} \sqrt{ 1 + \frac{B}{S} } \f$
+## Calculate the "effective" background-to-signal ratio from the valeu 
+#  and its uncertainty using the identity
+#  \f$ \frac{\sigma(S)}{S} = \frac{\sqrt{S}}{S}\sqrt{1+\frac{B}{S}}\f$.
+#  From this identity one gets
+#  \f$ \left.\frac{B}{S}\right|_{\mathrm{eff}} \equiv \frac{\sigma^2(S)}{S} -1 \f$
+#  @param v the value 
+#  @return the effective backround-to-signal ratio or -1 
 #  @code
 #  v = VE( ... )
 #  print 'B/S=', v.b2s() 
 #  @endcode
-def _b2s_ ( s )  :
+def _ve_b2s_ ( s )  :
     """Get background-over-signal ratio B/S estimate from the equation:
     error(S) = 1/sqrt(S) * sqrt ( 1 + B/S).
     >>> v = ...
     >>> b2s = v.b2s() ## get B/S estimate
     """
     #
+    vv = s.value ()
+    if   vv <= 0 or iszero ( vv ) : return VE(-1,0)
+    #
     c2 = s.cov2  ()
+    if   c2 <= 0 or iszero ( c2 ) : return VE(-1,0)
+    elif isequal ( vv , c2 )      : return VE( 1,0)
+    elif c2 < vv                  : return VE(-1,0)
     #
-    if s.value() <= 0  or c2 <= 0 : return VE(-1,0) 
-    #
-    return c2/s - 1 
+    return c2 / s - 1.0
 
+# =============================================================================
+## Calculate the "effective purity" ratio using the identity
+#  \f$ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f$
+#  and the effective "background-to-signal" ratio is estimated as 
+#  \f$ \left.\frac{B}{S}\right|_{\mathrm{eff}} = \frac{\sigma^2(S)}{S} -1 \f$, 
+#  finally one gets 
+#  \f$ p_{\mathrm{eff}} \equiv \frac{S}{\sigma^2(S)}\f$
+#  @see Ostap::Math::b2s 
+#  @see Ostap::Math::purity 
+#  @param v the value 
+#  @return the effective purity or -1 
+def _ve_purity_ ( s ) :
+    """Calculate the ``effective purity'' ratio using the identity
+    p = S/(S+B) = 1/( 1 + B/S ), 
+    - and the effective ``background-to-signal'' ratio B/S is estimated as
+    B/S = sigma^2(S)/S - 1
+    - Finally one gets
+    p = S / sigma^2(S) 
+    - see Ostap::Math::b2s 
+    - see Ostap::Math::purity
+    """
+    #
+    vv = s.value ()
+    if   vv <= 0 or iszero ( vv ) : return VE(-1,0)
+    #
+    c2 = s.cov2() 
+    if   c2 <= 0 or iszero ( c2 ) : return VE(-1,0)
+    elif isequal ( vv , c2  )     : return VE( 1,0)
+    elif c2 < vv                  : return VE(-1,0)
+    #
+    return s / cov2 
+    
 # ============================================================================= 
 ## Get precision with ``some'' error estimate.
-def _prec2_ ( s )  :
+def _ve_prec2_ ( s )  :
     """Get precision with ``some'' error estimate.
     >>> v = ...
     >>> p = v.prec()
@@ -142,11 +183,9 @@ def _prec2_ ( s )  :
     #
     return c/abs(s) 
 
-
-VE . b2s        = _b2s_
-VE . prec       = _prec2_
-VE . precision  = _prec2_
-
+VE . b2s        = _ve_b2s_
+VE . prec       = _ve_prec2_
+VE . precision  = _ve_prec2_
 
 _is_le_    = Ostap.Math.LessOrEqual ( 'double' )()
 
@@ -194,10 +233,10 @@ def _ve_ge_ ( self , other ) :
     """
     return _is_le_ ( float(other) , float(self) )
     
-VE.__lt__ = _ve_lt_ 
+VE.__lt__ = _ve_lt_
 VE.__le__ = _ve_le_ 
 VE.__gt__ = _ve_gt_ 
-VE.__ge__ = _ve_ge_ 
+VE.__ge__ = _ve_ge_
 
 
 _is_equal_ = Ostap.Math.Equal_To    ( 'double' )()

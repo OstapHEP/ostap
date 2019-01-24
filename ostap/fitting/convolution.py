@@ -140,37 +140,30 @@ class Convolution(object):
     def xvar (self ) :
         """The axis variable for  convolution"""
         return self.__xvar
-
     @property
     def useFFT  ( self ) :
         """``useFFT'' :    use Fast Fourier Transform?"""
         return self.__useFFT
-
     @property
     def resolution ( self  ) :
-        """``resoltuion'': pdf for resolution function"""
+        """``resolution'': pdf for resolution function"""
         return self.__resolution 
-    
     @property
     def old_pdf ( self ) :
         """``old'' - the original pdf before convolution"""
         return self.__old_pdf
-
     @property
     def pdf ( self ) :
         """``new'' (convoluted) PDF"""
         return self.__pdf
-
     @property
     def nbinsFFT ( self ) :
         """number of cache bins for Fast Fourier Transform"""
         return self.__nbins 
-
     @property
     def buffer ( self ) :
         """``buffer'' : buffer fraction for Fast Fourier Transform"""
         return self.__buffer
-
     @property
     def nsigmas ( self ) :
         """``nsigmas'' : convolution window for RooNumConvPdf"""
@@ -251,12 +244,10 @@ class Convolution_pdf(PDF) :
     def cnv         ( self ) :
         """``cnv'' : the actual convolution object (same as ``convolution'')"""
         return self.__cnv
-
     @property
     def old_pdf ( self ):
         """``old_pdf''  : original (non-convolved) PDF"""
-        return self.__old_pdf 
-        
+        return self.__old_pdf         
     ## redirect any other attributes to original PDF
     def __getattr__ ( self , attr ) :
         """Get all extra attributes from the original PDF"""

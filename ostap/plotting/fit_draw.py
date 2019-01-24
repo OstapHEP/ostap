@@ -29,13 +29,17 @@ __all__     = (
     'component_options'     , ## draw options for "other"      component(s)
     'total_fit_options'     , ## draw options for the total fit curve
     ##
-    'signal_style'          , ## style for "signal"     component(s)
-    'background_style'      , ## style for "background" component(s)
-    'crossterm1_style'      , ## style for "crossterm1" component(s)
-    'crossterm2_style'      , ## style for "crossterm2" component(s)
-    'component_style'       , ## style for "other"      component(s)
+    'signal_style'          , ## style for "signal"        component(s)
+    'background_style'      , ## style for "background"    component(s)
+    'background2D_style'    , ## style for "background-2D" component(s)
+    'crossterm1_style'      , ## style for "crossterm1"    component(s)
+    'crossterm2_style'      , ## style for "crossterm2"    component(s)
+    'component_style'       , ## style for "other"         component(s)
     ##
-    'Color'                 , ## simple class to define color for the commponents 
+    'Style'                 , ## helper class to define the style for the component
+    'Line'                  , ## helper class to define the style for the component
+    'Area'                  , ## helper class to define the style for the component
+    'Styles'                , ## helper class to define the style for the component
     )
 # =============================================================================
 import ROOT
@@ -100,23 +104,24 @@ data_options           = ()
 data_options_nobars     = ( ROOT.RooFit.MarkerStyle ( 20   ) ,
                             ROOT.RooFit.DrawOption  ( "zp" ) )
 
-## signal:          thin dotted line
-signal_options          = lineWidth ( 1 ) ,
+## signal: 
+signal_options          = ()
 
-## 1D background:   thin long-dashed line
-background_options      = lineWidth ( 1 ) ,
+## 1D background: 
+background_options      = () 
 
-## "component":     thin dash-dotted line
-component_options       = lineWidth ( 1 ) ,
+## "component":   
+component_options       = ()
 
 ## total fit curve: thick red orange line 
 total_fit_options       = lineWidth ( 3 ) , lineColor ( ROOT.kOrange + 1 ) , 
 
 ## background:  thin short-dashed line
-background2D_options    = lineWidth ( 1 ) , 
-crossterm1_options      = lineWidth ( 1 ) , 
-crossterm2_options      = lineWidth ( 1 ) , 
+background2D_options    = background_options  
+crossterm1_options      = ()  
+crossterm2_options      = () 
 
+base_background_2D_color = 2 
 
 # ===========================================================================================
 ## @class Style
@@ -125,7 +130,8 @@ class Style(object):
 
     def __init__ ( self                     ,
                    linecolor = ROOT.kBlack  ,
-                   linestyle = 1            , 
+                   linestyle = 1            ,
+                   linewidth = 1            ,                   
                    fillcolor = None         ,
                    fillstyle = None         , *args ) :
 
@@ -167,6 +173,11 @@ class Style(object):
             options.append ( fillstyle  )
             _fillopt = True 
 
+        if   isinstance ( linewidth , innteger_types ) and 0 < linewidth :            
+            options.append ( ROOT.RooFit.LineWwidth ( linewidth ) )
+        elif isinstance ( linewidth , ROOT.RooCmdArg )  and 'LineWidth' == linewidth.GetName () : 
+            options.append ( linewidth )
+            
         if _fillopt :
             options.append ( ROOT.RooFit.VLines     (      ) )
             options.append ( ROOT.RooFit.DrawOption ( "FL" ) )
@@ -178,7 +189,58 @@ class Style(object):
         """``options'' : get the constructed list of options"""
         return self.__options
 
-    
+# =============================================================================
+## @class Line
+#  Define style for the line
+#  @code
+#  l = Line ( ROOT.kRed )
+#  l = Line ( ROOT.kRed , linestyle = 2 ) 
+#  l = Line ( ROOT.kRed , linewidth = 3 ) 
+#  @endcode
+class Line (Style) :
+    """Define the line style:
+    >>> l = Line ( ROOT.kRed )
+    >>> l = Line ( ROOT.kRed , linestyle = 2 ) 
+    >>> l = Line ( ROOT.kRed , linewidth = 3 )     
+    """
+    def __init__ ( self                     ,
+                   linecolor = ROOT.kBlack  ,
+                   linestyle = 1            , 
+                   linewidth = 1            , *args ) :
+
+        Style.__init__( self ,
+                        linecolor = linecolor ,
+                        linestyle = linestyle ,
+                        linewidth = liewidth  ,
+                        fillcolor = None      ,
+                        fillstyle = None      , *args ) 
+
+        
+# =============================================================================
+## @class Area 
+#  Define style for the area
+#  @code
+#  l = Area ( ROOT.kRed )
+#  l = Area ( ROOT.kRed , fillstyle = 3315 ) 
+#  @endcode
+class Area (Style) :
+    """Define style for the ares
+    >>> l = Area ( ROOT.kRed )
+    >>> l = Area ( ROOT.kRed , fillstyle = 3315 ) 
+    """
+    def __init__ ( self                     ,
+                   fillcolor = ROOT.kRed    ,
+                   fillstyle = 1001         , *args ) :
+        
+        Style.__init__( self ,
+                        linecolor = None      ,
+                        linestyle = None      ,
+                        fillcolor = fillcolor ,
+                        fillstyle = fillstyle ,
+                        linewidth = None      , *args ) 
+
+# =======================================================================================
+## list of styles 
 class Styles(object) :
 
     def __init__ ( self            ,
@@ -186,7 +248,8 @@ class Styles(object) :
                    linecolors = [ i for i in range ( 1 , 51 ) ] ,
                    linestyles = [ i for i in range ( 1 , 16 ) ] ,
                    fillcolors = [ i for i in range ( 1 , 51 ) ] ,
-                   fillstyles = [] ) :
+                   fillstyles = [] , 
+                   linewidths = [] ) :
 
         _styles = []
         
@@ -197,17 +260,21 @@ class Styles(object) :
             elif isinstance ( s , list_types     ) : ss = Style (  *s )
             elif isinstance ( s , integer_types  ) : ss = Style ( linecolor = s  )
             elif isinstance ( s , ROOT.TColor    ) : ss = Style ( linecolor = s  )
-            elif isinstance ( s , ROOT.RooCmdArg ) : ss = Style ( None , None , None  , None  , s  ) 
+            elif isinstance ( s , ROOT.RooCmdArg ) : ss = Style ( linecolor = None ,
+                                                                  linestyle = None ,
+                                                                  linewidth = None ,
+                                                                  fillcolor = None ,
+                                                                  fillstyle = None , s ) 
             if ss : _styles.append ( ss ) 
 
         self.__styles     = tuple ( _styles )
         
         self.__linecolors = linecolors
         self.__linestyles = linestyles
+        self.__linewidths = linewidths
         self.__fillcolors = fillcolors
         self.__fillstyles = fillstyles
 
-        
     def __get_it ( self , index , objects , defval = None ) :
 
         if isinstance ( objects , list_types ) and objects :
@@ -236,6 +303,12 @@ class Styles(object) :
         elif isinstance  ( s , ROOT.RooCmdArg ) : return s
         return None
 
+    def linewidth ( self , index ) :
+        s = self.__get_it ( index  , self.__linewidths  )
+        if   isinstance  ( s , integer_types  ) : return ROOT.RooFit.LineWidth  ( s )
+        elif isinstance  ( s , ROOT.RooCmdArg ) : return s
+        return None
+    
     def fillcolor ( self , index ) :
         s = self.__get_it ( index  , self.__fillcolors  )
         if   isinstance  ( s , integer_types  ) : return ROOT.RooFit.FillColor  ( s )
@@ -247,7 +320,7 @@ class Styles(object) :
         if   isinstance  ( s , integer_types  ) : return ROOT.RooFit.FillStyle  ( s )
         elif isinstance  ( s , ROOT.RooCmdArg ) : return s
         return None
-    
+
     def __call__ ( self , index ) :
 
         if self.styles :
@@ -259,46 +332,52 @@ class Styles(object) :
         ls = self.linestyle ( index - l ) 
         fc = self.fillcolor ( index - l ) 
         fs = self.fillstyle ( index - l ) 
+        lw = self.linewidth ( index - l ) 
 
-        ss = Style ( lc  , ls , fc , fs )
+        ss = Style ( linecolor = lc , linestyle = ls , linewidth = lw ,
+                     fillcolor = fc , fillstyle = fs , )
         
         return ss.options
     
-signal_style = Styles ( (
-    Style( ROOT.kRed      , 1 , ROOT.kRed      , 1001 ) ,
-    Style( ROOT.kRed -  7 , 1 , ROOT.kRed -  7 , 3395 ) ,
-    Style( ROOT.kRed +  2 , 1 , ROOT.kRed +  2 , 3305 ) ,
-    Style( ROOT.kRed - 10 , 1 , ROOT.kRed - 10 , 3345 ) ,    
-    Style( ROOT.kRed +  3 , 1 , ROOT.kRed +  3 , 3354 ) ,    
-) ) 
-background_style = Styles ( (
-    Style( ROOT.kBlue         ,   7 ) ,
-    Style( ROOT.kBlue    -  9 ,  11 ) ,
-    Style( ROOT.kBlue    +  3 ,  12 ) ,
-    Style( ROOT.kBlue    -  2 ,  13 ) ,
-    Style( ROOT.kBlue    - 10 ,  14 ) ,
-) )
-component_style = Styles ( (
-    Style( 8 , 1 , 8 , 3354 ) ,
-    Style( 6 , 1 , 6 , 3345 ) ,
-    Style( 7 , 1 , 7 , 3395 ) ,
-    Style( 9 , 1 , 9 , 3305 ) ,
-    Style( ROOT.kPink   , 1 , ROOT.kPink   , 3315 ) ,
-    Style( ROOT.kOrange , 1 , ROOT.kOrange , 3351 ) ,
-    Style( 5 , 1 , 5 , 1001 ) ,
-) ) 
-crossterm1_style = Styles ( (
-    Style( ROOT.kMagenta +  3 ,  11 , None , 3345 ) ,
-    Style( ROOT.kMagenta - 10 ,  12 , None , 3354 ) ,
-    Style( ROOT.kMagenta +  3 ,  13 , None , 3395 ) ,
-    Style( ROOT.kMagenta -  3 ,  14 , None , 3305 ) ,
-) ) 
-crossterm2_style = Styles ( (
-    Style( ROOT.kGreen   +  1 ,  14 ) ,
-    Style( ROOT.kGreen   -  1 ,  13 ) ,
-    Style( ROOT.kGreen   - 10 ,  12 ) ,
-    Style( ROOT.kGreen   +  1 ,  11 ) ,
-) )
+signal_style     = Styles ( styles = (
+    Style ( linecolor = ROOT.kRed      , linewidth = 2 , fillcolor = ROOT.kRed      , fillstyle = 1001 ) ,
+    Style ( linecolor = ROOT.kRed -  7 , linewidth = 2 , fillcolor = ROOT.kRed -  7 , fillstyle = 3395 ) ,
+    Style ( linecolor = ROOT.kRed +  2 , linewidth = 2 , fillcolor = ROOT.kRed +  2 , fillstyle = 3305 ) ,
+    Style ( linecolor = ROOT.kRed - 10 , linewidth = 2 , fillcolor = ROOT.kRed - 10 , fillstyle = 3345 ) ,    
+    Style ( linecolor = ROOT.kRed +  3 , linewidth = 2 , fillcolor = ROOT.kRed +  3 , fillstyle = 3354 ) ,    
+    ) )
+
+background_style = Styles ( styles = (
+    Line  ( linecolor = ROOT.kBlue         , linestyle =  7 ) ,
+    Line  ( linecolor = ROOT.kBlue    -  9 , linestyle = 11 ) ,
+    Line  ( linecolor = ROOT.kBlue    +  3 , linestyle = 12 ) ,
+    Line  ( linecolor = ROOT.kBlue    -  2 , linestyle = 13 ) ,
+    Line  ( linecolor = ROOT.kBlue    - 10 , linestyle = 14 ) ,
+    ) )
+
+component_style  = Styles ( styles = (
+    Style ( linecolor = 8            , fillcolor = 8            , fillstyle = 3354 ) ,
+    Style ( linecolor = 6            , fillcolor = 6            , fillstyle = 3345 ) ,
+    Style ( linecolor = 7            , fillcolor = 7            , fillstyle = 3395 ) ,
+    Style ( linecolor = 9            , fillcolor = 9            , fillstyle = 3305 ) ,
+    Style ( linecolor = ROOT.kPink   , fillcolor = ROOT.kPink   , fillstyle = 3315 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3351 ) ,
+    Style ( linecolor = 5            , fillcolor = 5            , fillstyle = 1001 ) ,
+    ) ) 
+crossterm1_style = Styles ( styles = (
+    Line  ( linecolor = ROOT.kMagenta +  3 , linestyle = 11 ) ,
+    Line  ( linecolor = ROOT.kMagenta - 10 , linestyle = 12 ) , 
+    Line  ( linecolor = ROOT.kMagenta +  3 , linestyle = 13 ) , 
+    Line  ( linecolor = ROOT.kMagenta -  3 , linestyle = 14 ) ,
+    ) )
+crossterm2_style = Styles ( styles = (
+    Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 14 ) ,
+    Line  ( linecolor = ROOT.kGreen   -  1 , linestyle = 13 ) ,
+    Line  ( linecolor = ROOT.kGreen   - 10 , linestyle = 12 ) ,
+    Line  ( linecolor = ROOT.kGreen   +  1 , ilnestyle = 11 ) ,
+    ) )
+
+background2D_style = background_style 
 
 
 # =============================================================================

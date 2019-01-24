@@ -1647,6 +1647,53 @@ Ostap::Math::fraction
     1.0 - 1.0 / ( 1.0 + divide ( a , b , c ) ) ;
 }
 // ===========================================================================
+/* calculate the "effective" background-to-signal ratio from the valeu 
+ *  and its uncertainty using the identity
+ *  \f$ \frac{\sigma(S)}{S} = \frac{\sqrt{S}}{S}\sqrt{1+\frac{B}{S}}\f$.
+ *  From this identity one gets
+ *  \f$ \left.\frac{B}{S}\right|_{\mathrm{eff}} \equiv \frac{\sigma^2(S)}{S} -1 \f$
+ *  @param v the value 
+ *  @return the effective backround-to-signal ratio or -1 
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError Ostap::Math::b2s  
+( const Ostap::Math::ValueWithError& v ) 
+{
+  const double value = v.value () ;
+  if ( value <= 0 || s_zero ( value ) ) { return -1 ; } //
+  const double cov2  = v.cov2  () ;
+  if ( cov2  <= 0 || s_zero ( cov2 )  ) { return -1 ; } 
+  else if ( s_equal ( value , cov2 )  ) { return  0 ; }    
+  else if ( cov2 < value              ) { return -1 ; }    
+  //
+  return  cov2 / v -  1.0 ; 
+}
+// ============================================================================
+/* calculate the "effective purity" ratio using the identity
+ *  \f$ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f$
+ *  and the effective "background-to-signal" ratio is estimated as 
+ *  \f$ \left.\frac{B}{S}\right|_{\mathrm{eff}} = \frac{\sigma^2(S)}{S} -1 \f$, 
+ *  finally one gets 
+ *  \f$ p_{\mathrm{eff}} \equiv \frac{S}{\sigma^2(S)}\f$
+ *  @see Ostap::Math::b2s 
+ *  @param v the value 
+ *  @return the effective purity or -1 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::purity 
+( const Ostap::Math::ValueWithError& v ) 
+{
+  //
+  const double value = v.value () ;
+  if ( value <= 0 || s_zero ( value ) ) { return -1 ; } //
+  const double cov2  = v.cov2  () ;
+  if ( cov2  <= 0 || s_zero ( cov2 )  ) { return -1 ; } 
+  else if ( s_equal ( value , cov2 )  ) { return  1 ; }    
+  else if ( cov2 < value              ) { return -1 ; }    
+  //
+  return v / cov2 ;  
+}
+// ===========================================================================
 /* calculate "asymmetry" of two elements $\frac{a-b}{a+b}$
  *  taking into account the correlation coefficient  
  *  @param a  (input) the first value 
