@@ -25,7 +25,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random
-from   ostap.core.core      import dsID , VE , Ostap 
+from   ostap.core.core      import dsID , hID ,  VE , Ostap 
 from   ostap.logger.utils   import roo_silent , rooSilent
 from   ostap.fitting.utils  import H3D_dset , component_similar , component_clone
 from   ostap.fitting.basic  import PDF  , Flat1D 
@@ -637,32 +637,14 @@ class PDF3 (PDF2) :
 
 
     # ==========================================================================
-    ## Convert PDF to the 3D-histogram
-    #  @code
-    #  pdf = ...
-    #  h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
-    #  histo_template = ...
-    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
-    #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
-    #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
-    #  @endcode
-    def histo ( self             ,
-                xbins    = 10    , xmin = None , xmax = None ,
-                ybins    = 10    , ymin = None , ymax = None ,
-                zbins    = 10    , zmin = None , zmax = None ,
-                hpars    = ()    , 
-                histo    = None  ,
-                intergal = False ,
-                errors   = False , 
-                density  = False ) :
-        """Convert PDF to the 3D-histogram
-        >>> pdf = ...
-        >>> h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
-        >>> histo_template = ...
-        >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
-        >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
-        >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
-        """
+    ## create the histogram accoring to specifications 
+    def make_histo ( self ,
+                     xbins    = 10    , xmin = None , xmax = None ,
+                     ybins    = 10    , ymin = None , ymax = None ,
+                     zbins    = 10    , zmin = None , zmax = None ,
+                     hpars    = ()    , 
+                     histo    = None  ) :
+        """Create the histogram accoring to specifications"""
         
         import ostap.histos.histos
 
@@ -705,7 +687,45 @@ class PDF3 (PDF2) :
                                 zbins , zmin , zmax )
             if not histo.GetSumw2() : histo.Sumw2()
 
+        return histo 
 
+
+    # ==========================================================================
+    ## Convert PDF to the 3D-histogram
+    #  @code
+    #  pdf = ...
+    #  h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
+    #  histo_template = ...
+    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+    #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  @endcode
+    def histo ( self             ,
+                xbins    = 10    , xmin = None , xmax = None ,
+                ybins    = 10    , ymin = None , ymax = None ,
+                zbins    = 10    , zmin = None , zmax = None ,
+                hpars    = ()    , 
+                histo    = None  ,
+                intergal = False ,
+                errors   = False , 
+                density  = False ) :
+        """Convert PDF to the 3D-histogram
+        >>> pdf = ...
+        >>> h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
+        >>> histo_template = ...
+        >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+        >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+        >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        """
+
+
+        histo = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
+                                  ybins = ybins , ymin = ymin , ymax = ymax ,
+                                  zbins = zbins , zmin = zmin , zmax = zmax ,
+                                  hpars = hpars ,
+                                  histo = histo )
+        
+        
         # loop over the historgam bins 
         for ix,iy,iz,x,y,z,w in histo.iteritems() :
 
@@ -736,7 +756,101 @@ class PDF3 (PDF2) :
         if density : histo =  histo.density()
         
         return histo
- 
+    
+    # ==========================================================================
+    ## Convert PDF to the 3D-histogram
+    #  @code
+    #  pdf = ...
+    #  h1  = pdf.as_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
+    #  histo_template = ...
+    #  h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
+    #  h4  = pdf.as_histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  @endcode
+    def as_histo ( self             ,
+                   xbins    = 10    , xmin = None , xmax = None ,
+                   ybins    = 10    , ymin = None , ymax = None ,
+                   zbins    = 10    , zmin = None , zmax = None ,
+                   hpars    = ()    , 
+                   histo    = None  ,
+                   density  = True  ) :
+        """Convert PDF to the 3D-histogram
+        >>> pdf = ...
+        >>> h1  = pdf.as_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
+        >>> histo_template = ...
+        >>> h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
+        >>> h4  = pdf.as_histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        """
+        
+        histos = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
+                                   ybins = ybins , ymin = ymin , ymax = ymax ,
+                                   zbins = zbins , zmin = zmin , zmax = zmax ,
+                                   hpars = hpars ,
+                                   histo = histo )
+      
+        from   ostap.fitting.utils import binning 
+        hh = self.pdf.createHistogram (
+            hID()     ,
+            self.xvar ,                    binning ( histo.GetXaxis() , 'histo3x' )   ,
+            ROOT.RooFit.YVar ( self.yvar , binning ( histo.GetYaxis() , 'histo3y' ) ) , 
+            ROOT.RooFit.ZVar ( self.zvar , binning ( histo.GetZaxis() , 'histo3z' ) ) , 
+            ROOT.RooFit.Scaling  ( density ) , 
+            ROOT.RooFit.Extended ( True    ) ) 
+        
+        histo += hh
+         
+        return histo
+
+    # ==========================================================================
+    ## get the residual histogram : (data-fit) 
+    #  @see PDF.as_histo
+    #  @see PDF.residual_histo
+    #  @see PDF.make_histo
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data )
+    #  residual = pdf.residual ( data , nbins = 100 ) 
+    #  @endcode 
+    def residual ( self  , dataset , **kwargs ) :
+        """Get the residual histogram
+        - see PDF.as_histo
+        - see PDF.residual_histo
+        - see PDF.make_histo
+
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data )
+        >>> residual = pdf.residual ( data , nbins = 100 ) 
+        """
+        hdata = self.make_histo ( **kwargs )
+        dataset.project ( hdata , ( self.xvar.name , self.yvar.name , self.xvar.name )  )
+        return self.residual_histo ( hdata ) 
+        
+    # ==========================================================================
+    ## get the pull histogram : (data-fit)/data_error 
+    #  @see PDF.as_histo
+    #  @see PDF.residual_histo
+    #  @see PDF.make_histo
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data )
+    #  residual = pdf.pull ( data , nbins = 100 ) 
+    #  @endcode 
+    def pull ( self  , dataset , **kwargs ) :
+        """Get the pull  histogram: (data-fit)/data_error
+        - see PDF.as_histo
+        - see PDF.residual_histo
+        - see PDF.make_histo
+
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data )
+        >>> residual = pdf.residual ( data , nbins = 100 ) 
+        """
+        hdata = self.make_histo ( **kwargs )
+        dataset.project ( hdata , ( self.zvar.name , self.yvar.name , self.xvar.name ) ) 
+        return self.pull_histo ( hdata ) 
 
 # =============================================================================
 ## @class Generic3D_pdf

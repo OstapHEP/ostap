@@ -633,6 +633,53 @@ class PDF2 (PDF) :
         from ostap.core.core import fID
         return ROOT.TF2 ( fID() , _aux_fun_ , xmin , xmax , ymin , ymax ) 
 
+    
+    # ==========================================================================
+    ## Create the histo according to specifications 
+    def make_histo ( self , 
+                     xbins    = 20    , xmin = None , xmax = None ,
+                     ybins    = 20    , ymin = None , ymax = None ,
+                     hpars    = ()    , 
+                     histo    = None  ) :
+        """Create the histogram accordig to specifications
+        """
+        
+        import ostap.histos.histos
+
+        # histogram is provided 
+        if histo :
+            
+            assert isinstance ( histo  , ROOT.TH2 ) and not isinstance ( ROOT.TH3 ) , \
+                   "Illegal type of ``histo''-argument %s" % type( histo )
+            
+            histo = histo.clone()
+            histo.Reset()
+
+        # arguments for the histogram constructor 
+        elif hpars :
+            
+            histo = ROOT.TH2F ( hID () , 'PDF%s' % self.name , *hpars  )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+        # explicit construction from (#bins,min,max)-triplet  
+        else :
+            
+            assert isinstance ( xbins , ( int , long) ) and 0 < xbins, \
+                   "Wrong ``xbins''-argument %s" % xbins 
+            assert isinstance ( ybins , ( int , long) ) and 0 < ybins, \
+                   "Wrong ``ybins''-argument %s" % ybins 
+            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
+            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+            if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
+            if ymax == None and self.yminmax() : ymax = self.yminmax()[1]
+            
+            histo = ROOT.TH2F ( hID() , 'PDF%s' % self.name ,
+                                xbins , xmin , xmax ,
+                                ybins , ymin , ymax )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+        return histo 
+                     
     # ==========================================================================
     ## Convert PDF to the 2D-histogram
     #  @code
@@ -660,42 +707,11 @@ class PDF2 (PDF) :
         >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
         
-        import ostap.histos.histos
-
-        # histogram is provided 
-        if histo :
-            
-            assert isinstance ( histo  , ROOT.TH2 ) and not isinstance ( ROOT.TH3 ) , \
-                   "Illegal type of ``histo''-argument %s" % type( histo )
-            
-            histo = histo.clone()
-            histo.Reset()
-
-        # arguments for the histogram constructor 
-        elif hpars :
-            
-            from ostap.core.core import hID
-            histo = ROOT.TH2F ( hID () , 'PDF%s' % self.name , *hpars  )
-            if not histo.GetSumw2() : histo.Sumw2()
-
-        # explicit contruction from (#bins,min,max)-triplet  
-        else :
-            
-            assert isinstance ( xbins , ( int , long) ) and 0 < xbins, \
-                   "Wrong ``xbins''-argument %s" % xbins 
-            assert isinstance ( ybins , ( int , long) ) and 0 < ybins, \
-                   "Wrong ``ybins''-argument %s" % ybins 
-            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
-            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
-            if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
-            if ymax == None and self.yminmax() : ymax = self.yminmax()[1]
-            
-            from ostap.core.core import hID
-            histo = ROOT.TH2F ( hID() , 'PDF%s' % self.name ,
-                                xbins , xmin , xmax ,
-                                ybins , ymin , ymax )
-            if not histo.GetSumw2() : histo.Sumw2()
-
+        
+        histos = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
+                                   ybins = ybins , ymin = ymin , ymax = ymax ,
+                                   hpars = hpars ,
+                                   histo = histo )
 
         # loop over the historgam bins 
         for ix,iy,x,y,z in histo.iteritems() :
@@ -724,8 +740,100 @@ class PDF2 (PDF) :
         if density : histo =  histo.density()
         
         return histo
-  
 
+
+    # ==========================================================================
+    ## Convert PDF to the 2D-histogram
+    #  @code
+    #  pdf = ...
+    #  h1  = pdf.histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
+    #  histo_template = ...
+    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h3  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  @endcode
+    def as_histo ( self             ,
+                   xbins    = 20    , xmin = None , xmax = None ,
+                   ybins    = 20    , ymin = None , ymax = None ,
+                   hpars    = ()    , 
+                   histo    = None  , 
+                   density  = True  ) : 
+        """Convert PDF to the 2D-histogram
+        >>> pdf = ...
+        >>> h1  = pdf.as_histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
+        >>> histo_template = ...
+        >>> h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
+        >>> h3  = pdf.as_histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        """
+        
+        histos = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
+                                   ybins = ybins , ymin = ymin , ymax = ymax ,
+                                   hpars = hpars ,
+                                   histo = histo )
+       
+        from   ostap.fitting.utils import binning 
+        hh = self.pdf.createHistogram (
+            hID()     ,
+            self.xvar ,                    binning ( histo.GetXaxis() , 'histo2x' )   ,
+            ROOT.RooFit.YVar ( self.yvar , binning ( histo.GetYaxis() , 'histo2y' ) ) , 
+            ROOT.RooFit.Scaling  ( density ) , 
+            ROOT.RooFit.Extended ( True    ) ) 
+        
+        histo += hh
+        
+        return histo
+    
+    # ==========================================================================
+    ## get the residual histogram : (data-fit) 
+    #  @see PDF.as_histo
+    #  @see PDF.residual_histo
+    #  @see PDF.make_histo
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data )
+    #  residual = pdf.residual ( data , nbins = 100 ) 
+    #  @endcode 
+    def residual ( self  , dataset , **kwargs ) :
+        """Get the residual histogram
+        - see PDF.as_histo
+        - see PDF.residual_histo
+        - see PDF.make_histo
+
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data )
+        >>> residual = pdf.residual ( data , nbins = 100 ) 
+        """
+        hdata = self.make_histo ( **kwargs )
+        dataset.project ( hdata , ( self.yvar.name , self.xvar.name )  )
+        return self.residual_histo ( hdata ) 
+        
+    # ==========================================================================
+    ## get the pull histogram : (data-fit)/data_error 
+    #  @see PDF.as_histo
+    #  @see PDF.residual_histo
+    #  @see PDF.make_histo
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data )
+    #  residual = pdf.pull ( data , nbins = 100 ) 
+    #  @endcode 
+    def pull ( self  , dataset , **kwargs ) :
+        """Get the pull  histogram: (data-fit)/data_error
+        - see PDF.as_histo
+        - see PDF.residual_histo
+        - see PDF.make_histo
+
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data )
+        >>> residual = pdf.residual ( data , nbins = 100 ) 
+        """
+        hdata = self.make_histo ( **kwargs )
+        dataset.project ( hdata , ( self.yvar.name , self.xvar.name ) ) 
+        return self.pull_histo ( hdata ) 
+        
 # =============================================================================
 ## suppress methods specific for 1D-PDFs only
 for _a in (

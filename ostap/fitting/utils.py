@@ -657,7 +657,22 @@ def component_clone  ( same ) :
     return False 
 # =============================================================================
 
+# =============================================================================
+## convert ROOT.TAxis into ROOT.RooFit.Binning
+def binning ( axis , name = '' ) :
 
+    assert isinstance ( axis , ROOT.TAxis ),\
+           'Invalid axis %s/%s' % ( axis , type ( axis ) ) 
+    varbins = axis.IsVariableBinSize()
+    if not varbins :
+        return ROOT.RooFit.Binning ( axis.GetNbins() , axis.GetXmin() , axis.GetXmax() )
+    #
+    xbins = axis.GetXBins().GetArray()
+    rb = ROOT.RooBinning( axis.GetNbins() , xbins , name )
+    #
+    return ROOT.RooFit.Binning ( rb )
+
+    
 # =============================================================================
 ##  get <code>i</code>-th component from <code>what</code>
 def get_i ( what , i , default = None ) :

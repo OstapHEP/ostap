@@ -1320,6 +1320,44 @@ class PDF (MakeVar) :
         from ostap.core.core import fID
         return ROOT.TF1 ( fID() , _aux_fun_ , xmin , xmax ) 
 
+    # =========================================================================
+    ## helper function to create the histogram
+    def make_histo ( self  ,
+                     nbins    = 100   , xmin = None , xmax = None ,
+                     hpars    = ()    , 
+                     histo    = None  ) :
+        """Create the histogram according to specifications
+        """
+        
+        import ostap.histos.histos
+        # histogram is provided 
+        if histo :
+            
+            assert isinstance ( histo  , ROOT.TH1 ) and not isinstance ( ROOT.TH2 ) , \
+                   "Illegal type of ``histo''-argument %s" % type( histo )
+            
+            histo = histo.clone()
+            histo.Reset()
+
+        # arguments for the histogram constructor 
+        elif hpars :
+            
+            histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , *hpars  )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+        # explicit construction from (#bins,min,max)-triplet  
+        else :
+            
+            assert is_integer ( nbins ) and 0 < nbins, \
+                   "Wrong ``nbins''-argument %s" % nbins 
+            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
+            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+            
+            histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , nbins , xmin , xmax )
+            if not histo.GetSumw2() : histo.Sumw2()
+
+        return histo 
+    
     # ==========================================================================
     ## Convert PDF to the 1D-histogram
     #  @code
@@ -1346,36 +1384,11 @@ class PDF (MakeVar) :
         >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
         
-        import ostap.histos.histos
-
-        # histogram is provided 
-        if histo :
-            
-            assert isinstance ( histo  , ROOT.TH1 ) and not isinstance ( ROOT.TH2 ) , \
-                   "Illegal type of ``histo''-argument %s" % type( histo )
-            
-            histo = histo.clone()
-            histo.Reset()
-
-        # arguments for the histogram constructor 
-        elif hpars :
-            
-            from ostap.core.core import hID
-            histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , *hpars  )
-            if not histo.GetSumw2() : histo.Sumw2()
-
-        # explicit construction from (#bins,min,max)-triplet  
-        else :
-            
-            assert is_integer ( nbins ) and 0 < nbins, \
-                   "Wrong ``nbins''-argument %s" % nbins 
-            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
-            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
-            
-            from ostap.core.core import hID
-            histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , nbins , xmin , xmax )
-            if not histo.GetSumw2() : histo.Sumw2()
-
+        histo = self.make_histo ( nbins = nbins ,
+                                  xmin  = xmin  ,
+                                  xmax  = xmax  ,
+                                  hpars = hpars ,
+                                  histo = histo )
 
         # loop over the historgam bins 
         for i,x,y in histo.iteritems() :
@@ -1403,7 +1416,173 @@ class PDF (MakeVar) :
         if density : histo =  histo.density()
         
         return histo
+
+    # ==========================================================================
+    ## Convert PDF to the 1D-histogram
+    #  @code
+    #  pdf = ...
+    #  h1  = pdf.histo ( 100 , -1 , 10 ) ## specify histogram parameters
+    #  histo_template = ...
+    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
+    #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  @endcode
+    def as_histo ( self             ,
+                   nbins    = 100   , xmin = None , xmax = None ,
+                   hpars    = ()    , 
+                   histo    = None  ,
+                   density  = True  ) : 
+        """Convert PDF to the 1D-histogram
+        >>> pdf = ...
+        >>> h1  = pdf.as_histo ( 100 , 0. , 10. ) ## specify histogram parameters
+        >>> histo_template = ...
+        >>> h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
+        >>> h3  = pdf.as_histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        """
+
+        histo = self.make_histo ( nbins = nbins ,
+                                  xmin  = xmin  ,
+                                  xmax  = xmax  ,
+                                  hpars = hpars ,
+                                  histo = histo )
+        
+        from   ostap.fitting.utils import binning 
+        
+        hh = self.pdf.createHistogram (
+            hID()     ,
+            self.xvar ,
+            binning ( histo.GetXaxis() , 'histo1x' ) ,
+            ROOT.RooFit.Scaling  ( density ) , 
+            ROOT.RooFit.Extended ( True    ) ) 
+        
+        histo += hh
+        
+        return histo 
+
+    # ==========================================================================
+    ## create the residual histogram  :  (data - pdf)
+    #  @param   data_histo  the data histogram
+    #  @return  the residual histogram 
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data )
+    #
+    #  histo = ..
+    #  data.project ( histo , 'var1' )
+    #
+    #  residual = pdf.residual_histo ( histo )
+    #  @endcode 
+    def residual_histo  ( self , data_histo ) :
+        """Create the residual histogram   (data - fit)
+        >>> data = ... 
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data )
+        
+        >>> histo = ..
+        >>> data.project ( histo , 'var1' )
+        
+        >>> residual = pdf.residual_histo ( histo )
+        """
+        
+        v= self.as_histo ( histo = data_histo )
     
+        for i in h :
+            v    = h         [i]
+            d    = data_histo[i] 
+            h[i] = d - v.value()    ## data - pdf 
+            
+        return h 
+
+    # ==========================================================================
+    ## create the pull histogram  : (data - pdf)/data_error
+    #  @param   data_histo  the data histogram
+    #  @return  the pull histogram 
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data )
+    #
+    #  histo = ..
+    #  data.project ( histo , 'var1' )
+    #
+    #  pull = pdf.pull_histo ( histo )
+    #  @endcode 
+    def pull_histo  ( self , data_histo ) :
+        """Create the residual histogram   (data - fit)
+        >>> data = ... 
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data )
+        
+        >>> histo = ..
+        >>> data.project ( histo , 'var1' )
+        
+        >>> pull = pdf.pull_histo ( histo )
+        """
+        h = self.residual_histo ( histo = data_histo )
+        
+        for i in h :
+            v    = h         [i]
+            e    = data_histo[i].error()
+            if 0 < e : h[i] = v / e   ## (data-pdf)/data_error
+
+        return h 
+
+    # ==========================================================================
+    ## get the residual histogram : (data-fit) 
+    #  @see PDF.as_histo
+    #  @see PDF.residual_histo
+    #  @see PDF.make_histo
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data )
+    #  residual = pdf.residual ( data , nbins = 100 ) 
+    #  @endcode 
+    def residual ( self  , dataset , **kwargs ) :
+        """Get the residual histogram
+        - see PDF.as_histo
+        - see PDF.residual_histo
+        - see PDF.make_histo
+
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data )
+        >>> residual = pdf.residual ( data , nbins = 100 ) 
+        """
+        hdata = self.make_histo ( **kwargs )
+        dataset.project ( hdata , self.xvar.name )
+        return self.residual_histo ( hdata ) 
+        
+
+    # ==========================================================================
+    ## get the pull histogram : (data-fit)/data_error 
+    #  @see PDF.as_histo
+    #  @see PDF.residual_histo
+    #  @see PDF.make_histo
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data )
+    #  residual = pdf.pull ( data , nbins = 100 ) 
+    #  @endcode 
+    def pull ( self  , dataset , **kwargs ) :
+        """Get the pull  histogram: (data-fit)/data_error
+        - see PDF.as_histo
+        - see PDF.residual_histo
+        - see PDF.make_histo
+
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data )
+        >>> residual = pdf.residual ( data , nbins = 100 ) 
+        """
+        hdata = self.make_histo ( **kwargs )
+        dataset.project ( hdata , self.xvar.name )
+        return self.pull_histo ( hdata ) 
+        
+
+        
     # ==========================================================================
     # Several purely technical methods 
     # ==========================================================================
