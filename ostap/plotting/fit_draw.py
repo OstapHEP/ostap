@@ -173,8 +173,8 @@ class Style(object):
             options.append ( fillstyle  )
             _fillopt = True 
 
-        if   isinstance ( linewidth , innteger_types ) and 0 < linewidth :            
-            options.append ( ROOT.RooFit.LineWwidth ( linewidth ) )
+        if   isinstance ( linewidth , integer_types ) and 0 < linewidth :            
+            options.append ( ROOT.RooFit.LineWidth ( linewidth ) )
         elif isinstance ( linewidth , ROOT.RooCmdArg )  and 'LineWidth' == linewidth.GetName () : 
             options.append ( linewidth )
             
@@ -211,7 +211,7 @@ class Line (Style) :
         Style.__init__( self ,
                         linecolor = linecolor ,
                         linestyle = linestyle ,
-                        linewidth = liewidth  ,
+                        linewidth = linewidth ,
                         fillcolor = None      ,
                         fillstyle = None      , *args ) 
 
@@ -260,11 +260,11 @@ class Styles(object) :
             elif isinstance ( s , list_types     ) : ss = Style (  *s )
             elif isinstance ( s , integer_types  ) : ss = Style ( linecolor = s  )
             elif isinstance ( s , ROOT.TColor    ) : ss = Style ( linecolor = s  )
-            elif isinstance ( s , ROOT.RooCmdArg ) : ss = Style ( linecolor = None ,
-                                                                  linestyle = None ,
-                                                                  linewidth = None ,
-                                                                  fillcolor = None ,
-                                                                  fillstyle = None , s ) 
+            elif isinstance ( s , ROOT.RooCmdArg ) : ss = Style ( None ,
+                                                                  None ,
+                                                                  None ,
+                                                                  None ,
+                                                                  None , s ) 
             if ss : _styles.append ( ss ) 
 
         self.__styles     = tuple ( _styles )
@@ -374,7 +374,7 @@ crossterm2_style = Styles ( styles = (
     Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 14 ) ,
     Line  ( linecolor = ROOT.kGreen   -  1 , linestyle = 13 ) ,
     Line  ( linecolor = ROOT.kGreen   - 10 , linestyle = 12 ) ,
-    Line  ( linecolor = ROOT.kGreen   +  1 , ilnestyle = 11 ) ,
+    Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 11 ) ,
     ) )
 
 background2D_style = background_style 

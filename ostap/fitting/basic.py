@@ -1194,7 +1194,7 @@ class PDF (MakeVar) :
         """Get integral between xmin and xmax
         >>> pdf = ...
         >>> print pdf.integral ( 0 , 10 )
-        """[
+        """
         ## check limits
         if self.xminmax() :
             mn , mx = self.xminmax() 
