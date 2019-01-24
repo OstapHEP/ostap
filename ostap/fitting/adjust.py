@@ -265,7 +265,7 @@ class Adjust1D_pdf(PDF) :
                                        xvar     = xvar             ,
                                        fraction = fraction         )
         
-        self.__pdf  = self.adjustment.pdf 
+        self.pdf  = self.adjustment.pdf 
  
         self.config = {
             'xvar'     : self.xvar    ,
@@ -352,7 +352,7 @@ class Adjust2D_pdf(PDF2) :
                                        yvar     = yvar             ,
                                        fraction = fraction         )
         
-        self.__pdf  = self.adjustment.pdf 
+        self.pdf  = self.adjustment.pdf 
         
         self.config = {
             'xvar'     : self.xvar    ,
@@ -449,7 +449,7 @@ class Adjust3D_pdf(PDF3) :
                                        zvar     = yvar             ,
                                        fraction = fraction         )
         
-        self.__pdf  = self.adjustment.pdf 
+        self.pdf  = self.adjustment.pdf 
 
         self.config = {
             'xvar'     : self.xvar    ,

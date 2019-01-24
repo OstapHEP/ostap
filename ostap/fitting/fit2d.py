@@ -305,11 +305,10 @@ class PDF2 (PDF) :
             args [ 'crossterm2_options' ] = crossterm2_options
             args [  'total_fit_options' ] =  total_fit_options
             
-        background_options    = args.pop ( 'background_options'  , FD.background2D_options )
+        background_options  = args.pop ( 'background_options'  , FD.background2D_options )
         background_style    = args.pop ( 'base_background_color' , FD.background2D_style   )
         args [ 'background_options' ] = background_options
         args [ 'background_style'   ] = background_style
-        
         
         #
         ## redefine the drawing variable:
