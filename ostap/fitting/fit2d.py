@@ -130,13 +130,17 @@ class PDF2 (PDF) :
                                args   = args   , **kwargs ) 
         if not draw :
             return result , None
+
         
         ## 2D 
         if 1 < nbins and isinstance ( ybins , ( int , long ) ) and 1 < ybins :
             return result, self.draw ( None , dataset , nbins , ybins , silent = silent )
         
-        if     1 <= nbins : return result, self.draw1 ( dataset ,  nbins , silent = silent )
-        elif  -1 >= nbins : return result, self.draw2 ( dataset , -nbins , silent = silent )
+        if isinstance ( draw , str ) :
+            if   draw.upper() in ( '1' , 'X' ) :
+                return result, self.draw1 ( dataset , nbins = nbins , silent = silent )
+            elif draw.upper() in ( '2' , 'Y' ) :
+                return result, self.draw2 ( dataset , nbins = nbins , silent = silent )
 
         ## return 2D 
         return result, self.draw ( None , dataset , silent = silent )
@@ -301,10 +305,10 @@ class PDF2 (PDF) :
             args [ 'crossterm2_options' ] = crossterm2_options
             args [  'total_fit_options' ] =  total_fit_options
             
-        background_options    = args.pop ( 'background_options'    , FD.background2D_options    )
-        base_background_color = args.pop ( 'base_background_color' , FD.base_background2D_color )
-        args [ 'background_options'    ] = background_options
-        args [ 'base_background_color' ] = base_background_color
+        background_options    = args.pop ( 'background_options'  , FD.background2D_options )
+        background_style    = args.pop ( 'base_background_color' , FD.background2D_style   )
+        args [ 'background_options' ] = background_options
+        args [ 'background_style'   ] = background_style
         
         
         #
