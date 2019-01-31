@@ -27,12 +27,14 @@ __all__     = (
 # =============================================================================
 import ROOT, math,  random
 import ostap.fitting.roofit 
+import ostap.fitting.variables
 from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
+from   ostap.math.base      import iszero 
 from   ostap.core.types     import is_good_number, is_integer, integer_types
 from   ostap.core.types     import num_types , list_types
 from   ostap.fitting.roofit import SETVAR, PDF_fun
 from   ostap.logger.utils   import roo_silent   , rootWarning 
-from   ostap.fitting.utils  import ( RangeVar   , fitArgs  , MakeVar  , numcpu , 
+from   ostap.fitting.utils  import ( RangeVar   , MakeVar  , numcpu   , 
                                      fit_status , cov_qual , H1D_dset , get_i  ) 
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -51,19 +53,20 @@ class PDF (MakeVar) :
         ## name is defined via base class MakeVar 
         self.name  = name ## name is defines via base class MakeVar 
         
-        self.__signals      = ROOT.RooArgList ()
-        self.__backgrounds  = ROOT.RooArgList ()
-        self.__components   = ROOT.RooArgList ()
-        self.__crossterms1  = ROOT.RooArgSet  () 
-        self.__crossterms2  = ROOT.RooArgSet  () 
+        self.__signals         = ROOT.RooArgList ()
+        self.__backgrounds     = ROOT.RooArgList ()
+        self.__components      = ROOT.RooArgList ()
+        self.__crossterms1     = ROOT.RooArgSet  () 
+        self.__crossterms2     = ROOT.RooArgSet  () 
         ## take care about sPlots 
-        self.__splots       = []
-        self.__histo_data   = None
-        self.__draw_var     = None
-        self.__special      = True if special else False 
-        self.__fit_result   = None
-        self.__vars         = ROOT.RooArgSet  ()
-        self.__tricks       = True
+        self.__splots          = []
+        self.__histo_data      = None
+        self.__draw_var        = None
+        self.__special         = True if special else False 
+        self.__fit_result      = None
+        self.__vars            = ROOT.RooArgSet  ()
+        self.__tricks          = True
+        self.__draw_options    = {}    ## predefined drawing options for this PDF
         
         if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
@@ -92,8 +95,13 @@ class PDF (MakeVar) :
 
         self.vars.add ( self.__xvar ) 
 
-        self.config = { 'name' : self.name , 'xvar' : self.xvar }
-        
+        self.config = { 'name' : self.name , 'xvar' : self.xvar ,  'special' : self.special }
+
+    ## conversion to string 
+    def __str__ (  self ) :
+        return '%s(%s,xvar=%s)' % ( self.__class__.__name__ , self.name , self.xvar.name )
+    __repr__ = __str__ 
+    
     ## Min/max values for x-variable (when applicable)
     def xminmax ( self ) :
         """Min/max values for x-variable (when applicable)"""
@@ -257,7 +265,13 @@ class PDF (MakeVar) :
         assert value is None or isinstance ( value , ROOT.RooAbsReal ) , \
                "``draw_var'' has invalid type %s/%s" % ( value , type(value) )
         self.__draw_var = value 
-        
+
+    @property
+    def draw_options ( self ) :
+        """``draw_options'' : disctionarie with predefined draw-opptions for this PDF
+        """
+        return self.__draw_options
+    
     # =========================================================================
     ## make a clone for the given PDF with optional  replacement of certain parameters
     #  @code
@@ -322,19 +336,19 @@ class PDF (MakeVar) :
         >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
         >>> r,f = model.fitTo ( dataset , draw = True , nbins = 300 )    
         """
-        if isinstance ( dataset , ROOT.TH1 ) :
+        if   isinstance ( dataset , H1D_dset ) : dataset = dataset.dset        
+        elif isinstance ( dataset , ROOT.TH1 ) :
             density = kwargs.pop ( 'density' , True   )
             chi2    = kwargs.pop ( 'chi2'    , False  )
             return self.fitHisto ( dataset           ,
                                    draw    = draw    ,
                                    silent  = silent  ,
                                    density = density ,
-                                   chi2    = chi2    , 
-                                   args    = args    , **kwargs ) 
+                                   chi2    = chi2    , args = args , **kwargs ) 
         #
         ## treat the arguments properly
         #
-        opts = fitArgs ( "PDF(%s).fitTo:" % self.name , dataset , *args , **kwargs )
+        opts = self.parse_args ( dataset , *args , **kwargs )
 
         #
         ## define silent context
@@ -487,9 +501,21 @@ class PDF (MakeVar) :
     #  @param crossterm1_style      style(s) for ``crossterm-1''   components
     #  @param crossterm2_style      style(s) for ``crossterm-2''   components
     #  @param background2D_style    style(s) for ``background-2D'' components
-    
-    #  @param data_overlay          draw points atop of fitting curves?  
-    #  @see ostap.plotting.fit_draw 
+    #  @see ostap.plotting.fit_draw
+    #
+    #  Drawing options can be specified as keyword arguments:
+    #  @code
+    #  fit_curve = ROOT.RooFit.LineColor ( ROOT.kRed ) , ROOT.RooFit.LineWidth ( 3 )
+    #  f = pdf.draw ( ... , total_fit_options = fit_curve  , )
+    #  @endcode
+    #  When options are not provided explicitly, the options defined in the PDF are looked for:
+    #  @code
+    #  fit_curve = ROOT.RooFit.LineColor ( ROOT.kRed ) , ROOT.RooFit.LineWidth ( 3 )
+    #  pdf.draw_opptions['total_fit_options'] = fit_curve 
+    #  f = pdf.draw ( ...)
+    #  @endcode
+    #  Otherwise the default options,  defined in ostap.plotting.fit_draw module, are used 
+    #  @see ostap.plotting.fit_draw
     def draw ( self ,
                dataset               = None ,
                nbins                 = 100  ,   ## Frame binning
@@ -528,12 +554,24 @@ class PDF (MakeVar) :
         -  residual               ## make also residual frame
         -  pull                   ## make also residual frame
         
-        For default values see ostap.plotting.fit_draw 
+        For default values see ostap.plotting.fit_draw
+        
+        - Drawing options can be specified as keyword arguments:
+        
+        >>> fit_curve = ROOT.RooFit.LineColor ( ROOT.kRed ) , ROOT.RooFit.LineWidth ( 3 )
+        >>> f = pdf.draw ( ... , total_fit_options = fit_curve  , )
+        
+        - when options are not provided explicitly, the options defined in the PDF are looked for:
+        
+        >>> fit_curve = ROOT.RooFit.LineColor ( ROOT.kRed ) , ROOT.RooFit.LineWidth ( 3 )
+        >>> pdf.draw_options['total_fit_options'] = fit_curve 
+        >>> f = pdf.draw ( ...)
+        
+        - otherwise the default options, defined in ostap.plotting.fit_draw module, are used 
+
         """
         #
         
-        import ostap.plotting.fit_draw as FD
-
         from ostap.plotting.style import useStyle 
         
         #
@@ -549,44 +587,55 @@ class PDF (MakeVar) :
             #
             ## draw invizible data (for normalzation of fitting curves)
             #
-            data_options = kwargs.pop ( 'data_options' , FD.data_options )
+            data_options = self.draw_option ( 'data_options' , **kwargs )
             if dataset and dataset.isWeighted() and dataset.isNonPoissonWeighted() : 
                 data_options = data_options + ( ROOT.RooFit.DataError( ROOT.RooAbsData.SumW2 ) , )
 
             if dataset : dataset .plotOn ( frame , ROOT.RooFit.Invisible() , *data_options )
-
+            
             ## draw various ``background'' terms
-            boptions = kwargs.pop (     'background_options' , FD.   background_options )
-            bbstyle  = kwargs.pop (       'background_style' , FD.     background_style )
+            boptions     = self.draw_option ( 'background_options' , **kwargs ) 
+            bbstyle      = self.draw_option (   'background_style' , **kwargs )
             self._draw( self.backgrounds , frame , boptions , bbstyle )
+            kwargs.pop ( 'background_options' , () )
+            kwargs.pop ( 'background_style'   , () )
 
             ## ugly :-(
-            ct1options = kwargs.pop (     'crossterm1_options' , FD.   crossterm1_options )
-            ct1bstyle  = kwargs.pop (       'crossterm1_style' , FD.     crossterm1_style ) 
+            ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
+            ct1bstyle    = self.draw_option (   'crossterm1_style' , **kwargs ) 
             if hasattr ( self , 'crossterms1' ) and self.crossterms1 : 
                 self._draw( self.crossterms1 , frame , ct1options , ct1bstyle )
+            kwargs.pop ( 'crossterm1_options' , () )
+            kwargs.pop ( 'crossterm1_style' , () )
 
             ## ugly :-(
-            ct2options = kwargs.pop (     'crossterm2_options' , FD.   crossterm1_options )
-            ct2bstyle  = kwargs.pop (       'crossterm2_style' , FD.     crossterm1_style )
+            ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs )
+            ct2bstyle    = self.draw_option (   'crossterm2_style' , **kwargs ) 
             if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
                 self._draw( self.crossterms2 , frame , ct2options , ct2bstyle )
+            kwargs.pop ( 'crossterm2_options' , () )
+            kwargs.pop ( 'crossterm2_style'   , () )
 
             ## draw ``other'' components
-            coptions   = kwargs.pop (      'component_options' , FD.    component_options  )
-            cbstyle    = kwargs.pop (        'component_style' , FD.      component_style  )
+            coptions     = self.draw_option (  'component_options' , **kwargs )
+            cbstyle      = self.draw_option (    'component_style' , **kwargs )
             self._draw( self.components , frame , coptions , cbstyle )
+            kwargs.pop ( 'component_options' , () )
+            kwargs.pop ( 'component_style'   , () )
 
             ## draw ``signal'' components
-            soptions   = kwargs.pop (         'signal_options' , FD.      signal_options  )
-            sbstyle    = kwargs.pop (           'signal_style' , FD.        signal_style  ) 
+            soptions     = self.draw_option (    'signal_options'  , **kwargs )
+            sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
             self._draw( self.signals , frame , soptions , sbstyle )
+            kwargs.pop ( 'signal_options' , () )
+            kwargs.pop ( 'signal_style'   , () )
 
             #
             ## the total fit curve
             #
-            self.pdf .plotOn ( frame , *kwargs.pop ( 'total_fit_options' , FD. total_fit_options ) )
-            
+            totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
+            self.pdf .plotOn ( frame , *totoptions )
+            kwargs.pop ( 'total_fit_options' , () )            
             #
             ## draw data once more
             #
@@ -615,7 +664,7 @@ class PDF (MakeVar) :
             if pull     and not  dataset :
                 self.warning("draw: can't produce residual without data")
                 residual = False
-                
+
             if kwargs :
                 self.warning("draw: ignored unknown options: %s" % kwargs.keys() )
 
@@ -647,6 +696,42 @@ class PDF (MakeVar) :
                     pframe.SetZTitle ( '' )
                 
             return frame, rframe, pframe  
+
+    # =========================================================================
+    ## get the certain predefined drawing option
+    #  @code
+    #  options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
+    #  pdf = ...
+    #  pdf.draw_options['signal_style'] = [ options ]
+    #  ## and later:
+    #  options = pdf.draw_option ( 'signal_style' )
+    #  @endcode 
+    def draw_option ( self , key , default = () , **kwargs ) :
+        """Get the certain predefined drawing option
+        >>> options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
+        >>> pdf = ...
+        >>> pdf.draw_options['signal_style'] = [ options ]
+        - and later:
+        >>> options = pdf.draw_option ( 'signal_style' )
+        """
+        ##  check the explicitely provided arguments 
+        if kwargs.has_key ( key  ) : return kwargs [ key  ] 
+        klow = key.lower()
+        if kwargs.has_key ( klow ) : return kwargs [ klow ]
+        kup  = key.upper()
+        if kwargs.has_key ( kup  ) : return kwargs [ kup  ]
+
+        ## check the predefined drawing options for this PDF 
+        if   self.draw_options.has_key ( key  ) : return self.draw_options.get ( key  )
+        elif self.draw_options.has_key ( klow ) : return self.draw_options.get ( klow )
+        elif self.draw_options.has_key ( kup  ) : return self.draw_options.get ( kup  )
+
+        import ostap.plotting.fit_draw as FD
+        if   hasattr ( FD , key  ) : return getattr ( FD , key  ) 
+        elif hasattr ( FD , klow ) : return getattr ( FD , klow ) 
+        elif hasattr ( FD , kup  ) : return getattr ( FD , kup  ) 
+        
+        return default 
 
     # =========================================================================
     ## fit the histogram (and draw it)
@@ -713,7 +798,7 @@ class PDF (MakeVar) :
                 
         with roo_silent ( silent ) : 
 
-            lst1 = list ( fitArgs ( self.name , hdataset , *args , **kwargs ) )
+            lst1 = list ( self.parse_args ( hdataset , *args , **kwargs ) )
             lst2 = []
             
             if       self.pdf.mustBeExtended () : lst2.append ( ROOT.RooFit.Extended ( True  ) )
@@ -791,13 +876,13 @@ class PDF (MakeVar) :
         result = nll
 
         ## make profile? 
-        if not profile :
+        if profile :
             avar    = ROOT.RooArgSet    (  var ) 
             profile = nll.createProfile ( avar )
             result  = profile
             
         ## prepare the  frame & plot 
-        frame  = var.frame ( *fargs )
+        frame = var.frame ( *fargs )
         result.plotOn ( frame , *largs  )
 
         frame.SetMinimum ( 0  )
@@ -876,19 +961,27 @@ class PDF (MakeVar) :
 
     # =========================================================================
     ## simple 'function-like' interface 
-    def __call__ ( self , x , error = False ) :
+    def __call__ ( self , x , error = False , normalized = True ) :
         """ PDF as a ``function''
         >>> pdf  = ...
         >>> x = 1
         >>> y = pdf ( x ) 
         """
+        if error and not normalized :
+            self.error("Can't get error for non-normalized call" )
+            error = False
+            
+        with_error = error and self.fit_result 
+
         if isinstance ( self.xvar , ROOT.RooRealVar ) :
-            mn,mx = self.xminmax()
+            mn , mx = self.xminmax()
             if mn <= x <= mx :
                 with SETVAR( self.xvar ) :
                     self.xvar.setVal ( x )
-                    v = self.pdf.getVal ( self.vars )  
-                    if error and self.fit_result :
+                    
+                    v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getValV ()  
+                    
+                    if error :
                         e = self.pdf.getPropagatedError ( self.fit_result )
                         if 0<= e : return  VE ( v ,  e * e )
                     return v 
@@ -971,7 +1064,7 @@ class PDF (MakeVar) :
         return mn , mx 
 
     # ========================================================================
-    ## get  the actual minimizer for explicit manipulations
+    ## get the actual minimizer for the explicit manipulations
     #  @code
     #  data = ...
     #  pdf  = ...
@@ -981,12 +1074,12 @@ class PDF (MakeVar) :
     #  m.minos ( param )
     #  @endcode
     #  @see RooMinimizer
-    def minuit ( self , dataset   ,
-                 max_calls = -1   ,
-                 ncpu      = -1   ,
-                 max_iter  = -1   ,
-                 strategy  = None , args = () ) :
-        """Get  the actual minimizer for explicit manipulations
+    def minuit ( self , dataset ,
+                 max_calls   = -1   ,
+                 ncpu        = -1   ,
+                 max_iter    = -1   ,
+                 strategy    = None , *args , **kwargs  ):
+        """Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
         >>> m    = pdf.minuit ( data )
@@ -999,16 +1092,18 @@ class PDF (MakeVar) :
 
         if isinstance ( ncpu , int ) and 1 <= ncpu : pass 
         else                                       : ncpu = numcpu() 
-            
-        nll = self.pdf.createNLL ( dataset ,
-                                   ROOT.RooFit.NumCPU ( ncpu ) ,
-                                   ROOT.RooFit.Offset ( True ) , *args )
+
+        ## parse the arguments 
+        opts = self.parse_args  ( dataset , *args  , **kwargs )
+
+        keys = [ a.GetName()  for  a in opts  ]
+        nll  = self.pdf.createNLL ( dataset , ROOT.RooFit.Offset ( True ) , *opts )
         
         m = ROOT.RooMinimizer ( nll )
         if isinstance  ( max_calls , integer_types ) and 1 < max_calls :
             m.setMaxFunctionCalls ( max_calls )
         if isinstance  ( max_iter  , integer_types ) and 1 < max_iter  :
-            m.setMaxIterationns   ( max_iter  )
+            m.setMaxIterations    ( max_iter  )
         if isinstance  ( strategy , integer_types  ) and 0 <=  strategy <= 2 :
             m.setStrategy ( strategy )
             
@@ -1190,7 +1285,7 @@ class PDF (MakeVar) :
     
     # =========================================================================
     ## get the integral between xmin and xmax 
-    def integral ( self , xmin , xmax ) :
+    def integral ( self , xmin , xmax , nevents = True ) :
         """Get integral between xmin and xmax
         >>> pdf = ...
         >>> print pdf.integral ( 0 , 10 )
@@ -1200,22 +1295,41 @@ class PDF (MakeVar) :
             mn , mx = self.xminmax() 
             xmin = max ( xmin , mn )  
             xmax = max ( xmax , mn )
- 
-        ## make a try to use analytical integral 
-        if self.tricks and hasattr ( self , 'pdf' ) :
-            _pdf = self.pdf 
-            if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
-            try: 
-                if hasattr ( _pdf , 'function' ) :
-                    _func = _pdf.function() 
-                    if hasattr ( _func , 'integral' ) :
-                        return _func.integral ( xmin , xmax )
+
+        ## initialize the value and the flag 
+        value , todo = 0 , True
+        
+        ## 1) make a try to use ``analytical'' integral 
+        if self.tricks :
+            try:
+                if hasattr ( self.pdf , 'setPars'  ) : self.pdf.setPars() 
+                fun          = self.pdf.function()
+                value , todo = fun.integral ( xmin , xmax ) , False 
             except:
                 pass
-            
-        ## use numerical ingeration
+
+        ## 2) use numerical integration
         from ostap.math.integral import integral as _integral
-        return _integral ( self , xmin , xmax )
+
+        extended =  self.pdf.canBeExtended() or isinstance ( self.pdf , ROOT.RooAddPdf )
+        
+        if   todo and extended : value = _integral ( self , xmin , xmax )
+
+        elif todo :
+                        
+            ## use unormalized PDF here to speed up the integration 
+            ifun   = lambda x :  self ( x , error = False , normalized = False )
+            value  = _integral ( ifun , xmin , xmax )
+            norm   = self.pdf.getNorm ( self.vars )
+            value /= norm
+
+        if nevents and self.pdf.mustBeExtended () :
+            evts = self.pdf.expectedEvents( self.vars )
+            if evts <= 0 or iszero ( evts ) :
+                self.warning ( "integral: expectedEvents is %s" % evts )
+            value *= evts 
+
+        return value
 
     # =========================================================================
     ## get the derivative at  point x 
@@ -1333,7 +1447,7 @@ class PDF (MakeVar) :
         # histogram is provided 
         if histo :
             
-            assert isinstance ( histo  , ROOT.TH1 ) and not isinstance ( ROOT.TH2 ) , \
+            assert isinstance ( histo , ROOT.TH1 ) and not isinstance ( histo , ROOT.TH2 ) , \
                    "Illegal type of ``histo''-argument %s" % type( histo )
             
             histo = histo.clone()
@@ -1359,7 +1473,7 @@ class PDF (MakeVar) :
         return histo 
     
     # ==========================================================================
-    ## Convert PDF to the 1D-histogram
+    ## Convert PDF to the 1D-histogram  in correct way.
     #  @code
     #  pdf = ...
     #  h1  = pdf.histo ( 100 , -1 , 10 ) ## specify histogram parameters
@@ -1368,14 +1482,16 @@ class PDF (MakeVar) :
     #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
     #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
     #  @endcode
+    #  @see PDF.roo_histo
+    #  Unlike  <code>PDF.roo_histo</code> method, PDF is integrated within the bin
     def histo ( self             ,
                 nbins    = 100   , xmin = None , xmax = None ,
                 hpars    = ()    , 
                 histo    = None  ,
-                integral = False ,
-                errors   = False , 
-                density  = False ) :
-        """Convert PDF to the 1D-histogram
+                integral = True  ,
+                errors   = False ) :
+        """Convert PDF to the 1D-histogram in correct way
+        - Unlike  <code>PDF.roo_histo</code> method, PDF is integrated within the bin
         >>> pdf = ...
         >>> h1  = pdf.histo ( 100 , 0. , 10. ) ## specify histogram parameters
         >>> histo_template = ...
@@ -1391,7 +1507,7 @@ class PDF (MakeVar) :
                                   histo = histo )
 
         # loop over the historgam bins 
-        for i,x,y in histo.iteritems() :
+        for i , x , y in histo.iteritems() :
 
             xv , xe = x.value() , x.error()
             
@@ -1403,7 +1519,7 @@ class PDF (MakeVar) :
                 continue
 
             # integral over the bin 
-            v  = self.integral( xv -  xe , xv + xe )
+            v  = self.integral( xv - xe , xv + xe )
             
             if errors :
                 if    0 == c.cov2 () : pass
@@ -1412,32 +1528,32 @@ class PDF (MakeVar) :
                     
             histo[i] = v 
 
-        ## coovert to density historgam, if requested 
-        if density : histo =  histo.density()
-        
         return histo
 
     # ==========================================================================
-    ## Convert PDF to the 1D-histogram
+    ## Convert PDF to the 1D-histogram, taking PDF-values at bin-centres
     #  @code
     #  pdf = ...
-    #  h1  = pdf.histo ( 100 , -1 , 10 ) ## specify histogram parameters
+    #  h1  = pdf.roo_histo ( 100 , -1 , 10 ) ## specify histogram parameters
     #  histo_template = ...
-    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
-    #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
-    #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use historgam template
     #  @endcode
-    def as_histo ( self             ,
-                   nbins    = 100   , xmin = None , xmax = None ,
-                   hpars    = ()    , 
-                   histo    = None  ,
-                   density  = True  ) : 
-        """Convert PDF to the 1D-histogram
+    #  @see RooAbsPdf::createHistogram
+    #  @see RooAbsPdf::fillHistogram
+    #  @see PDF.histo
+    def roo_histo ( self             ,
+                    nbins    = 100   , xmin = None , xmax = None ,
+                    hpars    = ()    , 
+                    histo    = None  ,
+                    events   = True  ) : 
+        """Convert PDF to the 1D-histogram, taking PDF-values at bin-centres
+        - see RooAbsPdf::createHistogram
+        - see RooAbsPdf::fillHistogram
+        - see PDF.histo
         >>> pdf = ...
-        >>> h1  = pdf.as_histo ( 100 , 0. , 10. ) ## specify histogram parameters
+        >>> h1  = pdf.roo_histo ( 100 , 0. , 10. ) ## specify histogram parameters
         >>> histo_template = ...
-        >>> h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
-        >>> h3  = pdf.as_histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        >>> h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
         """
 
         histo = self.make_histo ( nbins = nbins ,
@@ -1445,16 +1561,25 @@ class PDF (MakeVar) :
                                   xmax  = xmax  ,
                                   hpars = hpars ,
                                   histo = histo )
-        
-        from   ostap.fitting.utils import binning 
-        
+
         hh = self.pdf.createHistogram (
             hID()     ,
             self.xvar ,
-            binning ( histo.GetXaxis() , 'histo1x' ) ,
-            ROOT.RooFit.Scaling  ( density ) , 
-            ROOT.RooFit.Extended ( True    ) ) 
+            self.binning ( histo.GetXaxis() , 'histo1x' ) ,
+            ROOT.RooFit.Extended ( False ) ,
+            ROOT.RooFit.Scaling  ( False ) ,            
+            )
         
+        for i in hh : hh.SetBinError ( i , 0 ) 
+        
+        if events and self.pdf.mustBeExtended() :
+            
+            for i , x , y in hh.iteritems() :
+                volume  = 2*x.error() 
+                hh[i]  *= volume
+                
+            hh *= self.pdf.expectedEvents ( self.vars ) / hh.sum() 
+                
         histo += hh
         
         return histo 
@@ -1485,14 +1610,15 @@ class PDF (MakeVar) :
         >>> residual = pdf.residual_histo ( histo )
         """
         
-        v= self.as_histo ( histo = data_histo )
-    
-        for i in h :
-            v    = h         [i]
-            d    = data_histo[i] 
-            h[i] = d - v.value()    ## data - pdf 
+        hpdf = self.histo ( histo = data_histo )
+
+        for i in hpdf :
             
-        return h 
+            d       = data_histo [i]
+            v       = hpdf       [i]
+            hpdf[i] = d - v.value()    ## data - pdf 
+            
+        return hpdf 
 
     # ==========================================================================
     ## create the pull histogram  : (data - pdf)/data_error
@@ -1519,7 +1645,7 @@ class PDF (MakeVar) :
         
         >>> pull = pdf.pull_histo ( histo )
         """
-        h = self.residual_histo ( histo = data_histo )
+        h = self.residual_histo ( data_histo = data_histo )
         
         for i in h :
             v    = h         [i]
@@ -1530,7 +1656,7 @@ class PDF (MakeVar) :
 
     # ==========================================================================
     ## get the residual histogram : (data-fit) 
-    #  @see PDF.as_histo
+    #  @see PDF.histo
     #  @see PDF.residual_histo
     #  @see PDF.make_histo
     #  @code
@@ -1541,7 +1667,7 @@ class PDF (MakeVar) :
     #  @endcode 
     def residual ( self  , dataset , **kwargs ) :
         """Get the residual histogram
-        - see PDF.as_histo
+        - see PDF.histo
         - see PDF.residual_histo
         - see PDF.make_histo
 
@@ -1557,7 +1683,7 @@ class PDF (MakeVar) :
 
     # ==========================================================================
     ## get the pull histogram : (data-fit)/data_error 
-    #  @see PDF.as_histo
+    #  @see PDF.histo
     #  @see PDF.residual_histo
     #  @see PDF.make_histo
     #  @code
@@ -1568,7 +1694,7 @@ class PDF (MakeVar) :
     #  @endcode 
     def pull ( self  , dataset , **kwargs ) :
         """Get the pull  histogram: (data-fit)/data_error
-        - see PDF.as_histo
+        - see PDF.histo
         - see PDF.residual_histo
         - see PDF.make_histo
 
@@ -1631,7 +1757,7 @@ class PDF (MakeVar) :
         assert is_integer ( N ) and 2 <= N , \
                "PDF.make_fracs: Invalid N=%s/%s" % ( N, type ( N ) )
         ##
-        fracs    = [] 
+        ufracs   = [] 
         n        =  ( N - 1 ) if fractions else N
         NN       = n + 1
         vminmax  =  ( 0 , 1 ) if fractions else ( 0 , 1.e+7 )
@@ -1645,11 +1771,16 @@ class PDF (MakeVar) :
                     prod *= ( 1.0 - fv )
                 value = fv 
             ## finally create the fraction
-            fi = get_i ( fracs , i , None ) 
-            f  = self.make_var ( fi , pname % i , ptitle % i , None , value , *vminmax ) 
-            fracs.append ( f )
+            fi = get_i ( fracs , i , None )
             
-        return fracs
+            if isinstance ( fi , num_types ) and not vminmax[0] <= fi <= vminmax[1] :
+                self.warning ("make_fracs: fraction %s is outside the interval %s, ignore" % ( fi , vminmax ) )
+                fi = None
+                
+            f  = self.make_var ( fi , pname % i , ptitle % i , None , value , *vminmax ) 
+            ufracs.append ( f )
+            
+        return ufracs
     
     # =============================================================================
     ## helper function to build composite (non-extended) PDF from components 
@@ -1929,11 +2060,6 @@ class Flat1D(PDF) :
             'title'    : title     
             }
         
-    ## simple conversion to string    
-    def __str__ ( self ) :
-        """Simple conversion to string"""        
-        return "Flat1D(name='%s',xvar='%s')" % ( self.name , self.xvar.name )
-  
 # =============================================================================
 ## @class Generic1D_pdf
 #  "Wrapper" over generic RooFit (1D)-pdf
@@ -1964,8 +2090,8 @@ class Generic1D_pdf(PDF) :
         """
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf'' must be ROOT.RooAbsReal"
-        if not name : name = pdf.GetName()
         
+        name = name if name else pdf.GetName ()        
         ## initialize the base 
         PDF . __init__ ( self , name , xvar , special = special )
         ##
@@ -1989,7 +2115,7 @@ class Generic1D_pdf(PDF) :
             'special'        : self.special        , 
             'add_to_signals' : self.add_to_signals , 
             }
-        
+            
     @property
     def add_to_signals ( self ) :
         """``add_to_signals'' : shodul PDF be added into list of signal components?"""
@@ -2046,7 +2172,6 @@ class H1D_pdf(H1D_dset,PDF) :
             'silent'  : self.silent  ,             
             }
         
-
 # =============================================================================
 ## @class Fit1D
 #  The actual model for 1D-mass fits

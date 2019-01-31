@@ -4378,13 +4378,18 @@ def _h1_accumulate_ ( h                        ,
 ## get the sum of entries 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_sum_ ( h     ,
-               xmin  ,
-               xmax  ) :
-    """Get the histogram integral  over the specified range xmin<x<xmax
+def _h1_sum_ ( h           ,
+               xmin = None ,
+               xmax = None ) :
+    """Get the sum of histogram entries over the specified range xmin<x<xmax
     >>> h = ....
     >>> h.sum ( 1.0 , 20.0 )    
     """
+    if xmin is None  or xmax is None :
+        xmn , xmx = h.xminmax()
+        if xmin is None : xmin = xmn
+        if xmax is None : xmax = xmx
+        
     return _h1_accumulate_ ( h , cut = lambda s : xmin<=s[1].value()<=xmax ) 
 
 # =============================================================================

@@ -356,39 +356,27 @@ class Sim1D(PDF) :
         assert self.sample in dataset      ,\
                'Category %s is not in dataset' % self.sample.GetName()
         
-        import ostap.plotting.fit_draw as FD
-
+        
         dcut = ROOT.RooFit.Cut("%s==%s::%s"  % ( self.sample.GetName() ,
                                                  self.sample.GetName() ,
                                                  category              ) )  
 
         ## 
-        data_options = kwargs.pop (       'data_options' ,       FD.data_options )
         sname = self.sample.GetName() 
-        dcut = ROOT.RooFit.Cut ( "%s==%s::%s"  % ( sname , sname , category ) )
-        data_options = data_options +  ( dcut , ) 
+        dcut  = ROOT.RooFit.Cut ( "%s==%s::%s"  % ( sname , sname , category ) )
         
-        self._tmp_vset  = ROOT.RooArgSet ( self.sample ) 
-        _proj  = ROOT.RooFit.ProjWData ( self._tmp_vset   , dataset  ) 
-        _slice = ROOT.RooFit.Slice     ( self.sample      , category )
-
-        bkgoptions   = kwargs.pop ( 'backrground_options' , FD.background_options )
-        bkgoptions   = bkgoptions + ( _slice , _proj  )
+        data_options = self.draw_option ( 'data_options' , **kwargs ) +  ( dcut , ) 
         
-        ct1options   = kwargs.pop ( 'crossterm1_options'  , FD.crossterm1_options )
-        ct1options   = ct1options + ( _slice , _proj  )
+        self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
+        _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  ) 
+        _slice = ROOT.RooFit.Slice      ( self.sample    , category )
 
-        ct2options   = kwargs.pop ( 'crossterm2_options'  , FD.crossterm2_options )
-        ct2options   = ct2options + ( _slice , _proj )
-        
-        cmpoptions   = kwargs.pop (  'component_options'  ,  FD.component_options )
-        cmpoptions   = cmpoptions + ( _slice , _proj )
-
-        sigoptions   = kwargs.pop (     'signal_options'  ,     FD.signal_options )
-        sigoptions   = sigoptions + ( _slice , _proj )
-
-        totoptions   = kwargs.pop (  'total_fit_options'  ,  FD.total_fit_options )
-        totoptions   = totoptions + ( _slice , _proj )
+        bkgoptions   = self.draw_option ( 'backrground_options' , **kwargs ) + ( _slice , _proj )
+        ct1options   = self.draw_option ( 'crossterm1_options'  , **kwargs ) + ( _slice , _proj )
+        ct2options   = self.draw_option ( 'crossterm2_options'  , **kwargs ) + ( _slice , _proj )        
+        cmpoptions   = self.draw_option (  'component_options'  , **kwargs ) + ( _slice , _proj )
+        sigoptions   = self.draw_option (     'signal_options'  , **kwargs ) + ( _slice , _proj )
+        totoptions   = self.draw_option (  'total_fit_options'  , **kwargs ) + ( _slice , _proj )
         
         kwargs [ 'data_options'       ] = data_options
         kwargs [ 'signal_options'     ] = sigoptions 

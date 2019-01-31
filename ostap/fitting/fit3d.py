@@ -3,7 +3,7 @@
 # =============================================================================
 ## @file ostap/fitting/fit3d.py
 #  Set of useful basic utilities to build various fit models 
-#  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 # =============================================================================
 """Set of useful basic utilities to build various 2D-fit models"""
@@ -108,14 +108,15 @@ class PDF3 (PDF2) :
         >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
         >>> r,f = model.fitTo ( dataset )    
         """
-        if isinstance ( dataset , ROOT.TH3 ) :
+        if   isinstance ( dataset , H3D_dset ) : dataset = dataset.dset        
+        elif isinstance ( dataset , ROOT.TH3 ) :
             density = kwargs.pop ( 'density' , True  ) 
             chi2    = kwargs.pop ( 'chi2'    , False ) 
             return self.fitHisto ( dataset   ,
                                    draw    = draw    ,
                                    silent  = silent  ,
                                    density = dentity ,
-                                   chi2    =  chi2   , args = args , **kwargs )
+                                   chi2    = chi2    , args = args , **kwargs )
         
         result,f = PDF2.fitTo ( self    ,
                                 dataset = dataset ,
@@ -369,7 +370,7 @@ class PDF3 (PDF2) :
 
     # ====================================================================================
     ## simple 'function-like' interface 
-    def __call__ ( self , x , y , z , error = False ) :
+    def __call__ ( self , x , y , z , error = False , normalized = True ) :
         
         if     isinstance ( self.xvar , ROOT.RooRealVar ) and \
                isinstance ( self.yvar , ROOT.RooRealVar ) and \
@@ -380,7 +381,9 @@ class PDF3 (PDF2) :
                     self.xvar.setVal ( x )
                     self.yvar.setVal ( y )
                     self.zvar.setVal ( z )
-                    v = self.pdf.getVal ( self.vars )  
+                    
+                    v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getValV ()
+ 
                     if error and self.fit_result :
                         e = self.pdf.getPropagatedError ( self.fit_result )
                         if 0<= e : return  VE ( v ,  e * e )
@@ -467,35 +470,57 @@ class PDF3 (PDF2) :
         >>> pdf = ...
         >>> print pdf.integral( 0,1,0,2,0,5)
         """
-        xmn , xmx = self.xminmax()
-        ymn , ymx = self.yminmax()
-        zmn , zmx = self.zminmax()
+        if self.xminmax() :            
+            xmn , xmx = self.xminmax()
+            xmin = max ( xmin , xmn )
+            xmax = min ( xmax , xmx )
+            
+        if self.yminmax() : 
+            ymn , ymx = self.yminmax()
+            ymin = max ( ymin , ymn )
+            ymax = min ( ymax , ymx )
+            
+        if self.zminmax() :
+            zmn , zmx = self.zminmax()
+            zmin = max ( zmin , zmn )
+            zmax = min ( zmax , zmx )
 
-        xmin = max ( xmin , xmn )
-        xmax = min ( xmax , xmx )
-        ymin = max ( ymin , ymn )
-        ymax = min ( ymax , ymx )
-        zmin = max ( zmin , zmn )
-        zmax = min ( zmax , zmx )
         
-        ## make a try to use analytical integral (could be fast)
-        if self.tricks and hasattr ( self , 'pdf' ) :
-            _pdf = self.pdf 
-            if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
-            try: 
-                if hasattr ( _pdf , 'function' ) :
-                    _func = _pdf.function() 
-                    if hasattr ( _func , 'integral' ) :
-                        return _func.integral ( xmin , xmax , ymin , ymax , zmin , zmax )
+        value , todo = 0 , True 
+        
+         ## 1) make a try to use analytical integral (could be fast)
+        if self.tricks :
+            try:
+                if hasattr ( self.pdf , 'setPars'  ) : self.pdf.setPars() 
+                fun          = self.pdf.function()
+                value , todo = fun.integral ( xmin , xmax ,
+                                              ymin , ymax ,
+                                              zmin , zmax ) , False 
             except:
                 pass
+
+
+        ## for numerical integration 
+        from ostap.math.integral import integral3 as _integral3
+        
+        extended = self.pdf.canBeExtended() or isinstance ( self.pdf , ROOT.RooAddPdf )
+        if todo  and extended  :
+            value = _integral3 ( self , xmin , xmax , ymin , ymax , zmin , zmax )
+        elif todo : 
+                        
+            ## use unormalized PDF here to speed up the integration 
+            ifun   = lambda x :  self ( x , error = False , normalized = False )
+            value  = _integral3 ( ifun , xmin , xmax , ymin , ymax , zmin , zmax )
+            norm   = self.pdf.getNorm ( self.vars )
+            value /= norm
             
-        ## use numerical integration 
-        from ostap.math.integral import integral3 as _integral3 
-        return _integral3 ( self ,
-                            xmin , xmax ,
-                            ymin , ymax ,
-                            zmin , zmax )
+        if nevents and self.pdf.mustBeExtended () :
+            evts = self.pdf.expectedEvents( self.vars )
+            if evts  <= 0 or iszero ( evts ) :
+                self.warning ( "integral: expectedEvents is %s" % evts )
+            value *= evts 
+                
+        return value
     
     # ==========================================================================
     ## get a minimum of PDF for certain interval
@@ -691,14 +716,13 @@ class PDF3 (PDF2) :
 
 
     # ==========================================================================
-    ## Convert PDF to the 3D-histogram
+    ## Convert PDF to the 3D-histogram in correct  way 
     #  @code
     #  pdf = ...
     #  h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
     #  histo_template = ...
     #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
     #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
-    #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
     #  @endcode
     def histo ( self             ,
                 xbins    = 10    , xmin = None , xmax = None ,
@@ -706,16 +730,14 @@ class PDF3 (PDF2) :
                 zbins    = 10    , zmin = None , zmax = None ,
                 hpars    = ()    , 
                 histo    = None  ,
-                intergal = False ,
-                errors   = False , 
-                density  = False ) :
-        """Convert PDF to the 3D-histogram
+                intergal = True  ,
+                errors   = False ) :
+        """Convert PDF to the 3D-histogram in correct way
         >>> pdf = ...
         >>> h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
         >>> histo_template = ...
         >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
         >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
-        >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
 
 
@@ -727,7 +749,7 @@ class PDF3 (PDF2) :
         
         
         # loop over the historgam bins 
-        for ix,iy,iz,x,y,z,w in histo.iteritems() :
+        for ix , iy , iz , x , y , z , w in histo.iteritems() :
 
             xv , xe = x.value() , x.error()
             yv , ye = y.value() , y.error()
@@ -752,53 +774,56 @@ class PDF3 (PDF2) :
                     
             histo[ix,iy,iz] = v 
 
-        ## coovert to density historgam, if requested 
-        if density : histo =  histo.density()
-        
         return histo
     
     # ==========================================================================
-    ## Convert PDF to the 3D-histogram
+    ## Convert PDF to the 3D-histogram, taking PDF-values at bin-centres
     #  @code
     #  pdf = ...
-    #  h1  = pdf.as_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
+    #  h1  = pdf.roo_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) 
     #  histo_template = ...
-    #  h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
-    #  h4  = pdf.as_histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use historgam template
     #  @endcode
-    def as_histo ( self             ,
+    def roo_histo ( self            ,
                    xbins    = 10    , xmin = None , xmax = None ,
                    ybins    = 10    , ymin = None , ymax = None ,
                    zbins    = 10    , zmin = None , zmax = None ,
                    hpars    = ()    , 
                    histo    = None  ,
-                   density  = True  ) :
-        """Convert PDF to the 3D-histogram
+                   events   = True) :
+        """Convert PDF to the 3D-histogram, taking PDF-values at bin-centres
         >>> pdf = ...
-        >>> h1  = pdf.as_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
+        >>> h1  = pdf.roo_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 )
         >>> histo_template = ...
-        >>> h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
-        >>> h4  = pdf.as_histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        >>> h2  = pdf.roo_histo ( histo = histo_template ) ## use historgam template
         """
         
-        histos = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
-                                   ybins = ybins , ymin = ymin , ymax = ymax ,
-                                   zbins = zbins , zmin = zmin , zmax = zmax ,
-                                   hpars = hpars ,
-                                   histo = histo )
-      
-        from   ostap.fitting.utils import binning 
+        histo = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
+                                  ybins = ybins , ymin = ymin , ymax = ymax ,
+                                  zbins = zbins , zmin = zmin , zmax = zmax ,
+                                  hpars = hpars ,
+                                  histo = histo )
+
         hh = self.pdf.createHistogram (
             hID()     ,
-            self.xvar ,                    binning ( histo.GetXaxis() , 'histo3x' )   ,
-            ROOT.RooFit.YVar ( self.yvar , binning ( histo.GetYaxis() , 'histo3y' ) ) , 
-            ROOT.RooFit.ZVar ( self.zvar , binning ( histo.GetZaxis() , 'histo3z' ) ) , 
-            ROOT.RooFit.Scaling  ( density ) , 
-            ROOT.RooFit.Extended ( True    ) ) 
+            self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo3x' )   ,
+            ROOT.RooFit.YVar ( self.yvar , self.binning ( histo.GetYaxis() , 'histo3y' ) ) , 
+            ROOT.RooFit.ZVar ( self.zvar , self.binning ( histo.GetZaxis() , 'histo3z' ) ) , 
+            ROOT.RooFit.Scaling  ( False ) , 
+            ROOT.RooFit.Extended ( False ) )
         
+        for i in hh : hh.SetBinError ( i , 0 ) 
+        
+        if events and self.pdf.mustBeExtended() :            
+            for ix , iy , iz , x , y , z , v  in hh.iteritems() :
+                volume               = 8 * x.error()  * y.error() * z.error() 
+                hh [ iz , iy , iz ] *= volume
+                
+            hh *= self.pdf.expectedEvents ( self.vars ) / hh.sum() 
+                
         histo += hh
-         
-        return histo
+            
+        return histo 
 
     # ==========================================================================
     ## get the residual histogram : (data-fit) 
@@ -852,6 +877,13 @@ class PDF3 (PDF2) :
         dataset.project ( hdata , ( self.zvar.name , self.yvar.name , self.xvar.name ) ) 
         return self.pull_histo ( hdata ) 
 
+    ## conversion to string 
+    def __str__ (  self ) :
+        return '%s(%s,xvar=%s,yvar=%s,zvar=%s)' % (
+            self.__class__.__name__ , self.name ,
+            self.xvar.name , self.yvar.name , self.zvar.name )
+    __repr__ = __str__ 
+
 # =============================================================================
 ## @class Generic3D_pdf
 #  "Wrapper" over generic RooFit (3D)-pdf
@@ -884,8 +916,9 @@ class Generic3D_pdf(PDF3) :
         assert isinstance ( yvar , ROOT.RooAbsReal ) , "``yvar'' must be ROOT.RooAbsReal"
         assert isinstance ( zvar , ROOT.RooAbsReal ) , "``zvar'' must be ROOT.RooAbsReal"
         assert isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf''  must be ROOT.RooAbsReal"
+
+        name = name if name else pdf.GetName ()
         
-        if not name : name = pdf.GetName()
         PDF3  . __init__ ( self , name , xvar , yvar , zvar , special = special )
 
         if not self.special : 
@@ -909,9 +942,9 @@ class Generic3D_pdf(PDF3) :
             'name'           : self.name           ,
             'special'        : self.special        ,  
             'add_to_signals' : self.add_to_signals , 
- 
             }
-        
+
+    
     @property
     def add_to_signals ( self ) :
         """``add_to_signals'' : shodul PDF be added into list of signal components?"""
@@ -961,14 +994,6 @@ class Flat3D(PDF3) :
             'title'    : title     ,             
             }
         
-    ## simple conversion to string    
-    def __str__ ( self ) :
-        """Simple conversion to string"""        
-        return "Flat3D(name='%s',xvar='%s',yvar='%s',zvar='%s')" % ( self     .name ,
-                                                                     self.xvar.name ,
-                                                                     self.yvar.name ,
-                                                                     self.zvar.name )
-    
 # =============================================================================
 ## @class Model3D
 #  Trivial class to construct 3D model as a product of split 1D-models
@@ -1078,14 +1103,6 @@ class Model3D(PDF3) :
     def zmodel ( self ) :
         """``z-model'' z-component of M(x)*M(y)*M(z) PDF"""
         return self.__zmodel
-    
-    ## simple conversion to string    
-    def __str__ ( self ) :
-        """Simple conversion to string"""        
-        return "Model3D(name='%s',xmodel=%s,ymodel=%s,zmodel=%s)" % ( self  .name ,
-                                                                      self.xmodel ,
-                                                                      self.ymodel ,
-                                                                      self.zmodel )
     
 # =============================================================================
 ## simple convertor of 3D-histogram into PDF
@@ -1475,7 +1492,7 @@ class Fit3D (PDF3) :
                                        title =  'Backrgound2(y) x Background2(z)' )
 
         self.__sbb_cmp = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( "SBB_pdf" + suffix , "Signal(x) x Backrgonud(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
+            ROOT.RooProdPdf ( "SBB_pdf" + suffix , "Signal(x) x Background(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
             self.xvar , self.yvar , self.zvar )
         self.__bsb_cmp = Generic3D_pdf (
             ROOT.RooProdPdf ( "BSB_pdf" + suffix , "Signal(y) x Background(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,

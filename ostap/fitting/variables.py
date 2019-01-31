@@ -20,8 +20,6 @@ __all__     = (
     'SETVAR'          , ## context manager to preserve the current value for RooRealVar
     'scale_var'       , ## construct "easy" RooFormulaVar  
     'add_var'         , ## construct "easy" RooFormulaVar
-    'make_constraint' , ## create soft Gaussian constraint
-    'soft_constraint' , ## create soft Gaussian constraint
     ## simple "inline" formulas
     'scale_var'       , ## "inline" creation of A*B
     'add_var'         , ## "inline" creation of A+B
@@ -173,91 +171,6 @@ _new_methods_ += [
     #
     ]
 
-
-
-# =============================================================================
-## Prepare ``soft'' gaussian constraint for the given variable
-#  @code 
-#  var  = ...                                      ## the variable 
-#  soft = var.soft_constraint( VE ( 1 , 0.1**2 ) ) ## create soft constraint
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-06-23
-def soft_constraint ( var , value , name = '' ,  title = '' ) :
-    """Prepare ``soft'' gaussian constraint for the variable
-    
-    >>> var  = ...                                   ## the variable 
-    >>> soft = var.soft_constraint ( VE(1,0.1**2 ) ) ## create soft constraint
-    """
-    #
-    ## create gaussian constrains
-    #
-    assert isinstance ( var   , ROOT.RooAbsReal ) ,\
-           "Invalid ``v'': %s/%s"  % ( var , type ( var ) )               
-    assert isinstance ( value , VE ),\
-           "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
-
-    name  = name  if name  else 'Constr(%s)'                     %   var.GetName()
-    title = title if title else 'Gauissian constraint(%s) at %s' % ( var.GetName() , value )
-    #
-
-    val = ROOT.RooFit.RooConst ( value.value () )
-    err = ROOT.RooFit.RooConst ( value.error () )
-        
-    gauss = ROOT.RooGaussian ( name , title , var , val , err )
-    
-    if not hasattr ( gauss , '_constraint_aux' ) : gauss._constraint_aux = []
-
-    gauss._constraint_aux.append ( val )
-    gauss._constraint_aux.append ( err )
-
-    if not hasattr ( var , '_constraint_aux' ) : var._constraint_aux = []
-    
-    var._constraint_aux.append ( val   )
-    var._constraint_aux.append ( err   )
-    var._constraint_aux.append ( gauss )
-    
-    var._constraint_error   = err
-    var._constraint_gauss   = gauss 
-    
-    return  gauss 
-
-# =============================================================================
-## Prepare ``soft'' gaussian constraint for the given variable
-#  @code 
-#    >>> var     = ...                            ## the variable 
-#    >>> extcntr = var.constraint( VE(1,0.1**2 ) ) ## create constrains 
-#    >>> model.fitTo ( ... , extcntr )            ## use it in the fit 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-06-23
-def make_constraint ( var , value , name = '' ,  title = '' ) :
-    """Prepare ``soft'' gaussian constraint for the variable
-    
-    >>> var     = ...                            ## the variable 
-    >>> extcntr = var.constaint( VE(1,0.1**2 ) ) ## create constrains 
-    >>> model.fitTo ( ... , extcntr )            ## use it in the fit 
-    """
-
-    ## create the gaussian constraint
-    gauss  = soft_constraint ( var , value , name ,  title ) 
-
-    cnts   = ROOT.RooArgSet ( gauss )
-
-    if not hasattr ( var , '_constraint_aux' ) : var._constraint_aux = []
-    
-    var   ._constraint_aux.append ( cnts )
-
-    return ROOT.RooFit.ExternalConstraints  (  cnts )
-
-
-ROOT.RooAbsReal. soft_constraint = soft_constraint
-ROOT.RooAbsReal.      constraint = make_constraint
-
-_new_methods_ += [
-    ROOT.RooAbsReal. soft_constraint , 
-    ROOT.RooAbsReal.      constraint 
-    ]
 
 # ============================================================================
 ## make a histogram for RooRealVar

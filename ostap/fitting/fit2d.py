@@ -25,12 +25,13 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random 
-from   ostap.core.core      import dsID , VE , Ostap, hID 
+from   ostap.core.core      import dsID , VE , Ostap, hID , iszero
 from   ostap.fitting.roofit import SETVAR
 from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
 from   ostap.fitting.basic  import PDF , Flat1D 
 from   ostap.fitting.utils  import ( H2D_dset        ,
                                      component_similar , component_clone )
+from   ostap.core.types     import num_types, list_types 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit2d' )
@@ -111,15 +112,15 @@ class PDF2 (PDF) :
         >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
         >>> r,f = model.fitTo ( dataset , draw = True , nbins = 300 )    
         """
-        if isinstance ( dataset , ROOT.TH2 ) :
+        if   isinstance ( dataset , H2D_dset ) : dataset = dataset.dset        
+        elif isinstance ( dataset , ROOT.TH2 ) :
             density = kwargs.pop ( 'density' , True  ) 
             chi2    = kwargs.pop ( 'chi2'    , False ) 
             return self.fitHisto ( dataset   ,
                                    draw    = draw    ,
                                    silent  = silent  ,
                                    density = density ,
-                                   chi2    = chi2    ,
-                                   args    =  args   , **kwargs )
+                                   chi2    = chi2    , args = args , **kwargs )
 
         result,f = PDF.fitTo ( self            ,
                                dataset         ,
@@ -277,18 +278,24 @@ class PDF2 (PDF) :
         ## copy arguments:
         args = kwargs.copy ()
         
-        import ostap.plotting.fit_draw as FD
-        if in_range and not isinstance ( in_range , ( list , tuple ) ) : in_range = in_range ,  
+        if in_range and isinstance ( in_range , list_types ) and 2 == len ( in_range ) :
+            low  = in_range[0]
+            high = in_range[1]
+            if isinstance ( low , num_types ) and isinstancee ( high , num_types ) and low  < high : 
+                with rooSilent ( 3 ) : drawvar.setRange ( 'aux_range' , low , high )
+                in_range = 'aux_range'
+    
+        if in_range and not isinstance ( in_range , list_types ) : in_range = in_range ,  
         if in_range :
-            data_options        = args.pop (       'data_options' , FD.         data_options )
-            background_options  = args.pop ( 'background_options' , FD. background2D_options )
-            signal_options      = args.pop (     'signal_options' , FD.       signal_options )
-            component_options   = args.pop (  'component_options' , FD.    component_options )
-            crossterm1_options  = args.pop ( 'crossterm1_options' , FD.   crossterm1_options )
-            crossterm2_options  = args.pop ( 'crossterm2_options' , FD.   crossterm2_options )
-            total_fit_options   = args.pop (  'total_fit_options' , FD.    total_fit_options )
+            data_options        = self.draw_option (       'data_options' , **args )
+            background_options  = self.draw_option ( 'background_options' , **args )
+            signal_options      = self.draw_option (     'signal_options' , **args )
+            component_options   = self.draw_option (  'component_options' , **args )
+            crossterm1_options  = self.draw_option ( 'crossterm1_options' , **args )
+            crossterm2_options  = self.draw_option ( 'crossterm2_options' , **args )
+            total_fit_options   = self.draw_option (  'total_fit_options' , **args )
 
-            for i in in_range :  
+            for i in in_range :
                 data_options       += ROOT.RooFit.CutRange        ( i ) , 
                 signal_options     += ROOT.RooFit.ProjectionRange ( i ) , 
                 background_options += ROOT.RooFit.ProjectionRange ( i ) , 
@@ -305,10 +312,10 @@ class PDF2 (PDF) :
             args [ 'crossterm2_options' ] = crossterm2_options
             args [  'total_fit_options' ] =  total_fit_options
             
-        background_options  = args.pop ( 'background_options'  , FD.background2D_options )
-        background_style    = args.pop ( 'base_background_color' , FD.background2D_style   )
-        args [ 'background_options' ] = background_options
-        args [ 'background_style'   ] = background_style
+            ## background_options  = self.draw_option ('background_options' , **args )
+            ## background_style    = self.draw_option (  'background_style' , **args )
+            ## args [ 'background_options' ] = background_options
+            ## args [ 'background_style'   ] = background_style
         
         #
         ## redefine the drawing variable:
@@ -318,10 +325,13 @@ class PDF2 (PDF) :
         #
         ## delegate the actual drawing to the base class
         # 
-        return PDF.draw ( self            ,
-                          dataset         ,
-                          nbins  = nbins  ,
-                          silent = silent ,  **args ) 
+        result = PDF.draw ( self            ,
+                            dataset         ,
+                            nbins  = nbins  ,
+                            silent = silent ,  **args )
+
+        self.draw_var = None
+        return result 
     
     # =========================================================================
     ## fit the 2D-histogram (and draw it)
@@ -408,7 +418,7 @@ class PDF2 (PDF) :
 
     # =========================================================================
     ## simple 'function-like' interface 
-    def __call__ ( self , x , y , error = False ) :
+    def __call__ ( self , x , y , error = False , normalized = True ) :
         """ Simple  function-like interface
         >>>  pdf = ...
         >>>  print pdf(0.1,0.5) 
@@ -420,7 +430,9 @@ class PDF2 (PDF) :
                 with SETVAR ( self.xvar ) , SETVAR( self.yvar ) :
                     self.xvar.setVal ( x )
                     self.yvar.setVal ( y )
-                    v = self.pdf.getVal ( self.vars )  
+                    
+                    v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getValV ()
+                    
                     if error and self.fit_result :
                         e = self.pdf.getPropagatedError ( self.fit_result )
                         if 0<= e : return  VE ( v ,  e * e )
@@ -504,29 +516,48 @@ class PDF2 (PDF) :
         >>> pdf = ...
         >>> print pdf.integral( 0,1,0,2)
         """
-        xmn , xmx = self.xminmax()
-        ymn , ymx = self.yminmax()
+        if self.xminmax() :
+            xmn , xmx = self.xminmax()
+            xmin = max ( xmin , xmn )
+            xmax = min ( xmax , xmx )
 
-        xmin = max ( xmin , xmn )
-        xmax = min ( xmax , xmx )
-        ymin = max ( ymin , ymn )
-        ymax = min ( ymax , ymx )
+        if self.yminmax() : 
+            ymn , ymx = self.yminmax()            
+            ymin = max ( ymin , ymn )
+            ymax = min ( ymax , ymx )
 
-        ## make a try to use analytical integral (could be fast)
-        if self.tricks and hasattr ( self , 'pdf' ) :
-            _pdf = self.pdf 
-            if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
-            try: 
-                if hasattr ( _pdf , 'function' ) :
-                    _func = _pdf.function() 
-                    if hasattr ( _func , 'integral' ) :
-                        return _func.integral ( xmin , xmax , ymin , ymax )
+        value , todo  = 0 , True 
+        
+        ## 1) make a try to use analytical integral (could be fast)
+        if self.tricks :
+            try:
+                if hasattr ( self.pdf , 'setPars'  ) : self.pdf.setPars() 
+                fun          = self.pdf.function()
+                value , todo = fun.integral ( xmin , xmax , ymin , ymax ) , False 
             except:
                 pass
-            
+
         ## use numerical integration 
         from ostap.math.integral import integral2 as _integral2
-        return _integral2 ( self , xmin , xmax , ymin , ymax )
+
+        extended =  self.pdf.canBeExtended() or isinstance ( self.pdf , ROOT.RooAddPdf )
+
+        if   todo and extended : value   = _integral2 ( self , xmin , xmax , ymin , ymax )
+        elif todo  :
+            
+            ## use unormalized PDF here to speed up the integration 
+            ifun   = lambda x :  self ( x , error = False , normalized = False )
+            value  = _integral2 ( ifun , xmin , xmax , ymin , ymax )
+            norm   = self.pdf.getNorm ( self.vars )
+            value /= norm
+
+        if nevents and self.pdf.mustBeExtended () :
+            evts = self.pdf.expectedEvents( self.vars )
+            if evts  <= 0 or iszero ( evts ) :
+                self.warning ( "integral: expectedEvents is %s" % evts )
+            value *= evts 
+
+        return value
 
 
     # ==========================================================================
@@ -649,7 +680,7 @@ class PDF2 (PDF) :
         # histogram is provided 
         if histo :
             
-            assert isinstance ( histo  , ROOT.TH2 ) and not isinstance ( ROOT.TH3 ) , \
+            assert isinstance ( histo , ROOT.TH2 ) and not isinstance ( histo , ROOT.TH3 ) , \
                    "Illegal type of ``histo''-argument %s" % type( histo )
             
             histo = histo.clone()
@@ -743,44 +774,54 @@ class PDF2 (PDF) :
 
 
     # ==========================================================================
-    ## Convert PDF to the 2D-histogram
+    ## Convert PDF to the 2D-histogram, taking taking PDF-values at bin-centres
     #  @code
     #  pdf = ...
-    #  h1  = pdf.histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
+    #  h1  = pdf.roo_histo ( 100 , 0. , 10. , 20 , 0. , 10 ) 
     #  histo_template = ...
-    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
-    #  h3  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
+    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use historgam template
+    #  h3  = pdf.roo_histo ( ... , density  = True  ) ## convert to "density" histogram 
     #  @endcode
-    def as_histo ( self             ,
-                   xbins    = 20    , xmin = None , xmax = None ,
-                   ybins    = 20    , ymin = None , ymax = None ,
-                   hpars    = ()    , 
-                   histo    = None  , 
-                   density  = True  ) : 
-        """Convert PDF to the 2D-histogram
+    def roo_histo ( self             ,
+                   xbins   = 20    , xmin = None , xmax = None ,
+                   ybins   = 20    , ymin = None , ymax = None ,
+                   hpars   = ()    , 
+                   histo   = None  , 
+                   events  = True  ) : 
+        """Convert PDF to the 2D-histogram, taking PDF-values at bin-centres
         >>> pdf = ...
-        >>> h1  = pdf.as_histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
+        >>> h1  = pdf.as_histo ( 100 , 0. , 10. , 20 , 0. , 10 ) 
         >>> histo_template = ...
         >>> h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
         >>> h3  = pdf.as_histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
         
-        histos = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
-                                   ybins = ybins , ymin = ymin , ymax = ymax ,
-                                   hpars = hpars ,
-                                   histo = histo )
-       
-        from   ostap.fitting.utils import binning 
+        histo = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
+                                  ybins = ybins , ymin = ymin , ymax = ymax ,
+                                  hpars = hpars ,
+                                  histo = histo )
+        
         hh = self.pdf.createHistogram (
             hID()     ,
-            self.xvar ,                    binning ( histo.GetXaxis() , 'histo2x' )   ,
-            ROOT.RooFit.YVar ( self.yvar , binning ( histo.GetYaxis() , 'histo2y' ) ) , 
-            ROOT.RooFit.Scaling  ( density ) , 
-            ROOT.RooFit.Extended ( True    ) ) 
+            self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo2x' )   ,
+            ROOT.RooFit.YVar ( self.yvar , self.binning ( histo.GetYaxis() , 'histo2y' ) ) , 
+            ROOT.RooFit.Scaling  ( False ) , 
+            ROOT.RooFit.Extended ( False ) ) 
+
+        for i in hh : hh.SetBinError ( i , 0 ) 
         
+        if events and self.pdf.mustBeExtended() :
+            
+            for ix , iy , x , y , z in hh.iteritems() :
+                volume          = 4 * x.error() * y.error() 
+                hh [ ix , iy ] *= volume
+                
+            hh *= self.pdf.expectedEvents ( self.vars ) / hh.sum() 
+                
         histo += hh
         
-        return histo
+        return histo 
+
     
     # ==========================================================================
     ## get the residual histogram : (data-fit) 
@@ -834,6 +875,13 @@ class PDF2 (PDF) :
         dataset.project ( hdata , ( self.yvar.name , self.xvar.name ) ) 
         return self.pull_histo ( hdata ) 
         
+    ## conversion to string 
+    def __str__ (  self ) :
+        return '%s(%s,xvar=%s,yvar=%s)' % (
+            self.__class__.__name__ , self.name , self.xvar.name , self.yvar.name )
+    __repr__ = __str__ 
+    
+
 # =============================================================================
 ## suppress methods specific for 1D-PDFs only
 for _a in (
@@ -960,12 +1008,6 @@ class Flat2D(PDF2) :
             'name'     : self.name ,            
             'title'    : title     ,             
             }                   
-    ## simple conversion to string    
-    def __str__ ( self ) :
-        """Simple conversion to string"""        
-        return "Flat2D(name='%s',xvar='%s',yvar='%s')" % ( self     .name ,
-                                                           self.xvar.name ,
-                                                           self.yvar.name )
 
 # =============================================================================
 ## @class Model2D
@@ -1001,6 +1043,9 @@ class Model2D(PDF2) :
             self.__ymodel = Generic1D_pdf  ( ymodel , yvar )
         else : raise AttributeError ( "Invalid ``y-model'' argument: %s" % ymodel )
 
+        name  = name  if name  else 'Model2D_%s_%s'  % ( self.xmodel.name , self.ymodel.name )
+        title = title if title else 'Model2D(%s,%s)' % ( self.xmodel.name , self.ymodel.name )
+        
         ## initialize the base 
         PDF2.__init__ (  self , name , self.__xmodel.xvar , self.__ymodel.xvar ) 
 
@@ -1048,12 +1093,6 @@ class Model2D(PDF2) :
         """``y-model'' y-component of Model(x)*Model(y) PDF"""
         return self.__ymodel
     
-    ## simple conversion to string    
-    def __str__ ( self ) :
-        """Simple conversion to string"""        
-        return "Model2D(name='%s',xmodel=%s,ymodel=%s)" % ( self  .name ,
-                                                            self.xmodel ,
-                                                            self.ymodel )
 
 # =============================================================================
 ## simple convertor of 2D-histogram into PDF

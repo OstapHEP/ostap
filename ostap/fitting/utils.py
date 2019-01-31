@@ -14,7 +14,6 @@ __date__    = "2018-08-14"
 __all__     = (
     'cov_qual'          , ## Quality of covariance matrix from Minuit
     'fit_status'        , ## Fit status from Minuit
-    'fitArgs'           , ## Function to parse 'fitTo'-arguments
     #
     'RangeVar'          , ## Helper class to temporary change a range for the variable 
     'MakeVar'           , ## Helper bade class that allow storage of newly created RooFit objects
@@ -34,7 +33,7 @@ import ROOT, math
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   ostap.core.core     import rootID, VE 
-from   ostap.core.types    import num_types, list_types
+from   ostap.core.types    import num_types, list_types, integer_types
 from   ostap.logger.utils  import roo_silent  
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -142,72 +141,6 @@ class RangeVar(object) :
     def __exit__  ( self , *_ ) :        
         self.var.setMin ( self.omin ) 
         self.var.setMax ( self.omax )
-
-# =============================================================================
-## "parse" common 'fitTo'-arguments
-def fitArgs ( name , dataset = None , *args , **kwargs ) :
-    """ Parse 'fitTo'-arguments 
-    """
-    _args = []
-    for a in args :
-        if not isinstance ( a , ROOT.RooCmdArg ) :
-            logger.warning ( '%s unknown argument type %s, skip it ' % ( name , type ( a ) ) ) 
-            continue
-        _args.append ( a )
-
-    from ostap.plotting.fit_draw import keys  as drawing_options 
-    ncpu_added = False 
-    for k , a in kwargs.iteritems() :
-        
-        ## skip "drawing" options 
-        if k.lower() in drawing_options                            : continue 
-        if k.lower() in ( 'draw' , 'draw_option', 'draw_options' ) : continue 
-        
-        if isinstance ( a , ROOT.RooCmdArg ) :
-            logger.debug   ( '%s add keyword argument %s' % ( name , k ) )  
-            _args.append ( a )
-        elif k.upper() in ( 'WEIGHTED'   ,
-                            'SUMW2'      ,
-                            'SUMW2ERROR' ) and isinstance ( a , bool ) and dataset.isWeighted() :
-            _args.append   (  ROOT.RooFit.SumW2Error( a ) )
-            logger.debug   ( '%s add keyword argument %s/%s' % ( name , k , a ) )                 
-        elif k.upper() in ( 'EXTENDED' , ) and isinstance ( a , bool ) :
-            _args.append   (  ROOT.RooFit.Extended ( a ) )
-            logger.debug   ( '%s add keyword argument %s/%s' % ( name , k , a ) )                 
-        elif k.upper() in ( 'NCPU'       ,
-                            'NCPUS'      ,
-                            'NUMCPU'     ,
-                            'NUMCPUS'    ) and isinstance ( a , int ) and 1<= a : 
-            _args.append   (  ROOT.RooFit.NumCPU( a  ) ) 
-            logger.debug   ( '%s add keyword argument %s/%s' % ( name , k , a ) )
-            ncpu_added = True
-        elif k.upper() in ( 'CONSTRAINT'  ,
-                            'CONSTRAINTS' ,
-                            'PARS'        ,
-                            'PARAMS'      ,
-                            'PARAMETER'   ,
-                            'PARAMETERS'  ) :
-            if   isinstance ( a , ROOT.RooCmdArg   ) : _args.append ( a )
-            elif isinstance ( a , ROOT.RooArgSet   ) :
-                _args.append ( ROOT.RooFit.ExternalConstraints  ( a ) )
-            elif isinstance ( a , ROOT.RooAbsReal  ) :
-                _args.append ( ROOT.RooFit.ExternalConstraints  ( ROOT.RooArgSet ( a ) ) )
-            elif isinstance ( a , ( tuple , list ) ) :
-                c = ROOT.RooArgSet ( )
-                for ia in a : c.add ( ia )
-                _args.append (  ROOT.RooFit.ExternalConstraints  ( c ) )
-            else : logger.error ( '%s skip keyword argument %s: %s' % ( name , k , a ) )
-                                        
-        else : 
-            logger.error ( '%s unknown/illegal keyword argument type %s/%s, skip it ' % ( name , k , type ( a ) ) )
-            continue            
-        
-    if not ncpu_added :
-        logger.debug  ( '%s: NCPU is added ' % name ) 
-        _args.append  (  ncpu ( len ( dataset ) ) )
-
-    ## _args.append ( ROOT.RooFit.Timer ( True  ) ) 
-    return tuple ( _args )
 
 # =============================================================================
 ## keep the list of local loggers  
@@ -323,7 +256,230 @@ class MakeVar ( object ) :
 
         return var
 
+    # =========================================================================
+    ## create ROOT.RooFit.Binning from TAxis
+    #  @see RooFit::Binning
+    #  @see RooBinning
+    #  @see TAxis
+    #  @code
+    #  axis = ...
+    #  bins = bining ( axis ) 
+    #  @endocode
+    def binning ( self , axis , name = '' ) :
+        """Create ROOT.RooFit.Binning from TAxis
+        >>> axis = ...
+        >>> bins = binning ( axis )
+        """
+        assert isinstance ( axis , ROOT.TAxis ),\
+               'Invalid axis %s/%s' % ( axis , type ( axis ) )
 
+        ## uniform binning?
+        if not  axis.IsVariableBinSize() : 
+            return ROOT.RooFit.Binning ( axis.GetNbins() , axis.GetXmin() , axis.GetXmax() )
+        ##
+        xbins = axis.GetXbins().GetArray()
+        rb = ROOT.RooBinning ( axis.GetNbins() , xbins , name )
+        ##
+        self.aux_keep.append ( rb )
+        ##
+        return ROOT.RooFit.Binning ( rb )
+
+    # =========================================================================
+    ## technical method to parse the constraint argument
+    #  @code
+    #  pdf.fiTo ( ..  , constraints = ... , ... )
+    #  @endcode
+    def parse_constraints ( self , arg ) :
+        """Technical method to parse the constraints argument
+        >>>  pdf.fiTo ( ..  , constraints = ... , ... )
+        """
+
+        if   isinstance ( arg , ROOT.RooCmdArg   ) :
+            return arg        
+        elif isinstance ( arg , ROOT.RooArgSet   ) :
+            return ROOT.RooFit.ExternalConstraints  ( arg )            
+        elif isinstance ( arg , ROOT.RooAbsReal  ) :
+            return ROOT.RooFit.ExternalConstraints  ( ROOT.RooArgSet ( arg ) )
+        elif isinstance ( arg , ( tuple , list ) ) and 2 == len ( arg ) \
+                 and isinstance ( arg[0] , ROOT.RooAbsReal ) and isinstance ( arg[1] , VE ) :
+            return self.make_constraint ( arg[0] , arg[1] ) 
+        
+        elif isinstance ( arg , ( tuple , list ) ) :
+            c = ROOT.RooArgSet ( )
+            for ia in arg :
+                if   isinstance ( ia , ROOT.RooAbsReal ) : c.add ( ia )
+                elif isinstance ( ia , ( tuple , list  ) ) and 2 == len ( ia ) \
+                         and isinstance ( ia[0] , ROOT.RooAbsReal ) and isinstance ( ia[1] , VE ) :
+                    c.add( self.soft_constraint ( ia[0] , ia[1] ) )
+                else  : self.error ('parse_constraint: invalid constraint: %s/%s from %s'  % ( ia , type(ia) , arg ) )  
+            self.aux_keep.append ( c )
+            return ROOT.RooFit.ExternalConstraints  ( c )
+
+        self.error ('parse_constraint: Invalid specification: %s/%s' % ( arg , type ( arg) ) )
+        return None 
+            
+    # =========================================================================
+    ## technical function to parse arguments for <code>fitTo</code>  function
+    def parse_args ( self ,  dataset = None , *args , **kwargs ) :
+        """Technical function to parse arguments for fitTo function
+        """
+        _args = []
+        for a in args :
+            if not isinstance ( a , ROOT.RooCmdArg ) :
+                self.warning ( 'parse_args: unknown argument type %s/%s, skip' % ( a , type ( a ) ) )
+            else : _args.append ( a ) 
+
+        from ostap.plotting.fit_draw import keys  as drawing_options
+        
+        for k , a in kwargs.iteritems() :
+            
+            ## skip "drawing" options 
+            if k.lower() in drawing_options                            : continue 
+            if k.lower() in ( 'draw' , 'draw_option', 'draw_options' ) : continue 
+            
+            if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
+            
+            elif k.upper () in  ( 'VERBOSE' , )           and isinstance ( a , bool ) :
+                _args.append ( ROOT.RooFit.Verbose (     a ) ) 
+            elif k.upper () in  ( 'SILENT'  , 'SILENCE' ) and isinstance ( a , bool ) :
+                _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
+            elif k.upper () in  ( 'PRINTLEVEL'  , 'PRINT_LEVEL'  ,
+                                  'MINUITPRINT' , 'MINUIT_PRINT' ,
+                                  'MINUITLEVEL' , 'MINUIT_LEVEL' ) and \
+                                  isinstance ( a , integer_types ) and -1 <= a <= 3 :
+                _args.append ( ROOT.RooFit.PrintLevel ( a ) ) 
+            elif k.upper () in  ( 'STRATEGY'   , ) and \
+                     isinstance ( a , integer_types ) and -1 <= a <= 3 :
+                _args.append ( ROOT.RooFit.Strategy ( a ) )
+            elif k.upper () in  ( 'PRINTEVALERRORS'  , 'PRINT_EVAL_ERRORS',
+                                  'PRINTEVAL_ERRORS' , 'PRINT_EVALERRORS' ,
+                                  'PRINTERRORS'      , 'PRINT_ERRORS'     ,
+                                  'ERRORSPRINT'      , 'ERRORS_PRINT'     ) and \
+                                  isinstance ( a , integer_types ) and -1 <= a :
+                _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )
+                
+            elif k.upper () in  ( 'TIMER'   , ) and isinstance ( a , bool ) :
+                _args.append ( ROOT.RooFit.Timer    ( a ) ) 
+            elif k.upper () in  ( 'WARNING' , 'WARNINGS' ) and isinstance ( a , bool ) :
+                _args.append ( ROOT.RooFit.Warnings ( a ) ) 
+            
+            elif k.upper  () in ( 'WEIGHTED' , 'SUMW2' , 'SUMW2ERROR' ) and isinstance ( a , bool ) :
+                
+                if   a and dataset and     dataset.isWeighted()           : pass 
+                elif a and dataset and not dataset.isWeighted()           :
+                    self.warning ('parse_args: SumW2-flag is True  for non-weighted dataset')
+                elif       dataset and not dataset.isWeighted() and not a : pass 
+                elif       dataset and     dataset.isWeighted() and not a :
+                    self.warning ('parse_args: SumW2-flag is False for     weighted dataset')                    
+
+                _args.append (  ROOT.RooFit.SumW2Error( a ) )
+                    
+            elif k.upper() in ( 'EXTENDED' , ) and isinstance ( a , bool ) :
+                _args.append   (  ROOT.RooFit.Extended ( a ) )
+                
+            elif k.upper() in ( 'NCPU' , 'NCPUS' , 'NUMCPU', 'NUMCPUS' ) and isinstance ( a , int ) and 1<= a : 
+                _args.append   (  ROOT.RooFit.NumCPU( a  ) ) 
+            elif k.upper() in ( 'NCPU' , 'NCPUS' , 'NUMCPU', 'NUMCPUS' ) and \
+                 isinstance ( a , list_types ) and 2 == len ( a )  and \
+                 isinstance ( a[0] , integer_types ) and 1 <= a[1] and \
+                 isinstance ( a[1] , integer_types ) and 0 <= a[1] <=3 :
+                _args.append   (  ROOT.RooFit.NumCPU( a[0] ,  a[1] ) ) 
+
+            elif k.upper() in ( 'CONSTRAINT'  ,
+                                'CONSTRAINTS' ,
+                                'PARS'        ,
+                                'PARAMS'      ,
+                                'PARAMETER'   ,
+                                'PARAMETERS'  ) :
+
+                c = self.parse_constraints ( a )
+                if c is None : self.error ('parse_args: Invalid constraint specification: %s/%s' % ( a , type ( a ) ) )
+                else         : _args.append ( c ) 
+                    
+            else :
+               
+                self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
+
+        keys       = [ a.GetName()  for  a in _args ]        
+        if not 'NumCPU' in keys :
+            if  dataset       : _args.append ( ncpu ( len ( dataset ) ) )
+            else :
+                nc =  numcpu()
+                if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) ) 
+
+        keys = [ a.GetName() for  a in _args ]
+        keys.sort () 
+        self.info ( 'parse_args: Parsed arguments %s' % keys ) 
+
+        return tuple ( _args )
+    
+    # =========================================================================
+    ## Helper function to prepare ``soft'' Gaussianian constraint for the variable
+    #  @attention the constraint is prepared, but not applied!
+    #  @code
+    #  sigma      = ...
+    #  constraint = pdf.soft_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
+    #  @endcode 
+    def soft_constraint ( self , var , value , name = '' , title = '' ) :
+        """Prepare ``soft'' Gaussianian constraint for the variable
+        -  consraint is prepared but not applied!
+        >>> sigma      = ...
+        >>> constraint = pdf.make_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
+        """
+        
+        assert isinstance ( var   , ROOT.RooAbsReal ) ,\
+               "Invalid ``v'': %s/%s"  % ( var , type ( var ) )               
+        assert isinstance ( value , VE ),\
+               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+        
+        name  = name  if name  else 'Constr(%s,%s)'                     % ( var.GetName() , self.name ) 
+        title = title if title else 'Gauissian constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
+        
+        # value & error as RooFit objects: 
+        val = ROOT.RooFit.RooConst ( value.value () )
+        err = ROOT.RooFit.RooConst ( value.error () )
+        
+        # Gaussian constrains 
+        gauss = ROOT.RooGaussian ( name , title , var , val , err )
+        
+        # keep all the created technical stuff  
+        self.aux_keep.append ( val   )
+        self.aux_keep.append ( err   )
+        self.aux_keep.append ( gauss )
+
+        self.info ('Constraint is created %s=%s' % ( var.name , value ) )
+        return  gauss 
+    
+    
+    # =========================================================================
+    ## create ready-to-use soft Gaussian constraint
+    #       and wrap it to ROOT.RooFit.ExternalConstraint
+    #  @see RooFit::ExternalConstraint
+    #  @code
+    #  sigma      = ...
+    #  constraint = pdf.make_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
+    #  pdf.fitTo ( ... ,  constraints =  constraint ) 
+    #  @endcode 
+    def make_constraint ( self , var , value , name = '' ,  title = '' ) :
+        """Create ready-to-use ``soft'' gaussian constraint for the variable
+        
+        >>> var     = ...                            ## the variable 
+        >>> extcntr = var.constaint( VE(1,0.1**2 ) ) ## create constrains 
+        >>> model.fitTo ( ... , extcntr )            ## use it in the fit 
+        """
+        
+        ## create the gaussian constraint
+        gauss  = self.soft_constraint ( var , value , name ,  title ) 
+        
+        cnts   = ROOT.RooArgSet ( gauss )
+        
+        result = ROOT.RooFit.ExternalConstraints ( cnts )
+        
+        self.aux_keep.append ( cnts   )
+        
+        return result 
+
+    
 # =============================================================================
 ## simple convertor of 1D-histo to data set
 #  @code
@@ -656,21 +812,6 @@ def component_clone  ( same ) :
        and same.strip().lower() in ( 'clone' , 'cloned' , 'same' ) : return True        
     return False 
 # =============================================================================
-
-# =============================================================================
-## convert ROOT.TAxis into ROOT.RooFit.Binning
-def binning ( axis , name = '' ) :
-
-    assert isinstance ( axis , ROOT.TAxis ),\
-           'Invalid axis %s/%s' % ( axis , type ( axis ) ) 
-    varbins = axis.IsVariableBinSize()
-    if not varbins :
-        return ROOT.RooFit.Binning ( axis.GetNbins() , axis.GetXmin() , axis.GetXmax() )
-    #
-    xbins = axis.GetXBins().GetArray()
-    rb = ROOT.RooBinning( axis.GetNbins() , xbins , name )
-    #
-    return ROOT.RooFit.Binning ( rb )
 
     
 # =============================================================================

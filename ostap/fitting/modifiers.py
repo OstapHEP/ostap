@@ -112,9 +112,6 @@ class Product1D_pdf(PDF) :
             'name'  : self.name  ,
             'title' : self.title ,            
             }
-        print  'I AM PRODUCT'
-        print  'PDF1:', self.pdf1
-        print  'PDF2:', self.pdf2
         
     @property
     def pdf1 ( self ) :

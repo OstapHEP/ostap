@@ -84,10 +84,10 @@ class Convolution(object):
         else :
             ## use   Gaussial resolution
             import ostap.fitting.resolution as OFR 
-            self.__resolution = OFR.ResoGauss ( 'Resolution' + name ,
-                                                self.__xvar         ,
-                                                sigma = resolution  ,
-                                                mean  = None        )
+            self.__resolution = OFR.ResoGauss ( 'Reso' + name      ,
+                                                self.__xvar        ,
+                                                sigma = resolution ,
+                                                mean  = None       )
         self.__nbins   = nbins
         self.__buffer  = buffer
         self.__nsigmas = nsigmas
@@ -203,7 +203,7 @@ class Convolution_pdf(PDF) :
         else :
             raise AttributeError ("Convolution_pdf: invalid pdf/xvar %s/%s"  % ( pdf , xvar ) ) 
 
-        name = name if name else 'Convolution_%s' % pdf.name
+        name = name if name else 'Cnv_%s' % pdf.name
         
         ## initialize the base 
         PDF.__init__ ( self , name , xvar )

@@ -17,14 +17,6 @@
 #  to zillions useful decorators for ROOT (and not only ROOT!) objects&classes  
 # 
 #  This file is a part of 
-#  <a href="http://cern.ch/lhcb-comp/Analysis/Bender/index.html">Bender project</a>
-#  <b>``Python-based Interactive Environment for Smart and Friendly Physics Analysis''</b>
-#
-#  The package has been designed with the kind help from
-#  Pere MATO and Andrey TSAREGORODTSEV. 
-#  And it is based on the 
-#  <a href="http://cern.ch/lhcb-comp/Analysis/LoKi/index.html">LoKi project:</a>
-#  <b>``C++ ToolKit for Smart and Friendly Physics Analysis''</b>
 #
 #  @date   2012-02-15
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -35,13 +27,6 @@
 to provide access to zillions useful decorators for ROOT
 (and not only ROOT) objects&classes
 
-This file is a part of BENDER project:
-
-``Python-based Interactive Environment for Smart and Friendly Physics Analysis''
-
-The project has been designed with the kind help from Pere MATO and Andrey TSAREGORODTSEV.
-
-And it is based on the LoKi project: ``C++ ToolKit for Smart and Friendly Physics Analysis''
 """
 # =============================================================================
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'

@@ -136,6 +136,12 @@ class Style(object):
                    fillstyle = None         , *args ) :
 
         options = []
+
+        self.__linecolor = None
+        self.__linestyle = None
+        self.__linewidth = None
+        self.__fillcolor = None
+        self.__fillstyle = None
         
         if isinstance ( linecolor , ROOT.TColor ) : linecolor = linecolor.GetNumber()
         if isinstance ( fillcolor , ROOT.TColor ) : fillcolor = fillcolor.GetNumber()
@@ -147,48 +153,83 @@ class Style(object):
                 elif 'FillColor' == a.GetName () : fillcolor = a
                 elif 'FillStyle' == a.GetName () : fillstyle = a
 
-        if isinstance ( linecolor , integer_types ) and 0 < linecolor :
+        if   isinstance ( linecolor , integer_types ) and 0 < linecolor :
+            self.__linecolor = linecolor 
             options.append ( ROOT.RooFit.LineColor ( linecolor ) )
-        elif isinstance ( linecolor , ROOT.RooCmdArg ) and 'LineColor' == linecolor.GetName () : 
+        elif isinstance ( linecolor , ROOT.RooCmdArg ) and 'LineColor' == linecolor.GetName () :
+            self.__linecolor = linecolor.getInt(0) 
             options.append ( linecolor )
             
-        if isinstance ( linestyle , integer_types ) and 0 < linestyle :
-            options.append ( ROOT.RooFit.LineStyle ( linestyle ) )
-        elif isinstance ( linestyle , ROOT.RooCmdArg ) and 'LineStyle' == linestyle.GetName () : 
+
+        if   isinstance ( linestyle , integer_types ) and 0 < linestyle :
+            self.__linestyle  = linestyle 
+            options.append ( ROOT.RooFit.LineStyle ( linestyle ) ) 
+        elif isinstance ( linestyle , ROOT.RooCmdArg ) and 'LineStyle' == linestyle.GetName () :
+            self.__linestyle = linestyle.getInt(0) 
             options.append ( linestyle  )
 
+        if   isinstance ( linewidth , integer_types ) and 0 < linewidth :
+            self.__linewidth = linewidth 
+            options.append ( ROOT.RooFit.LineWidth ( linewidth ) ) 
+        elif isinstance ( linewidth , ROOT.RooCmdArg ) and 'LineWidth' == linewidth.GetName () :
+            self.__linewidth = linewidth.getInt(0) 
+            options.append ( linewidth )
+
         _fillopt = False 
-        if isinstance ( fillcolor , integer_types ) and 0 < fillcolor :
-            fc = ROOT.TColor.GetColorTransparent ( fillcolor , 0.25 ) ## transparency!! 
-            options.append ( ROOT.RooFit.FillColor ( fc ) )
+        if   isinstance ( fillcolor , integer_types ) and 0 < fillcolor :
+            self.__fillcolor = fillcolor 
+            cc = ROOT.gROOT.GetColor ( fillcolor )
+            if cc and 1.0 == cc.GetAlpha () : 
+                ## add tranparency
+                fillcolor = ROOT.TColor.GetColorTransparent ( fillcolor , 0.35 ) ## transparency!!
+            options.append ( ROOT.RooFit.FillColor ( fillcolor ) )
+        elif isinstance ( fillcolor , ROOT.RooCmdArg ) and 'FillColor' == fillcolor.GetName () :
+            self.__fillcolor = fillcolor.getInt(0)             
+            options.append ( fillcolor  )               
             _fillopt = True 
-        elif isinstance ( fillcolor , ROOT.RooCmdArg ) and 'FillColor' == fillcolor.GetName () : 
-            _fillopt = True 
-            options.append ( fillcolor  )
-            
-        if isinstance ( fillstyle , integer_types ) and 0 < fillstyle :
+
+        
+        if   isinstance ( fillstyle , integer_types ) and 0 < fillstyle :
+            self.__fillstyle = fillstyle 
             options.append ( ROOT.RooFit.FillStyle ( fillstyle ) )
             _fillopt = True 
-        elif isinstance ( fillstyle , ROOT.RooCmdArg )  and 'FillStyle' == fillstyle.GetName () : 
+        elif isinstance ( fillstyle , ROOT.RooCmdArg ) and 'FillStyle' == fillstyle.GetName () :
+            self.__fillstyle = fillstyle.getInt(0)            
             options.append ( fillstyle  )
             _fillopt = True 
 
-        if   isinstance ( linewidth , integer_types ) and 0 < linewidth :            
-            options.append ( ROOT.RooFit.LineWidth ( linewidth ) )
-        elif isinstance ( linewidth , ROOT.RooCmdArg )  and 'LineWidth' == linewidth.GetName () : 
-            options.append ( linewidth )
-            
         if _fillopt :
             options.append ( ROOT.RooFit.VLines     (      ) )
             options.append ( ROOT.RooFit.DrawOption ( "FL" ) )
 
         self.__options = tuple ( options )
-        
+
+    def __str__ ( self ) :
+        return "Style(linecolor=%s,linestyle=%s,linewidth=%s,fillcolor=%s,fillstyle=%s)" % (
+            self.linecolor ,
+            self.linestyle ,
+            self.linewidth ,
+            self.fillcolor ,
+            self.fillstyle )
+    __repr__ = __str__
+
     @property 
     def options ( self ) :
         """``options'' : get the constructed list of options"""
         return self.__options
 
+    @property
+    def linecolor ( self ) : return self.__linecolor
+    @property
+    def linestyle ( self ) : return self.__linestyle
+    @property
+    def linewidth ( self ) : return self.__linewidth
+    @property
+    def fillcolor ( self ) : return self.__fillcolor
+    @property
+    def fillstyle ( self ) : return self.__fillstyle
+
+    
 # =============================================================================
 ## @class Line
 #  Define style for the line
@@ -215,6 +256,13 @@ class Line (Style) :
                         fillcolor = None      ,
                         fillstyle = None      , *args ) 
 
+    def __str__ ( self ) :
+        return "Line(linecolor=%s,linestyle=%s,linewidth=%s)" % (
+            self.linecolor ,
+            self.linestyle ,
+            self.linewidth )
+    __repr__ = __str__
+
         
 # =============================================================================
 ## @class Area 
@@ -237,7 +285,33 @@ class Area (Style) :
                         linestyle = None      ,
                         fillcolor = fillcolor ,
                         fillstyle = fillstyle ,
-                        linewidth = None      , *args ) 
+                        linewidth = None      , *args )
+        
+# =============================================================================
+## @class Line
+#  Define style for the line
+#  @code
+#  l = Line ( ROOT.kRed )
+#  l = Line ( ROOT.kRed , linestyle = 2 ) 
+#  l = Line ( ROOT.kRed , linewidth = 3 ) 
+#  @endcode
+class Line (Style) :
+    """Define the line style:
+    >>> l = Line ( ROOT.kRed )
+    >>> l = Line ( ROOT.kRed , linestyle = 2 ) 
+    >>> l = Line ( ROOT.kRed , linewidth = 3 )     
+    """
+    def __init__ ( self                     ,
+                   linecolor = ROOT.kBlack  ,
+                   linestyle = 1            , 
+                   linewidth = 1            , *args ) :
+
+        Style.__init__( self ,
+                        linecolor = linecolor ,
+                        linestyle = linestyle ,
+                        linewidth = linewidth ,
+                        fillcolor = None      ,
+                        fillstyle = None      , *args ) 
 
 # =======================================================================================
 ## list of styles 
@@ -321,13 +395,13 @@ class Styles(object) :
         elif isinstance  ( s , ROOT.RooCmdArg ) : return s
         return None
 
-    def __call__ ( self , index ) :
-
+    def __getitem__ ( self , index ) :
+        
         if self.styles :
             l = len ( self.styles ) 
-            return self.styles[ index % l ].options
+            return self.styles[ index % l ]
 
-        l = len ( self.styles )
+        l  = len ( self.styles )
         lc = self.linecolor ( index - l ) 
         ls = self.linestyle ( index - l ) 
         fc = self.fillcolor ( index - l ) 
@@ -335,47 +409,54 @@ class Styles(object) :
         lw = self.linewidth ( index - l ) 
 
         ss = Style ( linecolor = lc , linestyle = ls , linewidth = lw ,
-                     fillcolor = fc , fillstyle = fs , )
+                     fillcolor = fc , fillstyle = fs )
         
+        return ss
+
+    def __call__ ( self , index ) :
+
+        ss = self[index]
         return ss.options
     
 signal_style     = Styles ( styles = (
     Style ( linecolor = ROOT.kRed      , linewidth = 2 , fillcolor = ROOT.kRed      , fillstyle = 1001 ) ,
-    Style ( linecolor = ROOT.kRed -  7 , linewidth = 2 , fillcolor = ROOT.kRed -  7 , fillstyle = 3395 ) ,
-    Style ( linecolor = ROOT.kRed +  2 , linewidth = 2 , fillcolor = ROOT.kRed +  2 , fillstyle = 3305 ) ,
-    Style ( linecolor = ROOT.kRed - 10 , linewidth = 2 , fillcolor = ROOT.kRed - 10 , fillstyle = 3345 ) ,    
-    Style ( linecolor = ROOT.kRed +  3 , linewidth = 2 , fillcolor = ROOT.kRed +  3 , fillstyle = 3354 ) ,    
+    Style ( linecolor = ROOT.kRed -  7 , linewidth = 2 , fillcolor = ROOT.kRed -  7 , fillstyle = 3295 ) ,
+    Style ( linecolor = ROOT.kRed +  2 , linewidth = 2 , fillcolor = ROOT.kRed +  2 , fillstyle = 3205 ) ,
+    Style ( linecolor = ROOT.kRed - 10 , linewidth = 2 , fillcolor = ROOT.kRed - 10 , fillstyle = 3495 ) ,    
+    Style ( linecolor = ROOT.kRed +  3 , linewidth = 2 , fillcolor = ROOT.kRed +  3 , fillstyle = 3405 ) ,    
     ) )
 
-background_style = Styles ( styles = (
+background_style = (
     Line  ( linecolor = ROOT.kBlue         , linestyle =  7 ) ,
     Line  ( linecolor = ROOT.kBlue    -  9 , linestyle = 11 ) ,
     Line  ( linecolor = ROOT.kBlue    +  3 , linestyle = 12 ) ,
     Line  ( linecolor = ROOT.kBlue    -  2 , linestyle = 13 ) ,
     Line  ( linecolor = ROOT.kBlue    - 10 , linestyle = 14 ) ,
-    ) )
+    )
 
-component_style  = Styles ( styles = (
-    Style ( linecolor = 8            , fillcolor = 8            , fillstyle = 3354 ) ,
-    Style ( linecolor = 6            , fillcolor = 6            , fillstyle = 3345 ) ,
-    Style ( linecolor = 7            , fillcolor = 7            , fillstyle = 3395 ) ,
-    Style ( linecolor = 9            , fillcolor = 9            , fillstyle = 3305 ) ,
-    Style ( linecolor = ROOT.kPink   , fillcolor = ROOT.kPink   , fillstyle = 3315 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3351 ) ,
+component_style  = (
+    Style ( linecolor = 8            , fillcolor = 8            , fillstyle = 3254 ) ,
+    Style ( linecolor = 6            , fillcolor = 6            , fillstyle = 3245 ) ,
+    Style ( linecolor = 7            , fillcolor = 7            , fillstyle = 3290 ) ,
+    Style ( linecolor = 9            , fillcolor = 9            , fillstyle = 3490 ) ,
+    Style ( linecolor = ROOT.kPink   , fillcolor = ROOT.kPink   , fillstyle = 3454 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3445 ) ,
     Style ( linecolor = 5            , fillcolor = 5            , fillstyle = 1001 ) ,
-    ) ) 
-crossterm1_style = Styles ( styles = (
+    )
+
+crossterm1_style = (
     Line  ( linecolor = ROOT.kMagenta +  3 , linestyle = 11 ) ,
     Line  ( linecolor = ROOT.kMagenta - 10 , linestyle = 12 ) , 
     Line  ( linecolor = ROOT.kMagenta +  3 , linestyle = 13 ) , 
     Line  ( linecolor = ROOT.kMagenta -  3 , linestyle = 14 ) ,
-    ) )
-crossterm2_style = Styles ( styles = (
+    )
+
+crossterm2_style = (
     Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 14 ) ,
     Line  ( linecolor = ROOT.kGreen   -  1 , linestyle = 13 ) ,
     Line  ( linecolor = ROOT.kGreen   - 10 , linestyle = 12 ) ,
     Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 11 ) ,
-    ) )
+    ) 
 
 background2D_style = background_style 
 

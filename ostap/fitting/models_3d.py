@@ -38,8 +38,8 @@ else                       : logger = getLogger ( __name__                  )
 # =============================================================================
 models = []
 # =============================================================================
-##  @class PolyBase3
-#   helper base class to implement various polynomial-like shapes
+## @class PolyBase3
+#  helper base class to implement various polynomial-like shapes
 class PolyBase3(PDF3,Phases) :
     """Helper base class to implement various polynomial-like shapes
     """

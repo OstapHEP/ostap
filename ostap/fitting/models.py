@@ -169,7 +169,10 @@ __all__ = (
     'PSpline_pdf'          , ## positive spline (B-spline)
     'MSpline_pdf'          , ## positive monotonic spline 
     'CSpline_pdf'          , ## positive monotonic convex or concave spline 
-    'CPSpline_pdf'         , ## positive convex or concave spline 
+    'CPSpline_pdf'         , ## positive convex or concave spline
+    ##
+    'Linear_pdf'           , ## positive linear polynom 
+    'Parabolic_pdf'        , ## positive parabolic polynom 
     #
     ## 2D non-factorazable models
     #
@@ -283,6 +286,11 @@ from ostap.fitting.models_2d     import models as _models
 models += _models
 from ostap.fitting.rotated_2d    import models as _models 
 models += _models
+
+# ============================================================================
+## add the product operator for multiplication of two PDFs 
+import ostap.fitting.pdf_ops
+
 
 # =============================================================================
 if '__main__' == __name__ :

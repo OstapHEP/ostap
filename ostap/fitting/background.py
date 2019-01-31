@@ -19,22 +19,25 @@ __all__     = (
     'PolyEven_pdf'      , ## A positive even polynomial
     'Monotonic_pdf'     , ## A positive monotonic polynomial
     'Convex_pdf'        , ## A positive polynomial with fixed sign first and second derivatives 
-    'ConvexOnly_pdf'  , ## A positive polynomial with fixed sign second derivatives 
-    'Sigmoid_pdf'     , ## Background: sigmoid modulated by positive polynom 
-    'TwoExpoPoly_pdf' , ## difference of two exponents, modulated by positive polynomial
+    'ConvexOnly_pdf'    , ## A positive polynomial with fixed sign second derivatives 
+    'Sigmoid_pdf'       , ## Background: sigmoid modulated by positive polynom 
+    'TwoExpoPoly_pdf'   , ## difference of two exponents, modulated by positive polynomial
     ##
-    'PSpline_pdf'     , ## positive            spline 
-    'MSpline_pdf'     , ## positive monotonic spline 
-    'CSpline_pdf'     , ## positive monotonic convex or concave spline 
-    'CPSpline_pdf'    , ## positive convex or concave spline 
+    'Linear_pdf'        , ## positive linear polynom 
+    'Parabolic_pdf'     , ## positive parabolic polynom 
+    ## 
+    'PSpline_pdf'       , ## positive            spline 
+    'MSpline_pdf'       , ## positive monotonic spline 
+    'CSpline_pdf'       , ## positive monotonic convex or concave spline 
+    'CPSpline_pdf'      , ## positive convex or concave spline 
     ##
-    'PS2_pdf'         , ## 2-body phase space (no parameters)
-    'PSLeft_pdf'      , ## Low  edge of N-body phase space 
-    'PSRight_pdf'     , ## High edge of L-body phase space from N-body decays  
-    'PSNL_pdf'        , ## L-body phase space from N-body decays  
-    'PS23L_pdf'       , ## 2-body phase space from 3-body decays with orbital momenta
+    'PS2_pdf'           , ## 2-body phase space (no parameters)
+    'PSLeft_pdf'        , ## Low  edge of N-body phase space 
+    'PSRight_pdf'       , ## High edge of L-body phase space from N-body decays  
+    'PSNL_pdf'          , ## L-body phase space from N-body decays  
+    'PS23L_pdf'         , ## 2-body phase space from 3-body decays with orbital momenta
     ##
-    'make_bkg'        , ## helper function to create backgrounds 
+    'make_bkg'          , ## helper function to create backgrounds 
     )
 # =============================================================================
 import ROOT, math
@@ -148,6 +151,8 @@ models.append ( Bkg_pdf )
 #  A positive polynomial 
 #  @see Ostap::Models::PolyPositive 
 #  @see Ostap::Math::Positive
+#  @see Linear_pdf 
+#  @see Parabolic_pdf 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PolyPos_pdf(PolyBase) :
@@ -201,6 +206,93 @@ class PolyPos_pdf(PolyBase) :
 
 
 models.append ( PolyPos_pdf ) 
+
+
+# =============================================================================
+## @class Linear_pdf
+#  A positive linear polynomial 
+#  @see Ostap::Models::PolyPositive 
+#  @see Ostap::Math::Positive
+#  @see PolyPos_pdf 
+#  @see Parabolic_pdf 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-01-31
+class Linear_pdf (PolyPos_pdf) :
+    """Positive Linear (Bernstein) polynomial:     
+    >>>  mass = ROOT.RooRealVar( ... )
+    >>>  bkg  = Linear_pdf ( 'B' , mass )
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,  ## the name 
+                   xvar             ,  ## the variable 
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max 
+                   the_phis = None  ) : 
+        
+        ## initialize the base class 
+        PolyPos_pdf.__init__ ( self ,
+                               name     = name     ,
+                               xvar     = xvar     ,
+                               power    = 1        ,
+                               xmin     = xmin     ,
+                               xmax     = xmax     ,
+                               the_phis = the_phis ) 
+        
+        ## save configuration 
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'the_phis' : self.phis  ,
+            'xmin'     : xmin       ,
+            'xmax'     : xmax       ,            
+            }
+        
+models.append ( Linear_pdf ) 
+
+
+# =============================================================================
+## @class Parabolic_pdf
+#  A positive parabolic polynomial 
+#  @see Ostap::Models::PolyPositive 
+#  @see Ostap::Math::Positive
+#  @see PolyPos_pdf 
+#  @see Linear_pdf 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-01-31
+class Parabolic_pdf (PolyPos_pdf) :
+    """Positive parabolic (Bernstein) polynomial:     
+    >>>  mass = ROOT.RooRealVar( ... )
+    >>>  bkg  = Linear_pdf ( 'B' , mass )
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,  ## the name 
+                   xvar             ,  ## the variable 
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max 
+                   the_phis = None  ) : 
+        
+        ## initialize the base class 
+        PolyPos_pdf.__init__ ( self ,
+                               name     = name     ,
+                               xvar     = xvar     ,
+                               power    = 2        ,
+                               xmin     = xmin     ,
+                               xmax     = xmax     ,
+                               the_phis = the_phis ) 
+        
+        ## save configuration 
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'the_phis' : self.phis  ,
+            'xmin'     : xmin       ,
+            'xmax'     : xmax       ,            
+            }
+
+        
+models.append ( Parabolic_pdf ) 
 
 # =============================================================================
 ## @class  PolyEven_pdf
@@ -1661,7 +1753,9 @@ models.append ( PS23L_pdf )
 #  - 'eN', 'expN' , 'expoN' : <code>Bkg_pdf(power=N)</code>
 #  - 'pN', 'polN' , 'polyN' : <code>PolyPos_pdf(power=N)</code>
 #  - 'iN', 'incN' , 'incrN','increasingN' : <code>Monotonic_pdf(power=N,increasing=True)</code>
-#  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monotonic_pdf(power=N,increasing=False)</code>     
+#  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monotonic_pdf(power=N,increasing=False)</code>   #  - 'cxN' , 'convexN'                    : <code>ConvexOnly_pdf(power=N,convex=True)</code>
+#  - 'cvN' , 'concaveN'                   : <code> ConvexOnly_pdf(power=N,convex=False)</code>
+  
 #  @see ostap.fitting.basic.PDF.make_bkg 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-04-03
@@ -1688,6 +1782,8 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
     - 'pN', 'polN' or 'polyN'                 : PolyPos_pdf(power=N)
     - 'iN', 'incN' , 'incrN' or 'increasingN' : Monotonic_pdf(power=N,increasing=True)
     - 'dN', 'decN' , 'decrN' or 'decreasingN' : Monotonic_pdf(power=N,increasing=False)
+    - 'cxN' , 'convexN'                       : ConvexOnly_pdf(power=N,convex=True)
+    - 'cvN' , 'concaveN'                      : ConvexOnly_pdf(power=N,convex=False)
     
     >>> x =   .. ## the variable
     
@@ -1787,15 +1883,28 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if incr : 
             degree = int ( incr.group ( 'degree' ) )
-            bkg    = Monotonic_pdf ( name , xvar , degree , True )
+            bkg    = Monotonic_pdf ( name , xvar , power = degree , increasing = True )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
         
         decr = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if decr : 
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = Monotonic_pdf ( name , xvar , degree , False )
+            bkg    = Monotonic_pdf ( name , xvar , power = degree , increasing = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
+
+        decr = re.search ( r'(convex|cx)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if desc :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = True )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+
+        decr = re.search ( r'(concave|cv)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if desc :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = False )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+        
     if model :
         logger.debug ( 'make_bkg: created model is %s' % model ) 
         return model
