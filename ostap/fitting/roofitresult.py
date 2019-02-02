@@ -22,6 +22,10 @@ from   ostap.core.core          import Ostap, VE, valid_pointer
 import ostap.fitting.variables     
 import ostap.fitting.printable     
 # =============================================================================
+from   ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roofitresult' )
+else                       : logger = getLogger ( __name__                     )
+# =============================================================================        
 _new_methods_ = []
 
 # =============================================================================
@@ -362,7 +366,91 @@ def _rfr_results_( self , *vars ) :
             _c12 = self.cov ( _v1 , _v2 )(0,1) 
             _r.cov2()[_i1,_i2] = _c12 
     return _r 
+
+# =============================================================================
+## Run MIGRAD for RooMinimizer object
+#  @code
+#  pdf = ...
+#  minuit = pdf.minuit()
+#  minuit.migrad() 
+#  @endcode
+#  @see RooMinimizer 
+def _rm_migrad_  ( self ) :
+    """Run MIGRAD for RooMinimizer
+    - see ROOT.RooMinimizer 
+    >>> pdf = ...
+    >>> minuit = pdf.minuit()
+    >>> minuit.migrad() 
+    """
+    status = self._old_migrad_()
+    if 0 != status :
+        from   ostap.fitting.utils import fit_status 
+        logger.error ( "MIGRAD status %s"  % fit_status ( status ) )
+    return status 
+
+# =============================================================================
+## run MINOS for set of parameters
+#  @code
+#  pdf = ...
+#  minuit = pdf.minuit()
+#  minuit.migrad() 
+#  minuit.minos ( 'sigma' , 'mean' )  
+#  @endcode
+def _rm_minos_ ( self , *variables ) :
+    """Run MINOS for set of parameters
+    >>> pdf = ...
+    >>> minuit = pdf.minuit()
+    >>> minuit.migrad() 
+    >>> minuit.minos ( 'sigma' , 'mean' )  
+    """
+    
+    if not variables :
+        status = self._old_minos_ ()
+        if 0 != status :
+            from   ostap.fitting.utils import fit_status 
+            logger.error ( "MINOS status %s"  % fit_status ( status ) )
+        return status
+
+    aset = ROOT.RooArgSet()
+    
+    res  = self.save()
+    
+    for v in variables :
+
+        if   isinstance   ( v , string_types ) or isinstance ( v , ROOT.RooAbsReal ) :
+            par = res.param ( v ) [ 1 ]
+            if par : aset.add ( par )
+        elif isinstance ( v , ROOT.RooAbsCollection ) or \
+             isinstance ( v ,  list_types           ) :
+            for a in v :
+                if isinstance ( a , ROOT.RooAbsReal ) :
+                    par = res.param ( a ) [ 1 ]
+                    if par : aset.add ( par )
+                    
+    del res
+    
+    if aset : status = self._old_minos_ ( aset ) 
+    else    : status = self._old_minos_ ( aset )
+    
+    if 0 != status :
+        from   ostap.fitting.utils import fit_status 
+        logger.error ( "MINOS status %s"  % fit_status ( status ) )
         
+    return status
+    
+    
+if not hasattr ( ROOT.RooMinimizer , '_old_migrad_' ) :
+    ROOT.RooMinimizer._old_migrad_ = ROOT.RooMinimizer.migrad
+    _rm_migrad_.__doc__ += '\n' + ROOT.RooMinimizer.migrad.__doc__
+    ROOT.RooMinimizer.     migrad  = _rm_migrad_ 
+
+if not hasattr ( ROOT.RooMinimizer , '_old_minos_' ) :
+    ROOT.RooMinimizer._old_minos_  = ROOT.RooMinimizer.minos
+    _rm_minos_.__doc__ += '\n' + ROOT.RooMinimizer.minos.__doc__
+    ROOT.RooMinimizer.     minos   = _rm_minos_ 
+    
+
+    
 # =============================================================================
 ## some decoration over RooFitResult
 ROOT.RooFitResult . __repr__    = _rfr_print_
@@ -423,6 +511,7 @@ _new_methods_ += [
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooFitResult , 
+    ROOT.RooMinimizer , 
     )
 
 _new_methods_ = tuple ( _new_methods_ ) 

@@ -84,8 +84,8 @@ _fit_status_ = {
 # - status = 5    : Any other failure
 def fit_status ( status ) : return _fit_status_.get( status ,"%s" % status )
 # =============================================================================
-_nemax = 20000  ## number of events per CPU-core 
-_ncmax =    12  ## maximal number of CPUs: there are some problems with >= 7
+_nemax = 10000  ## number of events per CPU-core 
+_ncmax =    16  ## maximal number of CPUs: there are some problems with >= 7
                 ## @see https://sft.its.cern.ch/jira/browse/ROOT-4897
 # ==============================================================================
 _ncpus = []
@@ -101,16 +101,16 @@ def  numcpu () :
 #  number of events in dataset 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-03-31
-def ncpu (  events ) :
+def ncpu ( events ) :
     """Prepare 'NumCPU' argument with reasonable choice of #cpu, depending on
     the number of events in dataset 
     """
     #
-    n  = events // _nemax
-    if n       <= 1 : return ROOT.RooFit.Save () ## fake!!! 
-    # 
     n_cores = numcpu() 
-    if n_cores <= 1 : return ROOT.RooFit.Save () ## fake!!! 
+    if n_cores <= 1 : return ROOT.RooFit.NumCPU ( 1 ) ## fake!!! 
+    #
+    n  = events // _nemax
+    if n       <= 1 : return ROOT.RooFit.NumCPU ( 1 ) ## fake!!! 
     #
     num = min ( n , n_cores , _ncmax )
     if not _ncpus : _ncpus.append ( num )   
@@ -343,6 +343,10 @@ class MakeVar ( object ) :
                 _args.append ( ROOT.RooFit.Verbose (     a ) ) 
             elif k.upper () in  ( 'SILENT'  , 'SILENCE' ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
+            elif k.upper () in  ( 'STRATEGY'        ,
+                                  'MINUITSTRATEGY'  ,
+                                  'MINUIT_STRATEGY' )     and isinstance ( a , integer_types )  and 0 <= a <= 2 : 
+                _args.append ( ROOT.RooFit.Strategy (    a ) ) 
             elif k.upper () in  ( 'PRINTLEVEL'  , 'PRINT_LEVEL'  ,
                                   'MINUITPRINT' , 'MINUIT_PRINT' ,
                                   'MINUITLEVEL' , 'MINUIT_LEVEL' ) and \
@@ -402,9 +406,10 @@ class MakeVar ( object ) :
 
         keys       = [ a.GetName()  for  a in _args ]        
         if not 'NumCPU' in keys :
-            if  dataset       : _args.append ( ncpu ( len ( dataset ) ) )
+            if  dataset and not isinstance ( dataset , ROOT.RooDataHist ) :
+                _args.append ( ncpu ( len ( dataset ) ) )
             else :
-                nc =  numcpu()
+                nc = numcpu()
                 if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) ) 
 
         keys = [ a.GetName() for  a in _args ]
@@ -414,14 +419,14 @@ class MakeVar ( object ) :
         return tuple ( _args )
     
     # =========================================================================
-    ## Helper function to prepare ``soft'' Gaussianian constraint for the variable
+    ## Helper function to prepare ``soft'' Gaussian constraint for the variable
     #  @attention the constraint is prepared, but not applied!
     #  @code
     #  sigma      = ...
     #  constraint = pdf.soft_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
     #  @endcode 
     def soft_constraint ( self , var , value , name = '' , title = '' ) :
-        """Prepare ``soft'' Gaussianian constraint for the variable
+        """Prepare ``soft'' Gaussian constraint for the variable
         -  consraint is prepared but not applied!
         >>> sigma      = ...
         >>> constraint = pdf.make_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
@@ -431,9 +436,11 @@ class MakeVar ( object ) :
                "Invalid ``v'': %s/%s"  % ( var , type ( var ) )               
         assert isinstance ( value , VE ),\
                "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+
+        assert 0 < value.cov2() , 'Invalid error for %s' % value
         
-        name  = name  if name  else 'Constr(%s,%s)'                     % ( var.GetName() , self.name ) 
-        title = title if title else 'Gauissian constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
+        name  = name  if name  else 'Gauss_%s_%s'                       % ( var.GetName() , self.name ) 
+        title = title if title else 'Gauissian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
         
         # value & error as RooFit objects: 
         val = ROOT.RooFit.RooConst ( value.value () )
@@ -449,8 +456,160 @@ class MakeVar ( object ) :
 
         self.info ('Constraint is created %s=%s' % ( var.name , value ) )
         return  gauss 
+
+    # ==========================================================================
+    ## Helper function to  create soft Gaussian constraint
+    #  to the ratio of <code>a</code> and <code>b</code>
+    #  @code
+    #  N1 = ...
+    #  N2 = ...
+    #  rC = pdf.soft_ratio_contraint ( N1 , N2 , VE (10,1**2) )
+    #  @endcode
+    def soft_ratio_constraint ( self , a , b , value , name = '' , title = '' ) :
+        """Helper function to  create soft Gaussian constraint
+        to the ratio of te variables 
+        >>> N1 = ...
+        >>> N2 = ...
+        >>> rC = pdf.soft_ratio_constraint ( N1 , N2 , VE (10,1**2) )
+        """
+        assert isinstance ( value , VE ) and 0 < value.cov2() ,\
+               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+        
+        if 1 < abs ( value.value() )  :
+            return self.soft_ratio_constraint ( b , a , 1.0 / value )
+        
+        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
+
+            vlist   = ROOT.RooArgList    ( a , b )
+            
+            formula = '(%s)/(%s)'   % ( a.name , b.name )
+            vname   = 'Ratio_%s_%s' % ( a.name , b.name )
+            vtitle  = 'Ratio %s/%s' % ( a.name , b.name )
+            
+            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
+            
+            self.aux_keep.append ( vlist  )
+            self.aux_keep.append ( var    )
+            
+            return self.soft_constraint ( var , value , name , title )
+
+        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( a , value * b , name , title )
+        
+        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( b , a / v , name , title )
+        
+        raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
+    
+    # ==========================================================================
+    ## Helper function to  create soft Gaussian constraint
+    #  to the sum of <code>a</code> and <code>b</code>
+    #  @code
+    #  N1 = ...
+    #  N2 = ...
+    #  rC = pdf.soft_sum_contraint ( N1 , N2 , VE (10,1**2) )
+    #  @endcode
+    def soft_sum_constraint ( self , a , b , value , name = '' , title = '' ) :
+        """Helper function to  create soft Gaussian constraint
+        to the ratio of the variables 
+        >>> N1 = ...
+        >>> N2 = ...
+        >>> rC = pdf.soft_sum_constraint ( N1 , N2 , VE (10,1**2) )
+        """
+        assert isinstance ( value , VE ) and 0 < value.cov2() ,\
+               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+        
+        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
+
+            vlist   = ROOT.RooArgList    ( a , b )
+            
+            formula = '(%s)+(%s)' % ( a.name , b.name )
+            vname   = 'Sum_%s_%s' % ( a.name , b.name )
+            vtitle  = 'Sum %s+%s' % ( a.name , b.name )
+            
+            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
+            
+            self.aux_keep.append ( vlist  )
+            self.aux_keep.append ( var    )
+            
+            return self.soft_constraint ( var , value , name , title )
+
+        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( a , value - b , name , title )
+        
+        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( b , value - a  , name , title )
+
+        raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
     
     
+    # ==========================================================================
+    ## Helper function to  create soft Gaussian constraint
+    #  to the product of <code>a</code> and <code>b</code>
+    #  @code
+    #  N1 = ...
+    #  N2 = ...
+    #  rC = pdf.soft_product_contraint ( N1 , N2 , VE (10,1**2) )
+    #  @endcode
+    def soft_product_constraint ( self , a , b , value , name = '' , title = '' ) :
+        """Helper function to  create soft Gaussian constraint
+        to the product of the variables 
+        >>> N1 = ...
+        >>> N2 = ...
+        >>> rC = pdf.soft_product_constraint ( N1 , N2 , VE (10,1**2) )
+        """
+        assert isinstance ( value , VE ) and 0 < value.cov2() ,\
+               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+                
+        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
+
+            vlist   = ROOT.RooArgList    ( a , b )
+            
+            formula = '(%s)*(%s)'     % ( a.name , b.name )
+            vname   = 'Product_%s_%s' % ( a.name , b.name )
+            vtitle  = 'Product %s+%s' % ( a.name , b.name )
+            
+            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
+            
+            self.aux_keep.append ( vlist  )
+            self.aux_keep.append ( var    )
+            
+            return self.soft_constraint ( var , value , name , title )
+
+        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( a , value / b , name , title )
+        
+        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( b , 1 / value , name , title )
+        
+        raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) ) 
+                        
+    # ==========================================================================
+    ## Helper function to  create soft Gaussian constraint
+    #  to the fraction of <code>a</code> and <code>b</code> : a/(a+b)
+    #  @code
+    #  N1 = ...
+    #  N2 = ...
+    #  rC = pdf.soft_fraction_contraint ( N1 , N2 , VE (10,1**2) )
+    #  @endcode
+    def soft_fraction_constraint ( self , a , b , value , name = '' , title = '' ) :
+        """Helper function to  create soft Gaussian constraint
+        to the fraction of the variables:  a/(a+b)
+        >>> N1 = ...
+        >>> N2 = ...
+        >>> rC = pdf.soft_product_constraint ( N1 , N2 , VE (10,1**2) )
+        """
+        assert isinstance ( value , VE ) and 0 < value.cov2() ,\
+               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+
+        return self.soft_ratio_constraint ( a , b , 1.0/value - 1.0 , name , value )
+        
     # =========================================================================
     ## create ready-to-use soft Gaussian constraint
     #       and wrap it to ROOT.RooFit.ExternalConstraint
@@ -479,7 +638,6 @@ class MakeVar ( object ) :
         
         return result 
 
-    
 # =============================================================================
 ## simple convertor of 1D-histo to data set
 #  @code

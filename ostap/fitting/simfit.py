@@ -382,7 +382,7 @@ class Sim1D(PDF) :
         kwargs [ 'signal_options'     ] = sigoptions 
         kwargs [ 'background_options' ] = bkgoptions 
         kwargs [ 'crossterm1_options' ] = ct1options 
-        kwargs [ 'crossterm2_options' ] = ct1options
+        kwargs [ 'crossterm2_options' ] = ct2options
         kwargs [ 'component_options'  ] = cmpoptions 
         kwargs [ 'total_fit_options'  ] = totoptions 
 
@@ -410,7 +410,13 @@ class Sim1D(PDF) :
 # =============================================================================
 ## suppress methods specific for 1D-PDFs only
 for _a in (
-    ##'_get_stat_'     ,
+    ##'_get_stat_'   ,
+    'integral'       , 
+    'histo'          , 
+    'roo_histo'      , 
+    'residual'       , 
+    'pull'           ,
+    #
     'rms'            , 
     'fwhm'           , 
     'skewness'       , 
@@ -427,7 +433,9 @@ for _a in (
     'derivative'     ) :
 
     if hasattr ( Sim1D , _a ) :
+        ## method is suppressed
         def _suppress_ ( self , *args , **kwargs ) :
+            """Method is suppressed"""
             raise AttributeError ( "'%s' object has no attribute '%s'" % ( type ( self ) , _a ) )
         setattr ( Sim1D , _a , _suppress_ ) 
         logger.verbose ( 'Remove attribute %s from Sim1D' ) 

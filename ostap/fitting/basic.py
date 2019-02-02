@@ -348,13 +348,13 @@ class PDF (MakeVar) :
         #
         ## treat the arguments properly
         #
-        opts = self.parse_args ( dataset , *args , **kwargs )
+        opts = self.parse_args ( dataset , ROOT.RooFit.Save () , *args , **kwargs )
 
         #
         ## define silent context
         with roo_silent ( silent ) :
             self.fit_result = None             
-            result          = self.pdf.fitTo ( dataset , ROOT.RooFit.Save () , *opts ) 
+            result          = self.pdf.fitTo ( dataset , *opts ) 
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
@@ -588,6 +588,7 @@ class PDF (MakeVar) :
             ## draw invizible data (for normalzation of fitting curves)
             #
             data_options = self.draw_option ( 'data_options' , **kwargs )
+            kwargs.pop ( 'data_options' , () )
             if dataset and dataset.isWeighted() and dataset.isNonPoissonWeighted() : 
                 data_options = data_options + ( ROOT.RooFit.DataError( ROOT.RooAbsData.SumW2 ) , )
 
@@ -714,25 +715,79 @@ class PDF (MakeVar) :
         - and later:
         >>> options = pdf.draw_option ( 'signal_style' )
         """
-        ##  check the explicitely provided arguments 
-        if kwargs.has_key ( key  ) : return kwargs [ key  ] 
-        klow = key.lower()
-        if kwargs.has_key ( klow ) : return kwargs [ klow ]
-        kup  = key.upper()
-        if kwargs.has_key ( kup  ) : return kwargs [ kup  ]
+        import ostap.plotting.fit_draw as FD
+
+        keys = key , key.lower() , key.upper() 
+        
+        ##  check the explicitely provided arguments
+        for k in keys : 
+            if kwargs.has_key ( k ) : return kwargs [ k ]
 
         ## check the predefined drawing options for this PDF 
-        if   self.draw_options.has_key ( key  ) : return self.draw_options.get ( key  )
-        elif self.draw_options.has_key ( klow ) : return self.draw_options.get ( klow )
-        elif self.draw_options.has_key ( kup  ) : return self.draw_options.get ( kup  )
+        for k in keys :  
+            if self.draw_options.has_key ( k ) : return self.draw_options.get ( k)
 
-        import ostap.plotting.fit_draw as FD
-        if   hasattr ( FD , key  ) : return getattr ( FD , key  ) 
-        elif hasattr ( FD , klow ) : return getattr ( FD , klow ) 
-        elif hasattr ( FD , kup  ) : return getattr ( FD , kup  ) 
-        
+        ## check the default options
+        for k in keys :  
+            if hasattr ( FD , k ) : return getattr ( FD , k ) 
+
+        ##  use the default value 
         return default 
 
+    # ==========================================================================
+    ## Add/define new default draw option
+    #  @code
+    #  pdf = ...
+    #  pdf.add_draw_option( 'background_style' ) = Line ( 4 , 2 , 1 ) 
+    #  pdf.add_draw_option( 'components_style' ) = Styles ( Line (... ), Area ( ...) , ... ] ) 
+    #  pdf.add_draw_option( 'signal_style'     ) = ROOT.RooFit.LineColor ( 2 )
+    #  @endcode
+    #  @see ostap.plotting.fit_draw
+    #  @see ostap.plotting.fit_draw.Style
+    #  @see ostap.plotting.fit_draw.Styles
+    #  @see ostap.plotting.fit_draw.Styles
+    #  @see ostap.plotting.fit_draw.Line
+    #  @see ostap.plotting.fit_draw.Area
+    def add_draw_option ( key , options = () ) :
+        """Add/define new default draw option
+        - see ostap.plotting.fit_draw
+        - see ostap.plotting.fit_draw.Style
+        - see ostap.plotting.fit_draw.Styles
+        - see ostap.plotting.fit_draw.Styles
+        - see ostap.plotting.fit_draw.Line
+        - see ostap.plotting.fit_draw.Area
+        >>> pdf = ...
+        >>> pdf.add_draw_option ( 'data_options'     ) = ROOT.RooFit.MarkerStyle ( 20 ) , ROOT.RooFit.DrawOption  ( 'zp' )
+        >>> pdf.add_draw_option ( 'background_style' ) = Line ( 4 , 2 , 1 ) 
+        >>> pdf.add_draw_option ( 'components_style' ) = Styles ( Line (... ), Area ( ...) , ... ] 
+        >>> pdf.add_draw_option ( 'signal_style'     ) = ROOT.RooFit.LineColor ( 2 )
+        """
+        
+        key = key.lower() 
+        
+        import ostap.plotting.fit_draw as FD
+        if not k in FD.keys :
+            self.warning("Unknown draw_option '%s'/'%s'" % ( k  , key ) )
+            
+        option = k.endswwith( '_options') 
+        styule = k.endswwith( '_style'  )
+        if   option :
+            if   instance ( options , list_types     ) : options = tuple ( optios )
+            elif instance ( options , ROOT.RooCmdArg ) : options = options , 
+            else                                       : options = options ,  
+        elif style  :
+            if   instance ( options , FD.Styles      ) : pass
+            elif instance ( options , FD.Style       ) : optios  = options , 
+            elif instance ( options , ROOT.RooCmdArg ) :
+                args    = tuple( 5*[None] + [ options ] )
+                options = FD.Styles ( [ FD.Style ( *args ) ] )
+            elif instance ( options , list_types     ) : options = tuple ( options )
+        else :
+            self.warning("Neither ``options'' nor ``style''...")
+
+        self.draw_options [ k ] = options 
+        
+            
     # =========================================================================
     ## fit the histogram (and draw it)
     #  @code
@@ -1074,11 +1129,10 @@ class PDF (MakeVar) :
     #  m.minos ( param )
     #  @endcode
     #  @see RooMinimizer
-    def minuit ( self , dataset ,
-                 max_calls   = -1   ,
-                 ncpu        = -1   ,
-                 max_iter    = -1   ,
-                 strategy    = None , *args , **kwargs  ):
+    def minuit ( self , dataset   ,
+                 max_calls = -1   ,
+                 max_iter  = -1   ,
+                 strategy  = None , *args , **kwargs  ):
         """Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
@@ -1088,16 +1142,11 @@ class PDF (MakeVar) :
         >>> m.minos ( param )
         - see ROOT.RooMinimizer
         """
-        assert self.pdf, 'Pdf is not defined yet!'
-
-        if isinstance ( ncpu , int ) and 1 <= ncpu : pass 
-        else                                       : ncpu = numcpu() 
 
         ## parse the arguments 
-        opts = self.parse_args  ( dataset , *args  , **kwargs )
+        opts = self.parse_args  ( dataset , ROOT.RooFit.Offset ( True ) , *args , **kwargs )
 
-        keys = [ a.GetName()  for  a in opts  ]
-        nll  = self.pdf.createNLL ( dataset , ROOT.RooFit.Offset ( True ) , *opts )
+        nll  = self.pdf.createNLL ( dataset , *opts )
         
         m = ROOT.RooMinimizer ( nll )
         if isinstance  ( max_calls , integer_types ) and 1 < max_calls :
