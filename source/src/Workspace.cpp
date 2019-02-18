@@ -74,7 +74,10 @@ Ostap::Math::WorkSpace::operator=
 Ostap::Math::WorkSpace&
 Ostap::Math::WorkSpace::operator=
 (       Ostap::Math::WorkSpace&& right ) 
-{ std::swap  ( m_workspace ,  right.m_workspace ) ;}
+{ 
+  std::swap  ( m_workspace ,  right.m_workspace ) ;
+  return *this ;
+}
 // ============================================================================
 // swap
 // ============================================================================
