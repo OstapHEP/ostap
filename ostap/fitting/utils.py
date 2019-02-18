@@ -165,15 +165,25 @@ class MakeVar ( object ) :
         return obj
     
     ##  produce ERROR    message using the local logger 
-    def error   ( self , message , *args , **kwargs ) : return self.logger.error   ( message , *args , **kwargs )
+    def error   ( self , message , *args , **kwargs ) :
+        """Produce ERROR    message using the local logger"""
+        return self.logger.error   ( message , *args , **kwargs )
     ##  produce WARNIING message using the local logger 
-    def warning ( self , message , *args , **kwargs ) : return self.logger.warning ( message , *args , **kwargs )
+    def warning ( self , message , *args , **kwargs ) :
+        """Produce WARNIING message using the local logger"""
+        return self.logger.warning ( message , *args , **kwargs )
     ##  produce INFO     message using the local logger 
-    def info    ( self , message , *args , **kwargs ) : return self.logger.info    ( message , *args , **kwargs )
+    def info    ( self , message , *args , **kwargs ) :
+        """Produce INFO     message using the local logger"""
+        return self.logger.info    ( message , *args , **kwargs )
     ##  produce DEBUG    message using the local logger 
-    def debug   ( self , message , *args , **kwargs ) : return self.logger.debug   ( message , *args , **kwargs )
+    def debug   ( self , message , *args , **kwargs ) :
+        """Produce DEBUG    message using the local logger"""
+        return self.logger.debug   ( message , *args , **kwargs )
     ##  produce VERBOSE  message using the local logger 
-    def verbose ( self , message , *args , **kwargs ) : return self.logger.verbose ( message , *args , **kwargs )
+    def verbose ( self , message , *args , **kwargs ) :
+        """Produce VERBOSE  message using the local logger"""
+        return self.logger.verbose ( message , *args , **kwargs )
     
     @property
     def aux_keep ( self ) :
@@ -333,41 +343,50 @@ class MakeVar ( object ) :
         
         for k , a in kwargs.iteritems() :
             
+            klow = k.lower ()
+            kup  = k.upper ()
+            
             ## skip "drawing" options 
             if k.lower() in drawing_options                            : continue 
             if k.lower() in ( 'draw' , 'draw_option', 'draw_options' ) : continue 
             
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
             
-            elif k.upper () in  ( 'VERBOSE' , )           and isinstance ( a , bool ) :
+            elif kup in ( 'VERBOSE' ,        ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Verbose (     a ) ) 
-            elif k.upper () in  ( 'SILENT'  , 'SILENCE' ) and isinstance ( a , bool ) :
+            elif kup in ( 'SILENT'           ,
+                           'SILENCE'         ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
-            elif k.upper () in  ( 'STRATEGY'        ,
-                                  'MINUITSTRATEGY'  ,
-                                  'MINUIT_STRATEGY' )     and isinstance ( a , integer_types )  and 0 <= a <= 2 : 
+            elif kup in ( 'STRATEGY'         , 
+                          'MINUITSTRATEGY'   ,
+                          'MINUIT_STRATEGY'  ) and isinstance ( a , integer_types ) and 0 <= a <= 2 : 
                 _args.append ( ROOT.RooFit.Strategy (    a ) ) 
-            elif k.upper () in  ( 'PRINTLEVEL'  , 'PRINT_LEVEL'  ,
-                                  'MINUITPRINT' , 'MINUIT_PRINT' ,
-                                  'MINUITLEVEL' , 'MINUIT_LEVEL' ) and \
-                                  isinstance ( a , integer_types ) and -1 <= a <= 3 :
+            elif kup in ( 'PRINTLEVEL'       ,
+                          'PRINT_LEVEL'      ,
+                          'MINUITPRINT'      ,
+                          'MINUIT_PRINT'     ,
+                          'MINUITLEVEL'      ,
+                          'MINUIT_LEVEL'     ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
                 _args.append ( ROOT.RooFit.PrintLevel ( a ) ) 
-            elif k.upper () in  ( 'STRATEGY'   , ) and \
-                     isinstance ( a , integer_types ) and -1 <= a <= 3 :
-                _args.append ( ROOT.RooFit.Strategy ( a ) )
-            elif k.upper () in  ( 'PRINTEVALERRORS'  , 'PRINT_EVAL_ERRORS',
-                                  'PRINTEVAL_ERRORS' , 'PRINT_EVALERRORS' ,
-                                  'PRINTERRORS'      , 'PRINT_ERRORS'     ,
-                                  'ERRORSPRINT'      , 'ERRORS_PRINT'     ) and \
-                                  isinstance ( a , integer_types ) and -1 <= a :
-                _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )
-                
-            elif k.upper () in  ( 'TIMER'   , ) and isinstance ( a , bool ) :
+            elif kup in ( 'PRINTEVALERRORS'  ,
+                          'PRINT_EVAL_ERRORS',
+                          'PRINTEVAL_ERRORS' ,
+                          'PRINT_EVALERRORS' ,
+                          'PRINTERRORS'      ,
+                          'PRINT_ERRORS'     ,
+                          'ERRORSPRINT'      ,
+                          'ERRORS_PRINT'     ) and isinstance ( a , integer_types ) and -1 <= a :
+                _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )                
+            elif kup in ( 'TIMER'            ,
+                          'TIMING'           ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Timer    ( a ) ) 
-            elif k.upper () in  ( 'WARNING' , 'WARNINGS' ) and isinstance ( a , bool ) :
+            elif kup in ( 'WARNING'          ,
+                          'WARNINGS'         ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Warnings ( a ) ) 
             
-            elif k.upper  () in ( 'WEIGHTED' , 'SUMW2' , 'SUMW2ERROR' ) and isinstance ( a , bool ) :
+            elif kup in ( 'WEIGHTED'         ,
+                          'SUMW2'            ,
+                          'SUMW2ERROR'       ) and isinstance ( a , bool ) :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -378,24 +397,69 @@ class MakeVar ( object ) :
 
                 _args.append (  ROOT.RooFit.SumW2Error( a ) )
                     
-            elif k.upper() in ( 'EXTENDED' , ) and isinstance ( a , bool ) :
-                _args.append   (  ROOT.RooFit.Extended ( a ) )
-                
-            elif k.upper() in ( 'NCPU' , 'NCPUS' , 'NUMCPU', 'NUMCPUS' ) and isinstance ( a , int ) and 1<= a : 
+            elif kup in ( 'EXTENDED' ,       ) and isinstance ( a , bool ) :
+                _args.append   (  ROOT.RooFit.Extended ( a ) )                
+            elif kup in ( 'NCPU'             ,
+                          'NCPUS'            ,
+                          'NUMCPU'           ,
+                          'NUMCPUS'          ) and isinstance ( a , int ) and 1<= a : 
                 _args.append   (  ROOT.RooFit.NumCPU( a  ) ) 
-            elif k.upper() in ( 'NCPU' , 'NCPUS' , 'NUMCPU', 'NUMCPUS' ) and \
+            elif kup in ( 'NCPU'             ,
+                          'NCPUS'            ,
+                          'NUMCPU'           ,
+                          'NUMCPUS'          ) and \
                  isinstance ( a , list_types ) and 2 == len ( a )  and \
                  isinstance ( a[0] , integer_types ) and 1 <= a[1] and \
                  isinstance ( a[1] , integer_types ) and 0 <= a[1] <=3 :
                 _args.append   (  ROOT.RooFit.NumCPU( a[0] ,  a[1] ) ) 
-
-            elif k.upper() in ( 'CONSTRAINT'  ,
-                                'CONSTRAINTS' ,
-                                'PARS'        ,
-                                'PARAMS'      ,
-                                'PARAMETER'   ,
-                                'PARAMETERS'  ) :
-
+                
+            elif kup in ( 'RANGE'            ,
+                          'FITRANGE'         ,
+                          'FIT_RANGE'        ,
+                          'RANGES'           ,
+                          'FITRANGES'        ,
+                          'FIT_RANGES'       ) and isinstance ( a , string_types ) :
+                _args.append   (  ROOT.RooFit.Range ( a ) )  
+            elif kup in ( 'RANGE'            ,
+                          'FITRANGE'         ,
+                          'FIT_RANGE'        ) and isinstance ( a , list_types   ) \
+                 and isinstance ( a[0] ,  num_types ) \
+                 and isinstance ( a[1] ,  num_types ) \
+                 and a[0] < a[1]  : 
+                _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )                 
+            elif kup in ( 'MINIMIZER'  ,     ) and isinstance ( a , list_types   ) \
+                 and isinstance ( a[0] ,  string_types ) \
+                 and isinstance ( a[1] ,  string_types ) :
+                _args.append   (  ROOT.RooFit.Minimizer ( a[0] , a[1] ) )                 
+            elif kup in  ( 'HESSE'    ,      ) and isinstance ( a , bool ) :
+                _args.append   (  ROOT.RooFit.Hesse ( a )  )
+            elif kup in  ( 'INITIALHESSE'    ,
+                           'INITIAL_HESSE'   ,
+                           'INIT_HESSE'      ,
+                           'HESSE_INIT'      ,
+                           'HESSE_INITIAL'   ) and isinstance ( a , bool ) :
+                _args.append   (  ROOT.RooFit.InitialHesse ( a )  )
+            elif kup in ( 'OPTIMIZE'         ,
+                          'OPTIMISE'         ) and isinstance ( a , integer_types  ) :
+                _args.append   (  ROOT.RooFit.Optimize     ( a )  )
+            elif kup in ( 'MINOS'    ,       ) and isinstance ( a , bool           ) :
+                _args.append   (  ROOT.RooFit.Minos        ( a )  )
+            elif kup in ( 'MINOS'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
+                _args.append   (  ROOT.RooFit.Minos        ( a )  )
+            elif kup in ( 'SAVE'     ,       ) and isinstance ( a , bool           ) :
+                _args.append   (  ROOT.RooFit.Save         ( a )  )
+            elif kup in ( 'FITOPTIONS'       ,
+                          'FITOPTION'        ,
+                          'FIT_OPTIONS'      ,
+                          'FIT_OPTION'       ) and isinstance ( a , string_types ) :
+                _args.append   (  ROOT.RooFit.FitOptions   ( a )  )
+                
+            elif kup in ( 'CONSTRAINT'       ,
+                          'CONSTRAINTS'      ,
+                          'PARS'             ,
+                          'PARAMS'           ,
+                          'PARAMETER'        ,
+                          'PARAMETERS'       ) :
                 c = self.parse_constraints ( a )
                 if c is None : self.error ('parse_args: Invalid constraint specification: %s/%s' % ( a , type ( a ) ) )
                 else         : _args.append ( c ) 
@@ -404,7 +468,7 @@ class MakeVar ( object ) :
                
                 self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
 
-        keys       = [ a.GetName()  for  a in _args ]        
+        keys       = [ a.GetName() for a in _args ]        
         if not 'NumCPU' in keys :
             if  dataset and not isinstance ( dataset , ROOT.RooDataHist ) :
                 _args.append ( ncpu ( len ( dataset ) ) )
@@ -412,9 +476,9 @@ class MakeVar ( object ) :
                 nc = numcpu()
                 if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) ) 
 
-        keys = [ a.GetName() for  a in _args ]
+        keys = [ str ( a ) for a in _args ]
         keys.sort () 
-        self.info ( 'parse_args: Parsed arguments %s' % keys ) 
+        self.info ( 'parse_args: Parsed arguments %s' % keys )
 
         return tuple ( _args )
     

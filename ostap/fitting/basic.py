@@ -66,7 +66,8 @@ class PDF (MakeVar) :
         self.__fit_result      = None
         self.__vars            = ROOT.RooArgSet  ()
         self.__tricks          = True
-        self.__draw_options    = {}    ## predefined drawing options for this PDF
+        self.__draw_options    = {} ## predefined drawing options for this PDF
+        self.__fit_options     = () ## predefined fit options for this PDF
         
         if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
@@ -271,7 +272,26 @@ class PDF (MakeVar) :
         """``draw_options'' : disctionarie with predefined draw-opptions for this PDF
         """
         return self.__draw_options
-    
+
+    @property
+    def fit_options ( self ) :
+        """``fit_options'' : the predefined ``fitTo''-options for this PDF
+        - tuple of ROOT.RooArgCmd
+        pdf = ...
+        pdf.fit_options = ROOT.RooFit.Optimize ( 1 )
+        pdf.fit_options = ROOT.RooFit.Optimize ( 1 ) , ROOT.RooFit.PrintEvalError ( 2 ) 
+        """
+        return self.__fit_options
+    @fit_options.setter
+    def fit_options ( self , value )  :
+        if isinstance ( value , ROOT.RooCmdArg ) : value = value , 
+        assert isinstance ( value , list_types ), 'Invalid fitTo-options %s' % value 
+        _opts = []
+        for v in value :
+            assert isinstance ( v , ROOT.RooCmdArg ), 'Invalid fitTo-option %s' % v
+            _opts.append ( v )
+        self.__fit_options = tuple ( _opts ) 
+            
     # =========================================================================
     ## make a clone for the given PDF with optional  replacement of certain parameters
     #  @code
@@ -328,6 +348,7 @@ class PDF (MakeVar) :
                 nbins  = 100   ,
                 silent = False ,
                 refit  = False ,
+                timer  = False , 
                 args   = ()    , **kwargs ) :
         """
         Perform the actual fit (and draw it)
@@ -336,6 +357,18 @@ class PDF (MakeVar) :
         >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
         >>> r,f = model.fitTo ( dataset , draw = True , nbins = 300 )    
         """
+        if timer :
+            from ostap.utils.timing import timing 
+            with timing ( self.name  + '.fitTo' ) :
+                return self.fitTo ( dataset = dataset ,
+                                    draw    = draw    ,
+                                    nbins   = nbins   ,
+                                    silent  = silent  ,
+                                    refit   =  refit  ,
+                                    timer   = False   , ## NB
+                                    args    =  args   , **kwargs )
+            
+        
         if   isinstance ( dataset , H1D_dset ) : dataset = dataset.dset        
         elif isinstance ( dataset , ROOT.TH1 ) :
             density = kwargs.pop ( 'density' , True   )
@@ -348,12 +381,14 @@ class PDF (MakeVar) :
         #
         ## treat the arguments properly
         #
-        opts = self.parse_args ( dataset , ROOT.RooFit.Save () , *args , **kwargs )
+        opts = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
+        opts = self.parse_args ( dataset , *opts , **kwargs )
+        if not silent and opts : self.info ('fitTo options: %s ' % list ( opts ) )
 
         #
         ## define silent context
         with roo_silent ( silent ) :
-            self.fit_result = None             
+            self.fit_result = None
             result          = self.pdf.fitTo ( dataset , *opts ) 
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
@@ -475,7 +510,9 @@ class PDF (MakeVar) :
             st   = style  ( i ) if callable  ( style ) else () 
             opts = st + options
             self.pdf .plotOn ( frame , ROOT.RooFit.Components ( cmps ) , *opts )
-            
+            cmps = [ c.GetName() for c in cmps ]
+            if 1 == len ( cmps ) : cmps =  cmps[0]
+            self.debug ("draw ``%s'' with %s" % ( cmps , opts ) )
             i += 1
                                             
     # ================================================================================
@@ -853,6 +890,8 @@ class PDF (MakeVar) :
                 
         with roo_silent ( silent ) : 
 
+            
+            lst1 = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
             lst1 = list ( self.parse_args ( hdataset , *args , **kwargs ) )
             lst2 = []
             

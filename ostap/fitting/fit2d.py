@@ -104,6 +104,7 @@ class PDF2 (PDF) :
                 ybins  =  None , 
                 silent = False ,
                 refit  = False ,
+                timer  = False ,
                 args   = ()    , **kwargs ) :
         """
         Perform the actual fit (and draw it)
@@ -122,13 +123,14 @@ class PDF2 (PDF) :
                                    density = density ,
                                    chi2    = chi2    , args = args , **kwargs )
 
-        result,f = PDF.fitTo ( self            ,
-                               dataset         ,
-                               draw   = False  , ## false here!
-                               nbins  = nbins  ,
-                               silent = silent ,
-                               refit  = refit  ,
-                               args   = args   , **kwargs ) 
+        result , f = PDF.fitTo ( self            ,
+                                 dataset         ,
+                                 draw   = False  , ## false here!
+                                 nbins  = nbins  ,
+                                 silent = silent ,
+                                 refit  = refit  ,
+                                 timer  = timer  , 
+                                 args   = args   , **kwargs ) 
         if not draw :
             return result , None
 
@@ -511,7 +513,7 @@ class PDF2 (PDF) :
     #  pdf = ...
     #  print pdf.integral( 0,1,0,2)
     #  @endcode
-    def integral ( self, xmin , xmax , ymin , ymax ) :
+    def integral ( self, xmin , xmax , ymin , ymax , nevents = True ) :
         """Get integral over (xmin,xmax,ymin,ymax) region
         >>> pdf = ...
         >>> print pdf.integral( 0,1,0,2)
@@ -546,7 +548,7 @@ class PDF2 (PDF) :
         elif todo  :
             
             ## use unormalized PDF here to speed up the integration 
-            ifun   = lambda x :  self ( x , error = False , normalized = False )
+            ifun   = lambda x, y  :  self ( x , y , error = False , normalized = False )
             value  = _integral2 ( ifun , xmin , xmax , ymin , ymax )
             norm   = self.pdf.getNorm ( self.vars )
             value /= norm

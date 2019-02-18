@@ -299,6 +299,7 @@ class Sim1D(PDF) :
                 nbins  = 100   ,
                 silent = False ,
                 refit  = False ,
+                timer  = False ,
                 args   = ()    , **kwargs ) :
         """
         Perform the actual fit (and draw it)
@@ -316,6 +317,7 @@ class Sim1D(PDF) :
                                   nbins   = nbins   ,
                                   silent  = silent  ,
                                   refit   = refit   ,
+                                  timer   = timer   , 
                                   args    = args    , **kwargs )
         
         if   not draw                 : return res , None 

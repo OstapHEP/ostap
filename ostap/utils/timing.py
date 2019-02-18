@@ -109,11 +109,11 @@ class Timer(object):
     
     >>> print ct.delta 
     """
-    _logger = logger 
+    __logger = logger 
     ##
     def __init__  ( self , name = '' , logger = None , format = 'Timing %-18s %.3f' ) :
         self.name   = name
-        self.logger = logger if logger else self._logger 
+        self.logger = logger if logger else self.__logger 
         self.format = format
     def __enter__ ( self ) :
         self.time = time.time()

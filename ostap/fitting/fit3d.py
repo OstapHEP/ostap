@@ -100,6 +100,7 @@ class PDF3 (PDF2) :
                 dataset        ,
                 silent = False ,
                 refit  = False ,
+                timer  = False ,
                 args   = ()    , **kwargs ) :
         """
         Perform the actual fit (and draw it)
@@ -120,12 +121,13 @@ class PDF3 (PDF2) :
         
         result,f = PDF2.fitTo ( self    ,
                                 dataset = dataset ,
-                                draw    = False  , ## False here!
-                                nbins   = 50     , ## fake  here!
-                                ybins   = 20     , ## fake  here!
-                                silent  = silent ,
-                                refit   = refit  ,
-                                args    = args , **kwargs )
+                                draw    = False   , ## False here!
+                                nbins   = 50      , ## fake  here!
+                                ybins   = 20      , ## fake  here!
+                                silent  = silent  ,
+                                refit   = refit   ,
+                                timer   = timer   ,
+                                args    = args    , **kwargs )
         
         return result
     
@@ -465,7 +467,7 @@ class PDF3 (PDF2) :
     #  pdf = ...
     #  print pdf.integral( 0,1,0,2,0,5)
     #  @endcode
-    def integral ( self, xmin , xmax , ymin , ymax , zmin , zmax ) :
+    def integral ( self, xmin , xmax , ymin , ymax , zmin , zmax , nevents = True ) :
         """Get integral over (xmin,xmax,ymin,ymax,zmin,zmax) region
         >>> pdf = ...
         >>> print pdf.integral( 0,1,0,2,0,5)
@@ -509,7 +511,7 @@ class PDF3 (PDF2) :
         elif todo : 
                         
             ## use unormalized PDF here to speed up the integration 
-            ifun   = lambda x :  self ( x , error = False , normalized = False )
+            ifun   = lambda x , y , z : self ( x , y , z , error = False , normalized = False )
             value  = _integral3 ( ifun , xmin , xmax , ymin , ymax , zmin , zmax )
             norm   = self.pdf.getNorm ( self.vars )
             value /= norm

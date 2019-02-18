@@ -42,11 +42,12 @@ __all__     = (
     "partial"    , ## numerical partial derivatives (as function)
     "Partial"    , ## numerical partial derivatives (as object) 
     ##
-    'EvalVE'     , ## evaluate the function taking argument's unicertainty 
-    'Eval2VE'    , ## evaluate 2-argument function with argument's unicertainties
+    'EvalVE'     , ## evaluate the function taking argument's uncertainty 
+    'Eval2VE'    , ## evaluate 2-argument function with argument's uncertainties
+    'EvalNVE'    , ## evaluate N-argument function with argument's uncertainties
     ) 
 # =============================================================================
-import ROOT
+import ROOT, math
 # =============================================================================
 # logging 
 # =============================================================================
@@ -61,7 +62,7 @@ if not 0.75 < _eps_ * 2**52 < 1.25 :
     warnings.warn ('"epsilon" in not in the expected range!Math could be suboptimal')
 # =============================================================================
 from ostap.math.base  import cpp , iszero , isequal
-from ostap.core.types import num_types,  is_integer
+from ostap.core.types import num_types , is_integer
 from ostap.math.ve    import VE 
 # =============================================================================
 _next_double_ = cpp.Ostap.Math.next_double
@@ -111,7 +112,7 @@ class DeLevie(object) :
     - see https://link.springer.com/article/10.1007/s12039-009-0111-y
     - see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
     """
-    _d1h = [
+    __d1h = [
         ( ARRAY ( [      +1 ,       0                                                      ] ) ,      2 ) ,
         ( ARRAY ( [      +8 ,      -1 ,      0                                             ] ) ,     12 ) ,       
         ( ARRAY ( [      45 ,      -9 ,     +1 ,      0                                    ] ) ,     60 ) ,
@@ -121,7 +122,7 @@ class DeLevie(object) :
         ( ARRAY ( [ +315315 , -105105 , +35035 ,  -9555 , +1911 ,  -245 ,  +15 ,   0       ] ) , 360360 ) ,
         ( ARRAY ( [ +640640 , -224224 , +81536 , -25480 , +6272 , -1120 , +128 ,  -7 ,  0  ] ) , 720720 ) ] 
 
-    _d2h = [
+    __d2h = [
         ( ARRAY ( [      -2 ,      +1                                                      ] ) , 2      ) , 
         ( ARRAY ( [      +5 ,      -4 ,     +1                                             ] ) , 2      ) , 
         ( ARRAY ( [     -14 ,     +14 ,     -6 ,     +1                                    ] ) , 2      ) , 
@@ -133,19 +134,26 @@ class DeLevie(object) :
 
     ## constructor with the order parameter
     def __init__ ( self , o ) :
-        
-        self.o = o
-        if   o < 0               : self.o = 0
-        elif o >= len(self._d1h) : self.o = len(self._d1h) - 1 
 
-        self.d1          = self._d1h[ self.o ][0]
-        self.sf1         = self._d1h[ self.o ][1] 
-        self.d2          = self._d2h[ self.o ][0]
-        self.sf2         = self._d2h[ self.o ][1]
+        assert is_integer ( o ), 'Invalid order %s' % o
+        
+        self.__order = o
+        if   o < 0                : self.__order = 0
+        elif o >= len(self.__d1h) : self.__order = len(self.__d1h) - 1 
+
+        self.__d1          = self.__d1h[ self.__order ][0]
+        self.__sf1         = self.__d1h[ self.__order ][1] 
+        self.__d2          = self.__d2h[ self.__order ][0]
+        self.__sf2         = self.__d2h[ self.__order ][1]
         
         ## vector of function differences 
-        self.df          = ARRAY ( ( self.o + 2 ) * [ 0 ] ) 
+        self.__df          = ARRAY ( ( self.__order + 2 ) * [ 0 ] ) 
 
+    @property
+    def order ( self ) :
+        """Order of differentiation: 2*order+1 points witll be used"""
+        return self.__order
+        
     # =========================================================================
     ## calculate  1st (and optionally Nth) derivative with the given step
     #  - f'      is calcualted as O(h^(N-1))
@@ -164,19 +172,19 @@ class DeLevie(object) :
         """
 
         ## calculate differences 
-        imax = self.o + 2 if der else self.o + 1
+        imax = self.__order + 2 if der else self.__order + 1
         i = 0
         while i < imax : 
             j = i + 1
-            self.df[i] = func ( x + j * h ) - func ( x - j * h )
+            self.__df[i] = func ( x + j * h ) - func ( x - j * h )
             i += 1
             
         ## 1) calculate 1st derivative 
-        result = dot_fma ( self.o + 1 , self.df , self.d1 ) / ( self.sf1 * h )            
+        result = dot_fma ( self.__order + 1 , self.__df , self.__d1 ) / ( self.__sf1 * h )            
         if not der : return result 
             
         ## 2) calculate Nth derivative 
-        dd     = dot_fma ( self.o + 2 , self.df , self.d2 ) / ( self.sf2 * h**(self.o*2+3) ) 
+        dd     = dot_fma ( self.__order + 2 , self.__df , self.__d2 ) / ( self.__sf2 * h**(self.__order*2+3) ) 
         
         return result, dd 
                             
@@ -311,17 +319,17 @@ class Derivative(object) :
         see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
         - func:   the function
         - step:   proposed initial step for evaluation of derivatives
-        - order  derivative is calcuakted using 2*I+1 point
+        - order  derivative is calculated using 2*I+1 point
         - err    evaluate numerical uncertainties?
         >>> func = math.sin
         >>> deri = Derivative ( func )        
         """
-        self._func  = func
-        self._step  = float( step  ) 
-        self._order = int  ( order )
-        self._err   = True if err else False 
-        if self._order < 0 :
-            raise AttributeError("Invalid ``order''-parameter!")
+        assert is_integer ( order ) and 0 <= order, "Invalid ``order''-parameter!"
+        
+        self.__func  = func
+        self.__step  = float( step  ) 
+        self.__order = int  ( order )
+        self.__err   = True if err else False 
 
     # =========================================================================
     ## evaluate the derivative
@@ -340,12 +348,30 @@ class Derivative(object) :
         
         >>> print deriv(0.1) 
         """
-        return derivative ( self._func  ,
+        return derivative ( self.__func  ,
                             x           ,
-                            self._step  ,
-                            self._order ,
-                            self._err   )
+                            self.__step  ,
+                            self.__order ,
+                            self.__err   )
 
+    @property
+    def func ( self ) :
+        """The function to be differentiated"""
+        return self.__func
+    @property
+    def step ( self ) :
+        """proposed initial step for evaluation of derivatives"""
+        return self.__step
+    @property
+    def order ( self ) :
+        """ Derivative is calculated using 2*order+1 point"""
+        return self.__order
+    @property
+    def err   (  self ) :
+        """Evaluate numerical uncertainties?"""
+        return self.__err
+
+        
 # =============================================================================
 ## Calculate the partial derivative for the function
 #  @see R. De Levie, "An improved numerical approximation for the first derivative"
@@ -385,18 +411,18 @@ def partial ( index , func , x , h = 0  , I = 2 , err = False ) :
     if len(x) <= index :
         raise AttributeError("Invalid argument length/index %d/%d" %  ( len(x) , index ) )
     
-    _x =   [ float(a) for a in x ]
+    _x =  [ float(a) for a in x ]
     
     ## create wrapper function 
     def _wrap ( z ) :
-        _z              = _x[index] 
+        _z        = _x[index] 
         _x[index] =  z
         _r = func ( *_x )
         _x[index] = _z
         return _r
     
-    xi = _x[ index ]
-    return derivative ( _wrap , xi , h , I , err )
+    x_i = _x[ index ]
+    return derivative ( _wrap , x = x_i , h = h , I = I , err = err )
 
 # =============================================================================
 ## calcuate the partial derivative for the function
@@ -437,7 +463,7 @@ class Partial(Derivative) :
                    order = 2   ,   ## J=2*I(+1) is a number of points used for evaluation of derivative
                    err = False ) : ## estimate the uncertainty?
         """Calculate the partial derivative for the function
-        - index  (INPUT) indx of the variable 
+        - index  (INPUT) index of the variable 
         - func   (INPUT) the function itself
         - step   (INPUT) the guess for the step used in numeric differentiation
         - order  (INPUT) the rule to be used ("N-point rule" = 2*I+1)
@@ -450,13 +476,11 @@ class Partial(Derivative) :
         >>> print ' f(%f,%f)=%f    ' % ( x , y , func( x, y ) ) 
         >>> print ' dFdX=%f dFdY=%f' % ( dFdX(x,y), dFdY ( x, y ) ) 
         """
-        if is_integer ( index ) and 0 <= index :
-            self._index = index
-        else :
-            raise AttributeError("Invalid variable index %s" % index)
+        assert is_integer ( index ) and 0 <= index, \
+               "Invalid variable index %s" % index 
 
-        ## keep the function 
-        self._func2 = func
+        ## get the index 
+        self.__index = index 
         
         ## initialize the base 
         Derivative.__init__ ( self , func , step , order , err )
@@ -478,12 +502,17 @@ class Partial(Derivative) :
         >>> print ' f(%f,%f)=%f    ' % ( x , y , func( x, y ) ) 
         >>> print ' dFdX=%f dFdY=%f' % ( dFdX(x,y), dFdY ( x, y ) )
         """
-        return partial ( self._index  ,
-                         self._func2  ,
+        return partial ( self.__index ,
+                         self.func    ,
                          x            ,
-                         self._step   ,
-                         self._order  ,
-                         self._err    )
+                         self.step    ,
+                         self.order   ,
+                         self.err     )
+
+    @property 
+    def index ( self ) :
+        "Index of the variable to be differentiated"
+        return self.__index 
         
 # =============================================================================
 ## @class EvalVE
@@ -514,21 +543,9 @@ class EvalVE(object) :
         >>> sin1 = EvalVE( math.sin , lambda s : math.cos(s) )
         >>> sin2 = EvalVE( math.sin )  ## numerical derivative will be used 
         """
-        self._func  = func
-        if    deriv : self._deriv  = deriv
-        elif  hasattr ( func , 'derivative' ) :
-            try :
-                self._deriv = func.derivative()  ## derivative as object?
-            except:
-                self._deriv = func.derivative    ## derivative as function 
-        elif  hasattr ( func , 'Derivative' ) :
-            try :
-                self._deriv = func.Derivative()  ## derivative as object?
-            except:
-                self._deriv = func.Derivative    ## derivative as function 
-        else :
-            ## use numerical differentiation
-            self._deriv = Derivative(func)
+        self.__func  = func
+        if    deriv and callable ( deriv ) : self.__derivative = deriv
+        else                               : self.__derivative = Derivative(func)
             
         if   name                          : self.__name__ =  name 
         elif hasattr ( func , '__name__' ) and '<lambda>' != func.__name__ :
@@ -538,11 +555,11 @@ class EvalVE(object) :
     ## printout 
     def __str__ ( self ) : return str ( self.__name__ )
     __repr__ = __str__
-    
+
     ## get a value 
-    def _value_ ( self , x , *args ) :
+    def func_eval ( self , x , *args ) :
         """Evaluate a function"""
-        return self._func( float( x ) , *args )
+        return self.__func( float ( x ) , *args )
 
     # =========================================================================
     ## Evaluate the function taking into account uncertainty in the argument
@@ -564,20 +581,132 @@ class EvalVE(object) :
         >>> print 'sin2(x) = %s ' % sin2(x)
         """
         #
-        ## evaluate the function 
-        val  = self._value_ ( x , *args )
+        ## 1) evaluate the function 
+        val  = self.func_eval ( x , *args )
         #
         ## no uncertainties? 
         if   isinstance ( x , num_types          ) : return VE ( val , 0 )
         # ignore small or invalid uncertanties 
         elif 0 >= x.cov2() or iszero ( x.cov2()  ) : return VE ( val , 0 )
-        # evaluate the derivative  
-        d    = self._deriv ( float ( x ) , *args )
-        ## calculate the variance 
+        #
+        ## 2) evaluate the derivative
+        dfun = self.__derivative
+        d    = dfun (  float ( x ) , *args ) 
+        ## 3) calculate the variance 
         cov2 = d * d * x.cov2()
-        ## get a final result 
+        ## 4) get a final result 
         return VE ( val , cov2 )
-    
+
+    @property
+    def func       ( self ) :
+        """Get the function itself"""
+        return self.__func 
+    @property
+    def derivative ( self ):
+        """Get the derivative object/function"""
+        return self.__derivative
+        
+# ===================================================================================
+## @class EvalNVE
+#  Calculate the value of scalar function of N-arguments,
+#  taking into account the argument uncertainties
+#  @code
+#  fun2   = lambda x , y : x**2+y**2 
+#  fun2e  = EvalNVE( 2 , func )e
+#  x , y  = ...
+#  result = fun2e (  
+#  @endcode
+class  EvalNVE(object) :
+    """Calculate the value of scalar function of N-arguments,
+    taking into account the argument uncertainties
+    >>> fun2   = lambda x , y : x**2+y**2 
+    >>> fun2e  = EvalNVE( 2 , func )e
+    >>> x , y  = ...
+    >>> result = fun2e ( x , y )  
+    """
+    # =========================================================================
+    ## create the object
+    #  @param N       the dimensionality of the problem
+    #  @param func    the function
+    #  @param partial optional vector of partial derivatives 
+    def __init__ ( self , N , func , partial = () , name = '' ) :
+        """
+        """
+        assert is_integer ( N )  and 1 < N, 'Invalid N=%s' % N
+        assert callable   ( func ) , 'Invalid func %s/%s' % ( func , type ( func ) )
+
+        self.__func = func
+        self.__N    = N
+        
+        derivatives = []
+        for i in  range ( N ) :
+            
+            if i < len ( partial ) and callable ( partial[i] ) : d_i = partial[i] 
+            else                                               : d_i = Partial( i , func )
+                
+            derivatives.append ( d_i )
+            
+        self.__partial = tuple (  derivatives )
+
+        if   name  : self.__name__  =  name 
+        elif hasattr ( func , '__name__' ) and '<lambda>' != func.__name__ :
+            self.__name__ = func.__name__
+        else       : self.__name__ = 'EvalNVE'
+
+
+    @property 
+    def func    ( self ) :
+        """The original function"""
+        return  self.__func
+    @property
+    def partial ( self ) :
+        """Get tuple of partial derivatives (functions)"""
+        return self.__partial
+
+    ## printout 
+    def __str__ ( self ) : return str ( self.__name__ )
+    __repr__ = __str__
+
+    ## calculate the gradient
+    def gradient ( self , *x ) :
+        n = self.__N
+        assert len ( x ) == n , 'Invalid argument size'
+
+        xx = [ VE(i).value()        for i in x           ]
+        gr = [ self.partial[i](*xx) for i in range ( n ) ]
+        
+        return tuple ( _g ) 
+
+    ## the main method 
+    def __call__ ( self , *x ) :
+
+        n = self.__N 
+        assert len ( x ) == n , 'Invalid  argument size'
+
+        xve = [ VE(i)        for i in  x   ] ## force everything to be VE 
+        xv  = [    i.value() for i in  xve ] ## get only the values
+        
+        xv  = tuple ( xv ) 
+        
+        ## value of the function 
+        value = self.__func ( *xv )
+        
+        ## calculate the covariance 
+        cov2  = 0
+        for i in range ( n ) :
+
+            c2 = xve[i].cov2()
+            if c2 <= 0 or iszero ( c2 ) : continue
+
+            ## calculate the gradient 
+            df = self.partial[i] ( *xv ) 
+            if iszero ( df )            : continue 
+            
+            cov2 += c2 * df**2 
+
+        return VE( value , cov2 ) 
+                
+                   
 # ===================================================================================
 ## @class Eval2VE
 #  Evaluate the 2-argument function taking into account the uncertaintines
@@ -600,7 +729,7 @@ class EvalVE(object) :
 #  @see EvalVE
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-02-23
-class Eval2VE(object) :
+class Eval2VE(EvalNVE) :
     """ Evaluate the 2-argument function taking into account the uncertaintines
     >>> func2 = lambda x,y : x*x + y*y
     >>> eval2 = Eval2VE ( func2 )
@@ -635,59 +764,9 @@ class Eval2VE(object) :
         >>> eval2 = Eval2VE ( func2 , dFdX = lambda x,y : 2*x , dFdY = lambda x,y : 2*y )
         If derivatves are not provided, numerical differentiation will be used 
         """
-        self._func  = func
+
+        EvalNVE.__init__ ( self , 2 ,  func , ( dFdX , dFdY ) , name )
         
-        self._dFdX = dFdX if dFdX else Partial ( 0 , func )
-        self._dFdY = dFdY if dFdY else Partial ( 1 , func )
-
-        if not hasattr ( self._dFdX , '_step' ) : self._dFdX._step = 0 
-        if not hasattr ( self._dFdY , '_step' ) : self._dFdY._step = 0 
-            
-        if   name                          : self.__name__ =  name 
-        elif hasattr ( func , '__name__' ) and '<lambda>' != func.__name__ :
-            self.__name__ = func.__name__
-        else                               : self.__name__ = 'Eval2VE'
-
-    ## printout 
-    def __str__ ( self ) : return str ( self.__name__ )
-    __repr__ = __str__
-    
-    # =========================================================================
-    ## get a value 
-    def _value_ ( self , x , y ) :
-        """Evaluate a function"""
-        return self._func( float ( x ) , float(y) )
-    
-    # =========================================================================
-    ## get a partial derivatives,
-    #  adjust the step for numerical differentiation: use the initial value of 0.1*error
-    def _partial_ ( self , f , x , y , step2 ) :
-        """ get a partial derivatives,
-        adjust the step for numerical differentiation:
-        - use the initial value of 0.1*error
-        """
-        
-        old_step   = f._step
-        ## magic number choice: 1.e-8 <= ( step ~ 0.1 * error ) 
-        if 1.e-14 <= step2 :
-            from math import sqrt as _sqrt_ 
-            f._step = 0.1 * _sqrt_( step2 ) 
-        _r = f ( x , y )
-        f._step = old_step
-        return _r 
-    
-    ## get a partial derivatives d(func)/d(x)
-    def dFdX  ( self , x , y ) :
-        """Get a partial derivatives d(func)/d(X)"""
-        x = VE ( x )
-        return self._partial_ ( self._dFdX , x.value() , y          , x.cov2() )
-    
-    ## get a partial derivatives d(func)/d(y)
-    def dFdY  ( self , x , y ) :
-        """Get a partial derivatives d(func)/d(Y)"""
-        y = VE ( y )
-        return self._partial_ ( self._dFdY , x         , y.value()  , y.cov2() )
-
     # =========================================================================
     ## evaluate the function 
     #  @code
@@ -711,33 +790,39 @@ class Eval2VE(object) :
         >>> print eval2(x,y,+1) ## treat x,y as 100% correlated 
         >>> print eval2(x,y,-1) ## treat x,y as 100% anti-correlated
         """
-        ## evaluate the function 
-        val = self._value_ ( x , y )
-        #
-        x   =  VE ( x )
-        y   =  VE ( y )
-        #
-        x_plain = x.cov2() <= 0 or iszero ( x.cov2() )
-        y_plain = y.cov2() <= 0 or iszero ( y.cov2() ) 
+        assert isinstance ( cxy , num_types ) and \
+               ( abs ( cxy ) <= 1 or isequal ( abs ( cxy ) , 1 ) ) , \
+               'Invalid correlation coefficient %s' % cxy 
+        
+        x   = VE ( x ) 
+        y   = VE ( y )
+        
+        xv  = x.value()
+        yv  = y.value()
+        
+        val = self.func ( xv , yv )
+
+        xc2 = x.cov2()
+        yc2 = x.cov2()
+        
+        x_plain = xc2 <= 0 or iszero ( xc2 )
+        y_plain = yc2 <= 0 or iszero ( yc2 )
+        
         #
         if x_plain and y_plain : return VE ( val , 0 )
+        
         #
         ## here we need to calculate the uncertainties
         # 
-        cov2 = 0.0
+        dx   = self.partial[0] ( xv , yv ) if not x_plain else 0 
+        dy   = self.partial[1] ( xv , yv ) if not y_plain else 0 
         #
-        fx   = self.dFdX ( x         , y.value() ) if not x_plain else 0 
-        fy   = self.dFdY ( x.value() , y         ) if not y_plain else 0 
-        #
-        if not x_plain : cov2 += fx * fx * x.cov2()            
-        if not y_plain : cov2 += fy * fy * y.cov2()
-        # 
-        if not x_plain and not y_plain : 
-            ## adjust the correlation coefficient:
-            cxy   = min ( max ( -1 , cxy ) , 1 )
-            if not iszero ( cxy ) :
-                cov2 += 2 * cxy * fx * fy * x.error() * y.error() 
-
+        
+        cov2 = dx * dx * xc2 + dy * dy * yc2
+        
+        if cxy and xc2 and yc2 :
+            cov2 += 2 * cxy * dx * dy * math.sqrt ( xc2 * yc2 ) 
+            
         return VE ( val , cov2 )
  
 
