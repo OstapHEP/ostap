@@ -87,6 +87,7 @@ add_library(ostap SHARED src/format.cpp
                          src/HistoProject.cpp
                          src/HistoStat.cpp
                          src/IFuncs.cpp
+                         src/Integrator.cpp
                          src/Interpolation.cpp
                          src/Iterator.cpp
                          src/Lomont.cpp
