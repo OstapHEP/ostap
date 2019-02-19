@@ -16,6 +16,7 @@ from   ostap.core.pyrouts import *
 import ostap.io.zipshelve as     DBASE
 import ostap.io.root_file
 import ostap.trees.trees
+import ostap.parallel.kisa 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -108,13 +109,14 @@ for iter in range ( 0 , maxIter ) :
 
     weighting = (
         ## variable          address in DB    
-        Weight.Var( accessor = lambda s : s.x , address = 'x-reweight'  ) , 
+        Weight.Var( 'x' , address = 'x-reweight'  ) , 
         )
     
     weighter   = Weight( dbname , weighting )
     ## variables to be used in MC-dataset 
     variables  = [
-        Variable ( 'pt_x'   , 'pt_x'   , 0  , 100 , lambda s : s.x ) , 
+        ## Variable ( 'x'  , 'x-variable' , 0  , 100 , lambda s : s.x ) , 
+        Variable ( 'x'  , 'x-variable' , 0  , 100 ) , 
         Variable ( 'weight' , 'weight' , accessor =  weighter      )  
         ]
     
@@ -126,20 +128,20 @@ for iter in range ( 0 , maxIter ) :
         '0<x && x<100 '
         )
     
-    mctree.process ( selector )
+    mctree.pprocess ( selector , chunk_size = len ( mctree ) // 20 )
     mcds = selector.data             ## new reweighted dataset
 
     #
     ## update weights
     #    
     plots    = [
-        WeightingPlot( 'pt_x'   , 'weight' , 'x-reweight'  , hdata , hmc )  
+        WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc )  
         ]
     
     more = makeWeights ( mcds , plots , dbname , delta = 0.001 )
 
     ## make MC-histogram 
-    mcds .project  ( hmc , 'pt_x' , 'weight'  )
+    mcds .project  ( hmc , 'x' , 'weight'  )
     
     logger.info    ( 'Compare DATA and MC for iteration #%d' % iter )
     #

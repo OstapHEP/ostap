@@ -236,7 +236,7 @@ for iter in range ( 0 , maxIter ) :
         '0<x && x<20 && 0<y && y<20'
         )
 
-    mctree.pprocess ( selector , chunk_size = len(mctree)/20 )
+    mctree.pprocess ( selector , chunk_size = len(mctree) // 20 )
     
     mcds = selector.data             ## new reweighted dataset
 
