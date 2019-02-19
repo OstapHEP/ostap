@@ -13,7 +13,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = ""
 # =============================================================================
-__all__     = () ## nothing to be imported !
+__all__     = (
+    'matrix'      , ## get i,j-element                  from matrix-like object
+    'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
+    )
 # =============================================================================
 import ROOT, cppyy 
 # =============================================================================
@@ -25,6 +28,61 @@ else                       : logger = getLogger ( __name__            )
 # =============================================================================
 from ostap.math.base  import isequal,iszero
 from ostap.core.types import num_types, is_integer
+# =============================================================================
+## get  i,j element from matrix-like object
+#  @code
+#  mtrx  = ...
+#  value = matrix ( mtrx , 1 , 2 ) 
+#  @endcode 
+def matrix ( mtrx , i , j ) :
+    "Get  i,j element from matrix-like object
+    >>> mtrx  = ...
+    >>> value = matrix ( m , 1 , 2 ) 
+    """
+    if isinstance ( mtrx , ROOT.TMatrix ) :
+        if i < mtrx.GetNrows () and j < mtrx.GetNcols () :
+            return mtrx ( i , j )
+    
+    if callable ( mtrx ) :
+        try    :
+            return mtrx (  i , j ) 
+        except : 
+            pass
+
+    try :
+        return m [ i , j ]
+    except :
+        pass
+    
+    try :
+        return m [ i ] [ j ]
+    except :
+        pass
+
+    return TypeError("Can't get m(%d,%d) for m=%s" % ( i , j , mtrx ) )
+
+# =============================================================================
+## Get correlation element from the matrix-like object
+#  @code
+#  mtrx = ...
+#  corr = correlation ( mtrx , 1 , 2 ) 
+#  @endcode
+def correlation ( mtrx , i , j ):
+    """Get the correlation element from the matrix-like object
+    >>> mtrx = ...
+    >>> corr = correlation ( mtrx , 1 , 2 ) 
+    """
+    v = matrix ( mtrx , i , j )
+    
+    if abs ( v ) <= 1 : return v
+    elif 0 < v and isequal ( v  ,  1 ) :  return  1  
+    elif 0 > v and isequal ( v  , -1 ) :  return -1  
+    
+    return TypeError("Can't get corr(%d,%d) for m=%s" % ( i , j , mtrx ) )
+
+
+
+
 
 cpp   = cppyy.gbl
 
