@@ -41,6 +41,8 @@ dbname     = os.path.join ( tempfile.gettempdir() , 'ostap_test_reweight2.db' )
 if os.path.exists ( testdata ) : os.remove ( testdata ) 
 if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
+import ostap.parallel.kisa
+
 if not os.path.exists( testdata ) :
     #
     seed =  1234567890L 
@@ -188,7 +190,7 @@ hmcx = h1_axis ( [ 20.0/ix*i for i in  range(ix+1) ] )
 hmcy = h1_axis ( [ 15.0/iy*i for i in  range(iy+1) ] )
 
 ## prepare re-weighting machinery 
-maxIter = 20
+maxIter = 50
 
 ## check database 
 import os
@@ -210,17 +212,20 @@ for iter in range ( 0 , maxIter ) :
 
     weightings = (
         ## variable          address in DB    
-        Weight.Var ( lambda s : s.x       , 'x-reweight'  ) , 
-        Weight.Var ( lambda s : s.y       , 'y-reweight'  ) , 
-        Weight.Var ( lambda s : (s.x,s.y) , '2D-reweight' ) , 
+        #Weight.Var ( lambda s : s.x       , 'x-reweight'  ) , 
+        #Weight.Var ( lambda s : s.y       , 'y-reweight'  ) , 
+        #Weight.Var ( lambda s : (s.x,s.y) , '2D-reweight' ) , 
+        Weight.Var (  'x'      , 'x-reweight'  ) , 
+        Weight.Var (  'y'      , 'y-reweight'  ) , 
+        Weight.Var ( ('x','y') , '2D-reweight' ) , 
         )
     
     weighter   = Weight( dbname , weightings )
     ## variables to be used in MC-dataset 
     variables  = [
-        Variable( 'x'      , 'x-var'  , 0  , 20 , lambda s : s.x ) ,  
-        Variable( 'y'      , 'y-var'  , 0  , 15 , lambda s : s.y ) , 
-        Variable( 'weight' , 'weight' ,    accessor = weighter   )  
+        Variable ( 'x'      , 'x-var'  , 0  , 20 ) , 
+        Variable ( 'y'      , 'y-var'  , 0  , 15 ) ,
+        Variable ( 'weight' , 'weight' , accessor = weighter )  
         ]
     
     #
@@ -231,7 +236,8 @@ for iter in range ( 0 , maxIter ) :
         '0<x && x<20 && 0<y && y<20'
         )
 
-    mctree.process ( selector )
+    mctree.pprocess ( selector , chunk_size = len(mctree)/20 )
+    
     mcds = selector.data             ## new reweighted dataset
 
     logger.info ('MCDATA: %s' %  mcds )
@@ -241,7 +247,7 @@ for iter in range ( 0 , maxIter ) :
     #
 
     plots = [ WeightingPlot ( 'y:x' , 'weight' , '2D-reweight' , hdata  , hmc  ) ]
-    if 5 <= iter: 
+    if 3 < iter: 
         plots  = [
             WeightingPlot ( 'x'   , 'weight' , 'x-reweight'  , hxdata , hmcx       ) ,  
             WeightingPlot ( 'y'   , 'weight' , 'y-reweight'  , hydata , hmcy       ) , 
@@ -249,7 +255,7 @@ for iter in range ( 0 , maxIter ) :
             ]
     
     ## more iteration?  number of ``active'' reweightings    
-    more = makeWeights ( mcds , plots , dbname , delta = 0.01 , power = 2 if 1 != len(plots) else 1 ) 
+    more = makeWeights ( mcds , plots , dbname , delta = 0.015 , power = 2 if 1 != len(plots) else 1 ) 
     
     ## make MC-histogram 
     mcds .project  ( hmcx , 'x'   , 'weight'  )

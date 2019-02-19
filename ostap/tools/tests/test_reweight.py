@@ -115,7 +115,7 @@ for iter in range ( 0 , maxIter ) :
     ## variables to be used in MC-dataset 
     variables  = [
         Variable ( 'pt_x'   , 'pt_x'   , 0  , 100 , lambda s : s.x ) , 
-        Variable ( 'weight' , 'weight' , accessor =  weighter       )  
+        Variable ( 'weight' , 'weight' , accessor =  weighter      )  
         ]
     
     #

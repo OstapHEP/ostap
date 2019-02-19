@@ -290,19 +290,37 @@ class Operation2(object) :
         self.__afun = afun
         self.__bfun = bfun
         self.__oper = oper
+        
+        ## try to use the native operations, if defined  
 
-        ## make  try to use the native operation, (if defined and if gets the callable as result ) 
-        try :
+        native = [  ( afun , bfun ) ]
 
-            ## if the native operation defined - use it! 
-            funab = self.__oper ( afun , bfun ) 
-            if not callable ( funab ) :  raise TypeError ()
-            self.__shortcut = True 
-        except :
+        if   isinstance ( afun , Operation2 ) and isinstance ( bfun , Operation2 ) :
+            native.append ( ( afun.result , bfun.result ) )
+        elif isinstance ( afun , Operation2 ) :        
+            native.append ( ( afun.result , bfun        ) )
+        elif isinstance ( bfun , Operation2 ) :        
+            native.append ( ( afun        , bfun.result ) )
 
-            ## use generic wrapper 
+        funab = None 
+        for _a , _b in native :
+            if funab is None : 
+                try :
+                    funab = self.__oper ( _a , _b )
+                    if not callable ( funab ) :
+                        funab = None 
+                        raise TypeError ()
+                    self.__shortcut = True
+                    ## logger.info ('Native  operation is used %s vs %s' % ( type(a) , type(b) ) ) 
+                except :
+                    pass                
+        del native
+                    
+        ## use generic wrapper, if no native operations are defined 
+        if funab is None :
             funab = WrapOper2 ( afun , bfun , oper )
             self.__shortcut = False 
+            ## logger.info ('Generic operation is used %s vs %s' % ( type(a) , type(b) ) ) 
 
         ## store the result 
         self.__funab = funab 

@@ -35,7 +35,7 @@ from ostap.core.types import num_types, is_integer
 #  value = matrix ( mtrx , 1 , 2 ) 
 #  @endcode 
 def matrix ( mtrx , i , j ) :
-    "Get  i,j element from matrix-like object
+    """Get  i,j element from matrix-like object
     >>> mtrx  = ...
     >>> value = matrix ( m , 1 , 2 ) 
     """
@@ -80,9 +80,7 @@ def correlation ( mtrx , i , j ):
     
     return TypeError("Can't get corr(%d,%d) for m=%s" % ( i , j , mtrx ) )
 
-
-
-
+# =============================================================================
 
 cpp   = cppyy.gbl
 

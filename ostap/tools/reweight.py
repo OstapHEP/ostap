@@ -27,9 +27,14 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweigh' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
 logger.info ( 'Set of utitilities for re-weigthing')
-from   ostap.core.pyrouts import VE, SE
-from   ostap.math.base    import iszero
-import ostap.io.zipshelve as     DBASE ## needed to store the weights&histos 
+from   ostap.core.pyrouts    import VE, SE
+from   ostap.math.base       import iszero
+from   ostap.core.types      import string_types, list_types 
+from   ostap.math.operations import Mul as MULT  ## needed for proper abstract multiplication
+import ostap.io.zipshelve    as            DBASE ## needed to store the weights&histos
+from   ostap.utils.utils     import GetAttribute, GetAttributes 
+# =============================================================================
+
 # =============================================================================
 ## @class Weight
 #  helper class for semiautomatic reweighting of data 
@@ -109,19 +114,16 @@ class Weight(object) :
                 skip    = wvar.skip      ## skip   some of them?
                 
                 if isinstance ( funval , str ) :
-                    varnam = funval 
-                    funval = lambda s : getattr ( s , varnam )
+                    funval = GetAttr ( funval ) 
                     
                 ## 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
                 if not functions :
                     logger.warning("No reweighting is available for ``%s'', skip it" % funname )
                     continue
-                
-                
+                                
                 if not isinstance (  functions , ( list , tuple ) ) :
-                    functions = [ functions ]
-                    
+                    functions = [ functions ]                    
                 
                 flen = len(functions) 
                 if   0 < skip and skip      < flen :
@@ -134,26 +136,35 @@ class Weight(object) :
                     pass
                 else :
                     logger.error("Invalid ``skip'' parameter %s/%d for ``%s''" % ( skip , flen , funname ) )
+                
+                ## nullify the uncertainties except for the last histogram
+                _functions = []
+                _first     = True 
+                for f in reversed ( functions ) :
+                    if isinstance ( f , ROOT.TH1 ) and _first : 
+                        ff = f.clone()
+                        for i in ff :
+                            v     = float ( ff[i] )
+                            ff[i] = VE(v,0)
+                        _functions.append ( ff  )                        
+                        _first = False 
+                    else :
+                        _functions.append ( f  )
+                        
+                _functions.reverse() 
+                functions = _functions
                     
                 ## merge list of functions into single function 
                 if merge and 1 < len ( functions)  : 
-
-                    if isinstance ( functions[0] , ROOT.TH1 ) :
-                        ## nullify the errors
-                        for i in functions[0] :
-                            v = float ( functions[0][i] ) 
-                            functions[0][i] = VE(v,0)
                             
-                    single_func = functions[0] * functions [1] 
+                    ## single_func = functions[0] * functions [1] 
+                    single_func = MULT ( functions[0] , functions [1] )
                     
                     for fun in functions [2:] :
-                        ##  nullify  errors
-                        if isinstance ( single_func , ROOT.TH1 ) : 
-                            for i in single_func :
-                                v = float ( single_func[i] )
-                                single_func[i] = VE(v,0)
-                        ## multiply it
-                        single_func *= fun
+
+                        ## multiply it                               
+                        ## single_func *= fun
+                        single_func = MULT ( single_func , fun )
                             
                     functions  = [ single_func ]
                     
@@ -258,6 +269,11 @@ class Weight(object) :
             Schematic data flow to get the weigth for the given event 
             - tree/chain/dataset -> accessor -> database(address) -> weight
             """
+
+            if   isinstance ( accessor , string_types ) : accessor = GetAttribute  (  accessor )
+            elif isinstance ( accessor , list_types   ) and \
+                     all ( isinstance ( i , string_types ) for i in accessor ) : 
+                accessor = GetAttributes ( *accessor )
             
             assert callable ( accessor ) , \
                    "Invalid type of ``accessor'' %s/%s" % ( accessor , type( accessor ) )
@@ -535,7 +551,9 @@ def makeWeights  ( dataset                 ,
             
         if 1 != eff_exp and 0 < eff_exp : 
             weight = weight ** eff_exp
-            
+
+        print 'WEIGHT stat', eff_exp, weight.stat()
+        
         ## hmmmm... needed ? yes! 
         #if 1 < power : weight = weight ** ( 1.0 / power )
         

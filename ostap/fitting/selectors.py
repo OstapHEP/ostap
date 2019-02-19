@@ -112,6 +112,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
 from   ostap.core.core     import cpp, Ostap
+from   ostap.core.types    import num_types 
 import ostap.fitting.roofit 
 # =============================================================================
 ## C++ Selector 
@@ -260,9 +261,9 @@ class Variable(object) :
             var = var.strip() 
             assert isinstance ( description , str ) , \
                    "Variable: illegal type for ``description''"     % ( description , type ( description ) ) 
-            assert isinstance ( vmin ,  ( int , long , float ) ) , \
+            assert isinstance ( vmin , num_types ) , \
                    "Variable: illegal type for ``vmin'' %s/%s"      % ( vmin        , type ( vmin        ) )
-            assert isinstance ( vmax ,  ( int , long , float ) ) , \
+            assert isinstance ( vmax , num_types ) , \
                    "Variable: illegal type for ``vmax'' %s/%s"      % ( vmax        , type ( vmax        ) )
             assert vmin < vmax, \
                    "Variable: invalid ``minmax'' range (%g,%g)"     % ( vmin , vmax ) 
