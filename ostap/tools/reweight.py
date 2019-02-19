@@ -552,7 +552,7 @@ def makeWeights  ( dataset                 ,
         if 1 != eff_exp and 0 < eff_exp : 
             weight = weight ** eff_exp
 
-        print 'WEIGHT stat', eff_exp, weight.stat()
+        ## print 'WEIGHT stat', eff_exp, weight.stat()
         
         ## hmmmm... needed ? yes! 
         #if 1 < power : weight = weight ** ( 1.0 / power )
