@@ -34,7 +34,7 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
-import ROOT, os
+import ROOT, os, tarfile
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
@@ -55,7 +55,6 @@ class WeightsFiles(Utils.CleanUp) :
         ## string ? treat it a a single tar-file 
         if isinstance ( weights_files , str  ) :
             
-            import tarfile, os  
             assert os.path.exists  ( weights_files ) , \
                    "Non-existing ``weights_file''  %s"   %  weights_files 
             
@@ -431,7 +430,7 @@ class Trainer(object):
     #  trainer.train ()
     #  @endcode  
     #  @return the name of output XML file with the weights 
-    def train ( self , log = False , silent = False )  :
+    def train ( self , log = True , silent = False )  :
         """ train TMVA 
         >>> trainer.train ()
         return the name of output XML files with the weights 
@@ -439,29 +438,66 @@ class Trainer(object):
         
         if   log and isinstance ( log , str ) : log = log
         elif log                              : log = self.name + '.log'
+
+        
+
         
         self.__log_file = None
-        if log :
-            #
-            try    : os.remove ( log )
-            except : pass 
-            #
+        
+        if  log :
+            
+            try :
+                if os.path.exists ( log ) and os.path.isfile ( log ) :
+                    os.remove ( log )
+            except :
+                pass
+            
             opts = self.__bookingoptions
             opts = opts_replace ( opts , 'DrawProgressBar:' , False )
             opts = opts_replace ( opts , 'Color:'           , False )
             self.__bookingoptions = opts
-            from ostap.logger.utils import TeeCpp , OutputC
-            with OutputC ( log , True , True ) if silent else TeeCpp ( log )  :
-                from ostap.logger.logger import noColor
-                with noColor() : result = self.__train ()
-            if os.path.exists ( log ) and os.path.isfile ( log ) : self.__log_file = log
-            if self.log_file : logger.info ( 'Log-file created: %s'  % self.log_file )
-            return result
+            
+            from ostap.logger.utils  import TeeCpp , OutputC
+            context  = OutputC ( log , true , True ) if silent else TeeCpp ( log )
+            
+            from ostap.logger.logger import noColor
+            context2 = noColor() 
+            
+        else    :
+            
+            from ostap.logger.utils  import MuteC  , NoContext
+            context  = MuteC   ()                    if silent else NoContext ()
+            context2 = NoContext()
+
+
+        with context :
+            with context2 :
+                result = self.__train ()
+                
+        if log and os.path.exists ( log ) and os.path.isfile ( log ) : self.__log_file = log
+        else                                                         : self.__log_file = None
         
-        ## no log-file        
-        from ostap.logger.utils import MuteC , NoContext
-        with MuteC() if silent else NoContext() :
-            return self.__train ()
+        if self.weights_files :  
+            logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
+        if self.class_files   : 
+            logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.class_files   ) )
+        if self.output_file and \
+           os.path.exists ( self.output_file ) and \
+           os.path.isfile ( self.output_file ) :
+            logger.info  ( "Trainer(%s): Output  file  : %s" % ( self.name , self.output_file   ) )
+        if self.log_file and \
+           os.path.exists ( self.log_file ) and \
+           os.path.isfile ( self.log_file ) :
+            logger.info  ( "Trainer(%s): Log     file  : %s" % ( self.name , self.log_file      ) )
+        if self.tar_file and \
+           os.path.exists ( self.tar_file ) and \
+           os.path.isfile ( self.tar_file ) :
+            logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.tar_file      ) )
+            if self.verbose or not silent : 
+                with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
+
+        return result
+    
             
     # =========================================================================
     ## train TMVA 
@@ -552,31 +588,24 @@ class Trainer(object):
         import glob, os 
         self.__weights_files = [ f for f in glob.glob ( self.__pattern_xml ) ]
         self.__class_files   = [ f for f in glob.glob ( self.__pattern_C   ) ]
-        
+
         del dataloader
         del factory 
 
         tfile = self.name + '.tgz'
         if os.path.exists ( tfile ) :
             logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
-
-        import tarfile
+        
         with tarfile.open ( tfile , 'w:gz' ) as tar :
             for x in self.weights_files : tar.add ( x )
             for x in self.  class_files : tar.add ( x )
-            logger.info  ( "Trainer(%s): Tar/gz  file  : %s" % ( self.name , tfile ) ) 
-            if self.verbose : tar.list ()
+            if self.log_file and os.path.exists ( self.log_file) and os.path.isfile ( self.log_file ) :
+                tar.add ( self.log_file ) 
 
         ## finally set tar-file 
         if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
             self.__tar_file = tfile 
 
-        logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
-        logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.class_files   ) ) 
-        logger.info  ( "Trainer(%s): Output  file  : %s" % ( self.name , self.output_file   ) ) 
-        if  self.log_file :
-            logger.info  ( "Trainer(%s): Log     file  : %s" % ( self.name , self.log_file  ) ) 
-            
         return self.weights_files
 
 

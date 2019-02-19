@@ -34,8 +34,8 @@ from ostap.utils.utils import CleanUp
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tmva_' )
 if not os.path.exists( data_file ) :
     import random 
-    nB = 10000
-    nS = 10000
+    nB = 20000
+    nS = 20000
     logger.info('Prepare input ROOT file with data  %s' % data_file )
     with ROOT.TFile.Open( data_file ,'recreate') as test_file:
         ## test_file.cd()
@@ -110,11 +110,11 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
         signal         = tSignal                  , ## ``Signal'' sample
         background     = tBkg                     , ## ``Background'' sample         
-        verbose        = False  )
+        verbose        = True  )
     
     from ostap.utils.timing import timing
     with timing ( 'for TMVA training' , logger ) : 
-        weights_files = trainer.train ()
+        weights_files = trainer.train ( log = True )
         tar_file      = trainer.tar_file
 
 # =============================================================================
