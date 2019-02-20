@@ -98,7 +98,7 @@ __all__ = (
     'Selector'         ,        ## The ``fixed'' TPySelector
     'Selector2'        ,        ## The ``fixed'' TPySelector
     'SelectorWithCuts' ,        ## The ``fixed'' TPySelector with TTree-formula 
-    'SelectorWithVars' ,        ## Generic selctor to fill RooDataSet form TTree/TChain
+    'SelectorWithVars' ,        ## Generic selctor to fill RooDataSet from TTree/TChain
     'Variable'         ,        ## helper class to define variable 
     'SelectorWithVarsCached'    ## Generic selector with cache   
 )

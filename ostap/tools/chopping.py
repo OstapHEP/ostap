@@ -1011,7 +1011,7 @@ class Reader(object) :
 #  tar_file = trainer.tar_file
 #  dataset  = ...
 #  inputs = [ 'var1' , 'var2' , 'var2' ]
-#  dataset.addTMVAResponce (  dataset , chopper , inputs , tar_file , prefix = 'tmva_' )
+#  dataset.addTMVAResponce ( dataset , chopper , inputs , tar_file , prefix = 'tmva_' )
 #  @endcode 
 def addChoppingResponse ( dataset                     ,
                           chopper                     ,
