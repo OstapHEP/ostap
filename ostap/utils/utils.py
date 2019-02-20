@@ -65,8 +65,6 @@ __all__     = (
     ##
     'counted'            , ## decorator to create 'counted'-function
     ##
-    'GetAttribute'       , ## get the attribute  from the object 
-    'GetAttributes'      , ## get the attributes form the object 
    )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
@@ -677,38 +675,6 @@ def _cleanup_ () :
             try    : os.rmdir ( f  )
             except : pass 
 
-# =============================================================================
-## @class GetAttribute
-#  helper class to get the attribute from the object,
-#  - avoiding lambdas to ensure pickability
-class  GetAttribute (object) :
-    """Helper class to get the attribute from the object, 
-    avoiding lambdas to ensure pickability
-    """
-    def __init__ ( self , attribute) :
-        self.__attribute =  attribute
-    def __call__ ( self , obj  ) :
-        return getattr ( obj , self.__attribute )
-    @property
-    def attribute ( self ) :
-        """``attribute'' : the attribute to be retrieved"""
-        return self.__attribute
-# =====================================================================================
-## @class GetAttributes
-#  Get tuple of attributes, avoiding lambdas to ensure pickability
-class  GetAttributes(object):
-    """Get tuple of attributes, avoiding lambdas to ensure pickability
-    """
-    def __init__ ( self , *attributes ) :
-        self.__attributes = tuple ( attributes )        
-    def __call__ ( self , obj  ) :
-        return tuple ( [  getattr ( obj ,  a ) for a in self.__attributes ] )
-    @property
-    def attributes ( self ) :
-        """``attributes'' : the attributes to be retrieved"""
-        return tuple(self.__attributes)
-
-        
 # =============================================================================
 if '__main__' == __name__ :
     

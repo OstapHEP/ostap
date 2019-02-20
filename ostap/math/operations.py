@@ -57,6 +57,11 @@ __all__     = (
     'Mod'        , ## wrapped modulo-operation
     'Max'        , ## wrapped max-operation
     'Min'        , ## wrapped min-operation
+    'Or_l'       , ## wrapped OR(logical)-operation
+    'And_l'      , ## wrapped AND(logical)-operation
+    'Or_b'       , ## wrapped OR(bitwise)-operation
+    'And_b'      , ## wrapped AND(bitwise)-operation
+    'Xor_b'      , ## wrapped XOR(bitwise)-operation
     ) 
 # =============================================================================
 import operator
@@ -72,6 +77,10 @@ class _Fmax(object) :
     def __call__ ( self , x , y ) : return max ( x , y )
 class _Fmin(object) :
     def __call__ ( self , x , y ) : return min ( x , y )
+class _For (object) :
+    def __call__ ( self , x , y ) : return x or  y 
+class _Fand(object) :
+    def __call__ ( self , x , y ) : return x and y 
 # =============================================================================
 ## @class Constant
 #  trivial "constant"  function
@@ -451,7 +460,7 @@ class Max (Operation2)  :
 ## @class Min
 #  Min-operation
 #  @code
-#  op = OMin ( math.sin  , math.cos ) 
+#  op = Min ( math.sin  , math.cos ) 
 #  @endcode 
 class Min (Operation2)  :
     """Min-operation
@@ -459,6 +468,72 @@ class Min (Operation2)  :
     """
     def __init__ ( self , a , b )  :
         super(Min,self).__init__ ( a , b , _Fmin() )
+
+# =============================================================================
+## @class Or_l
+#  OR (logical) - operation
+#  @code
+#  op = LOr ( fun1 , fun2 ) 
+#  @endcode 
+class Or_l (Operation2)  :
+    """OR (logical) -operation
+    >>> op = Or_l ( fun1 , fun2 ) 
+    """
+    def __init__ ( self , a , b )  :        
+        super(Or_l,self).__init__ ( a , b , _For () )
+
+# =============================================================================
+## @class And_l
+#  AND (logical) -operation
+#  @code
+#  op = And_l ( fun1 , fun2 ) 
+#  @endcode 
+class And_l (Operation2)  :
+    """AND (logical) -operation
+    >>> op = And_l ( fun1 , fun2 ) 
+    """
+    def __init__ ( self , a , b )  :
+        super(And_l,self).__init__ ( a , b , _Fand() )
+
+
+# =============================================================================
+## @class Or_b
+#  OR (bitwise) - operation
+#  @code
+#  op = Or_b ( fun1 , fun2 ) 
+#  @endcode 
+class Or_b (Operation2)  :
+    """OR (bitwise) -operation
+    >>> op = Or_b ( fun1 , fun2 ) 
+    """
+    def __init__ ( self , a , b )  :        
+        super(Or_b,self).__init__ ( a , b , operator.or_ )
+
+# =============================================================================
+## @class And_b
+#  AND (bitwise) -operation
+#  @code
+#  op = And_b ( fun1 , fun2 ) 
+#  @endcode 
+class And_b (Operation2)  :
+    """AND (bitwise) -operation
+    >>> op = And_b ( fun1 , fun2 ) 
+    """
+    def __init__ ( self , a , b )  :
+        super(And_b,self).__init__ ( a , b , operator.and_ )
+
+# =============================================================================
+## @class Xor_b
+#  XOR (bitwise) - operation
+#  @code
+#  op = Xor_b ( fun1 , fun2 ) 
+#  @endcode 
+class Xor_b (Operation2)  :
+    """XOR (bitwise) -operation
+    >>> op = Xor_b ( fun1 , fun2 ) 
+    """
+    def __init__ ( self , a , b )  :        
+        super(Xor_b,self).__init__ ( a , b , operator.xor )
 
 # =============================================================================
 if '__main__' == __name__ :

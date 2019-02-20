@@ -64,10 +64,10 @@ excluded_varnames =  ( 'HOSTNAME', 'SSH_CLIENT', 'SSH_CONNECTION', 'DISPLAY' )
 # =============================================================================
 # PATHOS components 
 # =============================================================================
+import dill 
 import pathos.core as PC
 import pathos.multiprocessing
 import pathos.parallel
-import dill 
 
 
 def _prefunction( f, task, item) :

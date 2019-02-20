@@ -30,8 +30,8 @@ else                      : logger = getLogger ( __name__         )
 # =============================================================================
 ## try:
          
-##     from ostap.parallel.mp_pathos import Task, WorkManager 
-##     logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
+## from ostap.parallel.mp_pathos import Task, WorkManager 
+## logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
     
 ## except ImportErorr :
     

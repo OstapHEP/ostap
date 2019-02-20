@@ -18,7 +18,7 @@ __all__     = (
     'WeightingPlot' , 
     ) 
 # =============================================================================
-import ROOT
+import ROOT, operator
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,7 +32,6 @@ from   ostap.math.base       import iszero
 from   ostap.core.types      import string_types, list_types 
 from   ostap.math.operations import Mul as MULT  ## needed for proper abstract multiplication
 import ostap.io.zipshelve    as            DBASE ## needed to store the weights&histos
-from   ostap.utils.utils     import GetAttribute, GetAttributes 
 # =============================================================================
 
 # =============================================================================
@@ -68,7 +67,7 @@ class Weight(object) :
     >>> w *= func ( pt )              ## for the single function/callable
     >>> for f in funcs : w*= f ( pt ) ## for list of functions/callables  
     
-    quantity ``w'' will be am event  weight
+    quantity ``w'' will be an event  weight
     
     if list of ``factors'' constains more than one entry,
     to each entry weigth is calculated independently and total weight
@@ -114,7 +113,7 @@ class Weight(object) :
                 skip    = wvar.skip      ## skip   some of them?
                 
                 if isinstance ( funval , str ) :
-                    funval = GetAttr ( funval ) 
+                    funval = operator.attrgetter( funval ) 
                     
                 ## 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
@@ -270,10 +269,11 @@ class Weight(object) :
             - tree/chain/dataset -> accessor -> database(address) -> weight
             """
 
-            if   isinstance ( accessor , string_types ) : accessor = GetAttribute  (  accessor )
+            if   isinstance ( accessor , string_types ) :
+                accessor = operator.attrgetter (  accessor )
             elif isinstance ( accessor , list_types   ) and \
                      all ( isinstance ( i , string_types ) for i in accessor ) : 
-                accessor = GetAttributes ( *accessor )
+                accessor = operator.attrgetter ( *accessor )
             
             assert callable ( accessor ) , \
                    "Invalid type of ``accessor'' %s/%s" % ( accessor , type( accessor ) )

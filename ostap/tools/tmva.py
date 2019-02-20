@@ -458,7 +458,7 @@ class Trainer(object):
             self.__bookingoptions = opts
             
             from ostap.logger.utils  import TeeCpp , OutputC
-            context  = OutputC ( log , true , True ) if silent else TeeCpp ( log )
+            context  = OutputC ( log , True , True ) if silent else TeeCpp ( log )
             
             from ostap.logger.logger import noColor
             context2 = noColor() 

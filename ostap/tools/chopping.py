@@ -1006,12 +1006,12 @@ class Reader(object) :
 
 
 # =============================================================================
-## Helper function to add TMVA response into dataset
+## Helper function to add TMVA/chopping response into dataset
 #  @code
 #  tar_file = trainer.tar_file
 #  dataset  = ...
 #  inputs = [ 'var1' , 'var2' , 'var2' ]
-#  dataset.addTMVAResponce (  inputs , tar_file , prefix = 'tmva_' )
+#  dataset.addTMVAResponce (  dataset , chopper , inputs , tar_file , prefix = 'tmva_' )
 #  @endcode 
 def addChoppingResponse ( dataset                     ,
                           chopper                     ,
@@ -1023,11 +1023,11 @@ def addChoppingResponse ( dataset                     ,
                           suffix        = '_response' ,
                           aux           = 0.9         ) :
     """
-    Helper function to add TMVA  response into dataset
+    Helper function to add TMVA/chopping  response into dataset
     >>> tar_file = trainer.tar_file
     >>> dataset  = ...
     >>> inputs = [ 'var1' , 'var2' , 'var2' ]
-    >>> dataset.addTMVAResponce (  inputs , tar_file , prefix = 'tmva_' )
+    >>> dataset.addChoppingResponce ( dataset , chopper ,  inputs , tar_file , prefix = 'tmva_' )
     """
     assert isinstance ( N , int ) and 1 < N < 10000 , 'Invalid "N" %s' % N
     
