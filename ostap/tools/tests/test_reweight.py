@@ -129,6 +129,7 @@ for iter in range ( 0 , maxIter ) :
         )
     
     mctree.pprocess ( selector , chunk_size = len ( mctree ) // 20 )
+    ##mctree.process ( selector )
     mcds = selector.data             ## new reweighted dataset
 
     #

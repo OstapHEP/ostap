@@ -33,7 +33,19 @@ from   ostap.core.types      import string_types, list_types
 from   ostap.math.operations import Mul as MULT  ## needed for proper abstract multiplication
 import ostap.io.zipshelve    as            DBASE ## needed to store the weights&histos
 # =============================================================================
-
+## @class AttrGetter
+#  simple class to bypass <code>operator.attrgetter</code> that
+#  has some problem with multiprocessing
+class AttrGetter(object):
+    """Simple class to bypass operator.attrgetter that
+    has some problem with multiprocessing
+    """
+    def __init__ ( self , *attributes ) :
+        self.__attributes = attributes 
+    def __call__ ( self , obj ) :
+        getter = operator.attrgetter( *self.__attributes )
+        return getter ( obj )
+    
 # =============================================================================
 ## @class Weight
 #  helper class for semiautomatic reweighting of data 
@@ -113,7 +125,8 @@ class Weight(object) :
                 skip    = wvar.skip      ## skip   some of them?
                 
                 if isinstance ( funval , str ) :
-                    funval = operator.attrgetter( funval ) 
+                    ## funval = operator.attrgetter( funval ) 
+                    funval = AttrGetter( funval ) 
                     
                 ## 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
@@ -270,10 +283,12 @@ class Weight(object) :
             """
 
             if   isinstance ( accessor , string_types ) :
-                accessor = operator.attrgetter (  accessor )
-            elif isinstance ( accessor , list_types   ) and \
+                ## accessor = operator.attrgetter (  accessor )
+                accessor = AttrGetter (  accessor )
+            elif isinstance ( accessor , list_types   ) and accessor and \
                      all ( isinstance ( i , string_types ) for i in accessor ) : 
-                accessor = operator.attrgetter ( *accessor )
+                ## accessor = operator.attrgetter ( *accessor )
+                accessor = AttrGetter ( *accessor )
             
             assert callable ( accessor ) , \
                    "Invalid type of ``accessor'' %s/%s" % ( accessor , type( accessor ) )
