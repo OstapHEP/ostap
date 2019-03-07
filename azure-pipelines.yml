@@ -3,15 +3,25 @@
 jobs:
 - template: template-pipelines.yml  # Template reference
   parameters:
-    name: sl6_lcg95
+    name: sl6_lcg95_gcc62
     vmImage: 'ubuntu-16.04'
     dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest'
     LCG: 'LCG_95'
-    artifact: 'test_sl6_lcg95'
+    CMTCONFIG: 'x86_64-slc6-gcc62-opt'
+    artifact: 'test_sl6_lcg95_gcc62'
 - template: template-pipelines.yml  # Template reference
   parameters:
-    name: centos7_lcg_95
+    name: centos7_lcg_95_gcc7
     vmImage:  'ubuntu-16.04'
     dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
     LCG: 'LCG_95'
-    artifact: 'test_cs7_lcg95'
+    CMTCONFIG: 'x86_64-centos7-gcc8-opt'
+    artifact: 'test_cs7_lcg95_gcc7'
+- template: template-pipelines.yml  # Template reference
+  parameters:
+    name: centos7_lcg_95_gcc8
+    vmImage:  'ubuntu-16.04'
+    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
+    LCG: 'LCG_95'
+    CMTCONFIG: 'x86_64-centos7-gcc8-opt'
+    artifact: 'test_cs7_lcg95_gcc8'
