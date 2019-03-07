@@ -37,7 +37,7 @@ or, if you are working at the LHCb environment
 
 e.g. at lxplus/7 one can do 
 
-    lb-run --ext Python --ext pytools --ext pyanalysis --ext ROOT LCG/(93 or 94) bash --norc
+    lb-run --ext Python --ext pytools --ext pyanalysis --ext ROOT LCG/95 bash --norc
 then clone the repo and build Ostap package 
 
     git clone git://github.com/OstapHEP/ostap.git
