@@ -3,7 +3,7 @@ stages:
 #  - test
 
 variables:
-  CMTCONFIG: x86_64-slc6-gcc62-dbg
+  CMTCONFIG: x86_64-slc6-gcc62-opt
 
 local-build:
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest
