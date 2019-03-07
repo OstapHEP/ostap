@@ -22,7 +22,12 @@ Key features include:
 Setup
 -----
 
-You need to provide ROOTSYS environment for building the library. Library should be built with the same compiler version as was used to build ROOT.
+There are several possibilities to start working with Ostap, you can build Ostap on the Linux or lxplus/7 and also run the docker container.  
+
+Linux
+-----
+Ostap requires the python2 version >2.7. 
+You need to provide ROOTSYS environment for building the library. The library should be built with the same compiler version and C++ standard as was used to build ROOT. Set ROOT environment with following commands
 
     source /path/to/root/bin/thisroot.sh
 
@@ -32,7 +37,9 @@ or, if you are working at the LHCb environment
 
 e.g. at lxplus/7 one can do 
 
-    lb-run --ext Python --ext pytools --ext pyanalysis --ext ROOT LCG/93 bash --norc
+    lb-run --ext Python --ext pytools --ext pyanalysis --ext ROOT LCG/95 bash --norc
+then clone the repo and build Ostap package 
+
     git clone git://github.com/OstapHEP/ostap.git
     cd ostap
     mkdir build
@@ -41,15 +48,12 @@ e.g. at lxplus/7 one can do
     make -j8
     make install
     source <INSTALL_DIRECTORY>/thisostap.sh 
-You can also built ostapHep with conda-forge ROOT package: https://github.com/conda-forge/root-feedstock/, (checked only on Linux)
+Docker
+-----
+We also provided Dockerfile to build the OstapHep image.  You can run Ostap interactively using the command line or via Docker Desktop which is available for MacOS and Windows. To create the docker image from the Ostap directory run:
 
-    conda config --add channels conda-forge
-    conda create --name OstapHep-env python=2.7.15 cmake root scipy numpy
-    conda activate OstapHep-env
-    git clone git://github.com/OstapHEP/ostap.git
-    cd ostap
-    mkdir build
-    cd build
-    cmake .. -DCMAKE_INSTALL_PREFIX=<INSTALL_DIRECTORY> && make -j8 && make install
-    source <INSTALL_DIRECTORY>/thisostap.sh 
+    sudo docker build --network host -t <dockerID>/ostaphep:latest .
+Run the image iteractively:
 
+    sudo docker  run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix  -v ${WORKDIR_PATH}/work_dir:/work_dir  -it <dockerID>/ostaphep:latest
+To know more about docker, please check the documentation: https://docs.docker.com/.
