@@ -2964,7 +2964,7 @@ Ostap::Math::crossing_points
 // ============================================================================
 //  Here we'll use GSL
 // ============================================================================
-#include <gsl/gsl_linalg.h>
+#include "gsl/gsl_linalg.h"
 // ============================================================================
 /* create the interpolation spline 
  *  @param xy (INPUT)   vector of data 

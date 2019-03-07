@@ -2,13 +2,13 @@
 
 <lcgdict>
   
-  <class pattern    = "Ostap::*"                       />
-  <class pattern    = "Ostap::Math::*"                 />  
-  <class pattern    = "Ostap::Math::GSL::*"            />  
-  <class pattern    = "Ostap::Utils::*"                />
-  <class pattern    = "Ostap::Models::*"               />
-  <class pattern    = "Ostap::Functions::*"            />
-  
+  <class pattern    = "Ostap::*"                  />
+  <class pattern    = "Ostap::Math::*"            />  
+  <class pattern    = "Ostap::Math::GSL::*"       />  
+  <class pattern    = "Ostap::Utils::*"           />
+  <class pattern    = "Ostap::Models::*"          />
+  <class pattern    = "Ostap::Functions::*"       />
+
   <function pattern = "Ostap::Math::*"            />
   <function pattern = "Ostap::Utils::*"           />
   <function pattern = "Ostap::Utils::Histos::*"   />
@@ -24,8 +24,6 @@
     <field name = "m_workspace" transient="true"/>      
   </class>
   
-
-
   <exclusion>    
 
     <class name    = "Ostap::StatVar::Interval"     />

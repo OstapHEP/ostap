@@ -286,9 +286,10 @@ class PyPDF (object) :
         
         if not pdf : pdf = Ostap.Models.PyPdf ( self , name , title , self.__pyvars  )
 
-        logger.debug ( 'PyPDF: use %s/%s as PDF' % (  pdf , type(pdf) ) )
-        
         self.pdf = pdf
+
+        logger.debug ( 'PyPDF: use %s/%s as PDF' % (  pdf , type( pdf ) ) )
+        
     
     @property
     def vars ( self ) :

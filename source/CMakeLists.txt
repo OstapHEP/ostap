@@ -1,30 +1,9 @@
 # root_generate_dictionary(ostap_dict ${CMAKE_CURRENT_SOURCE_DIR}/dict/Dict.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/selections.xml)
 
-find_package(ROOT 6 REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
-
-# =============================================================================
-## Locate GSL 
-## since we are using MathMore, GSL *must be* somewhere around
-## try with gsl-config in the path 
-if ( EXISTS "$ENV{GSL_ROOT_DIR}" )
-  file( TO_CMAKE_PATH "$ENV{GSL_ROOT_DIR}" GSL_ROOT_DIR )
-  set( GSL_ROOT_DIR "${GSL_ROOT_DIR}" CACHE PATH "Prefix for GSL installation." )
-endif()
-if ( NOT EXISTS "${GSL_ROOT_DIR}" )
- find_program( GSL_CONFIG_EXECUTABLE NAMES gsl-config )        
- if( EXISTS "${GSL_CONFIG_EXECUTABLE}" )
-  execute_process(
-    COMMAND "${GSL_CONFIG_EXECUTABLE}" --prefix
-    OUTPUT_VARIABLE GSL_ROOT_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE )
- endif()
-endif()
-find_package(GSL REQUIRED GSL_ROOT_DIR)
+find_package(ROOT 6 CONFIG REQUIRED )
 
 # =============================================================================
 ## Locate Python/PythonLibs 
-## since we are using MathMore, GSL *must be* somewhere around
-## try with gsl-config in the path 
 find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config )        
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python-version
                  OUTPUT_VARIABLE PYVERSION_ROOT
@@ -32,6 +11,9 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python-version
 
 find_package(PythonInterp ${PYVERSION_ROOT} REQUIRED )
 find_package(PythonLibs                     REQUIRED )
+
+## message ('ROOT   version:' ${ROOT_VERSION})
+## message ('PYTHON version:' ${PYTHONLIBS_VERSION_STRING})
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
@@ -43,18 +25,19 @@ configure_file (
   "${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h"
   )
 
+
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
+
 
 function( MAKE_DICT name header selection )
    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANT -Wno-inconsistent-missing-override)
    add_library( ${name}Dict MODULE ${name}.cxx)
-   add_dependencies(${name}Dict ${name}-dictgen ostap)
-   ##target_compile_features ( ${name}Dict PUBLIC cxx_std_14 )
-   target_link_libraries   ( ${name}Dict ostap )
+   add_dependencies(${name}Dict ${name}-dictgen ostap ROOT::MathMore ROOT::PyROOT)
+   target_link_libraries   ( ${name}Dict ostap ROOT::MathMore ROOT::PyROOT )
 endfunction( MAKE_DICT )
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
+## include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
 
 #---Create a shared library 
@@ -133,24 +116,26 @@ add_library(ostap SHARED src/format.cpp
                          src/pcubature.cpp
                         )
 
-##target_compile_features    (ostap PUBLIC cxx_std_14 )
-target_link_libraries      (ostap ${ROOT_LIBRARIES} ${GSL_LIBRARIES} ${PYTHON_LIBRARIES})
+set_target_properties(ostap
+    PROPERTIES
+    NO_SYSTEM_FROM_IMPORTED ON
+    )
+target_compile_features    (ostap PUBLIC cxx_std_17 )
+target_link_libraries      (ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::PyROOT ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::TMVA ROOT::ROOTDataFrame ${PYTHON_LIBRARIES})
 
 target_include_directories (ostap
     PUBLIC 
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR} ${ROOT_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/src ${PYTHON_INCLUDE_DIRS}
 )
+
+get_target_property(incdirs1 ROOT::MathMore INTERFACE_INCLUDE_DIRECTORIES)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${incdirs1} ${PYTHON_INCLUDE_DIRS} )
 
 ## make dictionaries 
 MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
- 
-target_include_directories (ostapDict
-    PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/include ${ROOT_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}
-)
 
 ## For clang we need to define __MATH_LONG_DOUBLE_CONSTANTS for
 ## defining M_El, M_PIl math constants.
