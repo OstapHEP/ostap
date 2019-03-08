@@ -5,7 +5,7 @@
 // ============================================================================
 #include "Python.h"
 // ============================================================================
-// ROOT 
+// ROOT
 // ============================================================================
 #include "TPython.h"
 // ============================================================================
@@ -18,13 +18,13 @@
 // ============================================================================
 #include "CallPython.h"
 // ============================================================================
-/** @file 
+/** @file
  *  Implementation file for class Ostap::Models::PyPdf
- *  @date 2018-06-06 
+ *  @date 2018-06-06
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  */
 // ============================================================================
-namespace 
+namespace
 {
   // ==========================================================================
   static char s_evaluate[] = "evaluate"                 ;
@@ -35,124 +35,124 @@ namespace
 }
 // ============================================================================
 /*  Standard constructor
- *  @param self      python-partner for this C++ instance 
- *  @param name      the name of PDF 
- *  @param title     the title  of PDF 
- *  @param variables all variables 
+ *  @param self      python-partner for this C++ instance
+ *  @param name      the name of PDF
+ *  @param title     the title  of PDF
+ *  @param variables all variables
  */
 // ============================================================================
 Ostap::Models::PyPdf::PyPdf
-( PyObject*               self      , 
-  const char*             name      , 
+( PyObject*               self      ,
+  const char*             name      ,
   const char*             title     ,
   const RooAbsCollection& variables )
-  : RooAbsPdf (   name , title ) 
+  : RooAbsPdf (   name , title )
   , m_self ( self )
-  , m_varlist ( "varlist" , "All variables(list)" , this ) 
-  , m_varset  ( "varset"  , "All variables(set)"  , this ) 
+  , m_varlist ( "varlist" , "All variables(list)" , this )
+  , m_varset  ( "varset"  , "All variables(set)"  , this )
 {
   //
-  Ostap::Assert ( m_self , 
-                  "self* points to NULL" , 
-                  "PyPdf::consructor"    , 
+  Ostap::Assert ( m_self ,
+                  "self* points to NULL" ,
+                  "PyPdf::consructor"    ,
                   Ostap::StatusCode(400) ) ;
   //
   Ostap::Utils::Iterator it ( variables ) ;
   while ( RooAbsReal* v = it.static_next<RooAbsReal>() )
   {
     m_varlist.add ( *v ) ;
-    m_varset .add ( *v ) ; 
-  } 
+    m_varset .add ( *v ) ;
+  }
   Py_XINCREF ( m_self ) ;
 }
 // ============================================================================
 // copy constructor
 // ============================================================================
 Ostap::Models::PyPdf::PyPdf
-( const Ostap::Models::PyPdf& right , 
-  const char*                 name  ) 
-  : RooAbsPdf ( right , name ) 
+( const Ostap::Models::PyPdf& right ,
+  const char*                 name  )
+  : RooAbsPdf ( right , name )
     //
-  , m_self     ( right.m_self ) 
-  , m_varlist  ( "!varlist" , this , right.m_varlist ) 
-  , m_varset   ( "!varset"  , this , right.m_varset  ) 
+  , m_self     ( right.m_self )
+  , m_varlist  ( "!varlist" , this , right.m_varlist )
+  , m_varset   ( "!varset"  , this , right.m_varset  )
 {
   Py_XINCREF ( m_self ) ;
 }
 // ============================================================================
-// virtual destructor 
+// virtual destructor
 // ============================================================================
 Ostap::Models::PyPdf::~PyPdf() { if ( m_self ) { Py_DECREF ( m_self ) ; } }
 // ============================================================================
-Ostap::Models::PyPdf* 
-Ostap::Models::PyPdf::clone ( const char* name ) const 
+Ostap::Models::PyPdf*
+Ostap::Models::PyPdf::clone ( const char* name ) const
 {
-  /// create the python clone  
+  /// create the python clone
   PyObject* method = PyObject_GetAttrString ( m_self , s_clone ) ;
-  if ( !method ) 
+  if ( !method )
   {
     PyErr_Print();
     Ostap::throwException ( "No method ``clone'' is found"  ,
                             "PyPdf::clone"                  ,
                             Ostap::StatusCode(500)          ) ;
   }
-  if  ( !PyCallable_Check ( method ) ) 
+  if  ( !PyCallable_Check ( method ) )
   {
     PyErr_Print();
-    Py_DECREF ( method ); 
+    Py_DECREF ( method );
     Ostap::throwException ( "Attribute ``clone'' is not callable" ,
                             "PyPdf::clone"              ,
                             Ostap::StatusCode(500) ) ;
   }
-  /// create C++ clone 
+  /// create C++ clone
   PyPdf*     cl     = new Ostap::Models::PyPdf ( *this , name ) ;
-  /// create kwargs 
+  /// create kwargs
   PyObject*  kwargs = PyDict_New  (   ) ;
   ///
-  /// set "name"-item 
-  if  ( 0 != PyDict_SetItem ( kwargs                         ,   
-                              PyString_FromString ( "name" ) ,
-                              PyString_FromString ( ( name ? name : "" ) ) ) )
+  /// set "name"-item
+  if  ( 0 != PyDict_SetItem ( kwargs                         ,
+                              PyLong_FromString ( "name" , NULL , 0 ) ,
+                              PyLong_FromString ( ( name ? name : "" ) , NULL , 0 ) ) )
   {
     PyErr_Print();
-    Py_DECREF ( method ) ; 
+    Py_DECREF ( method ) ;
     Py_DECREF ( kwargs ) ;
     Ostap::throwException ( "Can't set ``name'' item"        ,
                             "PyPdf::clone"                   ,
                             Ostap::StatusCode(500)           ) ;
   }
-  /// create "pdf"-item 
-  PyObject*  pycl = TPython::ObjectProxy_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
-  if ( !pycl ) 
+  /// create "pdf"-item
+  PyObject*  pycl = TPython::ObjectProxy_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;
+  if ( !pycl )
   {
     PyErr_Print();
-    Py_DECREF ( method ) ; 
+    Py_DECREF ( method ) ;
     Py_DECREF ( kwargs ) ;
     Ostap::throwException ( "Can't pythonize PyPdf instance" ,
                             "PyPdf::clone"                   ,
-                            Ostap::StatusCode(500)           ) ; 
+                            Ostap::StatusCode(500)           ) ;
   }
-  if  ( 0 != PyDict_SetItem ( kwargs                             ,   
-                              PyString_FromString ( "pdf" )      ,
+  if  ( 0 != PyDict_SetItem ( kwargs                             ,
+                              PyLong_FromString ( "pdf" , NULL , 0 )      ,
                               pycl                               ) )
   {
     PyErr_Print();
-    Py_DECREF ( method ) ; 
+    Py_DECREF ( method ) ;
     Py_DECREF ( kwargs ) ;
     Py_DECREF ( pycl   ) ;
     Ostap::throwException ( "Can't set ``pdf'' item"        ,
                             "PyPdf::clone"                   ,
                             Ostap::StatusCode(500)           ) ;
   }
-  /// create args 
+  /// create args
   PyObject*  args   = PyTuple_New ( 0 ) ;
-  // 
+  //
   // create python clone!
   PyObject* pyclone = PyObject_Call ( method , args , kwargs ) ;
-  if ( !pyclone ) 
+  if ( !pyclone )
   {
     PyErr_Print();
-    Py_DECREF ( method ) ; 
+    Py_DECREF ( method ) ;
     Ostap::throwException ( "Can't create  python ``clone''" ,
                             "PyPdf::clone"                   ,
                             Ostap::StatusCode(500)           ) ;
@@ -169,24 +169,24 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
   return cl ;
 }
 // ============================================================================
-// declare the analysitical integrals 
+// declare the analysitical integrals
 // ============================================================================
 Int_t Ostap::Models::PyPdf::getAnalyticalIntegral
 ( RooArgSet&  allVars    ,
   RooArgSet&  analVars   ,
-  const char* rangeName  ) const 
+  const char* rangeName  ) const
 {
   //
-  Ostap::Assert ( m_self                         , 
-                  "self* points to NULL"         , 
-                  "PyPdf::getAnalyticalIntegral" , 
+  Ostap::Assert ( m_self                         ,
+                  "self* points to NULL"         ,
+                  "PyPdf::getAnalyticalIntegral" ,
                   Ostap::StatusCode(400)         ) ;
   ///
   m_allDeps   = &allVars  ;
   m_analDeps  = &analVars ;
   m_rangeName = rangeName ;
   m_intCode   = 0         ;
-  //  
+  //
   if ( 1 != PyObject_HasAttrString ( m_self , s_getAI ) ||
        1 != PyObject_HasAttrString ( m_self , s_AI    ) )
   {
@@ -199,9 +199,9 @@ Int_t Ostap::Models::PyPdf::getAnalyticalIntegral
     return 0 ;
   }
   //
-  /// create the python method  
+  /// create the python method
   PyObject* getai = PyObject_GetAttrString ( m_self , s_getAI ) ;
-  if ( !getai || !PyCallable_Check ( getai ) ) 
+  if ( !getai || !PyCallable_Check ( getai ) )
   {
     if ( nullptr == getai) { PyErr_Print ()        ; }
     else                   { Py_DECREF   ( getai ) ; }
@@ -213,17 +213,17 @@ Int_t Ostap::Models::PyPdf::getAnalyticalIntegral
     //
     return 0 ;                                                            // RETURN
   }
-  /// create args 
+  /// create args
   PyObject*  args   = PyTuple_New ( 0 ) ;
-  // 
-  // call python method 
+  //
+  // call python method
   PyObject* icode = PyObject_Call ( getai , args , nullptr ) ;
-  if ( !icode || !PyInt_Check ( icode ) )   // integer value ? ) 
+  if ( !icode || !PySet_Check ( icode ) )   // integer value ? )
   {
     if ( nullptr == icode ) { PyErr_Print ()        ; }
     else                    { Py_DECREF   ( icode ) ; }
     //
-    Py_DECREF ( getai ) ; 
+    Py_DECREF ( getai ) ;
     //
     Ostap::throwException ( "Can't get proper code"        ,
                             "PyPdf::getAnalyticalIntegral" ,
@@ -241,11 +241,11 @@ Int_t Ostap::Models::PyPdf::getAnalyticalIntegral
   return code ;
 }
 // ============================================================================
-// get the integral 
+// get the integral
 // ============================================================================
-Double_t Ostap::Models::PyPdf::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
+Double_t Ostap::Models::PyPdf::analyticalIntegral
+( Int_t       code      ,
+  const char* rangeName ) const
 {
   //
   m_intCode    = code      ;
@@ -259,21 +259,21 @@ Double_t Ostap::Models::PyPdf::analyticalIntegral
   return result ;
 }
 // ============================================================================
-/// move the function from protected to public interface 
-Bool_t Ostap::Models::PyPdf::matchArgs ( const RooArgSet& refVars ) const 
-{ 
-  return 
-    nullptr != m_allDeps  && 
-    nullptr != m_analDeps && 
+/// move the function from protected to public interface
+Bool_t Ostap::Models::PyPdf::matchArgs ( const RooArgSet& refVars ) const
+{
+  return
+    nullptr != m_allDeps  &&
+    nullptr != m_analDeps &&
     RooAbsReal::matchArgs ( *m_allDeps , *m_analDeps , refVars ) ;
 }
 // ============================================================================
 // the actual evaluation of function
 // ============================================================================
-Double_t Ostap::Models::PyPdf::evaluate() const 
+Double_t Ostap::Models::PyPdf::evaluate() const
 { return call_python ( m_self , s_evaluate ) ; }
 // ============================================================================
-// needed ? 
+// needed ?
 // ============================================================================
 ClassImp(Ostap::Models::PyPdf)
 // ============================================================================

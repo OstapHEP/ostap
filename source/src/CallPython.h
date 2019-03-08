@@ -1,8 +1,8 @@
 // ============================================================================
-#ifndef CALLPYTHON_H 
+#ifndef CALLPYTHON_H
 #define CALLPYTHON_H 1
 // ============================================================================
-// Incldue files 
+// Incldue files
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -12,11 +12,11 @@
 // ============================================================================
 #include "Exception.h"
 // ============================================================================
-namespace 
+namespace
 {
   // ==========================================================================
-  /// void -> double  
-  double call_python ( PyObject* self , char* method )  
+  /// void -> double
+  double call_python ( PyObject* self , char* method )
   {
     // check arguments
     Ostap::Assert ( self                          ,
@@ -24,9 +24,9 @@ namespace
                     "CallPython:call_python"      ,
                     Ostap::StatusCode(400)        ) ;
     // call Python
-    PyObject* r = PyObject_CallMethod ( self , method , nullptr );    
+    PyObject* r = PyObject_CallMethod ( self , method , nullptr );
     // error/exception ?
-    if ( !r ) 
+    if ( !r )
     {
       PyErr_Print();
       Ostap::throwException ( "CallPython:invalid ``result''" ,
@@ -34,30 +34,30 @@ namespace
                               Ostap::StatusCode(500) ) ;
     }
     // float or integer ?
-    if      ( PyFloat_Check( r ) )  // floating value? 
+    if      ( PyFloat_Check( r ) )  // floating value?
     {
       const double result = PyFloat_AS_DOUBLE( r );
       Py_DECREF( r );
-      return result ;                                    // RETURN 
-    } 
-    else if ( PyInt_Check ( r ) )   // integer value ? 
+      return result ;                                    // RETURN
+    }
+    else if ( PySet_Check ( r ) )   // integer value ?
     {
-      const double result = PyInt_AS_LONG( r );
+      const double result = PyLong_AsLong( r );
       Py_DECREF( r );
       return result ;                                    //  RETURN
-    } 
+    }
     // ?
     const double result = PyFloat_AsDouble ( r ) ;
-    if ( PyErr_Occurred() ) 
+    if ( PyErr_Occurred() )
     {
       PyErr_Print();
-      Py_DECREF ( r );      
+      Py_DECREF ( r );
       throwException ( "CallPython:invalid conversion" ,
                        "CallPython:call_python"          ,
                        Ostap::StatusCode(600) ) ;
     }
     //
-    Py_DECREF ( r ) ; 
+    Py_DECREF ( r ) ;
     return result   ;                                     // RETURN
   }
   // ==========================================================================
