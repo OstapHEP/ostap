@@ -6,6 +6,7 @@ parameters:
   dockername: ''
   LCG: ''
   artifact: ''
+  CMTCONFIG: ''
 
 
 jobs:
@@ -31,11 +32,11 @@ jobs:
       docker cp  .  ostap-build:/osya
     displayName: 'docker container'
   - script: |
-     docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0  ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/bootstrap ${{ parameters.LCG }}"
+     docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0  ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/bootstrap ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
      docker cp  ostap-build:/osya/build .
     displayName: 'build stage'
   - script: |
-     docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/test ${{ parameters.LCG }}"
+     docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/test ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
     displayName: 'test stage'
   - script: |
      docker cp  ostap-build:/osya/build .
