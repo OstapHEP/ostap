@@ -2,6 +2,25 @@
 
 find_package(ROOT 6 CONFIG REQUIRED)
 
+# =============================================================================
+## Locate GSL 
+## since we are using MathMore, GSL *must be* somewhere around
+## try with gsl-config in the path 
+if ( EXISTS "$ENV{GSL_ROOT_DIR}" )
+  file( TO_CMAKE_PATH "$ENV{GSL_ROOT_DIR}" GSL_ROOT_DIR )
+  set( GSL_ROOT_DIR "${GSL_ROOT_DIR}" CACHE PATH "Prefix for GSL installation." )
+endif()
+if ( NOT EXISTS "${GSL_ROOT_DIR}" )
+ find_program( GSL_CONFIG_EXECUTABLE NAMES gsl-config )        
+ if( EXISTS "${GSL_CONFIG_EXECUTABLE}" )
+  execute_process(
+    COMMAND "${GSL_CONFIG_EXECUTABLE}" --prefix
+    OUTPUT_VARIABLE GSL_ROOT_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE )
+ endif()
+endif()
+
+find_package(GSL REQUIRED GSL_ROOT_DIR)
 
 # =============================================================================
 ## Locate Python/PythonLibs 
@@ -11,6 +30,8 @@ find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config )
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python-version
                  OUTPUT_VARIABLE PYVERSION_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+message('Python version from ROOT: ' ${PYVERSION_ROOT})
 
 find_package(PythonInterp ${PYVERSION_ROOT} REQUIRED )
 find_package(PythonLibs                     REQUIRED )

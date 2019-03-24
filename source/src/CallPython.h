@@ -39,13 +39,43 @@ namespace
       const double result = PyFloat_AS_DOUBLE( r );
       Py_DECREF( r );
       return result ;                                    // RETURN 
-    } 
+    }
+    //
+#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3 
+    //
     else if ( PyInt_Check ( r ) )   // integer value ? 
     {
       const double result = PyInt_AS_LONG( r );
       Py_DECREF( r );
       return result ;                                    //  RETURN
     } 
+    //
+#else
+    //
+    else if ( PyLong_Check ( r ) )   // integer value ? 
+    {
+      int overflow = 0 ;
+      const long result = PyLong_AsLongAndOverflow ( r , &overflow );
+      if      ( -1 == overflow || 1 ==   overflow ) 
+      {
+        Py_DECREF ( r );      
+        throwException ( "CallPython:long overflow" ,
+                         "CallPython:call_python"          ,
+                         Ostap::StatusCode(600) ) ;
+      }
+      else if ( -1 == result && PyErr_Occurred() ) 
+      {
+        PyErr_Print();
+        Py_DECREF ( r );      
+        throwException ( "CallPython:invalid conversion" ,
+                         "CallPython:call_python"          ,
+                         Ostap::StatusCode(700) ) ;
+      }
+      Py_DECREF( r );
+      return result ;                                    //  RETURN
+    } 
+    //
+#endif 
     // ?
     const double result = PyFloat_AsDouble ( r ) ;
     if ( PyErr_Occurred() ) 
@@ -54,7 +84,7 @@ namespace
       Py_DECREF ( r );      
       throwException ( "CallPython:invalid conversion" ,
                        "CallPython:call_python"          ,
-                       Ostap::StatusCode(600) ) ;
+                       Ostap::StatusCode(800) ) ;
     }
     //
     Py_DECREF ( r ) ; 

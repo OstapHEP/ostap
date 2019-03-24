@@ -111,8 +111,13 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
   ///
   /// set "name"-item 
   if  ( 0 != PyDict_SetItem ( kwargs                         ,   
-                              PyString_FromString ( "name" ) ,
-                              PyString_FromString ( ( name ? name : "" ) ) ) )
+#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3
+                              PyString_FromString  ( "name" ) ,
+                              PyString_FromString  ( ( name ? name : "" ) ) ) )
+#else 
+                              PyUnicode_FromString ( "name" ) ,
+                              PyUnicode_FromString ( ( name ? name : "" ) ) ) )
+#endif
   {
     PyErr_Print();
     Py_DECREF ( method ) ; 
@@ -133,7 +138,11 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
                             Ostap::StatusCode(500)           ) ; 
   }
   if  ( 0 != PyDict_SetItem ( kwargs                             ,   
-                              PyString_FromString ( "pdf" )      ,
+#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3
+                              PyString_FromString  ( "pdf" )     ,
+#else 
+                              PyUnicode_FromString ( "pdf" )     ,
+#endif 
                               pycl                               ) )
   {
     PyErr_Print();
@@ -218,6 +227,10 @@ Int_t Ostap::Models::PyPdf::getAnalyticalIntegral
   // 
   // call python method 
   PyObject* icode = PyObject_Call ( getai , args , nullptr ) ;
+  //
+  //
+#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3  
+  //
   if ( !icode || !PyInt_Check ( icode ) )   // integer value ? ) 
   {
     if ( nullptr == icode ) { PyErr_Print ()        ; }
@@ -232,6 +245,43 @@ Int_t Ostap::Models::PyPdf::getAnalyticalIntegral
   //
   const Int_t code = PyInt_AS_LONG( icode );
   Py_DECREF ( icode ) ;
+  //
+#else 
+  //
+  if ( !icode || !PyLong_Check ( icode ) )   // integer value ? 
+  {
+    if ( nullptr == icode ) { PyErr_Print ()        ; }
+    else                    { Py_DECREF   ( icode ) ; }
+    //
+    Py_DECREF ( getai ) ; 
+    //
+    Ostap::throwException ( "Can't get proper code"        ,
+                            "PyPdf::getAnalyticalIntegral" ,
+                            Ostap::StatusCode(500)         ) ;
+  }
+  //
+  int overflow = 0 ;
+  const long code = PyLong_AsLongAndOverflow ( icode , &overflow );
+  if      ( -1 == overflow || 1 ==overflow ) 
+  {
+    Py_DECREF ( icode );      
+    Ostap::throwException ( "Can't get proper code/overflow" ,
+                            "PyPdf::getAnalyticalIntegral"   ,
+                            Ostap::StatusCode(600) ) ;
+  }
+  else if ( -1 == code && PyErr_Occurred() ) 
+  {
+    PyErr_Print();
+    Py_DECREF ( icode );      
+    Ostap::throwException ( "Can't get proper code" ,
+                            "PyPdf::getAnalyticalIntegral"   ,
+                            Ostap::StatusCode(700) ) ;
+  }
+  Py_DECREF ( icode ) ;
+  //
+#endif 
+  //
+
   ///
   m_allDeps   = nullptr   ;
   m_analDeps  = nullptr   ;
