@@ -924,17 +924,19 @@ namespace Ostap
       // ======================================================================      
     public:
       // ======================================================================      
-      Polynomial& __iadd__  ( const double a )       ;
-      Polynomial& __isub__  ( const double a )       ;
-      Polynomial& __imul__  ( const double a )       ;
-      Polynomial& __idiv__  ( const double a )       ;
+      Polynomial& __iadd__      ( const double a )       ;
+      Polynomial& __isub__      ( const double a )       ;
+      Polynomial& __imul__      ( const double a )       ;
+      Polynomial& __itruediv__  ( const double a )       ;
+      Polynomial& __idiv__      ( const double a )       { return __itruediv__ ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      Polynomial  __add__   ( const double a ) const ;
-      Polynomial  __sub__   ( const double a ) const ;
-      Polynomial  __mul__   ( const double a ) const ;
-      Polynomial  __div__   ( const double a ) const ;
+      Polynomial  __add__       ( const double a ) const ;
+      Polynomial  __sub__       ( const double a ) const ;
+      Polynomial  __mul__       ( const double a ) const ;
+      Polynomial  __truediv__   ( const double a ) const ;
+      Polynomial  __div__       ( const double a ) const { return __truediv__  ( a ) ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -973,7 +975,7 @@ namespace Ostap
     inline Polynomial operator*( const double      b , const Polynomial& a )
     { return a.__mul__   ( b ) ; }
     inline Polynomial operator/( const Polynomial& a , const double      b ) 
-    { return a.__div__   ( b ) ; }    
+    { return a.__truediv__   ( b ) ; }    
     // ========================================================================
     /** @class ChebyshevSum 
      *  Sum of chebychev polinomials 
@@ -1080,17 +1082,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      ChebyshevSum& __iadd__  ( const double a ) ;
-      ChebyshevSum& __isub__  ( const double a ) ;
-      ChebyshevSum& __imul__  ( const double a ) ;
-      ChebyshevSum& __idiv__  ( const double a ) ;
+      ChebyshevSum& __iadd__      ( const double a ) ;
+      ChebyshevSum& __isub__      ( const double a ) ;
+      ChebyshevSum& __imul__      ( const double a ) ;
+      ChebyshevSum& __itruediv__  ( const double a ) ;
+      ChebyshevSum& __idiv__      ( const double a ) { return __itruediv__ ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      ChebyshevSum  __add__   ( const double a ) const ;
-      ChebyshevSum  __sub__   ( const double a ) const ;
-      ChebyshevSum  __mul__   ( const double a ) const ;
-      ChebyshevSum  __div__   ( const double a ) const ;
+      ChebyshevSum  __add__       ( const double a ) const ;
+      ChebyshevSum  __sub__       ( const double a ) const ;
+      ChebyshevSum  __mul__       ( const double a ) const ;
+      ChebyshevSum  __truediv__   ( const double a ) const ;
+      ChebyshevSum  __div__       ( const double a ) { return __truediv__  ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1134,7 +1138,7 @@ namespace Ostap
     inline ChebyshevSum operator*( const double        b , const ChebyshevSum& a )
     { return a.__mul__   ( b ) ; }
     inline ChebyshevSum operator/( const ChebyshevSum& a , const double        b ) 
-    { return a.__div__   ( b ) ; }    
+    { return a.__truediv__   ( b ) ; }    
     // ========================================================================
     /** @class LegendreSum 
      *  Sum of Legendre polinomials 
@@ -1243,17 +1247,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      LegendreSum& __iadd__  ( const double a ) ;
-      LegendreSum& __isub__  ( const double a ) ;
-      LegendreSum& __imul__  ( const double a ) ;
-      LegendreSum& __idiv__  ( const double a ) ;
+      LegendreSum& __iadd__      ( const double a ) ;
+      LegendreSum& __isub__      ( const double a ) ;
+      LegendreSum& __imul__      ( const double a ) ;
+      LegendreSum& __itruediv__  ( const double a ) ;
+      LegendreSum& __idiv__      ( const double a ) { return __itruediv__ ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      LegendreSum  __add__   ( const double a ) const ;
-      LegendreSum  __sub__   ( const double a ) const ;
-      LegendreSum  __mul__   ( const double a ) const ;
-      LegendreSum  __div__   ( const double a ) const ;
+      LegendreSum  __add__       ( const double a ) const ;
+      LegendreSum  __sub__       ( const double a ) const ;
+      LegendreSum  __mul__       ( const double a ) const ;
+      LegendreSum  __truediv__   ( const double a ) const ;
+      LegendreSum  __div__       ( const double a ) { return __truediv__  ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1297,7 +1303,7 @@ namespace Ostap
     inline LegendreSum operator*( const double       b , const LegendreSum& a )
     { return a.__mul__   ( b ) ; }
     inline LegendreSum operator/( const LegendreSum& a , const double       b ) 
-    { return a.__div__   ( b ) ; }    
+    { return a.__truediv__   ( b ) ; }    
     // ========================================================================
     /** @class HermiteSum 
      *  Sum of Hermite polinomials 
@@ -1374,17 +1380,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      HermiteSum& __iadd__  ( const double a ) ;
-      HermiteSum& __isub__  ( const double a ) ;
-      HermiteSum& __imul__  ( const double a ) ;
-      HermiteSum& __idiv__  ( const double a ) ;
+      HermiteSum& __iadd__      ( const double a ) ;
+      HermiteSum& __isub__      ( const double a ) ;
+      HermiteSum& __imul__      ( const double a ) ;
+      HermiteSum& __itruediv__  ( const double a ) ;
+      HermiteSum& __idiv__      ( const double a ) { return __itruediv__ ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      HermiteSum  __add__   ( const double a ) const ; 
-      HermiteSum  __sub__   ( const double a ) const ;
-      HermiteSum  __mul__   ( const double a ) const ;
-      HermiteSum  __div__   ( const double a ) const ;
+      HermiteSum  __add__       ( const double a ) const ; 
+      HermiteSum  __sub__       ( const double a ) const ;
+      HermiteSum  __mul__       ( const double a ) const ;
+      HermiteSum  __truediv__   ( const double a ) const ;
+      HermiteSum  __div__       ( const double a ) { return __truediv__  ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1430,7 +1438,7 @@ namespace Ostap
     inline HermiteSum operator*( const double      b , const HermiteSum& a )
     { return a.__mul__   ( b ) ; }
     inline HermiteSum operator/( const HermiteSum& a , const double      b ) 
-    { return a.__div__   ( b ) ; }    
+    { return a.__truediv__   ( b ) ; }    
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

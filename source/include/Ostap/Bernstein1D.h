@@ -122,19 +122,20 @@ namespace Ostap
     public: // a bit of operators for python
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      BernsteinEven __add__   ( const double value ) const ;
+      BernsteinEven __add__     ( const double value ) const ;
       /// Sum of Bernstein polynomial and a constant
-      BernsteinEven __radd__  ( const double value ) const ;
+      BernsteinEven __radd__    ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      BernsteinEven __mul__   ( const double value ) const ;
+      BernsteinEven __mul__     ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      BernsteinEven __rmul__  ( const double value ) const ;
+      BernsteinEven __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      BernsteinEven __sub__   ( const double value ) const ;
+      BernsteinEven __sub__     ( const double value ) const ;
       /// Constant minus Bernstein polynomial
-      BernsteinEven __rsub__  ( const double value ) const ;
+      BernsteinEven __rsub__    ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      BernsteinEven __div__   ( const double value ) const ;
+      BernsteinEven __truediv__ ( const double value ) const ;
+      BernsteinEven __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -316,19 +317,20 @@ namespace Ostap
     public:  /// basic operations  for python
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      Bernstein __add__   ( const double value ) const { return m_bernstein + value ; }
+      Bernstein __add__     ( const double value ) const { return m_bernstein + value   ; }
       /// Sum of Bernstein polynomial and a constant
-      Bernstein __radd__  ( const double value ) const { return m_bernstein + value ; }
+      Bernstein __radd__    ( const double value ) const { return m_bernstein + value   ; }
       /// Product of Bernstein polynomial and a constant
-      Bernstein __mul__   ( const double value ) const { return m_bernstein * value ; }
+      Bernstein __mul__     ( const double value ) const { return m_bernstein * value   ; }
       /// Product of Bernstein polynomial and a constant
-      Bernstein __rmul__  ( const double value ) const { return m_bernstein * value ; }
+      Bernstein __rmul__    ( const double value ) const { return m_bernstein * value   ; }
       /// Subtract a constant from Benrstein polynomial
-      Bernstein __sub__   ( const double value ) const { return m_bernstein - value ; }
+      Bernstein __sub__     ( const double value ) const { return m_bernstein - value   ; }
       /// Constant minus Bernstein polynomial
-      Bernstein __rsub__  ( const double value ) const { return value - m_bernstein ; }
+      Bernstein __rsub__    ( const double value ) const { return value - m_bernstein   ; }
       /// Divide Bernstein polynomial by a constant
-      Bernstein __div__   ( const double value ) const { return m_bernstein / value ; }
+      Bernstein __truediv__ ( const double value ) const { return m_bernstein / value   ; }
+      Bernstein __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate Bernstein polynomial
       Bernstein __neg__   () const { return -m_bernstein ; }
       // ======================================================================
@@ -474,19 +476,20 @@ namespace Ostap
     public:  /// basic operations  for python
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      BernsteinEven __add__   ( const double value ) const { return m_even + value  ; }
+      BernsteinEven __add__     ( const double value ) const { return m_even + value        ; }
       /// Sum of Bernstein polynomial and a constant
-      BernsteinEven __radd__  ( const double value ) const { return m_even + value  ; }
+      BernsteinEven __radd__    ( const double value ) const { return m_even + value        ; }
       /// Product of Bernstein polynomial and a constant
-      BernsteinEven __mul__   ( const double value ) const { return m_even * value  ; }
+      BernsteinEven __mul__     ( const double value ) const { return m_even * value        ; }
       /// Product of Bernstein polynomial and a constant
-      BernsteinEven __rmul__  ( const double value ) const { return m_even * value  ; }
+      BernsteinEven __rmul__    ( const double value ) const { return m_even * value        ; }
       /// Subtract a constant from Benrstein polynomial
-      BernsteinEven __sub__   ( const double value ) const { return m_even - value  ; }
+      BernsteinEven __sub__     ( const double value ) const { return m_even - value        ; }
       /// Constant minus Bernstein polynomial
-      BernsteinEven __rsub__  ( const double value ) const { return value  - m_even ; }
+      BernsteinEven __rsub__    ( const double value ) const { return value  - m_even       ; }
       /// Divide Bernstein polynomial by a constant
-      BernsteinEven __div__   ( const double value ) const { return m_even / value  ; }
+      BernsteinEven __truediv__ ( const double value ) const { return m_even / value        ; }
+      BernsteinEven __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================

@@ -343,7 +343,7 @@ Ostap::Math::Point3DWithError::__imul__ ( const double v )
 }
 // ============================================================================
 Ostap::Math::Point3DWithError&
-Ostap::Math::Point3DWithError::__idiv__ ( const double v )
+Ostap::Math::Point3DWithError::__itruediv__ ( const double v )
 {
   point() /= v ;
   m_cov2  /= (v*v) ;
@@ -362,7 +362,7 @@ Ostap::Math::Point3DWithError::__mul__ ( const double v ) const
 
 // ============================================================================
 Ostap::Math::Point3DWithError
-Ostap::Math::Point3DWithError::__div__ ( const double v ) const
+Ostap::Math::Point3DWithError::__truediv__ ( const double v ) const
 {
   Ostap::Math::Point3DWithError tmp (*this) ;
   return ( tmp /= v ) ;

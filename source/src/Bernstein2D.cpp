@@ -424,7 +424,7 @@ Ostap::Math::Bernstein2D::__rsub__ ( const double value ) const
 // Divide Benrstein polynomial by a constant
 // ============================================================================
 Ostap::Math::Bernstein2D
-Ostap::Math::Bernstein2D:: __div__   ( const double value ) const
+Ostap::Math::Bernstein2D:: __truediv__   ( const double value ) const
 { return (*this) / value ; }
 // ============================================================================
 // Negate Bernstein polynomial
@@ -761,7 +761,7 @@ Ostap::Math::Bernstein2DSym::__rsub__ ( const double value ) const
 // Divide Benrstein polynomial by a constant
 // ============================================================================
 Ostap::Math::Bernstein2DSym
-Ostap::Math::Bernstein2DSym:: __div__   ( const double value ) const
+Ostap::Math::Bernstein2DSym:: __truediv__   ( const double value ) const
 { return (*this) / value ; }
 // ============================================================================
 // Negate Bernstein polynomial

@@ -193,29 +193,48 @@ namespace Ostap
     public: // helper functions for Python:
       // ======================================================================
       ///    a + right 
-      ValueWithError __add__  ( const ValueWithError& right ) const ;
+      ValueWithError __add__       ( const ValueWithError& right ) const ;
       ///    a + right 
-      ValueWithError __add__  ( const double          right ) const ;
+      ValueWithError __add__       ( const double          right ) const ;
       ///        right + a  
-      ValueWithError __radd__ ( const double          right ) const { return __add__ ( right ) ; }
+      ValueWithError __radd__      ( const double          right ) const { return __add__ ( right ) ; }
       ///    a - right  
-      ValueWithError __sub__  ( const ValueWithError& right ) const ;
+      ValueWithError __sub__       ( const ValueWithError& right ) const ;
       ///    a - right  
-      ValueWithError __sub__  ( const double          right ) const ;
+      ValueWithError __sub__       ( const double          right ) const ;
       ///        right - a   
-      ValueWithError __rsub__ ( const double          right ) const ;
+      ValueWithError __rsub__      ( const double          right ) const ;
       ///    a * right  
-      ValueWithError __mul__  ( const ValueWithError& right ) const ;
+      ValueWithError __mul__       ( const ValueWithError& right ) const ;
       ///    a * right  
-      ValueWithError __mul__  ( const double          right ) const ;
+      ValueWithError __mul__       ( const double          right ) const ;
       ///        right * a   
-      ValueWithError __rmul__ ( const double          right ) const { return __mul__ ( right ) ; }
+      ValueWithError __rmul__      ( const double          right ) const { return __mul__ ( right ) ; }
       ///    a / right  
-      ValueWithError __div__  ( const ValueWithError& right ) const ;
+      ValueWithError __truediv__   ( const ValueWithError& right ) const ;
       ///    a / right  
-      ValueWithError __div__  ( const double          right ) const ;
+      ValueWithError __truediv__   ( const double          right ) const ;
       ///        right / a   
-      ValueWithError __rdiv__ ( const double          right ) const ;
+      ValueWithError __rtruediv__  ( const double          right ) const ;
+      ///    a / right  
+      ValueWithError __div__       ( const ValueWithError& right ) const { return __truediv__  ( right ) ; }
+      ///    a / right  
+      ValueWithError __div__       ( const double          right ) const { return __truediv__  ( right ) ; }
+      ///        right / a   
+      ValueWithError __rdiv__      ( const double          right ) const { return __rtruediv__ ( right ) ; }
+      ///
+      ValueWithError& __iadd__     ( const ValueWithError& right ) { (*this) += right ; return *this ; }
+      ValueWithError& __imul__     ( const ValueWithError& right ) { (*this) *= right ; return *this ; }
+      ValueWithError& __isub__     ( const ValueWithError& right ) { (*this) -= right ; return *this ; }
+      ValueWithError& __itruediv__ ( const ValueWithError& right ) { (*this) /= right ; return *this ; }
+      ValueWithError& __iadd__     ( const double          right ) { (*this) += right ; return *this ; }
+      ValueWithError& __imul__     ( const double          right ) { (*this) *= right ; return *this ; }
+      ValueWithError& __isub__     ( const double          right ) { (*this) -= right ; return *this ; }
+      ValueWithError& __itruediv__ ( const double          right ) { (*this) /= right ; return *this ; }
+      //
+      ValueWithError& __idiv__     ( const ValueWithError& right ) { return __itruediv__ ( right ) ; }
+      ValueWithError& __idiv__     ( const double          right ) { return __itruediv__ ( right ) ; }
+      ///
       ///  abs ( a )   
       ValueWithError __abs__  () const ;
       /// -me

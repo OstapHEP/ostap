@@ -693,7 +693,7 @@ Ostap::Math::BSpline::__rsub__ ( const double value ) const
 // Divide B-spline by a constant 
 // ============================================================================
 Ostap::Math::BSpline
-Ostap::Math::BSpline::__div__   ( const double value ) const 
+Ostap::Math::BSpline::__truediv__   ( const double value ) const 
 { return (*this) / value ; }
 // ============================================================================
 // Negate Bernstein polynomial 
@@ -2224,7 +2224,7 @@ Ostap::Math::BSpline2D::__rmul__ ( const double value ) const
 // Divide Benrstein polynomial by a constant
 // ============================================================================
 Ostap::Math::BSpline2D 
-Ostap::Math::BSpline2D::__div__  ( const double value ) const 
+Ostap::Math::BSpline2D::__truediv__  ( const double value ) const 
 { return  (*this) / value ; }
 // ============================================================================
 // Negate BSpline polynomial
@@ -2668,7 +2668,7 @@ Ostap::Math::BSpline2DSym::__rmul__ ( const double value ) const
 // Divide Benrstein polynomial by a constant
 // ============================================================================
 Ostap::Math::BSpline2DSym 
-Ostap::Math::BSpline2DSym::__div__  ( const double value ) const 
+Ostap::Math::BSpline2DSym::__truediv__  ( const double value ) const 
 { return  (*this) / value ; }
 // ============================================================================
 // Negate BSpline2D polynomial

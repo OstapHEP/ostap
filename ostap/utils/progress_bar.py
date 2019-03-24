@@ -29,20 +29,20 @@
 #  @endcode
 #  With helper function:
 #  @code 
-#  for i in progress_bar  ( xrange(10000 ) ) :
+#  for i in progress_bar  ( range(10000 ) ) :
 #      .. do something here ...
 #  @endcode 
 #
 #  - RunningBar
 #  @code
 #  with RunningBar () as bar :
-#    for i in xrange(2000) :
+#    for i in range(2000) :
 #           ...
 #           bar += 1 
 #  @endcode
 #  With helper function:
 #  @code
-#  for i in running_bar  ( xrange(10000 ) ) :
+#  for i in running_bar  ( range(10000 ) ) :
 #      .. do something here ...
 #  @endcode 
 #
@@ -72,24 +72,26 @@ Better to use as context manager:
 
 Use with helper function:
 
->>> for i in progress_bar  ( xrange(10000 ) ) :
+>>> for i in progress_bar  ( range(10000 ) ) :
 ...       <do something here>
 
 - RunningBar
 
 >>> with RunningBar () as bar :
->>>    for i in xrange(2000) :
+>>>    for i in range(2000) :
 ...       bar += 1
 
 With helper function:
 
->>> for i in running_bar  ( xrange(10000 ) ) :
+>>> for i in running_bar  ( range(10000 ) ) :
 ...    <do something here>
 
 
 This class is an improvement from the original found at:
 @see http://code.activestate.com/recipes/168639/
 """
+# =============================================================================
+from __future__ import print_function
 # =============================================================================
 __author__   = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __version__  = "$Revision$"
@@ -101,7 +103,9 @@ __all__      = (
     "running_bar"     ## helper function for RunningBar 
     )
 # =============================================================================
-import sys,os
+import sys , os
+from   builtins  import range
+
 # =============================================================================
 ## get number of columns for xterm
 #  @code
@@ -168,7 +172,7 @@ from ostap.utils.basic import isatty
 #
 #  With helper function:
 #  @code 
-#  for i in progress_bar  ( xrange(10000 ) ) :
+#  for i in progress_bar  ( range(10000 ) ) :
 #      .. do something here ...
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -193,7 +197,7 @@ class ProgressBar(object):
     
     Use with helper function:
     
-    >>> for i in progress_bar  ( xrange(10000 ) ) :
+    >>> for i in progress_bar  ( range(10000 ) ) :
     ...       ... do something here ... 
     """
     def __init__(self, min_value = 0, max_value = 100, width=110 ,**kwargs):
@@ -322,7 +326,7 @@ _done_ =    'Done        %-12d    \n'
 #  @endcode
 #  With helper function:
 #  @code
-#  for i in running_bar  ( xrange(10000 ) ) :
+#  for i in running_bar  ( range(10000 ) ) :
 #      .. do something here ...
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -411,7 +415,7 @@ class RunningBar(object):
 # ==============================================================================
 ## helper function to display running bar 
 #  @code
-#  for i in running_bar  ( xrange(10000 ) ) :
+#  for i in running_bar  ( range(10000 ) ) :
 #      .. do something here ...
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -435,7 +439,7 @@ def running_bar ( iterable , frequency = 100 , description = '' , **kwargs ) :
 def progress_bar ( iterable , max_value = None , **kwargs ) :
     """ Helper function to display progress bar 
     
-    >>> for i in progress_bar  ( xrange ( 10000 ) ) :
+    >>> for i in progress_bar  ( range ( 10000 ) ) :
     ...      do something here
     """
     if   max_value is None and hasattr ( iterable , '__len__' ) :
@@ -458,21 +462,21 @@ def test_bars ():
 
     limit = 1000000
     
-    print 'Example 1: Fixed Bar'
+    print('Example 1: Fixed Bar')
     with ProgressBar(0, limit,  mode='fixed') as bar : 
-        for i in xrange(limit+1):
+        for i in range(limit+1):
             bar += 1 
  
-    print 'Example 2: Dynamic Bar'
+    print('Example 2: Dynamic Bar')
     with ProgressBar(0, limit, mode='dynamic', char='-') as bar : 
-        for i in xrange(limit+1):
+        for i in range(limit+1):
             bar += 1 
 
     import time 
-    for i in progress_bar( xrange(15000) , description = "Doing something ") : 
+    for i in progress_bar( range(15000) , description = "Doing something ") : 
         time.sleep(0.001)
         
-    for i in running_bar( xrange(15000) , description  = "Empty looping ") :         
+    for i in running_bar( range(15000) , description  = "Empty looping ") :         
         time.sleep(0.001)
 
 # ==============================================================================

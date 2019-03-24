@@ -197,18 +197,19 @@ namespace Ostap
       // ======================================================================
     public: //  helper functions for pythonizations
       // ======================================================================
-      Self  __add__  ( const Self&  right ) const ;
-      Self  __sub__  ( const Self&  right ) const ;      
-      Self  __add__  ( const Value& right ) const ;
-      Self  __sub__  ( const Value& right ) const ;      
-      Self  __radd__ ( const Value& right ) const ;
-      Self  __rsub__ ( const Value& right ) const ;
+      Self  __add__     ( const Self&  right ) const ;
+      Self  __sub__     ( const Self&  right ) const ;      
+      Self  __add__     ( const Value& right ) const ;
+      Self  __sub__     ( const Value& right ) const ;      
+      Self  __radd__    ( const Value& right ) const ;
+      Self  __rsub__    ( const Value& right ) const ;
       // ======================================================================      
-      Self& __imul__ ( const double v     )       { return (*this) *= v ; }
-      Self& __idiv__ ( const double v     )       { return (*this) *= v ; }
-      Self  __mul__  ( const double v     ) const { return (*this) *  v ; }
-      Self  __div__  ( const double v     ) const { return (*this) /  v ; }
-      Self  __rmul__ ( const double v     ) const { return __mul__ ( v ) ; }
+      Self& __imul__    ( const double v     )       { return (*this) *= v ; }
+      Self& __idiv__    ( const double v     )       { return (*this) *= v ; }
+      Self  __mul__     ( const double v     ) const { return (*this) *  v ; }
+      Self  __truediv__ ( const double v     ) const { return (*this) /  v ; }
+      Self  __div__     ( const double v     ) const { return (*this) /  v ; }
+      Self  __rmul__    ( const double v     ) const { return (*this) *  v ; }
       // ======================================================================
     public: //  printout 
       // ======================================================================

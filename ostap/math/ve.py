@@ -242,6 +242,9 @@ VE.__ge__ = _ve_ge_
 _is_equal_ = Ostap.Math.Equal_To    ( 'double' )()
 _is_zero_  = Ostap.Math.Zero        ( 'double' )()
 
+if not hasattr ( VE ,  '__truediv__' ) : VE. __truediv__  = VE. __div__ 
+if not hasattr ( VE , '__itruediv__' ) : VE.__itruediv__  = VE.__idiv__ 
+if not hasattr ( VE , '__rtruediv__' ) : VE.__rtruediv__  = VE.__rdiv__ 
 
 # =============================================================================
 ## Equality for ValueWithError objects
@@ -258,7 +261,7 @@ def _ve_eq_ ( self , other ) :
     elif _is_zero_ ( self.cov2() )  :
         return _is_equal_ ( float ( self ) ,  float ( other )  ) 
     else :
-        raise NotImplementedError,' Equality for %s and  %s is not implemented' % ( self, other) 
+        raise NotImplementedError ( ' Equality for %s and  %s is not implemented' % ( self , other ) ) 
 
 # =============================================================================
 ## inequality for ValueWithError objects
@@ -270,8 +273,8 @@ def _ve_ne_ ( self , other ) :
     """
     try: 
         return not self == other
-    except NotImplemented,s :
-        raise NotImplementedError,' Inequality for %s and  %s is not implemented' % ( self, other) 
+    except NotImplemented :
+        raise NotImplementedError ( ' Inequality for %s and  %s is not implemented' % ( self , other ) ) 
 
 VE . __eq__ = _ve_eq_
 VE . __ne__ = _ve_ne_
@@ -372,9 +375,9 @@ def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
     s = VE( s ) 
     v = s.value() 
     if v < 0 and not fluctuate :
-        raise TypeError, 'Negative mean without fluctuations (1)'
+        raise TypeError ( 'Negative mean without fluctuations (1)' )
     if v < 0 and s.cov2() <= 0 :
-        raise TypeError, 'Negative mean without fluctuations (2)'
+        raise TypeError ( 'Negative mean without fluctuations (2)' )
 
     e = s.error() 
     if v < 0 and abs(v) > 3 * e  :

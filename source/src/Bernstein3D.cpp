@@ -784,7 +784,7 @@ Ostap::Math::Bernstein3D::__rsub__ ( const double value ) const
 // Divide Benrstein polynomial by a constant
 // ============================================================================
 Ostap::Math::Bernstein3D
-Ostap::Math::Bernstein3D:: __div__   ( const double value ) const
+Ostap::Math::Bernstein3D:: __truediv__   ( const double value ) const
 { return (*this) / value ; }
 // ============================================================================
 // Negate Bernstein polynomial
@@ -1257,7 +1257,7 @@ Ostap::Math::Bernstein3DSym::__rsub__ ( const double value ) const
 // Divide Benrstein polynomial by a constant
 // ============================================================================
 Ostap::Math::Bernstein3DSym
-Ostap::Math::Bernstein3DSym:: __div__   ( const double value ) const
+Ostap::Math::Bernstein3DSym:: __truediv__   ( const double value ) const
 { return (*this) / value ; }
 // ============================================================================
 // Negate Bernstein polynomial
@@ -1882,7 +1882,7 @@ Ostap::Math::Bernstein3DMix::__rsub__ ( const double value ) const
 // Divide Benrstein polynomial by a constant
 // ============================================================================
 Ostap::Math::Bernstein3DMix
-Ostap::Math::Bernstein3DMix:: __div__   ( const double value ) const
+Ostap::Math::Bernstein3DMix:: __truediv__   ( const double value ) const
 { return (*this) / value ; }
 // ============================================================================
 // Negate Bernstein polynomial

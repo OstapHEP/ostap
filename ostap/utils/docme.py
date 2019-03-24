@@ -6,7 +6,7 @@
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date   2016-12-02
 # =============================================================================
-"""Trivial tility for documentation purposes
+"""Trivial utility for documentation purposes
 >>> docme ( module )
 """
 # =============================================================================
@@ -17,8 +17,13 @@ __all__     = (
     'docme' , ## the only one useful symbol from this module
     )
 # =============================================================================
-## primitive types 
-primitive =  int , long , float , bool , str , list , dict , set 
+## primitive types
+import sys
+if sys.version_info[0] > 2 : 
+    primitive =  int        , float , bool , str , bytes   , list , dict , set
+else :
+    primitive =  int , long , float , bool , str , unicode , list , dict , set
+    
 # =============================================================================
 ## simple function to allow coherent self-print for all ostap modules
 #  @code
@@ -84,8 +89,8 @@ def docme( module , symbols = {} , logger = None ) :
     if _all_ :
         logger.info ( "Symbols : %s" % list(_all_) ) 
         for key in _all_ :
-            sym = getattr ( module , key )
-            if isinstance ( sym , (int,long,float,bool,str,list,dict,set) ) : continue 
+            sym = getattr ( module , key )            
+            if isinstance ( sym , primitive ) : continue            
             if hasattr ( sym , '__doc__' ) and sym.__doc__ :
                 d = sym.__doc__.replace( '\n' , '\n#' )
                 logger.info ( "Symbol ``%s''\n# - %s" % ( key , d ) )
@@ -116,9 +121,7 @@ def docme( module , symbols = {} , logger = None ) :
         
     if isinstance ( symbols , dict ) :
         
-        keys = symbols.keys()
-        keys.sort() 
-        for key in keys :
+        for key in sorted ( symbols.keys () ) :
             if key.startswith('_')      : continue
             sym = symbols[key]
             if sym in _done_            : continue 

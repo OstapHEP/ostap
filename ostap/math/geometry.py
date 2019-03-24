@@ -333,20 +333,20 @@ def _v3_div_ ( self , other ) :
     tmp /= other
     return tmp
 
-_P3D . __add__  = _p3_add_
-_P3D . __sub__  = _p3_sub_
-_P3D . __div__  = _p3_div_
-_P3D . __mul__  = _p3_mul_
+_P3D . __add__      = _p3_add_
+_P3D . __sub__      = _p3_sub_
+_P3D . __mul__      = _p3_mul_
+_P3D . __div__      = _p3_div_
+_P3D . __truediv__  = _p3_div_
 
-_V3D . __add__  = _v3_add_
-_V3D . __sub__  = _v3_sub_
-_V3D . __div__  = _v3_div_
-_V3D . __mul__  = _v3_mul_
+_V3D . __add__      = _v3_add_
+_V3D . __sub__      = _v3_sub_
+_V3D . __mul__      = _v3_mul_
+_V3D . __div__      = _v3_div_
+_V3D . __truediv__  = _v3_div_
 
 _P3D . __radd__ = lambda s,o : s+o 
 _P3D . __rmul__ = lambda s,o : s*o 
-_V3D . __radd__ = lambda s,o : s+o 
-_V3D . __rmul__ = lambda s,o : s*o 
 
 
 # =============================================================================

@@ -941,7 +941,7 @@ Ostap::Math::Polynomial::__imul__   ( const double a )
 { (*this) *= a ; return *this ; } 
 // ============================================================================
 Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::__idiv__   ( const double a ) 
+Ostap::Math::Polynomial::__itruediv__   ( const double a ) 
 { (*this) /= a ; return *this ; } 
 // ============================================================================
 Ostap::Math::Polynomial 
@@ -957,7 +957,7 @@ Ostap::Math::Polynomial::__mul__   ( const double a ) const
 { return Polynomial(*this) *= a ; } 
 // ============================================================================
 Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__div__    ( const double a ) const 
+Ostap::Math::Polynomial::__truediv__    ( const double a ) const 
 { return Polynomial(*this) /= a ; } 
 // ============================================================================
 Ostap::Math::Polynomial 
@@ -1220,7 +1220,7 @@ Ostap::Math::ChebyshevSum::__imul__   ( const double a )
 { (*this) *= a ; return *this ; } 
 // ============================================================================
 Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::__idiv__   ( const double a ) 
+Ostap::Math::ChebyshevSum::__itruediv__   ( const double a ) 
 { (*this) /= a ; return *this ; } 
 // ============================================================================
 Ostap::Math::ChebyshevSum 
@@ -1236,7 +1236,7 @@ Ostap::Math::ChebyshevSum::__mul__    ( const double a ) const
 { return ChebyshevSum(*this) *= a ; } 
 // ============================================================================
 Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__div__    ( const double a ) const 
+Ostap::Math::ChebyshevSum::__truediv__    ( const double a ) const 
 { return ChebyshevSum(*this) /= a ; } 
 // ============================================================================
 Ostap::Math::ChebyshevSum 
@@ -1518,7 +1518,7 @@ Ostap::Math::LegendreSum::__imul__   ( const double a )
 { (*this) *= a ; return *this ; } 
 // ============================================================================
 Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::__idiv__   ( const double a ) 
+Ostap::Math::LegendreSum::__itruediv__   ( const double a ) 
 { (*this) /= a ; return *this ; } 
 // ============================================================================
 Ostap::Math::LegendreSum 
@@ -1534,7 +1534,7 @@ Ostap::Math::LegendreSum::__mul__    ( const double a ) const
 { return LegendreSum(*this) *= a ; } 
 // ============================================================================
 Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__div__    ( const double a ) const 
+Ostap::Math::LegendreSum::__truediv__    ( const double a ) const 
 { return LegendreSum(*this) /= a ; } 
 // ============================================================================
 Ostap::Math::LegendreSum 
@@ -1754,7 +1754,7 @@ Ostap::Math::HermiteSum::__imul__   ( const double a )
 { (*this) *= a ; return *this ; } 
 // ============================================================================
 Ostap::Math::HermiteSum& 
-Ostap::Math::HermiteSum::__idiv__   ( const double a ) 
+Ostap::Math::HermiteSum::__itruediv__   ( const double a ) 
 { (*this) /= a ; return *this ; } 
 // ============================================================================
 Ostap::Math::HermiteSum 
@@ -1770,7 +1770,7 @@ Ostap::Math::HermiteSum::__mul__    ( const double a ) const
 { return HermiteSum(*this) *= a ; } 
 // ============================================================================
 Ostap::Math::HermiteSum 
-Ostap::Math::HermiteSum::__div__    ( const double a ) const 
+Ostap::Math::HermiteSum::__truediv__    ( const double a ) const 
 { return HermiteSum(*this) /= a ; } 
 // ============================================================================
 Ostap::Math::HermiteSum 

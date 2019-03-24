@@ -166,13 +166,14 @@ namespace Ostap
       // =====================================================================
     public:
       // =====================================================================
-      Point3DWithError& __imul__  ( const double v ) ;
-      Point3DWithError& __idiv__  ( const double v ) ;
+      Point3DWithError& __imul__     ( const double v ) ;
+      Point3DWithError& __itruediv__ ( const double v ) ;
+      Point3DWithError& __idiv__     ( const double v ) { return __itruediv__ ( v ) ; }
       // =====================================================================
-      Point3DWithError  __mul__   ( const double v ) const ;
-      Point3DWithError  __div__   ( const double v ) const ;
-      Point3DWithError  __rmul__  ( const double v ) const 
-      { return __mul__ ( v ) ; }
+      Point3DWithError  __mul__      ( const double v ) const ;
+      Point3DWithError  __truediv__  ( const double v ) const ;
+      Point3DWithError  __div__      ( const double v ) const { return __truediv__ ( v ) ; }      
+      Point3DWithError  __rmul__     ( const double v ) const { return __mul__     ( v ) ; }
       // =====================================================================
     public:
       // ======================================================================
@@ -209,13 +210,13 @@ namespace Ostap
     // ========================================================================
     inline Point3DWithError operator*
     ( const Point3DWithError&  a ,
-      const double             b ) { return a.__mul__ ( b ) ; }
+      const double             b ) { return a.__mul__     ( b ) ; }
     inline Point3DWithError operator/
     ( const Point3DWithError&  a ,
-      const double             b ) { return a.__div__ ( b ) ; }
+      const double             b ) { return a.__truediv__ ( b ) ; }
     inline Point3DWithError operator*
     ( const double             b , 
-      const Point3DWithError&  a ) { return a.__mul__ ( b ) ; }
+      const Point3DWithError&  a ) { return a.__mul__     ( b ) ; }
     // ========================================================================
     inline double chi2 
     ( const Point3DWithError& a , 

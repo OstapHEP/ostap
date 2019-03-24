@@ -725,7 +725,7 @@ Ostap::Math::Bernstein::__rsub__ ( const double value ) const
 // Divide Benrstein polynomial by a constant 
 // ============================================================================
 Ostap::Math::Bernstein
-Ostap::Math::Bernstein:: __div__   ( const double value ) const 
+Ostap::Math::Bernstein:: __truediv__   ( const double value ) const 
 { return (*this) / value ; }
 // ============================================================================
 // Negate Bernstein polynomial 

@@ -186,19 +186,20 @@ namespace Ostap
     public:
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      Bernstein3D __add__   ( const double value ) const ;
+      Bernstein3D __add__     ( const double value ) const ;
       /// Sum of Bernstein polynomial and a constant
-      Bernstein3D __radd__  ( const double value ) const ;
+      Bernstein3D __radd__    ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein3D __mul__   ( const double value ) const ;
+      Bernstein3D __mul__     ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein3D __rmul__  ( const double value ) const ;
+      Bernstein3D __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      Bernstein3D __sub__   ( const double value ) const ;
+      Bernstein3D __sub__     ( const double value ) const ;
       /// Constant minus Bernstein polynomial
-      Bernstein3D __rsub__  ( const double value ) const ;
+      Bernstein3D __rsub__    ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      Bernstein3D __div__   ( const double value ) const ;
+      Bernstein3D __truediv__ ( const double value ) const ;
+      Bernstein3D __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate Bernstein polynomial
       Bernstein3D __neg__   () const ;
       // ======================================================================
@@ -586,19 +587,20 @@ namespace Ostap
     public:
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      Bernstein3DSym __add__   ( const double value ) const ;
+      Bernstein3DSym __add__     ( const double value ) const ;
       /// Sum of Bernstein polynomial and a constant
-      Bernstein3DSym __radd__  ( const double value ) const ;
+      Bernstein3DSym __radd__    ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein3DSym __mul__   ( const double value ) const ;
+      Bernstein3DSym __mul__     ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein3DSym __rmul__  ( const double value ) const ;
+      Bernstein3DSym __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      Bernstein3DSym __sub__   ( const double value ) const ;
+      Bernstein3DSym __sub__     ( const double value ) const ;
       /// Constant minus Bernstein polynomial
-      Bernstein3DSym __rsub__  ( const double value ) const ;
+      Bernstein3DSym __rsub__    ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      Bernstein3DSym __div__   ( const double value ) const ;
+      Bernstein3DSym __truediv__ ( const double value ) const ;
+      Bernstein3DSym __div__     ( const double value ) const { return __truediv__ (  value ) ; }      
       /// Negate Bernstein polynomial
       Bernstein3DSym __neg__   () const ;
       // ======================================================================
@@ -974,19 +976,20 @@ namespace Ostap
     public:
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      Bernstein3DMix __add__   ( const double value ) const ;
+      Bernstein3DMix __add__     ( const double value ) const ;
       /// Sum of Bernstein polynomial and a constant
-      Bernstein3DMix __radd__  ( const double value ) const ;
+      Bernstein3DMix __radd__    ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein3DMix __mul__   ( const double value ) const ;
+      Bernstein3DMix __mul__     ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein3DMix __rmul__  ( const double value ) const ;
+      Bernstein3DMix __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      Bernstein3DMix __sub__   ( const double value ) const ;
+      Bernstein3DMix __sub__     ( const double value ) const ;
       /// Constant minus Bernstein polynomial
-      Bernstein3DMix __rsub__  ( const double value ) const ;
+      Bernstein3DMix __rsub__    ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      Bernstein3DMix __div__   ( const double value ) const ;
+      Bernstein3DMix __truediv__ ( const double value ) const ;
+      Bernstein3DMix __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate Bernstein polynomial
       Bernstein3DMix __neg__   () const ;
       // ======================================================================

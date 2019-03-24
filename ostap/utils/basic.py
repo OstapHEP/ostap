@@ -30,13 +30,13 @@ import sys,os
 ## is sys.stdout attached to terminal or not  ?
 #  @code
 #  stream = ...
-#  if isatty( stream ) : print 'Teminal!'
+#  if isatty( stream ) : print('Teminal!')
 #  @endcode 
 def isatty ( stream = None ) :
     """Is the stream is attached to terminal?
     >>> stream = ...
-    >>> if isatty( stream ) : print 'Teminal!'
-    >>> if isatty() : print 'stdout is terminal!'
+    >>> if isatty( stream ) : print('Teminal!')
+    >>> if isatty() : print('stdout is terminal!')
     """
     if not stream : stream = sys.stdout
     #

@@ -32,7 +32,10 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.memory' )
 else                       : logger = getLogger( __name__             )
 del getLogger
 # =============================================================================
-_psutil = False 
+_psutil = False
+
+if sys.version_info[0] > 2 : LONG = int
+else                       : LONG = long 
 
 try :
     import psutil 
@@ -46,12 +49,12 @@ try :
     #  @endcode
     def memory_usage ( *args ):
         """Report current memory usage (in MB)
-        (psutil-based version, fast and efficient)
+        (psutil-based version, likely fast and efficient)
         - see help(psutil)
         >>> print memory_usage()
         """
         process = psutil.Process(os.getpid())
-        mem     = process.get_memory_info()[0] / float(2 ** 20)
+        mem     = process.memory_info()[0] / float(2 ** 20)
         return mem
     
 except ImportError :
@@ -71,8 +74,8 @@ except ImportError :
             import os 
             proc = '/proc/%d/stat' % os.getpid()
         try : 
-            with open ( proc , 'r' ) as p : 
-                for l in  p : return long(l.split(' ')[22])/1024./1024
+            with open ( proc , 'r' ) as p :
+                for l in  p : return LONG ( l.split(' ')[22] )/1024./1024
         except:
             return -1 
         

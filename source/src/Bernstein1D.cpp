@@ -122,7 +122,7 @@ Ostap::Math::BernsteinEven::__rsub__  ( const double value ) const
 //  Division of Bernstein polynomial and constant 
 // ============================================================================
 Ostap::Math::BernsteinEven
-Ostap::Math::BernsteinEven::__div__   ( const double value ) const 
+Ostap::Math::BernsteinEven::__truediv__   ( const double value ) const 
 { BernsteinEven tmp(*this) ; tmp /= value ; return tmp ; }
 // ============================================================================
 

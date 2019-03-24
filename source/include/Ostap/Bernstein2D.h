@@ -221,19 +221,20 @@ namespace Ostap
     public: // python! 
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      Bernstein2D __add__   ( const double value ) const ;
+      Bernstein2D __add__     ( const double value ) const ;
       /// Sum of Bernstein polynomial and a constant
-      Bernstein2D __radd__  ( const double value ) const ;
+      Bernstein2D __radd__    ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein2D __mul__   ( const double value ) const ;
+      Bernstein2D __mul__     ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein2D __rmul__  ( const double value ) const ;
+      Bernstein2D __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      Bernstein2D __sub__   ( const double value ) const ;
+      Bernstein2D __sub__     ( const double value ) const ;
       /// Constant minus Bernstein polynomial
-      Bernstein2D __rsub__  ( const double value ) const ;
+      Bernstein2D __rsub__    ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      Bernstein2D __div__   ( const double value ) const ;
+      Bernstein2D __truediv__ ( const double value ) const ;
+      Bernstein2D __div__     ( const double value ) const { return __truediv__ ( value ) ;  }
       /// Negate Bernstein polynomial
       Bernstein2D __neg__   () const ;
       // ======================================================================
@@ -691,19 +692,20 @@ namespace Ostap
     public:
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      Bernstein2DSym __add__   ( const double value ) const ;
+      Bernstein2DSym __add__     ( const double value ) const ;
       /// Sum of Bernstein polynomial and a constant
-      Bernstein2DSym __radd__  ( const double value ) const ;
+      Bernstein2DSym __radd__    ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein2DSym __mul__   ( const double value ) const ;
+      Bernstein2DSym __mul__     ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein2DSym __rmul__  ( const double value ) const ;
+      Bernstein2DSym __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      Bernstein2DSym __sub__   ( const double value ) const ;
+      Bernstein2DSym __sub__     ( const double value ) const ;
       /// Constant minus Bernstein polynomial
-      Bernstein2DSym __rsub__  ( const double value ) const ;
+      Bernstein2DSym __rsub__    ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      Bernstein2DSym __div__   ( const double value ) const ;
+      Bernstein2DSym __truediv__ ( const double value ) const ;
+      Bernstein2DSym __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate Bernstein polynomial
       Bernstein2DSym __neg__   () const ;
       // ======================================================================

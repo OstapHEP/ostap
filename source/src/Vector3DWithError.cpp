@@ -366,7 +366,7 @@ Ostap::Math::Vector3DWithError::__imul__ ( const double v )
 }
 // ============================================================================
 Ostap::Math::Vector3DWithError&
-Ostap::Math::Vector3DWithError::__idiv__ ( const double v ) 
+Ostap::Math::Vector3DWithError::__itruediv__ ( const double v ) 
 {
   vector3d() /= v ;
   m_cov2     /= (v*v) ;
@@ -385,7 +385,7 @@ Ostap::Math::Vector3DWithError::__mul__ ( const double v ) const
 
 // ============================================================================
 Ostap::Math::Vector3DWithError 
-Ostap::Math::Vector3DWithError::__div__ ( const double v ) const 
+Ostap::Math::Vector3DWithError::__truediv__ ( const double v ) const 
 {
   Ostap::Math::Vector3DWithError tmp (*this) ;
   return ( tmp /= v ) ;

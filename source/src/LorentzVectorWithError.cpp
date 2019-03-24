@@ -365,7 +365,7 @@ Ostap::Math::LorentzVectorWithError::__imul__ ( const double v )
 }
 // ============================================================================
 Ostap::Math::LorentzVectorWithError&
-Ostap::Math::LorentzVectorWithError::__idiv__ ( const double v ) 
+Ostap::Math::LorentzVectorWithError::__itruediv__ ( const double v ) 
 {
   vector4d() /= v ;
   m_cov2     /= (v*v) ;
@@ -384,7 +384,7 @@ Ostap::Math::LorentzVectorWithError::__mul__ ( const double v ) const
 
 // ============================================================================
 Ostap::Math::LorentzVectorWithError 
-Ostap::Math::LorentzVectorWithError::__div__ ( const double v ) const
+Ostap::Math::LorentzVectorWithError::__truediv__ ( const double v ) const
 {
   Ostap::Math::LorentzVectorWithError tmp (*this) ;
   return ( tmp /= v ) ;

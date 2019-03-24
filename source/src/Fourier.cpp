@@ -577,7 +577,7 @@ Ostap::Math::FourierSum
 Ostap::Math::FourierSum::__sub__  ( const double  value ) const 
 { return (*this) - value ; }
 Ostap::Math::FourierSum 
-Ostap::Math::FourierSum::__div__  ( const double  value ) const 
+Ostap::Math::FourierSum::__truediv__  ( const double  value ) const 
 { return (*this) / value ; }
 Ostap::Math::FourierSum 
 Ostap::Math::FourierSum::__radd__ ( const double  value ) const 
@@ -1066,7 +1066,7 @@ Ostap::Math::CosineSum
 Ostap::Math::CosineSum::__sub__  ( const double  value ) const 
 { return (*this) - value ; }
 Ostap::Math::CosineSum 
-Ostap::Math::CosineSum::__div__  ( const double  value ) const 
+Ostap::Math::CosineSum::__truediv__  ( const double  value ) const 
 { return (*this) / value ; }
 Ostap::Math::CosineSum 
 Ostap::Math::CosineSum::__radd__ ( const double  value ) const 

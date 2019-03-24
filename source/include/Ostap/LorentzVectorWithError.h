@@ -248,12 +248,13 @@ namespace Ostap
       { return __add__ ( right ) ; }  
       LorentzVectorWithError __rsub__  ( const Vector4D&               right ) const ;
       // ======================================================================
-      LorentzVectorWithError& __imul__ ( const double v ) ;
-      LorentzVectorWithError& __idiv__ ( const double v ) ;
-      LorentzVectorWithError  __mul__  ( const double v ) const ;
-      LorentzVectorWithError  __div__  ( const double v ) const ;
-      LorentzVectorWithError  __rmul__ ( const double v ) const 
-      { return __mul__ ( v ) ; }
+      LorentzVectorWithError& __imul__     ( const double v ) ;
+      LorentzVectorWithError& __itruediv__ ( const double v ) ;
+      LorentzVectorWithError& __idiv__     ( const double v )       { return __itruediv__ ( v ) ; }
+      LorentzVectorWithError  __mul__      ( const double v ) const ;
+      LorentzVectorWithError  __truediv__  ( const double v ) const ;
+      LorentzVectorWithError  __div__      ( const double v ) const { return __truediv__  ( v ) ; }
+      LorentzVectorWithError  __rmul__     ( const double v ) const { return __mul__      ( v ) ; }
       // ======================================================================
     public:
       // ======================================================================

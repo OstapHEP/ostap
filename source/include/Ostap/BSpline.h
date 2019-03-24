@@ -254,19 +254,21 @@ namespace Ostap
     public: // operators for python
       // ======================================================================
       /// Sum of B-spline and a constant
-      BSpline __add__   ( const double value ) const ;
+      BSpline __add__     ( const double value ) const ;
       /// Sum of B-spline and a constant
-      BSpline __radd__  ( const double value ) const ;
+      BSpline __radd__    ( const double value ) const ;
       /// Product B-spline and a constant
-      BSpline __mul__   ( const double value ) const ;
+      BSpline __mul__     ( const double value ) const ;
       /// Product B-spline and a constant
-      BSpline __rmul__  ( const double value ) const ;
+      BSpline __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      BSpline __sub__   ( const double value ) const ;
+      BSpline __sub__     ( const double value ) const ;
       /// Constant minus B-spline
-      BSpline __rsub__  ( const double value ) const ;
+      BSpline __rsub__    ( const double value ) const ;
       /// Divide B-spline by a constant
-      BSpline __div__   ( const double value ) const ;
+      BSpline __truediv__ ( const double value ) const ;
+      /// Divide B-spline by a constant
+      BSpline __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate B-spline
       BSpline __neg__   () const ;
       // ======================================================================
@@ -431,19 +433,20 @@ namespace Ostap
     public: // operators for python
       // ======================================================================
       /// Sum of spline and a constant
-      BSpline __add__   ( const double value ) const { return m_bspline+ value ; }
+      BSpline __add__     ( const double value ) const { return m_bspline+ value ; }
       /// Sum of spline and a constant
-      BSpline __radd__  ( const double value ) const { return m_bspline + value ; }
+      BSpline __radd__    ( const double value ) const { return m_bspline + value ; }
       /// Product of spline and a constant
-      BSpline __mul__   ( const double value ) const { return m_bspline * value ; }
+      BSpline __mul__     ( const double value ) const { return m_bspline * value ; }
       /// Product of spline and a constant
-      BSpline __rmul__  ( const double value ) const { return m_bspline * value ; }
+      BSpline __rmul__    ( const double value ) const { return m_bspline * value ; }
       /// Subtract a constant from spline
-      BSpline __sub__   ( const double value ) const { return m_bspline - value ; }
+      BSpline __sub__     ( const double value ) const { return m_bspline - value ; }
       /// Constant minus spline
-      BSpline __rsub__  ( const double value ) const { return value - m_bspline ; }
+      BSpline __rsub__    ( const double value ) const { return value - m_bspline ; }
       /// Divide spline by a constant
-      BSpline __div__   ( const double value ) const { return m_bspline / value ; }
+      BSpline __truediv__ ( const double value ) const { return m_bspline / value ; }
+      BSpline __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate spline
       BSpline __neg__   () const { return -m_bspline; }
       // ======================================================================
@@ -827,19 +830,20 @@ namespace Ostap
     public:  // for python
       // ======================================================================
       /// Sum of BSpline polynomial and a constant
-      BSpline2D __add__   ( const double value ) const ;
+      BSpline2D __add__      ( const double value ) const ;
       /// Sum of BSpline polynomial and a constant
-      BSpline2D __radd__  ( const double value ) const ;
+      BSpline2D __radd__     ( const double value ) const ;
       /// Product of BSpline polynomial and a constant
-      BSpline2D __mul__   ( const double value ) const ;
+      BSpline2D __mul__      ( const double value ) const ;
       /// Product of BSpline polynomial and a constant
-      BSpline2D __rmul__  ( const double value ) const ;
+      BSpline2D __rmul__     ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      BSpline2D __sub__   ( const double value ) const ;
+      BSpline2D __sub__      ( const double value ) const ;
       /// Constant minus BSpline polynomial
-      BSpline2D __rsub__  ( const double value ) const ;
+      BSpline2D __rsub__     ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      BSpline2D __div__   ( const double value ) const ;
+      BSpline2D __truediv__  ( const double value ) const ;
+      BSpline2D __div__      ( const double value ) const { return __truediv__ ( value ) ; }      
       /// Negate BSpline polynomial
       BSpline2D __neg__   () const ;
      // ======================================================================
@@ -1022,19 +1026,20 @@ namespace Ostap
     public:  // for python
       // ======================================================================
       /// Sum of BSpline polynomial and a constant
-      BSpline2DSym __add__   ( const double value ) const ;
+      BSpline2DSym __add__     ( const double value ) const ;
       /// Sum of BSpline polynomial and a constant
-      BSpline2DSym __radd__  ( const double value ) const ;
+      BSpline2DSym __radd__    ( const double value ) const ;
       /// Product of BSpline polynomial and a constant
-      BSpline2DSym __mul__   ( const double value ) const ;
+      BSpline2DSym __mul__     ( const double value ) const ;
       /// Product of BSpline polynomial and a constant
-      BSpline2DSym __rmul__  ( const double value ) const ;
+      BSpline2DSym __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      BSpline2DSym __sub__   ( const double value ) const ;
+      BSpline2DSym __sub__     ( const double value ) const ;
       /// Constant minus BSpline polynomial
-      BSpline2DSym __rsub__  ( const double value ) const ;
+      BSpline2DSym __rsub__    ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      BSpline2DSym __div__   ( const double value ) const ;
+      BSpline2DSym __truediv__ ( const double value ) const ;
+      BSpline2DSym __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate BSpline polynomial
       BSpline2DSym __neg__   () const ;
      // ======================================================================

@@ -59,6 +59,8 @@
   >>> dir( Ostap      )
 """
 # =============================================================================
+from __future__ import print_function
+# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = "Version$Revision$"
@@ -91,7 +93,7 @@ __all__     = (
     'vLongs'         , ## std::vector<long>
     ) 
 # =============================================================================
-import ROOT, cppyy 
+import ROOT, cppyy, sys 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -526,6 +528,7 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     CMPLX.__imul__    = _cmplx_imul_
     CMPLX.__idiv__    = _cmplx_idiv_
     CMPLX.__isub__    = _cmplx_isub_
+
     
     CMPLX.__repr__    = lambda s : "%s" % complex ( s.real(), s.imag() )
     CMPLX.__str__     = lambda s : "%s" % complex ( s.real(), s.imag() )
@@ -545,6 +548,12 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     CMPLX.conj        = _cmplx_conjugate_
     CMPLX.to_complex  = _cmplx_to_complex_ 
     CMPLX.as_complex  = _cmplx_to_complex_ 
+
+    ## make python 3 happy!
+    if not hasattr ( CMPLX ,  '__truediv__' ) : CMPLX. __truediv__  = CMPLX. __div__ 
+    if not hasattr ( CMPLX , '__itruediv__' ) : CMPLX.__itruediv__  = CMPLX.__idiv__ 
+    if not hasattr ( CMPLX , '__rtruediv__' ) : CMPLX.__rtruediv__  = CMPLX.__rdiv__ 
+    
 
 
 # =============================================================================
@@ -576,13 +585,13 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     _v = [ l for l in dir(Ostap     ) if 0 != l.find('__') ]
-    print ' dir(Ostap)      : '
+    print(' dir(Ostap)      : ')
     _v.sort()
-    for v in _v : print v
+    for v in _v : print(v)
     _v = [ l for l in dir(Ostap.Math) if 0 != l.find('__') ]
-    print ' dir(Ostap.Math) : '
+    print(' dir(Ostap.Math) : ')
     _v.sort()
-    for v in _v : print v
+    for v in _v : print(v)
 
 
 # =============================================================================

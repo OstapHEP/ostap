@@ -166,13 +166,14 @@ namespace Ostap
       { return __add__ ( right ) ; }
       Vector3DWithError __rsub__ ( const Vector3D&          right ) const ;
       // ======================================================================
-      Vector3DWithError& __imul__  ( const double v ) ;
-      Vector3DWithError& __idiv__  ( const double v ) ;
+      Vector3DWithError& __imul__      ( const double v ) ;
+      Vector3DWithError& __itruediv__  ( const double v ) ;
+      Vector3DWithError& __idiv__      ( const double v ) { return __itruediv__ ( v ) ; }
       // ======================================================================
-      Vector3DWithError  __mul__   ( const double v ) const ;
-      Vector3DWithError  __div__   ( const double v ) const ;
-      Vector3DWithError  __rmul__  ( const double v ) const 
-      { return __mul__ ( v ) ; }
+      Vector3DWithError  __mul__       ( const double v ) const ;
+      Vector3DWithError  __truediv__   ( const double v ) const ;
+      Vector3DWithError  __div__       ( const double v ) const { return __truediv__ ( v ) ; }
+      Vector3DWithError  __rmul__      ( const double v ) const { return __mul__     ( v ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -221,7 +222,7 @@ namespace Ostap
     inline 
     Vector3DWithError operator/ 
     ( const Vector3DWithError& a , 
-      const double             b ) { return a.__div__ ( b ) ; }
+      const double             b ) { return a.__truediv__ ( b ) ; }
     inline 
     Vector3DWithError operator* 
     ( const double             b , 

@@ -36,8 +36,8 @@ def _bifur_ ( self , mu , sigma1 , sigma2 ) :
     """Generate the bifurcated gaussian
     >>> value = bifur ( 0 , -1 , +2 )    
     """
-    if   sigma1 * sigma2 > 0.0 :
-        raise ValueError, 'Lower and upper errors must have opposite signs'
+    if sigma1 * sigma2 > 0.0 :
+        raise ValueError( 'Lower and upper errors must have opposite signs' )
         
     _as1  =  abs ( float ( sigma1 ) ) 
     _as2  =  abs ( float ( sigma2 ) ) 

@@ -552,7 +552,7 @@ Ostap::Math::ValueWithError::__mul__
 }
 // =============================================================================
 Ostap::Math::ValueWithError
-Ostap::Math::ValueWithError::__div__
+Ostap::Math::ValueWithError::__truediv__
 ( const Ostap::Math::ValueWithError& right ) const
 {
   //
@@ -584,7 +584,7 @@ Ostap::Math::ValueWithError::__mul__ ( const double right ) const
 }
 // =============================================================================
 Ostap::Math::ValueWithError
-Ostap::Math::ValueWithError::__div__ ( const double right ) const
+Ostap::Math::ValueWithError::__truediv__ ( const double right ) const
 {
   ValueWithError tmp ( *this ) ;
   return tmp /= right ;
@@ -595,7 +595,7 @@ Ostap::Math::ValueWithError::__rsub__ ( const double right ) const
 { return ValueWithError ( right - value() , cov2()  ) ; }
 // =============================================================================
 Ostap::Math::ValueWithError
-Ostap::Math::ValueWithError::__rdiv__ ( const double right ) const
+Ostap::Math::ValueWithError::__rtruediv__ ( const double right ) const
 {  
   ValueWithError tmp ( right ) ;
   return tmp /= (*this) ;

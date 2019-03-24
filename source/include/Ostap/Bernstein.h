@@ -489,19 +489,20 @@ namespace Ostap
     public: // a bit of operators for python
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
-      Bernstein __add__   ( const double value ) const ;
+      Bernstein __add__     ( const double value ) const ;
       /// Sum of Bernstein polynomial and a constant
-      Bernstein __radd__  ( const double value ) const ;
+      Bernstein __radd__    ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein __mul__   ( const double value ) const ;
+      Bernstein __mul__     ( const double value ) const ;
       /// Product of Bernstein polynomial and a constant
-      Bernstein __rmul__  ( const double value ) const ;
+      Bernstein __rmul__    ( const double value ) const ;
       /// Subtract a constant from Benrstein polynomial
-      Bernstein __sub__   ( const double value ) const ;
+      Bernstein __sub__     ( const double value ) const ;
       /// Constant minus Bernstein polynomial
-      Bernstein __rsub__  ( const double value ) const ;
+      Bernstein __rsub__    ( const double value ) const ;
       /// Divide Benrstein polynomial by a constant
-      Bernstein __div__   ( const double value ) const ;
+      Bernstein __truediv__ ( const double value ) const ;
+      Bernstein __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate Bernstein polynomial
       Bernstein __neg__   () const ;
       // ======================================================================

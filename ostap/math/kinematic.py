@@ -233,13 +233,14 @@ def _v4c_str_ ( self , fmt = "[(%s,%s,%s),%s]" ) :
     return fmt % ( self.X() , self.Y( ), self.Z() , self.E() )
 
 for _v4 in ( V4D , V4C ) : 
-    _v4 . __mul__   = _v4_mul_
-    _v4 . __add__   = _v4_add_
-    _v4 . __sub__   = _v4_sub_
-    _v4 . __div__   = _v4_div_    
-    _v4 . __radd__  = lambda s,o : s+o 
-    _v4 . __rmul__  = lambda s,o : s*o 
-    _v4 . __pow__   = _v4_pow_
+    _v4 . __mul__     = _v4_mul_
+    _v4 . __add__     = _v4_add_
+    _v4 . __sub__     = _v4_sub_
+    _v4 . __div__     = _v4_div_    
+    _v4 . __truediv__ = _v4_div_    
+    _v4 . __radd__    = lambda s,o : s+o 
+    _v4 . __rmul__    = lambda s,o : s*o 
+    _v4 . __pow__     = _v4_pow_
 
 # =============================================================================
 if not hasattr ( V4D , '_new_str_' ) :

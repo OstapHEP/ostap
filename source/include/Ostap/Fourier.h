@@ -212,13 +212,14 @@ namespace Ostap
       // ======================================================================
     public: // for python
       // ======================================================================
-      FourierSum __add__   ( const double value ) const ;
-      FourierSum __mul__   ( const double value ) const ;
-      FourierSum __sub__   ( const double value ) const ;
-      FourierSum __div__   ( const double value ) const ;
-      FourierSum __radd__  ( const double value ) const ;
-      FourierSum __rmul__  ( const double value ) const ;
-      FourierSum __rsub__  ( const double value ) const ;
+      FourierSum __add__     ( const double value ) const ;
+      FourierSum __mul__     ( const double value ) const ;
+      FourierSum __sub__     ( const double value ) const ;
+      FourierSum __truediv__ ( const double value ) const ;
+      FourierSum __div__     ( const double value ) const { return __truediv__ ( value ) ; }
+      FourierSum __radd__    ( const double value ) const ;
+      FourierSum __rmul__    ( const double value ) const ;
+      FourierSum __rsub__    ( const double value ) const ;
       // ======================================================================
       FourierSum __add__   ( const FourierSum& right ) const ;
       FourierSum __sub__   ( const FourierSum& right ) const ;
@@ -443,19 +444,20 @@ namespace Ostap
       // ======================================================================
     public: // for python
       // ======================================================================
-      CosineSum __add__   ( const double value ) const ;
-      CosineSum __mul__   ( const double value ) const ;
-      CosineSum __sub__   ( const double value ) const ;
-      CosineSum __div__   ( const double value ) const ;
+      CosineSum __add__     ( const double value ) const ;
+      CosineSum __mul__     ( const double value ) const ;
+      CosineSum __sub__     ( const double value ) const ;
+      CosineSum __truediv__ ( const double value ) const ;
+      CosineSum __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       // ======================================================================
-      CosineSum __radd__  ( const double value ) const ;
-      CosineSum __rmul__  ( const double value ) const ;
-      CosineSum __rsub__  ( const double value ) const ;
+      CosineSum __radd__    ( const double value ) const ;
+      CosineSum __rmul__    ( const double value ) const ;
+      CosineSum __rsub__    ( const double value ) const ;
       // ======================================================================
-      CosineSum __add__   ( const CosineSum& right ) const ;
-      CosineSum __sub__   ( const CosineSum& right ) const ;
+      CosineSum __add__     ( const CosineSum& right ) const ;
+      CosineSum __sub__     ( const CosineSum& right ) const ;
       // ======================================================================
-      CosineSum __neg__   () const ;
+      CosineSum __neg__     () const ;
       // ======================================================================
     private:
       // ======================================================================

@@ -39,6 +39,13 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'HepDATA format and conversion routines')
 # =============================================================================
+import sys
+if sys.version_info[0] > 2 : 
+    iteritems = lambda d : d.    items() 
+else : 
+    iteritems = lambda d : d.iteritems() 
+    
+# =============================================================================
 ## fields required for each dataset
 dataset_fields = ( 'location'  , ## e.g. Figure 5a
                    'dscomment' , 
@@ -64,6 +71,7 @@ hepfile_fields = ( 'author'     ,
 from collections import defaultdict
 METAINFO = defaultdict(list)
 
+
 # =============================================================================
 ## Helper base class for HepDATA formatting 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -76,7 +84,7 @@ class HepDataBase(object) :
         ##
         from copy import deepcopy 
         self.meta = deepcopy(metainfo)
-        for k , v in kwargs.iteritems() :
+        for k , v in iteritems( kwargs ) :
             if isinstance ( v , (list,tuple) ) :
                 for i in v :
                     if not i in self.meta[k] : self.meta[k].append ( i )
@@ -286,7 +294,7 @@ def _h1_hepdata_ ( histo      ,
     
     index = 0 
 
-    for item in histo.iteritems() :
+    for item in iteritems( histo ) :
         
         i = item[0] ## bin-number 
         x = item[1] ## x
@@ -357,7 +365,7 @@ def _tgae_hepdata_ ( graph      ,
     lines = [ '*data: x : y ' ]
 
     index = 0 
-    for item in graph.iteritems() :
+    for item in iteritems( graph ) :
         
         i   = item[0] ## bin-number 
         x   = item[1] ## x
