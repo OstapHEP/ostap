@@ -9,6 +9,7 @@
 """Simple example of (local) root finding in Ostap 
 """
 # =============================================================================
+from   __future__          import print_function
 from ostap.math.rootfinder import find_root  ##  local utility
 
 K    = 1
@@ -20,13 +21,18 @@ der2 = lambda x :   1.0 * N * ( N-1 ) * ( x - 1.0 )**(N-2)
 
 kwargs = { 'full_output' : True , 'disp' : False }
 
-print     'Halley:' , find_root ( fun , -0.5 , 10 , deriv1 = der1 , deriv2 = der2 , **kwargs )
-print     'Newton:' , find_root ( fun , -0.5 , 10 , deriv1 = der1                 , **kwargs )
-print     'Plain :' , find_root ( fun , -0.5 , 10                                 , **kwargs ) 
+r1 = find_root ( fun , -0.5 , 10 , deriv1 = der1 , deriv2 = der2 , **kwargs )
+r2 = find_root ( fun , -0.5 , 10 , deriv1 = der1                 , **kwargs )
+r3 = find_root ( fun , -0.5 , 10                                 , **kwargs )
+
+print ( 'Halley:%s' % str(r1) ) 
+print ( 'Newton:%s' % str(r2) ) 
+print ( 'Plain :%s' % str(r3) ) 
 
 try :
     import scipy.optimize as SP
-    print 'Brent :' , SP.brentq ( fun , -0.5 , 10 , **kwargs)
+    r4 = SP.brentq ( fun , -0.5 , 10 , **kwargs) 
+    print ( 'Brent :%s' % str(r4) )
 except :
     pass 
 

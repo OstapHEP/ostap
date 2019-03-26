@@ -81,7 +81,8 @@ __all__     = (
 )
 # =============================================================================
 import sys, collections
-from   ostap.math.base  import isequal, iszero , samesign  
+from   ostap.math.base  import isequal, iszero , samesign
+from   builtins         import  range 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -940,7 +941,7 @@ class RootFinder(object) :
         self.__inverse = [                        a   , b   ] 
         self.__aitken  = [ 0.5  * ( a.x + b.x ) , a.x , b.x ]  
             
-        for i in xrange ( self.__maxiter ) :
+        for i in range ( self.__maxiter ) :
 
             x , a , b = self.__make_step ( guess , a , b )
 
