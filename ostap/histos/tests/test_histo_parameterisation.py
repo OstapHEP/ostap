@@ -14,7 +14,8 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-import ROOT, random, ostap.histos.param, ostap.histos.histos, ostap.fitting.funcs 
+import ROOT, random, ostap.histos.param, ostap.histos.histos, ostap.fitting.funcs
+from   builtins import  range 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -38,24 +39,24 @@ from ostap.histos.param import legendre_sum, chebyshev_sum
 from ostap.core.core    import hID
 from ostap.utils.timing import timing
 
-h1 = ROOT.TH1F( hID() , 'histogram' , 100, 0 , 1 ) ; h1.Sumw2() 
-h2 = ROOT.TH1F( hID() , 'histogram' , 100, 0 , 1 ) ; h2.Sumw2() 
-h3 = ROOT.TH1F( hID() , 'histogram' , 100, 0 , 1 ) ; h3.Sumw2() 
-h4 = ROOT.TH1F( hID() , 'histogram' , 100, 0 , 1 ) ; h4.Sumw2() 
-h5 = ROOT.TH1F( hID() , 'histogram' , 100, 0 , 1 ) ; h5.Sumw2() 
-h6 = ROOT.TH1F( hID() , 'histogram' , 100, 0 , 1 ) ; h6.Sumw2() 
+h1 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h1.Sumw2() 
+h2 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h2.Sumw2() 
+h3 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h3.Sumw2() 
+h4 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h4.Sumw2() 
+h5 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h5.Sumw2() 
+h6 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h6.Sumw2() 
 
-f1 = ROOT.TF1('f3','(x-1)**2'         ,0,1)
-f2 = ROOT.TF1('f4','x**2'             ,0,1)
-f3 = ROOT.TF1('f3','1-(x-1)**2'       ,0,1)
-f4 = ROOT.TF1('f4','1-x**2'           ,0,1)
-f5 = ROOT.TF1('f5','4*(x-0.5)**2'     ,0,1)
-f6 = ROOT.TF1('f5','1-4*(x-0.5)**2'   ,0,1)
+f1 = ROOT.TF1  ( 'f3'  , '(x-1)**2'         , 0 , 1 )
+f2 = ROOT.TF1  ( 'f4'  , 'x**2'             , 0 , 1 )
+f3 = ROOT.TF1  ( 'f3'  , '1-(x-1)**2'       , 0 , 1 )
+f4 = ROOT.TF1  ( 'f4'  , '1-x**2'           , 0 , 1 )
+f5 = ROOT.TF1  ( 'f5'  , '4*(x-0.5)**2'     , 0 , 1 )
+f6 = ROOT.TF1  ( 'f5'  , '1-4*(x-0.5)**2'   , 0 , 1 )
 
 entries = 100000
 
 ## random.seed(10) 
-for i in xrange(0,entries) :
+for i in range ( 0 , entries ) :
     h1.Fill ( f1.GetRandom() )
     h2.Fill ( f2.GetRandom() )
     h3.Fill ( f3.GetRandom() )

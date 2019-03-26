@@ -391,7 +391,7 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
 
         index = N,i
         
-        if not _bernstein_dual_basis_.has_key ( index ) :
+        if not index in _bernstein_dual_basis_ :
             ## create the dual basic function
             _DUAL = Ostap.Math.BernsteinDualBasis
             _dual = _DUAL ( *index )
@@ -470,7 +470,7 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
         
         index = 2 * N + 1 , i
         
-        if not _bernstein_dual_basis_.has_key ( index ) :
+        if not index in _bernstein_dual_basis_ :
             ## create the dual basic function
             _DUAL = Ostap.Math.BernsteinDualBasis
             _dual = _DUAL ( *index )

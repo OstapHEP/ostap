@@ -9,6 +9,7 @@
 """Simple example of 1D-histogram local interpolation
 """
 # =============================================================================
+from   __future__ import print_function
 import ROOT,random 
 from   ostap.histos import VE 
 
@@ -20,7 +21,7 @@ for i in h1 :
     
 ## 2) use historgam as function
     
-print 'Histogram as function (local interpolation): '
+print ( 'Histogram as function (local interpolation): ')
 for i in range(10) :
 
     x = random.uniform ( *h1.xminmax() )
@@ -31,7 +32,7 @@ for i in range(10) :
     v2 = h1 ( x , interpolate = 2     )  ## parabolic interpolation 
     v3 = h1 ( x , interpolate = 3     )  ## cubic     interpolation 
 
-    print  'x=%s \tv=%s \tv0/v1/v2/v3=%s/%s/%s/%s ' % ( x , v , v0 , v1 , v2 , v3 ) 
+    print ( 'x=%s \tv=%s \tv0/v1/v2/v3=%s/%s/%s/%s ' % ( x , v , v0 , v1 , v2 , v3 ) )
 
 # =============================================================================
 # The END 

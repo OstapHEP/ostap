@@ -154,7 +154,7 @@ def _h1_cmp_chi2_ ( h1              ,
 
     c2  = 0
     ndf = 0  
-    for entry in h1.iteritems() :
+    for entry in h1.items() :
         
         x     = entry[1]
         y1    = entry[2]
@@ -195,7 +195,7 @@ def _h1_chi2_cmp_ ( h1                                    ,
         from ostap.math.intergal import integral as _integral_
         _func_  = lambda x,xl,xr : _integral_ ( func , xl , xr )/(xr-xl)
         
-    for entry in h1.iteritems() :
+    for entry in h1.items() :
         
         x    = entry[1]
         y1   = entry[2]
@@ -572,7 +572,7 @@ def _h1_cmp_minmax_ ( h1                         ,
     mn_val = None
     mx_val = None
     
-    for i , x , y in h1.iteritems() :
+    for i , x , y in h1.items() :
         
         dy = diff ( y , h2 ( x , **kwargs ) )
         if mn_val is None or dy.value() < mn_val.value() :
@@ -621,7 +621,7 @@ def _h2_cmp_minmax_ ( h1                         ,
     mn_val = None
     mx_val = None
     
-    for ix , iy , x , y , z in h1.iteritems() :
+    for ix , iy , x , y , z in h1.items() :
         
         dz = diff ( z , h2 ( x , y , **kwargs ) )
         if mn_val is None or dz.value() < mn_val.value() :

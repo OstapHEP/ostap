@@ -46,7 +46,8 @@ from ostap.core.core import ( cpp      , Ostap     ,
                               iszero   , isequal   , inrange         , 
                               isint    , islong    ,
                               natural_entry        ,
-                              natural_number       ) 
+                              natural_number       )
+from ostap.core.types import integer_types, num_types , long_type
 # =============================================================================
 inf_pos =  float('Inf')
 inf_neg = -float('Inf')
@@ -138,7 +139,7 @@ def _axis_iter_reversed_ ( a ) :
     >>> for i in reverse(axis) : 
     """
     s = a.GetNbins()
-    i = long( s )
+    i = int ( s )
     while 1 <= i :
         yield i
         i-=1
@@ -157,8 +158,15 @@ def _h1_get_item_ ( h1 , ibin ) :
     >>> histo = ...
     >>> ve    = histo[ibin]    
     """
-    ## if not ibin in h1.GetXaxis()    : raise IndexError
-    # 
+    if isinstance ( ibin , slice ) :
+        start = ibin.start
+        step  = ibin.step
+        stop  = ibin.stop
+        if step and step != 1: raise IndexError ('Step must be +1!')
+        if start is None : start = 0 
+        if stop  is None : stop  = len ( h1 ) 
+        return _h1_getslice_ ( h1 , start , stop ) 
+        
     a  = h1.GetXaxis()
     nb = a.GetNbins ()
     #
@@ -192,7 +200,7 @@ def _h1_set_item_ ( h1 , ibin , v ) :
     ## treat the value:
     #
     vv = VE ( v ) 
-    if   isinstance ( v , ( int , long ) ) :
+    if   isinstance ( v , integer_types ) :
         
         if   0  < v   : vv = VE ( v , v )  
         elif 0 == v   : vv = VE ( 0 , 1 ) 
@@ -200,7 +208,7 @@ def _h1_set_item_ ( h1 , ibin , v ) :
 
     elif isinstance ( v , float ) :
         
-        if   islong ( v ) : return _h1_set_item_ ( h1 , ibin , long ( v ) )
+        if   islong ( v ) : return _h1_set_item_ ( h1 , ibin , long_type ( v ) )
         else              : vv = VE ( v , 0 ) 
 
     #
@@ -226,7 +234,7 @@ def _h2_set_item_ ( h2 , ibin , v ) :
     """
     ##
     vv = VE ( v )
-    if isinstance   ( v , ( int , long ) ) :
+    if isinstance   ( v , integer_types ) :
         
         if   0  < v     : vv = VE ( v , v ) 
         elif 0 == v     : vv = VE ( 0 , 1 ) 
@@ -234,7 +242,7 @@ def _h2_set_item_ ( h2 , ibin , v ) :
 
     elif isinstance ( v , float ) :
         
-        if islong ( v ) : return _h2_set_item_ ( h2 , ibin , long ( v )  )
+        if islong ( v ) : return _h2_set_item_ ( h2 , ibin , long_type ( v )  )
         else            : vv = VE ( v , 0 ) 
         
     ## check and adjust bins 
@@ -280,7 +288,7 @@ def _h3_set_item_ ( h3 , ibin , v ) :
     """
     #
     vv = VE ( v ) 
-    if   isinstance ( v , ( int , long ) ) :
+    if   isinstance ( v , integer_types ) :
         
         if   0  < v     : vv = VE ( v , v )
         elif 0 == v     : vv = VE ( 0 , 1 ) 
@@ -288,7 +296,7 @@ def _h3_set_item_ ( h3 , ibin , v ) :
         
     elif isinstance ( v , float ) :
         
-        if islong ( v ) : return _h3_set_item_ ( h3 , ibin , long ( v ) )
+        if islong ( v ) : return _h3_set_item_ ( h3 , ibin , long_type ( v ) )
         else            : vv = VE ( v , 0 ) 
 
     ## check and adjust bins 
@@ -369,7 +377,7 @@ def _h2_get_item_ ( h2 , ibin ) :
     >>> ve    = histo[ix][iy] ## ditto 
     """
     #
-    if isinstance ( ibin , ( int , long ) ) :
+    if isinstance ( ibin , integer_types ) :
         return _H2_item_ ( h2 , ibin )
     
     ix = ibin[0]
@@ -465,7 +473,7 @@ class _H3_item_1_(object):
         self._xbin = xbin
         
     def __getitem__ ( self , ybin  ) :
-        if isinstance ( ybin , ( int , long ) ) : 
+        if isinstance ( ybin , integer_types ) : 
             return _H3_item_2_ ( self._h3 , self._xbin , ybin )
         elif 2 == len ( ybin ) :
             return self._h3 [ self._xbin , ybin[0] , ybin[1] ] 
@@ -500,8 +508,8 @@ def _h3_get_item_ ( h3 , ibin ) :
     >>> ve    = histo[ix][iy, iz] ## ditto    
     """
     #
-    if isinstance ( ibin , ( int , long ) ) : return _H3_item_1_ ( h3 ,  ibin )
-    elif 2 == len( ibin )                   : return _H3_item_2_ ( h3 , *ibin )
+    if isinstance ( ibin , integer_types ) : return _H3_item_1_ ( h3 ,  ibin )
+    elif 2 == len( ibin )                  : return _H3_item_2_ ( h3 , *ibin )
 
     ix = ibin[0]
     ax = h3.GetXaxis()
@@ -816,7 +824,7 @@ def _num_empty_ ( h ) :
     >>> e = h.numEmpty()
     """
     ne  = 0 
-    for i in h.iteritems() : 
+    for i in h.items() : 
         v = i[-1]
         if iszero ( v.value() ) and iszero  ( v.cov2 () ) : ne +=1
     return ne 
@@ -1086,7 +1094,8 @@ ROOT.TH3D  . __getitem__  = _h3_get_item_
 def _h1_iteritems_ ( h1 , low = 1 , high = sys.maxsize ) :
     """Iterate over histogram items:    
     >>> h1 = ...
-    >>> for i,x,y in h1.iteritems()  : ...    
+    >>> for i,x,y in h1.    items()  : ...    
+    >>> for i,x,y in h1.iteritems()  : ...    ## ditto 
     """
     ax = h1.GetXaxis()
     sx = ax.GetNbins()
@@ -1104,6 +1113,8 @@ def _h1_iteritems_ ( h1 , low = 1 , high = sys.maxsize ) :
         yield ix, VE(x,xe*xe) , VE ( y,ye*ye)
         
 
+ROOT.TH1F  .     items     = _h1_iteritems_
+ROOT.TH1D  .     items     = _h1_iteritems_
 ROOT.TH1F  . iteritems     = _h1_iteritems_
 ROOT.TH1D  . iteritems     = _h1_iteritems_
 
@@ -1190,7 +1201,8 @@ ROOT.TH3D.bin = _h3_bin_
 def _h2_iteritems_ ( h2 ) :
     """Iterate over histogram items:
     >>> h2 = ...
-    >>> for ix,iy,x,y,z in h2.iteritems() : ...    
+    >>> for ix,iy,x,y,z in h2.    items() : ...   
+    >>> for ix,iy,x,y,z in h2.iteritems() : ... ## ditto   
     """
     ax = h2.GetXaxis()
     sx = ax.GetNbins()
@@ -1214,6 +1226,8 @@ def _h2_iteritems_ ( h2 ) :
             #
             
         
+ROOT.TH2F  .     items     = _h2_iteritems_
+ROOT.TH2D  .     items     = _h2_iteritems_
 ROOT.TH2F  . iteritems     = _h2_iteritems_
 ROOT.TH2D  . iteritems     = _h2_iteritems_
 
@@ -1224,7 +1238,8 @@ ROOT.TH2D  . iteritems     = _h2_iteritems_
 def _h3_iteritems_ ( h3 ) :
     """Iterate over histogram items:    
     >>> h3 = ...
-    >>> for ix,iy,iz,x,y,z,V in h3 : ...    
+    >>> for ix,iy,iz,x,y,z,V in h3.    items() : ...    
+    >>> for ix,iy,iz,x,y,z,V in h3.iteritems() : ...   ##  ditto
     """
     ax = h3.GetXaxis ()
     sx = ax.GetNbins ()
@@ -1258,6 +1273,8 @@ def _h3_iteritems_ ( h3 ) :
                 #
 
             
+ROOT.TH3F  .     items     = _h3_iteritems_
+ROOT.TH3D  .     items     = _h3_iteritems_
 ROOT.TH3F  . iteritems     = _h3_iteritems_
 ROOT.TH3D  . iteritems     = _h3_iteritems_
 
@@ -1269,7 +1286,8 @@ ROOT.TH3D  . iteritems     = _h3_iteritems_
 def _a_iteritems_ ( axis ) :
     """Iterate over items in axis     
     >>> axis = ...
-    >>> for ibin,low,center,high in axis.iteritems() :     
+    >>> for ibin,low,center,high in axis.    items() : ...    
+    >>> for ibin,low,center,high in axis.iteritems() : ... ## ditto    
     """
     for i in axis :
 
@@ -1279,8 +1297,8 @@ def _a_iteritems_ ( axis ) :
 
         yield i,l,c,u
 
+ROOT.TAxis.     items     = _a_iteritems_
 ROOT.TAxis. iteritems     = _a_iteritems_
-
 
 # =============================================================================
 ## get bin parameters : low- and up-edges 
@@ -1433,7 +1451,7 @@ def binomEff_h1 ( h1 , h2 , func = binomEff ) :
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for i1,x1,y1 in h1.iteritems() :
+    for i1,x1,y1 in h1.items() :
         #
         if not natural_entry ( y1 ) :
             raise AssertionError ( 'Non-natural entry[%d]=%s' % ( ix1 , y1 ) ) 
@@ -1442,8 +1460,8 @@ def binomEff_h1 ( h1 , h2 , func = binomEff ) :
         if not natural_entry ( y2 ) :
             raise AssertionError ( 'Non-natural entry(%s)=%s' % ( x1.value() , y2 ) )
         #
-        l1 = long ( y1.value () )
-        l2 = long ( y2.value () )
+        l1 = long_type ( y1.value () )
+        l2 = long_type ( y2.value () )
         #
         if  0 > l1 or 0 > l2 or l1 > l2 :
             raise AssertionError ( 'Incorrect values(%s): %d,%d' % ( x1.value() , l1 , l2 ) )
@@ -1531,7 +1549,7 @@ def binom_interval_h1 ( accepted , rejected , func , interval = one_sigma ) :
     #
     points = [] 
     #
-    for i1,x1,y1 in h1.iteritems() :
+    for i1,x1,y1 in h1.items() :
         #
         if not natural_entry ( y1 ) :
             raise AssertionError ( 'Non-natural entry[%d]=%s' % ( i1 , y1 ) ) 
@@ -1540,8 +1558,8 @@ def binom_interval_h1 ( accepted , rejected , func , interval = one_sigma ) :
         if not natural_entry ( y2 ) :
             raise AssertionError ( 'Non-natural entry(%s)=%s' % ( x1.value() , y2 ) )
         #
-        l1 = long ( y1.value () )
-        l2 = long ( y2.value () )
+        l1 = long_type ( y1.value () )
+        l2 = long_type ( y2.value () )
         #
         if  0 > l1 or 0 > l2 :
             raise AssertionError ( 'Incorrect values(%s): %d,%d' % ( x1.value() , l1 , l2 ) )
@@ -1613,7 +1631,7 @@ def binomEff_h2 ( h1 , h2 , func = binomEff ) :
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for ix1,iy1,x1,y1,z1 in h1.iteritems() :
+    for ix1,iy1,x1,y1,z1 in h1.items() :
         #
         if not natural_entry ( z1 ) :
             raise AssertionError ( 'Non-natural entry[%d,%d]=%s' % ( ix1 , iy1 , z1 ) ) 
@@ -1622,8 +1640,8 @@ def binomEff_h2 ( h1 , h2 , func = binomEff ) :
         if not natural_entry ( z2 ) :
             raise AssertionError ( 'Non-natural entry(%s,%s)=%s' % ( x1.value() , y1.value() , z2 ) )
         #
-        l1 = long ( z1.value () )
-        l2 = long ( z2.value () )
+        l1 = long_type ( z1.value () )
+        l2 = long_type ( z2.value () )
         #
         if  0 > l1 or 0 > l2 or l1 > l2 :
             raise AssertionError ( 'Incorrect values(%s,%s): %d,%d' % ( x1.value() , y1.value() , l1 , l2 ) )
@@ -1663,7 +1681,7 @@ def binomEff_h3 ( h1 , h2 , func = binomEff ) :
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.iteritems() :
+    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
         if not natural_entry ( v1 ) :
             raise AssertionError ( 'Non-natural entry[%d,%d,%d]=%s' % ( ix1 , iy1 , iz1, v1 ) ) 
@@ -1672,8 +1690,8 @@ def binomEff_h3 ( h1 , h2 , func = binomEff ) :
         if not natural_entry ( v2 ) :
             raise AssertionError ( 'Non-natural entry(%s,%s,%s)=%s' % ( x1.value() , y1.value() , z1.value() , v2 ) )
         
-        l1 = long ( v1.value () )
-        l2 = long ( v2.value () )
+        l1 = long_type ( v1.value () )
+        l2 = long_type ( v2.value () )
         #
         if  0 > l1 or 0 > l2 or l1 > l2 :
             raise AssertionError ( 'Incorrect values(%s,%s,%s): %d,%d' % ( x1.value() , y1.value() , z1.value() , l1 , l2 ) )
@@ -1731,7 +1749,7 @@ def zechEff_h1 ( h1 , h2 , func = zechEff ) :
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for i1,x1,y1 in h1.iteritems() :
+    for i1,x1,y1 in h1.items() :
         #
         y2 = h2 ( x1.value() ) 
         #
@@ -1777,7 +1795,7 @@ def zechEff_h2 ( h1 , h2 ) :
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for ix1,iy1,x1,y1,z1 in h1.iteritems() :
+    for ix1,iy1,x1,y1,z1 in h1.items() :
         #
         z2 = h2 ( x1.value() , y1.value() ) 
         #
@@ -1824,7 +1842,7 @@ def zechEff_h3 ( h1 , h2 ) :
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.iteritems() :
+    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
         v2 = h2 ( x1.value() , y1.value() , z1.value() ) 
         #
@@ -1891,7 +1909,7 @@ ROOT.TH1.binomEff_2 = _h_binomEff_2_
 ## consider object as function:
 def objectAsFunction ( obj ) :
 
-    if   isinstance ( obj , ( int , long , float ) ) :
+    if   isinstance ( obj , num_types ) :
         
         val  = float  ( obj ) 
         func = lambda x,*y : VE ( val , 0 )
@@ -1974,11 +1992,12 @@ class FUNC_OTHER(FUNCX) :
 ## consider object as function:
 def objectAsFunctionObject ( obj ) :
     
-    if   isinstance ( obj , FUNCX                       ) : return obj 
-    elif isinstance ( obj , ( int , long , float , VE ) ) : return FUNC_CO ( obj ) 
-    elif isinstance ( obj ,   ROOT.TF1                  ) : return FUNC_F1 ( obj ) 
-    elif isinstance ( obj ,   ROOT.TF2                  ) : return FUNC_F2 ( obj ) 
-    elif isinstance ( obj ,   ROOT.TF3                  ) : return FUNC_F3 ( obj ) 
+    if   isinstance ( obj , FUNCX     ) : return obj 
+    elif isinstance ( obj , num_types ) : return FUNC_CO ( obj ) 
+    elif isinstance ( obj , VE        ) : return FUNC_CO ( obj ) 
+    elif isinstance ( obj , ROOT.TF1  ) : return FUNC_F1 ( obj ) 
+    elif isinstance ( obj , ROOT.TF2  ) : return FUNC_F2 ( obj ) 
+    elif isinstance ( obj , ROOT.TF3  ) : return FUNC_F3 ( obj ) 
     #
     ## the original stuff    
     return FUNC_OTHER ( obj ) 
@@ -2007,7 +2026,7 @@ def _h1_oper_ ( h1 , h2 , oper ) :
     f2 = objectAsFunction ( h2 )
     
     ##
-    for i1,x1,y1 in h1.iteritems() :
+    for i1,x1,y1 in h1.items() :
         #
         result.SetBinContent ( i1 , 0 ) 
         result.SetBinError   ( i1 , 0 )
@@ -2040,7 +2059,7 @@ def _h1_ioper_ ( h1 , h2 , oper ) :
     #
     f2 = objectAsFunction ( h2 ) 
     ##
-    for i1,x1,y1 in h1.iteritems() :
+    for i1,x1,y1 in h1.items() :
         #
         y2 = f2 ( x1.value() ) 
         #
@@ -2175,7 +2194,7 @@ def _h1_pow_ ( h1 , val ) :
     result = h1.Clone( hID() )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for i1,x1,y1 in h1.iteritems() :
+    for i1,x1,y1 in h1.items() :
         #
         result.SetBinContent ( i1 , 0 ) 
         result.SetBinError   ( i1 , 0 )
@@ -2203,7 +2222,7 @@ def _h1_abs_ ( h1 ) :
     result = h1.Clone( hID() )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for i1,x1,y1 in h1.iteritems() :
+    for i1,x1,y1 in h1.items() :
         #
         result.SetBinContent ( i1 , 0 ) 
         result.SetBinError   ( i1 , 0 )
@@ -2335,32 +2354,35 @@ def _h1_rrshift_ ( h1 , obj ) :
 ## decorate:
 for t in ( ROOT.TH1F , ROOT.TH1D ) : 
     
-    t . _oper_      = _h1_oper_
-    t . _ioper_     = _h1_ioper_
-    t . __div__     = _h1_div_
-    t . __mul__     = _h1_mul_
-    t . __add__     = _h1_add_
-    t . __sub__     = _h1_sub_
-    t . __pow__     = _h1_pow_
-    
-    t . __idiv__    = _h1_idiv_
-    t . __imul__    = _h1_imul_
-    t . __iadd__    = _h1_iadd_
-    t . __isub__    = _h1_isub_
-    
-    t . __rdiv__    = _h1_rdiv_
-    t . __rmul__    = _h1_rmul_
-    t . __radd__    = _h1_radd_
-    t . __rsub__    = _h1_rsub_
+    t . _oper_       = _h1_oper_
+    t . _ioper_      = _h1_ioper_
+    t . __mul__      = _h1_mul_
+    t . __add__      = _h1_add_
+    t . __sub__      = _h1_sub_
+    t . __pow__      = _h1_pow_
+    t . __truediv__  = _h1_div_
+    t . __div__      = _h1_div_
 
-    t . __rrshift__ = _h1_rrshift_
+    t . __imul__     = _h1_imul_
+    t . __iadd__     = _h1_iadd_
+    t . __isub__     = _h1_isub_
+    t . __itruediv__ = _h1_idiv_
+    t . __idiv__     = _h1_idiv_
     
-    t . __abs__     = _h1_abs_
-    t .  frac       = _h1_frac_
-    t .  asym       = _h1_asym_
-    t .  diff       = _h1_diff_
-    t .  chi2       = _h1_chi2_
-    t .  average    = _h1_mean_
+    t . __rtruediv__ = _h1_rdiv_
+    t . __rdiv__     = _h1_rdiv_
+    t . __rmul__     = _h1_rmul_
+    t . __radd__     = _h1_radd_
+    t . __rsub__     = _h1_rsub_
+
+    t . __rrshift__  = _h1_rrshift_
+    
+    t . __abs__      = _h1_abs_
+    t .  frac        = _h1_frac_
+    t .  asym        = _h1_asym_
+    t .  diff        = _h1_diff_
+    t .  chi2        = _h1_chi2_
+    t .  average     = _h1_mean_
 
 # =============================================================================
 ## find the first X-value for the given Y-value 
@@ -2646,7 +2668,7 @@ def _h2_oper_ ( h1 , h2 , oper ) :
     #
     f2 = objectAsFunction ( h2 )
     # 
-    for ix1,iy1,x1,y1,z1 in h1.iteritems() :
+    for ix1,iy1,x1,y1,z1 in h1.items() :
         #
         result.SetBinContent ( ix1 , iy1 , 0 ) 
         result.SetBinError   ( ix1 , iy1 , 0 )
@@ -2675,7 +2697,7 @@ def _h2_ioper_ ( h1 , h2 , oper ) :
     #
     f2 = objectAsFunction ( h2 )
     # 
-    for ix1,iy1,x1,y1,z1 in h1.iteritems() :
+    for ix1,iy1,x1,y1,z1 in h1.items() :
         #
         h1.SetBinContent ( ix1 , iy1 , 0 ) 
         h1.SetBinError   ( ix1 , iy1 , 0 )
@@ -2857,7 +2879,7 @@ def _h2_pow_ ( h1 , val ) :
     result = h1.Clone( hID() )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for ix1,iy1,x1,y1,z1 in h1.iteritems() :
+    for ix1,iy1,x1,y1,z1 in h1.items() :
         #
         result.SetBinContent ( ix1 , iy1 , 0 ) 
         result.SetBinError   ( ix1 , iy1 , 0 )
@@ -2885,7 +2907,7 @@ def _h2_abs_ ( h1 ) :
     result = h1.Clone( hID() )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for ix1,iy1,x1,y1,z1 in h1.iteritems() :
+    for ix1,iy1,x1,y1,z1 in h1.items() :
         #
         result.SetBinContent ( ix1 , iy1 , 0 ) 
         result.SetBinError   ( ix1 , iy1 , 0 )
@@ -2953,23 +2975,26 @@ def _h2_surf2_ ( self , opts = '' ) : return self.Draw ( opts + ' surf2' )
 ## decorate 
 for t in ( ROOT.TH2F , ROOT.TH2D ) : 
     
-    t . _oper_   = _h2_oper_
-    t . __div__  = _h2_div_
-    t . __mul__  = _h2_mul_
-    t . __add__  = _h2_add_
-    t . __sub__  = _h2_sub_
-    t . __pow__  = _h2_pow_
-    t . __abs__  = _h2_abs_
+    t . _oper_       = _h2_oper_
+    t . __truediv__  = _h2_div_
+    t . __div__      = _h2_div_
+    t . __mul__      = _h2_mul_
+    t . __add__      = _h2_add_
+    t . __sub__      = _h2_sub_
+    t . __pow__      = _h2_pow_
+    t . __abs__      = _h2_abs_
 
-    t . __rdiv__ = _h2_rdiv_
-    t . __rmul__ = _h2_rmul_
-    t . __radd__ = _h2_radd_
-    t . __rsub__ = _h2_rsub_
+    t . __rtruediv__ = _h2_rdiv_
+    t . __rdiv__     = _h2_rdiv_
+    t . __rmul__     = _h2_rmul_
+    t . __radd__     = _h2_radd_
+    t . __rsub__     = _h2_rsub_
 
-    t . __idiv__ = _h2_idiv_
-    t . __imul__ = _h2_imul_
-    t . __iadd__ = _h2_iadd_
-    t . __isub__ = _h2_isub_
+    t . __itruediv__ = _h2_idiv_
+    t . __idiv__     = _h2_idiv_
+    t . __imul__     = _h2_imul_
+    t . __iadd__     = _h2_iadd_
+    t . __isub__     = _h2_isub_
     
     t .  frac    = _h2_frac_
     t .  asym    = _h2_asym_
@@ -3002,7 +3027,7 @@ def _h3_oper_ ( h1 , h2 , oper ) :
     #
     f2 = objectAsFunction ( h2 ) 
     # 
-    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.iteritems() :
+    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
         result.SetBinContent ( ix1 , iy1 , iz1 , 0 ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , 0 )
@@ -3032,7 +3057,7 @@ def _h3_ioper_ ( h1 , h2 , oper ) :
     #
     f2 = objectAsFunction ( h2 ) 
     # 
-    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.iteritems() :
+    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
         h1.SetBinContent ( ix1 , iy1 , iz1 , 0 ) 
         h1.SetBinError   ( ix1 , iy1 , iz1 , 0 )
@@ -3154,7 +3179,7 @@ def _h3_pow_ ( h1 , val ) :
     result = h1.Clone( hID() )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.iteritems() :
+    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
         result.SetBinContent ( ix1 , iy1 , iz1 , 0 ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , 0 )
@@ -3232,7 +3257,7 @@ def _h3_abs_ ( h1 ) :
     result = h1.Clone( hID() )
     if not result.GetSumw2() : result.Sumw2()
     #
-    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.iteritems() :
+    for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
         result.SetBinContent ( ix1 , iy1 , iz1 , 0 ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , 0 )
@@ -3294,20 +3319,23 @@ def _h3_isub_ ( h1 , h2 ) :
 
 ROOT.TH3._oper_    = _h3_oper_
     
-ROOT.TH3.__div__   = _h3_div_
-ROOT.TH3.__mul__   = _h3_mul_
-ROOT.TH3.__add__   = _h3_add_
-ROOT.TH3.__sub__   = _h3_sub_
+ROOT.TH3.__truediv__  = _h3_div_
+ROOT.TH3.__div__      = _h3_div_
+ROOT.TH3.__mul__      = _h3_mul_
+ROOT.TH3.__add__      = _h3_add_
+ROOT.TH3.__sub__      = _h3_sub_
 
-ROOT.TH3.__rdiv__  = _h3_rdiv_
-ROOT.TH3.__rmul__  = _h3_rmul_
-ROOT.TH3.__radd__  = _h3_radd_
-ROOT.TH3.__rsub__  = _h3_rsub_
+ROOT.TH3.__rtruediv__ = _h3_rdiv_
+ROOT.TH3.__rdiv__     = _h3_rdiv_
+ROOT.TH3.__rmul__     = _h3_rmul_
+ROOT.TH3.__radd__     = _h3_radd_
+ROOT.TH3.__rsub__     = _h3_rsub_
 
-ROOT.TH3.__idiv__  = _h3_idiv_
-ROOT.TH3.__imul__  = _h3_imul_
-ROOT.TH3.__iadd__  = _h3_iadd_
-ROOT.TH3.__isub__  = _h3_isub_
+ROOT.TH3.__itruediv__ = _h3_idiv_
+ROOT.TH3.__idiv__     = _h3_idiv_
+ROOT.TH3.__imul__     = _h3_imul_
+ROOT.TH3.__iadd__     = _h3_iadd_
+ROOT.TH3.__isub__     = _h3_isub_
 
 ROOT.TH3.__abs__   = _h3_abs_
 ROOT.TH3.__pow__   = _h3_pow_
@@ -3344,7 +3372,7 @@ def _h1_add_function_integral_ ( h1 , func ) :
     ff = objectAsFunctionObject( func )
     if not h1.GetSumw2() : h1.Sumw2()
     
-    for i in h1.iteritems() :
+    for i in h1.items() :
 
         ibin      = i [ 0 ]
         x         = i [ 1 ]
@@ -3482,7 +3510,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 ) :
     >>> smeared2 = h.smear ( sigma = lambda x :  0.1*x ) ## smear using 'running' sigma  
     """
 
-    if   isinstance ( sigma , (int,long,float) ) :
+    if   isinstance ( sigma , num_types ) :
         if 0 > sigma or iszero ( sigma ) : return h1.clone()  ## no need to smear 
         sig    = sigma  
         sigma  = lambda x : sig
@@ -3495,7 +3523,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 ) :
         sigfun = sigma
         sigma  = lambda x : max ( float ( sigfun ( float ( x ) ) ) , 0.0 ) 
     else :
-        raise TypeError, "Can't deduce the resolution type %s/%s" %( sigma , type( sigma ) )
+        raise TypeError("Can't deduce the resolution type %s/%s" % ( sigma , type ( sigma ) ) )
     
     #
     ## clone the input histogram
@@ -3509,7 +3537,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 ) :
     ## collect all bins
     bins = []
 
-    for ibin in h1.iteritems() : bins.append ( ibin[1:] )
+    for ibin in h1.items() : bins.append ( ibin[1:] )
 
     ## add few artificially replicated bins
     fb    = bins [  0 ]
@@ -3569,7 +3597,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 ) :
             h2[i2] += val1 
             continue 
         
-        for ibin2 in h2.iteritems() :
+        for ibin2 in h2.items() :
 
             i2      =     ibin2 [0]
             x2c     =     ibin2 [1].value () 
@@ -3603,7 +3631,7 @@ def _h1_transform_ ( h1 , func ) :
     h2 = h1.Clone( hID() )
     if not h2.GetSumw2() : h2.Sumw2()
     #
-    for i,x,y in h1.iteritems() :
+    for i,x,y in h1.items() :
         
         h2 [ i ] = func ( x, y ) 
         
@@ -3660,7 +3688,7 @@ def _h2_transform_ ( h2 , func ) :
     h3 = h2.Clone( hID() )
     if not h3.GetSumw2() : h3.Sumw2()
     #
-    for ix,iy,x,y,z in h2.iteritems() :
+    for ix,iy,x,y,z in h2.items() :
         
         h3 [ ix , iy ] = func ( x, y , z ) 
         
@@ -3888,7 +3916,7 @@ def _fom_1_ ( s , b , alpha = 1 , increase = True ) :
     #
     from math import sqrt, pow 
     #
-    for i,x,y in hs.iteritems() :
+    for i,x,y in hs.items() :
         
         ## the signal 
         si = y
@@ -4004,7 +4032,7 @@ def _rebin_nums_1D_ ( h1 , template ) :
     ## reset the histogram 
     for i2 in h2 : h2[i2] = VE(0,0)
     #
-    for i2 in h2.iteritems() :
+    for i2 in h2.items() :
 
         xb  = i2[1]
         xbv = xb.value ()
@@ -4013,7 +4041,7 @@ def _rebin_nums_1D_ ( h1 , template ) :
         bl = h1.findBin ( xbv - xbe ) - 1
         bh = h1.findBin ( xbv + xbe ) + 1
         
-        for i1 in h1.iteritems( bl , bh + 1 ) :
+        for i1 in h1.items( bl , bh + 1 ) :
             
             o = _bin_overlap_1D_ ( i1[1] , i2[1] )
             
@@ -4034,7 +4062,7 @@ def _rebin_func_1D_ ( h1 , template ) :
     ## reset the histogram 
     for i2 in h2 : h2[i2] = VE(0,0)
     #
-    for i2 in h2.iteritems() :
+    for i2 in h2.items() :
         
         xb  = i2[1]
         xbv = xb.value ()
@@ -4043,7 +4071,7 @@ def _rebin_func_1D_ ( h1 , template ) :
         bl = h1.findBin ( xbv - xbe ) - 1  
         bh = h1.findBin ( xbv + xbe ) + 1
         
-        for i1 in h1.iteritems( bl , bh + 1 ) :
+        for i1 in h1.items( bl , bh + 1 ) :
 
             o = _bin_overlap_1D_ ( i2[1] , i1[1] ) ## NOTE THE ORDER!!! 
             
@@ -4067,9 +4095,9 @@ def _rebin_nums_2D_ ( h1 , template ) :
     ## reset the histogram 
     for i2 in h2 : h2[i2] = VE(0,0)
     #
-    for i2 in h2.iteritems() :
+    for i2 in h2.items() :
 
-        for i1 in h1.iteritems() :
+        for i1 in h1.items() :
             
             o = _bin_overlap_2D_ ( i1[2] , i1[3] , i2[2] , i2[3] )
             
@@ -4093,9 +4121,9 @@ def _rebin_func_2D_ ( h1 , template ) :
     ## reset the histogram 
     for i2 in h2 : h2[i2] = VE(0,0)
     #
-    for i2 in h2.iteritems() :
+    for i2 in h2.items() :
         
-        for i1 in h1.iteritems() :
+        for i1 in h1.items() :
             
             o = _bin_overlap_1D_ ( i2[2] , i2[3] , i1[2] , i2[3] ) ## NOTE THE ORDER!!! 
             
@@ -4168,6 +4196,9 @@ def _h1_getslice_ ( h1 , i , j ) :
     """
     axis = h1  .GetXaxis()
     nb   = axis.GetNbins()
+
+    if i is None : i = 1
+    if j is None : j = nb + 1 
     
     while i < 0 : i += nb
     while j < 0 : j += nb
@@ -4363,7 +4394,7 @@ def _h1_accumulate_ ( h                        ,
     ## check sums 
     if high <= low  or  xmax <= xmin : return result
     ##
-    for i in h.iteritems() :
+    for i in h.items() :
         ibin = i[0] 
         if low <= ibin < high :
             xval = i[1].value()
@@ -4440,7 +4471,7 @@ def _h1_shift_ ( h , bias ) :
     result.Reset() ;
     if not result.GetSumw2()  : result.Sumw2()
     #
-    for i,x,y in result.iteritems() :
+    for i,x,y in result.items() :
         
         x         += bias
         result[i]  = h ( x )
@@ -4459,7 +4490,7 @@ def _h1_irshift_ ( h , ibias ) :
     """
     #
     ##
-    if not isinstance ( ibias , ( int , long ) ) : return NotImplemented 
+    if not isinstance ( ibias , integer_types ) : return NotImplemented 
     if not h     .GetSumw2()  : h    .Sumw2()
     ##
     if   0 == ibias : return h ## RETURN 
@@ -4485,7 +4516,7 @@ def _h1_ilshift_ ( h , ibias ) :
     """
     #
     ##
-    if not isinstance ( ibias , ( int , long ) ) : return NotImplemented 
+    if not isinstance ( ibias , integer_types ) : return NotImplemented 
     if not h     .GetSumw2()  : h    .Sumw2()
     ##
     if   0 == ibias : return h  ## RETURN 
@@ -4511,7 +4542,7 @@ def _h1_lshift_ ( h , ibias ) :
     """
     #
     ##
-    if not isinstance ( ibias , ( int , long ) ) : return NotImplemented 
+    if not isinstance ( ibias , integer_types ) : return NotImplemented 
     ## 
     if not h     .GetSumw2()  : h    .Sumw2()
     result = h.Clone( hID() ) ;
@@ -4534,7 +4565,7 @@ def _h1_rshift_ ( h , ibias ) :
     #
     if isinstance ( ibias , ROOT.TH1 ) : return _h1_rrshift_ ( ibias , h ) 
     ##
-    if not isinstance ( ibias , ( int , long ) ) : return NotImplemented 
+    if not isinstance ( ibias , integer_types ) : return NotImplemented 
     ##
     return _h1_lshift_ ( h , -1 * ibias )
 
@@ -4575,7 +4606,7 @@ def _h1_integrate_ ( h                         ,
     ## check
     if highx <= lowx  or xmax <= xmin : return result
     ##
-    for i in h.iteritems() :
+    for i in h.items() :
 
         ibinx = i[0]
 
@@ -4730,7 +4761,7 @@ def _h3_integrate_ ( h                         ,
     if highy <= lowy  or ymax <= ymin : return result
     if highz <= lowz  or zmax <= zmin : return result
     ##
-    for i in h.iteritems() :
+    for i in h.items() :
 
         ibinx = i[0]
         ibiny = i[1]
@@ -5466,7 +5497,7 @@ def _solve_ ( h1 , value ) :
     #
     solutions = []
     _size = len ( h1 ) 
-    for i in h1.iteritems() :
+    for i in h1.items() :
 
         ibin = i[0]
         x    = i[1]
@@ -5518,7 +5549,7 @@ def _equal_edges_ ( h1 , num  , wmax = -1 ) :
     >>> histo = ....
     >>> edges = histo.equal_edges ( 10 )    
     """
-    if not isinstance ( num , ( int , long ) ) :
+    if not isinstance ( num , integer_types ) :
         return TypeError, "'num' is not integer!"
     elif 1 >  num :
         return TypeError, "'num' is invalid!"
@@ -5580,24 +5611,24 @@ def _h2_get_slice_ ( h2 , axis , ibins ) :
     """
     #
     if   1 == axis :
-        if isinstance ( ibins , ( int , long ) ) :
+        if isinstance ( ibins , integer_types ) :
             if not ibins in h2.GetXaxis() :
-                raise TypeError, 'Illegal bin  index %s' % ibins
+                raise TypeError ( 'Illegal bin  index %s' % ibins ) 
             ibins = ibins,
         h_slice = h1_axis ( h2.GetYaxis () ,
                             title  = h2.GetTitle() + ":X-slice %s" % ibins , 
                             double = isinstance ( h2 , ROOT.TH2D )         )              
     elif 2 == axis : 
-        if isinstance ( ibins , ( int , long ) ) :
+        if isinstance ( ibins , integer_types ) :
             if not ibins in h2.GetYaxis() :
-                raise TypeError, 'Illegal bin  index %s' % ibins 
+                raise TypeError ( 'Illegal bin  index %s' % ibins )
             ibins = ibins,
         h_slice = h1_axis ( h2.GetXaxis () ,
                             title  = h2.GetTitle() + ":Y-slice %s" % ibins , 
                             double = isinstance ( h2 , ROOT.TH2D )         )  
             
     else :
-        raise TypeError, 'Illegal axis index %s' % axis 
+        raise TypeError ( 'Illegal axis index %s' % axis ) 
 
     ## fill the slice histogram
     for i in h2 :
@@ -5689,9 +5720,9 @@ def _h3_get_slice_ ( h3 , axis , ibins ) :
     """
     #
     if   1 == axis :
-        if isinstance ( ibins , (int,long) ) : 
+        if isinstance ( ibins , integer_types ) : 
             if not ibins in h3.GetXaxis() :
-                raise TypeError, 'Illegal bin  index %s' % ibins
+                raise TypeError ( 'Illegal bin  index %s' % ibins ) 
             ibins = ibins ,
         h_slice = h2_axes ( h3.GetYaxis () ,
                             h3.GetZaxis () ,
@@ -5699,25 +5730,25 @@ def _h3_get_slice_ ( h3 , axis , ibins ) :
                             double = isinstance ( h3 , ROOT.TH3D )        )
         
     elif 2 == axis : 
-        if isinstance ( ibins , (int,long) ) : 
+        if isinstance ( ibins , integer_types ) : 
             if not ibins in h3.GetYaxis() :
-                raise TypeError, 'Illegal bin  index %s' % ibins
+                raise TypeError ( 'Illegal bin  index %s' % ibins ) 
             ibins = ibins ,
         h_slice = h2_axes ( h3.GetXaxis () ,
                             h3.GetZaxis () ,
                             title  = h3.GetTitle()+ ":Y-slice %s" % ibnis , 
                             double = isinstance ( h3 , ROOT.TH2D )        )             
     elif 3 == axis : 
-        if isinstance ( ibins , (int,long) ) : 
+        if isinstance ( ibins , integer_types ) : 
             if not ibins in h3.GetZaxis() :
-                raise TypeError, 'Illegal bin  index %s' % ibins 
+                raise TypeError ( 'Illegal bin  index %s' % ibins )
             ibins = ibins ,
         h_slice = h2_axes ( h3.GetXaxis () , 
                             h3.GetYaxis () ,
                             title  = h3.GetTitle()+ ":Z-slice %s" % ibins , 
                             double = isinstance ( h3 , ROOT.TH2D ) )     
     else :
-        raise TypeError, 'Illegal axis index %s' % axis 
+        raise TypeError ( 'Illegal axis index %s' % axis )
 
     ## fill the slice histogram
     for i in h3 :
@@ -5856,7 +5887,7 @@ def _h2_proj_ ( h2 , axis , *args ) :
     if   1 == axis : return h2.ProjectionX ( hID () , *args ) 
     elif 2 == axis : return h2.ProjectionY ( hID () , *args )
     
-    raise TypeError, 'Illegal axis index %s' % axis 
+    raise TypeError ( 'Illegal axis index %s' % axis )
 
 _h2_proj_ . __doc__ += '\n'
 _h2_proj_ . __doc__ += ROOT.TH2.ProjectionX.__doc__
@@ -6278,7 +6309,7 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
         deriv = lambda x,h : _deriv_ ( _fun , x , h )
 
     ## loop over the content of original histogram 
-    for i,x,y in h1.iteritems() :
+    for i,x,y in h1.items() :
 
         ## center bin 
         xc     = x.value()
@@ -6543,7 +6574,17 @@ _new_methods_   = (
     ROOT.TH3F  . iteritems    ,
     ROOT.TH3D  . iteritems    ,
     #
+    ROOT.TH1F  .     items    ,
+    ROOT.TH1D  .     items    ,
+    #
+    ROOT.TH2F  .     items    ,
+    ROOT.TH2D  .     items    ,
+    #
+    ROOT.TH3F  .     items    ,
+    ROOT.TH3D  .     items    ,
+    #
     ROOT.TAxis . iteritems    ,
+    ROOT.TAxis .     items    ,
     ROOT.TAxis . __eq__       ,
     ROOT.TAxis . __ne__       ,
     #
@@ -6627,6 +6668,7 @@ _new_methods_   = (
     _h1_add_     ,
     _h1_sub_     ,
     _h1_pow_     ,
+    _h1_idiv_    ,
     _h1_idiv_    ,
     _h1_imul_    ,
     _h1_iadd_    ,

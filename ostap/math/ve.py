@@ -26,7 +26,8 @@ __all__     = (
     )
 # ============================================================================= 
 import ROOT, cppyy
-from ostap.math.base import iszero, isequal
+from   ostap.math.base import iszero, isequal
+from   builtins        import range 
 # ============================================================================= 
 # logging 
 # ============================================================================= 
@@ -336,7 +337,7 @@ def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
     v = s.value ()
     e = s.error ()
     #
-    for i in xrange ( nmax  ) :
+    for i in range ( nmax  ) :
         r = _gauss  ( v , e ) 
         if accept   ( r     ) : return r
         

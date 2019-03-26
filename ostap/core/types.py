@@ -20,6 +20,7 @@ __all__     = (
     'str_types'       , ## string  types (only string!)
     'listlike_types'  , ## list-like types (list, tuple, set, collections.Iterable)
     'list_types'      , ## list types (list, tuple)
+    'long_type'       , ## long-type 
     ##
     'is_integer'      , ## is a value of int-like type?
     'is_number'       , ## is a value of numeric  type?
@@ -37,10 +38,12 @@ import sys, math, collections
 if sys.version_info[0] > 2:
     long          = int
     string_types  = bytes , str 
-    integer_types = int   , 
+    integer_types = int   ,
+    long_type     = int 
 else :
     string_types  = str   , unicode
     integer_types = int   , long
+    long_type     = long 
 
 num_types = integer_types + ( float , ) 
 str_type  = str,

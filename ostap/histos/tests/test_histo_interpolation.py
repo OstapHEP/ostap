@@ -75,8 +75,7 @@ def test_1D() :
                     
     logger.info('1D interpolation (wide bins): ') 
     keys = cnts_1D.keys()
-    keys.sort()
-    for k in keys :
+    for k in sorted ( keys ) :
         v = cnts_1D[k]
         b = v.mean()
         r = v.rms ()
@@ -106,8 +105,7 @@ def test_2D() :
                             
     logger.info('2D interpolation (wide bnis): ') 
     keys = cnts_2D.keys()
-    keys.sort()
-    for k in keys :
+    for k in sorted ( keys ) :
         v = cnts_2D[k]
         b = v.mean()
         r = v.rms ()
@@ -140,8 +138,7 @@ def test_3D() :
                 
     logger.info('3D interpolation (wide bins): ') 
     keys = cnts_3D.keys()
-    keys.sort()
-    for k in keys :
+    for k in sorted ( keys ) :
         v = cnts_3D[k]
         b = v.mean()
         r = v.rms ()

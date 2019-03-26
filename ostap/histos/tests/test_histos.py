@@ -26,10 +26,10 @@ else :
 # =============================================================================
 logger.info ( 'Test for basic operations with histograms')
 # =============================================================================
-from   ostap.math.ve        import VE 
-from   ostap.core.core      import hID 
-from   ostap.histos.histos  import h1_axis, h2_axes 
-#
+from  ostap.math.ve        import VE 
+from  ostap.core.core      import hID 
+from  ostap.histos.histos  import h1_axis, h2_axes 
+from  builtins             import range
 
 
 
@@ -72,12 +72,12 @@ def test_basic_1D() :
         logger.info( "bin# %2d, content %s" % (  i , h1[i] ) )
 
     ## iterate over all 
-    for item in h1.iteritems() : 
-        logger.info ( "iteritems:  %s" % str ( item ) )
+    for item in h1.items() : 
+        logger.info ( "items:  %s" % str ( item ) )
 
        
     ## interpolate
-    for x in xrange(10) :
+    for x in range(10) :
         x = random.uniform(0,1)
         logger.info ( 'h1(%.3f) = %s[d] %s[0] %s[1] %s[2] %s[3] ' % ( x     ,
                                                                       h1(x) ,
@@ -102,7 +102,7 @@ def test_basic_1D() :
 
     ## smear the histogram
     h0    = ROOT.TH1F( hID() , '', 400 , -1 , 1 )
-    for i in xrange( 1000 ) : h0.Fill( random.gauss(0,0.10 ) )
+    for i in range( 1000 ) : h0.Fill( random.gauss(0,0.10 ) )
     hs    = h0.smear ( sigma = 0.10 )
 
     logger.info ( 'Original RMS %20s , smeared(0.10) %-20s' % ( h0.rms() , hs.rms() ) )  
@@ -248,7 +248,7 @@ def test_efficiency() :
     hT = ROOT.TH1F ( hID() , 'total'    , 10 , 0 , 10 )
 
     random.seed (100) 
-    for i in xrange(10000) :
+    for i in range(10000) :
 
         vx       = random.uniform ( *hA.xminmax() )
 

@@ -152,7 +152,8 @@ from ostap.math.param    import ( legendre_sum      ,
                                   bernstein_sum     , 
                                   beziereven_sum    ,
                                   bernsteineven_sum )
-from ostap.fitting.param import H_fit, H_Nfit 
+from ostap.fitting.param import H_fit, H_Nfit
+from ostap.core.types    import integer_types, long_type
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
@@ -573,7 +574,7 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , ( int , long ) ) :
+    if isinstance ( knots , integer_types ) :
         func = cpp.Ostap.Math.BSpline ( xmin , xmax , knots , degree )
     else :
         from ostap.math.base import doubles
@@ -851,7 +852,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0I' , xmin = inf_neg 
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , ( int , long ) ) :
+    if isinstance ( knots , iteger_types ) :
         func = cpp.Ostap.Math.PositiveSpline ( xmin , xmax , knots , degree  )
     else :
         from ostap.math.base import doubles
@@ -902,7 +903,7 @@ def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , ( int , long ) ) :
+    if isinstance ( knots , iteger_types ) :
         func = cpp.Ostap.Math.MonotonicSpline ( xmin , xmax , knots , degree , increasing )
     else :
         from ostap.math.base import doubles
@@ -956,7 +957,7 @@ def _h1_cspline_ ( h1                   ,
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , ( int , long ) ) :
+    if isinstance ( knots , integer_types ) :
         func = cpp.Ostap.Math.ConvexSpline ( xmin , xmax , knots , degree , increasing , convex  )
     else :
         from ostap.math.base import doubles
@@ -1009,7 +1010,7 @@ def _h1_convexspline_ ( h1                 ,
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , ( int , long ) ) :
+    if isinstance ( knots , integer_types ) :
         func = cpp.Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , True )
     else :
         from ostap.math.base import doubles
@@ -1062,7 +1063,7 @@ def _h1_concavespline_ ( h1               ,
     xmax = min ( xmax , h1.xmax() )  
     #
     #
-    if isinstance ( knots , ( int , long ) ) :
+    if isinstance ( knots , integer_types ) :
         func = cpp.Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , False )
     else :
         from ostap.math.base import doubles

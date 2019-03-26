@@ -38,7 +38,8 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, cppyy              ## attention here!!
-from ostap.core.core import cpp, VE, grID 
+from   ostap.core.core import cpp, VE, grID
+from   builtins        import range
 # 
 # =============================================================================
 # logging 
@@ -108,19 +109,17 @@ def makeGraph ( x , y = []  , ex = [] , ey = [] ) :
         _x = []
         _y = []
         keys = x.keys()
-        keys.sort()
-        for k in keys :
+        for k in sorted ( keys ):
             _x += [   k  ]
             _y += [ x[k] ] 
         return makeGraph ( _x , _y )
         
-    if  not x : raise TypeError, "X is not a proper vector!"
-    if  not y : raise TypeError, "Y is not a proper vector!"
-    if len( x ) != len ( y ) :
-        raise TypeError, "Mismatch X/Y-lengths"
+    if  not x                   : raise TypeError ( "X is not a proper vector!" ) 
+    if  not y                   : raise TypeError ( "Y is not a proper vector!" )
+    if len( x ) != len ( y )    : raise TypeError ( "Mismatch X/Y-lengths" ) 
 
-    if ex and len(ex) != len(x) : raise TypeError, "Mismatch X/eX-lengths"
-    if ey and len(ey) != len(y) : raise TypeError, "Mismatch Y/eY-lengths"
+    if ex and len(ex) != len(x) : raise TypeError ( "Mismatch X/eX-lengths" )
+    if ey and len(ey) != len(y) : raise TypeError ( "Mismatch Y/eY-lengths" )
 
     gr = ROOT.TGraphErrors ( len(x) ) 
         
@@ -560,7 +559,7 @@ def hToGraph ( h1                   ,
     #
     copy_graph_attributes ( h1 , graph )
 
-    for i in h1.iteritems () :
+    for i in h1.items () :
 
         x = funcx  ( i[1] ) 
         v = funcv  ( i[2] )
@@ -589,7 +588,7 @@ def _hToGraph_ ( h1 , funcx , funcy ) :
     #
     copy_graph_attributes ( h1 , graph )
 
-    for i in h1.iteritems () :
+    for i in h1.items () :
         
         ip = i[0] - 1 ## different convention for TH1 and TGraph
         x  = i[1] 
@@ -614,7 +613,7 @@ def hToGraph2 ( h1 , bias ) :
     >>> g2 = h1.asGraph2 ( 0.1 ) ## shift for 10% of bin width    
     """
     if abs ( bias ) > 1 :
-        raise ValueError, ' Illegal value for "bias" parameter '
+        raise ValueError ( ' Illegal value for "bias" parameter ')
     
     funcx = lambda x,y : ( x.value() + x.error()*bias , x.error()*(1+bias) , x.error()*(1-bias) ) 
     funcy = lambda x,y : ( y.value()                  , y.error()          , y.error()          ) 
@@ -631,10 +630,10 @@ def hToGraph3 ( h1 , bias ) :
     >>> h1 = ....
     >>> g2 = h1.asGraph2 ( 0.1 ) ## shift for 0.1 (absolute)    
     """
-    for p in h1.iteritems() :
+    for p in h1.items() :
         x = p[1]
         if x.error() < abs ( bias ) :
-            raise ValueError, ' Illegal value for "bias" parameter '
+            raise ValueError ( ' Illegal value for "bias" parameter ')
         
     funcx = lambda x,y : ( x.value() + bias , x.error()+bias , x.error()-bias )
     funcy = lambda x,y : ( y.value()        , y.error()      , y.error()      ) 
@@ -716,6 +715,12 @@ def _gr_getitem_ ( graph , ipoint )  :
     >>> graph = ...
     >>> x,y   = graph[3]
     """
+    
+    if isinstance ( ipoint , slice ) :
+        if ipoint.step and 1 != ipoint.step :
+            raise IndexError ("Step must be +1!")
+        return _gr0_getslice_ ( graph , ipoint.start , ipoint.stop ) 
+    
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
@@ -754,14 +759,16 @@ def _gr_setitem_ ( graph , ipoint , point )  :
 ## iterate over the points in TGraph
 #  @code 
 #  gr = ...
-#  for i,x,v in gr.iteritems(): ...
+#  for i,x,v in gr.    items(): ...
+#  for i,x,v in gr.iteritems(): ... ##  ditto 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gr_iteritems_ ( graph ) :
     """Iterate over graph points 
     >>> graph = ...
-    >>> for i,x,v in graph.iteritems(): ...
+    >>> for i,x,v in graph.    items(): ...
+    >>> for i,x,v in graph.iteritems(): ... ##  ditto
     """
     for ip in graph :
         x , y = graph[ ip ] 
@@ -781,6 +788,12 @@ def _gre_getitem_ ( graph , ipoint )  :
     >>> graph = ...
     >>> x,y = graph[3]
     """
+    
+    if isinstance ( ipoint , slice ) :
+        if ipoint.step and 1 != ipoint.step :
+            raise IndexError ("Step must be +1!")
+        return _gr1_getslice_ ( graph , ipoint.start , ipoint.stop ) 
+
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
@@ -838,7 +851,8 @@ def _gr_as_TF1_ ( graph , interpolate = 3  ) :
 ## iterate over points in TGraphErrors
 #  @code
 #  gre = ...
-#  for i,x,v in gre.iteritems(): ...
+#  for i,x,v in gre.    items(): ...
+#  for i,x,v in gre.iteritems(): ... ## ditto
 #  @endcode
 #  @see TGraphErrors
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -846,7 +860,8 @@ def _gr_as_TF1_ ( graph , interpolate = 3  ) :
 def _gre_iteritems_ ( graph ) :
     """ Iterate over graph points 
     >>> gre = ...
-    >>> for i,x,v in gre.iteritems(): ...
+    >>> for i,x,v in gre.    items(): ...
+    >>> for i,x,v in gre.iteritems(): ... ## ditto
     """
     for ip in graph :        
         x , y = graph[ip]
@@ -861,6 +876,14 @@ def _grae_getitem_ ( graph , ipoint ) :
     >>> grae = ...
     >>> x,xl,xh,y,yl,yh = grae[ 1 ]
     """
+    
+    if isinstance ( ipoint , slice ) :
+        if ipoint.step and 1 != ipoint.step :
+            raise IndexError ("Step must be +1!")
+        return _gr2_getslice_ ( graph , ipoint.start , ipoint.stop ) 
+    
+
+    
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
@@ -910,7 +933,8 @@ def _grae_iteritems_ ( graph ) :
     """Iterate over graph points 
     
     >>> grae = ...
-    >>> for i,x,xl,xh,y,yl,yh in grae.iteritems(): ...
+    >>> for i,x,xl,xh,y,yl,yh in grae.    items(): ...
+    >>> for i,x,xl,xh,y,yl,yh in grae.iteritems(): ... ##   ditto
     
     """
     for ip in graph :
@@ -1216,9 +1240,12 @@ def _gr0_getslice_ ( graph , i , j ) :
     >>> gr1   = graph[2:10]
     """
     np = len ( graph ) 
+
+    if i is None : i = 0
+    if j is None : j = np 
     
-    while i < 0 : i += nb
-    while j < 0 : j += nb
+    while i < 0 : i += np
+    while j < 0 : j += np
 
     new_graph = ROOT.TGraph( j - i ) if  i < j else  ROOT.TGraph()
     copy_graph_attributes ( graph , new_graph )
@@ -1226,8 +1253,8 @@ def _gr0_getslice_ ( graph , i , j ) :
     ii = 0 
     while i < j :
         new_graph[ ii ] = graph[i]
-        ii +=1 
-        i  +=1 
+        ii += 1 
+        i  += 1 
         
     return new_graph 
 
@@ -1245,9 +1272,12 @@ def _gr1_getslice_ ( graph , i , j ) :
     >>> gr1   = graph[2:10]
     """
     np = len ( graph ) 
+
+    if i is None : i = 0
+    if j is None : j = np 
     
-    while i < 0 : i += nb
-    while j < 0 : j += nb
+    while i < 0 : i += np
+    while j < 0 : j += np
     
     new_graph = ROOT.TGraphErrors( j - i ) if  i < j else  ROOT.TGraphErrors ()
     copy_graph_attributes ( graph , new_graph )
@@ -1276,8 +1306,11 @@ def _gr2_getslice_ ( graph , i , j ) :
     """
     np = len ( graph ) 
     
-    while i < 0 : i += nb
-    while j < 0 : j += nb
+    if i is None : i = 0
+    if j is None : j = np 
+    
+    while i < 0 : i += np
+    while j < 0 : j += np
     
     new_graph = ROOT.TGraphAsymmErrors( j - i ) if  i < j else  ROOT.TGraphAsymmErrors ()
     copy_graph_attributes ( graph , new_graph )
@@ -1303,7 +1336,7 @@ def _gr0_sorted_ ( graph , reverse = False ) :
     >>> s     = graph.sorted() 
     """
     
-    oitems =        ( i for i in graph.iteritems() ) 
+    oitems =        ( i for i in graph.items() ) 
     sitems = sorted ( oitems , key = lambda s :s[1] , reverse = reverse )
     
     new_graph = ROOT.TGraph ( len( graph ) )
@@ -1329,7 +1362,7 @@ def _gr1_sorted_ ( graph , reverse = False ) :
     >>> s     = graph.sorted() 
     """
     
-    oitems =        ( i for i in graph.iteritems() ) 
+    oitems =        ( i for i in graph.items() ) 
     sitems = sorted ( oitems , key = lambda s :s[1].value() , reverse = reverse )
     
     new_graph = ROOT.TGraphErrors ( len( graph ) )
@@ -1355,7 +1388,7 @@ def _gr2_sorted_ ( graph , reverse = False ) :
     >>> s     = graph.sorted() 
     """
     
-    oitems =        ( i for i in graph.iteritems() ) 
+    oitems =        ( i for i in graph.items() ) 
     sitems = sorted ( oitems , key = lambda s :s[1] , reverse = reverse )
     
     new_graph = ROOT.TGraphAsymmErrors ( len( graph ) )
@@ -1380,8 +1413,8 @@ def _gr0_filter_ ( graph , accept ):
     >>> graph = ...
     >>> f     = graph.filter( lambda s : s[1]>0 ) 
     """
-    oitems =        ( i for i in graph.iteritems() ) 
-    fitems = filter ( accept , oitems ) 
+    oitems =      ( i for i in graph.items() ) 
+    fitems = list ( filter ( accept , oitems ) )
     
     new_graph = ROOT.TGraph ( len( fitems ) )
     copy_graph_attributes ( graph , new_graph )
@@ -1405,8 +1438,8 @@ def _gr1_filter_ ( graph , accept ):
     >>> graph = ...
     >>> f     = graph.filter( lambda s : s[1]>0 ) 
     """
-    oitems =        ( i for i in graph.iteritems() ) 
-    fitems = filter ( accept , oitems ) 
+    oitems =      ( i for i in graph.items() ) 
+    fitems = list ( filter ( accept , oitems ) )
     
     new_graph = ROOT.TGraphErrors ( len( fitems ) )
     copy_graph_attributes ( graph , new_graph )
@@ -1432,8 +1465,8 @@ def _gr2_filter_ ( graph , accept ):
     >>> f     = graph.filter( lambda s : s[1]>0 ) 
     """
     
-    oitems =        ( i for i in graph.iteritems() ) 
-    fitems = filter ( accept , oitems ) 
+    oitems =      ( i for i in graph.items() ) 
+    fitems = list ( filter ( accept , oitems ) )
     
     new_graph = ROOT.TGraphAsymmErrors ( len( fitems ) )
     copy_graph_attributes ( graph , new_graph )
@@ -1497,12 +1530,14 @@ ROOT.TGraph       .  minmax       = _gr_yminmax_
 
 ROOT.TGraph       . __getitem__   = _gr_getitem_ 
 ROOT.TGraph       . __setitem__   = _gr_setitem_
+ROOT.TGraph       .     items     = _gr_iteritems_
 ROOT.TGraph       . iteritems     = _gr_iteritems_
 
 ROOT.TGraph       . transform     = _gr_transform_
 
 ROOT.TGraphErrors . __getitem__   = _gre_getitem_ 
 ROOT.TGraphErrors . __setitem__   = _gre_setitem_ 
+ROOT.TGraphErrors .     items     = _gre_iteritems_ 
 ROOT.TGraphErrors . iteritems     = _gre_iteritems_ 
 
 
@@ -1520,6 +1555,7 @@ ROOT.TH1D.toGraph = hToGraph
 ROOT.TGraphAsymmErrors.__len__       = ROOT.TGraphAsymmErrors . GetN 
 ROOT.TGraphAsymmErrors.__contains__  = lambda s,i : i in range(0,len(s))
 ROOT.TGraphAsymmErrors.__iter__      = _gr_iter_ 
+ROOT.TGraphAsymmErrors.     items    = _grae_iteritems_ 
 ROOT.TGraphAsymmErrors. iteritems    = _grae_iteritems_ 
 ROOT.TGraphAsymmErrors.__getitem__   = _grae_getitem_ 
 ROOT.TGraphAsymmErrors.__setitem__   = _grae_setitem_ 
@@ -1746,7 +1782,7 @@ def _lw_graph_ ( histo , func ) :
     from ostap.math.intergal   import integral as _integral 
     from ostap.math.rootfinder import findroot 
     
-    for item in histo.iteritems () :
+    for item in histo.items () :
 
         ibin  = item[0]
         x     = item[1]
@@ -1947,12 +1983,12 @@ def fill_area ( fun1                     ,
         x2f =  lambda i : x2mx - i * dx2
         
     
-    for i in xrange ( n + 1 ) :
+    for i in range ( n + 1 ) :
         xi           = x1f  ( i ) 
         yi           = float( fun1( xi ) ) 
         graph[i]     = xi , yi 
         
-    for i in xrange ( n + 1 ) :
+    for i in range ( n + 1 ) :
         xi           = x2f  ( i ) 
         yi           = float( fun2 ( xi ) ) 
         graph[i+n+1] = xi , yi 
@@ -1991,12 +2027,14 @@ _new_methods_      = (
     #
     ROOT.TGraph       . __getitem__   ,
     ROOT.TGraph       . __setitem__   ,
+    ROOT.TGraph       .     items     ,
     ROOT.TGraph       . iteritems     ,
     #
     ROOT.TGraph       . transform     ,
     #
     ROOT.TGraphErrors . __getitem__   ,
     ROOT.TGraphErrors . __setitem__   ,
+    ROOT.TGraphErrors .     items     ,
     ROOT.TGraphErrors . iteritems     ,
     #
     ROOT.TGraphErrors . xmin          ,
@@ -2007,6 +2045,7 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors.__len__       ,
     ROOT.TGraphAsymmErrors.__contains__  ,
     ROOT.TGraphAsymmErrors.__iter__      ,
+    ROOT.TGraphAsymmErrors.     items    ,
     ROOT.TGraphAsymmErrors. iteritems    ,
     ROOT.TGraphAsymmErrors.__getitem__   ,
     ROOT.TGraphAsymmErrors.__setitem__   ,

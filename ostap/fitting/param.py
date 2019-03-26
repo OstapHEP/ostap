@@ -26,8 +26,8 @@ logger.debug ( 'Auxillary utilities for Histogram parameterisation')
 # =============================================================================
 import ostap.histos.histos 
 import ostap.fitting.fitresult 
-from   ostap.core.core import Ostap, funID
-
+from   ostap.core.core  import Ostap, funID
+from   ostap.core.types import num_types
 # =============================================================================
 ## @class H_fit
 #  simple function to fit/represent the histogram with bernstein/spline
@@ -55,7 +55,7 @@ class H_fit(object) :
     ## the major method 
     def __call__ ( self , x , pars = [] ) :
         
-        x0 = x if isinstance ( x ,  ( int , long , float ) ) else x[0]
+        x0 = x if isinstance ( x , num_types ) else x[0]
         
         if pars :
             np = self._hfit.npars() 
@@ -96,7 +96,7 @@ class H_Nfit (object) :
     def __call__ ( self , x , pars = [] ) :
 
         norm = 1.0
-        x0   = x if isinstance ( x ,  ( int , long , float ) ) else x[0]
+        x0   = x if isinstance ( x , num_types ) else x[0]
         
         if pars :
 
@@ -145,7 +145,7 @@ class H1Func(object) :
         """ Evaluate the function 
         """
         #
-        x0 = x if isinstance ( x , ( int , long , float ) ) else x[0]
+        x0 = x if isinstance ( x , num_types ) else x[0]
         #
         norm  = float ( par[0] )   ## NORM 
         bias  = float ( par[1] )   ## BIAS 
