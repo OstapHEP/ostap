@@ -276,7 +276,7 @@ def logError   () :
 
 
 ## ASCII colors :
-BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list ( range ( 8 ) )
     
 # =============================================================================
 ## provide colored string

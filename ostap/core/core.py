@@ -50,9 +50,12 @@ __all__     = (
     'strings'          , ## construct std::vector<std::string>
     'split_string'     , ## split the string  according to separators 
     ##
-    'StatusCode'       ,  ## status code
-    'SUCCESS'          ,  ## status code SUCCESS 
-    'FAILURE'          ,  ## status code FAILURE 
+    'StatusCode'       , ## status code
+    'SUCCESS'          , ## status code SUCCESS 
+    'FAILURE'          , ## status code FAILURE
+    ##
+    'loop_items'       , ## loop over dictionary items 
+    'items_loop'       , ## ditto
     )
 # =============================================================================
 import ROOT, cppyy, math, sys
@@ -74,6 +77,7 @@ from ostap.math.base      import ( Ostap    ,
                                    natural_number     ,
                                    natural_entry      )
 
+from sys                  import version_info  as python_version 
 from ostap.math.ve        import VE
 from ostap.stats.counters import SE , WSE 
 #
@@ -106,18 +110,35 @@ class ROOTCWD(object) :
     ...     print ROOT.gROOT.CurrentDirectory() 
     ... print ROOT.gROOT.CurrentDirectory() 
     """
+    def __init__ ( self ) :
+        self._dir = None
+        
     ## context manager ENTER 
     def __enter__ ( self ) :
         "Save current working directory"
         self._dir = ROOT.gROOT.CurrentDirectory()
-        return self._dir 
+        return self 
         
     ## context manager EXIT 
     def __exit__  ( self , *_ ) :
         "Make the previous directory current again"
         if self._dir :
-            if   not hasattr ( self._dir , 'IsOpen' ) : self._dir.cd() 
-            elif     self._dir.IsOpen()               : self._dir.cd()
+
+            odir = self._dir
+            
+            ## is is a directory in the file?
+            fdir = odir.GetFile ()
+            if not fdir : odir.cd()
+            else        :
+                ## check that fiel is still Open 
+                if fdir.IsOpen() : odir.cd()
+                
+            
+            #if  isinstance ( self._dir , ROOT.TFile ) :
+            #    if self._dir.IsOpen() : self._dir.cd()
+                
+                
+        self._dir = None 
             
 # =============================================================================
 ## global identifier for ROOT objects 
@@ -279,7 +300,19 @@ def split_string ( line , separators = ',;:' ) :
     while '' in items: items.remove ( '' )
 
     return items 
-    
+
+# =============================================================================
+if python_version.major > 2 : items_loop = lambda d : d.items     () 
+else                        : items_loop = lambda d : d.iteritems ()
+# =============================================================================
+def loop_items ( d ) :
+    """Return  iterator over the dictionary   items
+    >>> d = { 'a' : ...   , 'b' : ... , }
+    >>> for e in   loop_items ( d ) : print (e) 
+    """
+    return items_loop ( d ) 
+
+
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -134,9 +134,9 @@ class PDF_fun(object):
             else                  : self._xmax = min ( self._xmax , xvar.getMax() )
             
         if self._xmin is None :
-            raise AttributeError, "xmin can't be deduced from  input arguments"
+            raise AttributeError ( "xmin can't be deduced from  input arguments" )
         if self._xmax is None :
-            raise AttributeError, "xmax can't be deduced from  input arguments"
+            raise AttributeError ( "xmax can't be deduced from  input arguments" )
         
         if self._xmin > self._xmax :
             self._xmin , self._xmax = self._xmax , self._xmin

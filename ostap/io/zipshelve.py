@@ -42,7 +42,7 @@
 # >>> import zipshelve  ## import the ZipShelve module 
 # >>> db = zipshelve.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
 # ...
-# >>> for key in db : print key
+# >>> for key in db : print(key)
 # ...
 # >>> abcd = db['some_key']
 #
@@ -100,7 +100,7 @@ The module has been developed and used with great success in
  >>> import zipshelve as DBASE  ## import the ZipShelve module 
  >>> db = DBASE.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
  ...
- >>> for key in db : print key
+ >>> for key in db : print(key)
  ...
  >>> abcd = db['some_key']
 
@@ -109,7 +109,7 @@ The module has been developed and used with great success in
  >>> import zipshelve as DBASE ## import the ZipShelve module 
  >>> db = DBASE.open ('a_db' )    ## access existing dbase in update mode
  ...
- >>> for key in db : print key
+ >>> for key in db : print(key)
  ...
  >>> abcd = db['some_key']
  
@@ -131,15 +131,25 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.zipshelve' )
 else                      : logger = getLogger ( __name__             )
 # =============================================================================
+from sys import version_info as python_version 
+# =============================================================================
 try:
     from cPickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
 except ImportError:
     from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL 
+
 # =============================================================================
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from  StringIO import StringIO
+## to be compatible between  Python2 and Python3 
+PROTOCOL = 2
+ENCODING = 'utf-8'
+# =============================================================================
+if python_version.major > 2  :
+    from io import BytesIO
+else : 
+    try:
+        from cStringIO import StringIO as BytesIO 
+    except ImportError:
+        from  StringIO import StringIO as BytesIO    
 # ==============================================================================
 import os, sys
 import zlib        ## use zlib to compress DB-content 
@@ -195,12 +205,13 @@ class ZipShelf(shelve.Shelf):
     def __init__(
         self                                   ,
         filename                               ,
-        mode      = 'c'                        , 
-        protocol  = HIGHEST_PROTOCOL           , 
-        compress  = zlib.Z_BEST_COMPRESSION    ,
-        writeback = False                      ,
-        silent    = False                      ) :
-
+        mode        = 'c'                      , 
+        protocol    = PROTOCOL                 , 
+        compress    = zlib.Z_BEST_COMPRESSION  ,
+        writeback   = False                    ,
+        silent      = False                    ,
+        keyencoding = 'utf-8'                  ) :
+        
         ## the mode 
         mode = _modes_.get( mode.lower() , '' )
         if not mode :
@@ -269,19 +280,32 @@ class ZipShelf(shelve.Shelf):
                 self.__gzip     = True 
                 self.__filename = filename
 
-        import anydbm
-        shelve.Shelf.__init__ (
-            self                                   ,
-            anydbm.open ( self.__filename , mode ) ,
-            protocol                               ,
-            writeback                              )
+        try                : import anydbm as dbm
+        except ImportError : import           dbm
+
+        if python_version.major > 2 : 
+            shelve.Shelf.__init__ (
+                self                              ,
+                dbm.open ( self.filename , mode ) ,
+                protocol                          ,
+                writeback                         ,
+                keyencoding                       )
+        else :
+            shelve.Shelf.__init__ (
+                self                              ,
+                dbm.open ( self.filename , mode ) ,
+                protocol                          ,
+                writeback                         ) 
+            self.keyencoding = keyencoding
+            
         
-        self.compresslevel = compress
-        self.__opened      = True
-        self.__mode        = mode
+        self.__compresslevel = compress
+        self.__opened        = True
+        self.__mode          = mode
         
         ## keep in the list of known/opened databases 
         #_dbases.append ( self )
+
 
     ## needed for proper (un)pickling 
     def __getinitargs__ ( self ) :
@@ -301,7 +325,7 @@ class ZipShelf(shelve.Shelf):
     
     @property 
     def filename ( self ) :
-        "``filename'' :   the actual fiel name for database"
+        "``filename'' :   the actual file name for database"
         return self.__filename
 
     @property 
@@ -318,9 +342,16 @@ class ZipShelf(shelve.Shelf):
         "``protocol'' : pickling protocol"
         return self._protocol
 
+    @property
+    def compresslevel ( self ) :
+        "``compress level'' :  zip compression level"
+        return self.__compresslevel 
+
     ## valid, opened DB 
     def __nonzero__ ( self ) :
         return self.opened and not isinstance ( self.dict , shelve._ClosedDict ) and not self.dict is None 
+
+    def __bool__    (  self ) : return slef.__nonzero__ ()
     
     ## destructor 
     def __del__ ( self ) :
@@ -336,18 +367,18 @@ class ZipShelf(shelve.Shelf):
         fnmatch/glob/shell rules [it is not regex!] 
         
         >>> db = ...
-        >>> for k in db.ikeys('*MC*') : print k 
+        >>> for k in db.ikeys('*MC*') : print(k)
         
         """
         keys_ = self.keys()
-        keys_.sort()
+        
         if not pattern :
             good = lambda s,p : True
         else :
             import fnmatch
             good = lambda s,p : fnmatch.fnmatchcase ( k , p )
         
-        for k in keys_ :
+        for k in sorted ( keys_ ) :
             if good ( k , pattern ) : yield k
 
     ## list the avilable keys 
@@ -545,7 +576,6 @@ class ZipShelf(shelve.Shelf):
         return "Invalid/Closed %s('%s')"    % ( kname , self.filename )
     
     __str__ = __repr__
-    
 
 # =============================================================================
 ## ``get-and-uncompress-item'' from dbase 
@@ -555,7 +585,7 @@ def _zip_getitem (self, key):
     try:
         value = self.cache[key]
     except KeyError:
-        f = StringIO(zlib.decompress(self.dict[key]))
+        f = BytesIO(zlib.decompress(self.dict[key.encode(self.keyencoding )]))
         value = Unpickler(f).load()
         if self.writeback:
             self.cache[key] = value
@@ -568,10 +598,10 @@ def _zip_setitem ( self , key , value ) :
     """
     if self.writeback:
         self.cache[key] = value
-    f = StringIO()
+    f = BytesIO()
     p = Pickler(f, self._protocol)
     p.dump(value)
-    self.dict[key] = zlib.compress( f.getvalue(), self.compresslevel)
+    self.dict[key.encode(self.keyencoding)] = zlib.compress( f.getvalue(), self.compresslevel)
 
 ZipShelf.__getitem__ = _zip_getitem
 ZipShelf.__setitem__ = _zip_setitem
@@ -609,12 +639,14 @@ ZipShelf.__rrshift__ = _db_rrshift_
 ## helper finction to access ZipShelve data base
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def open ( filename                                   ,
-           mode          = 'c'                        ,
-           protocol      = HIGHEST_PROTOCOL           ,
-           compresslevel = zlib.Z_BEST_COMPRESSION    , 
-           writeback     = False                      ,
-           silent        = True                       ) : 
+def open ( filename                                 ,
+           mode          = 'c'                      ,
+           protocol      = PROTOCOL                 ,
+           compresslevel = zlib.Z_BEST_COMPRESSION  , 
+           writeback     = False                    ,
+           silent        = True                     ,
+           keyencoding   = ENCODING                 ) :
+    
     """Open a persistent dictionary for reading and writing.
     
     The filename parameter is the base filename for the underlying
@@ -632,7 +664,8 @@ def open ( filename                                   ,
                       protocol      ,
                       compresslevel ,
                       writeback     ,
-                      silent        )
+                      silent        ,
+                      keyencoding   )
 
 
 
@@ -647,21 +680,23 @@ class TmpZipShelf(ZipShelf):
     """    
     def __init__(
         self                                   ,
-        protocol  = HIGHEST_PROTOCOL           , 
-        compress  = zlib.Z_BEST_COMPRESSION    ,
-        silent    = False                      ) :
+        protocol    = HIGHEST_PROTOCOL         , 
+        compress    = zlib.Z_BEST_COMPRESSION  ,
+        silent      = False                    ,
+        keyencoding = ENCODING                 ) :
 
         ## create temporary file name 
         import tempfile
         filename = tempfile.mktemp  ( suffix = '.zdb' )
         
-        ZipShelf.__init__ ( self     ,  
-                            filename ,
-                            'n'      ,
-                            protocol ,
-                            compress , 
-                            False    , ## writeback 
-                            silent   ) 
+        ZipShelf.__init__ ( self        ,  
+                            filename    ,
+                            'n'         ,
+                            protocol    ,
+                            compress    , 
+                            False       , ## writeback 
+                            silent      ,
+                            keyencoding ) 
         
     ## close and delete the file 
     def close ( self )  :
@@ -679,9 +714,10 @@ class TmpZipShelf(ZipShelf):
 ## helper function to open TEMPORARY ZipShelve data base#
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def tmpdb ( protocol      = HIGHEST_PROTOCOL           ,
-            compresslevel = zlib.Z_BEST_COMPRESSION    , 
-            silent        = True                       ) : 
+def tmpdb ( protocol      = HIGHEST_PROTOCOL        ,
+            compresslevel = zlib.Z_BEST_COMPRESSION , 
+            silent        = True                    ,
+            keyencoding   = ENCODING                ) :
     """Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
@@ -691,9 +727,9 @@ def tmpdb ( protocol      = HIGHEST_PROTOCOL           ,
     """
     return TmpZipShelf ( protocol      ,
                          compresslevel ,
-                         silent        )
+                         silent        ,
+                         keyencoding   ) 
     
-
 # ============================================================================
 logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database")
 # =============================================================================

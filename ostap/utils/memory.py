@@ -25,7 +25,7 @@ __all__     = (
     'memory_usage'   , # report current memory usage 
     )
 # =============================================================================
-import os , sys ## attention here!!
+import os  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.memory' )
@@ -33,9 +33,9 @@ else                       : logger = getLogger( __name__             )
 del getLogger
 # =============================================================================
 _psutil = False
-
-if sys.version_info[0] > 2 : LONG = int
-else                       : LONG = long 
+from sys import version_info as python_version 
+if   python_version.major > 2 : LONG = int
+else                          : LONG = long 
 
 try :
     import psutil 

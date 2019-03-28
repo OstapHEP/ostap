@@ -28,6 +28,8 @@
 
 """
 # =============================================================================
+from   __future__        import print_function
+# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2012-05-13"
 __version__ = "$Revision$" 
@@ -73,7 +75,7 @@ def _ls_ ( self )  :
     """
     keys = self.keys()
     keys.sort()
-    for k in keys : print k
+    for k in keys : print ( k )
 
 # =============================================================================
 ## replace the method in module, if not done yet

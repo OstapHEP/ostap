@@ -64,16 +64,16 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, warnings, math 
+from   builtins        import range
 from   ostap.math.ve   import VE
-from   ostap.math.base import isequal, iszero 
+from   ostap.math.base import isequal, iszero
+from   ostap.core.core import items_loop 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.integral' )
 else                       : logger = getLogger ( __name__              )
-# =============================================================================
-
 # =============================================================================
 ## Straw-man replacement of scipy.integrate.quad when it is not available.
 #  Actually it is a primitive form of Romberg's adaptive integration
@@ -132,7 +132,7 @@ def romberg ( fun                ,
             # use simple trapezoid rule to calculate R(n,0) 
             rr      = 0.0
             i2     *= 2 
-            for k in xrange ( 1 , i2 , 2 ) :
+            for k in range ( 1 , i2 , 2 ) :
                 rr += f ( a + h * k )
                 
             # here we have R(n,0) 
@@ -140,7 +140,7 @@ def romberg ( fun                ,
             
             # calculate R(n,m) using Richardson's extrapolation
             p4 = 1 
-            for m in xrange ( 1 , n + 1 ) :
+            for m in range ( 1 , n + 1 ) :
                 p4   *= 4 
                 # here we have R(n,m)
                 rc[m] = rc[m-1] + (rc[m-1]-rp[m-1])/(p4-1)
@@ -523,7 +523,7 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
         rmx  =  None # (current) region with the maximal error 
         emx  = -1    # (current) maximal error
 
-        for r,entry in stack.iteritems() :
+        for r , entry in items_loop ( stack ) :
 
             err     = entry[0]            
             serr   += err

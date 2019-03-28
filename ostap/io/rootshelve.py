@@ -30,7 +30,7 @@
 # >>> import rootshelve  as DBASE ## import the ZipShelve module 
 # >>> db = DBASE.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
 # ...
-# >>> for key in db : print key
+# >>> for key in db : print(key)
 # ...
 # >>> abcd = db['some_key']
 #
@@ -43,7 +43,7 @@
 # >>> import rootshelve as DBASE  ## import the ZipShelve module 
 # >>> db = DBASE.open ('a_db' )    ## access existing dbase in update mode
 # ...
-# >>> for key in db : print key
+# >>> for key in db : print(key)
 # ...
 # >>> abcd = db['some_key']
 #
@@ -70,7 +70,7 @@
  >>> import rootshelve as DBASE  ## import the ZipShelve module 
  >>> db = DBASE.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
  ...
- >>> for key in db : print key
+ >>> for key in db : print(key)
  ...
  >>> abcd = db['some_key']
 
@@ -79,7 +79,7 @@
  >>> import rootshelve as DBASE   ## import the RootShelve module 
  >>> db = DBASE.open ('a_db' )    ## access existing dbase in update mode
  ...
- >>> for key in db : print key
+ >>> for key in db : print(key)
  ...
  >>> abcd = db['some_key']
  
@@ -100,9 +100,21 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
 else                      : logger = getLogger ( __name__              )
 # =============================================================================
+import ROOT, shelve
+from   sys import version_info as python_version 
 logger.debug ( "Simple generic ROOT-based shelve-like-database" )
 # =============================================================================
-import ROOT, shelve
+try : 
+    from cPickle import Pickler, Unpickler, HIGHEST_PROTOCOL
+except ImportError : 
+    from  pickle import Pickler, Unpickler, HIGHEST_PROTOCOL
+# =============================================================================    
+try :
+    from io     import             BytesIO 
+except ImportError : 
+    from shelve import StringIO as BytesIO
+# =============================================================================
+PROTOCOL = 2
 # =============================================================================
 ## @class RootOnlyShelf
 #  Plain vanilla DBASE for ROOT-object (only)
@@ -131,7 +143,11 @@ class RootOnlyShelf(shelve.Shelf):
     """ 
     ## constructors 
     #  @attention it depends on proper TFile-decorations in Ostap.TFileDeco module
-    def __init__( self, filename , mode , writeback=False , *args ):
+    def __init__( self                  ,
+                  filename              ,
+                  mode                  ,
+                  writeback   = False   ,
+                  args        = ()      ) :
         """ Create Root-only database 
         >>> db = RooOnlyShelf('mydb.root','c')
         >>> h1 = ...
@@ -140,12 +156,40 @@ class RootOnlyShelf(shelve.Shelf):
         from ostap.io.root_file import ROOTCWD, open_mode  
         with ROOTCWD() : ## NB: preserve current directory in ROOT!
             rfile = ROOT.TFile.Open ( filename   , open_mode ( mode ) , *args  )
-            shelve.Shelf.__init__ ( self , rfile , writeback ) 
+            shelve.Shelf.__init__ ( self , rfile , writeback )
 
-    def filename    ( self       ) : return self.__filename 
+    @property
+    def filename    ( self       ) :
+        """``filename'' : the file name for root-database"""
+        return self.__filename
+    
     def __enter__   ( self       ) : return self 
     def __exit__    ( self , *_  ) : self.close ()
 
+
+# =============================================================================
+## need to disable endcode/decode for the keys 
+if python_version.major > 2 :
+    
+    def _ros_iter_     ( self ):
+        for k in self.dict.keys() : yield k
+    def _ros_contains_ ( self , key ):
+        return key in self.dict
+    def _ros_get_      ( self , key , default = None ) :
+        if key in self.dict       : return self[key]
+        return default
+    def _ros_delitem_  ( self , key ) :
+        del self.dict[key]
+        try:
+            del self.cache[key]
+        except KeyError:
+            pass
+
+    RootOnlyShelf.__iter__     = _ros_iter_ 
+    RootOnlyShelf.__contains__ = _ros_contains_
+    RootOnlyShelf.__ros_get__  = _ros_get_
+    RootOnlyShelf.__delitem__  = _ros_delitem_
+    
 # =============================================================================
 ## get item from ROOT-file
 #  @code
@@ -160,7 +204,7 @@ def _root_getitem_ ( self , key ) :
     try:
         value = self.cache[key]
     except KeyError:
-        value = self.dict[key] 
+        value = self.dict[ key ] 
         if self.writeback:
             self.cache[key] = value
     return value
@@ -178,8 +222,7 @@ def _root_setitem_ ( self , key , value ) :
     """
     if self.writeback:
         self.cache[key] = value
-    self.dict[key] = value 
-
+    self.dict[ key ] = value 
 
 RootOnlyShelf.__getitem__ = _root_getitem_
 RootOnlyShelf.__setitem__ = _root_setitem_
@@ -236,9 +279,20 @@ class RootShelf(RootOnlyShelf):
     >>> db['histo'] = h1
     >>> db['tuple'] = ('a',1,h1)
     """
-    def __init__( self, filename , mode , writeback=False , *args ):
-        RootOnlyShelf.__init__ ( self , filename , mode , writeback , *args )
-        
+    def __init__( self                 ,
+                  filename             ,
+                  mode                 ,
+                  writeback = False    ,
+                  protocol  = PROTOCOL , ## pickling protocol 
+                  args      = ()       ):
+        RootOnlyShelf.__init__ ( self , filename , mode , writeback , args = args )
+        self.__protocol = protocol
+
+    @property
+    def protocol ( self ) :
+        """``protocol'' : pickle protocol"""
+        return self.__protocol
+    
 
 # =============================================================================
 ##  get object (unpickle if needed)  from dbase
@@ -252,22 +306,20 @@ def _pickled_getitem_ (self, key):
     >>> obj = db['A/B/C']
     """
     ##
-    from   shelve import StringIO, Unpickler 
-    ##
-    try:
+    try:    
         value = self.cache[key]
     except KeyError:
         value = self.dict[key]
         ## object string?
         if isinstance ( value , ROOT.TObjString ) :
             ## unpack it unpickle!
-            s     = value.GetName()
+            s = value.GetName()
+            ## s = s.encode('unicode_escape') ## utf_8 ? 
             ##
-            ##if 0<= s.find ('\377\001') or 0<=s.find('\377\376') : 
             ## restore zeroes
-            s     = s.replace('\377\001', '\000').replace('\377\376', '\377')
+            s     = s.replace(b'\377\001', b'\000').replace(b'\377\376',b'\377')
             ## unpickle! 
-            f     = StringIO ( s )
+            f     = BytesIO ( s )
             value = Unpickler( f ).load()
         if self.writeback:
             self.cache[key] = value
@@ -285,22 +337,22 @@ def _pickled_setitem_ ( self , key , value ) :
     >>> db['A/B/C'] = obj
     """
     ##
-    from   shelve import StringIO, Pickler
-    ##
     if self.writeback:
         self.cache[key] = value
+
     ## not TObject? pickle it and convert to TObjString
     if not isinstance  ( value , ROOT.TObject ) :
         ## pickle it 
-        f = StringIO ( )
-        p = Pickler  ( f , 2 ) ## PROTOCOL 
+        f = BytesIO    ( )
+        p = Pickler    ( f , self.protocol )
         p.dump( value )
-        s = f.getvalue()
+        s = f.getvalue ()
         ##
-        ##if 0<= s.find('\377') or 0<=s.find('\000') : 
         ## avoid appearence of zeroes in TObjString
-        s = s.replace('\377', '\377\376').replace('\000', '\377\001')
+        s = s.replace( b'\377', b'\377\376').replace( b'\000', b'\377\001')
+        ## s = s.decode('unicode_escape') ## utf_8 ? 
         value = ROOT.TObjString( s )
+        
     ## finally use ROOT 
     self.dict[key] = value
     
@@ -327,7 +379,6 @@ def open ( filename              ,
     return RootShelf ( filename  ,
                        mode      ,
                        writeback , * args )
-
 
 # =============================================================================
 ## @class TmpRootShelf
@@ -356,15 +407,16 @@ class TmpRootShelf(RootShelf):
         import tempfile
         filename = tempfile.mktemp  ( suffix = '.root' )
         
-        RootShelf.__init__ ( self              ,
-                             filename          ,
-                             mode      = 'n'   ,
-                             writeback = False , *args )
+        RootShelf.__init__ ( self                         ,
+                             filename                     ,
+                             mode      = 'n'              ,
+                             writeback = False            ,
+                             protocol  = HIGHEST_PROTOCOL , args = args )
         
     ## close and delete the file 
     def close ( self )  :
         ## close the shelve file
-        fname = self.filename() 
+        fname = self.filename 
         RootShelf.close ( self )
         ## delete the file
         import os 
@@ -390,6 +442,18 @@ def tmpdb ( *args ) :
     return TmpRootShelf ( *args )
 
 
+# =============================================================================
+if python_version.major > 2 :
+    import  warnings
+    warnings.warn("RootShelve is not available for Python-3 (problem with pickled string)")
+    del RootShelf
+    del TmpRootShelf 
+    del open
+    del tmpdb 
+    __all__ = (
+        'RootOnlyShelf' , ## "data base" for ROOT-only objects
+        )
+    
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -18,8 +18,8 @@ __all__     = (
     )
 # =============================================================================
 ## primitive types
-import sys
-if sys.version_info[0] > 2 : 
+from sys import version_info as python_version 
+if python_version.major > 2 : 
     primitive =  int        , float , bool , str , bytes   , list , dict , set
 else :
     primitive =  int , long , float , bool , str , unicode , list , dict , set

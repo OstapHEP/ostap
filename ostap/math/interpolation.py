@@ -78,7 +78,8 @@ __all__     = (
     'interpolate_bspline'   , ## Basic spline interpolation
     )
 # =============================================================================
-import  ROOT, math  
+import  ROOT, math
+from    builtins          import range 
 from    ostap.core.core   import cpp, Ostap
 from    ostap.core.types  import is_integer
 from    ostap.math.base   import iszero, isequal, doubles 
@@ -116,7 +117,7 @@ def _a_iter_ ( self ) :
     >>> for x in a : print x  
     """
     N = self.n()
-    for i in xrange ( N ) :
+    for i in range ( N ) :
         yield self.x ( i ) 
 # =============================================================================
 ## Iterator over (index,x) pairs
@@ -129,7 +130,7 @@ def _a_iteritems_ ( self ) :
     >>> for i,x in a.iteritems() : print i,x
     """
     N = self.n()
-    for i in xrange ( N ) :
+    for i in range ( N ) :
         yield i , self.x ( i ) 
 # =============================================================================
 ## Get the item or slice 
@@ -222,7 +223,7 @@ def _p_iter_ ( self ) :
     >>> for x,y in a : print x,y  
     """
     N = self.n()
-    for i in xrange ( N ) :
+    for i in range ( N ) :
         yield self.x ( i ) , self.y ( i )  
 # =============================================================================
 ## Iterator over (index,x) pairs
@@ -235,7 +236,7 @@ def _p_iteritems_ ( self ) :
     >>> for i,p in a.iteritems() : print i,p
     """
     N = self.n()
-    for i in xrange ( N ) :
+    for i in range ( N ) :
         yield i , ( self.x ( i ) , self.y ( i ) )  
 
 # =============================================================================
@@ -330,7 +331,7 @@ def _w_iter_ ( self ) :
     >>> for x,w in a : print x,w  
     """
     N = self.n()
-    for i in xrange ( N ) :
+    for i in range ( N ) :
         yield self.x ( i ) , self.w ( i )  
 # =============================================================================
 ## Iterator over (i,(x,w)) triplets 
@@ -343,7 +344,7 @@ def _w_iteritems_ ( self ) :
     >>> for i,p in a.iteritems() : print i,p
     """
     N = self.n()
-    for i in xrange ( N ) :
+    for i in range ( N ) :
         yield i , ( self.x ( i ) , self.w( i ) )  
 
 # =============================================================================
@@ -488,7 +489,7 @@ def _b_iter_ ( self ) :
     >>> for x,y in a : print x,y  
     """
     N = self.n()
-    for i in xrange ( N ) :
+    for i in range ( N ) :
         yield self.x ( i ) , self.y ( i )  
 # =============================================================================
 ## Iterator over (index,x) pairs
@@ -501,7 +502,7 @@ def _b_iteritems_ ( self ) :
     >>> for i,p in a.iteritems() : print i,p
     """
     N = self.n()
-    for i in xrange ( N ) :
+    for i in range ( N ) :
         yield i , ( self.x ( i ) , self.y ( i ) )  
 
 # =============================================================================
@@ -636,8 +637,7 @@ def lagrange ( func , abscissas  = None ) :
             _new_abscissas = []
             _new_func      = []
             _keys          = func.keys()
-            _keys.sort() 
-            for _k in _keys :
+            for _k in sorted ( _keys ) :
                 _new_abscissas.append (      _k  )
                 _new_func     .append ( func[_k] )
             abscissas = _new_abscissas 
@@ -704,8 +704,7 @@ def points ( func , abscissas  = None ) :
             _new_abscissas = []
             _new_func      = []
             _keys          = func.keys()
-            _keys.sort() 
-            for _k in _keys :
+            for _k in sorted ( _keys ) :
                 _new_abscissas.append (      _k  )
                 _new_func     .append ( func[_k] )
             abscissas = _new_abscissas 

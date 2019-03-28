@@ -635,8 +635,8 @@ def multicolumn ( lines , term_width=None , indent = 0 , pad = 2 ):
         
     cols = [lines[i*col_len : i*col_len + col_len] for i in range(n_cols)]
     
-    rows = list(zip(*cols))
-    rows_missed = zip(*[col[len(rows):] for col in cols[:-1]])
+    rows        = list(zip(*cols))
+    rows_missed = list(zip(*[col[len(rows):] for col in cols[:-1]]))
     rows.extend(rows_missed)
 
     result = []

@@ -101,6 +101,8 @@ Access to DB in read-only mode :
 # >>> abcd = db['some_key']
 """
 # =============================================================================
+from   __future__        import print_function
+# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-19"
 __version__ = "$Revision$" 
@@ -116,7 +118,20 @@ if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
 else                      : logger = getLogger ( __name__ )
 # =============================================================================
 from   ostap.io.sqlitedict import SqliteDict
-import zlib 
+import sys, zlib 
+import sqlite3
+# =============================================================================
+try:
+    from cPickle   import Pickler, Unpickler , HIGHEST_PROTOCOL
+except ImportError:
+    from  pickle   import Pickler, Unpickler , HIGHEST_PROTOCOL
+# =============================================================================
+PROTOCOL = 2 
+# =============================================================================
+try : 
+    from io        import             BytesIO
+except ImportError : 
+    from cStringIO import StringIO as BytesIO         
 # =============================================================================
 _modes_ = {
     # =========================================================================
@@ -202,10 +217,11 @@ class SQLiteShelf(SqliteDict):
     def __init__ ( self                       ,
                    filename       = None      ,
                    mode           = 'c'       ,
-                   tablename      = 'Ostap'   ,
+                   tablename      = 'ostap'   ,
                    writeback      = True      , ## original name: "autocommit"
                    compress_level = zlib.Z_BEST_COMPRESSION , 
-                   journal_mode   = "DELETE"  ) :
+                   journal_mode   = "DELETE"  ,
+                   protocol       = PROTOCOL  ) :
         """Initialize a thread-safe sqlite-backed dictionary.
         The dictionary will be a table ``tablename`` in database file
         ``filename``. A single file (=database) may contain multiple tables.
@@ -254,8 +270,19 @@ class SQLiteShelf(SqliteDict):
                               autocommit   = writeback    ,
                               journal_mode = journal_mode )
         
-        self.compression = compress_level 
+        self.__compression = compress_level 
+        self.__protocol    = protocol
 
+    @property
+    def compression ( self ) :
+        """The  compression level from zlib"""
+        return self.__compression
+    
+    @property
+    def protocol    ( self ) :
+        """The pickling protocol"""
+        return self.__protocol
+    
     ## list the avilable keys 
     def __dir ( self , pattern = '' ) :
         """ List the avilable keys (patterns included).
@@ -268,13 +295,12 @@ class SQLiteShelf(SqliteDict):
         
         """
         keys_ = self.keys()
-        keys_.sort()
         if pattern :
             import fnmatch
             _keys = [ k for k in keys_ if fnmatch.fnmatchcase ( k , pattern ) ]
             keys_ = _keys
         #
-        for key in keys_ : print key
+        for key in sorted(keys_) : print(key)
         
     ## list the avilable keys 
     def ls    ( self , pattern = '' ) :
@@ -289,18 +315,6 @@ class SQLiteShelf(SqliteDict):
         """
         return self.__dir( pattern )
 
-
-# =============================================================================
-try:
-    from cPickle import Pickler, Unpickler, HIGHEST_PROTOCOL
-except ImportError:
-    from  pickle import Pickler, Unpickler, HIGHEST_PROTOCOL 
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from  StringIO import StringIO
- 
 # =============================================================================
 ## ``get-and-uncompress-item'' from dbase 
 def _zip_getitem (self, key):
@@ -309,13 +323,12 @@ def _zip_getitem (self, key):
     GET_ITEM = 'SELECT value FROM %s WHERE key = ?' % self.tablename
     item = self.conn.select_one(GET_ITEM, (key,))
     if item is None: raise KeyError(key)
-    
-    f     = StringIO ( zlib.decompress ( str ( item[0] ) ) ) 
+
+    f     = BytesIO ( zlib.decompress ( item[0] ) ) 
     value = Unpickler(f).load()
 
     return value
 
-import sqlite3
 # =============================================================================
 ## ``set-and-compress-item'' to dbase 
 def _zip_setitem ( self , key , value ) :
@@ -323,8 +336,8 @@ def _zip_setitem ( self , key , value ) :
     """
     ADD_ITEM = 'REPLACE INTO %s (key, value) VALUES (?,?)' % self.tablename
     
-    f     = StringIO()
-    p     = Pickler(f, HIGHEST_PROTOCOL  )
+    f     = BytesIO()
+    p     = Pickler(f, self.protocol )
     p.dump(value)
     blob  = f.getvalue() 
     zblob = zlib.compress ( blob , self.compression ) 
@@ -397,10 +410,11 @@ class TmpSQLiteShelf(SQLiteShelf):
     """TEMPORARY SQLite-based ``shelve-like'' database with compressed content. 
     see SQLiteShelf
     """
-    def __init__ ( self                        ,
-                   tablename      = 'Ostap'    ,
+    def __init__ ( self                                     ,
+                   tablename      = 'ostap'                 ,
                    compress_level = zlib.Z_BEST_COMPRESSION , 
-                   journal_mode   = "DELETE"   ) :
+                   journal_mode   = "DELETE"                ,
+                   protocol       = HIGHEST_PROTOCOL        ) :
         
         SQLiteShelf.__init__ ( self            ,
                                None            ,
@@ -408,7 +422,8 @@ class TmpSQLiteShelf(SQLiteShelf):
                                tablename       ,
                                True            , ## False , ## writeback/autocommit
                                compress_level  ,
-                               journal_mode    ) 
+                               journal_mode    ,
+                               protocol        ) 
         
 # =============================================================================
 ## open new TEMPORARY SQLiteShelve data base

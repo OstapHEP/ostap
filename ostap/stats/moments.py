@@ -107,7 +107,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moments' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-
+from ostap.core.types import integer_types, num_types 
 # =============================================================================
 ## @class Moment
 #  Calculate the N-th moment for the distribution 
@@ -129,12 +129,12 @@ class Moment(object) :
     def __init__ ( self , N , xmin , xmax , err = False , x0 = 0 , *args ) :
         """Contructor 
         """
-        if not isinstance ( N , ( int , long ) ) or 0 > N  :
+        if not isinstance ( N , integer_types ) or 0 > N  :
             raise TypeError('Moment: illegal order')
         
         self.__N     = N 
-        self.__xmin  = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
-        self.__xmax  = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
+        self.__xmin  = float ( xmin ) if isinstance ( xmin , integer_types ) else xmin 
+        self.__xmax  = float ( xmax ) if isinstance ( xmax , integer_types ) else xmax 
         self.__err   = err
         self.__args  = args
         self.__x0    = x0  
@@ -744,9 +744,9 @@ class CL_symm(object) :
             raise AttributeError ("Invalid value of prob/CL=%g" % prob)
 
         self.__prob = prob 
-        self.__xmin = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
-        self.__xmax = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
-        self.__x0   = float ( x0   ) if isinstance ( x0   , ( int , long ) ) else x0  
+        self.__xmin = float ( xmin ) if isinstance ( xmin , integer_types ) else xmin 
+        self.__xmax = float ( xmax ) if isinstance ( xmax , integer_types ) else xmax 
+        self.__x0   = float ( x0   ) if isinstance ( x0   , integer_types ) else x0  
         self.__args = args
         
     def __str__ ( self ) :
@@ -865,8 +865,8 @@ class CL_asymm(object) :
             raise AttributeError ("Invalid value of prob/CL=%g" % prob)
 
         self.__prob = prob 
-        self.__xmin = float ( xmin ) if isinstance ( xmin , ( int , long ) ) else xmin 
-        self.__xmax = float ( xmax ) if isinstance ( xmax , ( int , long ) ) else xmax 
+        self.__xmin = float ( xmin ) if isinstance ( xmin , integer_types ) else xmin 
+        self.__xmax = float ( xmax ) if isinstance ( xmax , integer_types ) else xmax 
         self.__args = args
 
     def __str__ ( self ) :
@@ -986,18 +986,18 @@ def sp_action ( func , actor , xmin = None , xmax = None ) :
     ##
     import numpy
     ##
-    if   isinstance  ( xmin , (float,int,long) ) : xmn =  float ( xmin            ) 
-    elif hasattr     ( func ,'GetXmin' )         : xmn =  float ( func.GetXmin () )
-    elif hasattr     ( func ,'xmin'    )         : xmn =  float ( func.xmin    () ) 
-    else                                         : xmn = -numpy.inf
+    if   isinstance  ( xmin , num_types ) : xmn =  float ( xmin            ) 
+    elif hasattr     ( func ,'GetXmin'  ) : xmn =  float ( func.GetXmin () )
+    elif hasattr     ( func ,'xmin'     ) : xmn =  float ( func.xmin    () ) 
+    else                                  : xmn = -numpy.inf
     ##
-    if   isinstance  ( xmax , (float,int,long) ) : xmx =  float ( xmax            )
-    elif hasattr     ( func ,'GetXmax' )         : xmx =  float ( func.GetXmax () ) 
-    elif hasattr     ( func ,'xmax'    )         : xmx =  float ( func.xmax    () )
-    else                                         : xmx = +numpy.inf
+    if   isinstance  ( xmax , num_types ) : xmx =  float ( xmax            )
+    elif hasattr     ( func ,'GetXmax'  ) : xmx =  float ( func.GetXmax () ) 
+    elif hasattr     ( func ,'xmax'     ) : xmx =  float ( func.xmax    () )
+    else                                  : xmx = +numpy.inf
     ##
-    xmn = float ( xmn ) if isinstance ( xmn , ( int , long ) ) else xmn 
-    xmx = float ( xmx ) if isinstance ( xmx , ( int , long ) ) else xmx
+    xmn = float ( xmn ) if isinstance ( xmn , integer_types ) else xmn 
+    xmx = float ( xmx ) if isinstance ( xmx , integer_types ) else xmx
     #
     ## instantiate calculator and use it 
     calc = actor ( xmn , xmx )
