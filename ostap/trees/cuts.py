@@ -16,7 +16,8 @@ __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
 import ROOT
-from   ostap.core.core import cpp, VE, hID, dsID   
+from   ostap.core.core  import cpp, VE, hID, dsID
+from   ostap.core.types import num_types, string_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -31,6 +32,7 @@ logger.debug( 'Some useful decorations for ROOT.TCut objects')
 ROOT.TCut.__str__      = lambda s :       s.GetTitle().strip() 
 ROOT.TCut.__repr__     = lambda s :       s.GetTitle().strip() 
 ROOT.TCut.__nonzero__  = lambda s : bool( s.GetTitle().strip() )
+ROOT.TCut.__bool__     = lambda s : bool( s.GetTitle().strip() )
 
 # =============================================================================
 ## Remove leading/traling and excessive blanks from TCut
@@ -146,7 +148,7 @@ def _tc_imul_ ( self , other ) :
     ## 
     self.strip()        
     ##
-    if   isinstance ( other , ( float , int , long ) ) :
+    if   isinstance ( other , num_types ) :
         if self : self.SetTitle ( "(%s)*%s"  %  ( self , other ) )
         else    : self.SetTitle ( "%s"       %           other   )
         return self
@@ -180,7 +182,7 @@ def _tc_idiv_ ( self , other ) :
     ## 
     self.strip()
     ##
-    if   isinstance ( other , ( float , int , long ) ) :
+    if   isinstance ( other , num_types ) :
         if self : self.SetTitle ( "(%s)/%s"  %  ( self , other ) )
         else    : self.SetTitle ( "%s"       %  ( 1.0  / other ) )
         return self    
@@ -215,7 +217,7 @@ def _tc_iadd_ ( self , other ) :
     ## 
     self.strip()
     ##
-    if   isinstance ( other , ( float , int , long ) ) :
+    if   isinstance ( other , num_types ) :
         if self : self.SetTitle ( "(%s)+%s"  %  ( self , other ) )
         else    : self.SetTitle ( "%s"       %           other   )
         return self
@@ -249,7 +251,7 @@ def _tc_isub_ ( self , other ) :
     ## 
     self.strip()
     ##
-    if   isinstance ( other , ( float , int , long ) ) :
+    if   isinstance ( other , num_types  ) :
         if self : self.SetTitle ( "(%s)-%s"  %  ( self , other ) )
         else    : self.SetTitle ( "%s"       %      -1 * other   )
         return self
@@ -324,8 +326,10 @@ def _tc_mul_ ( self , other ) :
     >>> new_cut    = cut * other_cut 
     """
     ##
-    if not isinstance ( other , ( str , ROOT.TCut , float , int , long  ) ) :
-        return NotImplemented
+    if   isinstance ( other , ROOT.TCut    ) : pass 
+    elif isinstance ( other , num_types    ) : pass 
+    elif isinstance ( other , string_types ) : pass
+    else                                     : return NotImplemented
     ## 
     new_cut  = ROOT.TCut ( self )
     new_cut *= other 
@@ -346,8 +350,10 @@ def _tc_div_ ( self , other ) :
     >>> new_cut    = cut / other_cut 
     """
     ##
-    if not isinstance ( other , ( str , ROOT.TCut , float , int , long  ) ) :
-        return NotImplemented
+    if   isinstance ( other , ROOT.TCut    ) : pass 
+    elif isinstance ( other , num_types    ) : pass 
+    elif isinstance ( other , string_types ) : pass
+    else                                     : return NotImplemented
     ## 
     new_cut  = ROOT.TCut ( self )
     new_cut /= other 
@@ -368,8 +374,10 @@ def _tc_add_ ( self , other ) :
     >>> new_cut    = cut + other_cut 
     """
     ##
-    if not isinstance ( other , ( str , ROOT.TCut , float , int , long  ) ) :
-        return NotImplemented
+    if   isinstance ( other , ROOT.TCut    ) : pass 
+    elif isinstance ( other , num_types    ) : pass 
+    elif isinstance ( other , string_types ) : pass
+    else                                     : return NotImplemented
     ## 
     new_cut  = ROOT.TCut ( self )
     new_cut += other 
@@ -390,8 +398,10 @@ def _tc_sub_ ( self , other ) :
     >>> new_cut    = cut - other_cut 
     """
     ##
-    if not isinstance ( other , ( str , ROOT.TCut , float , int , long  ) ) :
-        return NotImplemented
+    if   isinstance ( other , ROOT.TCut    ) : pass 
+    elif isinstance ( other , num_types    ) : pass 
+    elif isinstance ( other , string_types ) : pass
+    else                                     : return NotImplemented
     ## 
     new_cut  = ROOT.TCut ( self )
     new_cut -= other 
@@ -409,7 +419,10 @@ def _tc_rand_ ( self , other ) :
     >>> cut        = ...
     >>> new_cut    = 'pt>1' & other_cut 
     """
-    if not isinstance ( other , ( str , ROOT.TCut ) ) : return NotImplemented
+    if   isinstance ( other , ROOT.TCut    ) : pass 
+    elif isinstance ( other , string_types ) : pass
+    else                                     : return NotImplemented
+    ## 
     return ROOT.TCut(other) & self  
 
 # =============================================================================
@@ -424,7 +437,9 @@ def _tc_ror_ ( self , other ) :
     >>> cut        = ...
     >>> new_cut    = 'pt>1' | other_cut 
     """
-    if not isinstance ( other , ( str , ROOT.TCut ) ) : return NotImplemented
+    if   isinstance ( other , ROOT.TCut    ) : pass 
+    elif isinstance ( other , string_types ) : pass
+    else                                     : return NotImplemented
     return ROOT.TCut(other) | self  
 
 
@@ -443,9 +458,9 @@ def _tc_rmul_ ( self , other ) :
     >>> new_cut    = other_cut * cut
     """
     ##
-    if isinstance ( other , ( str , ROOT.TCut ) ) :
-        another = ROOT.TCut( other.strip() )
-    elif isinstance ( other ,  ( float , int, long ) ) :
+    if   isinstance ( other , ROOT.TCut    ) : another = ROOT.TCut( other.strip() )
+    elif isinstance ( other , string_types ) : another = ROOT.TCut( other.strip() )
+    elif isinstance ( other , num_types    ) :
         if self : another = ROOT.TCut ("%s*(%s)"   % ( other , self ) )
         else    : another = ROOT.TCut ("%s"        %   other          )
         return another 
@@ -470,9 +485,9 @@ def _tc_radd_ ( self , other ) :
     >>> new_cut    = other_cut + cut
     """
     ##
-    if isinstance ( other , ( str , ROOT.TCut ) ) :
-        another = ROOT.TCut ( other.strip() )
-    elif isinstance ( other ,  ( float , int, long ) ) :
+    if   isinstance ( other , ROOT.TCut    ) : another = ROOT.TCut( other.strip() )
+    elif isinstance ( other , string_types ) : another = ROOT.TCut( other.strip() )
+    elif isinstance ( other , num_types    ) :
         if self : another = ROOT.TCut ("%s+(%s)"   % ( other , self ) )
         else    : another = ROOT.TCut ("%s"        %   other          )
         return another 
@@ -497,9 +512,9 @@ def _tc_rsub_ ( self , other ) :
     >>> new_cut    = other_cut - cut
     """
     ##
-    if isinstance ( other , ( str , ROOT.TCut ) ) :
-        another = ROOT.TCut ( other.strip() )
-    elif isinstance ( other ,  ( float , int, long ) ) :
+    if   isinstance ( other , ROOT.TCut    ) : another = ROOT.TCut( other.strip() )
+    elif isinstance ( other , string_types ) : another = ROOT.TCut( other.strip() )
+    elif isinstance ( other , num_types    ) :
         if self : another = ROOT.TCut ("%s-(%s)" % ( other , self ) )
         else    : another = ROOT.TCut ("%s"      %   other          )
         return another 
@@ -525,9 +540,8 @@ def _tc_rdiv_ ( self , other ) :
     """
     ##
     ##
-    if isinstance ( other , ( str , ROOT.TCut ) ) :
-        another = ROOT.TCut ( other.strip() )
-    elif isinstance ( other ,  ( float , int, long ) ) :
+    if   isinstance ( other , ROOT.TCut    ) : another = ROOT.TCut( other.strip() )
+    elif isinstance ( other , num_types    ) :
         if self : another = ROOT.TCut ("%s/(%s)" % ( other , self ) )
         else    : another = ROOT.TCut ("%s"      %   other          )
         return another 
@@ -557,28 +571,29 @@ def _tc_invert_ ( c ) :
     ##
     return ROOT.TCut
 
-ROOT.TCut. __and__    = _tc_and_
-ROOT.TCut.__iand__    = _tc_iand_
-ROOT.TCut.__rand__    = _tc_rand_
-ROOT.TCut.  __or__    = _tc_or_
-ROOT.TCut. __ior__    = _tc_ior_
-ROOT.TCut. __ror__    = _tc_ror_
-ROOT.TCut. __mul__    = _tc_mul_
-ROOT.TCut.__imul__    = _tc_imul_
-ROOT.TCut.__rmul__    = _tc_rmul_
-ROOT.TCut. __div__    = _tc_div_
-ROOT.TCut.__idiv__    = _tc_idiv_
-ROOT.TCut.__rdiv__    = _tc_rdiv_
-ROOT.TCut. __add__    = _tc_add_
-ROOT.TCut.__iadd__    = _tc_iadd_
-ROOT.TCut.__radd__    = _tc_radd_
-ROOT.TCut. __sub__    = _tc_sub_
-ROOT.TCut.__isub__    = _tc_isub_
-ROOT.TCut.__rsub__    = _tc_rsub_
+ROOT.TCut. __and__      = _tc_and_
+ROOT.TCut.__iand__      = _tc_iand_
+ROOT.TCut.__rand__      =  _tc_rand_
+ROOT.TCut.  __or__      = _tc_or_
+ROOT.TCut. __ior__      = _tc_ior_
+ROOT.TCut. __ror__      = _tc_ror_
+ROOT.TCut. __mul__      = _tc_mul_
+ROOT.TCut.__imul__      = _tc_imul_
+ROOT.TCut.__rmul__      = _tc_rmul_
+ROOT.TCut. __div__      = _tc_div_
+ROOT.TCut.__idiv__      = _tc_idiv_
+ROOT.TCut.__rdiv__      =  _tc_rdiv_
+ROOT.TCut. __add__      = _tc_add_
+ROOT.TCut.__iadd__      = _tc_iadd_
+ROOT.TCut.__radd__      =  _tc_radd_
+ROOT.TCut. __sub__      =  _tc_sub_
+ROOT.TCut.__isub__      = _tc_isub_
+ROOT.TCut.__rsub__      = _tc_rsub_
 
-ROOT.TCut.__invert__  = _tc_invert_
-
-
+ROOT.TCut.__invert__    = _tc_invert_
+ROOT.TCut.__truediv__   = _tc_div_
+ROOT.TCut.__itruediv__  = _tc_idiv_
+ROOT.TCut.__rtruediv__  = _tc_rdiv_
 
 
 # =============================================================================
@@ -610,6 +625,10 @@ _new_methods_       = (
     ROOT.TCut .  __div__  ,
     ROOT.TCut . __idiv__  ,
     ROOT.TCut . __rdiv__  ,
+    #
+    ROOT.TCut .  __truediv__  ,
+    ROOT.TCut . __itruediv__  ,
+    ROOT.TCut . __rtruediv__  ,
     #
     ROOT.TCut . __invert__ ,
     #
