@@ -90,7 +90,7 @@
     Note:
     
     1. the double inhetiance pattern: It is not mandatory, but it allows to
-    get all benefits from the left bas-class, MASS in this  case
+    get all benefits from the left base-class, MASS in this  case
     2. The __init__ method *must* have keyword argument `pdf` (default is `None`)
     3. one *must* specify the `config` dictionary
     
@@ -293,7 +293,7 @@ class PyPDF (object) :
     
     @property
     def vars ( self ) :
-        """``vars'' - all variables used fro PyPDF creation
+        """``vars'' - all variables used for PyPDF creation
         - it should *NOT* be used inside `evaluate`-function!
         """
         return self.__pyvars
@@ -315,7 +315,7 @@ class PyPDF (object) :
     @property
     def allDeps ( self ) :
         """``allDeps'' - the first parameter  of ``getAnalyticalIntegra/get_analytical_integral''-method 
-        - attention:  it coudl be a null pointer! check it before usage! 
+        - attention:  it could be a null pointer! check it before usage! 
         """
         return self.pdf.allDeps()
     
@@ -325,8 +325,8 @@ class PyPDF (object) :
         - attention:  it could be a null pointer! check it before usage!
         """
         return self.pdf.allDeps()
-    @property
     
+    @property
     def rangeName ( self )  :
         """``rangeName'' -  the ``rangeName''  parameter for ``(get_)analytical_integral''-method
         - attention - it could be a null pointer! check it before usage! 

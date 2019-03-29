@@ -1016,37 +1016,37 @@ class Phases(MakeVar) :
         """
         return self.__phi_list
 
-    ## number of parameters 
-    def __len__     ( self ) :
-        """get the number of phi-parameters"""
-        return  len ( sels.__phis )
+    ## ## number of parameters 
+    ## def __len__     ( self ) :
+    ##     """get the number of phi-parameters"""
+    ##     return  len ( self.__phis )
     
-    ## Get certain phi value(s)
-    def __getitem__ ( self , index ) :
-        """Get certain phi-value by index
-        >>> obj = ...
-        >>> print(obj[3])
-        >>> print(obj[3:9])
-        """
-        return self.__phis [ index ]
+    ## ## Get certain phi value(s)
+    ## def __getitem__ ( self , index ) :
+    ##     """Get certain phi-value by index
+    ##     >>> obj = ...
+    ##     >>> print(obj[3])
+    ##     >>> print(obj[3:9])
+    ##     """
+    ##     return self.__phis [ index ]
     
-    ## Change certain phi-value(s)
-    #  @code
-    #  >>> obj = ...
-    #  >>> obj[3]   = 15
-    #  >>> obj[1:3] = 2, 0   
-    #  @endcode 
-    def __setitem__ ( self , index , values ) :
-        """Change certain phi values
-        >>> obj = ...
-        >>> obj[3]   = 15
-        >>> obj[1:3] = 2, 0   
-        """
-        my_phis = self.__phis [ index ]
-        if isinstance ( my_phis , ROOT.RooAbsReal ) :
-            my_phis.setVal ( float ( values ) )
-        else  :            
-            for p , v in zip (  my_phis , values ) : p.setVal ( float ( v ) )
+    ## ## Change certain phi-value(s)
+    ## #  @code
+    ## #  >>> obj = ...
+    ## #  >>> obj[3]   = 15
+    ## #  >>> obj[1:3] = 2, 0   
+    ## #  @endcode 
+    ## def __setitem__ ( self , index , values ) :
+    ##     """Change certain phi values
+    ##     >>> obj = ...
+    ##     >>> obj[3]   = 15
+    ##     >>> obj[1:3] = 2, 0   
+    ##     """
+    ##     my_phis = self.__phis [ index ]
+    ##     if isinstance ( my_phis , ROOT.RooAbsReal ) :
+    ##         my_phis.setVal ( float ( values ) )
+    ##     else  :            
+    ##         for p , v in zip (  my_phis , values ) : p.setVal ( float ( v ) )
         
 # ==============================================================================
 ## Should one use ``similar'' component?

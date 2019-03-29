@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright (c) Ostap developers.
 # ============================================================================= 
-# @file test_fitting_efficiency2.py
+# @file test_fitting_efficiency.py
 # Test module for ostap/fitting/efficiency.py
 # ============================================================================= 
 """ Test module for ostap/fitting/efficiency.py
@@ -23,7 +23,7 @@ from   ostap.fitting.efficiency import Efficiency1D
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_fitting_efficiency2' )
+    logger = getLogger ( 'test_fitting_efficiency' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
@@ -37,15 +37,11 @@ acc.defineType('reject',0)
 varset  = ROOT.RooArgSet  ( x , acc )
 ds      = ROOT.RooDataSet ( dsID() , 'test data' ,  varset )
 
-A  = 0.1
-B  = 0.8
-C  = 0.5
-X0 = 6.0
-
-def eff0 ( x ) :
-    return A + 0.5 * B * ( 1.0 + math.tanh ( C * 1.0 * ( x - X0 ) ) ) 
-
-emax       = 1.0  
+eff0       = Models.Monotonic_pdf ( 'E0' , xvar = x , power = 4 , increasing = True )
+eff0.phis  = [ random.uniform(-2.5,4.5) for i in   range(4) ]
+eff0.phis  = 0.1 ,  3 ,  1.5  , 0.5
+margin     = 1.20 
+emax       = margin * eff0 ( x.getMax() ) 
 
 for i in range ( 50000 ) :
     
@@ -65,28 +61,40 @@ dx     = (xmax-xmin)/np
 points = [ dx * i for i in range ( np + 1 ) ]
 
 # =============================================================================
-# use RooFormulaVar to parameterise efficiency:
-def test_formula () :
+# use some PDF to parameterize efficiciency
+def test_pdf () : 
     
-    a       = ROOT.RooRealVar    ( 'a'  , 'a'  , 0.05 , 0.0  , 0.2 )
-    b       = ROOT.RooRealVar    ( 'b'  , 'b'  , 0.50 , 0.1  , 0.9 )
-    c       = ROOT.RooRealVar    ( 'c'  , 'c'  , 0.05 , 0.01 , 5   )
-    x0      = ROOT.RooRealVar    ( 'x0' , 'x0' , 4    , 1    , 9   )
-    effFunc = ROOT.RooFormulaVar ( "effFunc" , "a+0.5*b*(1+tanh((x-x0)*c))" , ROOT.RooArgList ( x , a , b , c , x0 ) )
+    effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 6 , increasing = True )
+
+    ## add tiny noise:  
+    ## effPdf.phis = [ float ( p ) * random.gauss ( 1 , 0.02 ) for p in eff0.phis ]
+    effPdf.phis = [ -0.04 , 0.20 , 0  , 0.55 , -0.05 , 0.80 ]
+    maxe   = margin * effPdf ( xmax )
     
-    eff1 = Efficiency1D( 'E1' , effFunc , cut  = acc , xvar = x )
-    r1 = eff1.fitTo ( ds )
-    r1 = eff1.fitTo ( ds )
-    f1 = eff1.draw  ( ds )
-    print(r1)
+    s0     = min ( 1.0 / emax , 1.0 / maxe ) 
+    scale  = ROOT.RooRealVar ( 'scaleX' , 'scaleX' , s0 , 0.2 * s0 , 5.0 * s0  )
+    
+    eff2   = Efficiency1D( 'E2' , effPdf , cut = acc  , scale = scale )
+    
+    r2     = eff2.fitTo ( ds )
+    r2     = eff2.fitTo ( ds )
+    r2     = eff2.fitTo ( ds )
+    f2     = eff2.draw  ( ds )
+    
+    print (r2)
+    
     for p in points :
-        print(' Point/Eff %4.1f %s%% %.2f%%'   % ( p , (100*eff1 ( p , error = True )).toString ( '(%5.2f+-%4.2f)' ) , 100*eff0(p) ))
+        e  = eff2 ( p , error = True )
+        ev = e.value()
+        e0 = eff0 ( p ) / emax  
+        print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
 
     
 # =============================================================================
 if '__main__' == __name__ :
+
     
-    test_formula     ()
+    test_pdf     ()
 
 
 

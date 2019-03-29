@@ -1815,18 +1815,22 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
     ## regular case: use Bkg_pdf or PolyPos_pdf as baseline background shapes 
     elif isinstance ( bkg , integer_types ) :
 
-        if   0 < bkg : model =     Bkg_pdf ( name , power =       bkg  , xvar = xvar , **kwargs )
+        if   0 < bkg : model =     Bkg_pdf ( name , power =       bkg   , xvar = xvar , **kwargs )
         elif 0 > bkg : model = PolyPos_pdf ( name , power = abs ( bkg ) , xvar = xvar , **kwargs )
         else         :
             model = Flat1D      ( name = name             , xvar = xvar )
             if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
-    
+
+        print ('1):-', model )
+        
     ## native RooFit pdf ? 
     elif isinstance ( bkg , ROOT.RooAbsPdf ) :
 
         ## use Generic1D_pdf 
         model = Generic1D_pdf ( bkg , xvar = xvar , name = name ) 
         if kwargs : logger.warning ('make_bkg: kwargs %s are ignored' % kwargs )
+
+        print ('2):-', model )
 
     ## some Ostap-based background model ?
     elif isinstance ( bkg , PDF ) : 
@@ -1839,6 +1843,8 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
             model = bkg.clone ( name = name , xvar = xvar , **kwargs )
             logger.debug ( 'make_bkg: %s model is cloned to %s' % ( bkg , model ) ) 
         
+        print ('3):-', model )
+
     ## interprete it as exponential slope for Bkg-pdf 
     elif isinstance ( bkg , ROOT.RooAbsReal ) \
              or   isinstance ( bkg , float )  \
@@ -1847,11 +1853,15 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         model = Bkg_pdf ( name , mass = xvar , tau = bkg , power = 0 , **kwargs )
         if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
 
+        print ('4):-', model )
+
     ## exponent 
     elif bkg is math.exp : 
         
         model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
         if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
+
+        print ('5):-', model )
 
     ## strings ....
     elif isinstance ( bkg , str ) :
@@ -1869,6 +1879,8 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
             model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
             model.tau.setMax ( 0 ) 
 
+        print ('6):-', model )
+        
         import re
         
         poly = re.search ( r'(poly|pol|p)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
@@ -1905,11 +1917,17 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
-        
+
+        print ('7):-', model )
+
+    else :
+        print ('ELSE:-', bkg )
+
     if model :
         logger.debug ( 'make_bkg: created model is %s' % model ) 
         return model
-    
+
+    print('I AM HERE', bkg,  model , isinstance ( bkg , PDF ) ) 
     raise  TypeError("Wrong type of bkg object: %s/%s " % ( bkg , type ( bkg ) ) ) 
 
 

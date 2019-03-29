@@ -42,10 +42,9 @@ mmin,mmax = mass.minmax()
 
 ## fill it 
 m = VE(3.100,0.015**2)
-for i in range(0,5000) :
+for i in range(0,10000) :
     mass.value = m.gauss () 
     dataset.add ( varset0 )
-
 
 logger.info ('DATASET %s' % dataset )
 
@@ -99,6 +98,9 @@ class PyGaussAI(PyGauss) :
 
         PyGauss.__init__ (  self , name , xvar , mean , sigma , pdf = pdf )
 
+        a =  QUQU
+
+
     ## declare analytical integral 
     def get_analytical_integral ( self ) :
         """Declare the analytical integral"""
@@ -130,24 +132,32 @@ class PyGaussAI(PyGauss) :
 # =============================================================================
 ## pygauss PDF
 # =============================================================================
-##def test_pygauss() :
-if 1 < 2 :
+def test_pygauss() :
     
     logger.info ('Test PyGauss:  simple Gaussian signal' )
     
     gauss   = PyGauss( 'PyGauss'   , xvar = mass )
-    gaussAI = PyGauss( 'PyGaussAI' , xvar = mass )
     
-    r1, f1  = gauss  .fitTo ( dataset , draw = False , silent = True )
-    r2, f2  = gaussAI.fitTo ( dataset , draw = True , silent = True )
+    r1, f1  = gauss  .fitTo ( dataset , draw = True , silent = True , ncpu=1 )
+    print (r1) 
 
-    print(r1, r2)
+
+# =============================================================================
+## pygauss PDF
+# =============================================================================
+def test_pygauss_AI() :
     
+    logger.info ('Test PyGaussAI:  simple Gaussian signal with  analytical integral' )
+    
+    gaussAI = PyGauss( 'PyGaussAI' , xvar = mass )
+    r2, f2  = gaussAI.fitTo ( dataset , draw = True , silent = True , ncpu=1 )
+    print(r2)
+
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## test_pygauss          () ## simple Gaussian PDF
-    pass
+    test_pygauss          () ## simple Gaussian PDF
+    test_pygauss_AI       () ## simple Gaussian PDF with analytical integral 
 
 # =============================================================================
 # The END 
