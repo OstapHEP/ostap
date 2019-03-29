@@ -59,7 +59,6 @@ def test_shelves():
     for k in data :
         db_sql  [ k ] = data[k]
         db_zip  [ k ] = data[k]
-        if python_version.major < 3 : db_root [ k ] = data[k]
 
     logger.info('SQLiteShelve keys: %s' % list ( db_sql .keys() ) ) 
     logger.info('ZipShelve    keys: %s' % list ( db_zip .keys() ) )

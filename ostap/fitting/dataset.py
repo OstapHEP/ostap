@@ -25,6 +25,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core import Ostap, VE, hID, dsID , valid_pointer  
+from   builtins        import range
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
@@ -49,7 +50,7 @@ def _rad_iter_ ( self ) :
     >>> for i in dataset : ... 
     """
     _l = len ( self )
-    for i in xrange ( 0 , _l ) :
+    for i in range ( 0 , _l ) :
         yield self.get ( i )
 
 # =============================================================================
@@ -76,7 +77,7 @@ def _rad_getitem_ ( self , i ) :
         if 1 == step : return self.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
         
         result = self.emptyClone( dsID() )
-        for j in xrange ( start , stop , step ) : result.add ( self [j] ) 
+        for j in range ( start , stop , step ) : result.add ( self [j] ) 
         return result
     
     elif isinstance ( i , ( int , long ) ) and 0<= i < len ( self ) :
@@ -202,7 +203,7 @@ def _rad_mul_ ( self , another ) :
 
         res = self.emptyClone()
         l    = len ( self )
-        for i in xrange ( l ) :
+        for i in range ( l ) :
             if random.uniform(0,1) < fraction : res.add ( self[i] ) 
         return res
     
@@ -245,7 +246,7 @@ def  _rad_mod_ ( self , fraction ) :
 
         res = self.emptyClone()
         s    = slice ( 0 , -1 , fraction )
-        for i in xrange ( *s.indices ( len ( self ) ) ) : 
+        for i in range ( *s.indices ( len ( self ) ) ) : 
             res.add ( self[i] ) 
         return res 
         
@@ -278,7 +279,7 @@ def _rad_sample_ ( self , num ) :
         raise TypeError("Unknown ``num''=%s" % num )
     
     result  = self.emptyClone ( dsID () )
-    indices = random.sample (  xrange ( len ( self ) ) , num )
+    indices = random.sample ( range ( len ( self ) ) , num )
     
     while indices :
         i = indices.pop()
@@ -299,7 +300,7 @@ def _rad_shuffle_ ( self ) :
     """
     result  = self.emptyClone ( dsID () )
     
-    indices = [ i for i in xrange( len ( self ) ) ]  
+    indices = [ i for i in range( len ( self ) ) ]  
     random.shuffle ( indices )
 
     while indices :

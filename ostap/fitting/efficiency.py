@@ -36,7 +36,8 @@ class Efficiency ( object ) :
                     eff_fun           ,
                     vars              ,
                     cut               ,
-                    accept = 'accept' ) :
+                    accept = 'accept' ,
+                    scale  = None     ) :
 
         self.__name   = str(name)
         self.__cut    = cut
@@ -48,15 +49,22 @@ class Efficiency ( object ) :
         self.__eff_fun = eff_fun
         self.__vars    = ROOT.RooArgSet( *vars )
         
-        self.__scale   = 1 
+        self.__scale   = 1
+        
         if not self.eff_fun :
-            
-            scale = 0.001 , 1.e-10 , 1.e+5 
-            mnmx  = self.eff_pdf.minmax ()
-            if mnmx :
-                mn , mx = mnmx
-                scale   = 0.25 / mx , 1.e-9 / mx , 10 / mx                 
-            self.__scale   = ROOT.RooRealVar ( 'effscale_%s' % self.name , 'scale factor for efficiency (%s)' % self.name , *scale )
+
+            if scale is None :
+                scale = 0.001 , 1.e-10 , 1.e+5 
+                mnmx  = self.eff_pdf.minmax ()
+                if mnmx :
+                    mn , mx = mnmx
+                    scale   = 0.25 / mx , 1.e-9 / mx , 10 / mx
+                    
+            if   isinstance ( scale , ROOT.RooAbsReal ) :
+                self.__scale = scale
+            else : 
+                self.__scale = ROOT.RooRealVar ( 'effscale_%s' % self.name , 'scale factor for efficiency (%s)' % self.name , *scale )
+                
             self.__lst     = ROOT.RooArgList ( self.__scale , self.__eff_pdf.pdf )
             _s = self.scale.GetName()
             _p = self.eff_pdf.pdf.GetName() 
@@ -72,12 +80,12 @@ class Efficiency ( object ) :
         if 3 == len ( vars ) : 
             ## pdf-object for fit 
             self.__pdf_fit = Generic3D_pdf ( pdf   = self.pdf ,
-                                              xvar  = vars[0]  ,
-                                              yvar  = vars[1]  ,
-                                              zvar  = vars[2]  ,
-                                              name  = 'eff_fit_%s'   % self.name ,
-                                              special        = True  ,
-                                              add_to_signals = False )
+                                             xvar  = vars[0]  ,
+                                             yvar  = vars[1]  ,
+                                             zvar  = vars[2]  ,
+                                             name  = 'eff_fit_%s'   % self.name ,
+                                             special        = True  ,
+                                             add_to_signals = False )
             ## pdf-object for drawing
             self.__pdf_draw = Generic3D_pdf ( pdf   = self.eff_fun   ,
                                               xvar  = vars[0]        ,
@@ -134,6 +142,10 @@ class Efficiency ( object ) :
     def scale ( self ) :
         """``scale'': the scale factor to be applied to eff_pdf"""
         return self.__scale
+    @scale.setter
+    def scale ( self , value ) :
+        val = float ( value )
+        self.__scale.setVal( val )
     
     @property 
     def cut ( self ) :
@@ -191,9 +203,10 @@ class Efficiency ( object ) :
         """
         
         vargs = [] ##  i for i in args ]
-        vargs.append  ( ROOT.RooFit.ConditionalObservables( self.vars ) ) 
+        vargs.append  ( ROOT.RooFit.ConditionalObservables ( self.vars ) ) 
         vargs = tuple ( vargs ) 
-        ## 
+        ##
+        draw  = kwargs.pop ( 'draw' , False ) 
         from ostap.logger.utils import roo_silent
         with roo_silent ( silent ) : 
             result , frame = self.pdf_fit.fitTo ( dataset ,                            
@@ -201,7 +214,8 @@ class Efficiency ( object ) :
                                                   nbins  = 100    ,
                                                   silent = silent ,
                                                   refit  = refit  ,
-                                                  args   = vargs  , **kwargs )        
+                                                  args   = vargs  , **kwargs )
+            if  draw : self.draw ( dataset ) 
         self.__fit_result = result 
         return result
 
@@ -278,7 +292,8 @@ class Efficiency1D (Efficiency) :
                     efficiency        , ## the function or PDF 
                     cut               ,
                     xvar   = None     ,
-                    accept = 'accept' ) :
+                    accept = 'accept' ,
+                    scale  = None     ) :
         
         if isinstance   ( efficiency , PDF  ) :
             eff_pdf = efficiency
@@ -293,7 +308,7 @@ class Efficiency1D (Efficiency) :
                                  ( efficiency ,  type(efficiency) , xvar , type(xvar) ) )
 
         self.__xvar = xvar 
-        Efficiency.__init__ ( self , name , eff_pdf , eff_fun ,  ( xvar,) , cut , accept )
+        Efficiency.__init__ ( self , name , eff_pdf , eff_fun ,  ( xvar,) , cut , accept , scale )
     
     @property 
     def xvar ( self ) :

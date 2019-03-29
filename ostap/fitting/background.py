@@ -42,6 +42,7 @@ __all__     = (
 # =============================================================================
 import ROOT, math
 from   ostap.core.core     import cpp, Ostap
+from   ostap.core.types    import integer_types 
 from   ostap.math.base     import iszero
 from   ostap.fitting.basic import PDF
 from   ostap.fitting.utils import Phases 
@@ -1662,8 +1663,8 @@ class PS23L_pdf(PDF) :
         assert 0 <= am3          , "The third mass ``m3'' must be non-negative"
         assert am1+am2+am3 < amm , "The total mass ``mm'' is too low"
 
-        assert  isinstance ( L , (int,long) ) and 0 <= L < 10 , "Invalid ``L'' for the phase space function"
-        assert  isinstance ( l , (int,long) ) and 0 <= l < 10 , "Invalid ``l'' for the phase space function"
+        assert  isinstance ( L , integer_types ) and 0 <= L < 10 , "Invalid ``L'' for the phase space function"
+        assert  isinstance ( l , integer_types ) and 0 <= l < 10 , "Invalid ``l'' for the phase space function"
         self.__m1 = am1
         self.__m2 = am2
         self.__m3 = am3
@@ -1812,7 +1813,7 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         if kwargs : logger.warning ('make_bkg: kwargs %s are ignored' % kwargs )
         
     ## regular case: use Bkg_pdf or PolyPos_pdf as baseline background shapes 
-    elif isinstance ( bkg , ( int , long ) ) :
+    elif isinstance ( bkg , integer_types ) :
 
         if   0 < bkg : model =     Bkg_pdf ( name , power =       bkg  , xvar = xvar , **kwargs )
         elif 0 > bkg : model = PolyPos_pdf ( name , power = abs ( bkg ) , xvar = xvar , **kwargs )

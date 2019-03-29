@@ -43,7 +43,8 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
-from   ostap.core.types import integer_types, list_types 
+from   ostap.core.types import integer_types, list_types
+from   ostap.core.core  import items_loop
 import ostap.plotting.style  
 import ostap.plotting.canvas
 # =============================================================================
@@ -90,7 +91,7 @@ def draw_options ( **kwargs ) :
     ...      draw_opts = draw_options ( kwargs )
     """
     options = {}
-    for k,v in kwargs.iteritems() :
+    for k,v in items_loop ( kwargs ) :
         if k.lower() in keys : options[ k.lower() ] = v
         if k.lower() in ( 'draw' , 'draw_option' , 'draw_options' ) :
             if isinstance ( v , dict ) : options.update ( v ) 

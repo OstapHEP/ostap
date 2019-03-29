@@ -23,6 +23,8 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.modifiers' )
 else                       : logger = getLogger ( __name__                  )
 # =============================================================================
+models = []
+# =============================================================================
 ## @class Product1D_pdf
 #  Simple product of 1D-pdfs
 #  - trivial wrapper for RooProdPdf
@@ -116,14 +118,14 @@ class Product1D_pdf(PDF) :
     @property
     def pdf1 ( self ) :
         """``pdf1'' : the first PDF"""
-        print 'I am property pdf1'
         return self.__pdf1
     
     @property
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
         return self.__pdf2
-    
+
+models.append ( Product1D_pdf ) 
 # =============================================================================
 ## @class Modify1D_pdf
 #  Modify the certain PDF with positive polynomial function
@@ -217,6 +219,9 @@ class Modify1D_pdf(Product1D_pdf) :
     ##    print 'getting %s attribute' % attr 
     ##    opdf = self.pdf1
     ##    return  getattr ( opdf , attr )
+
+
+models.append ( Modify1D_pdf )
 
 # =============================================================================
 if '__main__' == __name__ : 

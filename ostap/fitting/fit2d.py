@@ -32,6 +32,7 @@ from   ostap.fitting.basic  import PDF , Flat1D
 from   ostap.fitting.utils  import ( H2D_dset        ,
                                      component_similar , component_clone )
 from   ostap.core.types     import num_types, list_types 
+from   builtins             import range
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit2d' )
@@ -442,7 +443,7 @@ class PDF2 (PDF) :
             else :
                 return 0.0
             
-        raise AttributeError, 'something wrong goes here'
+        raise AttributeError('something wrong goes here')
 
 
     # ========================================================================
@@ -493,7 +494,7 @@ class PDF2 (PDF) :
         mn  , mx = -1 , -10
         xmn , xmx = self.xminmax()
         ymn , ymx = self.yminmax()
-        for i in xrange ( nshoots ) : 
+        for i in range ( nshoots ) : 
             xx = random.uniform ( xmn , xmx )
             yy = random.uniform ( ymn , ymx )
             with SETVAR ( self.xvar ) :

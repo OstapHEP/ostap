@@ -33,7 +33,8 @@ from   ostap.math.base      import iszero
 from   ostap.core.types     import is_good_number, is_integer, integer_types
 from   ostap.core.types     import num_types , list_types
 from   ostap.fitting.roofit import SETVAR, PDF_fun
-from   ostap.logger.utils   import roo_silent   , rootWarning 
+from   ostap.logger.utils   import roo_silent   , rootWarning
+from   builtins             import range 
 from   ostap.fitting.utils  import ( RangeVar   , MakeVar  , numcpu   , 
                                      fit_status , cov_qual , H1D_dset , get_i  ) 
 # =============================================================================
@@ -309,7 +310,7 @@ class PDF (MakeVar) :
         conf.update ( self.config ) 
         
         ## modify the name if the name is in config  
-        if conf.has_key ('name' ) : conf['name'] += '_copy'
+        if 'name' in conf : conf['name'] += '_copy'
             
         ## update (if needed)
         conf.update ( kwargs )
@@ -758,11 +759,11 @@ class PDF (MakeVar) :
         
         ##  check the explicitely provided arguments
         for k in keys : 
-            if kwargs.has_key ( k ) : return kwargs [ k ]
+            if k in kwargs : return kwargs [ k ]
 
         ## check the predefined drawing options for this PDF 
         for k in keys :  
-            if self.draw_options.has_key ( k ) : return self.draw_options.get ( k)
+            if k in self.draw_options : return self.draw_options.get ( k)
 
         ## check the default options
         for k in keys :  
@@ -1148,7 +1149,7 @@ class PDF (MakeVar) :
         
         mn  , mx = -1 , -10
         xmn , xmx = self.xminmax()
-        for i in xrange ( nshoots ) : 
+        for i in range ( nshoots ) : 
             xx = random.uniform ( xmn , xmx )
             with SETVAR ( self.xvar ) :
                 self.xvar.setVal ( xx )

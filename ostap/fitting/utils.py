@@ -32,9 +32,10 @@ __all__     = (
 import ROOT, math
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
-from   ostap.core.core     import rootID, VE 
+from   ostap.core.core     import rootID, VE, items_loop
 from   ostap.core.types    import num_types, list_types, integer_types
-from   ostap.logger.utils  import roo_silent  
+from   ostap.logger.utils  import roo_silent
+from   sys                 import version_info as python_version 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
@@ -84,9 +85,9 @@ _fit_status_ = {
 # - status = 5    : Any other failure
 def fit_status ( status ) : return _fit_status_.get( status ,"%s" % status )
 # =============================================================================
-_nemax = 10000  ## number of events per CPU-core 
-_ncmax =    16  ## maximal number of CPUs: there are some problems with >= 7
-                ## @see https://sft.its.cern.ch/jira/browse/ROOT-4897
+_nemax = 1000 ## number of events per CPU-core 
+_ncmax =   16 ## maximal number of CPUs: there are some problems with >= 7
+              ## @see https://sft.its.cern.ch/jira/browse/ROOT-4897
 # ==============================================================================
 _ncpus = []
 ## Get number of cores/CPUs
@@ -159,7 +160,9 @@ class MakeVar ( object ) :
     """
     ## @attention ensure that important attributes are available even before __init__
     def __new__( cls, *args, **kwargs):
-        obj = super(MakeVar, cls).__new__( cls , *args , **kwargs )
+        if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
+        else                         : obj = super(MakeVar, cls).__new__( cls , *args , **kwargs )
+            
         obj.__aux_keep = []                      ## ATTENTION!        
         obj.__name     = None                    ## ATTENTION!
         return obj
@@ -239,7 +242,7 @@ class MakeVar ( object ) :
             var = ROOT.RooRealVar ( name , comment , *var )
 
         # var = value 
-        if isinstance   ( var , ( float , int , long ) ) :
+        if isinstance   ( var , num_types ) :
             if   not    args       : var = ROOT.RooRealVar ( name , comment , var             )
             elif 2 == len ( args ) : var = ROOT.RooRealVar ( name , comment , var , *args     )
             elif 3 == len ( args ) : var = ROOT.RooRealVar ( name , comment , var , *args[1:] )
@@ -250,8 +253,8 @@ class MakeVar ( object ) :
             self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
         
         ## fix it, if needed
-        if   isinstance ( fix , bool                   ) : pass 
-        elif isinstance ( fix , ( float , int , long ) ) :
+        if   isinstance ( fix , bool       ) : pass 
+        elif isinstance ( fix , num_types  ) :
                 
             if hasattr ( var , 'getMin)') and fix < var.getMin() and hasattr ( var , 'setMin' ) :                                                                             
                 self.warning ( "make_var: min-value for %s is redefined to be %s " % ( var.GetName () , fix ) )
@@ -341,7 +344,7 @@ class MakeVar ( object ) :
 
         from ostap.plotting.fit_draw import keys  as drawing_options
         
-        for k , a in kwargs.iteritems() :
+        for k , a in items_loop ( kwargs ) :
             
             klow = k.lower ()
             kup  = k.upper ()
@@ -932,8 +935,9 @@ class Phases(MakeVar) :
         """
 
         ## check  the arguments 
-        assert isinstance ( power , (int ,long)) and 0 <= power, \
+        assert isinstance ( power , num_types ) and  int ( power ) == power and 0 <= power, \
                "Phases: invalid type/value for ``power''-parameter: %s/%s"  % (  power , type(power) )
+        power = int ( power ) 
 
         if  isinstance ( the_phis , Phases ) : 
             self.__phis     = [ i for i in the_phis.phis ]  
@@ -964,8 +968,6 @@ class Phases(MakeVar) :
                                     None , 0 ,  -0.85 * pi  , 1.55 * pi  )
             self.__phis    .append ( phi_i ) 
             self.__phi_list.add    ( phi_i )
-
-        nphi = len(self.__phis )
         
     ## set all phis to be 0
     def reset_phis ( self ) :
@@ -1007,13 +1009,45 @@ class Phases(MakeVar) :
                 logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )                 
             s.setVal   ( vv )
         nphi = len ( self.__phis )
-        
+
     @property
     def phi_list ( self ) :
         """The list/ROOT.RooArgList of ``phases'', used to parameterize polynomial-like shapes
         """
         return self.__phi_list
- 
+
+    ## number of parameters 
+    def __len__     ( self ) :
+        """get the number of phi-parameters"""
+        return  len ( sels.__phis )
+    
+    ## Get certain phi value(s)
+    def __getitem__ ( self , index ) :
+        """Get certain phi-value by index
+        >>> obj = ...
+        >>> print(obj[3])
+        >>> print(obj[3:9])
+        """
+        return self.__phis [ index ]
+    
+    ## Change certain phi-value(s)
+    #  @code
+    #  >>> obj = ...
+    #  >>> obj[3]   = 15
+    #  >>> obj[1:3] = 2, 0   
+    #  @endcode 
+    def __setitem__ ( self , index , values ) :
+        """Change certain phi values
+        >>> obj = ...
+        >>> obj[3]   = 15
+        >>> obj[1:3] = 2, 0   
+        """
+        my_phis = self.__phis [ index ]
+        if isinstance ( my_phis , ROOT.RooAbsReal ) :
+            my_phis.setVal ( float ( values ) )
+        else  :            
+            for p , v in zip (  my_phis , values ) : p.setVal ( float ( v ) )
+        
 # ==============================================================================
 ## Should one use ``similar'' component?
 def component_similar ( same ) :
