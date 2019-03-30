@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/tools/tests/test_reweight2.py
-#
+## @file ostap/tools/tests/test_tools_reweight2.py
 #  Test for 2D-reweighting machinery
-# 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-11
 # =============================================================================
@@ -25,7 +23,7 @@ import ostap.io.zipshelve as     DBASE
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_reweight2' )
+    logger = getLogger ( 'ostap.test_tools_reweight2' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    

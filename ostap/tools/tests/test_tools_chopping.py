@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file test_chopping.py
-#
+## @file ostap/tools/tests/test_tools_chopping.py
 #  Test for TMVA ``chopping'' machinery
-# 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-10-25 
 # =============================================================================
-"""Test for TVMA machinery in  Ostap
+"""Test for TVMA-chopping  machinery in  Ostap
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -27,7 +25,7 @@ from   array                    import array
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'test_chopping' )
+    logger = getLogger ( 'ostap.test_tools_chopping' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    

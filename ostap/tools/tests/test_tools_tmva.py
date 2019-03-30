@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file test_tmva.py
+## @file ostap/tools/tests/test_tools_tmva.py
 #
 #  Test for TMVA machinery
 # 
@@ -27,7 +27,7 @@ from   array                    import array
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'test_tmva' )
+    logger = getLogger ( 'ostap.test_tools_tmva' )
 else : 
     logger = getLogger ( __name__ )
 # ==============================================================================

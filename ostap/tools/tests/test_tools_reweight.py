@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file test_reweight.py
-#
+## @file ostap/tools/tests/test_tools_reweight.py
 #  Test for reweighting machinery
-#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-11
 # =============================================================================
@@ -23,7 +21,7 @@ import ostap.parallel.kisa
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'test_reweight' )
+    logger = getLogger ( 'ostap.test_tools_reweight' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    
