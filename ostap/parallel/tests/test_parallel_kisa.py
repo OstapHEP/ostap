@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file test_kisa.py
+## @file ostap/parallel/tests/test_parallel_kisa.py
 #  Test for parallel data processing 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2015-05-17
@@ -23,7 +23,7 @@ import ostap.parallel.kisa  ## ATTENTION!
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' == __name__ or '__builtin__' == __name__ : 
-    logger = getLogger( 'test_kisa' )
+    logger = getLogger( 'ostap.test_parallel_kisa' )
 else : 
     logger = getLogger( __name__ )
 # =============================================================================
