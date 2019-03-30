@@ -135,7 +135,7 @@ import ostap.utils.utils  as Utils
 # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
 # @endcode
 class Trainer(object) :
-    """The ``chopping''  trainer. Th einterface is very similar to TMVA Trainer
+    """The ``chopping''  trainer. The interface is very similar to TMVA Trainer
     with two   additional mandatory parameters:
     1. ``N''        : number of categories 
     2. ``category'' : the string/expression with TTree variables 
@@ -186,7 +186,10 @@ class Trainer(object) :
                    name              = 'TMVAChopper' ,   # the name 
                    verbose           = False         ,   # verbose ? 
                    chop_signal       = False         ,   # chop the signal     ?
-                   chop_background   = True          ) : #x chop the background ?
+                   chop_background   = True          ,   # chop the background ?
+                   logging           = True          ,   # create log-files    ?
+                   parallel          = True          ) : # paralell trainingg  ? 
+        
         """Create TMVA ``chopping'' trainer
         
         >>> N = 11 
@@ -210,7 +213,9 @@ class Trainer(object) :
 
         self.__chop_signal     = True if chop_signal     else False 
         self.__chop_background = True if chop_background else False 
-
+        self.__parallel        = True if parallel        else False
+        self.__logging         = True if logging         else False
+        
         assert  self.__chop_signal or self.__chop_background, "Neither signal nor background chopping" 
         
         self.__category  = category 
@@ -329,6 +334,16 @@ class Trainer(object) :
     def category ( self ) :
         """``category'' -  the accessor(string) to the category"""
         return self.__category 
+
+    @property
+    def parallel ( self ) :
+        """``parallel'' : use parallelisation for training"""
+        return self.__parallel
+    
+    @property
+    def logging  ( self ) :
+        """``logging'' : create the log-files"""
+        return self.__logging
 
     @property
     def N        ( self ) :
@@ -453,8 +468,35 @@ class Trainer(object) :
     # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
     # @endcode
     def train ( self ) :
-        """The main method: training of all subsamples
+        """ The main method: training of all subsamples 
         - Use the trainer
+        >>> trainer.train()
+        
+        - Get  results from the  trainer
+        >>> weights_files = trainer.weights_files ## weights files (XML) 
+        >>> class_files   = trainer.  class_files ## class files (C++)
+        >>> output_files  = trainer. output_files ## output ROOT files 
+        >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
+        """
+        return self.p_train() if self.parallel else self.s_train() 
+
+    # =========================================================================
+    ## The main method: training of all subsamples sequentially 
+    #  - Use the trainer for sequential training:
+    # @code 
+    # >>> trainer.s_train()
+    # @endcode
+    #
+    # - Get  results from the  trainer
+    # @code
+    # >>> weights_files = trainer.weights_files ## weights files (XML) 
+    # >>> class_files   = trainer.  class_files ## class files (C++)
+    # >>> output_files  = trainer. output_files ## output ROOT files 
+    # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
+    # @endcode
+    def s_train ( self ) :
+        """The main method: training of all subsamples sequentially 
+        - Use the trainer for   sequential training 
         >>> trainer.train()
         
         - Get  results from the  trainer
@@ -498,52 +540,39 @@ class Trainer(object) :
 
         return self.__weights_files 
 
-    ## create the tarfile from the list of tarfiles 
-    def make_tarfile ( self , tarfiles , logfiles = [] ) : 
-    
-        import tarfile, os
-        
-        tfile = self.name + '.tgz'
-        if os.path.exists ( tfile ) :
-            logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
-            
-        with tarfile.open ( tfile , 'w:gz' ) as tar :
-            for x in  tarfiles: tar.add ( x )
-            logger.debug ( "Trainer(%s): Tar/gz    file  : %s" % ( self.name , tfile ) ) 
-            if self.verbose : tar.list ()
+    # =========================================================================
+    ## The main method: training of all subsamples in parallel  
+    #  - Use the trainer for parallel training 
+    # @code 
+    # >>> trainer.p_train()
+    # @endcode
+    #
+    # - Get  results from the  trainer
+    # @code
+    # >>> weights_files = trainer.weights_files ## weights files (XML) 
+    # >>> class_files   = trainer.  class_files ## class files (C++)
+    # >>> output_files  = trainer. output_files ## output ROOT files 
+    # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
+    # @endcode
 
-        ## finally set the tar-file 
-        if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
-            self.__tar_file = tfile
-
-        if not logfiles : return tfile
-        
-        lfile = self.name + '_logs.tgz'
-        if os.path.exists ( lfile ) :
-            logger.debug  ( "Trainer(%s): Remove existing tar-logfile %s" % ( self.name , lfile ) )
-
-        with tarfile.open ( lfile , 'w:gz' ) as tar :
-            for x in  logfiles: tar.add ( x )
-            logger.debug ( "Trainer(%s): Tar/gz logfile  : %s" % ( self.name , lfile ) ) 
-            if self.verbose : tar.list ()
-            
-        ## finally set the tar-file 
-        if os.path.exists ( lfile ) and tarfile.is_tarfile( lfile ) :
-            self.__log_file = lfile 
-            
-        return tfile
-
-    # =======================================================================
     ## use the parallel training 
-    def ptrain ( self , log = True , silent = True ) :
-        """Use the parallel training
+    def p_train ( self ) :
+        """The main method: training of all subsamples in parallel  
+        - Use the trainer for paralell training 
+        >>> trainer.p_train()
+        
+        - Get  results from the  trainer
+        >>> weights_files = trainer.weights_files ## weights files (XML) 
+        >>> class_files   = trainer.  class_files ## class files (C++)
+        >>> output_files  = trainer. output_files ## output ROOT files 
+        >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
         """
         from ostap.parallel.kisa import ChopperTraining, WorkManager
 
         import sys 
         task   = ChopperTraining()
         wmgr   = WorkManager ( silent = False )
-        params = [ ( i , self , log , silent ) for i in range ( self.N ) ]
+        params = [ ( i , self , self.logging ) for i in range ( self.N ) ]
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -580,6 +609,43 @@ class Trainer(object) :
             
         return self.__weights_files 
         
+    ## create the tarfile from the list of tarfiles 
+    def make_tarfile ( self , tarfiles , logfiles = [] ) : 
+    
+        import tarfile, os
+        
+        tfile = self.name + '.tgz'
+        if os.path.exists ( tfile ) :
+            logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
+            
+        with tarfile.open ( tfile , 'w:gz' ) as tar :
+            for x in  tarfiles: tar.add ( x )
+            logger.debug ( "Trainer(%s): Tar/gz    file  : %s" % ( self.name , tfile ) ) 
+            if self.verbose : tar.list ()
+
+        ## finally set the tar-file 
+        if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
+            self.__tar_file = tfile
+
+        if not logfiles : return tfile
+        
+        lfile = self.name + '_logs.tgz'
+        if os.path.exists ( lfile ) :
+            logger.debug  ( "Trainer(%s): Remove existing tar-logfile %s" % ( self.name , lfile ) )
+
+        with tarfile.open ( lfile , 'w:gz' ) as tar :
+            for x in  logfiles: tar.add ( x )
+            logger.debug ( "Trainer(%s): Tar/gz logfile  : %s" % ( self.name , lfile ) ) 
+            if self.verbose : tar.list ()
+            
+        ## finally set the tar-file 
+        if os.path.exists ( lfile ) and tarfile.is_tarfile( lfile ) :
+            self.__log_file = lfile 
+            
+        return tfile
+
+
+
 # =============================================================================
 ## @class WeightFiles
 #  helper structure  to deal with weights files

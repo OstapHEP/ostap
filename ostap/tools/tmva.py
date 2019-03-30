@@ -237,7 +237,7 @@ class Trainer(object):
                    background_weight = None   ,
                    ##
                    output_file       = ''     ,  # the name of output file 
-                   verbose           = True   ,
+                   verbose           = True   ,  
                    name              = 'TMVA' ) :
         """Constructor with list of methods
         
@@ -426,14 +426,13 @@ class Trainer(object):
         """``log_file''  : the name of log-file """
         return str(self.__log_file) if self.__log_file else None 
 
-
     # =========================================================================
     ## train TMVA 
     #  @code
     #  trainer.train ()
     #  @endcode  
     #  @return the name of output XML file with the weights 
-    def train ( self , log = True , silent = False )  :
+    def train ( self , log = False )  :
         """ train TMVA 
         >>> trainer.train ()
         return the name of output XML files with the weights 
@@ -457,8 +456,8 @@ class Trainer(object):
             self.__bookingoptions = opts
             
 
-            from ostap.logger.utils  import TeeCpp , OutputC, NoContext, MuteC  
-            context  = OutputC ( log , True , True ) if silent else TeeCpp ( log )
+            from ostap.logger.utils import TeeCpp , OutputC  
+            context  = TeeCpp (  log ) if self.verbose else OutputC ( log , True , True ) 
             
             from ostap.logger.logger import noColor
             context2 = noColor()             
@@ -466,14 +465,13 @@ class Trainer(object):
         else    :
             
             from ostap.logger.utils  import MuteC  , NoContext
-            context  = MuteC     ()                  if silent else NoContext ()
+            context  = NoContex  () if  self.verbose else MuteC     ()   
             context2 = NoContext ()
 
         with context :
             with context2 :
                 result = self.__train ()
                 
-        
         if log and os.path.exists ( log ) and os.path.isfile ( log ) : self.__log_file = log
         else                                                         : self.__log_file = None
         
@@ -493,7 +491,7 @@ class Trainer(object):
            os.path.exists ( self.tar_file ) and \
            os.path.isfile ( self.tar_file ) :
             logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.tar_file      ) )
-            if self.verbose or not silent : 
+            if self.verbose : 
                 with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
 
         return result

@@ -36,7 +36,6 @@ if not os.path.exists( data_file ) :
     import random 
     nB = 20000
     nS = 10000
-    
     s_evt_per_run = 927
     b_evt_per_run = 511
     
@@ -147,18 +146,15 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
         signal         = tSignal                  , ## ``Signal'' sample
         background     = tBkg                     , ## ``Background'' sample         
-        verbose        = False    )
+        verbose        = True     ,
+        logging        = True     ,  ## produce  log-files 
+        parallel       = True     )  ## parallel training
 
     from ostap.utils.timing import timing
 
-    # sequential trainig 
-    ## with timing ( 'for TMVA training' , logger ) : 
-    ##    weights_files = trainer.train ()
-    ##    tar_file      = trainer.tar_file
-
-    # parallel trainig 
+    # train it!  
     with timing ( 'for TMVA training' , logger ) : 
-        trainer.ptrain ( log = False ,  silent = False ) 
+        trainer.train () 
         tar_file      = trainer.tar_file
         
 # =============================================================================

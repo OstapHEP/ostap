@@ -483,9 +483,9 @@ class ChopperTraining(Parallel.Task) :
     def process           ( self , params ) :
 
         import ostap.tools.tmva
-        category , chopper , log , silent = params
+        category , chopper , log = params
         trainer  = chopper.create_trainer ( category , False )
-        trainer.train ( log , silent )
+        trainer.train ( log )
         self.output = (
             [ ( category , trainer.weights_files ) ] ,
             [ ( category , trainer.  class_files ) ] ,
