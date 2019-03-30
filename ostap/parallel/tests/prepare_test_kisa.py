@@ -17,7 +17,8 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT,os,  random  
-import ostap.core.pyrouts 
+import ostap.core.pyrouts
+from   builtins                import range 
 from   ostap.trees.data        import Data
 from   ostap.utils.timing      import timing 
 import ostap.parallel.parallel as     Parallel  
@@ -54,7 +55,7 @@ def create_tree ( item ) :
         tree.Branch ( 'c2dtf' , var2 , 'c2dtf/D' )
         tree.Branch ( 'pt'    , var3 , 'pt/D'    )
         
-        for i in xrange ( nentries ) : 
+        for i in range ( nentries ) : 
             
             m  = random.gauss        ( 3.1 ,  0.015 )
             c2 = random.gammavariate ( 2.5 , 0.5    ) / 5 

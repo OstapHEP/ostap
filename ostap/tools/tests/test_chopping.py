@@ -18,6 +18,7 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 import ROOT, os
 import ostap.io.root_file 
+from   builtins                 import range  
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
 from   array                    import array
@@ -37,8 +38,7 @@ if not os.path.exists( data_file ) :
     import random 
     nB = 20000
     nS = 10000
-    ##nB = 2000
-    ##nS = 1000
+    
     s_evt_per_run = 927
     b_evt_per_run = 511
     
@@ -72,8 +72,8 @@ if not os.path.exists( data_file ) :
         ievt = 0
         irun = 1 
         ## fill background tuple: 
-        #for i in progress_bar ( xrange ( nB ) ) : 
-        for i in xrange ( nB ) : 
+        #for i in progress_bar ( range ( nB ) ) : 
+        for i in range ( nB ) : 
             
             x = random.uniform ( -2.0 , 2.0 )
             y = random.uniform ( -2.0 , 2.0 )
@@ -96,8 +96,8 @@ if not os.path.exists( data_file ) :
         ievt = 0
         irun = 1 
         ## fill signal tuple: 
-        #for i in progress_bar ( xrange ( nS ) ) : 
-        for i in xrange ( nS ) : 
+        #for i in progress_bar ( range ( nS ) ) : 
+        for i in range ( nS ) : 
             
             x = random.gauss  (  0.0 , 0.1 )
             y = random.gauss  (  0.0 , 0.2 )
@@ -153,14 +153,14 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
 
     from ostap.utils.timing import timing
 
-    ## # sequential trainig 
+    # sequential trainig 
     ## with timing ( 'for TMVA training' , logger ) : 
-    ##     weights_files = trainer.train ()
-    ##     tar_file      = trainer.tar_file
+    ##    weights_files = trainer.train ()
+    ##    tar_file      = trainer.tar_file
 
     # parallel trainig 
     with timing ( 'for TMVA training' , logger ) : 
-        trainer.ptrain() 
+        trainer.ptrain ( log = False ,  silent = False ) 
         tar_file      = trainer.tar_file
         
 # =============================================================================

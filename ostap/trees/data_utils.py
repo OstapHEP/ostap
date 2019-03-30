@@ -39,6 +39,7 @@ the original ``Ostap'' code by Alexander BARANOV
 
 """
 # =============================================================================
+# =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
@@ -71,7 +72,6 @@ class DataProcessor (object) :
     def initialize ( self ) :
         return self.data.clone()
     def __call__ ( self , items )  :
-        print 'processing:', items 
         data = self.data.clone() 
         data.add_files ( items )
         return data

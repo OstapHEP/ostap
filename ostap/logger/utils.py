@@ -186,7 +186,7 @@ class OutputC(object) :
         """
         self._out  = out 
         self._err  = err
-        self._file = file ( filename , 'w' ) 
+        self._file = open ( filename , 'w' ) 
             
     ## context-manager 
     def __enter__(self):
@@ -252,7 +252,7 @@ class TeePy(object) :
     ## constructor 
     def __init__( self , filename ):
         
-        self._file = file ( filename , 'w' ) 
+        self._file = open ( filename , 'w' ) 
 
     ## context manager 
     def __enter__(self):

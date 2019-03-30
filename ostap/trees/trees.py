@@ -19,6 +19,7 @@ __all__     = (
 # =============================================================================
 import ROOT
 from ostap.core.core    import std , Ostap, VE, hID
+from ostap.core.types   import integer_types , long_type
 from ostap.logger.utils import multicolumn
 from ostap.utils.basic  import terminal_size, isatty 
 # =============================================================================
@@ -1151,7 +1152,7 @@ def _rc_getitem_ ( self , index ) :
     
     _files = self.files()
     
-    if isinstance ( index , ( int , long ) ) :
+    if isinstance ( index , integer_types ) :
         
         assert 0 <= index < len ( _files ), "Invalid index %s" % index
         _c = ROOT.TChain( self.GetName() , self.GetTitle() )
@@ -1211,7 +1212,7 @@ def _rt_slice_ ( tree , varname , cut = '' ) :
         if p1 < p2 :
             raise AttributeError("TTree:slice: can't slice array-like variable '%s'" % varname )
             
-    ge   = long( tree.GetEstimate() ) 
+    ge   = long_type( tree.GetEstimate() ) 
     tree.SetEstimate ( max ( len ( tree ) , ge ) )
     ##
     n    = tree.Draw ( varname , cut , "goff" )

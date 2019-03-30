@@ -18,6 +18,7 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 import ROOT, os
 import ostap.io.root_file 
+from   builtins                 import range  
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
 from   array                    import array
@@ -58,8 +59,8 @@ if not os.path.exists( data_file ) :
         treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
         
         ## fill background tuple: 
-        #for i in progress_bar ( xrange ( nB ) ) : 
-        for i in xrange ( nB ) : 
+        #for i in progress_bar ( range ( nB ) ) : 
+        for i in range ( nB ) : 
             
             x = random.uniform ( -2.0 , 2.0 )
             y = random.uniform ( -2.0 , 2.0 )
@@ -72,8 +73,8 @@ if not os.path.exists( data_file ) :
             treeBkg.Fill()
             
         ## fill signal tuple: 
-        #for i in progress_bar ( xrange ( nS ) ) : 
-        for i in xrange ( nS ) : 
+        #for i in progress_bar ( range ( nS ) ) : 
+        for i in range ( nS ) : 
             
             x = random.gauss  (  0.0 , 0.1 )
             y = random.gauss  (  0.0 , 0.2 )

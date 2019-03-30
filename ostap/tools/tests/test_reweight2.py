@@ -17,6 +17,7 @@ __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 import ROOT, random, math, os, time 
+from   builtins           import range  
 from   ostap.core.pyrouts import *
 import ostap.io.zipshelve as     DBASE
 # =============================================================================
@@ -45,8 +46,8 @@ import ostap.parallel.kisa
 
 if not os.path.exists( testdata ) :
     #
-    seed =  1234567890L 
-    random.seed (  1234567890L ) 
+    seed =  1234567890 
+    random.seed ( seed ) 
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
     # 1) 2D hstograms
@@ -148,7 +149,7 @@ if not os.path.exists( testdata ) :
         mctree.Branch ( 'x' , xvar , 'x/F' )
         mctree.Branch ( 'y' , yvar , 'y/F' )
         
-        for i in  xrange ( 500000 ) :
+        for i in  range ( 500000 ) :
 
             xv = random.uniform ( 0 , 20 ) 
             yv = random.uniform ( 0 , 15 ) 

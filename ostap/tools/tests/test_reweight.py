@@ -12,7 +12,8 @@
 """
 # =============================================================================
 import ROOT, random, math, os, time  
-from   ostap.core.pyrouts import * 
+from   builtins           import range  
+from   ostap.core.pyrouts import *
 import ostap.io.zipshelve as     DBASE
 import ostap.io.root_file
 import ostap.trees.trees
@@ -38,7 +39,7 @@ if os.path.exists ( testdata ) : os.remove ( testdata )
 if os.path.exists ( dbname   ) : os.remove ( dbname   ) 
     
 ## prepare data for tests 
-seed = 1234567890L
+seed = 1234567890
 logger.info ( 'Test RANDOM data will be generated/seed=%s' % seed  )
 random.seed ( seed )
 
@@ -68,7 +69,7 @@ with ROOT.TFile.Open( testdata ,'recreate') as mc_file:
     xvar = array  ( 'f', [0])
     mctree.Branch ( 'x' , xvar , 'x/F' )
     
-    for i in xrange ( 200000 ) : 
+    for i in range ( 200000 ) : 
         xvar[0] = random.expovariate(1.0/80)            
         mctree.Fill()
         

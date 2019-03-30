@@ -9,6 +9,8 @@
 """Few utilities to simplify linear algebra manipulations 
 """
 # =============================================================================
+from   __future__        import print_function
+# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = ""
@@ -430,7 +432,9 @@ def deco_vector ( t ) :
         t ._old_rmul_   = t.__rmul__
         t ._old_sub_    = t.__sub__
         t ._old_rsub_   = t.__rsub__
-        t ._old_div_    = t.__div__
+        
+        if hasattr ( t , '__div__ '    ) : t ._old_div_      = t.__div__
+        if hasattr ( t , '__truediv__ ') : t ._old_truediv_  = t.__truediv__
 
         _operations   = Ostap.Math.VctrOps( t )
         
@@ -442,6 +446,7 @@ def deco_vector ( t ) :
         t.__mul__       = _linalg_mul_    
         t.__rmul__      = _linalg_rmul_    
         t.__div__       = _linalg_div_    
+        t.__truediv__   = _linalg_div_    
         
         t.__eq__        = _vector_eq_    
         t.__neq__       = lambda a,b : not ( a == b )
@@ -449,6 +454,7 @@ def deco_vector ( t ) :
         
         t.cross         = _vector_cross_        
         t.__rdiv__      = lambda s,*a :  NotImplemented 
+        t.__rtruediv__  = lambda s,*a :  NotImplemented 
 
         t. _new_str_    = _v_str_
         t. __str__      = _v_str_
@@ -716,11 +722,11 @@ def _eigen_2_ ( self , sorted = True ) :
         _values  = Ostap.Vector4  ()
         _vectors = Ostap.Vectors4 ()
     else :
-        raise AttributeError, "Not implemented for dimention: %s" % self.kCols
+        raise AttributeError( "Not implemented for dimention: %s" % self.kCols )
 
     st = Ostap.Math.EigenSystems.eigenVectors ( self , _values , _vectors , sorted )
     if st.isFailure () :
-        print 'EigenVectors: Failure from EigenSystems' , st
+        print('EigenVectors: Failure from EigenSystems' , st)
 
     return ( _values , _vectors )
 
@@ -749,7 +755,9 @@ def deco_matrix ( m  ) :
         m ._old_rmul_   = m.__rmul__
         m ._old_sub_    = m.__sub__
         m ._old_rsub_   = m.__rsub__
-        m ._old_div_    = m.__div__
+        
+        if hasattr ( m , '__div__ '    ) : m ._old_div_      = m.__div__
+        if hasattr ( m , '__truediv__ ') : m ._old_truediv_  = m.__truediv__
 
         _operations     = Ostap.Math.MtrxOps( m )
         
@@ -761,8 +769,10 @@ def deco_matrix ( m  ) :
         m.__mul__       = lambda a,b : _linalg_mul_     ( a , b )
         m.__rmul__      = lambda a,b : _linalg_rmul_    ( a , b )
         m.__div__       = lambda a,b : _linalg_div_     ( a , b )
+        m.__truediv__   = lambda a,b : _linalg_div_     ( a , b )
         
         m.__rdiv__      = lambda s,*a :  NotImplemented 
+        m.__rtruediv__  = lambda s,*a :  NotImplemented 
 
         m.__eq__        = lambda a,b : _matrix_eq_      ( a , b )
         m.__neq__       = lambda a,b : not ( a == b ) 
@@ -802,7 +812,9 @@ def deco_symmatrix ( m ) :
         m ._old_rmul_   = m.__rmul__
         m ._old_sub_    = m.__sub__
         m ._old_rsub_   = m.__rsub__
-        m ._old_div_    = m.__div__
+
+        if hasattr ( m , '__div__ '    ) : m ._old_div_      = m.__div__
+        if hasattr ( m , '__truediv__ ') : m ._old_truediv_  = m.__truediv__
 
         _operations     = Ostap.Math.MtrxOps( m )
         
@@ -814,8 +826,10 @@ def deco_symmatrix ( m ) :
         m.__mul__       = _linalg_mul_  
         m.__rmul__      = _linalg_rmul_  
         m.__div__       = _linalg_div_    
+        m.__truediv__   = _linalg_div_    
         
         m.__rdiv__      = lambda s,*a :  NotImplemented 
+        m.__rtruediv__  = lambda s,*a :  NotImplemented 
 
         m.__eq__        = _matrix_eq_    
         m.__neq__       = lambda a,b : not ( a == b ) 

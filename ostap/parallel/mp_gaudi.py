@@ -8,7 +8,7 @@
     independent of the underlying implementation package.
     Two main class are defined: Task and WorkManager
 """
-
+from   __future__        import print_function
 __all__ = [ 'Task','WorkManager' ]
 excluded_varnames = ['HOSTNAME', 'SSH_CLIENT', 'SSH_CONNECTION', 'DISPLAY']
 
@@ -196,9 +196,9 @@ class SshSession(object) :
         self.session.write('%s %s/scripts-%s/ppserver.py \n'%(sys.executable, ppprefix, sys.version.split()[0] ))
         self.session.read_lazy()
         self.session.read_lazy()
-        print 'started ppserver in ', hostname
+        print('started ppserver in ', hostname)
     def __del__(self):
         self.session.close()
-        print 'killed ppserver in ', self.host
+        print('killed ppserver in ', self.host)
 
 # == EOF ====================================================================================

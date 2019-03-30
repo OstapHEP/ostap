@@ -37,10 +37,13 @@ __all__     = (
 import ROOT, os, tarfile
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
+from ostap.logger.logger import getLogger
+# =============================================================================
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.tmva' )
 else                       : logger = getLogger ( __name__           )
 # =============================================================================
+from ostap.core.core     import items_loop
+from ostap.core.types    import num_types 
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
 # =============================================================================
@@ -103,7 +106,7 @@ class WeightsFiles(Utils.CleanUp) :
         assert isinstance ( weights_files , dict  ), \
                "Invalid type of ``weight_files''  %s "    % weights_files
 
-        for method , xml in weights_files.iteritems() :            
+        for method , xml in items_loop ( weights_files ) :            
             assert os.path.exists ( xml ) and os.path.isfile ( xml ), \
                    "No weights file '%s'" %  xml 
             
@@ -435,20 +438,16 @@ class Trainer(object):
         >>> trainer.train ()
         return the name of output XML files with the weights 
         """
-        
+
         if   log and isinstance ( log , str ) : log = log
         elif log                              : log = self.name + '.log'
 
-        
-
-        
         self.__log_file = None
         
         if  log :
             
             try :
-                if os.path.exists ( log ) and os.path.isfile ( log ) :
-                    os.remove ( log )
+                if os.path.exists ( log ) and os.path.isfile ( log ) : os.remove ( log )
             except :
                 pass
             
@@ -457,23 +456,24 @@ class Trainer(object):
             opts = opts_replace ( opts , 'Color:'           , False )
             self.__bookingoptions = opts
             
-            from ostap.logger.utils  import TeeCpp , OutputC
+
+            from ostap.logger.utils  import TeeCpp , OutputC, NoContext, MuteC  
             context  = OutputC ( log , True , True ) if silent else TeeCpp ( log )
             
             from ostap.logger.logger import noColor
-            context2 = noColor() 
-            
+            context2 = noColor()             
+
         else    :
             
             from ostap.logger.utils  import MuteC  , NoContext
-            context  = MuteC   ()                    if silent else NoContext ()
-            context2 = NoContext()
-
+            context  = MuteC     ()                  if silent else NoContext ()
+            context2 = NoContext ()
 
         with context :
             with context2 :
                 result = self.__train ()
                 
+        
         if log and os.path.exists ( log ) and os.path.isfile ( log ) : self.__log_file = log
         else                                                         : self.__log_file = None
         
@@ -520,7 +520,7 @@ class Trainer(object):
             rf.append ( f )
             os.remove ( f )
         if rf : logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
-        
+
         ROOT.TMVA.Tools.Instance()
 
         outFile = ROOT.TFile.Open   ( self.output_file, 'RECREATE' )        
@@ -547,6 +547,7 @@ class Trainer(object):
             if isinstance ( vv , str ) : vv = ( vv , 'F' )             
             dataloader.AddSpectator ( *vv )
         #
+        
         if self.signal_cuts :
             logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) ) 
         if self.background_cuts :
@@ -574,7 +575,7 @@ class Trainer(object):
         ms = tuple( i[1] for i in  self.methods )
         logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
         factory.TrainAllMethods    ()
-        # Test MVAs
+        ## Test MVAs
         logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
         factory.TestAllMethods     ()
         # Evaluate MVAs
@@ -582,7 +583,7 @@ class Trainer(object):
         factory.EvaluateAllMethods ()        
         # Save the output.
         logger.debug ( "Trainer(%s): Output ROOT file %s is closed" % ( self.name , outFile.GetName() ) )
-            
+        
         outFile.Close()
 
         import glob, os 
@@ -643,7 +644,7 @@ class Trainer(object):
 #  >>> for entry in tree :
 #  ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
 #  ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
-#  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+#  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
 #  @endcode
 #
 #  A bit more efficient form is :
@@ -654,7 +655,7 @@ class Trainer(object):
 #  >>> for entry in tree :
 #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
 #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-#  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+#  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg) )
 #  @endcode
 #
 #  - It it natually merges with Ostap's SelectorWithVars utility
@@ -695,7 +696,7 @@ class Reader(object)  :
     >>> for entry in tree :
     ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
     ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
-    ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+    ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg) )
 
     - A bit more efficient form is :
     >>> tree =  ....  ## TTree/TChain/RooDataSet with data
@@ -704,7 +705,7 @@ class Reader(object)  :
     >>> for entry in tree :
     ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
     ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-    ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    ...     print ( 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)) 
     
     It it natually merges with Ostap's SelectorWithVars utility 
     """    
@@ -804,7 +805,7 @@ class Reader(object)  :
             else :
                 
                 logger.error ('Reader(%s): Invalid variable description!' % name )
-                raise AttributeError, 'Invalid variable description!'
+                raise AttributeError ( 'Invalid variable description!' )
 
             ##                     name    accessor   address 
             self.__variables += [ ( vname , vfun     , vfield  ) ] 
@@ -818,7 +819,7 @@ class Reader(object)  :
         
         self.__methods = weights.methods
 
-        for method , xml in  weights.files.iteritems() :
+        for method , xml in  items_loop ( weights.files ) :
             m = self.__reader.BookMVA ( method , xml )
             assert  m , 'Error in booking %s/%s' % (  method  , xml )
             logger.debug ('TMVA Reader(%s) is booked for method:%s xml: %s' % (  self.__name ,
@@ -893,14 +894,14 @@ class Reader(object)  :
         # @code 
         # tree   = ...
         # method = ...
-        # print 'Response is %s' % method.eval ( tree )
+        # print('Response is %s' % method.eval ( tree ) )
         # @endcode 
         def eval ( self , entry , cut_efficiency = 0.9 ) :
             """Evaluate the method fomr TTree/RooAbsData using the
             accessors, defined  early
             >>> tree   = ...
             >>> method = ...
-            >>> print 'Response is %s'    % method.eval ( tree ) 
+            >>> print('Response is %s'    % method.eval ( tree ) )
             """
             return self.__reader( self.__method , entry , cut_efficiency )        
 
@@ -917,29 +918,29 @@ class Reader(object)  :
         #  @code
         #  tree   = ...
         #  method = reader.MLP
-        #  print 'Responce %s' % method ( tree )
+        #  print('Responce %s' % method ( tree ))
         #  @endcode
         #  or using parameters
         #  @code
         #  pt , y, phi = ...
-        #  print 'Responce %s' % method ( pt , y , phi )
+        #  print('Responce %s' % method ( pt , y , phi ))
         #  @endcode 
         def __call__ ( self , arg ,  *args ) :
-            if isinstance ( arg , ( float , int , long , bool ) ) :
-                return self.evaluate ( arg , *args ) 
+            if   isinstance ( arg , num_types ) : return self.evaluate ( arg , *args ) 
+            elif isinstance ( arg , bool      ) : return self.evaluate ( arg , *args ) 
             return self.eval ( arg , *args )
         # =====================================================================
         ## Evaluate the method from parameters 
         # @code 
         # method       = ...
         # pt, eta, phi = 5 ,  3.0 , 0  ## variables 
-        # print 'Response is %s'    % method.evaluate ( pt ,  eta , phi ) 
+        # print('Response is %s'    % method.evaluate ( pt ,  eta , phi ) )
         # @endcode 
         def evaluate ( self , *args ) :
             """Evaluate the method from parameters 
             >>> method       = ...
             >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables 
-            >>> print 'Response is %s'    % method.evaluate ( pt ,  eta , phi ) 
+            >>> print('Response is %s'    % method.evaluate ( pt ,  eta , phi ) )
             """
             return self.reader.evaluate ( self.method , *args )        
 
@@ -952,7 +953,7 @@ class Reader(object)  :
     #  >>> for entry in tree :
     #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
     #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getitem__ ( self , method ) :
         """Helper utility to  get the correspondig function from the  reader:
@@ -963,7 +964,7 @@ class Reader(object)  :
         >>> for entry in tree :
         ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
         ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+        ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
         """
         if not method in self.__methods :
             return KeyError( 'No method %s is booked!' %  method )
@@ -978,7 +979,7 @@ class Reader(object)  :
     #  >>> for entry in tree :
     #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
     #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getattr__ ( self , method ) :
         """Helper utility to  get the correspondig function from the  reader:
@@ -989,7 +990,7 @@ class Reader(object)  :
         >>> for entry in tree :
         ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
         ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+        ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg) )
         """        
         if not method in self.__methods :
             return AttributeError( 'No method %s is booked!' %  method )
@@ -1003,7 +1004,7 @@ class Reader(object)  :
     #  >>> for entry in tree :
     #  ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
     #  ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
-    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+    #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
     #  @endcode 
     #  @attention it is *not* CPU efficient
     #  Ugly trick with arrays is needed due to some technical problems
@@ -1015,7 +1016,7 @@ class Reader(object)  :
         >>> for entry in tree :
         ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
         ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
-        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+        ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
         - It is not CPU efficient :-( 
         - Ugly trick with arrays is needed due to some pure technical problem
         [actually TMVA reader needs the address of ``float''(in C++ sense) variable]
@@ -1034,13 +1035,13 @@ class Reader(object)  :
     #  @code
     #  reader = ...
     #  pt, y  = ...  ##
-    #  print 'MLP response is: ', reader.MLP.evaluate ( pt , y )
+    #  print ('MLP response is: ', reader.MLP.evaluate ( pt , y ))
     #  @endcode
     def evaluate ( self , method , *args ) :
         """Evaluate TMVA
         >>> reader = ...
         >>> pt, y  = ...  ##
-        >>> print 'MLP response is: ', reader.MLP.evaluate ( pt , y )
+        >>> print('MLP response is: ', reader.MLP.evaluate ( pt , y ))
         """
         l1 = len ( args             )
         l2 = len ( self.__variables )
@@ -1112,7 +1113,7 @@ def _weights2map_ ( weights_files ) :
     
     weights  = WeightsFiles ( weights_files )
     _weights = MAP() 
-    for method , xml in weights.files.iteritems() :
+    for method , xml in items_loop ( weights.files ) :
         _weights [ method ] = xml
 
     assert not _weights .empty() , \

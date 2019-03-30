@@ -87,7 +87,8 @@ else                       : logger = getLogger ( __name__               )
 # =============================================================================
 from   ostap.tools.tmva   import Trainer as TMVATrainer
 from   ostap.tools.tmva   import Reader  as TMVAReader
-from   ostap.core.pyrouts import hID, h1_axis 
+from   ostap.core.pyrouts import hID, h1_axis
+from   ostap.core.types   import integer_types 
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils  as Utils 
@@ -205,7 +206,7 @@ class Trainer(object) :
         ... verbose    = False )
         
         """
-        assert isinstance ( N , (int,long) ) and 1 < N , "Invalid number of categories"
+        assert isinstance ( N , integer_types ) and 1 < N , "Invalid number of categories"
 
         self.__chop_signal     = True if chop_signal     else False 
         self.__chop_background = True if chop_background else False 
@@ -547,7 +548,7 @@ class Trainer(object) :
         sys.stdout.flush()
         sys.stderr.flush()
         
-        wmgr.process( task, params )
+        wmgr.process ( task, params )
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -644,7 +645,7 @@ class WeightsFiles(Utils.CleanUp) :
 # >>> for entry in tree :
 # ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
 # ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
-# ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+# ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
 # @endcode 
 #
 # - A bit more efficient form is :
@@ -655,7 +656,7 @@ class WeightsFiles(Utils.CleanUp) :
 # >>> for entry in tree :
 # ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
 # ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-# ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+# ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
 # @endcode 
 # - It it natually merges with Ostap's <code>SelectorWithVars</code> utility
 class Reader(object) :
@@ -687,7 +688,7 @@ class Reader(object) :
     >>> for entry in tree :
     ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
     ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
-    ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+    ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
 
     - A bit more efficient form is :
     >>> tree =  ....  ## TTree/TChain/RooDataSet with data
@@ -696,7 +697,7 @@ class Reader(object) :
     >>> for entry in tree :
     ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
     ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-    ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     
     - It it natually merges with Ostap's ``SelectorWithVars'' utility     
     """
@@ -722,7 +723,7 @@ class Reader(object) :
         - single tar/tgz/tar.gz-file with weights files (output from ``Trainer.tar_file'')
         - the structure of xml-files with weights       (output from ``Trainer.weights_files'')
         """
-        assert isinstance ( N , (int,long) ) and 1 <= N , "``N'' is illegal %s/%s"  % ( N , type(N) )
+        assert isinstance ( N , integer_types ) and 1 <= N , "``N'' is illegal %s/%s"  % ( N , type(N) )
 
         self.__name          = str(name) 
         self.__categoryfunc  = categoryfunc, 
@@ -829,23 +830,23 @@ class Reader(object) :
         #  @code
         #  tree = ...
         #  method = reader.MLP
-        #  print 'Responce %s' % method ( tree )
+        #  print('Responce %s' % method ( tree ))
         #  @endcode
         #  or using categroy and parameters
         #  @code
         #  category  = 2
         #  pt , y, phi = ...
-        #  print 'Responce %s' % method ( category , pt , y , phi )
+        #  print('Responce %s' % method ( category , pt , y , phi ))
         #  @endcode 
         def __call__ ( self , arg ,  *args ) :
             """Evaluate the chopper from TTree/TChain/RooAbsData:
             >>>tree = ...
             >>> method = reader.MLP
-            >>> print 'Responce %s' % method ( tree )
+            >>> print('Responce %s' % method ( tree ))
             Using category and parameters
             >>> category  = 2
             >>> pt , y, phi = ...
-            >>> print 'Responce %s' % method ( category , pt , y , phi )
+            >>> print('Responce %s' % method ( category , pt , y , phi ))
             """
             if isinstance ( arg , int ) and args :
                 category = arg
@@ -857,14 +858,14 @@ class Reader(object) :
         # method       = ...
         # pt, eta, phi = 5 ,  3.0 , 0  ## variables
         # category     = 2 
-        # print 'Response is %s'    % method.evaluate ( category , pt ,  eta , phi ) 
+        # print('Response is %s'    % method.evaluate ( category , pt ,  eta , phi ) )
         # @endcode 
         def evaluate ( self , category , *args ) :
             """Evaluate the method from parameters 
             >>> method       = ...
             >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables
             >>> category     = ...
-            >>> print 'Response is %s'    % method.evaluate ( category ,  pt ,  eta , phi ) 
+            >>> print('Response is %s'    % method.evaluate ( category ,  pt ,  eta , phi ) )
             """
             return self.reader.evaluate ( category , self.method , *args )
 
@@ -873,13 +874,13 @@ class Reader(object) :
         #  @code
         #  method = ...
         #  pt, eta, phi = 5 ,  3.0 , 0  ## variables
-        #  print 'Mean  response is %s' % method.mean (  pt , eta , phi ) 
+        #  print ('Mean  response is %s' % method.mean (  pt , eta , phi ) )
         #  @endcode
         def mean ( self , *args ) :
             """Get the  mean over all categories
             >>> method = ...
             >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables
-            >>> print 'Mean  response is %s' % method (  pt , eta , phi ) 
+            >>> print('Mean  response is %s' % method (  pt , eta , phi ) )
             """
             sum = 0.0
             for i in range(self.__N) : sum += self.evaluate ( i , *args )
@@ -890,13 +891,13 @@ class Reader(object) :
         #  @code
         #  method = ...
         #  pt, eta, phi = 5 ,  3.0 , 0  ## variables
-        #  print 'Response statistic is %s' % method.stat (  pt , eta , phi ) 
+        #  print('Response statistic is %s' % method.stat (  pt , eta , phi ) )
         #  @endcode        
         def stat ( self , *args ) :
             """ Get the full statistic over all categories
             >>> method = ...
             >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables
-            >>> print 'Response statistic is %s' % method.stat (  pt , eta , phi ) 
+            >>> print('Response statistic is %s' % method.stat (  pt , eta , phi ) )
             """
             from ostap.stats.counters import SE
             se = SE()
@@ -912,7 +913,7 @@ class Reader(object) :
     #  >>> for entry in tree :
     #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
     #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getitem__ ( self , method ) :
         """Helper utility to  get the correspondig function from the  reader:
@@ -923,7 +924,7 @@ class Reader(object) :
         >>> for entry in tree :
         ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
         ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+        ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
         """
         if not method in self.__methods :
             return KeyError( 'No method %s is booked!' %  method )
@@ -938,7 +939,7 @@ class Reader(object) :
     #  >>> for entry in tree :
     #  ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
     #  ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)
+    #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getattr__ ( self , method ) :
         """Helper utility to  get the correspondig function from the  reader:
@@ -949,10 +950,10 @@ class Reader(object) :
         >>> for entry in tree :
         ...     mlp  = mlp_fun  ( entry )  ## evaluate MLP-TMVA
         ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
-        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+        ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
         """                
         if not method in self.__methods :
-            return AttributeError( 'No method %s is booked!' %  method )
+            raise AttributeError( 'No method %s is booked!' %  method )
         return Reader.Method  ( self , method ) 
 
     # =========================================================================
@@ -963,7 +964,7 @@ class Reader(object) :
     #  >>> for entry in tree :
     #  ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
     #  ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
-    #  ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+    #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
     #  @endcode 
     #  @attention it is *not* CPU efficient
     #  Ugly trick with arrays is needed due to some technical problems
@@ -976,12 +977,12 @@ class Reader(object) :
         >>> for entry in tree :
         ...     mlp  = reader ( 'MLP'  , entry )  ## evaluate MLP-TMVA
         ...     bdtg = reader ( 'BDTG' , entry )  ## evalaute BDTG-TMVA
-        ...     print 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   
+        ...     print ( 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   ) 
         """
         icatfunc = self.__categoryfunc[0]
         ic       = icatfunc ( entry )
                  
-        assert isinstance ( ic , (int,long) ) and 0 <= ic < self.__N, \
+        assert isinstance ( ic , integer_types ) and 0 <= ic < self.__N, \
                "Invalid ``category'' %s/%s" % ( ic ,  type ( ic ) )
         return self.__readers[ ic ] ( method ,  entry , cut_efficiency ) 
         
@@ -991,15 +992,15 @@ class Reader(object) :
     #  reader   = ...
     #  pt, y    = ...  ##
     #  category = ... 
-    #  print 'MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y )
+    #  print( 'MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y ))
     #  @endcode
     def evaluate ( self , category , method , *args ) :
         """Evaluate TMVA
         >>> reader = ...
         >>> pt, y  = ...  ##
-        >>> print 'MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y )
+        >>> print('MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y ))
         """
-        assert isinstance ( category , ( int , long ) ) and 0 <= category < self.__N, \
+        assert isinstance ( category , integer_types ) and 0 <= category < self.__N, \
                "Invalid ``category'' %s/%s" % ( category ,  type ( category ) )
         return self.__readers[ category ].evaluate ( method , *args ) 
                                 
