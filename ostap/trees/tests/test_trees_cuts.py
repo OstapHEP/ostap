@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ============================================================================= 
+# =============================================================================
+# @file ostap/trees/tests/test_trees_cuts.py
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
 """ Test module for ostap/trees/cuts.py.
@@ -9,8 +10,8 @@
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_cuts' )
-else                       : logger = getLogger ( __name__        )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_trees_cuts' )
+else                       : logger = getLogger ( __name__                )
 # ============================================================================= 
 import ROOT
 import ostap.trees.cuts 
