@@ -25,6 +25,7 @@ else                       : logger = getLogger( __name__              )
 logger.debug ( 'Tiny decoration for ROOT.TF objects')
 # =============================================================================
 from ostap.core.core   import cpp, Ostap, VE, funID
+from ostap.core.types  import num_types , integer_types
 # =============================================================================
 
 # =============================================================================
@@ -94,8 +95,8 @@ def _tf1_contains_ ( func , par ) :
     >>> if 'm' in fun : ... ## check if 'm' is valid parameter name  
     """
     ## check name 
-    if   isinstance ( par , str            ) : return 0<=func.GetParNumber ( par ) 
-    elif isinstance ( par , ( int , long ) ) : return 0<= par<func.GetNpar (     )
+    if   isinstance ( par , str           ) : return 0<=func.GetParNumber ( par ) 
+    elif isinstance ( par , integer_types ) : return 0<= par<func.GetNpar (     )
     #
     return False 
 
@@ -118,7 +119,7 @@ def _tf1_fix_ ( func , par , value = None ) :
     if not par in func : raise IndexError("Invalid parameter index %s" % par )
     if     isinstance ( par , str  ) : par = func.GetParNumber( par )
     ##
-    if not isinstance ( value , ( float , int , long ) )  :
+    if not isinstance ( value , num_types )  :
         value = func.GetParameter(par)
     #
     func.FixParameter( par , value ) 

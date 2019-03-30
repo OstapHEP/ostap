@@ -24,7 +24,8 @@ else                       : logger = getLogger( __name__                  )
 # =============================================================================
 logger.debug ( 'Tiny decoration for ROOT.FitResult object')
 # =============================================================================
-from ostap.math.ve import VE 
+from ostap.math.ve    import VE 
+from ostap.core.types import integer_types
 # =============================================================================
 ## representation of TFitResult object 
 #  @code 
@@ -94,7 +95,7 @@ def _fit_parnum_ ( self , par ) :
     >>> r    = h1.Fit( ... )
     >>> name = r.GetParNumber ( 'mass' ) 
     """ 
-    if isinstance ( par , ( int , long ) ) :
+    if isinstance ( par , integer_types ) :
         if 0<= par< len ( self ) : return int( par )   ## RETURN 
         else                     : return       -1     ## RETURN 
     #

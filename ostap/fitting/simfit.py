@@ -19,7 +19,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math,  random
-from   ostap.core.core     import std , Ostap , dsID 
+from   ostap.core.core     import std , Ostap , dsID , items_loop 
 from   ostap.fitting.basic import PDF , Generic1D_pdf  
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -239,13 +239,10 @@ class Sim1D(PDF) :
                                           title              , 
                                           self.sample        )
 
-        cats = self.categories 
-        for key in cats : self.pdf.addPdf ( cats[key].pdf , key )
-        keys = cats.keys()
-        keys.sort()
-        del cats 
+        keys = self.categories.keys()
+        for key in sorted ( keys ) : self.pdf.addPdf ( self.categories[key].pdf , key )
         
-        for k,pdf in self.categories.iteritems() :
+        for k , pdf in items_loop ( self.categories ) :
             
             for c in pdf.signals     : self.signals    .add ( c ) 
             for c in pdf.backgrounds : self.backgrounds.add ( c ) 

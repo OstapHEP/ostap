@@ -80,6 +80,7 @@ from ostap.math.base      import ( Ostap    ,
 from sys                  import version_info  as python_version 
 from ostap.math.ve        import VE
 from ostap.stats.counters import SE , WSE 
+from builtins             import range 
 #
 binomEff        = Ostap.Math.binomEff
 binomEff2       = Ostap.Math.binomEff2
@@ -214,7 +215,7 @@ def _sc_print_ ( sc ) :
     >>> st = ...
     >>> print st
     """
-    BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+    BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list ( range ( 8 ) )
     ##
     from ostap.logger.logger   import colored_string
     if   sc.isSuccess     () : return colored_string( 'SUCCESS'     , WHITE , GREEN  , True ) 

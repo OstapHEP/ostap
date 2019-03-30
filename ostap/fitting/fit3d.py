@@ -26,6 +26,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core      import dsID , hID ,  VE , Ostap 
+from   ostap.core.types     import integer_types
 from   ostap.logger.utils   import roo_silent , rooSilent
 from   ostap.fitting.utils  import H3D_dset , component_similar , component_clone
 from   ostap.fitting.basic  import PDF  , Flat1D 
@@ -695,11 +696,11 @@ class PDF3 (PDF2) :
         # explicit contruction from (#bins,min,max)-triplet  
         else :
             
-            assert isinstance ( xbins , ( int , long) ) and 0 < xbins, \
+            assert isinstance ( xbins , integer_types ) and 0 < xbins, \
                    "Wrong ``xbins''-argument %s" % xbins 
-            assert isinstance ( ybins , ( int , long) ) and 0 < ybins, \
+            assert isinstance ( ybins , integer_types ) and 0 < ybins, \
                    "Wrong ``ybins''-argument %s" % ybins 
-            assert isinstance ( zbins , ( int , long) ) and 0 < zbins, \
+            assert isinstance ( zbins , integer_types ) and 0 < zbins, \
                    "Wrong ``zbins''-argument %s" % zbins 
             if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
             if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
@@ -752,7 +753,7 @@ class PDF3 (PDF2) :
         
         
         # loop over the historgam bins 
-        for ix , iy , iz , x , y , z , w in histo.iteritems() :
+        for ix , iy , iz , x , y , z , w in histo.items() :
 
             xv , xe = x.value() , x.error()
             yv , ye = y.value() , y.error()
@@ -818,7 +819,7 @@ class PDF3 (PDF2) :
         for i in hh : hh.SetBinError ( i , 0 ) 
         
         if events and self.pdf.mustBeExtended() :            
-            for ix , iy , iz , x , y , z , v  in hh.iteritems() :
+            for ix , iy , iz , x , y , z , v  in hh.items() :
                 volume               = 8 * x.error()  * y.error() * z.error() 
                 hh [ iz , iy , iz ] *= volume
                 

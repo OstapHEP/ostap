@@ -26,6 +26,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random 
 from   ostap.core.core      import dsID , VE , Ostap, hID , iszero
+from   ostap.core.types     import integer_types 
 from   ostap.fitting.roofit import SETVAR
 from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
 from   ostap.fitting.basic  import PDF , Flat1D 
@@ -137,7 +138,7 @@ class PDF2 (PDF) :
 
         
         ## 2D 
-        if 1 < nbins and isinstance ( ybins , ( int , long ) ) and 1 < ybins :
+        if 1 < nbins and isinstance ( ybins , integer_types ) and 1 < ybins :
             return result, self.draw ( None , dataset , nbins , ybins , silent = silent )
         
         if isinstance ( draw , str ) :
@@ -698,9 +699,9 @@ class PDF2 (PDF) :
         # explicit construction from (#bins,min,max)-triplet  
         else :
             
-            assert isinstance ( xbins , ( int , long) ) and 0 < xbins, \
+            assert isinstance ( xbins , integer_types ) and 0 < xbins, \
                    "Wrong ``xbins''-argument %s" % xbins 
-            assert isinstance ( ybins , ( int , long) ) and 0 < ybins, \
+            assert isinstance ( ybins , integer_types ) and 0 < ybins, \
                    "Wrong ``ybins''-argument %s" % ybins 
             if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
             if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
@@ -748,7 +749,7 @@ class PDF2 (PDF) :
                                    histo = histo )
 
         # loop over the historgam bins 
-        for ix,iy,x,y,z in histo.iteritems() :
+        for ix,iy,x,y,z in histo.items() :
 
             xv , xe = x.value() , x.error()
             yv , ye = y.value() , y.error()
@@ -815,7 +816,7 @@ class PDF2 (PDF) :
         
         if events and self.pdf.mustBeExtended() :
             
-            for ix , iy , x , y , z in hh.iteritems() :
+            for ix , iy , x , y , z in hh.items() :
                 volume          = 4 * x.error() * y.error() 
                 hh [ ix , iy ] *= volume
                 

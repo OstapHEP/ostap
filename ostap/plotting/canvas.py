@@ -251,7 +251,7 @@ def getCanvases () :
     return _canvases.keys() 
 
 def _remove_canvases_() :
-    keys = _canvases.keys() 
+    keys = list( _canvases.keys() )
     for k in keys : del _canvases[k]
         
 import atexit

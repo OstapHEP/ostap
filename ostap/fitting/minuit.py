@@ -16,7 +16,8 @@ __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
 import ROOT
-from   ostap.core.core import cpp, VE
+from   ostap.core.core  import cpp, VE
+from   ostap.core.types import integer_types
 # =============================================================================
 # logging 
 # =============================================================================
@@ -47,7 +48,7 @@ def _mn_par_ ( self , i ) :
     #
     return VE ( val , err*err )
 
-ROOT.TMinuit . __contains__ = lambda s,i : isinstance(i,(int,long,ROOT.Long)) and 0<=i<s.GetNumPars() 
+ROOT.TMinuit . __contains__ = lambda s,i : isinstance(i, integer_type + (ROOT.Long,) ) and 0<=i<s.GetNumPars() 
 ROOT.TMinuit . __len__      = lambda s : s.GetNumPars() 
 
 ROOT.TMinuit . par         = _mn_par_

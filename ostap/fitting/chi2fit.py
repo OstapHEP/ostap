@@ -95,7 +95,7 @@ def _h_Fit_ ( self                              ,
     while len ( cmps ) < len ( components )  :
         cmps.push_back( DATA() )
 
-    for i,x,y in self.iteritems () :
+    for i,x,y in self.items () :
 
         if not selector ( i , x , y ) : continue
         

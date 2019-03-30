@@ -22,12 +22,13 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #
 # =============================================================================
-
 """ Simple interactive PyRoot-based analysis environment
 to provide access to zillions useful decorators for ROOT
 (and not only ROOT) objects&classes
 
 """
+# =============================================================================
+from   __future__        import print_function
 # =============================================================================
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
@@ -35,6 +36,10 @@ __version__ = '$Revision$'
 # =============================================================================
 import ROOT, os  
 ROOT.PyConfig.IgnoreCommandLineOptions = True
+try :
+    from cString import StringIO
+except :
+    from io      import StringIO
 # =============================================================================
 
 # =============================================================================
@@ -53,7 +58,7 @@ def parse_args ( args = [] ) :
     #  ... nargs   = '*'     ,
     #  ... default = []      ,
     #  ...)
-    #  print parser.parse_args('a.txt b.txt --foo 1 2 3 --foo 4 -foo 5 '.split())
+    #  print(parser.parse_args('a.txt b.txt --foo 1 2 3 --foo 4 -foo 5 '.split()))
     #  @endcode
     class Collect(argparse.Action):
         """Simple parsing action to collect multiple arguments
@@ -63,7 +68,7 @@ def parse_args ( args = [] ) :
         ... nargs   = '*'     ,
         ... default = []      ,
         ...)
-        >>> print parser.parse_args('a.txt b.txt --foo 1 2 3 --foo 4 -foo 5 '.split())
+        >>> print(parser.parse_args('a.txt b.txt --foo 1 2 3 --foo 4 -foo 5 '.split()))
         """
         def __init__(self            ,
                      option_strings  ,
@@ -249,9 +254,8 @@ else:
     
     _vars = vars ( arguments )
     _keys = _vars.keys()
-    _keys .sort() 
     logger.info ( 'Arguments  : ')
-    for _k in _keys : logger.info ( '  %15s : %-s ' % ( _k , _vars[_k] ) )
+    for _k in sorted ( _keys ) : logger.info ( '  %15s : %-s ' % ( _k , _vars[_k] ) )
     del _keys,_vars,_k,level  
 
 # =============================================================================
@@ -263,13 +267,12 @@ if arguments.Profile :
     def _end_profile_ ( prof ) :
         logger.debug ( 'End of profiling, generate profiling report' )
         prof.disable()
-        import  cStringIO as StringIO 
-        _sio   = StringIO.StringIO()
+        _sio   = StringIO()
         sortby = 'cumulative'
         import pstats 
         _pstat = pstats.Stats( prof , stream=_sio).sort_stats('cumulative')
         _pstat.print_stats()
-        print _sio.getvalue()
+        print(_sio.getvalue())
             
 
     import atexit 
@@ -384,7 +387,7 @@ def _load_macro_ ( macro , silent = True ) :
     if sc :
         # - Interactive mode: print traceback and continue
         if arguments.batch :
-            raise RuntimeError, 'Failure to load macro "%s" code:%d' % ( macro , sc ) 
+            raise RuntimeError ( 'Failure to load macro "%s" code:%d' % ( macro , sc ) )
         else :
             logger.error       ('Failure to load macro "%s" code:%d' % ( macro , sc ) )
             return False
@@ -488,9 +491,9 @@ def treat_file ( f ) :
         
         if not load_macro ( f )  :
             if arguments.batch :
-                raise RuntimeError, "No macros are loaded for '%s' pattern" % f 
+                raise RuntimeError ( "No macros are loaded for '%s' pattern" % f )
             else :
-                logger.error       ("No macros are loaded for '%s' pattern" % f )
+                logger.error       ( "No macros are loaded for '%s' pattern" % f )
 
     ## execute ostap-script 
     elif fok and name and dot and ext in ( 'ost' , 'ostp' , 'ostap' , 'opy' ) :
@@ -529,9 +532,9 @@ def treat_file ( f ) :
 for pattern in arguments.Macros :
     if not load_macro ( pattern )  :
         if arguments.batch :
-            raise RuntimeError, "No macros are loaded for '%s' pattern" % pattern 
+            raise RuntimeError ( "No macros are loaded for '%s' pattern" % pattern )
         else :
-            logger.error       ("No macros are loaded for '%s' pattern" % pattern )
+            logger.error       ( "No macros are loaded for '%s' pattern" % pattern )
 
 # =============================================================================
 ## treat all input arguments/files 
@@ -557,12 +560,11 @@ del treat_file
 if root_files :
     logger.info("ROOT FILES    : %d (with '.root' extension)" % len ( root_files ) )
     keys = root_files.keys()
-    keys.sort()
     _n = 0  
-    for k in keys :
+    for k in sorted ( keys ) :
         _n +=  1
         rfile = root_files [k]
-        okeys = rfile.keys ()
+        okeys = list ( rfile.keys () )
         okeys.sort()
         logger.info('%2d: %s #keys: %d: %s' % ( _n , k , len(okeys) , okeys ) )
 

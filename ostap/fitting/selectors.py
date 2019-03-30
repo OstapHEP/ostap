@@ -111,8 +111,8 @@ from   ostap.logger.logger import getLogger, attention, allright
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-from   ostap.core.core     import cpp, Ostap
-from   ostap.core.types    import num_types 
+from   ostap.core.core     import cpp, Ostap, items_loop 
+from   ostap.core.types    import num_types
 import ostap.fitting.roofit 
 # =============================================================================
 ## C++ Selector 
@@ -845,7 +845,7 @@ class SelectorWithVars(SelectorWithCuts) :
         
         if not len ( self.__data ) :
             skip = 0
-            for k,v in self.__skip.iteritems() : skip += v 
+            for k,v in items_loop ( self.__skip ) : skip += v 
             self.__logger.warning("Selector(%s): empty dataset! Total:%s/Processed:%s/Skipped:%d"
                                   % ( self.__name  , self.total , self.processed , skip ) ) 
             

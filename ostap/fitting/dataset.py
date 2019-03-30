@@ -24,8 +24,9 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random
-from   ostap.core.core import Ostap, VE, hID, dsID , valid_pointer  
-from   builtins        import range
+from   builtins         import range
+from   ostap.core.core  import Ostap, VE, hID, dsID , valid_pointer
+from   ostap.core.types import integer_types 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
@@ -80,7 +81,7 @@ def _rad_getitem_ ( self , i ) :
         for j in range ( start , stop , step ) : result.add ( self [j] ) 
         return result
     
-    elif isinstance ( i , ( int , long ) ) and 0<= i < len ( self ) :
+    elif isinstance ( i , integer_types ) and 0<= i < len ( self ) :
         return self.get ( i )
     
     raise IndexError ( 'Invalid index %s'% i )
@@ -224,7 +225,7 @@ def  _rad_div_ ( self , fraction ) :
     >>> dataset = ....
     >>> small   = dataset / 10 
     """
-    if  isinstance ( fraction , ( int , long ) ) and 1 < fraction :
+    if  isinstance ( fraction , integer_types ) and 1 < fraction :
         return _rad_mul_ ( self , 1.0 / fraction )
     elif 1 == fraction : return self.clone      ()
     
@@ -242,7 +243,7 @@ def  _rad_mod_ ( self , fraction ) :
     >>> dataset = ....
     >>> small   = dataset % 10 
     """
-    if  isinstance ( fraction , ( int , long ) ) and 1 < fraction :
+    if  isinstance ( fraction , integer_types ) and 1 < fraction :
 
         res = self.emptyClone()
         s    = slice ( 0 , -1 , fraction )
@@ -269,7 +270,7 @@ def _rad_sample_ ( self , num ) :
     >>> subset =  data.sample ( 0.01 )  ## get 1% of events 
     """
     if   0 == num : return self.emptyClone ( dsID () ) 
-    elif isinstance ( num , (  int , long ) ) and 0 < num :
+    elif isinstance ( num , integer_types ) and 0 < num :
         num = min ( num , len ( self ) )
     elif isinstance ( num , float ) and 0 < num < 1 :
         from ostap.math.random_ext import poisson 

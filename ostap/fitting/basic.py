@@ -705,7 +705,7 @@ class PDF (MakeVar) :
                 residual = False
 
             if kwargs :
-                self.warning("draw: ignored unknown options: %s" % kwargs.keys() )
+                self.warning("draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
 
             if not residual and not pull:
                 return frame
@@ -1596,7 +1596,7 @@ class PDF (MakeVar) :
                                   histo = histo )
 
         # loop over the historgam bins 
-        for i , x , y in histo.iteritems() :
+        for i , x , y in histo.items() :
 
             xv , xe = x.value() , x.error()
             
@@ -1663,7 +1663,7 @@ class PDF (MakeVar) :
         
         if events and self.pdf.mustBeExtended() :
             
-            for i , x , y in hh.iteritems() :
+            for i , x , y in hh.items() :
                 volume  = 2*x.error() 
                 hh[i]  *= volume
                 
