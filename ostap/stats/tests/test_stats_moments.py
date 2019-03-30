@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ============================================================================= 
+# =============================================================================
+# @file ostap/stats/tests/test_stats_moments.py
+# Test module for ostap/stat/moments.py.
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
 """ Test module for ostap/stat/moments.py.
@@ -27,7 +29,7 @@ from   ostap.stats.moments import  ( Mean          ,
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_moments' )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_stats_moments' )
 else                       : logger = getLogger ( __name__        )
 # ============================================================================= 
 

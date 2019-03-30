@@ -3,7 +3,7 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-# @file test_histo_interpolation.py
+# @file ostap/histos/tests/test_histos_interpolation.py
 # Test module for ostap/histos/histos.py
 # - It tests interpolation for 1,2&3D histograms 
 # ============================================================================= 
@@ -20,7 +20,7 @@ import ROOT, random
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_histo_interpolation' )
+    logger = getLogger ( 'ostap.test_histos_interpolation' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================

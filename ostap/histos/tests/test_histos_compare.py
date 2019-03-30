@@ -3,7 +3,7 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-# @file test_histo_compare.py
+# @file ostap/histos/tests/test_histos_compare.py
 # Test module for ostap/histos/compare.py
 # - It tests comparision of 1D-histograms 
 # ============================================================================= 
@@ -20,7 +20,7 @@ import ROOT, random
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_histo_compare' )
+    logger = getLogger ( 'ostap.test_histos_compare' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================

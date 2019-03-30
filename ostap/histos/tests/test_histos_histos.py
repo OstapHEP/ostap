@@ -3,7 +3,7 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-# @file test_histos.py
+# @file ostap/histos/tests/test_histos_histos.py
 # Test module for ostap/histos/histos.py
 # - It tests the basic operations with histograms  
 # ============================================================================= 
@@ -20,7 +20,7 @@ import ROOT, random, math
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_histos' )
+    logger = getLogger ( 'ostap.test_histos_histos' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================

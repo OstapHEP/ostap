@@ -3,7 +3,7 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-# @file test_histo_parameterisation.py
+# @file ostap/histos/tests/test_histos_parameterisation.py
 # Test module for ostap/histos/param.py
 # - It tests parameterisation of histograms 
 # ============================================================================= 
@@ -21,7 +21,7 @@ from   builtins import  range
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'ostap/histos/tests/test_histo_parameterisation' )
+    logger = getLogger ( 'ostap.test_histos_parameterisation' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
