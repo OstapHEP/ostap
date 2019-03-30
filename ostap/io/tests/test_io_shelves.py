@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
+# @file ostap/io/tests/test_io_shelves.py
+# Test module for data storages, i.e. modules
+# @see rootshelve.py
+# @see sqliteshelve.py
+# @see zipshelve.py
 # Copyright (c) Ostap developpers.
 # =============================================================================
 """
 Test module for data storages, i.e. modules
-  /ostap/io/rootshelve.py
-  /ostap/io/sqliteshelve.py
-  /ostap/io/zipshelve.py
+  - ostap/io/rootshelve.py
+  - ostap/io/sqliteshelve.py
+  - ostap/io/zipshelve.py
 """
 # =============================================================================
 import os, tempfile, random
@@ -16,8 +21,8 @@ import ROOT
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_shelves' )
-else                       : logger = getLogger ( __name__       )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_io_shelves' )
+else                       : logger = getLogger ( __name__                )
 # =============================================================================
 from   ostap.math.base       import iszero
 from   ostap.core.pyrouts    import VE
