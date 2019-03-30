@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ============================================================================= 
+# =============================================================================
+# @file ostap/frames/tests/test_frames_frames.py
+# Test module for ostap/frames/frames.py.
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
 """ Test module for ostap/frames/frames.py.
@@ -9,8 +11,8 @@
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_frames' )
-else                       : logger = getLogger ( __name__        )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_frames_frames' )
+else                       : logger = getLogger ( __name__                  )
 # ============================================================================= 
 import ROOT, os 
 from ostap.frames.frames import DataFrame
