@@ -30,7 +30,7 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================    
 from ostap.utils.utils import CleanUp
-data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_chopping_' ) 
+data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_chopping_' ) 
 
 if not os.path.exists( data_file ) :
     import random 

@@ -32,7 +32,7 @@ else :
     logger = getLogger ( __name__ )
 # ==============================================================================
 from ostap.utils.utils import CleanUp
-data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tmva_' )
+data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva_' )
 if not os.path.exists( data_file ) :
     import random 
     nB = 20000

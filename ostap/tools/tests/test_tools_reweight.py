@@ -27,11 +27,11 @@ else :
 # =============================================================================    
 logger.info ( 'Test for Reweighting machinery')
 # =============================================================================
-import  tempfile
-testdata   =  os.path.join ( tempfile.gettempdir() , 'ostap_test_reweight_data.root' )
+from ostap.utils.utils import CleanUp
+testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='test_tools_reweight_' )
 tag_data   = 'DATA_histogram'
 tag_mc     = 'MC_tree'
-dbname     = os.path.join ( tempfile.gettempdir() , 'ostap_test_reweight.db' )
+dbname     = CleanUp.tempfile ( suffix = '.db'   , prefix ='test_tools_reweight_' )
 
 if os.path.exists ( testdata ) : os.remove ( testdata ) 
 if os.path.exists ( dbname   ) : os.remove ( dbname   ) 

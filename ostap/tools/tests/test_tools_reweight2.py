@@ -28,14 +28,14 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================    
 logger.info ( 'Test for 2D-Reweighting machinery')
-# =============================================================================
-import  tempfile
-testdata   = os.path.join ( tempfile.gettempdir() , 'ostap_test_reweight2.root' )
+# ============================================================================
+from ostap.utils.utils import CleanUp
+testdata   = CleanUp.tempfile( suffix = '.root' , prefix ='test_tools_reweight2_' )
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'
 tag_datay  = 'DATAY_histogram'
 tag_mc     = 'MC2_tree'
-dbname     = os.path.join ( tempfile.gettempdir() , 'ostap_test_reweight2.db' )
+dbname     = CleanUp.tempfile( suffix = '.db' , prefix ='test_tools_reweight2_'   )
  
 if os.path.exists ( testdata ) : os.remove ( testdata ) 
 if os.path.exists ( dbname   ) : os.remove ( dbname   )
