@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright (c) Ostap developers.
 # ============================================================================= 
-# @file test_fitting_models_2D.py
+# @file ostap/fitting/tests/test_fitting_models2_2D.py
 # Test module for ostap/fitting/models_2d.py
 # - It tests various 2D-non-factrorizeable models 
 # ============================================================================= 
@@ -505,167 +505,6 @@ def test_psxps_BBsym () :
 
     models.add ( model ) 
     
-# =============================================================================
-## gauss as signal, expo times 1st order polynomial as background 
-# =============================================================================
-def test_model_13 () :
-    
-    logger.info ('Non-factorizeable fit component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (Expo*PS)**2')
-    PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
-    model   = Models.Fit2D (
-        suffix   = '_13' , 
-        signal_x = signal1  ,
-        signal_y = signal2s ,
-        bkg_1x     = -1 , 
-        bkg_1y     = -1 ,
-        bkg_2D    = Models.ExpoPSPol2D_pdf ( 'P2D13' , m_x , m_y , psy = PS , nx = 1 , ny = 1 ) 
-        )
-
-    ## fit with fixed mass and sigma
-    with rooSilent() : 
-        result, frame = model. fitTo ( dataset )
-        model.signal_x.sigma.release () 
-        model.signal_y.sigma.release ()
-        model.signal_x.mean .release () 
-        model.signal_y.mean .release () 
-        result, frame = model. fitTo ( dataset )
-
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
-                       % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-
-        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]     )
-        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]     )
-        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]     )
-        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]     )
-
-    models.add ( model ) 
-
-
-
-    
-knots = std.vector('double')()
-knots.push_back (      m_x.xmin()              )
-knots.push_back ( 0.5*(m_x.xmin()+m_x.xmax() ) )
-knots.push_back (                 m_x.xmax()   )
-spline1 = Ostap.Math.BSpline ( knots , 2 )
-
-# =============================================================================
-## gauss as signal, expo times 1st order polynomial as background 
-# =============================================================================
-def test_model_14 () :
-    
-    logger.info ('Non-factorazeable background component (spline):  ( Gauss + P1 ) (x) ( Gauss + P1 ) + Spline2D')
-    SPLINE  = Ostap.Math.PositiveSpline2D ( spline1 , spline1 ) 
-    model   = Models.Fit2D (
-        suffix   = '_14' , 
-        signal_x = signal1  ,
-        signal_y = signal2s ,
-        bkg_1x     = -1 , 
-        bkg_1y     = -1 ,
-        bkg_2D    = Models.Spline2D_pdf ( 'P2D14' , m_x , m_y , spline = SPLINE ) 
-        )
-    
-    ## fit with fixed mass and sigma
-    with rooSilent() : 
-        result, frame = model. fitTo ( dataset )
-        model.signal_x.sigma.release () 
-        model.signal_y.sigma.release ()
-        model.signal_x.mean .release () 
-        model.signal_y.mean .release () 
-        result, frame = model. fitTo ( dataset )
-
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
-                       % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-
-        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]     )
-        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]     )
-        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]     )
-        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]     )
-
-    models.add ( model )
-    
-# =============================================================================
-## gauss as signal, expo times 1st order polynomial as background 
-# =============================================================================
-def test_model_15 () :
-    
-    logger.info ('Non-factorized symmetric background component (spline):  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + Spline2Dsym')
-    SPLINES = Ostap.Math.PositiveSpline2DSym ( spline1 ) 
-    model   = Models.Fit2D (
-        suffix   = '_15' , 
-        signal_x = signal1  ,
-        signal_y = signal2s ,
-        bkg_1x     = -1 , 
-        bkg_1y     = -1 ,
-        bkg_2D    = Models.Spline2Dsym_pdf ( 'P2D15' , m_x , m_y , spline = SPLINES ) 
-        )
-
-    ## fit with fixed mass and sigma
-    with rooSilent() : 
-        result, frame = model. fitTo ( dataset )
-        model.signal_x.sigma.release () 
-        model.signal_y.sigma.release ()
-        model.signal_x.mean .release () 
-        model.signal_y.mean .release () 
-        result, frame = model. fitTo ( dataset )
-
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
-                       % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-
-
-        logger.info ('S1xS2 : %20s' % result ( model.SS ) [0]     )
-        logger.info ('S1xB2 : %20s' % result ( model.SB ) [0]     )
-        logger.info ('B1xS2 : %20s' % result ( model.BS ) [0]     )
-        logger.info ('B1xB2 : %20s' % result ( model.BB ) [0]     )
-
-    models.add ( model )
-
-   
-# =============================================================================
-## gauss as signal, expo times 1st order polynomial as background 
-# =============================================================================
-def test_model_16() : 
-    logger.info ('Symmetric fit model with non-factorazeable symmetric (spline) background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + Spline2Dsym')
-    SPLINES = Ostap.Math.PositiveSpline2DSym ( spline1 ) 
-    model   = Models.Fit2DSym (
-        suffix   = '_16' , 
-        signal_x = signal1  ,
-        signal_y = signal2s ,
-        bkg_1x   = 1 , 
-        bkg_2D   = Models.Spline2Dsym_pdf ( 'P2D16' , m_x , m_y , spline = SPLINES ) 
-        )
-
-    ## fit with fixed mass and sigma
-    with rooSilent() : 
-        result, frame = model. fitTo ( dataset )
-        model.signal_x.sigma.release () 
-        model.signal_y.sigma.release ()
-        model.signal_x.mean .release () 
-        model.signal_y.mean .release () 
-        result, frame = model. fitTo ( dataset )
-
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
-                       % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        
-        logger.info ('S1xS2 : %20s' %   result ( model.SS ) [0]       )
-        logger.info ('S1xB2 : %20s' % ( result ( model.SB ) [0] /2  ) )
-        logger.info ('B1xS2 : %20s' % ( result ( model.BS ) [0] /2  ) )
-        logger.info ('B1xB2 : %20s' %   result ( model.BB ) [0]       )
-
-    models.add ( model )
-
  
 # =============================================================================
 ## check that everything is serializable
@@ -694,10 +533,6 @@ if '__main__' == __name__ :
     with timing ('test_pbxpb_BBsym' ) : test_pbxpb_BBsym ()          
     with timing ('test_psxps_BBs'   ) : test_psxps_BBs   ()          
     with timing ('test_psxps_BBsym' ) : test_psxps_BBsym ()          
-    with timing ('test_model_13'    ) : test_model_13    ()          
-    with timing ('test_model_14'    ) : test_model_14    ()          
-    with timing ('test_model_15'    ) : test_model_15    ()          
-    with timing ('test_model_16'    ) : test_model_16    ()          
 
     ## check finally that everything is serializeable:
     test_db ()          
