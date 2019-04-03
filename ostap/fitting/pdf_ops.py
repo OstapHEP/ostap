@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file  ostap/fitting/pdf_ops.py
-#  PDF multiplication  via operators: easy wrappers for class RooProdPdf
+#  Introduce helper operators for PDFs
+#   - PDF multiplication via operators: easy wrappers for class RooProdPdf
+#   - non-extended sum of two PDFs 
+#   - non-extended sum of two PDFs 
+
 #  @see RooProdPdf
 #  @see ostap.fitting.basic.PDF 
 #  @see ostap.fitting.fit2d.PDF2
@@ -31,14 +35,6 @@ def _prod_ ( pdf1 , pdf2 ) :
     return ROOT.RooProdPdf (
         'Product_%s_%s'    % ( pdf1.name ,  pdf2.name ) ,
         'Product:(%s)x(%s)'% ( pdf1.name ,  pdf2.name ) , pdf1.pdf , pdf2.pdf )
-
-# =============================================================================
-def _in_ ( a , *others ) :
-
-    for b in others :
-        if a is b : return True
-        
-    return False 
 
 # =============================================================================
 ## Product of two PDFs :
@@ -225,12 +221,100 @@ def pdf_sum ( pdf1 , pdf2 ) :
         return _1D.Sum1D ( pdf1 , pdf2 )
 
     return NotImplemented 
+
+# =============================================================================
+## make a convolution (FFT) for a given PDF
+#  @code
+#  pdf        = ...
+#  resolution = ...
+#  result1    = pdf % resolution
+#  result2    = pdf % Convolution ( ... ) 
+#  result3    = pdf % ( 10 * MeV )
+#  result4    = pdf % (  5 * MeV , 15 * MeV ) 
+#  result5    = pdf % ( 10 * MeV , 5 * MeV , 15 * MeV )
+#  ## only for Python 3
+#  result1    = pdf @ resolution
+#  result2    = pdf @ Convolution ( ... ) 
+#  result3    = pdf @ ( 10 * MeV )
+#  result4    = pdf @ (  5 * MeV , 15 * MeV ) 
+#  result5    = pdf @ ( 10 * MeV , 5 * MeV , 15 * MeV ) 
+#  @endcode
+#  The resolution can be :
+#   - PDF
+#   - ostap.fitting.convolution.Convolution 
+#   - ROOT.RooAbsPdf
+#   - ROOT.RooAbsReal (Gaussian PDF will be constructed with sigma = resoltuion )
+#   - float           (Gaussian PDF will be constructed with sigma = resoltuion )
+#   - 2/3 tuple       (Gaussian PDF will be constructed with sigma = resoltuion )
+#  @see ostap.fitting.convolution.Convolution
+#  @see ostap.fitting.convolution.Convolution_pdf 
+def pdf_convolution ( pdf , resolution ) :
+    """Make a convolution (FFT) for a given PDF
+    The resolution can be :
+    - PDF
+    - ostap.fitting.convolution.Convolution
+    - ROOT.RooAbsPdf
+    - ROOT.RooAbsReal (Gaussian PDF will be constructed with sigma = resolution )
+    - float           (Gaussian PDF will be constructed with sigma = resolution )
+    - 2/3 tuple       (Gaussian PDF will be constructed with sigma = resolution )
     
+    >>> pdf        = ...
+    >>> resolution = ...
+
+    ## python 2 and 3 
+    >>> result1    = pdf % resolution
+    >>> result2    = pdf % Convolution ( ... ) 
+    >>> result3    = pdf % ( 10 * MeV )                      ## Gaussian
+    >>> result4    = pdf % (  5 * MeV , 15 * MeV )           ## Gaussian
+    >>> result5    = pdf % ( 10 * MeV , 5 * MeV , 15 * MeV ) ## Gaussian
+
+    ## only python 3 
+    >>> result1    = pdf @ resolution
+    >>> result2    = pdf @ Convolution ( ... ) 
+    >>> result3    = pdf @ ( 10 * MeV )                      ## Gaussian
+    >>> result4    = pdf @ (  5 * MeV , 15 * MeV )           ## Gaussian
+    >>> result5    = pdf @ ( 10 * MeV , 5 * MeV , 15 * MeV ) ## Gaussian
+
+    - see ostap.fitting.convolution.Convolution
+    - see ostap.fitting.convolution.Convolution_pdf 
+    """
+
+    import ostap.fitting.basic       as      _1D
+    import ostap.fitting.convolution as     _CNV
+    from   ostap.core.types          import num_types
+    from   ostap.core.core           import VE 
+    
+    if not isinstance ( pdf , _1D.PDF ) : return NotImplemented
+
+    if   isinstance ( resolution , _1D.PDF          ) and pdf.xvar is resolution.xvar :
+        return _CNV.Convolution_pdf ( pdf , resolution )
+    elif isinstance ( resolution , _CNV.Convolution ) and pdf.xvar is resolution.xvar :
+        return _CNV.Convolution_pdf ( pdf , resolution )
+    elif isinstance ( resolution , ROOT.RooAbsPdf   ) :
+        return _CNV.Convolution_pdf ( pdf , resolution )
+    elif isinstance ( resolution , ROOT.RooAbsReal   ) :
+        return _CNV.Convolution_pdf ( pdf , resolution )
+    elif isinstance ( resolution , num_types         ) :
+        return _CNV.Convolution_pdf ( pdf , resolution )
+    elif isinstance ( resolution , VE                ) :
+        return _CNV.Convolution_pdf ( pdf , resolution )
+    elif isinstance ( resolution , tuple             ) :
+        return _CNV.Convolution_pdf ( pdf , resolution )
+
+    return NotImplemented
+
+    
+    
+        
 # =============================================================================
 ## add multiplication operator for PDFs 
-ostap.fitting.basic.PDF . __mul__  = pdf_product
+ostap.fitting.basic.PDF . __mul__     = pdf_product
 ## add addition       operator for PDFs 
-ostap.fitting.basic.PDF . __add__  = pdf_sum 
+ostap.fitting.basic.PDF . __add__     = pdf_sum 
+## add convolution operator for PDFs 
+ostap.fitting.basic.PDF . __mod__     = pdf_convolution
+## Python3: add convolution operator for PDFs 
+ostap.fitting.basic.PDF . __matmul__  = pdf_convolution
 
 # =============================================================================
 if '__main__' == __name__ :
