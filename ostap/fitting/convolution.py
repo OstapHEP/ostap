@@ -174,12 +174,12 @@ class Convolution(object):
 #  Helper class to simplify the convolutions
 #  @code
 #  pdf = ...
-#  pdfc = Convolution_pdf(  'C' , pdf  , xvar = ... , resolution = ... , useFFT = True )
+#  pdfc = Convolution_pdf( pdf  , xvar = ... , resolution = ... , useFFT = True )
 #  @endcode
 class Convolution_pdf(PDF) :
     """Helper class/PDF to simplify the convolution:
     >>> pdf = ...
-    >>> pdfc = Convolution_pdf(  'C' , pdf  , xvar = ... , resolution = ... , useFFT = True )
+    >>> pdfc = Convolution_pdf( pdf  , xvar = ... , resolution = ... , useFFT = True )
     """
     def __init__ ( self              ,
                    pdf               ,   ## the PDF to be convoluted 
@@ -211,17 +211,22 @@ class Convolution_pdf(PDF) :
         em = pdf.pdf.extendMode()
         if   1 == em : self.warning ( "PDF  ``canBeExtended''" )
         elif 2 == em : self.error   ( "PDF ``mustBeExtended''" )
-        
-        ## make the actual convolution
-        self.__cnv = Convolution ( name       = name             ,
-                                   pdf        = self.old_pdf.pdf ,
-                                   xvar       = xvar             ,
-                                   resolution = resolution       ,
-                                   useFFT     = useFFT           ,
-                                   nbins      = nbins            ,
-                                   buffer     = buffer           ,
-                                   nsigmas    = nsigmas          )
 
+        ## make the actual convolution
+        if isinstance ( resolution , Convolution ) :
+            assert resolution.xvar is  xvar, "Mismatch in ``xvar'': %s vs %s" % ( xvar , resolution.xvar )
+            self.__cnv = resolution
+        else :
+            self.__cnv = Convolution ( name       = name             ,
+                                       pdf        = self.old_pdf.pdf ,
+                                       xvar       = xvar             ,
+                                       resolution = resolution       ,
+                                       useFFT     = useFFT           ,
+                                       nbins      = nbins            ,
+                                       buffer     = buffer           ,
+                                       nsigmas    = nsigmas          )
+
+        ## the  actual convoluted PDF 
         self.pdf = self.__cnv.pdf 
 
         ## save configuration 
