@@ -21,6 +21,7 @@ __all__     = (
     'Generic3D_pdf' , ## wrapper over imported RooFit (2D)-pdf  
     'Flat3D'        , ## the most trivial 3D-pdf - constant
     'Model3D'       , ## trivial class to build 3D model from 1D-components 
+    'Sum3D'         , ## non-extended sum two PDFs 
     'H3D_pdf'       , ## convertor of 1D-histo to RooDataPdf
     )
 # =============================================================================
@@ -969,6 +970,113 @@ class Generic3D_pdf(PDF3) :
         if zvar and not zvar is self.zvar :
             raise AttributeError("Generic2D_pdf can not be cloned with different `zvar''")
         return PDF.clone ( self , name = name ) if name else PDF.clone( self )
+
+# =============================================================================
+## @class Sum3D
+#  Non-extended sum of two PDFs
+#  @code
+#  pdf1 = ...
+#  pdf2 = ...
+#  sum  = Sum3D ( pdf1 , pdf2 ) 
+#  @endcode
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Sum3D(PDF3) :
+    """Non-extended sum of two PDFs:
+    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf 
+    
+    pdf1 = ...
+    pdf2 = ...
+    sum  = Sum3D ( pdf1 , pdf2 ) 
+
+    """
+    def __init__ ( self            ,
+                   pdf1            ,
+                   pdf2            ,  
+                   xvar     = None , 
+                   yvar     = None , 
+                   zvar     = None , 
+                   name     = ''   , 
+                   fraction = None ) :
+
+        if   isinstance ( pdf1 , PDF3 ) :
+            assert ( not xvar ) or xvar is pdf1.xvar, "Invalid xvar/pdf1.xvar: %s/%s" % ( xvar , pdf1.xvar )             
+            assert ( not yvar ) or yvar is pdf1.yvar, "Invalid yvar/pdf1.yvar: %s/%s" % ( yvar , pdf1.yvar )             
+            assert ( not zvar ) or zvar is pdf1.zvar, "Invalid zvar/pdf1.zvar: %s/%s" % ( zvar , pdf1.zvar )             
+            xvar = pdf1.xvar        
+            yvar = pdf1.yvar        
+            zvar = pdf1.yvar        
+        elif isinstance ( pdf1 , ROOT.RooAbsPdf )           and \
+             xvar and isinstance ( xvar , ROOT.RooAbsReal ) and \
+             yvar and isinstance ( yvar , ROOT.RooAbsReal ) and \
+             zvar and isinstance ( zvar , ROOT.RooAbsReal ):
+            pdf1 = Generic3D_pdf ( pdf1 , xvar , yvar , zvar )
+        else :
+            raise TypeError ( "Invalid type: pdf1/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
+
+        if   isinstance ( pdf2 , PDF3 ) and xvar in pdf2.vars and yvar in pdf2.vars and zvar in pdf2.vars : pass 
+        elif isinstance ( pdf2 , ROOT.RooAbsPdf ) : pdf2 = Generic3D_pdf ( pdf2 , xvar , yvar , zvar )
+        else :
+            raise TypeError ( "Invalid type: pdf2/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
+        
+
+        name = name if name else 'Sum_%s_%s' % (  pdf1.name , pdf2.name ) 
+        
+        PDF3.__init__ ( name , xvar , yvar , zvar )
+
+        self.__pdf1     = pdf1
+        self.__pdf2     = pdf2
+        
+        self.__fraction = self.make_var ( fraction ,
+                                          'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
+                                          'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
+                                          fraction , 0 , 1 ) 
+        
+        self.pdf = ROOT.RooAddPdf ( name , 
+                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.fraction )
+        
+        if self.pdf1.canBeExtended() : self.error ("``pdf1'' can be extended!") 
+        if self.pdf2.canBeExtended() : self.error ("``pdf2'' can be extended!") 
+
+        self.config = {
+            'pdf1'     : self.pdf1     ,
+            'pdf2'     : self.pdf2     ,
+            'xvar'     : self.xvar     ,
+            'yvar'     : self.yvar     ,
+            'name'     : self.name     , 
+            'fraction' : self.fraction 
+            }
+
+    @property
+    def pdf1 ( self ) :
+        """``pdf1'' : the first PDF"""
+        return self.__pdf1
+    
+    @property
+    def pdf2 ( self ) :
+        """``pdf2'' : the second PDF"""
+        return self.__pdf2
+
+    @property
+    def fraction ( self ) :
+        """``fraction'' : the fraction of the first PDF in the sum"""
+        return self.__fraction
+    @fraction.setter
+    def fraction ( self , value ) :
+        val = float ( value )
+        self.__fraction.setVal ( val )
+
+    @property
+    def F  ( self ) :
+        """``F'' : the fratcion of the first PDF in the sum (the same  as ``fraction'')"""
+        return self.__fraction
+    @F.setter
+    def F ( self , value ) :
+        self.fraction = value 
+        
+
 
 # =============================================================================
 ## @class Flat3D

@@ -19,7 +19,7 @@ __date__    = "2019-01-28"
 __all__     = ()
 # =============================================================================
 import ROOT
-import ostap.fitting.basic 
+import ostap.fitting.basic
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pdf_ops' )
@@ -39,6 +39,7 @@ def _in_ ( a , *others ) :
         if a is b : return True
         
     return False 
+
 # =============================================================================
 ## Product of two PDFs :
 #  @code
@@ -105,51 +106,38 @@ def pdf_product ( pdf1 , pdf2 ) :
     ## 1D * ...
     if   isinstance ( pdf1  , _3D.PDF3 ) :
         
-        x1 = pdf1.xvar 
-        y1 = pdf1.yvar 
-        z1 = pdf1.zvar
-        v1 = x1 , y1 , z1
         
         if   isinstance  ( pdf2 , _3D.PDF3 )   :
 
-            x2 = pdf2.xvar 
-            y2 = pdf2.yvar 
-            z2 = pdf2.zvar 
-
-            if _in_ ( x2 , *v1 ) and _in_ ( y2 , *v1 ) and _in_ ( z2 , *v1 ) :
-                return _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , *v1 )
+            x2 , y2 , z2 = pdf2.xvar , pdf2.yvar , pdf2.zvar 
+            if x2 in pdf1.vars and y2 in pdf1.vars and z2 in pdf1.vars :
+                return _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , pdf1.xvar , pdf1.yvar , pdf1.zvar )
             
         elif isinstance  ( pdf2 , _2D.PDF2 )   :
             
-            x2 = pdf2.xvar 
-            y2 = pdf2.yvar 
-
-            if _in_ ( x2 , *v1 ) and _in_ ( y2 , *v1 ) :
-                return _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , *v1 )
+            x2 , y2 = pdf2.xvar , pdf2.yvar 
+            if x2 in pdf1.vars and y2 in pdf1.vars:
+                return _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , pdf1.xvar , pdf1.yvar , pdf1.zvar )
 
         elif isinstance  ( pdf2 , _1D.PDF  )   :
             
             x2 = pdf2.xvar 
-
-            if _in_ ( x2 , *v1 ) : 
-                return _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , *v1  )
+            if x2 in pdf1.vars :
+                return _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , pdf1.xvar , pdf1.yvar , pdf1.zvar )
 
         return NotImplemented 
         
     elif isinstance ( pdf1  , _2D.PDF2 ) :
 
-        x1 = pdf1.xvar 
-        y1 = pdf1.yvar 
-        v1 = x1 , y1
+        x1 , y1 = pdf1.xvar , pdf1.yvar 
         
         if   isinstance ( pdf2 , _3D.PDF3 ) : return pdf_product ( pdf2 , pdf1 )
         elif isinstance ( pdf2 , _2D.PDF2 ) :
 
-            x2 = pdf2.xvar 
-            y2 = pdf2.yvar 
+            x2 , y2  = pdf2.xvar ,  pdf2.yvar 
 
-            if   _in_ ( x2 , *v1 ) and _in_ ( y2 , *v1 ) : 
-                return _2D.Generic2D_pdf ( _prod_ ( pdf1 , pdf2 ) , *v1 )
+            if   x2 in pdf1.vars and y2 in pdf1.vars :  
+                return _2D.Generic2D_pdf ( _prod_ ( pdf1 , pdf2 ) , pdf1.xvar , pdf1.yvar )
             elif x1 is x2 : 
                 return _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , x1 , y1 , y2 )
             elif x1 is y2 : 
@@ -163,8 +151,8 @@ def pdf_product ( pdf1 , pdf2 ) :
             
             x2 = pdf2.yvar
             
-            if  _in_ ( x2 , *v1 ) :
-                return _2D.Generic2D_pdf ( _prod_ ( pdf1 , pdf2 ) , *v1 )
+            if  x2 in pdf1.vars :
+                return _2D.Generic2D_pdf ( _prod_ ( pdf1 , pdf2 ) , pdf1.xvar , pdf2.yvar )
             
             return     _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , x1 , y1 , x2 ) 
 
@@ -188,8 +176,61 @@ def pdf_product ( pdf1 , pdf2 ) :
     return NotImplemented
 
 # =============================================================================
-## add multiplication operator for PDF 
+## Non-extended sum of two PDFs
+#  @code
+#  pdf1 = ...
+#  pdf2 = ...
+#  pdf = pdf1 + pdf2
+#  @endcode
+#  @see ostap.fitting.basic.Sum1D
+#  @see ostap.fitting.fit2d.Sum2D
+#  @see ostap.fitting.fit3d.Sum2D
+def pdf_sum ( pdf1 , pdf2 ) :
+    """ Non-extended sum of two PDFs
+    - see ostap.fitting.basic.Sum1D
+    - see ostap.fitting.fit2d.Sum2D
+    - see ostap.fitting.fit3d.Sum2D
+    >>> pdf1 = ...
+    >>> pdf2 = ...
+    >>> pdf = pdf1 + pdf2
+    """
+    
+    import ostap.fitting.basic as _1D 
+    import ostap.fitting.fit2d as _2D 
+    import ostap.fitting.fit3d as _3D 
+    
+    if   isinstance ( pdf1 , _3D.PDF3 ) and isinstance ( pdf2 , _3D.PDF3 ) :
+        
+        if not pdf1.xvar in pdf2.vars : return NotImplemented
+        if not pdf1.yvar in pdf2.vars : return NotImplemented
+        if not pdf1.zvar in pdf2.vars : return NotImplemented
+        
+        return _3D.Sum3D ( pdf1 , pdf2 )
+    
+    elif isinstance ( pdf1 , _3D.PDF3 ) or  isinstance ( pdf2 , _3D.PDF3 ) : return NotImplemented
+    
+    elif isinstance ( pdf1 , _2D.PDF2 ) and isinstance ( pdf2 , _2D.PDF2 ) :
+
+        if not pdf1.xvar in pdf2.vars : return NotImplemented
+        if not pdf1.yvar in pdf2.vars : return NotImplemented
+        
+        return _2D.Sum2D ( pdf1 , pdf2 )
+            
+    elif isinstance ( pdf1 , _2D.PDF2 ) or  isinstance ( pdf2 , _2D.PDF2 ) : return NotImplemented
+    
+    elif isinstance ( pdf1 , _1D.PDF1 ) and isinstance ( pdf2 , _1D.PDF1 ) :
+        
+        if not pdf1.xvar in pdf2.vars : return NotImplemented
+        
+        return _1D.Sum1D ( pdf1 , pdf2 )
+
+    return NotImplemented 
+    
+# =============================================================================
+## add multiplication operator for PDFs 
 ostap.fitting.basic.PDF . __mul__  = pdf_product
+## add addition       operator for PDFs 
+ostap.fitting.basic.PDF . __add__  = pdf_sum 
 
 # =============================================================================
 if '__main__' == __name__ :

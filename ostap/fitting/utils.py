@@ -1048,6 +1048,7 @@ class Phases(MakeVar) :
     ##     else  :            
     ##         for p , v in zip (  my_phis , values ) : p.setVal ( float ( v ) )
         
+
 # ==============================================================================
 ## Should one use ``similar'' component?
 def component_similar ( same ) :
