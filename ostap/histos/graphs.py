@@ -39,7 +39,10 @@ __all__     = (
 # =============================================================================
 import ROOT, cppyy              ## attention here!!
 from   ostap.core.core import cpp, VE, grID
-from   builtins        import range
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range
 # 
 # =============================================================================
 # logging 

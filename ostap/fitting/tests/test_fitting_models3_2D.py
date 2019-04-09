@@ -20,7 +20,10 @@ from   ostap.core.core      import Ostap, std, VE, dsID
 from   ostap.logger.utils   import rooSilent 
 import ostap.io.zipshelve   as     DBASE
 from   ostap.utils.timing     import timing 
-from   builtins             import range 
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range 
 # =============================================================================
 # logging 
 # =============================================================================

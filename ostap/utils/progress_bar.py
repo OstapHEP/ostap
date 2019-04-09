@@ -104,7 +104,10 @@ __all__      = (
     )
 # =============================================================================
 import sys , os
-from   builtins  import range
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range
 
 # =============================================================================
 ## get number of columns for xterm

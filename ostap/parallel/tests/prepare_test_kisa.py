@@ -18,7 +18,10 @@ __all__     = (
 # =============================================================================
 import ROOT,os,  random  
 import ostap.core.pyrouts
-from   builtins                import range 
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range 
 from   ostap.trees.data        import Data
 from   ostap.utils.timing      import timing 
 import ostap.parallel.parallel as     Parallel  

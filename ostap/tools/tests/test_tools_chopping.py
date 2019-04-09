@@ -16,7 +16,10 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 import ROOT, os
 import ostap.io.root_file 
-from   builtins                 import range  
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range 
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
 from   array                    import array

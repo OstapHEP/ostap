@@ -79,7 +79,10 @@ __all__     = (
     )
 # =============================================================================
 import  ROOT, math
-from    builtins          import range 
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range 
 from    ostap.core.core   import cpp, Ostap
 from    ostap.core.types  import is_integer
 from    ostap.math.base   import iszero, isequal, doubles 

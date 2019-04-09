@@ -34,7 +34,10 @@ from   ostap.fitting.basic  import PDF , Flat1D
 from   ostap.fitting.utils  import ( H2D_dset        ,
                                      component_similar , component_clone )
 from   ostap.core.types     import num_types, list_types 
-from   builtins             import range
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit2d' )

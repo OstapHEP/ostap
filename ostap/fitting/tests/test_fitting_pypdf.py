@@ -21,7 +21,10 @@ import ostap.fitting.roofit
 from   ostap.core.core      import VE, dsID, Ostap
 from   ostap.fitting.basic  import MASS,     Fit1D 
 from   ostap.fitting.pypdf  import PyPDF
-from   builtins             import range
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range
 # =============================================================================
 # logging 
 # =============================================================================

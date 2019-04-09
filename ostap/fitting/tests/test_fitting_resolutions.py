@@ -19,7 +19,10 @@ __all__    = () ## nothing to import
 import ROOT, random
 import ostap.fitting.roofit 
 from   ostap.core.core       import VE, dsID
-from   builtins              import range
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range
 # =============================================================================
 # logging 
 # =============================================================================
