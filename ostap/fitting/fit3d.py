@@ -33,10 +33,7 @@ from   ostap.fitting.utils  import H3D_dset , component_similar , component_clon
 from   ostap.fitting.basic  import PDF  , Flat1D 
 from   ostap.fitting.fit2d  import PDF2 , Model2D 
 from   ostap.fitting.roofit import SETVAR
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range
+from   builtins             import range
 # =============================================================================
 from   ostap.logger.logger  import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit3d' )

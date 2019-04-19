@@ -29,11 +29,8 @@ logger.info ( 'Test for 1D-histogram compare')
 from   ostap.math.ve        import VE 
 from   ostap.core.core      import hID 
 from   ostap.histos.histos  import h1_axis
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range 
 import ostap.histos.compare
+from   builtins             import range
 
 #
 ## histos for gaussian distributions

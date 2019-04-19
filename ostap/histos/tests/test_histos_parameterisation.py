@@ -15,10 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 import ROOT, random, ostap.histos.param, ostap.histos.histos, ostap.fitting.funcs
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range 
+from   builtins import range
 # =============================================================================
 # logging 
 # =============================================================================

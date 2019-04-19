@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/trees/funcs.py
 #  Module with helper base classes ...
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -21,6 +21,12 @@ __all__     = (
 # =============================================================================
 import ROOT
 from   ostap.core.core import Ostap, valid_pointer
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.funcs' )
+else                       : logger = getLogger( __name__             )
 # =============================================================================
 ## ## @class FuncTree
 ## #  Helper class to implement "TTree-function"

@@ -47,7 +47,7 @@ else :
     python_version = 2 
 
 num_types = integer_types + ( float , ) 
-str_type  = str,
+str_types = str,
 
 list_types     = list, tuple
 listlike_types = list_types + ( set , collections.Iterable ) 
@@ -96,10 +96,19 @@ def is_list_like  ( v ) :
     
 # =============================================================================
 if '__main__' == __name__ :
+
+    # =========================================================================
+    # logging 
+    # =========================================================================
+    from ostap.logger.logger import getLogger 
+    if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.types' )
+    else                       : logger = getLogger( __name__           )
+    # =========================================================================
+    logger.debug ( 'The basic types for ostap')
+    # =========================================================================
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
     
 # =============================================================================
 ##                                                                      The END 

@@ -27,10 +27,7 @@ __all__     = (
 # ============================================================================= 
 import ROOT, cppyy
 from   ostap.math.base import iszero, isequal
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range
+from   builtins import range
 # ============================================================================= 
 # logging 
 # ============================================================================= 

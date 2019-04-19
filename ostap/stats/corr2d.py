@@ -5,10 +5,6 @@
 #  Simple 2D-decorrelation transformation 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-08
-#
-#                    $Revision$
-#  Last modification $Date$
-#  by                $Author$
 # =============================================================================
 """Simple 2D-decorrelation transformation """
 # =============================================================================
@@ -28,7 +24,7 @@ from   ostap.core.core import cpp , WSE
 # =============================================================================
 ## get error-function 
 if  not hasattr ( math , 'erf' ) :
-    from ostap.math.math_ve immport erf as  _erf 
+    from ostap.math.math_ve import erf as _erf 
     math.erf = _erf
     logger.debug ( 'ostap.math.erf       is added to math' )
 # =============================================================================
@@ -37,8 +33,8 @@ if  not hasattr ( math , 'erf' ) :
 erf = math.erf
 ## get Gaussian cdf 
 if not hasattr ( math , 'gauss_cdf' ) :
-    from ostap.math.math_ve immport gauss_cdf as _gauss_cdf
-    math.erf = _gauss_cdf
+    from ostap.math.math_ve import gauss_cdf as _gauss_cdf
+    math.gauss_cdf = _gauss_cdf
     logger.debug ( 'ostap.math.gauss_cdf is added to math' )
 # =============================================================================
 gauss_cdf = math.gauss_cdf

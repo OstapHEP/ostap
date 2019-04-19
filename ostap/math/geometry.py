@@ -55,6 +55,7 @@ Ostap.Line3D              = Ostap.Math.XYZLine
 Ostap.Math.Line3D         = Ostap.Math.XYZLine
 
 
+## Ostap.LorentzVector       = _RM.PxPyPzEVector
 ## ============================================================================
 ## some useful decoration:
 ## ============================================================================
@@ -766,6 +767,9 @@ _parallel_lines_ . __doc__ += '\n' + _GeomFun.parallel . __doc__
 
 if not hasattr ( Ostap.XYZLine , 'parallel' ) :
     Ostap.XYZLine.parallel = _parallel_lines_
+
+
+Ostap.Math.LorentzVector = Ostap.LorentzVector
 
 # =============================================================================
 _decorated_classes_ = set( [

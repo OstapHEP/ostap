@@ -21,7 +21,6 @@ __all__     = (
     'FillTask'    , ## "Fill task" for loooong chains/trees  
     'cproject'    , ##  project looong TChain into historgam   
     'tproject'    , ##  project looong TTree into histogram
-    'fillDataSet' ,
     'WorkManager' 
     ) 
 # =============================================================================

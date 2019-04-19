@@ -152,7 +152,6 @@ from ostap.math.param    import ( legendre_sum      ,
                                   bernstein_sum     , 
                                   beziereven_sum    ,
                                   bernsteineven_sum )
-from ostap.fitting.param import H_fit, H_Nfit
 from ostap.core.types    import integer_types, long_type
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
@@ -278,6 +277,7 @@ def _h1_bernstein_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_po
     # make reasonable approximation
     func  = bezier_sum ( h1   , degree , xmin , xmax )
     #
+    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax , fixes )  
 
 
@@ -317,7 +317,8 @@ def _h1_bernsteineven_ ( h1 , halfdegree , opts = 'SQ0' , xmin = inf_neg , xmax 
     xmax = min ( xmax , h1.xmax() )  
     # make reasonable approximation
     func  = beziereven_sum ( h1   , halfdegree , xmin , xmax )
-    # make a fit 
+    # make a fit
+    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax , fixes )  
 
 
@@ -359,6 +360,7 @@ def _h1_chebyshev_ ( h1 , degree , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_p
     ## make reasonable approximation: 
     func = chebyshev_sum ( h1 , degree ,  xmin , xmax )
     ## fit it!
+    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax )  
 
 # =============================================================================
@@ -409,6 +411,7 @@ def _h1_legendre_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos
                              epsrel = 1.e-3         ,
                              limit  = 3 * h1.bins() ) 
     ## fit it!
+    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax )  
 
 
@@ -452,6 +455,7 @@ def _h1_fourier_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg 
     func = fourier_sum ( h1 , degree , xmin , xmax , fejer )
 
     ## fit it!
+    from ostap.fitting.param import H_fit    
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax )  
 
 # =============================================================================
@@ -494,6 +498,7 @@ def _h1_cosine_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg ,
     func = cosine_sum ( h1 , degree , xmin , xmax , fejer )
 
     ## fit it!
+    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax )  
 
 # =============================================================================
@@ -534,6 +539,7 @@ def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_p
     my = h1.accumulate().value()/h1.bins()
     func.setPar( 0, my )
     ##
+    from ostap.fitting.param import H_fit    
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax )  
 
 
@@ -583,6 +589,7 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
         func = cpp.Ostap.Math.BSpline ( _knots , degree )
         
     ##
+    from ostap.fitting.param import H_fit 
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax )  
 
 
@@ -620,7 +627,8 @@ def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     func = cpp.Ostap.Math.Positive ( N , xmin , xmax )
-    # 
+    #
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 # =============================================================================
@@ -659,6 +667,7 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
     xmax = min ( xmax , h1.xmax() )  
     func = cpp.Ostap.Math.PositiveEven ( N , xmin , xmax )
     # 
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 
@@ -698,6 +707,7 @@ def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg 
     xmax = min ( xmax , h1.xmax() )  
     func  = cpp.Ostap.Math.Monotonic ( N , xmin , xmax , increasing )
     # 
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 
@@ -737,6 +747,7 @@ def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  x
     xmax = min ( xmax , h1.xmax() )  
     func = cpp.Ostap.Math.Convex ( N , xmin , xmax , increasing , convex )
     # 
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 
@@ -775,6 +786,7 @@ def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) 
     xmax = min ( xmax , h1.xmax() )  
     func = cpp.Ostap.Math.ConvexOnly ( N , xmin , xmax , True )
     # 
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 # =============================================================================
@@ -813,6 +825,7 @@ def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos )
     xmax = min ( xmax , h1.xmax() )  
     func = cpp.Ostap.Math.ConvexOnly ( N , xmin , xmax , False )
     # 
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 # =============================================================================
@@ -860,6 +873,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0I' , xmin = inf_neg 
         for k in knots : _knots.push_back( k )
         func = cpp.Ostap.Math.PositiveSpline ( _knots , degree )
     #
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 # =============================================================================
@@ -911,6 +925,7 @@ def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0
         for k in knots : _knots.push_back( k )
         func = cpp.Ostap.Math.MonotonicSpline ( knots , degree , increasing )
     #
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 # =============================================================================
@@ -965,6 +980,7 @@ def _h1_cspline_ ( h1                   ,
         for k in knots : _knots.push_back( k )
         func   = cpp.Ostap.Math.ConvexSpline ( _knots , order , increasing , convex )
         
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts ) 
 
 
@@ -1018,6 +1034,7 @@ def _h1_convexspline_ ( h1                 ,
         for k in knots : _knots.push_back( k )
         func   = cpp.Ostap.Math.ConvexOnlySpline ( _knots , order , True )
         
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
 
 # =============================================================================
@@ -1071,6 +1088,7 @@ def _h1_concavespline_ ( h1               ,
         for k in knots : _knots.push_back( k )
         func   = cpp.Ostap.Math.ConvexOnlySpline ( _knots , order , False )
         
+    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts ) 
 
 # =============================================================================

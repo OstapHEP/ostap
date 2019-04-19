@@ -82,10 +82,7 @@ __all__     = (
 # =============================================================================
 import sys, collections
 from   ostap.math.base  import isequal, iszero , samesign
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range 
+from   builtins import range
 # =============================================================================
 # logging 
 # =============================================================================

@@ -198,8 +198,8 @@ class AutoPlots ( object ) :
 #  ...     c.draw()
 #  ...     d.draw()
 #  @endcode
-def auto_plot ( pattern   = 'ostap_%0.4d' ,
-                directory = ''            ) :
+def auto_plots ( pattern   = 'ostap_%0.4d' ,
+                 directory = ''            ) :
     """Helper function /context manager to setup "auto-plotting"
     all produced plots will be saved
     with auto_plots ( 'all_%d'  , directory  = 'plots' ) :

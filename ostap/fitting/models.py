@@ -122,7 +122,6 @@ __all__ = (
     # 
     'BreitWigner_pdf'      , ## (relativistic) 2-body Breit-Wigner
     'Flatte_pdf'           , ## Flatte-function  (pipi)
-    'Flatte2_pdf'          , ## Flatte-function  (KK) 
     'LASS_pdf'             , ## kappa-pole
     'Bugg_pdf'             , ## sigma-pole
     ##
@@ -206,10 +205,6 @@ __all__ = (
     # 
     ## helpers
     #
-    'H1D_dset'          , ## convertor of 1D-histogram to dataset 
-    'H1D_pdf'           , ## convertor of 1D-histogram to PDF 
-    'H2D_dset'          , ## convertor of 2D-histogram to dataset 
-    'H2D_pdf'           , ## convertor of 2D-histogram to PDF 
     #
     'Fit1D'             , ## generic model for                1D-fit
     'Fit2D'             , ## generic model for                2D-fit

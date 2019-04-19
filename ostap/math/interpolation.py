@@ -72,20 +72,21 @@ __all__     = (
     #
     'points'                , ## helper function to create the collection of interpolation points
     'Abscissas'             , ## collecion of interpolation abscissas 
-    'Table'                 , ## the interplation table (colelcitonof points)
+    'Table'                 , ## the interpolation table (collection of points)
     # for completeness  
     'interpolate_bernstein' , ## Newton-Bernstein interpolation 
     'interpolate_bspline'   , ## Basic spline interpolation
     )
 # =============================================================================
 import  ROOT, math
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range 
+from    builtins          import range
 from    ostap.core.core   import cpp, Ostap
 from    ostap.core.types  import is_integer
 from    ostap.math.base   import iszero, isequal, doubles 
+# =============================================================================
+from   ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation' )
+else                       : logger = getLogger ( __name__                   )
 # =============================================================================
 
 # =============================================================================

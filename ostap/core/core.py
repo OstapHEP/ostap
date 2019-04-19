@@ -65,7 +65,7 @@ std = cpp.std
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.core' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.core' )
 else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')

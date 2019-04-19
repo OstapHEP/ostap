@@ -30,7 +30,7 @@ __version__ = '$Revision$'
 __all__     = (
     "Trainer"         , ## the basic TMVA trainer 
     "Reader"          , ## the basic TMVA reader
-    "addTMVAResponce" , ## add TMVA responce to RooDataSet
+    "addTMVAResponse" , ## add TMVA responce to RooDataSet
     "tmvaGUI"
     )
 # =============================================================================
@@ -916,12 +916,12 @@ class Reader(object)  :
         #  @code
         #  tree   = ...
         #  method = reader.MLP
-        #  print('Responce %s' % method ( tree ))
+        #  print('Response %s' % method ( tree ))
         #  @endcode
         #  or using parameters
         #  @code
         #  pt , y, phi = ...
-        #  print('Responce %s' % method ( pt , y , phi ))
+        #  print('Response %s' % method ( pt , y , phi ))
         #  @endcode 
         def __call__ ( self , arg ,  *args ) :
             if   isinstance ( arg , num_types ) : return self.evaluate ( arg , *args ) 

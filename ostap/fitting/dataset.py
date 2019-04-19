@@ -24,10 +24,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range
+from   builtins         import range
 from   ostap.core.core  import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.types import integer_types 
 import ostap.fitting.variables 

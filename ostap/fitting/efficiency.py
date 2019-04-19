@@ -23,6 +23,14 @@ from   ostap.fitting.basic import PDF , Generic1D_pdf
 from   ostap.fitting.fit2d import PDF2, Generic2D_pdf
 from   ostap.fitting.fit3d import PDF3, Generic3D_pdf
 # =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.efficiency' )
+else                       : logger = getLogger( __name__                   )
+# ==============================================================================
+logger.debug ( 'Utilities to get efficiency using RooFit machinery')
+# ==============================================================================
 ## @class Efficiency1D
 #  Helper class  to get get the efficiency using unbinned fit and ROOT.RooEfficiency class
 #  @attention this an internal class, not to be used directly!

@@ -16,18 +16,53 @@ option(RUN_TESTS "Run tests?" ON)
 
 enable_testing() 
 file(GLOB files "${CMAKE_INSTALL_PREFIX}/ostap/*/tests/test_*.py")
+find_program(NOSE_EXECUTABLE NAMES nosetests)
 foreach(filename ${files})
    get_filename_component(fname ${filename} NAME_WE)
-   find_program(NOSE_EXECUTABLE NAMES nosetests)
    if( ${NOSE_EXECUTABLE-FOUND} )
      add_test (NAME ${fname} COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=5000 )
    else  () 
-     if(PYVERSION_ROOT  VERSION_LESS "3.6")
-             add_test (NAME ${fname} COMMAND python             ${filename} )
-     else()
-        add_test (NAME ${fname} COMMAND python3             ${filename} )
-     endif()
+     add_test (NAME ${fname} COMMAND python             ${filename} )
    endif () 
    set_tests_properties(${fname} PROPERTIES TIMEOUT 5000 ) 
 endforeach() 
+file(GLOB               allfiles "${CMAKE_INSTALL_PREFIX}/ostap/*/*.py")
+list(SORT               allfiles)
+list(REMOVE_DUPLICATES  allfiles)
+list(FILTER             allfiles EXCLUDE REGEX ".*\\/__init__\\.py$")
+list(FILTER             allfiles EXCLUDE REGEX ".*\\/tests/.*\\.py$")
+
+foreach(filename ${allfiles})
+
+   string(REPLACE FAKEfakeFAKEfake ququququ   test_name ${filename} )
+
+   string(REPLACE fitting/param  fitting_param  test_name ${test_name})
+   string(REPLACE histos/param   histos_param   test_name ${test_name})
+   string(REPLACE math/param     math_param     test_name ${test_name})
+   
+   string(REPLACE fitting/utils  fitting_utils  test_name ${test_name})
+   string(REPLACE logger/utils   logger_utils   test_name ${test_name})
+   string(REPLACE utils/utils    utils_utils    test_name ${test_name})
+
+   string(REPLACE fitting/basic  fitting_basic  test_name ${test_name})
+   string(REPLACE utils/basic    utils_basic    test_name ${test_name})
+
+   string(REPLACE fitting/funcs  fitting_funcs  test_name ${test_name})
+   string(REPLACE trees/funcs    trees_funcs    test_name ${test_name})
+
+   string(REPLACE fitting/models fitting_models test_name ${test_name})
+   string(REPLACE math/models    math_models    test_name ${test_name})
+
+   get_filename_component(tname ${test_name} NAME_WE)
+   string(PREPEND tname test_runit_)
+   if( ${NOSE_EXECUTABLE-FOUND} )
+     add_test (NAME ${tname} COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=5000 )
+   else  () 
+     add_test (NAME ${tname} COMMAND python             ${filename} )
+   endif () 
+   set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ) 
+
+endforeach() 
+
+
 ## nosetests -w ../ostap/tools --exe --processes=16  --process-timeout=2000 -I '.*chopping.*'

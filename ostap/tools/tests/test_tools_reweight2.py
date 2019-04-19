@@ -15,10 +15,7 @@ __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 import ROOT, random, math, os, time 
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range 
+from   builtins           import range
 from   ostap.core.pyrouts import *
 import ostap.io.zipshelve as     DBASE
 # =============================================================================

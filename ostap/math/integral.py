@@ -64,10 +64,7 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, warnings, math 
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range
+from   builtins        import range
 from   ostap.math.ve   import VE
 from   ostap.math.base import isequal, iszero
 from   ostap.core.core import items_loop 

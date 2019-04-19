@@ -18,10 +18,7 @@ import ostap.fitting.roofit
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import Ostap, VE, dsID
 from   ostap.logger.utils   import rooSilent 
-try:
-    from builtins import range
-except ImportError:
-    from __builtin__ import range 
+from   builtins             import range
 # =============================================================================
 # logging 
 # =============================================================================
