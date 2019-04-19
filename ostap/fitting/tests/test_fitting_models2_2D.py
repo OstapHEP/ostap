@@ -19,7 +19,7 @@ import ostap.fitting.models as     Models
 from   ostap.core.core      import Ostap, std, VE, dsID
 from   ostap.logger.utils   import rooSilent 
 import ostap.io.zipshelve   as     DBASE
-from   ostap.utils.timing   mport timing 
+from   ostap.utils.timing   import timing 
 from   builtins             import range
 # =============================================================================
 # logging 
