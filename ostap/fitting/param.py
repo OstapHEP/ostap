@@ -274,6 +274,7 @@ def _h2_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
     >>> fun   = histo.asFunc() 
     """
     return H2Func ( self , func , *args , **kwargs )
+
 # =============================================================================
 ## construct function 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

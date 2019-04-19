@@ -6329,9 +6329,10 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
         
     return nh 
 
+
     
 # =============================================================================
-## make a historgam transfromation:
+## make a histogram transfromation:
 #  H(x)  ->  H'(y(x))
 #  where transformation is defined  y=fun(x)
 #  @code

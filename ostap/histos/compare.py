@@ -25,9 +25,10 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some specific comparison of histo-objects')
 # =============================================================================
-from   ostap.core.core     import hID,VE 
+from   ostap.core.core      import hID,VE 
 import ostap.histos.histos 
 import ostap.histos.param
+import ostap.fitting.param 
 # =============================================================================
 ## Can 1D-histogram can be considered as ``constant'' ?
 #  @code
