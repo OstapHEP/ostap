@@ -25,7 +25,7 @@ else                       : logger = getLogger( __name__              )
 logger.debug ( 'Tiny decoration for ROOT.TF objects')
 # =============================================================================
 from ostap.core.core   import cpp, Ostap, VE, funID
-from ostap.core.types  import num_types , integer_types
+from ostap.core.ostap_types  import num_types , integer_types
 # =============================================================================
 
 # =============================================================================

@@ -62,7 +62,7 @@ if not 0.75 < _eps_ * 2**52 < 1.25 :
     warnings.warn ('"epsilon" in not in the expected range!Math could be suboptimal')
 # =============================================================================
 from ostap.math.base  import cpp , iszero , isequal
-from ostap.core.types import num_types , is_integer
+from ostap.core.ostap_types import num_types , is_integer
 from ostap.math.ve    import VE 
 # =============================================================================
 _next_double_ = cpp.Ostap.Math.next_double

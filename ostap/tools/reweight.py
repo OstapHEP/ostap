@@ -29,7 +29,7 @@ else                       : logger = getLogger ( __name__              )
 logger.info ( 'Set of utitilities for re-weigthing')
 from   ostap.core.pyrouts    import VE, SE
 from   ostap.math.base       import iszero
-from   ostap.core.types      import string_types, list_types 
+from   ostap.core.ostap_types      import string_types, list_types 
 from   ostap.math.operations import Mul as MULT  ## needed for proper abstract multiplication
 import ostap.io.zipshelve    as            DBASE ## needed to store the weights&histos
 # =============================================================================

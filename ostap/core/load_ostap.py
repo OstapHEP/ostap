@@ -5,8 +5,6 @@
 #  @date   2012-02-15
 #  @author Vanya BELYAEV Ivan.Belyaevitep.ru
 # =============================================================================
-
-# =============================================================================
 import ROOT, sys
 # =============================================================================
 # logging 
@@ -43,8 +41,6 @@ from ostap.core.core import cpp, Ostap, VE, SE, WSE, hID
 # =============================================================================
 if '__main__' == __name__ :
 
-    logger = __logger
-    
     from ostap.utils.docme import docme
     docme ( __name__ , logger = __logger )
 

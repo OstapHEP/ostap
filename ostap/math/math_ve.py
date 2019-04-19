@@ -38,7 +38,7 @@ else                       : logger = getLogger ( __name__             )
 # =============================================================================
 from   ostap.math.ve    import VE
 from   ostap.math.base  import cpp, iszero, isequal
-from   ostap.core.types import num_types, is_integer 
+from   ostap.core.ostap_types import num_types, is_integer 
 
 _ln2_i = 1/math.log(2.0)                 ## useful constant 
 # =============================================================================

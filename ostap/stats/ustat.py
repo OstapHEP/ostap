@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ============================================================================
-# @file ustat.py
+# @file ostap/stats/ustat.py
 #
 # Helper module to get ``U-statistics'' useful for ``Goodnes-Of-Fit'' tests
 #
@@ -51,6 +51,7 @@ Usage is fairly trivial:
    >>> histo.Draw()             ## plot the results     
 """
 # ============================================================================
+from   __future__        import print_function
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2010-09-21"
 __version__ = "$Revision$"
@@ -230,7 +231,7 @@ def uPlot ( pdf            ,
             if nEntries/nbins < 100 : continue  
             bins = nbins
             break
-        print '#bins %s' % bins 
+        print('#bins %s' % bins)
         
     histo = ROOT.TH1F ( hID () ,'U-statistics', bins , 0 , 1 )
     histo.Sumw2      (   )

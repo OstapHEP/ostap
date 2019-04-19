@@ -58,7 +58,9 @@ __all__     = (
     'items_loop'       , ## ditto
     )
 # =============================================================================
-import ROOT, cppyy, math, sys
+import math, sys
+import ROOT
+import cppyy
 cpp = cppyy.gbl
 std = cpp.std
 # =============================================================================
@@ -316,7 +318,7 @@ def loop_items ( d ) :
 
 # =============================================================================
 if '__main__' == __name__ :
-    
+
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     

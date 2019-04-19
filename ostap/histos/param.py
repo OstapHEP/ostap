@@ -152,7 +152,7 @@ from ostap.math.param    import ( legendre_sum      ,
                                   bernstein_sum     , 
                                   beziereven_sum    ,
                                   bernsteineven_sum )
-from ostap.core.types    import integer_types, long_type
+from ostap.core.ostap_types    import integer_types, long_type
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity

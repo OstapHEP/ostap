@@ -33,7 +33,7 @@ import ROOT, math
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   ostap.core.core     import rootID, VE, items_loop
-from   ostap.core.types    import num_types, list_types, integer_types
+from   ostap.core.ostap_types    import num_types, list_types, integer_types
 from   ostap.logger.utils  import roo_silent
 from   sys                 import version_info as python_version 
 # =============================================================================
@@ -993,7 +993,7 @@ class Phases(MakeVar) :
     @phis.setter
     def phis ( self , values ) :
 
-        from ostap.core.types import num_types , list_types
+        from ostap.core.ostap_types import num_types , list_types
         ##
         if   isinstance ( values , num_types          ) : values = [ values           ]
         elif isinstance ( values , VE                 ) : values = [ values.value()   ]

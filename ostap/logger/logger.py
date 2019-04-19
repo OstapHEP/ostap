@@ -105,7 +105,7 @@ logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
 # =============================================================================
 # - is sys.stdout attached to terminal or not ?
 # - do we run IPYTHON ? 
-from ostap.utils.basic import isatty, with_ipython
+from ostap.utils.basic import isatty
 
 # =============================================================================
 # COLORS: 
@@ -293,7 +293,6 @@ def colored_string ( what               ,
     >>> print colored_string ( 'Hello' , foreground = RED , background = YELLOW , bold = True , blink = True , underline = True )
     """
     ## nothing to colorize or no coloring is activated
-    from ostap.utils.basic import isatty
     if not what or not with_colors() or not isatty() : return what
 
     ## nothing to do 
@@ -345,6 +344,7 @@ def allright ( what ) :
 def make_colors () :
     """Colorize logging
     """
+
     if with_colors() : return
     if not isatty () : return  ## no colorization for non-TTY output 
     

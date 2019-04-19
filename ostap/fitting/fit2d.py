@@ -27,13 +27,13 @@ __all__     = (
 # =============================================================================
 import ROOT, random 
 from   ostap.core.core      import dsID , VE , Ostap, hID , iszero
-from   ostap.core.types     import integer_types 
+from   ostap.core.ostap_types     import integer_types 
 from   ostap.fitting.roofit import SETVAR
 from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
 from   ostap.fitting.basic  import PDF , Flat1D 
 from   ostap.fitting.utils  import ( H2D_dset        ,
                                      component_similar , component_clone )
-from   ostap.core.types     import num_types, list_types 
+from   ostap.core.ostap_types     import num_types, list_types 
 from   builtins             import range
 # =============================================================================
 from   ostap.logger.logger import getLogger

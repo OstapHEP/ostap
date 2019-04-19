@@ -69,7 +69,7 @@ __all__     = (
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
 # =============================================================================
-from   ostap.logger.logger import getLogger, isatty 
+from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
 else                       : logger = getLogger( __name__            )
 del getLogger

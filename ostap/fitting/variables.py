@@ -33,7 +33,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core  import VE
-from   ostap.core.types import num_types 
+from   ostap.core.ostap_types import num_types 
 # =============================================================================
 # logging 
 # =============================================================================

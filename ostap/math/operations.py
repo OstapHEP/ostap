@@ -65,7 +65,7 @@ __all__     = (
     ) 
 # =============================================================================
 import operator
-from   ostap.core.types import num_types, integer_types, list_types  
+from   ostap.core.ostap_types import num_types, integer_types, list_types  
 # =============================================================================
 # logging 
 # =============================================================================

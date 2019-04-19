@@ -26,7 +26,7 @@ __all__     = (
 import ROOT, random
 from   builtins         import range
 from   ostap.core.core  import Ostap, VE, hID, dsID , valid_pointer
-from   ostap.core.types import integer_types 
+from   ostap.core.ostap_types import integer_types 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable

@@ -30,7 +30,7 @@ logger.debug ( 'Auxillary utilities for Histogram parameterisation')
 import ostap.histos.histos 
 import ostap.fitting.fitresult 
 from   ostap.core.core  import Ostap, funID
-from   ostap.core.types import num_types
+from   ostap.core.ostap_types import num_types
 # =============================================================================
 ## @class H_fit
 #  simple function to fit/represent the histogram with bernstein/spline

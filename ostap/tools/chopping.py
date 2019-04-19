@@ -88,7 +88,7 @@ else                       : logger = getLogger ( __name__               )
 from   ostap.tools.tmva   import Trainer as TMVATrainer
 from   ostap.tools.tmva   import Reader  as TMVAReader
 from   ostap.core.pyrouts import hID, h1_axis
-from   ostap.core.types   import integer_types 
+from   ostap.core.ostap_types   import integer_types 
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils  as Utils 

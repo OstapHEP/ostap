@@ -23,10 +23,12 @@ __all__ = (
     )
 # =============================================================================
 import sys
-from ostap.logger.logger import getLogger
+from   builtins import range
+# =============================================================================
+from   ostap.logger.logger import getLogger
+# =============================================================================
 if '__main__' == __name__ : logger = getLogger ( 'ostap.math.random_ext')
 else                      : logger = getLogger ( __name__               ) 
-
 # =============================================================================
 ## generate bifurcated gaussian
 #  @code
@@ -132,7 +134,7 @@ if '__main__' == __name__  :
     from ostap.stats.counters import SE
     cnt = SE()
     mu  = 0.4
-    for i in xrange(10000) :
+    for i in range(10000) :
         cnt += poisson(0.4)
 
     logger.info ( 'Poisson(mu=%s) : %s' % ( mu , cnt ) )

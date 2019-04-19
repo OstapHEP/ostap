@@ -107,7 +107,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moments' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-from ostap.core.types import integer_types, num_types 
+from ostap.core.ostap_types import integer_types, num_types 
 # =============================================================================
 ## @class Moment
 #  Calculate the N-th moment for the distribution 

@@ -19,7 +19,7 @@ __all__     = (
 # =============================================================================
 import ROOT
 from ostap.core.core    import std , Ostap, VE, hID
-from ostap.core.types   import integer_types , long_type
+from ostap.core.ostap_types   import integer_types , long_type
 from ostap.logger.utils import multicolumn
 from ostap.utils.basic  import terminal_size, isatty 
 # =============================================================================

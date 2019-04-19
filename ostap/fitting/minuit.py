@@ -17,7 +17,7 @@ __all__     = ()
 # =============================================================================
 import ROOT
 from   ostap.core.core  import cpp, VE
-from   ostap.core.types import integer_types
+from   ostap.core.ostap_types import integer_types
 # =============================================================================
 # logging 
 # =============================================================================

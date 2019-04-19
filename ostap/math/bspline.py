@@ -47,7 +47,7 @@ __all__     = (
 # =============================================================================
 import  ROOT, math  
 from    ostap.core.core      import cpp, Ostap, funID
-from    ostap.core.types     import is_integer
+from    ostap.core.ostap_types     import is_integer
 from    ostap.math.base      import iszero, isequal, signum, doubles
 import  ostap.math.bernstein 
 # =============================================================================

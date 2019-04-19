@@ -43,7 +43,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.tmva' )
 else                       : logger = getLogger ( __name__           )
 # =============================================================================
 from ostap.core.core     import items_loop
-from ostap.core.types    import num_types 
+from ostap.core.ostap_types    import num_types 
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
 # =============================================================================

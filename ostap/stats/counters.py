@@ -27,9 +27,9 @@ cpp   = cppyy.gbl
 Ostap = cpp.Ostap
 
 # =============================================================================
-SE            = Ostap.StatEntity 
-WSE           = Ostap.WStatEntity 
-NSE           = Ostap.NStatEntity 
+SE    = Ostap.StatEntity 
+WSE   = Ostap.WStatEntity 
+NSE   = Ostap.NStatEntity 
 
 # =============================================================================
 # temporary trick, to be removed 
@@ -129,7 +129,7 @@ _decorated_classes_ = (
     )
 # =============================================================================
 if '__main__' == __name__  :
-    
+
     from ostap.logger.logger import getLogger
     logger = getLogger( 'ostap.stats.counters' )
     
@@ -139,7 +139,8 @@ if '__main__' == __name__  :
     import random
     
     cnt = SE() 
-    for i in xrange(10000) :
+    from builtins import range 
+    for i in range(10000) :
         cnt += random.gauss(1,1)
         
     logger.info ( 'Counter: %s' % cnt        ) 

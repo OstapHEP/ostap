@@ -32,8 +32,8 @@ import ostap.fitting.variables
 from   builtins             import range
 from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
 from   ostap.math.base      import iszero 
-from   ostap.core.types     import is_good_number, is_integer, integer_types
-from   ostap.core.types     import num_types , list_types
+from   ostap.core.ostap_types     import is_good_number, is_integer, integer_types
+from   ostap.core.ostap_types     import num_types , list_types
 from   ostap.fitting.roofit import SETVAR, PDF_fun
 from   ostap.logger.utils   import roo_silent   , rootWarning
 from   ostap.fitting.utils  import ( RangeVar   , MakeVar  , numcpu   , 

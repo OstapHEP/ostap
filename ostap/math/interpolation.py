@@ -81,7 +81,7 @@ __all__     = (
 import  ROOT, math
 from    builtins          import range
 from    ostap.core.core   import cpp, Ostap
-from    ostap.core.types  import is_integer
+from    ostap.core.ostap_types  import is_integer
 from    ostap.math.base   import iszero, isequal, doubles 
 # =============================================================================
 from   ostap.logger.logger import getLogger

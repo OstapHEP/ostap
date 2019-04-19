@@ -22,7 +22,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.geometry' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-from ostap.core.types import num_types
+from ostap.core.ostap_types import num_types
 
 ## global C++ namespace 
 cpp = cppyy.gbl 

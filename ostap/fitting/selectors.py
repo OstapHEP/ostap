@@ -112,7 +112,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
 from   ostap.core.core     import cpp, Ostap, items_loop 
-from   ostap.core.types    import num_types
+from   ostap.core.ostap_types    import num_types
 import ostap.fitting.roofit 
 # =============================================================================
 ## C++ Selector 

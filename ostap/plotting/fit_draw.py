@@ -43,7 +43,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
-from   ostap.core.types import integer_types, list_types
+from   ostap.core.ostap_types import integer_types, list_types
 from   ostap.core.core  import items_loop
 import ostap.plotting.style  
 import ostap.plotting.canvas

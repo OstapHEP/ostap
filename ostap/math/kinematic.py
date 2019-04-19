@@ -42,7 +42,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.kinematic' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
 from ostap.math.base  import cpp , COMPLEX 
-from ostap.core.types import num_types
+from ostap.core.ostap_types import num_types
 
 ## C++ namespace Ostap 
 Ostap = cpp.Ostap

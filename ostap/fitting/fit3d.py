@@ -27,7 +27,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core      import dsID , hID ,  VE , Ostap 
-from   ostap.core.types     import integer_types
+from   ostap.core.ostap_types     import integer_types
 from   ostap.logger.utils   import roo_silent , rooSilent
 from   ostap.fitting.utils  import H3D_dset , component_similar , component_clone
 from   ostap.fitting.basic  import PDF  , Flat1D 

@@ -42,7 +42,7 @@ __all__     = (
 # =============================================================================
 import ROOT, math
 from   ostap.core.core     import cpp, Ostap
-from   ostap.core.types    import integer_types 
+from   ostap.core.ostap_types    import integer_types 
 from   ostap.math.base     import iszero
 from   ostap.fitting.basic import PDF
 from   ostap.fitting.utils import Phases 

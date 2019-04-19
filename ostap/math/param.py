@@ -89,7 +89,7 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Some parameterization utilities')
 # =============================================================================
 from   ostap.core.core   import cpp, Ostap
-from   ostap.core.types  import is_integer, num_types
+from   ostap.core.ostap_types  import is_integer, num_types
 import ostap.math.models
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity

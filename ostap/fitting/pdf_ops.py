@@ -281,7 +281,7 @@ def pdf_convolution ( pdf , resolution ) :
 
     import ostap.fitting.basic       as      _1D
     import ostap.fitting.convolution as     _CNV
-    from   ostap.core.types          import num_types
+    from   ostap.core.ostap_types          import num_types
     from   ostap.core.core           import VE 
     
     if not isinstance ( pdf , _1D.PDF ) : return NotImplemented

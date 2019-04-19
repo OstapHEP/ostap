@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/core/types.py
+## @file ostap/core/ostap_types.py
 #  core types for ostap 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -32,6 +32,14 @@ __all__     = (
     'is_list_like'    , ## is a value of list-like type?
     ##
     )
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_types' )
+else                       : logger = getLogger( __name__     )
+# =============================================================================
+logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
 import math, collections
 from   sys import version_info as python_version 
@@ -97,16 +105,6 @@ def is_list_like  ( v ) :
 # =============================================================================
 if '__main__' == __name__ :
 
-    # =========================================================================
-    # logging 
-    # =========================================================================
-    from ostap.logger.logger import getLogger 
-    if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.types' )
-    else                       : logger = getLogger( __name__           )
-    # =========================================================================
-    logger.debug ( 'The basic types for ostap')
-    # =========================================================================
-    
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     

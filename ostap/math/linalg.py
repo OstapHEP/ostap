@@ -29,7 +29,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg' )
 else                       : logger = getLogger ( __name__            )
 # =============================================================================
 from ostap.math.base  import isequal,iszero
-from ostap.core.types import num_types, is_integer
+from ostap.core.ostap_types import num_types, is_integer
 # =============================================================================
 ## get  i,j element from matrix-like object
 #  @code
