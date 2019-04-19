@@ -26,7 +26,7 @@ There are several possibilities to start working with Ostap, you can build Ostap
 
 Linux
 -----
-Ostap requires the python2 version >2.7. 
+Ostap requires the python2 version >2.7 or python3. 
 You need to provide ROOTSYS environment for building the library. The library should be built with the same compiler version and C++ standard as was used to build ROOT. Set ROOT environment with following commands
 
     source /path/to/root/bin/thisroot.sh
