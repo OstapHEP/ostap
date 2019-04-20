@@ -61,7 +61,7 @@ from collections import defaultdict
 ##  test interpolation for 1D-historgams 
 def test_1D() :
     
-    N1 = 100000
+    N1 = 10000
     cnts_1D = defaultdict(SE) 
     for i in range(N1) :   
         x  = random.uniform(0,1)
@@ -86,7 +86,7 @@ def test_1D() :
 ##  test interpolation for 2D-historgams 
 def test_2D() :
 
-    N2 = 100
+    N2 = 50
     cnts_2D = defaultdict(SE) 
     for i in range(N2) :   
         x  = random.uniform(0,1)
@@ -117,7 +117,7 @@ def test_3D() :
 
     cnts_3D = defaultdict(SE)
     
-    N3 = 30
+    N3 = 20
     for i in range(N3) :   
         x  = random.uniform(0,1)
         for j in range(N3) :
@@ -158,7 +158,7 @@ def test_3D2() :
             for j in itypes :
                 for k in itypes :
                     itype = i,j,j
-                    for i in range (100) :
+                    for i in range (50) :
                         
                         x = random.uniform ( *h.xminmax() )
                         y = random.uniform ( *h.yminmax() )

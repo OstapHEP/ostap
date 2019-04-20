@@ -40,10 +40,10 @@ dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )
 
 m = VE(3.100,0.015**2)
 
-N_ss = 10000
-N_sb =  2500
-N_bs =  2500
-N_bb =  5000
+N_ss = 5000
+N_sb =  500
+N_bs =  500
+N_bb = 1000
 
 random.seed(0)
 
@@ -155,7 +155,7 @@ if '__main__' == __name__ :
     with timing ('test_model_14'    ) : test_model_14    ()          
 
     ## check finally that everything is serializeable:
-    test_db ()          
+    with timing ( 'save to DB'     ) : test_db ()          
     
 # =============================================================================
 # The END 

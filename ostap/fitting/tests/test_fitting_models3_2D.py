@@ -150,7 +150,7 @@ if '__main__' == __name__ :
     with timing ('test_model_13'    ) : test_model_13    ()          
 
     ## check finally that everything is serializeable:
-    test_db ()          
+    with timing ( 'save to DB'     ) : test_db ()          
     
 # =============================================================================
 # The END 

@@ -39,7 +39,7 @@ dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )
 ## fill it with uniform (x,y) 
 m = VE(3.100,0.015**2)
 w = VE(3.100,0.100**2) 
-for i in range(0,5000) :
+for i in range(0,2500) :
     
     m_x.value = random.uniform ( *m_x.minmax() )  
     m_y.value = random.uniform ( *m_y.minmax() )
@@ -318,7 +318,7 @@ if '__main__' == __name__ :
     test_splinesym2D  () 
     
     ## check finally that everything is serializeable:
-    test_db ()          
+    test_db           ()          
     
 # =============================================================================
 # The END 
