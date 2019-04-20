@@ -37,13 +37,12 @@ acc.defineType('reject',0)
 varset  = ROOT.RooArgSet  ( x , acc )
 ds      = ROOT.RooDataSet ( dsID() , 'test data' ,  varset )
 
-eff0       = Models.Monotonic_pdf ( 'E0' , xvar = x , power = 4 , increasing = True )
-eff0.phis  = [ random.uniform(-2.5,4.5) for i in   range(4) ]
-eff0.phis  = 0.1 ,  3 ,  1.5  , 0.5
-margin     = 1.20 
+eff0       = Models.Monotonic_pdf ( 'E0' , xvar = x , power = 2 , increasing = True )
+eff0.phis  = 3.1415/2 , 3.1415/2 
+margin     = 1.25 
 emax       = margin * eff0 ( x.getMax() ) 
 
-for i in range ( 50000 ) :
+for i in range ( 10000 ) :
     
     xv = random.uniform ( xmin , xmax )
     
@@ -64,11 +63,8 @@ points = [ dx * i for i in range ( np + 1 ) ]
 # use some PDF to parameterize efficiciency
 def test_pdf () : 
     
-    effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 6 , increasing = True )
+    effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 3 , increasing = True )
 
-    ## add tiny noise:  
-    ## effPdf.phis = [ float ( p ) * random.gauss ( 1 , 0.02 ) for p in eff0.phis ]
-    effPdf.phis = [ -0.04 , 0.20 , 0  , 0.55 , -0.05 , 0.80 ]
     maxe   = margin * effPdf ( xmax )
     
     s0     = min ( 1.0 / emax , 1.0 / maxe ) 
@@ -76,8 +72,6 @@ def test_pdf () :
     
     eff2   = Efficiency1D( 'E2' , effPdf , cut = acc  , scale = scale )
     
-    r2     = eff2.fitTo ( ds )
-    r2     = eff2.fitTo ( ds )
     r2     = eff2.fitTo ( ds )
     f2     = eff2.draw  ( ds )
     
@@ -93,7 +87,7 @@ def test_pdf () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    
+
     test_pdf     ()
 
 
