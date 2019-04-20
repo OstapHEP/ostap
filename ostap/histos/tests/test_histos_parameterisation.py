@@ -228,114 +228,6 @@ def test_cosine_sum() :
                                                                            (rB5 , h5) ,
                                                                            (rB6 , h6) ] ] )
 
-logger.info ( 100*'*')
-logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (in general slow)')
-logger.info ( 100*'*')
-
-# =============================================================================
-def test_bernstein() :
-    
-    with timing ( 'Bernstein[4]' , logger ) :
-        rB1 = h1.bernstein      ( 4 )
-        rB2 = h2.bernstein      ( 4 )
-        rB3 = h3.bernstein      ( 4 )
-        rB4 = h4.bernstein      ( 4 )
-        rB5 = h5.bernstein      ( 4 )
-        rB6 = h6.bernstein      ( 4 )        
-        logger.info ( 'Bernstein[4]: diff   %s ' %  [ diff2(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
-
-# =============================================================================
-def test_chebyshev() :
-    
-    with timing ( 'Chebyshev[4]' , logger ) : 
-        rC1 = h1.chebyshev  ( 4 )
-        rC2 = h2.chebyshev  ( 4 )
-        rC3 = h3.chebyshev  ( 4 )
-        rC4 = h4.chebyshev  ( 4 )
-        rC5 = h5.chebyshev  ( 4 )
-        rC6 = h6.chebyshev  ( 4 )
-        logger.info ( 'Chebyshev[4]: diff   %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                           (rC2 , h2) ,
-                                                                           (rC3 , h3) ,
-                                                                           (rC4 , h4) ,
-                                                                           (rC5 , h5) ,
-                                                                           (rC6 , h6) ] ] )
-
-# =============================================================================
-def test_legendre() :
-    
-    with timing ( 'Legendre[4]' , logger ) :
-        rL1 = h1.legendre   ( 4 )
-        rL2 = h2.legendre   ( 4 )
-        rL3 = h3.legendre   ( 4 )
-        rL4 = h4.legendre   ( 4 )
-        rL5 = h5.legendre   ( 4 )
-        rL6 = h6.legendre   ( 4 )        
-        logger.info ( 'Legendre[4]: diff    %s ' %  [ diff2(*p) for p in [ (rL1 , h1) ,
-                                                                           (rL2 , h2) ,
-                                                                           (rL3 , h3) ,
-                                                                           (rL4 , h4) ,
-                                                                           (rL5 , h5) ,
-                                                                           (rL6 , h6) ] ] )
-
-# =============================================================================
-def test_monomial() :
-    
-    with timing ( 'Monomial[4]' , logger ) : 
-        rP1 = h1.polynomial ( 4 )
-        rP2 = h2.polynomial ( 4 )
-        rP3 = h3.polynomial ( 4 )
-        rP4 = h4.polynomial ( 4 )
-        rP5 = h5.polynomial ( 4 )
-        rP6 = h6.polynomial ( 4 )
-        logger.info ( 'Monomial[4]: diff    %s ' %  [ diff2(*p) for p in [ (rP1 , h1) ,
-                                                                           (rP2 , h2) ,
-                                                                           (rP3 , h3) ,
-                                                                           (rP4 , h4) ,
-                                                                           (rP5 , h5) ,
-                                                                           (rP6 , h6) ] ] )
-
-# =============================================================================
-def test_fourier () : 
-    with timing ( 'Fourier[8]' , logger ) :
-        rF1 = h1.fourier    ( 8 )
-        rF2 = h2.fourier    ( 8 )
-        rF3 = h3.fourier    ( 8 )
-        rF4 = h4.fourier    ( 8 )
-        rF5 = h5.fourier    ( 8 )
-        rF6 = h6.fourier    ( 8 )
-        logger.info ( 'Fourier[8] : diff    %s ' %  [ diff2(*p) for p in [ (rF1 , h1) ,
-                                                                           (rF2 , h2) ,
-                                                                           (rF3 , h3) ,
-                                                                           (rF4 , h4) ,
-                                                                           (rF5 , h5) ,
-                                                                           (rF6 , h6) ] ] )
-# =============================================================================
-def test_cosine() :
-    
-    if not use_scipy :
-        logger.warning("No scipy is avilable, skip 'cosine' test")
-        return
-    
-    with timing ( 'Cosine[8]' , logger ) :
-        rC1 = h1.cosine     ( 8 )
-        rC2 = h2.cosine     ( 8 )
-        rC3 = h3.cosine     ( 8 )
-        rC4 = h4.cosine     ( 8 ) 
-        rC5 = h5.cosine     ( 8 )
-        rC6 = h6.cosine     ( 8 ) 
-        logger.info ( 'Cosine[8]: diff      %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                           (rC2 , h2) ,
-                                                                           (rC3 , h3) ,
-                                                                           (rC4 , h4) ,
-                                                                           (rC5 , h5) ,
-                                                                           (rC6 , h6) ] ] )
-
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -349,17 +241,6 @@ if '__main__' == __name__ :
     test_chebyshev_sum     ()
     test_fourier_sum       ()
     test_cosine_sum        ()
-
-    logger.info ( 100*'*')
-    logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
-    logger.info ( 100*'*')
-    
-    test_bernstein         ()
-    test_legendre          ()
-    test_chebyshev         ()
-    test_monomial          ()
-    test_fourier           ()
-    test_cosine            ()
     
 # =============================================================================
 # The END 

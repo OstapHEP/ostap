@@ -563,8 +563,8 @@ def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_p
 def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as B-spline polynomial    
     >>> h = ... # the historgam
-    >>> b = h.bSpline ( degree = 3 , innerknots = 3  )
-    >>> b = h.bSpline ( degree = 3 , innerknots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
+    >>> b = h.bSpline ( degree = 3 , knots = 3  )
+    >>> b = h.bSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
     
     >>> tf1        = b[0]    ## TF1 object
     >>> obj        = b[1]    ## helper object 
@@ -580,7 +580,7 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , integer_types ) :
+    if isinstance ( knots , integer_types ) and 0 <= knots :
         func = cpp.Ostap.Math.BSpline ( xmin , xmax , knots , degree )
     else :
         from ostap.math.base import doubles
@@ -845,7 +845,7 @@ def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos )
 #  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
 #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
 #  @endcode 
-def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
+def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as positive B-spline 
     
     >>> h  = ... # the historgam
@@ -865,7 +865,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0I' , xmin = inf_neg 
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , iteger_types ) :
+    if isinstance ( knots , integer_types ) and 0 <= knots :
         func = cpp.Ostap.Math.PositiveSpline ( xmin , xmax , knots , degree  )
     else :
         from ostap.math.base import doubles
@@ -894,7 +894,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0I' , xmin = inf_neg 
 #  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
 #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
 #  @endcode 
-def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
+def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as positive monotonic  spline 
     
     >>> h  = ... # the historgam
@@ -917,7 +917,7 @@ def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , iteger_types ) :
+    if isinstance ( knots , integer_types ) and 0 <= knots :
         func = cpp.Ostap.Math.MonotonicSpline ( xmin , xmax , knots , degree , increasing )
     else :
         from ostap.math.base import doubles
@@ -950,7 +950,7 @@ def _h1_cspline_ ( h1                   ,
                    knots      = 3       ,
                    increasing = True    ,
                    convex     = True    , 
-                   opts       = 'SQ0I'  ,
+                   opts       = 'SQ0'   ,
                    xmin       = inf_neg ,
                    xmax       = inf_pos ) :
     """Represent histo as positive monotonic convex/concave spline  
@@ -972,7 +972,7 @@ def _h1_cspline_ ( h1                   ,
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , integer_types ) :
+    if isinstance ( knots , integer_types ) and 0 <= knots :
         func = cpp.Ostap.Math.ConvexSpline ( xmin , xmax , knots , degree , increasing , convex  )
     else :
         from ostap.math.base import doubles
@@ -1004,7 +1004,7 @@ def _h1_cspline_ ( h1                   ,
 def _h1_convexspline_ ( h1                 ,
                         degree   = 3       ,
                         knots    = 3       ,
-                        opts     = 'SQ0I'  ,
+                        opts     = 'SQ0'   ,
                         xmin     = inf_neg ,
                         xmax     = inf_pos ) :
     """Represent histo as positive convex spline  
@@ -1026,7 +1026,7 @@ def _h1_convexspline_ ( h1                 ,
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     #
-    if isinstance ( knots , integer_types ) :
+    if isinstance ( knots , integer_types ) and 0 <= knots :
         func = cpp.Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , True )
     else :
         from ostap.math.base import doubles
@@ -1057,7 +1057,7 @@ def _h1_convexspline_ ( h1                 ,
 def _h1_concavespline_ ( h1               ,
                          degree = 3       ,
                          knots  = 3       ,
-                         opts   = 'SQ0I'  ,
+                         opts   = 'SQ0'   ,
                          xmin   = inf_neg ,
                          xmax   = inf_pos ) :
     """Represent histo as positive convcave spline  

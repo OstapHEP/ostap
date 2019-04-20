@@ -35,8 +35,8 @@ from ostap.utils.utils import CleanUp
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva_' )
 if not os.path.exists( data_file ) :
     import random 
-    nB = 20000
-    nS = 20000
+    nB = 10000
+    nS = 10000
     logger.info('Prepare input ROOT file with data  %s' % data_file )
     with ROOT.TFile.Open( data_file ,'recreate') as test_file:
         ## test_file.cd()
@@ -102,7 +102,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     trainer = Trainer (
         name    = 'TestTMVA' ,   
         methods = [ # type               name   configuration
-        ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+4:TestRate=5:!UseRegulator" ) ,
+        ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator" ) ,
         ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
         ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=1000:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20" )  , 
         ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=1000:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=Decorrelate" ) ,        

@@ -147,7 +147,7 @@ if not os.path.exists( testdata ) :
         mctree.Branch ( 'x' , xvar , 'x/F' )
         mctree.Branch ( 'y' , yvar , 'y/F' )
         
-        for i in  range ( 500000 ) :
+        for i in  range ( 100000 ) :
 
             xv = random.uniform ( 0 , 20 ) 
             yv = random.uniform ( 0 , 15 ) 
@@ -189,7 +189,7 @@ hmcx = h1_axis ( [ 20.0/ix*i for i in  range(ix+1) ] )
 hmcy = h1_axis ( [ 15.0/iy*i for i in  range(iy+1) ] )
 
 ## prepare re-weighting machinery 
-maxIter = 50
+maxIter = 10
 
 ## check database 
 import os
@@ -254,7 +254,7 @@ for iter in range ( 0 , maxIter ) :
             ]
     
     ## more iteration?  number of ``active'' reweightings    
-    more = makeWeights ( mcds , plots , dbname , delta = 0.015 , power = 2 if 1 != len(plots) else 1 ) 
+    more = makeWeights ( mcds , plots , dbname , delta = 0.02 , power = 2 if 1 != len(plots) else 1 ) 
     
     ## make MC-histogram 
     mcds .project  ( hmcx , 'x'   , 'weight'  )
@@ -312,8 +312,8 @@ for iter in range ( 0 , maxIter ) :
 
 
     mcstat = mcds.statCov('x','y','weight')
-    logger.info ('MCSTAT:\nx=%s\ny=%s\ncov2:\n%s'   % mcstat  [:3] ) 
-    logger.info ('DATASTAT:\nx=%s\ny=%s\ncov2:\n%s' %datastat[:3] ) 
+    logger.info ('MCSTAT:\nx=%s\ny=%s\ncov2:\n%s'   %   mcstat[:3] ) 
+    logger.info ('DATASTAT:\nx=%s\ny=%s\ncov2:\n%s' % datastat[:3] ) 
     
     ## final density on data 
     datax_density = hxdata.density()
