@@ -42,8 +42,8 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.tmva' )
 else                       : logger = getLogger ( __name__           )
 # =============================================================================
-from ostap.core.core     import items_loop
-from ostap.core.ostap_types    import num_types 
+from ostap.core.core         import items_loop
+from ostap.core.ostap_types  import num_types, string_types
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
 # =============================================================================
@@ -237,7 +237,8 @@ class Trainer(object):
                    background_weight = None   ,
                    ##
                    output_file       = ''     ,  # the name of output file 
-                   verbose           = True   ,  
+                   verbose           = True   ,
+                   logging           = True   , 
                    name              = 'TMVA' ) :
         """Constructor with list of methods
         
@@ -272,9 +273,14 @@ class Trainer(object):
         self.__background_weight = background_weight
         
         self.__spectators        = [] 
-
+        
         self.__verbose = True if verbose else False 
         self.__name    = name 
+
+        self.__logging           = False
+        if  logging :
+            if isinstance ( logging , string_types ) : self.__logging = logging 
+            else                                     : self.__logging = self.name + '.log'
 
         self.__bookingoptions   = bookingoptions
         self.__configuration    = configuration
@@ -400,6 +406,11 @@ class Trainer(object):
         return self.__verbose
 
     @property
+    def logging ( self ) :
+        """``logging'' : logging flag : produce log-file?"""
+        return self.__logging
+
+    @property
     def dirname  ( self ) :
         """``dirname''  : the output directiory name"""
         return str(self.__dirname) 
@@ -432,14 +443,13 @@ class Trainer(object):
     #  trainer.train ()
     #  @endcode  
     #  @return the name of output XML file with the weights 
-    def train ( self , log = False )  :
+    def train ( self )  :
         """ train TMVA 
         >>> trainer.train ()
         return the name of output XML files with the weights 
         """
 
-        if   log and isinstance ( log , str ) : log = log
-        elif log                              : log = self.name + '.log'
+        log = self.logging 
 
         self.__log_file = None
         
@@ -465,7 +475,7 @@ class Trainer(object):
         else    :
             
             from ostap.logger.utils  import MuteC  , NoContext
-            context  = NoContex  () if  self.verbose else MuteC     ()   
+            context  = NoContext () if  self.verbose else MuteC     ()   
             context2 = NoContext ()
 
         with context :

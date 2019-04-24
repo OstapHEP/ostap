@@ -4,6 +4,9 @@
 ## @file ostap/tools/chopping.py
 #  ``TMVA Chopper'' - helper utility to train/use  TMVA using ``chopping''
 #
+# ``Chopping'' is a jargon name for k-fold cross-validation technique
+# @see https://machinelearningmastery.com/k-fold-cross-validation
+# 
 # The most frequest case:
 # - TMVA is trained using the simulated events as ``Signal'' and realtively
 # limited sample of data events (e.g. sidebands)  as ``Backrgound''.
@@ -36,6 +39,10 @@
 #  @date 2017-09-10
 # =============================================================================
 """``TMVAChopper'' - helper utility to train/use  TMVA using ``chopping''
+
+``Chopping'' is a jargon name for k-fold cross-validation technique.
+ - see e.g. https://machinelearningmastery.com/k-fold-cross-validation
+
 Most frequest case:
 
 TMVA is trained using the simulated events as ``Signal'' and realtively
@@ -254,7 +261,7 @@ class Trainer(object) :
             self.__sig_histos = hs1,hs2
             st = hs2.stat()
             if 0 >=  st.min()  : logger.warning ("Some signal categories are empty!")                 
-            logger.info('Signal     category population mean/rms: %s/%s' % ( st.mean() , st.rms() ) )
+            logger.info('Signal     category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
                         
         if self.chop_background  :
             hb1 = ROOT.TH1F( hID() , 'Background categories' , self.N * 5 , -0.5 , self.N - 1 ) 
@@ -265,7 +272,7 @@ class Trainer(object) :
             ##
             st = hb2.stat()
             if 0 >=  st.min()  : logger.warning ("Some background categories are empty!")                 
-            logger.info('Background category population mean/rms: %s/%s' % ( st.mean() , st.rms() ) )
+            logger.info('Background category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
 
 
         ##  trick to please Kisa 
@@ -311,13 +318,14 @@ class Trainer(object) :
                           configuration     = self.configuration     ,
                           signal_weight     = self.signal_weight     ,
                           background_weight = self.background_weight ,
-                          output_file       = ''      , 
+                          output_file       = ''           , 
                           ##
-                          signal_cuts       = scuts   , 
-                          background_cuts   = bcuts   ,
+                          signal_cuts       = scuts        , 
+                          background_cuts   = bcuts        ,
                           ##
-                          name              = nam     ,
-                          verbose           = verbose )
+                          name              = nam          ,
+                          verbose           = verbose      ,
+                          logging           = self.logging )
         return t 
 
     @property
@@ -572,7 +580,7 @@ class Trainer(object) :
         import sys 
         task   = ChopperTraining()
         wmgr   = WorkManager ( silent = False )
-        params = [ ( i , self , self.logging ) for i in range ( self.N ) ]
+        params = [ ( i , self ) for i in range ( self.N ) ]
 
         sys.stdout.flush()
         sys.stderr.flush()

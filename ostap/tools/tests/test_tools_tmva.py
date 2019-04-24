@@ -125,7 +125,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     
     from ostap.utils.timing import timing
     with timing ( 'for TMVA training' , logger ) : 
-        weights_files = trainer.train ( log = True )
+        weights_files = trainer.train ()
         tar_file      = trainer.tar_file
 
 # =============================================================================
