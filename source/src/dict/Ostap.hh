@@ -6,6 +6,7 @@
 // ============================================================================
 // Include files
 // ============================================================================
+#include "Ostap/BLOB.h"
 #include "Ostap/BSpline.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/Bernstein1D.h"
@@ -70,6 +71,7 @@
 #include "Ostap/PyIterator.h"
 #include "Ostap/PySelector.h"
 #include "Ostap/PySelectorWithCuts.h"
+#include "Ostap/PyBLOB.h"
 #include "Ostap/Polarization.h"
 #include "Ostap/SFactor.h"
 #include "Ostap/StatEntity.h"

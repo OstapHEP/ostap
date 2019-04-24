@@ -87,7 +87,7 @@ __all__     = (
     'addChoppingResponse'  , ## add ``chopping'' response to RooDataSet
     )
 # =============================================================================
-import ROOT
+import ROOT, os, shutil, tarfile  
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.chopping' )
 else                       : logger = getLogger ( __name__               )
@@ -237,8 +237,10 @@ class Trainer(object) :
         
         self.__background_weight = background_weight 
         self.__background_cuts   = ROOT.TCut ( background_cuts ) 
-        
+
+        variables                = list ( variables ) ; variables.sort()
         self.__variables         = tuple(variables)
+        
         self.__spectators        = tuple(spectators)
 
         self.__bookingoptions    = bookingoptions
@@ -250,6 +252,12 @@ class Trainer(object) :
         self.__sig_histos        = ()
         self.__bkg_histos        = ()
         
+        dirname    = str( self.name )
+        for s in ' %!><\n?(){}+:.-^&|$#' :
+            while s in dirname : dirname = dirname.replace ( ' ' , '_' )
+
+        self.__dirname           = dirname 
+        self.__trainer_dirs      = [] 
         
         cat = '(%s)%%%d' % ( self.category , self.N  )
         
@@ -293,8 +301,9 @@ class Trainer(object) :
         if self.trainers : logger.debug ('Remove existing trainers ')
         self.__trainers = [] 
         for i in  range ( self.N ) : self.__trainers.append ( self.create_trainer ( i ) )
-        self.__trainers = tuple ( self.__trainers ) 
-
+        self.__trainers     = tuple ( self.__trainers ) 
+        self.__trainer_dirs = [ t.dirname for t in self.trainers ]
+        
     ## create the trainer for category "i"
     def create_trainer ( self , i , verbose = True ) :
         """Create the trainer for category ``i''
@@ -324,19 +333,31 @@ class Trainer(object) :
                           background_cuts   = bcuts        ,
                           ##
                           name              = nam          ,
-                          verbose           = verbose      ,
-                          logging           = self.logging )
-        return t 
-
+                          verbose           = self.verbose ,
+                          logging           = self.logging ,
+                          category          = i            )
+        
+        return t
+    
     @property
     def name    ( self ) :
         """``name''    : the name of TMVA chopper"""
         return self.__name
     
     @property
+    def dirname  ( self ) :
+        """``dirname''  : the output directiory name"""
+        return str(self.__dirname) 
+
+    @property
     def trainers ( self ) :
         """``trainers'' - the  actual list of N-TMVA  trainers for N-categories"""
         return self.__trainers 
+
+    @property
+    def trainer_dirs ( self ) :
+        """``trainer_dirs'' - list of direcorries with trainer's output"""
+        return tuple(self.__trainer_dirs)
 
     @property
     def category ( self ) :
@@ -352,7 +373,7 @@ class Trainer(object) :
     def logging  ( self ) :
         """``logging'' : create the log-files"""
         return self.__logging
-
+    
     @property
     def N        ( self ) :
         """``N'' - number of categories for chopping"""
@@ -486,7 +507,45 @@ class Trainer(object) :
         >>> output_files  = trainer. output_files ## output ROOT files 
         >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
         """
-        return self.p_train() if self.parallel else self.s_train() 
+        result = self.p_train() if self.parallel else self.s_train()
+
+        if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
+            try :
+                shutil.rmtree ( self.dirname )
+            except :
+                pass
+            
+        try :
+            os.mkdir ( self.dirname )
+        except :
+            pass
+
+        if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
+            
+            if self.tar_file and tarfile.is_tarfile ( self.tar_file ) :            
+                try :
+                    shutil.move ( self.tar_file , self.dirname )
+                    ntf = os.path.join ( self.dirname , self.tar_file )
+                    if os.path.exists ( ntf ) and tarfile.is_tarfile ( ntf ) : self.__tar_file = ntf 
+                except :
+                    pass
+                
+            if self.log_file and tarfile.is_tarfile ( self.log_file ) :            
+                try :
+                    shutil.move ( self.log_file , self.dirname )
+                    ntf = os.path.join ( self.dirname , self.log_file )
+                    if os.path.exists ( ntf ) and tarfile.is_tarfile ( ntf ) : self.__log_file = ntf 
+                except :
+                    pass
+
+            for tdir in self.trainer_dirs :
+                if os.path.exists ( tdir ) and os.path.isdir ( tdir ) :
+                    try :
+                        shutil.move ( tdir , self.dirname )
+                    except :
+                        pass
+                    
+        return self.tar_file
 
     # =========================================================================
     ## The main method: training of all subsamples sequentially 
@@ -546,7 +605,7 @@ class Trainer(object) :
             logger.info  ( "Trainer(%s): Log/tgz file  : %s" % ( self.name , self. log_file ) ) 
 
 
-        return self.__weights_files 
+        return self.tar_file 
 
     # =========================================================================
     ## The main method: training of all subsamples in parallel  
@@ -594,13 +653,15 @@ class Trainer(object) :
         assert self.N == len(task.output[1]), 'Invalid number of   class files '
         assert self.N == len(task.output[2]), 'Invalid number of  output files '
         assert self.N == len(task.output[3]), 'Invalid number of     tar files '
-        assert self.N == len(task.output[4]), 'Invalid number of     log files '
+        assert self.N == len(task.output[4]), 'Invalid number of     dir files '
+        assert self.N == len(task.output[5]), 'Invalid number of     log files '
         
         weights  = [ i[1] for i in task.output[0]         ]
         classes  = [ i[1] for i in task.output[1]         ]
         outputs  = [ i[1] for i in task.output[2]         ]
         tarfiles = [ i[1] for i in task.output[3]         ]
-        logfiles = [ i[1] for i in task.output[4] if i[1] ]
+        dirnames = [ i[1] for i in task.output[4]         ]
+        logfiles = [ i[1] for i in task.output[5] if i[1] ]
         
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
@@ -614,8 +675,10 @@ class Trainer(object) :
         logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) ) 
         if self.log_file :
             logger.info  ( "Trainer(%s): Log/tgz file  : %s" % ( self.name , self. log_file ) ) 
-            
-        return self.__weights_files 
+
+        self.__trainer_dirs = tuple ( dirnames ) 
+        
+        return self.tar_file
         
     ## create the tarfile from the list of tarfiles 
     def make_tarfile ( self , tarfiles , logfiles = [] ) : 
@@ -645,13 +708,13 @@ class Trainer(object) :
             for x in  logfiles: tar.add ( x )
             logger.debug ( "Trainer(%s): Tar/gz logfile  : %s" % ( self.name , lfile ) ) 
             if self.verbose : tar.list ()
-            
+
+        
         ## finally set the tar-file 
         if os.path.exists ( lfile ) and tarfile.is_tarfile( lfile ) :
             self.__log_file = lfile 
             
         return tfile
-
 
 
 # =============================================================================
@@ -802,6 +865,8 @@ class Reader(object) :
         self.__name          = str(name) 
         self.__categoryfunc  = categoryfunc, 
         self.__N             = N
+        
+        variables            = list  ( variables ) ; variables.sort ()        
         self.__variables     = tuple(variables)
         self.__methods       = []
 
@@ -904,23 +969,23 @@ class Reader(object) :
         #  @code
         #  tree = ...
         #  method = reader.MLP
-        #  print('Responce %s' % method ( tree ))
+        #  print('Response %s' % method ( tree ))
         #  @endcode
         #  or using categroy and parameters
         #  @code
         #  category  = 2
         #  pt , y, phi = ...
-        #  print('Responce %s' % method ( category , pt , y , phi ))
+        #  print('Response %s' % method ( category , pt , y , phi ))
         #  @endcode 
         def __call__ ( self , arg ,  *args ) :
             """Evaluate the chopper from TTree/TChain/RooAbsData:
             >>>tree = ...
             >>> method = reader.MLP
-            >>> print('Responce %s' % method ( tree ))
+            >>> print('Response %s' % method ( tree ))
             Using category and parameters
             >>> category  = 2
             >>> pt , y, phi = ...
-            >>> print('Responce %s' % method ( category , pt , y , phi ))
+            >>> print('Response %s' % method ( category , pt , y , phi ))
             """
             if isinstance ( arg , int ) and args :
                 category = arg
@@ -1085,8 +1150,8 @@ class Reader(object) :
 #  @code
 #  tar_file = trainer.tar_file
 #  dataset  = ...
-#  inputs = [ 'var1' , 'var2' , 'var2' ]
-#  dataset.addTMVAResponce ( dataset , chopper , inputs , tar_file , prefix = 'tmva_' )
+#  inputs   = [ 'var1' , 'var2' , 'var2' ] ## input variables to TMVA
+#  dataset.addTMVAResponse ( dataset , chopper , inputs , tar_file , prefix = 'tmva_' )
 #  @endcode 
 def addChoppingResponse ( dataset                     ,
                           chopper                     ,
@@ -1101,8 +1166,8 @@ def addChoppingResponse ( dataset                     ,
     Helper function to add TMVA/chopping  response into dataset
     >>> tar_file = trainer.tar_file
     >>> dataset  = ...
-    >>> inputs = [ 'var1' , 'var2' , 'var2' ]
-    >>> dataset.addChoppingResponce ( dataset , chopper ,  inputs , tar_file , prefix = 'tmva_' )
+    >>> inputs   = [ 'var1' , 'var2' , 'var2' ] ## input varibales to TMVA 
+    >>> dataset.addChoppingResponse ( dataset , chopper ,  inputs , tar_file , prefix = 'tmva_' )
     """
     assert isinstance ( N , int ) and 1 < N < 10000 , 'Invalid "N" %s' % N
     
@@ -1117,7 +1182,7 @@ def addChoppingResponse ( dataset                     ,
             chopper = ROOT.RooFormulaVar( 'chopping' , chopper , varlist )
             logger.debug ( 'Create chopping function %s' %  chopper ) 
 
-    assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid choper type %s' % chopper 
+    assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid chopper type %s' % chopper 
         
     category = ROOT.RooCategory ( category_name ,
                                   'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) ) 
@@ -1135,7 +1200,7 @@ def addChoppingResponse ( dataset                     ,
     from ostap.tools.tmva import _inputs2map_ , _weights2map_ 
     
     _inputs = _inputs2map_  ( inputs )
-    
+
     files   = WeightsFiles  ( weights_files ).files
     files_  = [ _weights2map_ ( f ) for f in files ]
 

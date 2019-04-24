@@ -176,7 +176,7 @@ reader = Reader(
     N             = N         , ##  number of   categories
     categoryfunc  = category  , ## category 
     ## other argument  as for plain TMVA     
-    name = 'ChopReader' ,
+    name          = 'ChopReader' ,
     variables     = [ ('var1' , lambda s : s.var1 )   ,
                       ('var2' , lambda s : s.var2 )   ,
                       ('var3' , lambda s : s.var3 ) ] ,
@@ -208,8 +208,8 @@ variables = [
     ]
 
 ## 3) declare/add TMVA  variables 
-for m in methods :
-    variables += [ Variable ( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
+## for m in methods :
+##    variables += [ Variable ( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
     
 ## 4)  Run Ostap to   fill   RooDataSet 
 from ostap.fitting.selectors import SelectorWithVars     

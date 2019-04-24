@@ -43,6 +43,7 @@ endfunction( MAKE_DICT )
 #---Create a shared library 
 add_library(ostap SHARED src/format.cpp
                          src/gauss.cpp
+                         src/BLOB.cpp
                          src/BSpline.cpp
                          src/Bernstein.cpp
                          src/Bernstein1D.cpp
@@ -91,6 +92,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp   
                          src/Printable.cpp
+                         src/PyBLOB.cpp
                          src/PyFuncs.cpp ## temporarily removed 
                          src/PyPdf.cpp   ## temporarily removed 
                          src/PyIterator.cpp

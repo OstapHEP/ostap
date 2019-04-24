@@ -490,6 +490,7 @@ class ChopperTraining(Parallel.Task) :
             [ ( category , trainer.  class_files ) ] ,
             [ ( category , trainer. output_file  ) ] ,
             [ ( category , trainer.    tar_file  ) ] ,
+            [ ( category , trainer.     dirname  ) ] ,
             [ ( category , trainer.    log_file  ) ] ,
             )
         
@@ -501,13 +502,14 @@ class ChopperTraining(Parallel.Task) :
             classes  = list ( self.output[1] ) + list ( result[1] ) 
             outputs  = list ( self.output[2] ) + list ( result[2] ) 
             tarfiles = list ( self.output[3] ) + list ( result[3] ) 
-            logfiles = list ( self.output[4] ) + list ( result[4] ) 
+            dirnames = list ( self.output[4] ) + list ( result[4] ) 
+            logfiles = list ( self.output[5] ) + list ( result[5] ) 
             weights  . sort()
             classes  . sort()
             outputs  . sort()
             tarfiles . sort()
             logfiles . sort()
-            self.output = weights , classes , outputs , tarfiles, logfiles  
+            self.output = weights , classes , outputs , tarfiles, dirnames , logfiles  
                             
 # ===================================================================================
 ## parallel processing of loooong chain/tree 

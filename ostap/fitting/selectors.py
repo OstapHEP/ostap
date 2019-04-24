@@ -512,9 +512,9 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__variables.append ( vv     )
             self.__varset   .add    ( vv.var )
             #
-            if   v.trivial and v.name == v.formula : pass
-            elif v.formula                         : pass
-            else                                   : self.__triv_vars = False
+            if   vv.trivial and vv.name == vv.formula : pass
+            elif vv.formula                           : pass
+            else                                      : self.__triv_vars = False
             #
             vvars.add ( vv ) 
             

@@ -208,6 +208,7 @@ namespace
     //
     RooArgSet tmva_vars;
     std::map<std::string , std::unique_ptr<RooRealVar> > varmap ;
+    //
     for ( const auto& m : readers[0].methods() )
     {
       const std::string vname = prefix + m + suffix ;
@@ -224,7 +225,7 @@ namespace
     //
     for ( unsigned long long entry = 0 ; entry < nEntries ; ++entry ) 
     {
-      if ( 0 == data.get( entry ) ) { return Ostap::TMVA::InvalidEntry ; }
+      if ( nullptr == data.get( entry ) ) { return Ostap::TMVA::InvalidEntry ; }
       //
       const double chopval  = chopping.getVal() ;
       if ( !Ostap::Math::islong ( chopval ) ) { return Ostap::TMVA::InvalidChoppingCategory ; }

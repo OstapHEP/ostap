@@ -64,6 +64,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PY
 #---Create a shared library 
 add_library(ostap SHARED src/format.cpp
                          src/gauss.cpp
+                         src/BLOB.cpp
                          src/BSpline.cpp
                          src/Bernstein.cpp
                          src/Bernstein1D.cpp
@@ -117,6 +118,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
+                         src/PyBLOB.cpp
                          src/Polarization.cpp
                          src/SFactor.cpp
                          src/StatEntity.cpp

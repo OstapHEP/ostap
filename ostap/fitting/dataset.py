@@ -476,19 +476,19 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
 
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len(what)  :
         return Ostap.HistoProject.project3 ( dataset ,
-                                                histo   , 
-                                                what[2] ,
-                                                what[1] ,
-                                                what[0] , cuts , *args) 
+                                             histo   , 
+                                             what[2] ,
+                                             what[1] ,
+                                             what[0] , cuts , *args) 
     elif isinstance ( histo , ROOT.TH2 ) and 2 == len(what)  :
         return Ostap.HistoProject.project2 ( dataset ,
-                                                 histo   , 
-                                                 what[1] ,
-                                                 what[0] , cuts , *args )
+                                             histo   , 
+                                             what[1] ,
+                                             what[0] , cuts , *args )
     elif isinstance ( histo , ROOT.TH1 ) and 1 == len(what)  :
         return Ostap.HistoProject.project  ( dataset ,
-                                                 histo   , 
-                                                 what[0] , cuts , *args )
+                                             histo   , 
+                                             what[0] , cuts , *args )
     
     raise AttributeError ( 'DataSet::project, invalid case' )
 
