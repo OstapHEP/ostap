@@ -32,7 +32,7 @@ import ostap.fitting.variables
 from   builtins             import range
 from   ostap.core.core      import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
 from   ostap.math.base      import iszero 
-from   ostap.core.ostap_types     import is_good_number, is_integer, integer_types
+from   ostap.core.ostap_types     import is_good_number , is_integer , integer_types
 from   ostap.core.ostap_types     import num_types , list_types
 from   ostap.fitting.roofit import SETVAR, PDF_fun
 from   ostap.logger.utils   import roo_silent   , rootWarning
@@ -787,7 +787,7 @@ class PDF (MakeVar) :
     #  @see ostap.plotting.fit_draw.Styles
     #  @see ostap.plotting.fit_draw.Line
     #  @see ostap.plotting.fit_draw.Area
-    def add_draw_option ( key , options = () ) :
+    def add_draw_option ( self , key , options = () ) :
         """Add/define new default draw option
         - see ostap.plotting.fit_draw
         - see ostap.plotting.fit_draw.Style
@@ -805,26 +805,26 @@ class PDF (MakeVar) :
         key = key.lower() 
         
         import ostap.plotting.fit_draw as FD
-        if not k in FD.keys :
-            self.warning("Unknown draw_option '%s'/'%s'" % ( k  , key ) )
+        if not key in FD.keys :
+            self.warning("Unknown draw_option '%s'" % key )
             
-        option = k.endswwith( '_options') 
-        styule = k.endswwith( '_style'  )
-        if   option :
-            if   instance ( options , list_types     ) : options = tuple ( optios )
-            elif instance ( options , ROOT.RooCmdArg ) : options = options , 
-            else                                       : options = options ,  
-        elif style  :
-            if   instance ( options , FD.Styles      ) : pass
-            elif instance ( options , FD.Style       ) : optios  = options , 
-            elif instance ( options , ROOT.RooCmdArg ) :
+        option = key.endswith ( '_options' ) 
+        style  = key.endswith ( '_style'   )
+        if   options :
+            if   isinstance ( options , list_types     ) : options = tuple ( options )
+            elif isinstance ( options , ROOT.RooCmdArg ) : options = options , 
+            else                                         : options = options ,  
+        elif style   :
+            if   isinstance ( options , FD.Styles      ) : pass
+            elif isinstance ( options , FD.Style       ) : options = options , 
+            elif isinstance ( options , ROOT.RooCmdArg ) :
                 args    = tuple( 5*[None] + [ options ] )
                 options = FD.Styles ( [ FD.Style ( *args ) ] )
-            elif instance ( options , list_types     ) : options = tuple ( options )
+            elif isinstance ( options , list_types     ) : options = tuple ( options )
         else :
             self.warning("Neither ``options'' nor ``style''...")
 
-        self.draw_options [ k ] = options 
+        self.draw_options [ key ] = options 
         
             
     # =========================================================================
@@ -2013,8 +2013,8 @@ class MASS(PDF) :
         limits_sigma = ()
         
         if   self.xminmax() :            
-            mn, mx = self.xminmax()
-            dm     =  mx - mn
+            mn , mx = self.xminmax()
+            dm      =  mx - mn
             limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
             sigma_max    =  2 * dm / math.sqrt(12)  
             limits_sigma = 1.e-3 * sigma_max , sigma_max 
