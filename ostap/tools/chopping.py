@@ -685,11 +685,11 @@ class Trainer(object) :
         
         tfile = self.name + '.tgz'
         if os.path.exists ( tfile ) :
-            logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
+            logger.verbose ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
             
         with tarfile.open ( tfile , 'w:gz' ) as tar :
             for x in  tarfiles: tar.add ( x )
-            logger.debug ( "Trainer(%s): Tar/gz    file  : %s" % ( self.name , tfile ) ) 
+            logger.info ( "Trainer(%s): Tar/gz    file  : %s" % ( self.name , tfile ) ) 
             if self.verbose : tar.list ()
 
         ## finally set the tar-file 
@@ -700,13 +700,12 @@ class Trainer(object) :
         
         lfile = self.name + '_logs.tgz'
         if os.path.exists ( lfile ) :
-            logger.debug  ( "Trainer(%s): Remove existing tar-logfile %s" % ( self.name , lfile ) )
-
+            logger.verbose ( "Trainer(%s): Remove existing tar-logfile %s" % ( self.name , lfile ) )
+        
         with tarfile.open ( lfile , 'w:gz' ) as tar :
             for x in  logfiles: tar.add ( x )
-            logger.debug ( "Trainer(%s): Tar/gz logfile  : %s" % ( self.name , lfile ) ) 
+            logger.info ( "Trainer(%s): Tar/gz logfile  : %s" % ( self.name , lfile ) ) 
             if self.verbose : tar.list ()
-
         
         ## finally set the tar-file 
         if os.path.exists ( lfile ) and tarfile.is_tarfile( lfile ) :

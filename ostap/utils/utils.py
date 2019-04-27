@@ -592,6 +592,7 @@ def implicitMT ( enable = True ) :
 ## @class CleanUp
 #  Simple (base) class to get temporary files and directories and to remove them at axit
 class  CleanUp(object) :
+    
     _tmpfiles = set()
     _tmpdirs  = set()
 
@@ -608,8 +609,15 @@ class  CleanUp(object) :
     @property
     def tmpdirs  ( self ) :
         """``tmpdirs'' - list of currently registered managed temporary directories"""
-        return tuple ( self._tmpfiles )
-    
+        return tuple ( self._tmpdirs )
+    @tmpdirs.setter
+    def tmpdirs ( self, values ) :
+        if instance ( values , str ) : values = [ values ]
+        for o in values :
+            if o and isinstance ( o ,  str ) :
+                self._tmpdirs.add ( o )
+                logger.debug ( 'CleanUp: temporary directory     added %s' % o )
+                
     @property 
     def tmpfiles ( self ) :
         """``tempfiles'' : list of registered managed temporary files"""
@@ -617,7 +625,10 @@ class  CleanUp(object) :
     @tmpfiles.setter
     def tmpfiles ( self , other ) :
         if isinstance ( other , str ) : other = [ other ]
-        for o in other : self._tmpfiles.add ( o )
+        for o in other :
+            if o and isinstance ( o , str ) : 
+                self._tmpfiles.add ( o )
+                logger.debug ( 'CleanUp: temporary file          added %s' % o )
 
     @staticmethod
     def tempdir ( suffix = '' , prefix = 'tmp_' ) :
@@ -628,6 +639,7 @@ class  CleanUp(object) :
         import tempfile
         tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
         CleanUp._tmpdirs.add ( tmp )
+        logger.debug ( 'CleanUp: temporary directory requested %s' % tmp   )
         return tmp        
     
     @staticmethod
@@ -644,41 +656,48 @@ class  CleanUp(object) :
         os.unlink(fname)
         assert not os.path.exists ( fname )
         CleanUp._tmpfiles.add ( fname )
+        logger.debug ( 'CleanUp: temporary file      requested %s' % fname )
         return fname
 
 # =============================================================================
 import atexit
 @atexit.register
 def _cleanup_ () :
-    files = CleanUp._tmpfiles
-    logger.debug ( 'CleanUp: remove temporary files: %s' % list ( files ) ) 
-    while files :
-        f = files.pop() 
-        if os.path.exists ( f )  and os.path.isfile ( f ) :
+
+    ## 1. clean up the files 
+    tmp_files  = CleanUp._tmpfiles
+    logger.debug ( 'CleanUp: remove temporary files: %s' % list ( tmp_files ) ) 
+    while tmp_files :
+        f = tmp_files.pop() 
+        if os.path.exists ( f ) and os.path.isfile ( f ) :
             logger.verbose ( 'CleanUp: remove temporary file: %s' % f )
             try    : os.remove ( f )
             except : pass
-    dirs = CleanUp._tmpdirs
-    logger.debug ( 'CleanUp: remove temporary directories: %s' % list ( dirs ) ) 
-    while dirs :
-        f = dirs.pop()
+
+    ## 2. clean up  the directories 
+    tmp_dirs = CleanUp._tmpdirs
+    logger.debug ( 'CleanUp: remove temporary directories: %s' % list ( tmp_dirs ) ) 
+    while tmp_dirs :
+        f = tmp_dirs.pop()
         if os.path.exists ( f ) and os.path.isdir ( f ) :
-            ## remove all files & subdirectories 
-            for root, dirs, files in os.walk ( f  , topdown = False ):
+            ## collect all files & subdirectories 
+            for root, subdirs, files in os.walk ( f  , topdown = False ):
+                ## 2.1 remove all files 
                 for ff in files :
                     ff = os.path.join ( root , ff )
                     logger.verbose ( 'CleanUp: remove file %s in temporary directory : %s' %  ( ff , f ) )
                     try    : os.remove  ( ff  )
                     except : pass
-                for dd in dirs :
+                ## 2.2 remove all directories 
+                for dd in subdirs :
                     dd = os.path.join ( root , dd )
                     logger.verbose ( 'CleanUp: remove subdirectory %s in temporary directory %s ' % ( dd , f ) )
                     try    : os.rmdir   ( dd  )
                     except : pass 
-            ## remove the root
+            ## 2.3 finally remove the root
             logger.debug ( 'CleanUp: remove temporary directory: %s' % f )
             try    : os.rmdir ( f  )
-            except : pass 
+            except : pass
 
 # =============================================================================
 if '__main__' == __name__ :

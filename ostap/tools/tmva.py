@@ -77,12 +77,11 @@ class WeightsFiles(Utils.CleanUp) :
                             
                 with tarfile.open ( weights_files , 'r' ) as tar :
                     ## tar.list() 
-                    xmls = [ f for f in xml_files ( tar ) ] 
+                    xmls   = [ f for f in xml_files ( tar ) ] 
                     tmpdir = self.tmpdir 
                     tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                     weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
-                    self.tmpfiles += weights_files
             else :
                 weights_files = [ weights_files ]
 
@@ -121,7 +120,7 @@ class WeightsFiles(Utils.CleanUp) :
         self.__methods       = tuple ( [ i for  i in  weights_files.keys() ] )
         import copy
         self.__weights_files = copy.deepcopy ( weights_files ) 
-        
+
     @property
     def methods ( self ) :
         "``methods'': the known methods from weights-file"
@@ -295,6 +294,9 @@ class Trainer(object):
             else                                     : self.__logging = self.name + '.log'
 
         self.__bookingoptions   = bookingoptions
+        
+
+        
         self.__configuration    = configuration
         
         ## outputs 
@@ -302,7 +304,9 @@ class Trainer(object):
         self.__class_files   = []
         self.__output_file   = output_file if output_file else '%s.root' % self.name
         self.__tar_file      = None 
-        self.__log_file      = None 
+        self.__log_file      = None
+
+        
         #
         ## minor adjustment
         #
@@ -317,13 +321,17 @@ class Trainer(object):
         opts = opts_replace ( opts , 'Silent:'          , not self.verbose )
         
         from ostap.utils.basic import isatty
-        opts = opts_replace ( opts , 'DrawProgressBar:' , self.verbose and isatty() ) 
-        opts = opts_replace ( opts , 'Color:'           , self.verbose and isatty() ) 
+        OK1  = self.verbose and self.category in ( 0 , -1 )
+        OK2  = OK1 and isatty () 
+        
+        opts = opts_replace ( opts , 'DrawProgressBar:' , OK1 ) 
+        opts = opts_replace ( opts , 'Color:'           , OK2 ) 
 
         _methods  = [] 
         for _m in self.methods :
             _m    = list( _m ) 
-            _m[2] = opts_replace ( _m[2] , 'H:' , self.verbose )
+            _m[2] = opts_replace ( _m[2] , 'H:' , OK1 )
+            _m[2] = opts_replace ( _m[2] , 'V:' , OK1 )
             _methods.append (  tuple ( _m ) )
         self.__methods = tuple (  _methods ) 
 
@@ -474,11 +482,6 @@ class Trainer(object):
             except :
                 pass
             
-            opts = self.__bookingoptions
-            opts = opts_replace ( opts , 'DrawProgressBar:' , False )
-            opts = opts_replace ( opts , 'Color:'           , False )
-            self.__bookingoptions = opts
-
             from ostap.logger.utils import TeeCpp , OutputC  
             context  = TeeCpp ( log ) if self.verbose and self.category in ( 0 , -1 ) else OutputC ( log , True , True ) 
             
@@ -491,47 +494,45 @@ class Trainer(object):
             context  = NoContext () if self.verbose and self.category in ( 0 , -1 ) else MuteC     ()   
             context2 = NoContext ()
 
-        logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) )
-        if self.spectators : 
-            logger.info ( "Trainer(%s):        spectators:%s" % ( self.name , self.spectators ) )
-        
-        with context :
-            with context2 :
-                result = self.__train ()
+        with context : ## ,  context2 :
 
-        if log and os.path.exists ( log ) and os.path.isfile ( log ) :
-            self.__log_file = log
-            if log == '%s.log' % self.name and os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
-                try :
-                    shutil.move ( log , self.dirname )
-                    nl = os.path.join ( self.dirname , log )
-                    if os.path.exists ( nl ) and os.path.isfile ( nl ) : self.__log_file = nl
-                except :
-                    pass
+            result = self.__train ()
+            
+            if log and os.path.exists ( log ) and os.path.isfile ( log ) :
+                self.__log_file = log
+                if log == '%s.log' % self.name and os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
+                    try :
+                        shutil.move ( log , self.dirname )
+                        nl = os.path.join ( self.dirname , log )
+                        if os.path.exists ( nl ) and os.path.isfile ( nl ) : self.__log_file = nl
+                    except :
+                        pass
+                        
+            logger.info ( "Trainer(%s):      variables: %s" % ( self.name , self.variables  ) )
+            if self.spectators : 
+                logger.info ( "Trainer(%s):     spectators: %s" % ( self.name , self.spectators ) )
                 
-        logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) )
-
-        if self.weights_files :  
-            logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
-        if self.class_files   : 
-            logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.class_files   ) )
-        if self.output_file and \
-           os.path.exists ( self.output_file ) and \
-           os.path.isfile ( self.output_file ) :
-            logger.info  ( "Trainer(%s): Output  file  : %s" % ( self.name , self.output_file   ) )
-        if self.log_file and \
-           os.path.exists ( self.log_file ) and \
-           os.path.isfile ( self.log_file ) :
-            logger.info  ( "Trainer(%s): Log     file  : %s" % ( self.name , self.log_file      ) )
-        if self.tar_file and \
-           os.path.exists     ( self.tar_file ) and \
-           os.path.isfile     ( self.tar_file ) and \
-           tarfile.is_tarfile ( self.tar_file ) : 
-            logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.tar_file      ) )
-            if self.verbose : 
-                with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
-
-        return result
+            if self.weights_files :  
+                logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
+            if self.class_files   : 
+                logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.class_files   ) )
+            if self.output_file and \
+                   os.path.exists ( self.output_file ) and \
+                   os.path.isfile ( self.output_file ) :
+                logger.info  ( "Trainer(%s): Output  file  : %s" % ( self.name , self.output_file   ) )
+            if self.log_file and \
+                   os.path.exists ( self.log_file ) and \
+                   os.path.isfile ( self.log_file ) :
+                logger.info  ( "Trainer(%s): Log     file  : %s" % ( self.name , self.log_file      ) )
+            if self.tar_file and \
+                   os.path.exists     ( self.tar_file ) and \
+                   os.path.isfile     ( self.tar_file ) and \
+                   tarfile.is_tarfile ( self.tar_file ) : 
+                logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.tar_file      ) )
+                if self.verbose : 
+                    with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
+                    
+            return result
     
             
     # =========================================================================
@@ -561,12 +562,26 @@ class Trainer(object):
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
             
             logger.debug ( 'Trainer(%s): output ROOT file: %s ' % ( self.name , outFile.GetName() ) )
-            
-            factory = ROOT.TMVA.Factory (
+
+            ## the final adjustment 
+            opts = self.__bookingoptions
+            from ostap.utils.basic import isatty
+            OK1  = self.verbose and self.category in ( 0 , -1 )
+            OK2  = OK1 and isatty ()             
+            opts = opts_replace ( opts , 'DrawProgressBar:' , OK1 ) 
+            opts = opts_replace ( opts , 'Color:'           , OK2 ) 
+            self.__bookingoptions = opts 
+
+            bo = self.bookingoptions.split (':')
+            bo.sort() 
+            if self.verbose : logger.info  ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , bo ) )
+            else            : logger.debug ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , bo ) )
+
+            factory = ROOT.TMVA.Factory (                
                 self.name             ,
                 outFile               ,
                 self.bookingoptions   )
-            logger.debug ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , self.bookingoptions ) )
+    
             factory.SetVerbose( self.verbose )
         
             ## 
@@ -577,8 +592,8 @@ class Trainer(object):
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 dataloader.AddVariable  ( *vv )    
-            logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) )
-                
+            logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) ) 
+               
             for v in self.spectators :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )             
@@ -608,7 +623,12 @@ class Trainer(object):
                 ROOT.TCut ( self.background_cuts ) ,
                 self.configuration            )
             #
-            for m in self.methods : factory.BookMethod ( dataloader , *m )
+            for m in self.methods :
+                bo = m[2].split(':')
+                bo.sort() 
+                if  self.verbose : logger.info  ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
+                else             : logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
+                factory.BookMethod ( dataloader , *m )
            
             # Train MVAs
             ms = tuple( i[1] for i in  self.methods )
@@ -800,7 +820,7 @@ class Reader(object)  :
                    weights_files        ,
                    options      = ''    ,
                    verbose      = True  ) :
-        """Constrct the reader         
+        """Construct the TMVA reader         
         >>> from ostap.tools.tmva import Reader
         >>> r = Reader ( 'MyTMVA' ,
         ... variables = [ ## name      accessor  

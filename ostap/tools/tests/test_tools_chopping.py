@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/tools/tests/test_tools_chopping.py
-#  Test for TMVA ``chopping'' machinery
+#  Test for TMVA ``chopping''(k-fold cross-validation) machinery
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-10-25 
 # =============================================================================
-"""Test for TVMA-chopping  machinery in  Ostap
+"""Test for TVMA-chopping (k-fold cross-validation) machinery in  Ostap
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -135,7 +135,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         N        = N                 , ## ATTENTION! 
         category = "137*evt+813*run" , ## ATTENTION!
         ## other  arguments as for ``plain'' TMVA
-        name    = 'TestTMVA' ,   
+        name    = 'TestChopping' ,   
         methods = [ # type               name   configuration
         ( ROOT.TMVA.Types.kMLP        , "MLP"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
         ( ROOT.TMVA.Types.kBDT        , "BDTG"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
@@ -165,13 +165,34 @@ for f in trainer.output_files :
         except : pass
     
 # =============================================================================
-## Use trained TMVA
+## Use trained TMVA/Chopping
+#  There are two alternatives
+#  - usage of TMVA/Chopper Reader : it can be  rather slow,
+#    but it is very flexible and powerful with respect to variable transformations
+#  - addChoppingResponse function : it is less flexible, but very CPU efficient 
 # =============================================================================
 
-
-## 1) create TMVA reader
-from ostap.tools.chopping import Reader
+## category function
 category = lambda s :  int ( s.evt*137 + 813*s.run ) % N
+
+## prepare dataset with TMVA/Chopping result
+
+from ostap.fitting.selectors import SelectorWithVars,  Variable     
+## 1) Book RooDataset                 
+variables = [
+    Variable ( 'var1' , 'variable#1' ) ,
+    Variable ( 'var2' , 'variable#2' ) ,
+    Variable ( 'var3' , 'variable#3' ) ,
+    ## extra: needed for addChoppingResponse 
+    Variable ( 'evt'  , 'event'      ) ,
+    Variable ( 'run'  , 'run'        ) ,
+    ## extra: needed for cross-checks  
+    Variable ( 'cat'  , 'category'   , accessor = category ) ,
+    ]
+
+
+## 2) create TMVA/Chopping reader
+from ostap.tools.chopping import Reader
 reader = Reader(
     N             = N         , ##  number of   categories
     categoryfunc  = category  , ## category 
@@ -184,41 +205,39 @@ reader = Reader(
 
 methods = reader.methods[:]
 
-# =============================================================================
-## 1') few trivial tests: use the methods/reader as simple function
-for m in methods :
-    method   = reader[m]
-    ## response = [ method ( i  , 1.1 , 0.8 , 0.3 ) for i in  range ( reader.N ) ] 
-    response = method.stat ( 1.1 , 0.8 , 0.3 )
-    logger.info ( 'Simple test: method %10s,response %s' % ( m , response ) )
-    del method 
-# =============================================================================
+## # =============================================================================
+## ## A: Use TMVA/Chopping  reader
+## #  - It can be slow, but it allows on-flight varibales transformation
+## #  - much more efficient alternativeis <code>addChoppingResponse</code> function
+## # =============================================================================
 
-from ostap.fitting.selectors import SelectorWithVars,  Variable     
-## 2) Book RooDataset                 
-variables = [
-    Variable ( 'var1' , 'variable#1' ) ,
-    Variable ( 'var2' , 'variable#2' ) ,
-    Variable ( 'var3' , 'variable#3' ) ,
-    ## extra: needed for addChoppingResponse 
-    Variable ( 'evt'  , 'event'      ) ,
-    Variable ( 'run'  , 'run'        ) ,
-    ## extra: needed for cross-checks  
-    Variable ( 'cat'  , 'category'   , accessor = category ) ,
-    ]
-
-## 3) declare/add TMVA  variables 
+## # =============================================================================
+## ## 2.1) few trivial tests: use the methods/reader as simple function
 ## for m in methods :
-##    variables += [ Variable ( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
-    
-## 4)  Run Ostap to   fill   RooDataSet 
+##     method   = reader[m]
+##     ## response = [ method ( i  , 1.1 , 0.8 , 0.3 ) for i in  range ( reader.N ) ] 
+##     response = method.stat ( 1.1 , 0.8 , 0.3 )
+##     logger.info ( 'Simple test: method %10s,response %s' % ( m , response ) )
+##     del method 
+## # =============================================================================
+
+## ## 2.2) declare/add TMVA/Chopping  variables 
+## for m in methods :
+##     variables += [ Variable ( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
+
+## # =============================================================================
+## ## The END of TMVA/Choppiny reader fragment 
+## # =============================================================================
+
+
+## 3)  Run Ostap to   fill   RooDataSet 
 from ostap.fitting.selectors import SelectorWithVars     
 dsS = SelectorWithVars (
-    variables = variables + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 1 ) ] ,
+    variables = variables    ,
     selection = "var1 < 100" , 
     )
 dsB = SelectorWithVars (
-    variables = variables + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 0 ) ] ,
+    variables = variables    , 
     selection = "var1 < 100" ,
     )
 
@@ -239,9 +258,15 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     ds1 = dsS.data
     ds2 = dsB.data
 
-    del variables 
-    del reader
+    del variables   ## attention: reader must be deleted explicitely 
+    del reader      ## attention: reader must be deleted explicitely 
 
+    # =========================================================================
+    ## B: addChoppingResponse
+    #  Much better alternative to TMVA/Chopping reader:
+    #  - it has much better performance  :-) 
+    #  - but it is less flexible with  repsect to varibale  transformation :-(
+    # =========================================================================
     from ostap.tools.chopping import addChoppingResponse
 
     logger.info ('dataset SIG: %s' %  ds1 )
@@ -261,13 +286,21 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
     
+    # =========================================================================
+    ## The END of addChoppingResponse  fragment
+    # =========================================================================
+    
     logger.info ('dataset SIG: %s' %  ds1 )
     logger.info ('dataset BKG: %s' %  ds2 )
     
+
 for m in methods :
+
+    ms = ds1.statVar('tmva_%s_response' % m )
+    mb = ds2.statVar('tmva_%s_response' % m )
     
-    logger.info('TMVA:%-11s for signal     %s' % ( m, ds1.statVar('tmva_%s' % m ) ) )
-    logger.info('TMVA:%-11s for background %s' % ( m, ds2.statVar('tmva_%s' % m ) ) )
+    logger.info('TMVA:%-11s for signal&background: %+.2f+-%.2f(S) vs %+.2f+-%.2f(B)' % ( m, ms.mean().value() , ms.rms() , mb.mean().value() , mb.rms() ) )
+
 
 # =============================================================================
 # The END

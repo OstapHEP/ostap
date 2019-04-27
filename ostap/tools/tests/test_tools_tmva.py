@@ -134,10 +134,23 @@ if os.path.exists ( trainer.output_file ) :
 
 # =============================================================================
 ## Use trained TMVA
+#  There are two alternatives
+#  - usage of TMVA Reader : it can be  rather slow,
+#    but it is very flexible and powerful with respect to variable transformations
+#  - addTMVAResponse function : it is less flexible, but very CPU efficient 
 # =============================================================================
 
+## prepare dataset with TMVA result
 
-## 1) create TMVA reader
+from ostap.fitting.selectors import SelectorWithVars, Variable     
+## 1) Book RooDataset                 
+variables = [
+    Variable( 'var1' , 'variable#1' ) ,
+    Variable( 'var2' , 'variable#2' ) ,
+    Variable( 'var3' , 'variable#3' ) ,
+    ]
+
+## 2) create TMVA reader
 from ostap.tools.tmva import Reader
 reader = Reader( 'MyMLP' ,
                  variables     = [ ('var1' , lambda s : s.var1 )   ,
@@ -147,38 +160,35 @@ reader = Reader( 'MyMLP' ,
 
 methods = reader.methods[:]
 
+## # =============================================================================
+## ## A: Use TMVA  reader
+## #  - It can be slow, but it allows on-flight varibales transformation
+## #  - much more efficient alternativeis <code>addTMVAResponse</code> function
+## # =============================================================================
 
-# =============================================================================
-## 1') few trivial tests: use the methods/reader as simple function
-for m in methods :
-    method = reader[m]
-    logger.info ( 'Method  %12s , response %s' % ( m , method ( 1.1 , 0.8 , 0.3 ) ) )
-    del method 
-# =============================================================================
-                  
+## # =============================================================================
+## ## 2.1) few trivial tests: use the methods/reader as simple function
+## for m in methods :
+##     method = reader[m]
+##     logger.info ( 'Method  %12s , response %s' % ( m , method ( 1.1 , 0.8 , 0.3 ) ) )
+##     del method 
+## # =============================================================================
 
-from ostap.fitting.selectors import SelectorWithVars, Variable     
-## 2) Book RooDataset                 
-variables = [
-    #Variable( 'var1' , 'variable#1' , accessor = lambda s : s.var1 ) ,
-    #Variable( 'var2' , 'variable#2' , accessor = lambda s : s.var2 ) ,
-    #Variable( 'var3' , 'variable#3' , accessor = lambda s : s.var3 ) ,
-    Variable( 'var1' , 'variable#1' ) ,
-    Variable( 'var2' , 'variable#2' ) ,
-    Variable( 'var3' , 'variable#3' ) ,
-    ]
-
-## ## 3) declare/add TMVA  variables 
+## ## 2.2) declare/add TMVA  variables with TMVAreader 
 ## for m in methods :
 ##     variables += [ Variable( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
-    
-## 4)  Run Ostap to   fill   RooDataSet 
+## # =============================================================================
+## ## The END of TMVA.Reader fragment 
+## # =============================================================================
+
+
+## 3) Run Ostap to   fill   RooDataSet 
 dsS = SelectorWithVars (
-    variables = variables , ##   + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 1 ) ] ,
+    variables = variables    ,
     selection = "var1 < 100" , 
     )
 dsB = SelectorWithVars (
-    variables = variables , ## + [ Variable ( 'signal' , 'signal' , -1 , 3 , lambda s : 0 ) ] ,
+    variables = variables    , 
     selection = "var1 < 100" ,
     )
 
@@ -196,9 +206,16 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     ds1 = dsS.data
     ds2 = dsB.data
 
-    del variables 
-    del reader
+    del variables   ## attention: reader must be deleted explicitely 
+    del reader      ## attention: reader must be deleted explicitely 
 
+    # =========================================================================
+    ## B: addTMVAResponse
+    #  Much better alternative to TMVA.Reader:
+    #  - it has much better performance  :-) 
+    #  - but it is less flexible with  repsect to varibale  transformation :-(
+    # =========================================================================
+    
     from ostap.tools.tmva import addTMVAResponse
 
     logger.info ('dataset SIG: %s' %  ds1 )
@@ -213,15 +230,21 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
                       weights_files = tar_file ,
                       prefix        = 'tmva_'     ,
                       suffix        = '_response' )
+    # =========================================================================
+    ## The END of addTMVAResponse  fragment
+    # =========================================================================
     
     logger.info ('dataset SIG: %s' %  ds1 )
     logger.info ('dataset BKG: %s' %  ds2 )
 
 
 for m in methods :
+
+    ms = ds1.statVar('tmva_%s_response' % m )
+    mb = ds2.statVar('tmva_%s_response' % m )
     
-    logger.info('TMVA:%-11s for signal     %s' % ( m, ds1.statVar('tmva_%s_response' % m ) ) )
-    logger.info('TMVA:%-11s for background %s' % ( m, ds2.statVar('tmva_%s_response' % m ) ) )
+    logger.info('TMVA:%-11s for signal&background: %+.2f+-%.2f(S) vs %+.2f+-%.2f(B)' % ( m, ms.mean().value() , ms.rms() , mb.mean().value() , mb.rms() ) )
+
 
 # =============================================================================
 # The END

@@ -1922,11 +1922,8 @@ class RooKeys1D_pdf(PDF) :
     @property
     def nsigma    ( self )  :
         """``nsigma'' : ``nsigma'' parameter for RooNDKeysPdf"""
-        return self.__nsigma 
-
-        
-
-        
+        return self.__nsigma
+    
 # =============================================================================
 ## create popular 1D ``background''  function
 #  @param bkg  the type of background function/PDF

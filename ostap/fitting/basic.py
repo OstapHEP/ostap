@@ -187,7 +187,11 @@ class PDF (MakeVar) :
         assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
         if not self.special :
             assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
-        self.__pdf = value 
+        self.__pdf = value
+    @property
+    def pdf_name ( self ) :
+        """``pdf_name'' : get the name of the underlying RooAbsPdf"""
+        return  self.pdf.GetName() if self.pdf else ''
     @property
     def fit_result ( self ) :
         """``fit_result'' : (the latest) fit resut (TFitResult)"""
