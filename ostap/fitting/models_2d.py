@@ -28,6 +28,8 @@ __all__     = (
     'Spline2D_pdf'    , ## 2D generic   positive spline 
     'Spline2Dsym_pdf' , ## 2D symmetric positive spline
     #
+    'RooKeys2D_pdf'   , ## wrapper for native RooNDKeysPdf
+    #
     'make_B2D'        , ## create           2D "background" function 
     'make_B2Dsym'     , ## create symmetric 2D "background" function 
     )
@@ -1498,7 +1500,104 @@ class Spline2Dsym_pdf(PolyBase2) :
         """``spline''-function for Spline2Dsym PDF"""
         return self.__spline
 
-models.append ( Spline2Dsym_pdf ) 
+models.append ( Spline2Dsym_pdf )
+
+
+# =============================================================================        
+## @class RooKeys2D_pdf
+#  Trivial Ostap wrapper for the native <code>RooNDKeysPdf</code> from RooFit
+#  @code
+#  xvar = ...
+#  yvar = ...
+#  pdf  = RooKeys2D_pdf ( 'P4' , xvar , yvar ,  data  ) ;
+#  @endcode
+#  @see RooNDKeysPdf
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-04-27
+class RooKeys2D_pdf(PDF2) :
+    """Trivial Ostap wrapper for the native RooNDKeysPdf from RooFit
+    - see ROOT.RooKeysPdf
+    >>> xvar = ...
+    >>> yvar = ...
+    >>> pdf  = RooKeys2D_pdf ( 'Keys' , xvar , yvar,  data  )
+    """
+    ## constructor
+    def __init__ ( self           ,
+                   name           ,   ## the name 
+                   xvar           ,   ## the variable
+                   yvar           ,   ## the variable
+                   data           ,   ## data set 
+                   options = 'ma' ,   ## options 
+                   rho     = 1    ,   ## global scale 
+                   nsigma  = 3    ,   ##
+                   rotate  = True ,   
+                   sort    = True ) : 
+        
+        ## initialize the base class 
+        PDF2.__init__ (  self , name , xvar , yvar )
+
+        self.__data    = data
+        self.__options = mirror
+        self.__rho     = rho 
+        self.__options = options 
+        self.__nsigma  = nsigma 
+        self.__rotate  = True if rotate else False 
+        self.__sort    = True if sort   else False 
+
+        self.__keys_vlst = ROOT.RooArgList()
+        self.__keys_vlst.Add ( self.xvar )
+        self.__keys_vlst.Add ( self.yvar )
+        
+        ## create PDF
+        self.pdf = ROOT.RooNDKeysPdf (
+            "rookeys2_%s"        % name ,
+            "RooNDKeysPdf(%s,2)" % name ,
+            self.__keys_vlst  ,
+            self.data    ,
+            self.options , 
+            self.rho     , 
+            self.nsigma  , 
+            self.rotate  , 
+            self.sort    ) 
+
+        ## save configuration
+        self.config = {
+            'name'    : self.name    ,
+            'xvar'    : self.xvar    ,
+            'yvar'    : self.yvar    ,
+            'data'    : self.data    ,            
+            'options' : self.options ,            
+            'rho'     : self.rho     ,            
+            'nsigma'  : self.nsigma  ,            
+            'rotate'  : self.rotate  ,            
+            'sort'    : self.sort    ,            
+            }
+
+    @property
+    def data   ( self ) :
+        """``data'' : the actual data set for RooNDKeysPdf"""
+        return self.__data
+    @property
+    def options ( self ) :
+        """``options'' : ``ootions'' string for RooNDKeysPdf"""
+        return self.__mirror        
+    @property
+    def rho    ( self )  :
+        """``rho'' : ``rho'' parameter for RooNDKeysPdf"""
+        return self.__rho 
+    @property
+    def rotate    ( self )  :
+        """``rotate'' : ``rotate'' flag for RooNDKeysPdf"""
+        return self.__rotate
+    @property
+    def sort      ( self )  :
+        """``sort'' : ``sort'' flag for RooNDKeysPdf"""
+        return self.__sort 
+    @property
+    def nsigma    ( self )  :
+        """``nsigma'' : ``nsigma'' parameter for RooNDKeysPdf"""
+        return self.__nsigma 
+
 # =============================================================================
 # some tiny decoration of underlying classes 
 # =============================================================================

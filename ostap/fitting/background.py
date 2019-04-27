@@ -38,8 +38,10 @@ __all__     = (
     'PS23L_pdf'         , ## 2-body phase space from 3-body decays with orbital momenta
     ##
     ## get the native RooFit background shapes
+    ##
     'RooPoly_pdf'       , ## wrapper for RooPolynomial 
-    'RooCheb_pdf'       , ## wrapper for RooChebyshev 
+    'RooCheb_pdf'       , ## wrapper for RooChebyshev
+    'RooKeys1D_pdf'     , ## wrapper for RooNDKeysPdf 
     ##
     'make_bkg'          , ## helper function to create backgrounds 
     )
@@ -1750,7 +1752,7 @@ class RooPoly(PDF,RooPolyBase) :
 
 # =============================================================================        
 ## @class RooPoly_pdf
-#  Trivial Ostap wrapper for the native RooPolynomial PDF from RooFit
+#  Trivial Ostap wrapper for the native <code>RooPolynomial</code> PDF from RooFit
 #  @code
 #  xvar = ...
 #  poly = RooPoly_pdf ( 'P4' , xvar , 4 ) ;
@@ -1789,10 +1791,10 @@ class RooPoly_pdf(RooPoly) :
             'power'       : self.power        ,            
             'coefficients': self.coefficients ,            
             }
-        
+
 # =============================================================================        
 ## @class RooCheb_pdf
-#  Trivial Ostap wrapper for the native RooChebyshev PDF from RooFit
+#  Trivial Ostap wrapper for the native <code>RooChebyshev</code> PDF from RooFit
 #  @code
 #  xvar = ...
 #  poly = RooCheb_pdf ( 'P4' , xvar , 4 ) ;
@@ -1830,8 +1832,100 @@ class RooCheb_pdf(RooPoly) :
             'xvar'        : self.xvar         ,
             'power'       : self.power        ,            
             'coefficients': self.coefficients ,            
-            }
+            }        
+
+# =============================================================================        
+## @class RooKeys1D_pdf
+#  Trivial Ostap wrapper for the native <code>RooNDKeysPdf</code> from RooFit
+#  @code
+#  xvar = ...
+#  pdf  = RooKeys1D_pdf ( 'P4' , xvar , data  ) ;
+#  @endcode
+#  @see RooNDKeysPdf
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-04-27
+class RooKeys1D_pdf(PDF) :
+    """Trivial Ostap wrapper for the native RooNDKeysPdf from RooFit
+    - see ROOT.RooKeysPdf
+    >>> xvar = ...
+    >>> pdf  = RooKeys_pdf ( 'Keys' , xvar , data  )
+    """
+    ## constructor
+    def __init__ ( self           ,
+                   name           ,   ## the name 
+                   xvar           ,   ## the variable
+                   data           ,   ## data set 
+                   options = 'ma' ,   ## options 
+                   rho     = 1    ,   ## global scale 
+                   nsigma  = 3    ,   ##
+                   rotate  = True ,   
+                   sort    = True ) : 
         
+        ## initialize the base class 
+        PDF.__init__ (  self , name , xvar )
+
+        self.__data    = data
+        self.__options = mirror
+        self.__rho     = rho 
+        self.__options = options 
+        self.__nsigma  = nsigma 
+        self.__rotate  = True if rotate else False 
+        self.__sort    = True if sort   else False 
+
+        self.__keys_vlst = ROOT.RooArgList()
+        self.__keys_vlst.Add ( self.xvar )
+        
+        ## create PDF
+        self.pdf = ROOT.RooNDKeysPdf (
+            "rookeys1_%s"        % name ,
+            "RooNDKeysPdf(%s,1)" % name ,
+            self.__keys_vlst  ,
+            self.data    ,
+            self.options , 
+            self.rho     , 
+            self.nsigma  , 
+            self.rotate  , 
+            self.sort    ) 
+
+        ## save configuration
+        self.config = {
+            'name'    : self.name    ,
+            'xvar'    : self.xvar    ,
+            'data'    : self.data    ,            
+            'options' : self.options ,            
+            'rho'     : self.rho     ,            
+            'nsigma'  : self.nsigma  ,            
+            'rotate'  : self.rotate  ,            
+            'sort'    : self.sort    ,            
+            }
+
+    @property
+    def data   ( self ) :
+        """``data'' : the actual data set for RooNDKeysPdf"""
+        return self.__data
+    @property
+    def options ( self ) :
+        """``options'' : ``ootions'' string for RooNDKeysPdf"""
+        return self.__mirror        
+    @property
+    def rho    ( self )  :
+        """``rho'' : ``rho'' parameter for RooNDKeysPdf"""
+        return self.__rho 
+    @property
+    def rotate    ( self )  :
+        """``rotate'' : ``rotate'' flag for RooNDKeysPdf"""
+        return self.__rotate
+    @property
+    def sort      ( self )  :
+        """``sort'' : ``sort'' flag for RooNDKeysPdf"""
+        return self.__sort 
+    @property
+    def nsigma    ( self )  :
+        """``nsigma'' : ``nsigma'' parameter for RooNDKeysPdf"""
+        return self.__nsigma 
+
+        
+
         
 # =============================================================================
 ## create popular 1D ``background''  function

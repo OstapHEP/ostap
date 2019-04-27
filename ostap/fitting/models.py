@@ -203,12 +203,17 @@ __all__ = (
     #
     'Tsallis_pdf'       , ## useful model for fitting pT-spectra 
     'QGSM_pdf'          , ## useful model for fitting pT-spectra
-    # 
+    #
+    ## Non-parametric PDFs
+    #
+    'RooKeys1D_pdf'     , ## 1D-wrapper for RooNDKeysPdf 
+    'RooKeys2D_pdf'     , ## 2D-wrapper for RooNDKeysPdf 
+    'RooKeys3D_pdf'     , ## 3D-wrapper for RooNDKeysPdf 
+    #
     ## simultaneous  fit
     'Sim1D'             , ## 1D-simultaneous fit 
     # 
     ## helpers
-    #
     #
     'Fit1D'             , ## generic model for                1D-fit
     'Fit2D'             , ## generic model for                2D-fit

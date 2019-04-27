@@ -19,6 +19,9 @@ __all__     = (
     'PolyPos3DmixYZ_pdf', ## A positive partly symmetric (y<-->z) polynomial in 3D 
     'PolyPos3DmixXZ_pdf', ## A positive partly symmetric (x<-->z) polynomial in 3D 
     #
+    'RooKeys3D_pdf'     , ## wrapper for native RooNDKeysPdf
+    #
+
     'make_B3D'          , ## create                         3D "background" function 
     'make_B3Dsym'       , ## create symmetric               3D "background" function 
     'make_B3DmixXY'     , ## create mixed symmetry (x<-->y) 3D "background" function 
@@ -526,6 +529,107 @@ class PolyPos3DmixXZ_pdf(PolyBase3) :
 
 models.append ( PolyPos3DmixXZ_pdf ) 
 
+
+
+# ==============================================================================
+## @class RooKeys3D_pdf
+#  Trivial Ostap wrapper for the native <code>RooNDKeysPdf</code> from RooFit
+#  @code
+#  xvar = ...
+#  yvar = ...
+#  zvar = ...
+#  pdf  = RooKeys3D_pdf ( 'P4' , xvar , yvar ,  zvar , data  ) ;
+#  @endcode
+#  @see RooNDKeysPdf
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-04-27
+class RooKeys3D_pdf(PDF3) :
+    """Trivial Ostap wrapper for the native RooNDKeysPdf from RooFit
+    - see ROOT.RooKeysPdf
+    >>> xvar = ...
+    >>> yvar = ...
+    >>> zvar = ...
+    >>> pdf  = RooKeys3D_pdf ( 'Keys' , xvar , yvar ,  zvar , data  )
+    """
+    ## constructor
+    def __init__ ( self           ,
+                   name           ,   ## the name 
+                   xvar           ,   ## the variable
+                   yvar           ,   ## the variable
+                   zvar           ,   ## the variable
+                   data           ,   ## data set 
+                   options = 'ma' ,   ## options 
+                   rho     = 1    ,   ## global scale 
+                   nsigma  = 3    ,   ##
+                   rotate  = True ,   
+                   sort    = True ) : 
+        
+        ## initialize the base class 
+        PDF3.__init__ (  self , name , xvar , yvar , zvar )
+
+        self.__data    = data
+        self.__options = mirror
+        self.__rho     = rho 
+        self.__options = options 
+        self.__nsigma  = nsigma 
+        self.__rotate  = True if rotate else False 
+        self.__sort    = True if sort   else False 
+
+        self.__keys_vlst = ROOT.RooArgList()
+        self.__keys_vlst.Add ( self.xvar )
+        self.__keys_vlst.Add ( self.yvar )
+        self.__keys_vlst.Add ( self.zvar )
+        
+        ## create PDF
+        self.pdf = ROOT.RooNDKeysPdf (
+            "rookeys3_%s"        % name ,
+            "RooNDKeysPdf(%s,3)" % name ,
+            self.__keys_vlst  ,
+            self.data    ,
+            self.options , 
+            self.rho     , 
+            self.nsigma  , 
+            self.rotate  , 
+            self.sort    ) 
+
+        ## save configuration
+        self.config = {
+            'name'    : self.name    ,
+            'xvar'    : self.xvar    ,
+            'yvar'    : self.yvar    ,
+            'zvar'    : self.yvar    ,
+            'data'    : self.data    ,            
+            'options' : self.options ,            
+            'rho'     : self.rho     ,            
+            'nsigma'  : self.nsigma  ,            
+            'rotate'  : self.rotate  ,            
+            'sort'    : self.sort    ,            
+            }
+
+    @property
+    def data   ( self ) :
+        """``data'' : the actual data set for RooNDKeysPdf"""
+        return self.__data
+    @property
+    def options ( self ) :
+        """``options'' : ``ootions'' string for RooNDKeysPdf"""
+        return self.__mirror        
+    @property
+    def rho    ( self )  :
+        """``rho'' : ``rho'' parameter for RooNDKeysPdf"""
+        return self.__rho 
+    @property
+    def rotate    ( self )  :
+        """``rotate'' : ``rotate'' flag for RooNDKeysPdf"""
+        return self.__rotate
+    @property
+    def sort      ( self )  :
+        """``sort'' : ``sort'' flag for RooNDKeysPdf"""
+        return self.__sort 
+    @property
+    def nsigma    ( self )  :
+        """``nsigma'' : ``nsigma'' parameter for RooNDKeysPdf"""
+        return self.__nsigma 
 
 
 # ==============================================================================
