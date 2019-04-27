@@ -26,7 +26,10 @@ __all__     = (
     'component_clone'   , ## Should one use ``cloned'' component?
     # 
     'numcpu'            , ## number of CPUs
-    'ncpu'              , ## fuction to builf ROOT.RooFit.NumCPU 
+    'ncpu'              , ## fuction to builf ROOT.RooFit.NumCPU
+    #
+    'Phases'            , ##  helper class for Ostap polynomial/PDFs
+    'RooPolyBase'       , ##  helper class for RooFit polynomials
     )
 # =============================================================================
 import ROOT, math
@@ -1006,7 +1009,7 @@ class Phases(MakeVar) :
         for s , v in  zip ( self.__phis , values ) :
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )                 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )                 
             s.setVal   ( vv )
         nphi = len ( self.__phis )
 
@@ -1049,6 +1052,73 @@ class Phases(MakeVar) :
     ##         for p , v in zip (  my_phis , values ) : p.setVal ( float ( v ) )
         
 
+# =============================================================================        
+## @class RooPolyBase
+#  Helper base clas to make Ostap wrapper for the native RooFit polynomials 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-04-27
+class RooPolyBase(MakeVar) :
+    """Helper base class to make Ostap wrapper for the native RooFit polynomials 
+    """
+    ## constructor
+    def __init__ ( self                ,
+                   name                , ## the name 
+                   xvar                , ## the variable
+                   power        = 0    , ## degree of polynomial
+                   coefficients = [] ) : ## the list of coefficients 
+
+        assert isinstance ( power , integer_types ) and  0<= power ,\
+               "Invalid type of ``power''"
+        
+        clist = [] 
+        for c in coefficients  :
+            cvar = self.make_var ( c ,
+                                   'c%s_%d' % ( self.name , i ) ,
+                                   'coefficient for x^%d' % i   , 
+                                   c , 0 ,  -1.e+3 , 1e+3   ) 
+            clist.append ( cvar )
+            
+        if not self.__coefficients : 
+            for i in range ( 1 , power + 1 ) : 
+                cvar = self.make_var ( None ,
+                                       'c%s_%d' % ( self.name , i ) ,
+                                       'coefficient for x^%d' % i   , 
+                                       None , 0  ,  -1.e+3 , 1e+3   ) 
+                clist.append ( cvar )
+
+        self.__power        = len   ( clist )
+        self.__coefficients = tuple ( clist ) 
+        self.__clist        = ROOT.RooArgList()
+        for c in clist : self.__clist.Add ( c )
+        del clist
+        
+    @property
+    def power ( self ) :
+        """``power''-polynomial degree/order"""
+        return self.__power
+    @property 
+    def coefficients ( self ) :
+        """``coefficients'' : list of polynomial coefficients"""
+        return tuple( self.__coefficients )
+    @coefficients.setter
+    def coefficients ( self , values ) : 
+
+        from ostap.core.ostap_types import num_types , list_types
+        ##
+        if   isinstance ( values , num_types          ) : values = [ values           ]
+        elif isinstance ( values , VE                 ) : values = [ values.value()   ]
+        elif isinstance ( values , ROOT.RooAbsReal    ) : values = [ float ( values ) ] 
+        elif isinstance ( values , list_types         ) : pass
+        elif isinstance ( values , ROOT.RooArgList    ) : pass
+        else :
+            raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
+
+        for s , v in  zip ( self.__coefficients , values ) :
+            vv = float ( v  )
+            if s.minmax() and not vv in s :
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )
+            s.setVal   ( vv )
+
 # ==============================================================================
 ## Should one use ``similar'' component?
 def component_similar ( same ) :
@@ -1076,7 +1146,7 @@ def component_clone  ( same ) :
 def get_i ( what , i , default = None ) :
     """
     """
-    if isinstance   ( what , ROOT.RooArgList ) and i in what             : return what[i]
+    if   isinstance ( what , ROOT.RooArgList ) and i in what             : return what[i]
     elif isinstance ( what , ROOT.RooAbsReal ) and 0 == i                : return what 
     elif isinstance ( what , num_types       ) and 0 == i                : return what  
     elif isinstance ( what , list_types      ) and 0 <= i < len ( what ) : return what[i] 

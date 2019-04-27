@@ -161,7 +161,6 @@ class Style(object):
             self.__linecolor = linecolor.getInt(0) 
             options.append ( linecolor )
             
-
         if   isinstance ( linestyle , integer_types ) and 0 < linestyle :
             self.__linestyle  = linestyle 
             options.append ( ROOT.RooFit.LineStyle ( linestyle ) ) 
@@ -176,19 +175,19 @@ class Style(object):
             self.__linewidth = linewidth.getInt(0) 
             options.append ( linewidth )
 
-        _fillopt = False 
+        _fillopt = False
         if   isinstance ( fillcolor , integer_types ) and 0 < fillcolor :
             self.__fillcolor = fillcolor 
             cc = ROOT.gROOT.GetColor ( fillcolor )
-            if cc and 1.0 == cc.GetAlpha () : 
+            if cc and 1.0 == cc.GetAlpha () :
                 ## add tranparency
                 fillcolor = ROOT.TColor.GetColorTransparent ( fillcolor , 0.35 ) ## transparency!!
             options.append ( ROOT.RooFit.FillColor ( fillcolor ) )
+            _fillopt = True 
         elif isinstance ( fillcolor , ROOT.RooCmdArg ) and 'FillColor' == fillcolor.GetName () :
-            self.__fillcolor = fillcolor.getInt(0)             
+            self.__fillcolor = fillcolor.getInt(0)            
             options.append ( fillcolor  )               
             _fillopt = True 
-
         
         if   isinstance ( fillstyle , integer_types ) and 0 < fillstyle :
             self.__fillstyle = fillstyle 
@@ -202,7 +201,7 @@ class Style(object):
         if _fillopt :
             options.append ( ROOT.RooFit.VLines     (      ) )
             options.append ( ROOT.RooFit.DrawOption ( "FL" ) )
-
+            
         self.__options = tuple ( options )
 
     def __str__ ( self ) :

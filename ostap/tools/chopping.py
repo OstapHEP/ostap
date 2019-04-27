@@ -92,13 +92,14 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.chopping' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
-from   ostap.tools.tmva   import Trainer as TMVATrainer
-from   ostap.tools.tmva   import Reader  as TMVAReader
-from   ostap.core.pyrouts import hID, h1_axis
-from   ostap.core.ostap_types   import integer_types 
+from   ostap.tools.tmva       import Trainer as TMVATrainer
+from   ostap.tools.tmva       import Reader  as TMVAReader
+from   ostap.tools.tmva       import dir_name 
+from   ostap.core.pyrouts     import hID, h1_axis
+from   ostap.core.ostap_types import integer_types 
 import ostap.trees.trees 
 import ostap.trees.cuts
-import ostap.utils.utils  as Utils 
+import ostap.utils.utils      as     Utils 
 # =============================================================================
 ## @class Trainer
 #  The ``chopping''  trainer. Th einterface is very similar to TMVA Trainer
@@ -252,10 +253,7 @@ class Trainer(object) :
         self.__sig_histos        = ()
         self.__bkg_histos        = ()
         
-        dirname    = str( self.name )
-        for s in ' %!><\n?(){}+:.-^&|$#' :
-            while s in dirname : dirname = dirname.replace ( ' ' , '_' )
-
+        dirname                  = dir_name ( self.name ) 
         self.__dirname           = dirname 
         self.__trainer_dirs      = [] 
         
@@ -1187,12 +1185,13 @@ def addChoppingResponse ( dataset                     ,
     category = ROOT.RooCategory ( category_name ,
                                   'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) ) 
     for i in range(N) :
-        
+        ##
         if   N <    10 : cn = category_name + '_%d'    % i
         if   N <   100 : cn = category_name + '_%02d'  % i
         elif N <  1000 : cn = category_name + '_%03d'  % i
         elif N < 10000 : cn = category_name + '_%04d'  % i
         else           : cn = category_name + '_%d'    % i
+        ##
         category.defineType ( cn , i )
         
     ## decode inputs&weights

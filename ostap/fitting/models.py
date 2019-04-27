@@ -171,7 +171,11 @@ __all__ = (
     'CPSpline_pdf'         , ## positive convex or concave spline
     ##
     'Linear_pdf'           , ## positive linear polynom 
-    'Parabolic_pdf'        , ## positive parabolic polynom 
+    'Parabolic_pdf'        , ## positive parabolic polynom  
+    ## the native RooFit background shapes
+    'RooPoly_pdf'       , ## wrapper for RooPolynomial 
+    'RooCheb_pdf'       , ## wrapper for RooChebyshev 
+    ##
     #
     ## 2D non-factorazable models
     #

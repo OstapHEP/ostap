@@ -48,6 +48,13 @@ from ostap.core.ostap_types  import num_types, string_types
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
 # =============================================================================
+def dir_name ( name ) :
+    name = str( name )
+    for s in ' %!><\n?(){}+:.,;-^&|$#@' :
+        while s in name : name = name.replace ( ' ' , '_' )
+    while 0 <= name.find ('__') : name = name.replace ('__','_')
+    return  name 
+# =============================================================================
 ## @class WeightFiles
 #  helper structure  to deal with weights files
 import ostap.utils.utils as Utils 
@@ -322,11 +329,7 @@ class Trainer(object):
 
         self.__bookingoptions = str ( opts )
 
-        ## clean-up 
-        dirname    = str( self.name )
-        for s in ' %!><\n?(){}+:.-^&|$#' :
-            while s in dirname : dirname = dirname.replace ( ' ' , '_' )
-            
+        dirname     = dir_name ( self.name )
         pattern_xml = pattern_XML   % ( dirname ,  dirname )
         pattern_C   = pattern_CLASS % ( dirname ,  dirname )
 

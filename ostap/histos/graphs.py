@@ -1694,6 +1694,73 @@ ROOT.TGraph  . xmin    = _gr_xmin_
 ROOT.TGraph  . xmax    = _gr_xmax_
 ROOT.TGraph  . xminmax = _gr_xminmax_
 
+
+
+
+# =============================================================================
+## Transpose the graphs
+# =============================================================================
+
+# =============================================================================
+## transpose the graph
+#  @code
+#  graph   = ...
+#  graph_T = graph.transpose ()  
+#  graph_T = graph.T() ## ditto 
+#  @endcode
+def _gr_transpose_ ( self ) :
+    """Transpose the graph
+    >>> graph   = ...
+    >>> graph_T = graph.transpose ()  
+    >>> graph_T = graph.T() ## ditto 
+    """
+    new_graph = ROOT.TGraph( len ( self ) )
+    for i , x , y in self.iteritems() :
+        ng[i] = x , y
+    return new_graph 
+
+# =============================================================================
+## transpose the graph
+#  @code
+#  graph   = ...
+#  graph_T = graph.transpose ()  
+#  graph_T = graph.T() ## ditto 
+#  @endcode
+def _gre_transpose_ ( self ) :
+    """Transpose the graph:
+    >>> graph   = ...
+    >>> graph_T = graph.transpose ()  
+    >>> graph_T = graph.T() ## ditto 
+    """
+    new_graph = ROOT.TGraphErrors ( len ( self ) )
+    for i , x , y in self.iteritems() :
+        ng[i] = x , y
+    return new_graph 
+
+# =============================================================================
+## transpose the graph
+#  @code
+#  graph   = ...
+#  graph_T = graph.transpose ()  
+#  graph_T = graph.T() ## ditto 
+#  @endcode
+def _grae_transpose_ ( self ) :
+    """Transpose the graph:
+    >>> graph   = ...
+    >>> graph_T = graph.transpose ()  
+    >>> graph_T = graph.T() ## ditto 
+    """
+    new_graph = ROOT.TGraphAsymmErrors ( len ( self ) )
+    for item in self.iteritems() : ng[ item[0] ] = item[1:]
+    return new_graph 
+
+ROOT.TGraph.transpose            =   _gr_transpose_ 
+ROOT.TGraph.T                    =   _gr_transpose_ 
+ROOT.TGraphErrors.transpose      =  _gre_transpose_ 
+ROOT.TGraphErrors.T              =  _gre_transpose_ 
+ROOT.TGraphAsymmErrors.transpose = _grae_transpose_ 
+ROOT.TGraphAsymmErrors.T         = _grae_transpose_ 
+
 # =============================================================================
 ## propagate the color for each graph in multigraph 
 def _mg_color_ ( mgraph , color = 2 , marker = 20 , size = -1 ) :
@@ -1724,6 +1791,34 @@ ROOT.TMultiGraph.magenta  = _mg_magenta_
 ROOT.TMultiGraph.cyan     = _mg_cyan_
 ROOT.TMultiGraph.green    = _mg_green_
 ROOT.TMultiGraph.yellow   = _mg_yellow_
+
+
+# =============================================================================
+## transpose the graph
+#  @code
+#  graph   = ...
+#  graph_T = graph.transpose ()  
+#  graph_T = graph.T() ## ditto 
+#  @endcode
+def _mt_transpose_ ( self ) :
+    """Transpose the graph:
+    >>> graph   = ...
+    >>> graph_T = graph.transpose ()  
+    >>> graph_T = graph.T() ## ditto 
+    """
+    new_graph         = ROOT.TMultiGraph()
+    new_graph._graphs = [] 
+    
+    _graphs = mgraph.GetListOfGraps()
+    for g in _graphs :
+        tg =  g.T() 
+        new_graph.Add            ( tg )
+        new_graph._graphs.append ( tg )
+        
+    return new_graph 
+
+ROOT.TMultiGraph.transpose = _grae_transpose_ 
+ROOT.TMultiGraph.T         = _grae_transpose_ 
 
 # =============================================================================
 ## Convert the histogram to into "Laffery-Wyatt" graph
@@ -2069,7 +2164,14 @@ _new_methods_      = (
     ROOT.TGraph            .filter        ,
     ROOT.TGraphErrors      .filter        ,
     ROOT.TGraphAsymmErrors .filter        ,
-    #
+    ##
+    ROOT.TGraph.transpose                 ,
+    ROOT.TGraph.T                         ,     
+    ROOT.TGraphErrors.transpose           ,
+    ROOT.TGraphErrors.T                   ,
+    ROOT.TGraphAsymmErrors.transpose      ,
+    ROOT.TGraphAsymmErrors.T              ,
+    ##
     _color_   ,
     _red_     ,
     _blue_    ,
@@ -2082,16 +2184,19 @@ _new_methods_      = (
     ROOT.TGraph  . xmax    ,
     ROOT.TGraph  . xminmax ,
     #
-    ROOT.TMultiGraph.color    ,
-    ROOT.TMultiGraph.red      ,
-    ROOT.TMultiGraph.blue     ,
-    ROOT.TMultiGraph.magenta  ,
-    ROOT.TMultiGraph.cyan     ,
-    ROOT.TMultiGraph.green    ,
-    ROOT.TMultiGraph.yellow   ,
+    ROOT.TMultiGraph.color     ,
+    ROOT.TMultiGraph.red       ,
+    ROOT.TMultiGraph.blue      , 
+    ROOT.TMultiGraph.magenta   , 
+    ROOT.TMultiGraph.cyan      ,
+    ROOT.TMultiGraph.green     ,
+    ROOT.TMultiGraph.yellow    ,
     #
-    ROOT.TH1D.lw_graph        , 
-    ROOT.TH1F.lw_graph        ,
+    ROOT.TMultiGraph.transpose ,
+    ROOT.TMultiGraph.T         ,
+    #
+    ROOT.TH1D.lw_graph         , 
+    ROOT.TH1F.lw_graph         ,
     )
 
 # =============================================================================

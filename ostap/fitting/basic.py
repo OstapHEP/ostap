@@ -250,6 +250,7 @@ class PDF (MakeVar) :
     def histo_data  ( self ):
         """Histogram representation as DataSet (RooDataSet)"""
         return self.__histo_data
+    
     @histo_data.setter
     def  histo_data ( self  , value ) :
         if   value is None :
@@ -366,19 +367,20 @@ class PDF (MakeVar) :
                                     draw    = draw    ,
                                     nbins   = nbins   ,
                                     silent  = silent  ,
-                                    refit   =  refit  ,
+                                    refit   = refit   ,
                                     timer   = False   , ## NB
                                     args    =  args   , **kwargs )
             
         
         if   isinstance ( dataset , H1D_dset ) : dataset = dataset.dset        
         elif isinstance ( dataset , ROOT.TH1 ) :
-            density = kwargs.pop ( 'density' , True   )
+            density = kwargs.pop ( 'density' , False  )
             chi2    = kwargs.pop ( 'chi2'    , False  )
             return self.fitHisto ( dataset           ,
                                    draw    = draw    ,
                                    silent  = silent  ,
                                    density = density ,
+                                   nbins   = nbins   , 
                                    chi2    = chi2    , args = args , **kwargs ) 
         #
         ## treat the arguments properly
@@ -620,6 +622,8 @@ class PDF (MakeVar) :
 
             drawvar = self.draw_var if self.draw_var else self.xvar  
 
+            binned = dataset  and isinstance ( dataset , ROOT.RooDataHist )
+            
             if nbins :  frame = drawvar.frame ( nbins )
             else     :  frame = drawvar.frame ()
             
@@ -630,6 +634,9 @@ class PDF (MakeVar) :
             kwargs.pop ( 'data_options' , () )
             if dataset and dataset.isWeighted() and dataset.isNonPoissonWeighted() : 
                 data_options = data_options + ( ROOT.RooFit.DataError( ROOT.RooAbsData.SumW2 ) , )
+                
+            if dataset and binned and nbins :
+                data_options = data_options + ( ROOT.RooFit.Binning ( nbins ) , )
 
             if dataset : dataset .plotOn ( frame , ROOT.RooFit.Invisible() , *data_options )
             
@@ -828,7 +835,7 @@ class PDF (MakeVar) :
         
             
     # =========================================================================
-    ## fit the histogram (and draw it)
+    ## fit the 1D-histogram (and draw it)
     #  @code
     #  histo = ...
     #  r,f = model.fitHisto ( histo , draw = True ) 
@@ -837,8 +844,9 @@ class PDF (MakeVar) :
                    histo           ,
                    draw    = False ,
                    silent  = False ,
-                   density = True  ,
+                   density = False ,
                    chi2    = False ,
+                   nbins   = None  , 
                    args    = () , **kwargs ) :
         """Fit the histogram (and draw it)
 
@@ -851,15 +859,28 @@ class PDF (MakeVar) :
             ## convert it! 
             self.histo_data = H1D_dset ( histo , self.xvar , density , silent )
             data            = self.histo_data.dset
-            
+
+            if  self.xminmax() :
+                
+                mn  , mx  = self .xminmax ()
+                hmn , hmx = histo.xminmax ()
+
+                vmn = max ( mn , hmn )
+                vmx = min ( mx , hmx )
+
+                args = list  ( args )
+                args.append  ( ROOT.RooFit.Range ( vmn , vmx ) )  
+                args = tuple ( args )
+                
             if chi2 : return self.chi2fitTo ( data               ,
                                               draw    = draw     ,
                                               silent  = silent   ,
-                                              density =  density ,
+                                              density = density  ,
+                                              nbins   = nbins    ,
                                               args    = args     , **kwargs )
-            else    : return self.fitTo     ( data ,
+            else    : return self.fitTo     ( data               ,
                                               draw    = draw     ,
-                                              nbins   = None     , 
+                                              nbins   = nbins    , 
                                               silent  = silent   ,
                                               args    = args     , **kwargs )
 
@@ -874,7 +895,8 @@ class PDF (MakeVar) :
                     dataset         ,
                     draw    = False ,
                     silent  = False ,
-                    density = True  ,
+                    density = False ,
+                    nbins   = None  , 
                     args    = ()    , **kwargs ) :
         """ Chi2-fit for binned dataset or histogram
         >>> histo = ...
@@ -887,7 +909,7 @@ class PDF (MakeVar) :
             xminmax = dataset.xminmax() 
             with RangeVar( self.xvar , *xminmax ) :                
                 self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
-                hdataset        = self.__histo_data.dset 
+                hdataset        = self.histo_data.dset 
                 histo           = dataset 
                 
         with roo_silent ( silent ) : 
@@ -922,10 +944,10 @@ class PDF (MakeVar) :
         draw_opts = draw_options ( **kwargs )
         if isinstance ( draw , dict ) : draw_opts.update( draw )
 
-        return result, self.draw ( hdataset , nbins = None , silent = silent , **draw_opts )
+        return result, self.draw ( hdataset , nbins = nbins , silent = silent , **draw_opts )
 
     # =========================================================================
-    ## draw NLL or LL-profiles for selected variable
+    ## draw/prepare NLL or LL-profiles for selected variable
     #  @code
     #  model.fitTo ( dataset , ... )
     #  nll  , f1 = model.draw_nll ( 'B' ,  dataset )
@@ -935,8 +957,24 @@ class PDF (MakeVar) :
                    var             ,
                    dataset         ,
                    profile = False ,
+                   draw    = True  ,
+                   silent  = True  , 
                    args    = ()    , **kwargs ) :
 
+        # if histogram, convert it to RooDataHist object:
+        if isinstance  ( dataset , ROOT.TH1 ) :
+            # if histogram, convert it to RooDataHist object:
+            xminmax = dataset.xminmax() 
+            with RangeVar( self.xvar , *xminmax ) :
+                density = kwargs.pop ( 'density' , False )
+                silent  = kwargs.pop ( 'silent'  , True  )                
+                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                hdataset        = self.histo_data.dset 
+                return self.draw_nll ( var     = var      ,
+                                       dataset = hdataset ,
+                                       profile = profile  ,
+                                       draw    = draw     ,
+                                       args    = args     , **kwargs )                
         ## get all parametrs
         pars = self.pdf.getParameters ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
@@ -991,10 +1029,73 @@ class PDF (MakeVar) :
         ## draw it! 
         if not ROOT.gROOT.IsBatch() :
             with rootWarning ():
-                frame.draw ( kwargs.get('draw_options', '' ) )
+                if draw : frame.draw ( kwargs.get('draw_options', '' ) )
                         
         return result , frame
-    
+
+    # ========================================================================
+    ## evaluate "significance" using Wilks' theorem via NLL
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data , ... )
+    #  sigmas = pdf.wilks ( 'S' , data )
+    #  @endcode
+    def wilks ( self                     ,
+                var                      ,
+                dataset                  ,
+                range    = ( 0 , None )  ,
+                silent   = True          ,
+                args     = () , **kwargs ) :
+        """Evaluate ``significance'' using Wilks' theorem via NLL
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data , ... )
+        >>> sigmas = pdf.wilks ( 'S' , data )
+        """
+        # if histogram, convert it to RooDataHist object:
+        if isinstance  ( dataset , ROOT.TH1 ) :
+            # if histogram, convert it to RooDataHist object:
+            xminmax = dataset.xminmax() 
+            with RangeVar( self.xvar , *xminmax ) :
+                density = kwargs.pop ( 'density' , False )
+                silent  = kwargs.pop ( 'silent'  , True  )                
+                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                hdataset        = self.histo_data.dset 
+                return self.wilks ( var     = var      ,
+                                    dataset = hdataset ,
+                                    args    = args     , **kwargs )    
+        ## get all parametrs
+        pars = self.pdf.getParameters ( dataset ) 
+        assert var in pars , "Variable %s is not a parameter"   % var
+        if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
+        del pars
+
+        if silent : nargs = ROOT.RooFit.NumCPU ( numcpu() ) , ROOT.RooFit.Verbose ( False )
+        else      : nargs = ROOT.RooFit.NumCPU ( numcpu() ) , 
+
+        with roo_silent ( silence ) :
+            
+            ## create NLL object
+            nll = self.pdf.createNLL ( dataset , *nargs ) 
+            
+            ## unpack the range 
+            minv , maxv = range 
+            if maxv is None : maxv = var.getVal() 
+            
+            with RangeVar ( var , minv , maxv ) : 
+                var.setVal ( minv )
+                val_minv = nll.getVal ()
+                var.setVal ( maxv )
+                val_maxv = nll.getVal ()
+                dnll     = val_minv -  val_maxv
+                
+        ## convert duifference in likelihoods into sigmas 
+        result = 2.0 * abs ( dnll )
+        result = result**0.5
+
+        return result if 0<=dnll else -1*result 
+            
     # =========================================================================
     ## perform sPlot-analysis 
     #  @code
@@ -2330,7 +2431,7 @@ class H1D_pdf(H1D_dset,PDF) :
                    name            ,
                    histo           ,
                    xvar    = None  ,
-                   density = True  ,
+                   density = False ,
                    silent  = False ) :
         
         H1D_dset.__init__ ( self , histo , xvar , density , silent )

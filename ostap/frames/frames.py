@@ -36,6 +36,36 @@ Ostap.DataFrame    = DataFrame
 DataFrame.columns  = lambda s : tuple( s.GetColumnNames() ) 
 DataFrame.branches = DataFrame.columns 
 
+# ==============================================================================
+## modify constuctor for RDataFrame to enable/disbale implicit multithreading
+#  @code
+#  f1 = DataFrame ( ... , enable = True  ) ## default
+#  f2 = DataFrame ( ... , enable = False ) ## default
+#  @endcode
+#  @see ROOT::EnableImplicitMT 
+#  @see ROOT::DisableImplicitMT
+#  @see ROOT::IsImplicitMTEnabled
+def _fr_new_init_ ( self , *args , **kwargs ) :
+    """Modify the DataFrame constuctor to allow (semi)automatic
+    manipulations wth ROOT.ROOT.EnablemplicitMT/DisableImplicitMT
+    - see ROOT.ROOT.EnableImplicitMT 
+    - see ROOT.ROOT.DisableImplicitMT
+    - see ROOT.ROOT.IsImplicitMTEnabled
+    >>> f = DataFrame ( .... , enable = True  ) ## default 
+    >>> f = DataFrame ( .... , enable = False )
+    """
+    
+    mt = kwargs.pop ( 'enable' , True )
+    
+    if       mt and not ROOT.ROOT.IsImplicitMTEnabled() : ROOT.ROOT.EnableImplicitMT  ()
+    elif not mt and     ROOT.ROOT.IsImplicitMTEnabled() : ROOT.ROOT.DisableImplicitMT ()
+    
+    return  self._fr_old_init_ ( *args , **kwargs )
+
+if not hasattr ( DataFrame , '_fr_old_init_' ) :
+    DataFrame._fr_old_init_ = DataFrame.__init__
+    DataFrame.__init__      = _fr_new_init_
+    
 # =============================================================================
 ## Get the length/size of the data frame
 #  @code

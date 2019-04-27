@@ -37,6 +37,10 @@ __all__     = (
     'PSNL_pdf'          , ## L-body phase space from N-body decays  
     'PS23L_pdf'         , ## 2-body phase space from 3-body decays with orbital momenta
     ##
+    ## get the native RooFit background shapes
+    'RooPoly_pdf'       , ## wrapper for RooPolynomial 
+    'RooCheb_pdf'       , ## wrapper for RooChebyshev 
+    ##
     'make_bkg'          , ## helper function to create backgrounds 
     )
 # =============================================================================
@@ -45,7 +49,7 @@ from   ostap.core.core     import cpp, Ostap
 from   ostap.core.ostap_types    import integer_types 
 from   ostap.math.base     import iszero
 from   ostap.fitting.basic import PDF
-from   ostap.fitting.utils import Phases 
+from   ostap.fitting.utils import Phases, RooPolyBase 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
@@ -1608,11 +1612,10 @@ class PSNL_pdf(PDF) :
     def right ( self , value ) :
         value = float ( value )
         self.__right.setVal ( value  )
-        return self.__right.getVal()
+        return self.__right.getVal()      
 
-      
+models.append ( PSNL_pdf )
 
-models.append ( PSNL_pdf ) 
 # =============================================================================
 ## @class  PS23L_pdf
 #  2-body phase space from 3-body decay with orbital momenta 
@@ -1732,6 +1735,104 @@ class PS23L_pdf(PDF) :
         
 models.append ( PS23L_pdf ) 
 
+
+# ==============================================================================
+##  @class RooPoly
+#   helper base class to implement various polynomial-like shapes
+class RooPoly(PDF,RooPolyBase) :
+    """Helper base class to implement various polynomial-like shapes
+    """
+    def __init__ ( self , name , power , xvar = None , coefficients  = None ) :
+        ## check  the arguments 
+        xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
+        PDF       .__init__ ( self , name  , xvar         )
+        RooPlyBase.__init__ ( self , power , coefficients )
+
+# =============================================================================        
+## @class RooPoly_pdf
+#  Trivial Ostap wrapper for the native RooPolynomial PDF from RooFit
+#  @code
+#  xvar = ...
+#  poly = RooPoly_pdf ( 'P4' , xvar , 4 ) ;
+#  poly = RooPoly_pdf ( 'P3' , xvar , coefficients = [ 1, 2 , 3 ] )
+#  @endcode
+#  @see RooPolynomial 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-04-27
+class RooPoly_pdf(RooPoly) :
+    """Trivial Ostap wrapper for the native RooPolynomial PDF from RooFit
+    - see ROOT.RooPolynomial
+    >>> xvar = ...
+    >>> poly = RooPoly_pdf ( 'P4' , xvar , 4 ) ;
+    >>> poly = RooPoly_pdf ( 'P3' , xvar , coefficients = [ 1, 2 , 3 ] )
+    """
+    ## constructor
+    def __init__ ( self                ,
+                   name                , ## the name 
+                   xvar                , ## the variable
+                   power        = 0    , ## degree of polynomial
+                   coefficients = [] ) : ## the list of coefficients 
+        
+        ## initialize the base class 
+        RooPoly.__init__ (  self , name , xvar , power ,  coefficients )
+
+        ## create PDF
+        self.pdf = ROOT.RooPolynomial (
+            'roopoly_%s%d'         % ( name , self.power ) ,
+            'RooPolynomial(%s,%d)' % ( name , self.power ) ,
+            self.xvar , self.__clist )
+
+        ## save configuration 
+        self.config = {
+            'name'        : self.name         ,
+            'xvar'        : self.xvar         ,
+            'power'       : self.power        ,            
+            'coefficients': self.coefficients ,            
+            }
+        
+# =============================================================================        
+## @class RooCheb_pdf
+#  Trivial Ostap wrapper for the native RooChebyshev PDF from RooFit
+#  @code
+#  xvar = ...
+#  poly = RooCheb_pdf ( 'P4' , xvar , 4 ) ;
+#  poly = RooCheb_pdf ( 'P3' , xvar , coefficients = [ 1, 2 , 3 ] )
+#  @endcode
+#  @see RooChebyshev
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-04-27
+class RooCheb_pdf(RooPoly) :
+    """Trivial Ostap wrapper for the native RooChebyshev PDF from RooFit
+    - see ROOT.RooChebushev 
+    >>> xvar = ...
+    >>> poly = RooCheb_pdf ( 'P4' , xvar , 4 ) ;
+    >>> poly = RooCheb_pdf ( 'P3' , xvar , coefficients = [ 1, 2 , 3 ] )
+    """
+    ## constructor
+    def __init__ ( self                ,
+                   name                , ## the name 
+                   xvar                , ## the variable
+                   power        = 0    , ## degree of polynomial
+                   coefficients = [] ) : ## the list of coefficients 
+        
+        ## initialize the base class 
+        RooPoly.__init__ (  sels , name , xvar , power ,  coefficients )
+
+        ## create PDF 
+        self.pdf = ROOT.RooChebyshev (
+            'roocheb_%s%d'        % ( name , self.power ) ,
+            'RooChebyshev(%s,%d)' % ( name , self.power ) ,
+            self.xvar , self.__clist )
+
+        ## save configuration 
+        self.config = {
+            'name'        : self.name         ,
+            'xvar'        : self.xvar         ,
+            'power'       : self.power        ,            
+            'coefficients': self.coefficients ,            
+            }
+        
+        
 # =============================================================================
 ## create popular 1D ``background''  function
 #  @param bkg  the type of background function/PDF
@@ -1754,9 +1855,13 @@ models.append ( PS23L_pdf )
 #  - 'eN', 'expN' , 'expoN' : <code>Bkg_pdf(power=N)</code>
 #  - 'pN', 'polN' , 'polyN' : <code>PolyPos_pdf(power=N)</code>
 #  - 'iN', 'incN' , 'incrN','increasingN' : <code>Monotonic_pdf(power=N,increasing=True)</code>
-#  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monotonic_pdf(power=N,increasing=False)</code>   #  - 'cxN' , 'convexN'                    : <code>ConvexOnly_pdf(power=N,convex=True)</code>
+#  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monotonic_pdf(power=N,increasing=False)</code>
+#  - 'cxN' , 'convexN'                    : <code>ConvexOnly_pdf(power=N,convex=True)</code>
 #  - 'cvN' , 'concaveN'                   : <code> ConvexOnly_pdf(power=N,convex=False)</code>
-  
+#  - 'roopolyN','rpN'                     : <code>RooPoly_pdf (power=N)</code>>
+#  - 'roochebyshevN',roochebN'            : <code>RooCheb_pdf (power=N)</code> 
+#  - 'chebyshevN', 'chebN','rcN'          : <code>RooCheb_pdf (power=N)</code>
+# 
 #  @see ostap.fitting.basic.PDF.make_bkg 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-04-03
@@ -1785,6 +1890,9 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
     - 'dN', 'decN' , 'decrN' or 'decreasingN' : Monotonic_pdf(power=N,increasing=False)
     - 'cxN' , 'convexN'                       : ConvexOnly_pdf(power=N,convex=True)
     - 'cvN' , 'concaveN'                      : ConvexOnly_pdf(power=N,convex=False)
+    - 'roopolyN','rpN'                        : RooPoly_pdf (power=N) 
+    - 'roochebyshevN' or roochebyshevN'       : RooCheb_pdf (power=N) 
+    - 'chebyshevN', 'chebN' or 'rcN'          : RooCheb_pdf (power=N) 
     
     >>> x =   .. ## the variable
     
@@ -1904,6 +2012,18 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         if desc :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = False )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+
+        decr = re.search ( r'(roopoly|rp)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if desc :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = RooPoly_pdf ( name , xvar , power = degree )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+        
+        decr = re.search ( r'(roochebyshev|roocheb|chebyshev|cheb|rc)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if desc :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = RooCheb_pdf ( name , xvar , power = degree )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
 

@@ -43,18 +43,18 @@ __all__     = (
     'isatty'             , ## is the stream ``isatty'' ?
     'with_ipython'       , ## do we run IPython?
     ##
-    'batch'              , ## contex manager to keep  ROOT ``batch''-mode
-    'useBatch'           , ## contex manager to force ROOT ``batch''-mode
+    'batch'              , ## context manager to keep/force certain ROOT ``batch''-mode
     ##
     'keepCanvas'         , ## context manager to keep the current ROOT canvas
     'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     ##
     'keepArgs'           , ## context manager to keep sys.argv
     ##
+    'keepCWD'            , ## context manager to keep current working directory 
+    ##
     'implicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
     ##
     'Batch'              , ## context manager to keep  ROOT ``batch''-mode
-    'UseBatch'           , ## context manager to force ROOT ``batch''-mode
     ##
     'KeepCanvas'         , ## context manager to keep the current ROOT canvas
     'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
@@ -324,14 +324,15 @@ class Batch(object) :
     ... do something here 
     """
     ## contex manahger: ENTER
-    def __enter__ ( self ) :
+    def __enter__ ( self , batch = True ) :
         import ROOT
         self.old_state = ROOT.gROOT.IsBatch()
+        if self.old_state != batch : ROOT.gROOT.SetBatch ( batch ) 
         return self
     ## contex manager: EXIT
     def __exit__  ( self , *_ ) :
         import ROOT
-        ROOT.gROOT.SetBatch( self.old_state ) 
+        if self.old_state != ROOT.gROOT.IsBatch() : ROOT.gROOT.SetBatch( self.old_state ) 
 
 # =============================================================================
 ## context manager to keep ROOT ``batch'' state
@@ -339,48 +340,52 @@ class Batch(object) :
 #  with batch() :
 #  ... do something here 
 #  @endcode 
-def batch() :
+def batch( batch = True ) :
     """Context manager to keep ROOT ``batch'' state
     >>> with batch() :
     ... do something here 
     """
-    return Batch()
+    return Batch ( batch )
+
 
 # =============================================================================
-## context manager to tempoariliy force certain ROOT ``batch'' state
+## context manager to keep the current working directory
 #  @code
-#  with UseBatch( True ) :
-#  ... do something here 
+#  with KeepCWD ( new_dir ) :
+#    ....
 #  @endcode 
-class UseBatch(Batch) :
-    """Context manager to tempoariliy force certain ROOT ``batch'' state
-    >>> with UseBatch( True ) :
-    ... do something here 
+class KeepCWD(object) :
+    """context manager to keep the current working directory
+    >>> with KeepCWD( new_dir ) :
+    ...
     """
-    def __init__  ( self , batch = True ) :
-        self.new_state = batch
-        Batch.__init__ ( self )
+    def __init__ ( self , new_dir = '' ) :
+        self.cwd     = os.getcwd() 
+        self.new_dir = new_dir
         
-    ## context manager: ENTER
-    def __enter__ ( self ) :
-        Batch.__enter__ ( self ) 
-        import ROOT
-        ROOT.gROOT.SetBatch( self.new_state ) 
-        return self
-
+    def __enter__ (  self ) :
+        self.cwd = os.getcwd() 
+        if self.new_cdir and os.path.exists ( self.new_dir ) and os.path.isdir ( self.new_dir ) :
+            os.chdir ( self.new_dir )
+            return self
+        
+    def __exit__ ( self , *_ ) :
+        if os.path.exists ( self.cwd ) and os.path.isdir ( self.cwd ) :
+            os.chdir ( os.cwd ) 
+            
 # =============================================================================
-## context manager to keep ROOT ``batch'' state
+## context manager to keep the current working directory
 #  @code
-#  with useBatch( True ) :
-#  ... do something here 
+#  with keepCWD ( new_dir ) :
+#    ....
 #  @endcode 
-def useBatch( batch = True ) :
-    """Context manager to keep ROOT ``batch'' state
-    >>> with batch() :
-    ... do something here 
+def keepCWD ( new_dir = '' ) :
+    """context manager to keep the current working directory
+    >>> with keepCWD( new_dir ) :
+    ...
     """
-    return UseBatch( batch )
-
+    return KeepCWD (  new_dir ) 
+        
 # =============================================================================
 ## @class KeepCanvas
 #  helper class to keep the current canvas
@@ -431,7 +436,7 @@ class InvisibleCanvas(KeepCanvas) :
         ## start from keeping the current canvas 
         KeepCanvas.__enter__ ( self )
         ## create new canvas in batch mode 
-        with UseBatch( True ) : 
+        with Batch( True ) : 
             import ROOT 
             self.batch_canvas = ROOT.TCanvas()
             self.batch_canvas.cd ()
@@ -527,7 +532,7 @@ class ImplicitMT(object) :
 
         return self
     
-    ## Context managr: EXIT
+    ## Context manager: EXIT
     def __exit__ ( self , *_ ) :
         ##
         enabled = ROOT.ROOT.IsImplicitMTEnabled()
@@ -547,7 +552,7 @@ class ImplicitMT(object) :
 #  def fun2 ( ...  ) : return ...
 #  @endcode
 def counted ( f ):
-    """create 'counted' function to knon number of function calls
+    """create 'counted' function to know number of function calls
 
     Example
     -------
