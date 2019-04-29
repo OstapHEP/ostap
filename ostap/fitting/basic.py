@@ -184,6 +184,10 @@ class PDF (MakeVar) :
         return self.__pdf
     @pdf.setter
     def pdf  ( self , value ) :
+        if value is None :
+            self.__pdf = value
+            return
+        
         assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
         if not self.special :
             assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
@@ -2481,7 +2485,7 @@ class H1D_pdf(H1D_dset,PDF) :
 #  @param xvar               the fitting variable, must be specified if components are given as RooAbsPdf
 #  @code 
 #  gauss = Gauss_pdf( ... ) 
-#  pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal ans exponent as background
+#  pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-08-02
@@ -2503,7 +2507,7 @@ class Fit1D (PDF) :
     - xvar               : the fitting variable, must be specified if components are given as RooAbsPdf
 
     >>> gauss = Gauss_pdf( ... ) 
-    >>> pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal ans exponent as background 
+    >>> pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background 
     """
     def __init__ ( self                          , 
                    signal                        ,    ## the main signal 
@@ -2519,7 +2523,7 @@ class Fit1D (PDF) :
                    combine_others      = False   ,    ## combine signal PDFs into single "COMPONENT"  ?             
                    recursive           = True    ,    ## recursive fractions for NON-extended models?
                    xvar                = None    ,
-                   S                   = []      ,    ## yields for ``signals''
+                   S                   = []      ,    ## yeilds for ``signals''
                    B                   = []      ,    ## yeilds for ``background''
                    C                   = []      ,    ## yeilds for ``components''
                    F                   = []      ) :  ## fractions  
@@ -2530,12 +2534,17 @@ class Fit1D (PDF) :
             'background' : background , 'otherbackgrounds' : otherbackgrounds ,
             'others'     : others     ,
             'extended'   : extended   ,
+            ##
             'suffix'     : suffix     , 'name'             : name             , 
             ##
             'combine_signals'     : combine_signals     ,
             'combine_backgrounds' : combine_backgrounds ,
             'combine_others'      : combine_others      ,
-            'recursive'           : recursive           ,        
+            'recursive'           : recursive           ,
+            ##
+            'xvar'                : xvar  ,
+            ## 
+            'S' : S , 'B' : B , 'C' : C , 'F' : F ,            
             }
         
         self.__suffix              = suffix
@@ -2551,7 +2560,7 @@ class Fit1D (PDF) :
         self.__args_F = F
         
         ## wrap signal if needed 
-        if   isinstance ( signal , PDF )                     : self.__signal = signal
+        if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone() 
         ## if bare RooFit pdf,  fit variable must be specified
         elif isinstance ( signal , ROOT.RooAbsPdf ) and xvar :
             self.__signal = Generic1D_pdf (  signal , xvar )
@@ -2563,8 +2572,7 @@ class Fit1D (PDF) :
             if suffix : name += '_' + suffix
 
         ## Init base class
-        PDF.__init__ ( self , name + suffix , self.__signal.xvar ) 
-            
+        PDF.__init__ ( self , name + suffix , self.__signal.xvar )             
         
         ## create the background component 
         self.__background = self.make_bkg ( background , 'Background' + suffix , self.xvar )
@@ -2767,7 +2775,7 @@ class Fit1D (PDF) :
             'name'                : self.name                ,
             'extended'            : self.extended            ,
             'combine_signals'     : self.combine_signals     ,
-            'combine_backrgounds' : self.combine_backgrounds ,
+            'combine_backgrounds' : self.combine_backgrounds ,
             'combine_others'      : self.combine_others      ,
             'recursive'           : self.recursive           ,
             'xvar'                : self.xvar                ,

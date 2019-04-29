@@ -9,7 +9,6 @@
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
-#include "RooSetProxy.h"
 #include "RooAbsReal.h"
 // ============================================================================
 // ROOT
@@ -42,12 +41,12 @@ namespace Ostap
        *  @param title     the title  of PDF 
        *  @param variables all variables 
        */
-      PyPdf ( PyObject*               self      , 
-              const char*             name      , 
-              const char*             title     ,
-              const RooAbsCollection& variables );
+      PyPdf ( PyObject*         self      , 
+              const char*       name      , 
+              const char*       title     ,
+              const RooArgList& variables );
       /// copy  constructor 
-      PyPdf ( const PyPdf& right , const  char* name = 0 ) ;
+      PyPdf ( const PyPdf& right , const char* name = nullptr ) ;
       /// virtual destructor 
       virtual ~PyPdf() ;
       /// clone method 
@@ -61,13 +60,24 @@ namespace Ostap
     public:
       // ======================================================================
       ///  get all variables in a form of the list 
-      const RooListProxy& proxylist () const { return m_varlist ; }
-      ///  get all varianles in a form of the set  
-      const RooSetProxy&  proxyset  () const { return m_varset  ; }      
+      const RooArgList&   proxylist () const { return m_varlist ; }
+      ///  get all variables in a form of the list      
+      /// const RooListProxy& variables () const { return m_varlist ; }
+      const RooArgList&   variables () const { return m_varlist ; }
       ///  get all variables in a form of the list 
-      const RooListProxy& varlist () const { return m_varlist ; }
-      ///  get all varianles in a form of the set  
-      const RooSetProxy&  varset  () const { return m_varset  ; }      
+      // const RooListProxy& varlist   () const { return m_varlist ; }
+      const RooArgList&   varlist   () const { return m_varlist ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      std::string myid() const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get a variable with index 
+      double variable ( const unsigned short index ) const ;
+      /// get a variable with name 
+      double variable ( const          char*  name ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -96,11 +106,9 @@ namespace Ostap
     private:
       // ======================================================================  
       // python partner
-      PyObject*    m_self    { nullptr  } ; // python partner 
+      PyObject*    m_self      { nullptr } ; // python partner 
       /// all variables as list of variables 
       RooListProxy m_varlist {} ; // all variables as list of variables 
-      /// all variables as set  of variables 
-      RooSetProxy  m_varset  {} ; // all variables as set  of variables 
       // ======================================================================  
     private: // helper fields for implementation of getAnalyticalIntegral 
       // ======================================================================  
@@ -108,6 +116,58 @@ namespace Ostap
       mutable       RooArgSet*  m_analDeps  { nullptr } ;
       mutable const char*       m_rangeName { nullptr } ;
       mutable Int_t             m_intCode   { 0       } ; 
+      // ======================================================================  
+    } ;
+    // ========================================================================
+    /** @class PyPdf2 Ostap/PyPdf.h
+     *  ``Light'' verison of PyPdf
+     *  @see Ostap::Models::PyPDF
+     *  @see ostap.fitting.pypdf.PyPDF2
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+     *  @date   2018-06-06
+     */
+    class PyPdf2 : public RooAbsPdf
+    {
+    public: 
+      // ======================================================================
+      ClassDef(Ostap::Models::PyPdf2, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** Standard constructor
+       *  @param self python partner for this instance 
+       *  @param name      the name of PDF 
+       *  @param title     the title  of PDF 
+       *  @param variables all variables 
+       */
+      PyPdf2 ( const char*      name      , 
+               const char*      title     ,
+               PyObject*        function  , 
+               const RooArgList& variables );
+      /// copy  constructor 
+      PyPdf2 ( const PyPdf2& right , const char* name = nullptr ) ;
+      /// virtual destructor 
+      virtual ~PyPdf2() ;
+      /// clone method 
+      PyPdf2* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // default constructor (needed for serialization)
+      PyPdf2() {} // default constructor (needed for serialization)
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    private:
+      // ======================================================================
+      // python partner
+      PyObject*    m_function  { nullptr } ; // python partner
+      PyObject*    m_arguments { nullptr } ; // argument cache
+      /// all variables as list of variables 
+      RooListProxy m_varlist   {} ; // all variables as list of variables 
       // ======================================================================  
     } ;
     // ========================================================================

@@ -64,7 +64,7 @@ double Ostap::Functions::PyFuncTree::operator() ( const TTree* t ) const
 {
   /// redefine the current  tree 
   if ( nullptr != t ) { m_tree = t ; }
-  return call_python ( m_self , s_method ) ;
+  return call_method ( m_self , s_method ) ;
 }
 // ============================================================================
 /** constructor
@@ -91,7 +91,7 @@ double Ostap::Functions::PyFuncData::operator() ( const RooAbsData* d ) const
 {
   /// redefine the current  tree 
   if ( nullptr != d ) { m_data = d ; }
-  return call_python ( m_self , s_method ) ;
+  return call_method ( m_self , s_method ) ;
 }  
 // ============================================================================
 

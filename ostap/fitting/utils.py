@@ -171,6 +171,10 @@ class MakeVar ( object ) :
         return obj
     
     ##  produce ERROR    message using the local logger 
+    def fatal   ( self , message , *args , **kwargs ) :
+        """Produce FATGAL   message using the local logger"""
+        return self.logger.fatal   ( message , *args , **kwargs )
+    ##  produce ERROR    message using the local logger 
     def error   ( self , message , *args , **kwargs ) :
         """Produce ERROR    message using the local logger"""
         return self.logger.error   ( message , *args , **kwargs )

@@ -262,110 +262,231 @@ class PyPDF (object) :
      ...     s     = float ( vlist [ 2 ] )        
      ... return CDF ( xmax , m , s  ) - CDF ( xmin , m , s  )
     """
+    _storage = []
+    
     def __init__ ( self          ,
                    name          ,
                    vars          , ## all variables (observables&parameters) 
                    title  = ''   ,
-                   pdf    = None ) :
+                   pypdf  = None ) :
 
-        ## convert to RooArgList if needed 
-        if not isinstance ( vars , ROOT.RooAbsCollection ) :
-            vv = ROOT.RooArgList ()
-            for v in vars :
-                if not v in vv :  vv.add ( v )
-            vars = vv 
+        
+        assert ( not pypdf ) or isinstance ( pypdf , Ostap.Models.PyPdf  ) , \
+               "Invalid type of ``pypdf'': %s/%s" % ( pypdf , type ( pypdf ) )
+        
+        if not pypdf :
+
+            ## convert to RooArgList if needed 
+            if not isinstance ( vars , ROOT.RooArgList ) :
+                vv = ROOT.RooArgList ()
+                for v in vars :
+                    if not v in vv :  vv.add ( v )
+                vars = vv    
+
+            self.__pyvars = vars
             
-        self.__pyvars = vars
-        
-        self.__pyname   =  name 
-        if not title : title = "PyPDF(%s)"  % name 
-        
-        assert ( not pdf ) or isinstance ( pdf , Ostap.Models.PyPdf  ) , \
-               "Invalid type of ``pdf'': %s/%s" % ( pdf , type ( pdf ) )
-        
-        
-        if not pdf : pdf = Ostap.Models.PyPdf ( self , name , title , self.__pyvars  )
+            if not title : title = "PyPDF(%s)"  % name 
 
-        self.pdf = pdf
+            pypdf = Ostap.Models.PyPdf ( self , name , title , self.__pyvars  )
+            
 
-        logger.debug ( 'PyPDF: use %s/%s as PDF' % (  pdf , type( pdf ) ) )
+        ## take care on ROOT ownership pf the object
+        ROOT.SetOwnership ( pypdf , False )
+
+        ## define the pdf 
+        self.__pypdf = pypdf
         
-    
+        self.config =  {
+            'name'    : self.pypdf.GetName   () ,
+            'title'   : self.pypdf.GetTitle  () ,
+            'vars'    : self.pypdf.variables () ,  
+            'pypdf'   : None 
+            }
+
     @property
-    def vars ( self ) :
-        """``vars'' - all variables used for PyPDF creation
-        - it should *NOT* be used inside `evaluate`-function!
-        """
-        return self.__pyvars
+    def pypdf ( self ) :
+        """``pypdf'' : get the actual Ostap::Models::PyPdf object"""
+        return self.__pypdf
+    @pypdf.setter
+    def pypdf ( self , value ) :
+        assert value is None  or isinstance (  value , ROOT.RooAbsPdf ),\
+               'Invalid type of pypdf:%s' % type ( value )        
+        self.__pypdf == value 
     
     @property
     def varlist ( self ) :
         """``varlist'' : get all variables (as RooArgList)  from Ostap::Models::PyPdf
         - all variables *MUST* be accessed via this collection!
         """
-        return self.pdf.varlist ()
+        return self.pypdf.varlist ()
     
-    @property
-    def varset ( self ) :
-        """``varset''  : get all variables (as RooArgSet)   from Ostap::Models::PyPdf
-        - all variables *MUST* be accessed via this collection!
-        """
-        return self.pdf.varset () 
-
     @property
     def allDeps ( self ) :
         """``allDeps'' - the first parameter  of ``getAnalyticalIntegra/get_analytical_integral''-method 
         - attention:  it could be a null pointer! check it before usage! 
         """
-        return self.pdf.allDeps()
+        return self.pypdf.allDeps()
     
     @property
     def analDeps ( self ) :
         """``analDeps'' - the second parameter  of ``getAnalyticalIntegral/get_analystical_integral''-method 
         - attention:  it could be a null pointer! check it before usage!
         """
-        return self.pdf.allDeps()
+        return self.pypdf.allDeps()
     
     @property
     def rangeName ( self )  :
         """``rangeName'' -  the ``rangeName''  parameter for ``(get_)analytical_integral''-method
         - attention - it could be a null pointer! check it before usage! 
         """
-        return self.pdf.rangeName ()
+        return self.pypdf.rangeName ()
     
     @property
     def intCode   ( self )  :
         """``intCode'' -  the ``integration code'' parameter for ``analytic_integral''-method
         """
-        return self.pdf.intCode ()
+        return self.pypdf.intCode ()
 
-    # =================================================================================
+    # ==========================================================================
+    ## The method  that MUST be implemented
+    #  @code
+    #  pdf = ...
+    #  pdf.evaluate() 
+    #  @endcode
+    def evaluate ( self ) :
+        """The method  that MUST be implemented
+        >>> pdf = ...
+        >>> pdf.evaluate() 
+        """
+        raise NotImplementedError("PyPDF: ``evaluate'' is not implemented!")
+
+    # =========================================================================
+    ## get a value of certain variale
+    #  @code
+    #  pdf = ...
+    #  a = pdf.variable ( 'a' )
+    #  b = pdf.variable (  2  )
+    #  @endcode 
+    def variable ( self , tag ) :
+        """Get a value of certain variale
+        >>> pdf = ...
+        >>> a = pdf.variable ( 'a' )
+        >>> b = pdf.variable (  2  )
+        """
+        return self.pypdf.variable ( tag ) 
+    # =========================================================================
     ## Safe shortcut for <code>RooAbsPdf.matchArgs(allDeps,analDeps,*vars)</code> 
     def matchArgs ( self , *vars ) :
         """Safe shortcut for RooAbsPdf.matchArgs ( allDeps , analDeps , *vars )
         """
         vv = ROOT.RooArgSet() 
         for v in vars : vv.add ( v )
-        return self.pdf.matchArgs ( vv ) 
-    
-                                     
+        return self.pypdf.matchArgs ( vv ) 
+                                         
     ## clone the object (needed by C++ partner class)
     def clone ( self , **kwargs ) :
         """Clone the object
-        -  attention: existing PDF is ``copied'', unless specified via kwargs (by C++)
         """
-        conf =  {
-            'name'    : self.__pyname ,
-            'vars'    : self.vars     ,
-            'pdf'     : self.pdf      ## ATTENTION: clone also PDF!
-            }
         
+        conf = {}
+        conf.update ( self.config )
+        
+        ## modify the name if the name is in config  
+        if 'name' in conf : conf['name'] += '_copy'
+
         conf.update ( kwargs )
         
         KLASS = self.__class__
         return KLASS ( **conf )
- 
 
+# =============================================================================
+## @class PyPDF2
+#  ``Light'' version of ``pythonic-Pdf''
+#  
+#  @see Ostap::Models::PyPdf
+#  @see Ostap::Models::PyPdf2
+class PyPDF2(object) :
+
+    def __init__ (  self       ,
+                    name       ,
+                    function   ,
+                    vars       , 
+                    title = '' ) :
+
+        ## function must be valid function! 
+        assert function and callable ( function ) , "``function'' is not callable!"
+
+        if not title : title = 'PyPDF2(%s)' % name
+
+        self.__pyfunction = function
+
+        self.__argvars    = vars 
+        if not isinstance ( vars , ROOT.RooArgList )  :
+            self.__pyvars = vars 
+            vv = ROOT.RooArgList()
+            for v in vars : vv.add ( v ) 
+            vars = vv
+            
+        self.__vars  = vars
+        
+        ## create the actual RooAbsPdf 
+        pypdf        = Ostap.Models.PyPdf2 ( name          ,
+                                             title         ,
+                                             self.function ,
+                                             self.__vars   )
+        ROOT.SetOwnership ( pypdf , False )
+
+        self.__pypdf = pypdf
+
+
+        ## finally define PDF 
+        self.pdf     = self.pypdf
+
+        ## store configuration
+        self.config = {
+            'name'     : self.pypdf.GetName  () ,
+            'title'    : self.pypdf.GetTitle () ,
+            'function' : self.function          ,
+            'vars'     : self.variables                                           
+            }
+
+    @property
+    def pypdf ( self ) :
+        """``pypdf''   : get the actual Ostap::Models::PyPdf2 object"""
+        return  self.__pypdf 
+
+    @property
+    def function ( self ) :
+        """``function'' : get the actual python function/callable"""
+        return self.__pyfunction
+    
+    @property
+    def variables  ( self ) :
+        """``variables'' : list(ROOT.RooArgList) of all variables"""
+        return self.__vars
+    
+    @property
+    def vars       ( self ) :
+        """``vars'' : tuple of all variables"""
+        return  tuple ( [ i for i in self.__vars ] ) 
+    
+    ## clone the object (needed by C++ partner class)
+    def clone ( self , **kwargs ) :
+        """Clone the object
+        """
+        
+        conf = {}
+        conf.update ( self.config )
+        
+        ## modify the name if the name is in config  
+        if 'name' in conf : conf['name'] += '_copy'
+
+        conf.update ( kwargs )
+        
+        KLASS = self.__class__
+        return KLASS ( **conf )
+        
+        
 # =============================================================================
 if '__main__' == __name__ :
     

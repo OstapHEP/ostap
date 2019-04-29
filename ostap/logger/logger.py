@@ -49,27 +49,18 @@ if not hasattr ( logging , 'VERBOSE' ) : logging.VERBOSE = 5
 
 # =============================================================================
 ## Log message with severity 'VERBOSE'
-def _verbose2_(msg, *args, **kwargs):
-    """Log a message with severity 'VERBOSE' on the root logger.
-    """
-    if len(logging.root.handlers) == 0: logging.basicConfig()
-    logging.root.verbose (msg, *args, **kwargs)
-
-# =============================================================================
-## Log message with severity 'VERBOSE'
 def _verbose1_(self, msg, *args, **kwargs):
     """Log 'msg % args' with severity 'VERBOSE'.
     """
     if self.isEnabledFor(logging.VERBOSE):
-            self._log(logging.VERBOSE, msg, args, **kwargs)
-
+        self._log(logging.VERBOSE, msg, args, **kwargs)
+        
 # =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose2_(msg, *args, **kwargs):
     """Log a message with severity 'VERBOSE' on the root logger.
     """
-    if len(logging.root.handlers) == 0:
-        logging.basicConfig()
+    if len(logging.root.handlers) == 0 : logging.basicConfig()
     logging.root.verbose (msg, *args, **kwargs)
 
 # =============================================================================

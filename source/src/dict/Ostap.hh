@@ -71,6 +71,7 @@
 #include "Ostap/PyIterator.h"
 #include "Ostap/PySelector.h"
 #include "Ostap/PySelectorWithCuts.h"
+#include "Ostap/PyVar.h"     
 #include "Ostap/PyBLOB.h"
 #include "Ostap/Polarization.h"
 #include "Ostap/SFactor.h"

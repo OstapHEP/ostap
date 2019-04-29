@@ -19,9 +19,10 @@ __all__    = () ## nothing to import
 import ROOT, random, math
 import ostap.fitting.roofit 
 from   ostap.core.core      import VE, dsID, Ostap
-from   ostap.fitting.basic  import MASS,     Fit1D 
-from   ostap.fitting.pypdf  import PyPDF
+from   ostap.fitting.basic  import MASS,     Fit1D , Generic1D_pdf 
+from   ostap.fitting.pypdf  import PyPDF, PyPDF2 
 from   builtins             import range
+from   ostap.utils.utils    import timing
 # =============================================================================
 # logging 
 # =============================================================================
@@ -42,16 +43,21 @@ mmin,mmax = mass.minmax()
 
 ## fill it 
 m = VE(3.100,0.015**2)
-for i in range(0,10000) :
+for i in range(0,1000) :
     mass.value = m.gauss () 
+    dataset.add ( varset0 )
+for i in range(0,100) :
+    mass.value = random.uniform ( *mass.minmax() )
     dataset.add ( varset0 )
 
 logger.info ('DATASET %s' % dataset )
 
 NORM = 1.0 / math.sqrt ( 2.0 * math.pi )
+
 # =============================================================================
 ## @class PyGauss
 #  local ``pure-python'' PDF 
+## class PyGauss(MASS,PyPDF) :
 class PyGauss(MASS,PyPDF) :
     """Local ``pure-python'' PDF """    
     def __init__ ( self         ,
@@ -59,27 +65,33 @@ class PyGauss(MASS,PyPDF) :
                    xvar         ,
                    mean  = ( 3.080 , 3.05  , 3.15  ) ,
                    sigma = ( 0.010 , 0.005 , 0.020 ) ,
-                   pdf   = None ) :
+                   pypdf = None ) :
+
         
         MASS .__init__ ( self , name      , xvar , mean , sigma ) 
         PyPDF.__init__ ( self , self.name , ( self.xvar  ,
                                               self.mean  ,
-                                              self.sigma ) , pdf = pdf )
+                                              self.sigma ) , pypdf = pypdf )
+
+        self.pdf = self.pypdf
+        
         self.config = {
-            'name'  : self.name ,
-            'xvar'  : self.xvar ,
-            'mean'  : self.mean ,
-            'sigma' : self.mean ,
-            'pdf'   : None        ## attention! 
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mean'  : self.mean  ,
+            'sigma' : self.sigma ,
+            'pypdf' : None         ## attention! 
             }
         
     ## the  main method 
     def evaluate ( self ) :
+        
         vlist = self.varlist
-
-        x = float ( vlist [ 0 ] ) 
-        m = float ( vlist [ 1 ] ) 
-        s = float ( vlist [ 2 ] )        
+        
+        x = self.variable ( 0 ) 
+        m = self.variable ( 1 )  
+        s = self.variable ( 2 )
+        
         dx = ( x - m ) / s        
         return math.exp ( -0.5 * dx * dx ) * NORM / s 
 
@@ -92,14 +104,11 @@ class PyGaussAI(PyGauss) :
     def __init__ ( self         ,
                    name         ,
                    xvar         ,
-                   mean  = (         3.05  , 5.15  ) ,
+                   mean  = (         3.05  , 3.15  ) ,
                    sigma = ( 0.010 , 0.005 , 0.025 ) ,
-                   pdf   = None ) :
+                   pypdf = None ) :
 
-        PyGauss.__init__ (  self , name , xvar , mean , sigma , pdf = pdf )
-
-        a =  QUQU
-
+        PyGauss.__init__ (  self , name , xvar , mean , sigma , pypdf = pypdf )
 
     ## declare analytical integral 
     def get_analytical_integral ( self ) :
@@ -128,7 +137,35 @@ class PyGaussAI(PyGauss) :
         s     = float ( vlist [ 2 ] )        
         
         return CDF ( xmax , m , s  ) - CDF ( xmin , m , s  )
-    
+
+# =============================================================================
+## @class PyGauss2
+#  local ``pure-python'' PDF 
+class PyGauss2(MASS,PyPDF2) :
+    """Local ``pure-python'' PDF """    
+    def __init__ ( self         ,
+                   name         ,
+                   function     , 
+                   xvar         ,                   
+                   mean  = ( 3.080 , 3.05  , 3.15  ) ,
+                   sigma = ( 0.010 , 0.005 , 0.020 ) ,
+                   title = '' 
+                   ) :
+        
+        MASS  .__init__ ( self , name      , xvar , mean , sigma ) 
+        PyPDF2.__init__ ( self      ,
+                          name     = self.name ,
+                          function = function  ,
+                          vars     = ( self.xvar , self.mean , self.sigma ) )
+        
+        self.config = {
+            'name'     : self.name     ,
+            'function' : self.function , 
+            'xvar'     : self.xvar     ,
+            'mean'     : self.mean     ,
+            'sigma'    : self.sigma    ,
+            }
+        
 # =============================================================================
 ## pygauss PDF
 # =============================================================================
@@ -138,8 +175,14 @@ def test_pygauss() :
     
     gauss   = PyGauss( 'PyGauss'   , xvar = mass )
     
-    r1, f1  = gauss  .fitTo ( dataset , draw = True , silent = True , ncpu=1 )
-    print (r1) 
+    ## model 
+    model = Fit1D ( signal = gauss , background = None  , name = 'M0' )
+
+    ## r1, f1  = gauss  .fitTo ( dataset , draw = True , silent = True , ncpu=1 )
+    ## print (r1) 
+
+    r2, f2  = model  .fitTo ( dataset , draw = True , silent = True , ncpu=1 )
+    print (r2) 
 
 
 # =============================================================================
@@ -149,16 +192,52 @@ def test_pygauss_AI() :
     
     logger.info ('Test PyGaussAI:  simple Gaussian signal with  analytical integral' )
     
-    gaussAI = PyGauss( 'PyGaussAI' , xvar = mass )
-    r2, f2  = gaussAI.fitTo ( dataset , draw = True , silent = True , ncpu=1 )
-    print(r2)
+    gauss   = PyGauss( 'PyGaussAI' , xvar = mass )
+    
+    ## model 
+    model   = Fit1D ( signal = gauss , background = None  , name = 'M1' )
+
+    ## r1, f1  = gauss.fitTo ( dataset , draw = True , silent = True , ncpu=1 )
+    ## print(r1)
+    
+    
+    r2, f2  = model  .fitTo ( dataset , draw = True , silent = True , ncpu=1 )
+    print (r2) 
+
+def test_pygauss2 () :
+    
+    ## the function
+    def function ( x , m , s ) :
+        dx = ( x - m ) / s        
+        return math.exp ( -0.5 * dx * dx ) * NORM / s 
+    
+    ## construct PDF
+    gauss = PyGauss2 ( name  ='G2' , function = function , xvar = mass  )
+    
+    ## model 
+    model = Fit1D ( signal = gauss , background = 'p0' , name = 'Q2' )
+
+    ## r1, f1  = gauss  .fitTo ( dataset , draw = True , silent = True , ncpu=1 )
+    ## print (r1) 
+
+    r2, f2  = model  .fitTo ( dataset , draw = True , silent = True , ncpu=1 )
+    print (r2) 
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_pygauss          () ## simple Gaussian PDF
-    test_pygauss_AI       () ## simple Gaussian PDF with analytical integral 
+    
+    ## simple Gaussian PDF
+    with timing ("PyGauss    : ") : test_pygauss        ()
+    
 
+    ## simple Gaussian PDF with analytical integral 
+    with timing ("PyGaussAI  : ") : test_pygauss_AI  ()
+
+    ## simple Gaussian PDF
+    with timing ("PyGauss2   : ") : test_pygauss2       ()
+
+    
 # =============================================================================
 # The END 
 # ============================================================================= 
