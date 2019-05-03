@@ -91,7 +91,7 @@ class Clock(object):
 #     whatever action is here 
 #     at the exit it prints the clock counts 
 #
-#  print ct.delta 
+#  print t.delta 
 # 
 #  @endcode
 class Timer(object):
@@ -107,11 +107,11 @@ class Timer(object):
     ...  whatever action is
     at the exit it prints the clock counts 
     
-    >>> print ct.delta 
+    >>> print t.delta 
     """
     __logger = logger 
     ##
-    def __init__  ( self , name = '' , logger = None , format = 'Timing %-18s %.3f' ) :
+    def __init__  ( self , name = '' , logger = None , format = 'Timing %-18s %.3fs' ) :
         self.name   = name
         self.logger = logger if logger else self.__logger 
         self.format = format
@@ -187,7 +187,7 @@ def clocks ( name = '' , logger = None ) :
 #  print t.delta 
 # 
 #  @endcode
-def timing ( name = '' , logger = None ) :
+def timing ( name = '' , logger = None , format = 'Timing %-18s %.3fs') :
     """Simple context manager to measure the clock counts 
     
     >>> with timing () :
@@ -200,7 +200,7 @@ def timing ( name = '' , logger = None ) :
     
     >>> print c.delta
     """
-    return Timer ( name , logger )
+    return Timer ( name , logger , format ) 
 
 ## ditto 
 timer = timing   # ditto

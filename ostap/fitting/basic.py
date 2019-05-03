@@ -370,7 +370,8 @@ class PDF (MakeVar) :
         """
         if timer :
             from ostap.utils.timing import timing 
-            with timing ( self.name  + '.fitTo' ) :
+            with timing ( name = "`fitTo'" , logger = self.logger , format =  "Timing %-18s %7.1fs") :
+                if not silent : args = args + ( ROOT.RooFit.Timer ( True ) , ) 
                 return self.fitTo ( dataset = dataset ,
                                     draw    = draw    ,
                                     nbins   = nbins   ,
@@ -877,7 +878,7 @@ class PDF (MakeVar) :
                 vmx = min ( mx , hmx )
 
                 args = list  ( args )
-                args.append  ( ROOT.RooFit.Range ( vmn , vmx ) )  
+                ## args.append  ( ROOT.RooFit.Range ( vmn , vmx ) )  
                 args = tuple ( args )
                 
             if chi2 : return self.chi2fitTo ( data               ,
@@ -1082,23 +1083,44 @@ class PDF (MakeVar) :
         if silent : nargs = ROOT.RooFit.NumCPU ( numcpu() ) , ROOT.RooFit.Verbose ( False )
         else      : nargs = ROOT.RooFit.NumCPU ( numcpu() ) , 
 
-        with roo_silent ( silence ) :
+        with roo_silent ( silent ) :
             
             ## create NLL object
             nll = self.pdf.createNLL ( dataset , *nargs ) 
             
             ## unpack the range 
-            minv , maxv = range 
-            if maxv is None : maxv = var.getVal() 
+            minv , maxv = range
             
-            with RangeVar ( var , minv , maxv ) : 
+            if maxv is None : maxv = var.value
+            
+            error = -1 
+            if isinstance ( maxv , VE ) :
+                if 0 < maxv.cov2() : error = maxv.error() 
+                maxv = maxv.value()
+
+            vv = var.getVal() 
+            with RangeVar ( var , minv , maxv ) :
+                
                 var.setVal ( minv )
                 val_minv = nll.getVal ()
+                
                 var.setVal ( maxv )
                 val_maxv = nll.getVal ()
                 dnll     = val_minv -  val_maxv
                 
-        ## convert duifference in likelihoods into sigmas 
+                if 0 < error :
+                    
+                    var.setVal ( maxv + error )
+                    val_maxvp = nll.getVal()
+                    
+                    var.setVal ( maxv - error )
+                    val_maxvm = nll.getVal()
+                    
+                    dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm )**2 )
+                    
+                var.setVal( vv  )
+                
+        ## convert difference in likelihoods into sigmas 
         result = 2.0 * abs ( dnll )
         result = result**0.5
 

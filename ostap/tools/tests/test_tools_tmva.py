@@ -103,7 +103,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         name    = 'TestTMVA' ,   
         methods = [ # type               name   configuration
         ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator" ) ,
-        ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
+        ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=2" ) , 
         ## ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=1000:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20" )  , 
         ## ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=1000:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=Decorrelate" ) ,        
         ( ROOT.TMVA.Types.kCuts       , "Cuts"        , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,

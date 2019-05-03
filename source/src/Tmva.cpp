@@ -56,13 +56,13 @@ namespace
     // ========================================================================
     READER ( RooDataSet& data                     ,
              const Ostap::TMVA::MAP& inputs       , 
-             const Ostap::TMVA::MAP& weight_files ) 
+             const Ostap::TMVA::MAP& weight_files )
       : m_data         ( &data        ) 
       , m_inputs       ( inputs       )
       , m_weight_files ( weight_files )
     {}
     // prepare it  for usage 
-    Ostap::StatusCode build () 
+    Ostap::StatusCode build ( const std::string& options = "" ) 
     {
       //
       RooArgList       varlst ;
@@ -96,7 +96,7 @@ namespace
       }
       //
       // 2) create the actual reader 
-      m_reader = std::make_unique<TMVAReader>() ;
+      m_reader = std::make_unique<TMVAReader>( options ) ;
       //
       //
       // 3) connect the reader with names&placeholders
@@ -271,13 +271,14 @@ Ostap::StatusCode Ostap::TMVA::addResponse
 ( RooDataSet& data                     ,
   const Ostap::TMVA::MAP& inputs       , 
   const Ostap::TMVA::MAP& weight_files , 
+  const std::string&       options      , 
   const std::string&      prefix       , 
   const std::string&      suffix       ,
   const double            aux          )
 {
   // create the helper structure  
   READER reader  ( data , inputs , weight_files ) ;
-  Ostap::StatusCode sc =  reader.build() ;
+  Ostap::StatusCode sc =  reader.build ( options ) ;
   if ( sc.isFailure() ) { return sc ; }
   //
   return _add_response_ ( data    ,
@@ -302,6 +303,7 @@ Ostap::StatusCode Ostap::TMVA::addResponse
 ( RooDataSet& data                       ,
   const Ostap::TMVA::PAIRS& inputs       , 
   const Ostap::TMVA::PAIRS& weight_files , 
+  const std::string&        options      , 
   const std::string&        prefix       , 
   const std::string&        suffix       ,
   const double              aux          )
@@ -310,7 +312,7 @@ Ostap::StatusCode Ostap::TMVA::addResponse
   for ( const auto& p : inputs     ) { _i[p.first] = p.second ; }
   if  ( _i.size() != inputs.size() ) { return InvalidInputVariables ; }
   //
-  return addResponse (  data , _i , weight_files , prefix , suffix , aux ) ;
+  return addResponse (  data , _i , weight_files , options , prefix , suffix , aux ) ;
 }
 // =======================================================================-----
 /*  Add TMVA response to dataset 
@@ -328,6 +330,7 @@ Ostap::StatusCode Ostap::TMVA::addResponse
 ( RooDataSet& data                       ,
   const Ostap::TMVA::PAIRS& inputs       , 
   const Ostap::TMVA::MAP&   weight_files , 
+  const std::string&         options      , 
   const std::string&        prefix       , 
   const std::string&        suffix       ,
   const double              aux          )
@@ -336,7 +339,7 @@ Ostap::StatusCode Ostap::TMVA::addResponse
   for ( const  auto& p : inputs    ) { _i[p.first] = p.second ; }
   if  ( _i.size() != inputs.size() ) { return InvalidInputVariables ; }
   //
-  return addResponse (  data , _i , weight_files , prefix , suffix , aux ) ; 
+  return addResponse (  data , _i , weight_files , options , prefix , suffix , aux ) ; 
 }
 // =======================================================================-----
 /*  Add TMVA response to dataset 
@@ -354,6 +357,7 @@ Ostap::StatusCode Ostap::TMVA::addResponse
 ( RooDataSet& data                       ,
   const Ostap::TMVA::MAP&   inputs       , 
   const Ostap::TMVA::PAIRS& weight_files , 
+  const std::string&         options      , 
   const std::string&        prefix       , 
   const std::string&        suffix       ,
   const double              aux          )
@@ -362,7 +366,7 @@ Ostap::StatusCode Ostap::TMVA::addResponse
   for ( const auto& p : weight_files    ) { _w[p.first] = p.second ; }
   if ( _w.size() != weight_files.size() ) { return InvalidWeightFiles  ; }
   //
-  return addResponse (  data , inputs , _w , prefix , suffix , aux ) ;
+  return addResponse (  data , inputs , _w , options , prefix , suffix , aux ) ;
 }
 // ============================================================================
 // Chopping 
@@ -374,6 +378,7 @@ Ostap::StatusCode Ostap::TMVA::addChoppingResponse
   const unsigned short     N            , // number of categories 
   const Ostap::TMVA::MAP&  inputs       , // mapping of input variables 
   const Ostap::TMVA::MAPS& weight_files ,
+  const std::string&       options      , 
   const std::string&       prefix       , 
   const std::string&       suffix       ,
   const double             aux          )
@@ -385,14 +390,16 @@ Ostap::StatusCode Ostap::TMVA::addChoppingResponse
   READERS readers ;
   readers.reserve ( N ) ;
   //
-  for ( const auto& wfs : weight_files ) 
-  { readers.emplace_back ( data , inputs ,  wfs ) ; }
+  for ( const auto& wfs : weight_files )
+  { readers.emplace_back ( data , inputs ,  wfs ) ;}
   //
   // initialize the  readers:
+  bool first = true ;
   for ( auto& r : readers ) 
   {
-    Ostap::StatusCode sc =  r.build() ;
+    Ostap::StatusCode sc =  r.build( first ? options : "" ) ;
     if   ( sc.isFailure () ) { return sc ; }  
+    first = false ;
   }
   //
   return _add_chopping_response_ ( data      ,

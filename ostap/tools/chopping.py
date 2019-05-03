@@ -56,7 +56,7 @@ For the final TMVA evaluation, for the events from category ``i'' the correspond
 trained TMVA is used [By construction,  these events have not been used for
 the training of corresponding TMVA].
 
-- For the large number of categories it coudol be rather slow, since too many
+- For the large number of categories it could be rather slow, since too many
 TMVA's need to be trained
 
 The interface is very similar to TMVATrainer/TMVAReader, but one needs to specify:
@@ -881,7 +881,7 @@ class Reader(object) :
                                                  variables     = self.variables        ,
                                                  weights_files = self.weights_files[i] ,
                                                  options       = options               ,
-                                                 verbose       = verbose               ) )
+                                                 verbose       = verbose and i == 0    ) )
                 
         self.__readers  = tuple   ( self.__readers )
         self.__histo    = h1_axis ( [ -0.5 + i for i in range ( self.N + 1 ) ] ,
@@ -1149,15 +1149,28 @@ class Reader(object) :
 #  dataset  = ...
 #  inputs   = [ 'var1' , 'var2' , 'var2' ] ## input variables to TMVA
 #  dataset.addTMVAResponse ( dataset , chopper , inputs , tar_file , prefix = 'tmva_' )
-#  @endcode 
-def addChoppingResponse ( dataset                     ,
-                          chopper                     ,
-                          N                           ,
-                          inputs                      ,
-                          weights_files               ,
-                          category_name = 'chopping'  , 
-                          prefix        = 'tmva_'     ,                          
-                          suffix        = '_response' ,
+#  @endcode
+#  @param dataset input dataset to be updated
+#  @param chopper       chopping category/formula
+#  @param N             number of categories
+#  @param inputs        input variables
+#  @param weights_files files with TMVA weigths (tar/gz or xml)
+#  @param category_name the category
+#  @param prefix        prefix for TMVA-variable
+#  @param suffix        suffix for TMVA-variable
+#  @param options       options to be used in TMVA Reader
+#  @param verbose       verbose operation?
+#  @param aux           obligatory for the cuts method, where it represents the efficiency cutoff 
+def addChoppingResponse ( dataset                     , ## input dataset to be updated
+                          chopper                     , ## chopping category/formula 
+                          N                           , ## number of categrories
+                          inputs                      , ## input variables 
+                          weights_files               , ## files with TMVA weigths (tar/gz or xml)
+                          category_name = 'chopping'  , ## categroy name 
+                          prefix        = 'tmva_'     , ## prefix for TMVA-variable         
+                          suffix        = '_response' , ## suffix for TMVA-variable 
+                          options       =  ''         , ## TMVA-reader options
+                          verbose       = True        , ## verbosity flag 
                           aux           = 0.9         ) :
     """
     Helper function to add TMVA/chopping  response into dataset
@@ -1207,13 +1220,20 @@ def addChoppingResponse ( dataset                     ,
     MAPS  = std.vector ( MAP ) 
     _maps = MAPS()
     for m in files_ : _maps.push_back( m ) 
-
+    
+    options = opts_replace ( options , 'V:'      ,     verbose )
+    options = opts_replace ( options , 'Silent:' , not verbose )
+    
+    from ostap.utils.basic import isatty
+    options = opts_replace ( options , 'Color:'  , verbose and isatty() )
+    
     sc = Ostap.TMVA.addChoppingResponse ( dataset  ,
                                           chopper  ,
                                           category , 
                                           N        ,
                                           _inputs  ,
                                           _maps    ,
+                                          options  ,
                                           prefix   ,
                                           suffix   ,
                                           aux      )

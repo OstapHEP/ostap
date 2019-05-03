@@ -849,11 +849,14 @@ class Reader(object)  :
         
         ROOT.TMVA.Tools.Instance()
         
-        verbose = True if verbose else False 
+        verbose = True if verbose else False
+        ##
         options = opts_replace ( options , 'V:'      ,     verbose )
         options = opts_replace ( options , 'Silent:' , not verbose )
+        ##
         from ostap.utils.basic import isatty
-        optiont = opts_replace ( options , 'Color:'  , verbose and isatty() ) 
+        #
+        options = opts_replace ( options , 'Color:'           , verbose and isatty () ) 
 
         self.__reader = ROOT.TMVA.Reader( options , verbose )
         self.__name   = name
@@ -1212,13 +1215,23 @@ def _weights2map_ ( weights_files ) :
 #  dataset  = ...
 #  inputs = [ 'var1' , 'var2' , 'var2' ]
 #  dataset.addTMVAResponse (  inputs , tar_file , prefix = 'tmva_' )
-#  @endcode 
-def addTMVAResponse ( dataset        ,
-                      inputs         ,
-                      weights_files  ,
-                      prefix   = ''  , 
-                      suffix   = ''  ,
-                      aux      = 0.9 ) :
+#  @endcode
+#  @param dataset  input dataset to be updated 
+#  @param inputs   input variables
+#  @param weights_files files with TMVA weigths (tar/gz or xml)
+#  @param prefix   prefix for TMVA-variable
+#  @param suffix   suffix for TMVA-variable
+#  @param options  options to be used in TMVA Reader
+#  @param verbose  verbose operation?
+#  @param aux       obligatory for the cuts method, where it represents the efficiency cutoff
+def addTMVAResponse ( dataset                ,   ## input dataste to be updated
+                      inputs                 ,   ## input variables 
+                      weights_files          ,   ## files with TMVA weigths (tar/gz or xml)
+                      prefix   = 'tmva_'     ,   ## prefix for TMVA-variable 
+                      suffix   = '_response' ,   ## suffix for TMVA-variable
+                      options  = ''          ,   ## TMVA-reader options
+                      verbose  = True        ,   ## verbosity flag 
+                      aux      = 0.9         ) : ## for Cuts method : efficiency cut-off
     """
     Helper function to add TMVA  responce into dataset
     >>> tar_file = trainer.tar_file
@@ -1233,9 +1246,16 @@ def addTMVAResponse ( dataset        ,
     _inputs  = _inputs2map_  ( inputs        )
     _weights = _weights2map_ ( weights_files )
     
+    options = opts_replace ( options , 'V:'      ,     verbose )
+    options = opts_replace ( options , 'Silent:' , not verbose )
+    
+    from ostap.utils.basic import isatty
+    options = opts_replace ( options , 'Color:'  , verbose and isatty() )
+    
     sc = Ostap.TMVA.addResponse ( dataset  ,
                                   _inputs  ,
                                   _weights ,
+                                  options  , 
                                   prefix   ,
                                   suffix   ,
                                   aux      )

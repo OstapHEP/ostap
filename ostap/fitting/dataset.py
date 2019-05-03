@@ -24,9 +24,9 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random
-from   builtins         import range
-from   ostap.core.core  import Ostap, VE, hID, dsID , valid_pointer
-from   ostap.core.ostap_types import integer_types 
+from   builtins               import range
+from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
+from   ostap.core.ostap_types import integer_types, string_types  
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
@@ -309,7 +309,42 @@ def _rad_shuffle_ ( self ) :
         result.add ( self[i] )
         
     return result 
+
+# ==============================================================================
+## Imporved reduce
+#  @code
+#  data = ...
+#  data =  data.subset ( RooArgSet( ... ) , 'a>0' )
+#  data =  data.subset ( [a,b,c]       , 'a>0' )
+#  data =  data.subset ( ['a','b','c'] , 'a>0' )
+#  @endcode
+#  @see RooAbsData::reduce
+def _rad_subset_ ( dset , vars = [] , cuts = '' ) :
+    """ Improved reduce
+    >>> data = ...
+    >>> data =  data.subset( RooArgSet( ... ) , 'a>0' )
+    >>> data =  data.subset ( [a,b,c]       , 'a>0' )
+    >>> data =  data.subset ( ['a','b','c'] , 'a>0' )
+    - see ROOT.RooAbsData.reduce
+    """
+
+    if   isinstance ( cuts , ROOT.TCut ) :   cuts = str(cuts)
     
+    if   isinstance ( vars , ROOT.RooArgSet  ) :
+        return dset.reduce ( vars , cuts )
+    elif isinstance ( vars , string_types    ) : vars = [ vars ]
+    
+    aset   = ROOT.RooArgSet()
+    varset = dset.get()
+    for v in vars :
+        if   isinstance ( v , ROOT.RooAbsArg ) : aset.add ( v )
+        elif isinstance ( v , string_types   ) and v in varset : aset.add ( varset[v] )
+        else :
+            raise TypeError("``subset'': unknown type %s/%s" % ( v , type(v) ) )
+
+    return dset.reduce ( aset , cuts ) if aset else dset.reduce( cuts )
+
+
 # =============================================================================
 ## some decoration over RooDataSet 
 ROOT.RooAbsData . varlist       = _rad_vlist_
@@ -322,7 +357,9 @@ ROOT.RooAbsData . __len__       = lambda s   : s.numEntries()
 ROOT.RooAbsData . __nonzero__   = lambda s   : 0 != len ( s ) 
 ROOT.RooAbsData . __contains__  = _rad_contains_
 ROOT.RooAbsData . __iter__      = _rad_iter_ 
-ROOT.RooAbsData . __getitem__   = _rad_getitem_ 
+ROOT.RooAbsData . __getitem__   = _rad_getitem_
+
+ROOT.RooAbsData . subset        = _rad_subset_ 
 
 ROOT.RooAbsData . __add__       = _rad_add_
 ROOT.RooDataSet . __iadd__      = _rad_iadd_

@@ -487,8 +487,18 @@ class MakeVar ( object ) :
                 if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) ) 
 
         keys = [ str ( a ) for a in _args ]
-        keys.sort () 
-        self.info ( 'parse_args: Parsed arguments %s' % keys )
+        keys.sort ()
+        
+        ## check presence of "non-trivial"  keys
+        kset = set( keys ) 
+        kset.discard  ( 'Save'       ) ## trivial
+        kset.discard  ( 'NumCPU'     ) ## trivial
+        kset.discard  ( 'Verbose'    ) ## trivial 
+        kset.discard  ( 'Timer'      ) ## trivial 
+        kset.discard  ( 'PrintLevel' ) ## trivial 
+        #
+        if kset : self.info  ( 'parse_args: Parsed arguments %s' % keys )
+        else    : self.debug ( 'parse_args: Parsed arguments %s' % keys )
 
         return tuple ( _args )
     
@@ -728,7 +738,7 @@ class H1D_dset(MakeVar) :
     def __init__ ( self            , 
                    histo           ,
                    xaxis   = None  ,
-                   density = True  ,
+                   density = False ,
                    silent  = False ) :
         #
         ## use mass-variable
@@ -788,7 +798,7 @@ class H2D_dset(MakeVar) :
                    histo           ,
                    xaxis   = None  ,
                    yaxis   = None  ,
-                   density = True  ,
+                   density = False ,
                    silent  = False ) :
         #
         assert isinstance ( histo , ROOT.TH2 ) , "``histo'' is not ROOT.TH2"
@@ -860,7 +870,7 @@ class H3D_dset(MakeVar) :
                    xaxis   = None  ,
                    yaxis   = None  ,
                    zaxis   = None  ,
-                   density = True  ,
+                   density = False ,
                    silent  = False ) :
         
         assert isinstance ( histo , ROOT.TH3 ) , "``histo'' is not ROOT.TH3"

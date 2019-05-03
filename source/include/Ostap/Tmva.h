@@ -55,16 +55,17 @@ namespace Ostap
      *  @param weight_files (INPUT) map  { method  : weight_file }  
      *  @param prefix       (INPUT) the prefix for added variables 
      *  @param suffix       (INPUT) the suffix for added variables 
-     *  @param aux          (INPUT) obligatory for the cuts method,
+     *  @param aux          (INPUT) obligatory for the cuts method
      *                              where it represents the efficiency cutoff
      */ 
     Ostap::StatusCode addResponse
-    ( RooDataSet&        data         ,
-      const MAP&         inputs       , 
-      const MAP&         weight_files ,
-      const std::string& prefix = ""  , 
-      const std::string& suffix = ""  , 
-      const double       aux    = 0.9 ) ;
+    ( RooDataSet&        data          ,
+      const MAP&         inputs        , 
+      const MAP&         weight_files  ,
+      const std::string& options = ""  ,
+      const std::string& prefix  = ""  , 
+      const std::string& suffix  = ""  , 
+      const double       aux     = 0.9 ) ;
     // ========================================================================
     /** Add TMVA response to dataset 
      *  The  function add variables  "prefix+methos+suffix" that 
@@ -82,6 +83,7 @@ namespace Ostap
     ( RooDataSet&        data         ,
       const PAIRS&       inputs       , 
       const PAIRS&       weight_files , 
+      const std::string& options = "" ,
       const std::string& prefix = ""  , 
       const std::string& suffix = ""  ,
       const double       aux    = 0.9 ) ;
@@ -102,6 +104,7 @@ namespace Ostap
     ( RooDataSet&        data         ,
       const PAIRS&       inputs       , 
       const MAP&         weight_files ,
+      const std::string& options = "" ,
       const std::string& prefix = ""  , 
       const std::string& suffix = ""  ,
       const double       aux    = 0.9 ) ;
@@ -122,6 +125,7 @@ namespace Ostap
     ( RooDataSet&        data         ,
       const MAP&         inputs       , 
       const PAIRS&       weight_files ,
+      const std::string& options = "" ,
       const std::string& prefix = ""  , 
       const std::string& suffix = ""  ,
       const double       aux    = 0.9 ) ;
@@ -135,6 +139,7 @@ namespace Ostap
       const unsigned short N                      , // number of categories 
       const MAP&           inputs                 , // mapping of input variables 
       const MAPS&          weight_files           ,
+      const std::string&   options  = ""          ,
       const std::string&   prefix   = ""          , 
       const std::string&   suffix   = ""          ,
       const double         aux      = 0.9         ) ;

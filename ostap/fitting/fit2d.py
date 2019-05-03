@@ -118,7 +118,7 @@ class PDF2 (PDF) :
         """
         if   isinstance ( dataset , H2D_dset ) : dataset = dataset.dset        
         elif isinstance ( dataset , ROOT.TH2 ) :
-            density = kwargs.pop ( 'density' , True  ) 
+            density = kwargs.pop ( 'density' , False ) 
             chi2    = kwargs.pop ( 'chi2'    , False ) 
             return self.fitHisto ( dataset   ,
                                    draw    = draw    ,
@@ -351,7 +351,7 @@ class PDF2 (PDF) :
                    histo           ,
                    draw    = False ,
                    silent  = False ,
-                   density = True  ,
+                   density = False ,
                    chi2    = False ,
                    args    = ()    , **kwargs ) :
         """Fit the histogram (and draw it)
@@ -1213,9 +1213,9 @@ class H2D_pdf(H2D_dset,PDF2) :
     def __init__ ( self            ,
                    name            ,
                    histo           ,
-                   xvar  = None    , 
-                   yvar  = None    ,
-                   density = True  ,
+                   xvar    = None  , 
+                   yvar    = None  ,
+                   density = False ,
                    silent  = False ) :
         
         H2D_dset.__init__ ( self , histo , xvar , yvar , density , silent )
