@@ -1208,7 +1208,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
         
     ## decode inputs&weights
     
-    from ostap.tools.tmva import _inputs2map_ , _weights2map_ 
+    from ostap.tools.tmva import _inputs2map_ , _weights2map_ , opts_replace
     
     _inputs = _inputs2map_  ( inputs )
 
@@ -1220,7 +1220,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     MAPS  = std.vector ( MAP ) 
     _maps = MAPS()
     for m in files_ : _maps.push_back( m ) 
-    
+
     options = opts_replace ( options , 'V:'      ,     verbose )
     options = opts_replace ( options , 'Silent:' , not verbose )
     
