@@ -54,7 +54,7 @@ EOF
 if [ -n "$OSTAPDIR" ] ; then
    old_ostapdir=$OSTAPDIR
    export PATH=$(            _path_remove PATH            $old_ostapdir/bin     ) 
-   export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir         ) 
+   export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir/lib/python2.7/site-packages         ) 
    export LD_LIBRARY_PATH=$( _path_remove LD_LIBRARY_PATH $old_ostapdir/lib     ) 
    export MANPATH=$(         _path_remove MANPATH         $old_ostapdir/doc/man )
 fi
@@ -74,7 +74,7 @@ OSTAPVERSION=@OSTAP_VERSION@                                       ; export OSTA
 
 ## update all   nesessary paths 
 export PATH=$(              _path_prepend PATH            $OSTAPDIR/bin     ) 
-export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR         )  
+export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR/lib/python2.7/site-packages         )  
 export LD_LIBRARY_PATH=$(   _path_prepend LD_LIBRARY_PATH $OSTAPDIR/lib     )  
 export MANPATH=$(           _path_prepend MANPATH         $OSTAPDIR/doc/man )  
 

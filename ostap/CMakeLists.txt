@@ -1,12 +1,16 @@
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py) 
+
+execute_process(
+  COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
+  from distutils import sysconfig as sc
+  print(sc.get_python_lib(prefix='', plat_specific=True))"
+  OUTPUT_VARIABLE PYTHON_SITE
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 install(DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}
-        DESTINATION .
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/${PYTHON_SITE}
         FILES_MATCHING PATTERN "*.py" )
 
-find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config )
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python-version
-                 OUTPUT_VARIABLE PYVERSION_ROOT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 ## senseless? 
 set( $ENV{PYTHONPATH} ${CMAKE_INSTALL_PREFIX}:$ENV{PYTHONPATH} ) 
