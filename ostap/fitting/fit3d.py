@@ -276,7 +276,7 @@ class PDF3 (PDF2) :
         if in_range2 : in_range.append( in_range2 )
         in_ranage = tuple( in_range ) 
         return self.draw ( drawvar  = self.zvar , 
-                           dataste  = dataset   ,
+                           dataset  = dataset   ,
                            nbins    = nbins     ,
                            ybins    = 20        , ## fake 
                            silent   = silent    ,
@@ -1024,21 +1024,26 @@ class Sum3D(PDF3) :
 
         name = name if name else 'Sum_%s_%s' % (  pdf1.name , pdf2.name ) 
         
-        PDF3.__init__ ( name , xvar , yvar , zvar )
+        PDF3.__init__ (self, name , xvar , yvar , zvar )
 
         self.__pdf1     = pdf1
         self.__pdf2     = pdf2
-        
+
         self.__fraction = self.make_var ( fraction ,
                                           'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
                                           'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
                                           fraction , 0 , 1 ) 
+        self.alist1 = ROOT.RooArgList (
+            self.__pdf1.pdf ,
+            self.__pdf2.pdf )
+        self.alist2 = ROOT.RooArgList (
+            self.__fraction  )
         
         self.pdf = ROOT.RooAddPdf ( name , 
-                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.fraction )
+                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1,self.alist2 )
         
-        if self.pdf1.canBeExtended() : self.error ("``pdf1'' can be extended!") 
-        if self.pdf2.canBeExtended() : self.error ("``pdf2'' can be extended!") 
+        if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
+        if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
 
         self.config = {
             'pdf1'     : self.pdf1     ,
@@ -1713,8 +1718,8 @@ class Fit3D (PDF3) :
         self.__more_components = []
         for cmp in components :
             
-            if   isinstance  ( c , PDF2           ) : cc = c  
-            elif isinstance  ( c , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cs ,  self.xvar , self.yvar ) 
+            if   isinstance  ( cmp , PDF3           ) : cc = cmp  
+            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic3D_pdf ( cmp ,  self.xvar , self.yvar, self.zvar ) 
             else :
                 self.error ("unknown ``other''component %s/%s, skip it!" % ( cc , type(cc) ) )
                 continue  
@@ -1725,11 +1730,11 @@ class Fit3D (PDF3) :
         if 1 == nc :
             cf = self.make_var ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
             self.alist1.add  ( self.components[0] )
-            self.__num_components.append ( cf ) 
+            self.__nums_components.append ( cf ) 
         elif 2 <= nc : 
             fic = self.make_fracs ( nc , 'C_%%d%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False )
             for c in self.components : self.alist1.add ( c)
-            for f in fic             : self.__num_components.append ( f )
+            for f in fic             : self.__nums_components.append ( f )
             
         self.__nums_components  = tuple ( self.__nums_components  ) 
         for c in self.__nums_components  : self.alist2.add ( c )
@@ -2467,8 +2472,8 @@ class Fit3DSym (PDF3) :
         self.__more_components = []
         for cmp in components :
             
-            if   isinstance  ( c , PDF2           ) : cc = c  
-            elif isinstance  ( c , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cs ,  self.xvar , self.yvar ) 
+            if   isinstance  ( cmp , PDF3           ) : cc = cmp  
+            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic3D_pdf ( cmp ,  self.xvar , self.yvar,self.zvar ) 
             else :
                 self.error ("unknown ``other''component %s/%s, skip it!" % ( cc , type(cc) ) )
                 continue  
@@ -2479,11 +2484,11 @@ class Fit3DSym (PDF3) :
         if 1 == nc :
             cf = self.make_var ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
             self.alist1.add  ( self.components[0] )
-            self.__num_components.append ( cf ) 
+            self.__nums_components.append ( cf ) 
         elif 2 <= nc : 
             fic = self.make_fracs ( nc , 'C_%%d%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False )
             for c in self.components : self.alist1.add ( c)
-            for f in fic             : self.__num_components.append ( f )
+            for f in fic             : self.__nums_components.append ( f )
             
         self.__nums_components  = tuple ( self.__nums_components  ) 
         for c in self.__nums_components  : self.alist2.add ( c )
@@ -3310,8 +3315,8 @@ class Fit3DMix (PDF3) :
         self.__more_components = []
         for cmp in components :
             
-            if   isinstance  ( c , PDF2           ) : cc = c  
-            elif isinstance  ( c , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cs ,  self.xvar , self.yvar ) 
+            if   isinstance  ( cmp , PDF3           ) : cc = cmp  
+            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic3D_pdf ( cmp ,  self.xvar , self.yvar ) 
             else :
                 self.error ("unknown ``other''component %s/%s, skip it!" % ( cc , type(cc) ) )
                 continue  
@@ -3322,11 +3327,11 @@ class Fit3DMix (PDF3) :
         if 1 == nc :
             cf = self.make_var ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
             self.alist1.add  ( self.components[0] )
-            self.__num_components.append ( cf ) 
+            self.__nums_components.append ( cf ) 
         elif 2 <= nc : 
             fic = self.make_fracs ( nc , 'C_%%d%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False )
             for c in self.components : self.alist1.add ( c)
-            for f in fic             : self.__num_components.append ( f )
+            for f in fic             : self.__nums_components.append ( f )
             
         self.__nums_components  = tuple ( self.__nums_components  ) 
         for c in self.__nums_components  : self.alist2.add ( c )
