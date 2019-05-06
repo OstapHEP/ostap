@@ -150,6 +150,7 @@ def _rad_add_ ( self , another ) :
             result = self.emptyClone( dsID() ) 
             result.append ( self    )
             result.append ( another )
+            return result
     
     return NotImplemented
 
@@ -395,7 +396,7 @@ _new_methods_ += [
    ROOT.RooAbsData . __iter__      ,
    ROOT.RooAbsData . __getitem__   ,
    #
-   ROOT.RooAbsData . __add__       ,
+   ROOT.RooDataSet . __add__       ,
    ROOT.RooDataSet . __iadd__      ,
    #
    ROOT.RooAbsData . __mul__       ,

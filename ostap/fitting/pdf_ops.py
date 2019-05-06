@@ -145,13 +145,13 @@ def pdf_product ( pdf1 , pdf2 ) :
                 
         elif isinstance ( pdf2 , _1D.PDF  ) :
             
-            x2 = pdf2.yvar
+            x2 = pdf2.xvar
             
             if  x2 in pdf1.vars :
                 return _2D.Generic2D_pdf ( _prod_ ( pdf1 , pdf2 ) , pdf1.xvar , pdf2.yvar )
             
             return     _3D.Generic3D_pdf ( _prod_ ( pdf1 , pdf2 ) , x1 , y1 , x2 ) 
-
+                
         return NotImplemented
     
     elif isinstance ( pdf1  , _1D.PDF  ) :
