@@ -951,6 +951,34 @@ class SETVAR(object):
 
 
 # =============================================================================
+## @class FIXVAR
+#  Simple context manager to fix/unfix the variable 
+#  @code
+#  a   = ...
+#  var = ...
+#  with FIXVAR( var, a ) :
+#      ## variable is fixed here 
+#  @endcode
+class FIXVAR(object):
+    """ Simple context manager to fix/unfix value for RooAbsVar
+    >>> a   = ...
+    >>> var = ...
+    >>> with FIXVAR(var,a ) :
+    ...     ## variable is fixed here 
+    """
+    def __init__  ( self , xvar , value = None ) :
+        self.xvar  = xvar
+        self.value = value 
+    def __enter__ ( self        ) :
+        self.svar.fix ( self.value ) 
+        return self 
+    def __exit__  ( self , *_   ) :
+        self.xvar.release() 
+
+
+
+
+# =============================================================================
 _decorated_classes_ = (
     ROOT.RooRealVar       ,
     ROOT.RooConstVar      ,

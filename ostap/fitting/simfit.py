@@ -240,15 +240,19 @@ class Sim1D(PDF) :
                                           self.sample        )
 
         keys = self.categories.keys()
-        for key in sorted ( keys ) : self.pdf.addPdf ( self.categories[key].pdf , key )
-        
+        for key in sorted ( keys ) :
+            self.pdf.addPdf ( self.categories[key].pdf , key )
+
         for k , pdf in items_loop ( self.categories ) :
             
             for c in pdf.signals     : self.signals    .add ( c ) 
             for c in pdf.backgrounds : self.backgrounds.add ( c ) 
             for c in pdf.crossterms1 : self.crossterms1.add ( c ) 
             for c in pdf.crossterms2 : self.crossterms2.add ( c ) 
-                        
+
+            ## for c in pdf.alist1      : self.alist1.add ( c ) 
+            ## for c in pdf.alist2      : self.alist2.add ( c ) 
+
         self.config = {
             'name'       : self.name       ,
             'title'      : title           ,            

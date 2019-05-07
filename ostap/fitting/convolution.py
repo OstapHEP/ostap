@@ -17,7 +17,7 @@ __all__     = (
     'Convolution_pdf'  , ## ``ready-to-use'' PDF for convolution 
     )
 # =============================================================================
-import ROOT
+import ROOT, math
 from   ostap.fitting.basic import PDF, Generic1D_pdf
 from   ostap.core.ostap_types    import num_types ,  integer_types 
 # =============================================================================
@@ -55,7 +55,7 @@ class Convolution(object):
                    xvar              ,   ## the axis variable
                    resolution        ,   ## the resolution
                    useFFT  = True    ,   ## use FFT ? 
-                   nbins   = 5000    ,   ## numbr of bins for FFT
+                   nbins   = 10000   ,   ## number of bins for FFT
                    buffer  = 0.25    ,   ## buffer fraction use for setBufferFraction
                    nsigmas = 6       ) : ## number of sigmas for setConvolutionWindow
 
@@ -94,22 +94,24 @@ class Convolution(object):
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
-            assert isinstance ( nbins  , integer_types ) and 100   < nbins         , \
+            assert isinstance ( nbins  , integer_types ) and 100   < abs ( nbins  )  , \
                    "Invalid ``nbins''  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
-            assert isinstance ( buffer ,  float        ) and 0.05  < buffer < 0.95 , \
+            assert isinstance ( buffer ,  float        ) and 0.05  < buffer < 0.95   , \
                    "Invalid ``buffer'' parameter %s/%s for ``setBufferFraction''"   % ( buffer , type ( buffer ) )
-                   
-            if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() :
+
+            ## adjust #bins if positive. keep it as it is if negavtive 
+            if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() and  self.__nbins > 0 :
                 mn , mx = self.xvar.minmax()
                 dm  = mx - mn
                 sv  = self.__resolution.sigma.getVal() 
                 dm /= sv
-                nb  = 100 * ( int ( dm ) + 1  )
-                if nb > self.__nbins : 
+                nb  = min ( 50 * ( int ( dm ) + 1  ) , 100000 )
+                nb  = 2**math.frexp(nb)[1]
+                if nb > self.nbinsFFT : 
                     self.__nbins  = nb       
                     logger.info('Convolution: choose #bins %d' % self.__nbins ) 
                 
-            self.__xvar.setBins ( self.__nbins , 'cache' )
+            self.__xvar.setBins ( self.nbinsFFT, 'cache' )
             
             self.__pdf = ROOT.RooFFTConvPdf (
                 'FFT'     + name       , 
@@ -159,7 +161,11 @@ class Convolution(object):
     @property
     def nbinsFFT ( self ) :
         """number of cache bins for Fast Fourier Transform"""
-        return self.__nbins 
+        return abs ( self.__nbins )
+    @property
+    def nbins    ( self ) :
+        """number of cache bins for Fast Fourier Transform"""
+        return abs ( self.__nbins ) 
     @property
     def buffer ( self ) :
         """``buffer'' : buffer fraction for Fast Fourier Transform"""
@@ -186,7 +192,7 @@ class Convolution_pdf(PDF) :
                    resolution        ,   ## the convolution/resolution
                    xvar    = None    ,   ## the axis varable
                    useFFT  = True    ,   ## use  FastFourierTransform?
-                   nbins   = 1000000 ,   ## #bins for FFT
+                   nbins   = 10000   ,   ## #bins for FFT
                    buffer  = 0.25    ,   ## buffer fraction ## setBufferFraction
                    nsigmas = 6       ,   ## number of sigmas for setConvolutionWindow
                    name    = ''      ) : ## the name 
@@ -256,8 +262,18 @@ class Convolution_pdf(PDF) :
     ## redirect any other attributes to original PDF
     def __getattr__ ( self , attr ) :
         """Get all extra attributes from the original PDF"""
-        opdf = self.old_pdf 
-        return  getattr ( opdf , attr )
+
+        try :
+            return getattr ( self.old_pdf     , attr )
+        except AttributeError :
+            pass
+
+        try :
+            return getattr ( self.convolution , attr )
+        except AttributeError :
+            pass
+
+        raise AttributeError("Unknown attribute %s:" % attr )
     
 # =============================================================================
 if '__main__' == __name__ :
