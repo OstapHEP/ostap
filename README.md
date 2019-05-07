@@ -64,7 +64,7 @@ To know more about docker, please check the documentation: https://docs.docker.c
 
 Сonda
 -----
-OstapHep is now available on the conda-forge channel. You can get ostap with conda using the following steps:
+OstapHep is now available on the conda-forge channel https://github.com/conda-forge/ostaphep-feedstock. You can get ostap with conda using the following steps:
 
 Install mininconda
 
