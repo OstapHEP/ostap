@@ -32,7 +32,7 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python-version
                  OUTPUT_VARIABLE PYVERSION_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-message('Python version from ROOT: ' ${PYVERSION_ROOT})
+
 
 find_package(PythonInterp ${PYVERSION_ROOT} REQUIRED )
 find_package(PythonLibs                     REQUIRED )

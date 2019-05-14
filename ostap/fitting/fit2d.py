@@ -1037,7 +1037,7 @@ class Sum2D (PDF2) :
 
         name = name if name else 'Sum_%s_%s' % (  pdf1.name , pdf2.name ) 
         
-        PDF2.__init__ ( name , xvar , yvar )
+        PDF2.__init__ ( self, name , xvar , yvar )
 
         self.__pdf1     = pdf1
         self.__pdf2     = pdf2
@@ -1046,12 +1046,18 @@ class Sum2D (PDF2) :
                                           'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
                                           'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
                                           fraction , 0 , 1 ) 
+        self.alist1 = ROOT.RooArgList (
+            self.__pdf1.pdf ,
+            self.__pdf2.pdf )
+        self.alist2 = ROOT.RooArgList (
+            self.__fraction  )
+
         
         self.pdf = ROOT.RooAddPdf ( name , 
-                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.fraction )
+                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1, self.alist2 )
         
-        if self.pdf1.canBeExtended() : self.error ("``pdf1'' can be extended!") 
-        if self.pdf2.canBeExtended() : self.error ("``pdf2'' can be extended!") 
+        if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
+        if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
 
         self.config = {
             'pdf1'     : self.pdf1     ,
@@ -1515,8 +1521,8 @@ class Fit2D (PDF2) :
         self.__more_components = []
         for cmp in components :
             
-            if   isinstance  ( c , PDF2           ) : cc = c  
-            elif isinstance  ( c , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cs ,  self.xvar , self.yvar ) 
+            if   isinstance  ( cmp , PDF2           ) : cc = cmp  
+            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cmp ,  self.xvar , self.yvar ) 
             else :
                 self.error ("unknown ``other''component %s/%s, skip it!" % ( cc , type(cc) ) )
                 continue  
@@ -1527,11 +1533,11 @@ class Fit2D (PDF2) :
         if 1 == nc :
             cf = self.make_var ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
             self.alist1.add  ( self.components[0] )
-            self.__num_components.append ( cf ) 
+            self.__nums_components.append ( cf ) 
         elif 2 <= nc : 
             fic = self.make_fracs ( nc , 'C_%%d%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False )
             for c in self.components : self.alist1.add ( c)
-            for f in fic             : self.__num_components.append ( f )
+            for f in fic             : self.__nums_components.append ( f )
             
         self.__nums_components  = tuple ( self.__nums_components  ) 
         for c in self.__nums_components  : self.alist2.add ( c )
@@ -1827,7 +1833,7 @@ class Fit2DSym (PDF2) :
     """
     def __init__ ( self               ,
                    #
-                   signal_x           , 
+                   signal_x          , 
                    signal_y   = None  ,
                    suffix     = ''    ,
                    #
@@ -2002,8 +2008,8 @@ class Fit2DSym (PDF2) :
         self.__more_components = []
         for cmp in components :
             
-            if   isinstance  ( c , PDF2           ) : cc = c  
-            elif isinstance  ( c , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cs ,  self.xvar , self.yvar ) 
+            if   isinstance  ( cmp , PDF2           ) : cc = cmp  
+            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cmp ,  self.xvar , self.yvar ) 
             else :
                 self.error ("unknown ``other''component %s/%s, skip it!" % ( cc , type(cc) ) )
                 continue  
@@ -2014,16 +2020,18 @@ class Fit2DSym (PDF2) :
         if 1 == nc :
             cf = self.make_var ( None , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
             self.alist1.add  ( self.components[0] )
-            self.__num_components.append ( cf ) 
+            self.__nums_components.append ( cf ) 
         elif 2 <= nc : 
             fic = self.make_fracs ( nc , 'C_%%d%s' % suffix ,  'C(%%d)%s'  % suffix , fractions  = False )
             for c in self.components : self.alist1.add ( c)
-            for f in fic             : self.__num_components.append ( f )
+            for f in fic             : self.__nums_components.append ( f )
             
         self.__nums_components  = tuple ( self.__nums_components  ) 
         for c in self.__nums_components  : self.alist2.add ( c )
             
         #
+
+
         ## build the final PDF 
         # 
         self.pdf  = ROOT.RooAddPdf  ( "model2D"      + suffix ,

@@ -35,12 +35,14 @@ or, if you are working at the LHCb environment
 
     lb-run ROOT bash
 
-e.g. at lxplus/7 one can do 
+e.g. at lxplus/7 you can do it with several LCG  versions  (93,94,95). Check on which platform is the preferred version of LCG located and run LbLogin, for instance for LCG 95 and  x86_64-centos7-gcc8-opt:
 
+    LbLogin -c x86_64-centos7-gcc8-opt
     source /cvmfs/sft.cern.ch/lcg/views/LCG_95/${CMTCONFIG}/setup.sh
-then clone the repo and build Ostap package 
 
-    git clone git://github.com/OstapHEP/ostap.git
+After setting the enviroments clone the latest released version and build Ostap package 
+
+    git clone —branch <latest tag> git://github.com/OstapHEP/ostap.git
     cd ostap
     mkdir build
     cd build
@@ -48,12 +50,47 @@ then clone the repo and build Ostap package
     make -j8
     make install
     source <INSTALL_DIRECTORY>/thisostap.sh 
+For the latest tag check the page https://github.com/OstapHEP/ostap/releases
+
 Docker
 -----
 We also provided Dockerfile to build the OstapHep image.  You can run Ostap interactively using the command line or via Docker Desktop which is available for MacOS and Windows. To create the docker image from the Ostap directory run:
 
     sudo docker build --network host -t <dockerID>/ostaphep:latest .
-Run the image iteractively:
+Run the image iteractively
 
     sudo docker  run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix  -v ${WORKDIR_PATH}/work_dir:/work_dir  -it <dockerID>/ostaphep:latest
 To know more about docker, please check the documentation: https://docs.docker.com/.
+
+Сonda
+-----
+OstapHep is now available on the conda-forge channel https://github.com/conda-forge/ostaphep-feedstock. You can get ostap with conda using the following steps:
+
+Install mininconda
+
+    wget http://repo.continuum.io.miniconda/Miniconda3-latest-Linux-x86_64.sh
+    sh Miniconda3-latest-Linux-x86_64.sh
+    
+Set the conda environments
+
+    source path-to-miniconda/etc/profile.d/conda.sh
+    
+Add the conda-forge to your channels
+
+    conda config --add channels conda-forge
+    
+Check which versions are available
+
+    conda search ostaphep --channel conda-forge
+
+Create an environment with a specific version of python
+
+    conda create --name ostap-env ostaphep python=3.7
+
+To activate or deactivate the ostap environment use the following command
+
+    conda activate ostap-env 
+    conda deactivate  
+    
+To know more about conda-forge, please visit conda page: https://conda-forge.org.
+
