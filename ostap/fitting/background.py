@@ -1461,8 +1461,8 @@ class PSRight_pdf(PDF) :
                                        None , *self.xminmax() )
         
         if self.xminmax() and self.right.minmax() :
-            mn  , mx  = self       .xminmax()
-            rmn , rmx = self.rright. minmax()            
+            mn  , mx  = self      .xminmax()
+            rmn , rmx = self.right. minmax()            
             assert rmn <= mx, "PSRight_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , rmn, rmx ) 
             
         self.pdf  = Ostap.Models.PhaseSpaceRight (
@@ -1737,7 +1737,6 @@ class PS23L_pdf(PDF) :
         
 models.append ( PS23L_pdf ) 
 
-
 # ==============================================================================
 ##  @class RooPoly
 #   helper base class to implement various polynomial-like shapes
@@ -1747,8 +1746,8 @@ class RooPoly(PDF,RooPolyBase) :
     def __init__ ( self , name , power , xvar = None , coefficients  = None ) :
         ## check  the arguments 
         xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
-        PDF       .__init__ ( self , name  , xvar         )
-        RooPlyBase.__init__ ( self , power , coefficients )
+        PDF        .__init__ ( self , name  , xvar         )
+        RooPolyBase.__init__ ( self , power , coefficients )
 
 # =============================================================================        
 ## @class RooPoly_pdf
