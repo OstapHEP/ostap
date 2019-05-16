@@ -18,6 +18,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     'SETVAR'          , ## context manager to preserve the current value for RooRealVar
+    'FIXVAR'          , ## context manager to fix/unfix variables 
     'scale_var'       , ## construct "easy" RooFormulaVar  
     'add_var'         , ## construct "easy" RooFormulaVar
     ## simple "inline" formulas
@@ -966,17 +967,27 @@ class FIXVAR(object):
     >>> with FIXVAR(var,a ) :
     ...     ## variable is fixed here 
     """
-    def __init__  ( self , xvar , value = None ) :
-        self.xvar  = xvar
-        self.value = value 
+    def __init__  ( self , vars , value = None ) :
+        
+        if isinstance ( vars , ROOT.RooAbsReal ) : vars = [ vars ]
+
+        self.vars = [] 
+        for v in vars :
+            assert isinstance ( v , ROOT.RooAbsReal ),\
+                   'FIXVAR: Invalid variable type %s/%s' % ( v   , type ( v ) )
+            self.vars.append ( v )
+            
     def __enter__ ( self        ) :
-        self.svar.fix ( self.value ) 
-        return self 
+
+        self.fixed = [ c.isConstant() for c in self.vars ]  
+        for v in self.vars : v.fix ()
+        
+        return self
+    
     def __exit__  ( self , *_   ) :
-        self.xvar.release() 
-
-
-
+        for v , c in zip ( self.vars , self.fixed ) :
+            if not c : v.release()
+            
 
 # =============================================================================
 _decorated_classes_ = (

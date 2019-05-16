@@ -209,8 +209,28 @@ class DataAndLumi(Data2):
         self.chain1  = self.chain 
         self.lumi    = self.chain2 
  
-
-
+    # =========================================================================
+    ##  Get a sub-sample
+    #   @code
+    #   files = ...
+    #   f1 = files.sample ( 5   ) ##  5     files
+    #   f2 = files.samlpe ( 0.1 ) ## 10% of files 
+    #   @endcode
+    def sample ( self , n , sort = True , **kwargs ) :
+        """Get a sub-sample
+        >>> files = ...
+        >>> f1 = files.sample ( 5   ) ##  5     files
+        >>> f2 = files.sample ( 0.1 ) ## 10% of files 
+        """
+        files = self.sample_files ( n , sort )
+        return DataAndLumi ( files       = files ,
+                             chain       = kwargs.get ( 'chain'       , self.chain1.GetName() ) ,
+                             lumi_chain  = kwargs.get ( 'lumi_chain'  , self.chain2.GetName() ) ,                             
+                             description = kwargs.get ( 'description' , self.description      ) ,
+                             maxfiles    = kwargs.get ( 'maxfiles'    , self.maxfiles         ) ,
+                             silent      = kwargs.get ( 'silent'      , self.silent           ) ,
+                             missing     = kwargs.get ( 'missing'     , self.missing1st       ) )
+    
 # =============================================================================
 if '__main__' == __name__ :
     

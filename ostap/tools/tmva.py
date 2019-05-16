@@ -38,7 +38,7 @@ import ROOT, os, tarfile, shutil
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger
+from ostap.logger.logger import getLogger, attention
 # =============================================================================
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.tmva' )
 else                       : logger = getLogger ( __name__           )
@@ -50,7 +50,7 @@ pattern_CLASS = "%s/weights/%s*.class.C"
 # =============================================================================
 def dir_name ( name ) :
     name = str( name )
-    for s in ' %!><\n?(){}+:.,;-^&|$#@' :
+    for s in ' %!><\n?(){}[]+:.,;-^&|$#@="\'' :
         while s in name : name = name.replace ( ' ' , '_' )
     while 0 <= name.find ('__') : name = name.replace ('__','_')
     return  name 
@@ -207,7 +207,7 @@ class Trainer(object):
     >>> output   = t.output_file   ## get the output ROOT file  
     >>> tar_file = t.tar_file      ## get the tar-file with XML&C++
     
-    Actuially it is a bit simplified version of the original code by Albert PUIG,
+    Actually it is a bit simplified version of the original code by Albert PUIG,
     inspired from
     http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py
     """
@@ -243,7 +243,7 @@ class Trainer(object):
                    signal_weight     = None   ,                
                    background_weight = None   ,
                    ##
-                   output_file       = ''     ,  # the name of output file 
+                   output_file       = ''     ,  ## the name of output file
                    verbose           = True   ,
                    logging           = True   ,
                    name              = 'TMVA' ,
@@ -294,15 +294,15 @@ class Trainer(object):
             else                                     : self.__logging = self.name + '.log'
 
         self.__bookingoptions   = bookingoptions
-        
-
-        
+                
         self.__configuration    = configuration
-        
-        ## outputs 
+
+        ##
+        ## outputs :
+        ## 
         self.__weights_files = []
         self.__class_files   = []
-        self.__output_file   = output_file if output_file else '%s.root' % self.name
+        self.__output_file   = output_file if output_file else '%s.root' % self.name 
         self.__tar_file      = None 
         self.__log_file      = None
 
@@ -603,19 +603,20 @@ class Trainer(object):
                 logger.info ( "Trainer(%s):        spectators:%s" % ( self.name , self.spectators ) )
             #
             if self.signal_cuts :
-                logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) ) 
+                logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) )
+                    
             if self.background_cuts :
                 logger.info ( "Trainer(%s): Background   cuts:``%s''" % ( self.name , self.background_cuts ) )
-            # 
+            #
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
             dataloader.AddTree ( self.background , 'Background' , 1.0 , ROOT.TCut ( self.background_cuts ) )
             #
             if self.signal_weight :
                 dataloader.SetSignalWeightExpression     ( self.signal_weight     )
-                logger.info ( "Trainer(%s): Signal     weight:``%s''" % ( self.name ,     self.signal_weight ) )            
+                logger.info ( "Trainer(%s): Signal     weight:``%s''" % ( self.name , attention ( self.signal_weight     ) ) )
             if self.background_weight :
                 dataloader.SetBackgroundWeightExpression ( self.background_weight )
-                logger.info ( "Trainer(%s): Background weight:``%s''" % ( self.name , self.background_weight ) )
+                logger.info ( "Trainer(%s): Background weight:``%s''" % ( self.name , attention ( self.background_weight ) ) )
                 
             logger.info     ( "Trainer(%s): Configuration    :``%s''" % ( self.name , self.configuration ) )
             dataloader.PrepareTrainingAndTestTree(
@@ -1207,7 +1208,61 @@ def _weights2map_ ( weights_files ) :
     
     assert not _weights.empty() , "Invalid weights_files: %s"  % weights.files
     return _weights 
+
+
+# =============================================================================
+def _add_response_tree  ( tree  , *args ) :
+    """Specific action to ROOT.TChain
+    """
+            
+    import ostap.trees.trees
+    from   ostap.core.core       import Ostap, ROOTCWD
+    from   ostap.io.root_file    import REOPEN
+
+    tdir  = tree.GetDirectory()
+    with ROOTCWD () , REOPEN ( tdir ) as tfile : 
+        
+        tdir.cd()
+        
+        sc = Ostap.TMVA.addResponse ( tree , *args  )
+        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
+        
+        if tfile.IsWritable() :
+            tfile.Write( "" , ROOT.TFile.kOverwrite ) 
+            return sc , tdir.Get ( tree.GetName() )
+        
+        else : logger.warning ( "Can't write TTree back to the file" )
+            
+        return sc , tree 
+
+# =============================================================================
+def _add_response_chain ( chain , *args ) :
+    """Specific axction to ROOT.TChain
+    """
     
+    import ostap.trees.trees
+    
+    files  = chain.files()
+    cname  = chain.GetName() 
+    
+    status = None 
+    
+    verbose = True
+    from ostap.utils.progress_bar import progress_bar
+    for f in progress_bar ( files , len ( files ) , silent = not verbose ) :
+        
+        with ROOT.TFile.Open ( fname , 'UPDATE' ,  exception = True ) as rfile :
+            ## get the tree
+            rr =   rfile.Gen ( cname )
+            ## treat the tree
+            sc , nt = _add_response_tree ( tt  , *args )
+            if status is None or sc.isFailure() : status = sc
+            
+    newc = ROOT.TChain ( cname )
+    for f in  files : newc.Add ( f  )
+ 
+    return status, newc
+        
 # =============================================================================
 ## Helper function to add TMVA response into dataset
 #  @code
@@ -1224,7 +1279,7 @@ def _weights2map_ ( weights_files ) :
 #  @param options  options to be used in TMVA Reader
 #  @param verbose  verbose operation?
 #  @param aux       obligatory for the cuts method, where it represents the efficiency cutoff
-def addTMVAResponse ( dataset                ,   ## input dataste to be updated
+def addTMVAResponse ( dataset                ,   ## input dataset to be updated
                       inputs                 ,   ## input variables 
                       weights_files          ,   ## files with TMVA weigths (tar/gz or xml)
                       prefix   = 'tmva_'     ,   ## prefix for TMVA-variable 
@@ -1233,15 +1288,16 @@ def addTMVAResponse ( dataset                ,   ## input dataste to be updated
                       verbose  = True        ,   ## verbosity flag 
                       aux      = 0.9         ) : ## for Cuts method : efficiency cut-off
     """
-    Helper function to add TMVA  responce into dataset
+    Helper function to add TMVA  response into dataset
     >>> tar_file = trainer.tar_file
     >>> dataset  = ...
     >>> inputs = [ 'var1' , 'var2' , 'var2' ]
     >>> dataset.addTMVAResponse (  inputs , tar_file , prefix = 'tmva_' )
     """
+    assert dataset and isinstance ( dataset , ( ROOT.TTree , ROOT.RooAbsData ) ),\
+           'Invalid dataset type!'
+    
     from ostap.core.core import cpp, std, Ostap
-    PP = std.pair   ( 'std::string', 'std::string' )
-    VP = std.vector ( PP )
 
     _inputs  = _inputs2map_  ( inputs        )
     _weights = _weights2map_ ( weights_files )
@@ -1252,16 +1308,21 @@ def addTMVAResponse ( dataset                ,   ## input dataste to be updated
     from ostap.utils.basic import isatty
     options = opts_replace ( options , 'Color:'  , verbose and isatty() )
     
-    sc = Ostap.TMVA.addResponse ( dataset  ,
-                                  _inputs  ,
-                                  _weights ,
-                                  options  , 
-                                  prefix   ,
-                                  suffix   ,
-                                  aux      )
-    if sc.isFailure() :
-        logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
-    return sc 
+    args = dataset , _inputs, _weights, options, prefix , suffix , aux
+    
+    if   isinstance ( dataset , ROOT.TChain     ) :
+        sc , nc = _add_response_chain ( *args )
+        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
+        return  nc
+    elif isinstance ( dataset , ROOT.TTree      ) :
+        sc , nt = _add_response_tree  ( *args )
+        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
+    else                                          :
+        sc = Ostap.TMVA.addResponse  ( *args )  
+        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
+    
+    return dataset 
+
 # =============================================================================
 if '__main__' == __name__ :
     

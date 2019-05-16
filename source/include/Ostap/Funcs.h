@@ -12,12 +12,12 @@
 // Ostap
 // ============================================================================
 #include "Ostap/IFuncs.h"
+#include "Ostap/Formula.h"
 // ============================================================================
 // ROOT
 // ============================================================================
 #include  "TObject.h"
-// ============================================================================
-class RooFormulaVar ; // formm RooFit 
+#include  "RooFormulaVar.h"
 // ============================================================================
 namespace Ostap 
 {
@@ -29,7 +29,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class FuncFormula Ostap/Funcs.h
-     *  simple implementation of TTRee-function based on Ostap::Formula
+     *  simple implementation of TTree-function based on Ostap::Formula
      */
     class FuncFormula : public Ostap::IFuncTree, public TObject
     {
@@ -48,6 +48,9 @@ namespace Ostap
                     const TTree*       tree       =  nullptr ,
                     const std::string& name       = ""       ) ;
       // ======================================================================
+      /// copy constructor 
+      FuncFormula ( const  FuncFormula& right )  ;
+      // ======================================================================
       /// default constructor, needed for serialization 
       FuncFormula () = default ;
       /// destructor 
@@ -56,7 +59,7 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  TTree
-      double operator() ( const TTree* tree = nullptr ) const override ;
+      double operator() ( const TTree* tree ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -104,7 +107,7 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  data
-      double operator () ( const RooAbsData* data = nullptr ) const override ;
+      double operator () ( const RooAbsData* data ) const override ;
       // ======================================================================
     private:
       // ======================================================================

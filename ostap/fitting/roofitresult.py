@@ -162,7 +162,7 @@ def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
 ## get the covariance (sub) matrix 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _rfr_cov_  ( self , name1 , name2 ) :
+def _rfr_cov_  ( self , var1 , var2 ) :
     """Get covariance (sub) matrix 
     >>> result = ...
     >>> cov = results.cov('Signal', 'Background')

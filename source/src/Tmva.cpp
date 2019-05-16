@@ -12,10 +12,17 @@
 #include "Ostap/Math.h"
 #include "Ostap/Tmva.h"
 #include "Ostap/Iterator.h"
+#include "Ostap/Formula.h"
+#include "Ostap/Notifier.h"
 // ============================================================================
 // TMVA
 // ============================================================================
 #include "TMVA/Reader.h"
+// ============================================================================
+// ROOT
+// ============================================================================
+#include "TTree.h"
+#include "TBranch.h"
 // ============================================================================
 // RooFit 
 // ============================================================================
@@ -46,6 +53,7 @@ namespace
    *  list of all input variables 
    */
   typedef std::vector<VARIABLE>  VARIABLES  ;
+  // ==========================================================================
   /// actual type for the reader 
   typedef TMVA::Reader           TMVAReader ;
   // ==========================================================================
@@ -142,9 +150,7 @@ namespace
     // ========================================================================
   } ;  
   // ==========================================================================
-  typedef std::vector<READER>   READERS ;
-  // ==========================================================================
-  inline Ostap::StatusCode _add_response_ 
+  Ostap::StatusCode _add_response_ 
   ( RooDataSet&                     data      , 
     READER&                         reader    ,
     const std::string&              prefix    , 
@@ -193,7 +199,9 @@ namespace
   // ==========================================================================
   // Chopping 
   // ==========================================================================
-  inline Ostap::StatusCode _add_chopping_response_ 
+  typedef std::vector<READER>   READERS ;
+  // ==========================================================================
+  Ostap::StatusCode _add_chopping_response_ 
   ( RooDataSet&        data     , 
     RooAbsReal&        chopping ,
     RooCategory&       category ,
@@ -253,11 +261,237 @@ namespace
     //
     return Ostap::StatusCode::SUCCESS ;
   }
-  //
+  // ==========================================================================
+  /** @typedef VARIABLE2 
+   *  helper structure to keep "variable":  name, accessor and placeholder
+   */
+  typedef std::tuple<std::string,Ostap::Formula*,float> VARIABLE2;
+  // ==========================================================================
+  /** @typedef VARIABLES2 
+   *  list of all input variables 
+   */
+  typedef std::vector<VARIABLE2> VARIABLES2 ;
+  // ==========================================================================
+  class READER2
+  {
+    // ========================================================================
+  public: 
+    // ========================================================================
+    READER2 ( TTree*                  data         ,
+              const Ostap::TMVA::MAP& inputs       , 
+              const Ostap::TMVA::MAP& weight_files )
+      : m_data         ( data         ) 
+      , m_inputs       ( inputs       )
+      , m_weight_files ( weight_files )
+    {}
+    // prepare it  for usage 
+    Ostap::StatusCode build ( const std::string& options = "" ) 
+    {
+      //
+      // 1)  create variables 
+      for ( const auto& i : m_inputs ) 
+      {
+        const std::string& name = i.first  ;
+        const std::string  formula { i.second.empty() ? name : i.second } ;
+        //
+        std::string fname = name + "_formula" ;
+        auto _v = std::make_unique<Ostap::Formula>( fname , formula , m_data ) ;
+        if ( !_v->ok() ) { return Ostap::TMVA:: InvalidFormula ; }      
+        Ostap::Formula* var = _v.get() ;
+        _vars.push_back ( std::move ( _v ) ) ;        
+        //
+        if ( nullptr == var ) { return Ostap::TMVA::InvalidVariable ; }
+        //
+        m_variables.push_back ( std::make_tuple ( name , var , 0.0f ) ) ;  
+      }
+      //
+      // 2) create the actual reader 
+      m_reader = std::make_unique<TMVAReader>( options ) ;
+      //
+      //
+      // 3) connect the reader with names&placeholders
+      for ( auto& v : m_variables ) 
+      { 
+        m_reader->AddVariable ( std::get<0> ( v ) , &std::get<2>( v ) ) ;
+      }
+      //
+      // 4) book   TMVA methods 
+      for ( const auto& p : m_weight_files ) 
+      { 
+        auto m = m_reader->BookMVA   ( p.first , p.second ) ; 
+        if  ( nullptr == m ) { return Ostap::TMVA::InvalidBookTMVA ; }
+        m_methods.push_back ( p.first ) ;
+      }
+      //
+      return Ostap::StatusCode::SUCCESS ;
+    }
+    // 
+  public:
+    // ========================================================================
+    const std::vector<std::string> methods      () const { return m_methods      ; }
+    TMVAReader*                    reader       () const { return m_reader.get() ; }
+    const Ostap::TMVA::MAP&        inputs       () const { return m_inputs       ; }
+    const Ostap::TMVA::MAP&        weight_files () const { return m_weight_files ; }
+    VARIABLES2&                    variables    ()       { return m_variables    ; }
+    // ========================================================================
+  private:
+    // ========================================================================     
+    Ostap::TMVA::MAP         m_inputs                   ;
+    Ostap::TMVA::MAP         m_weight_files             ;
+    std::vector<std::string> m_methods      {}          ;
+    TTree*                   m_data         { nullptr } ;
+    // ========================================================================    
+  private:
+    // ========================================================================
+    std::vector<std::unique_ptr<Ostap::Formula> > _vars {} ;
+    // ========================================================================
+  private:  
+    // ========================================================================    
+    VARIABLES2                  m_variables  {}           ;
+    std::unique_ptr<TMVAReader> m_reader     { nullptr }  ;
+    // ========================================================================
+  } ;  
+  // ===========================================================================
+  Ostap::StatusCode _add_response_ 
+  ( TTree*                          tree      , 
+    READER2&                        reader    ,
+    const std::string&              prefix    , 
+    const std::string&              suffix    , 
+    const double                    aux       )
+  {
+    //
+    const Long64_t nEntries = tree->GetEntries() ;
+    if  ( 0 == nEntries || reader.methods().empty() ) { return Ostap::StatusCode::SUCCESS ; }
+    //
+    typedef std::tuple<TBranch*,std::string,double> Branch   ;
+    typedef std::vector<Branch>                     Branches ;
+    //
+    Branches branches { reader.methods().size() } ;
+    unsigned short index = 0 ;
+    for(  auto& branch : branches ) 
+    {
+      const std::string method = reader.methods()[ index ] ;
+      const std::string bname  = prefix + method + suffix       ;
+      //
+      std::get<1>( branch ) = method ;
+      std::get<2>( branch ) = 0.0    ;
+      std::get<0>( branch ) = tree->Branch ( bname.c_str() , &std::get<2> ( branch) , ( bname+"/D").c_str() ) ;
+      //
+      if ( !std::get<0>( branch ) ) { return Ostap::TMVA::InvalidBranch ; } 
+      //
+      ++index ;
+    }
+    //
+    Ostap::Utils::Notifier  notifier { tree } ;
+    for ( auto& e : reader.variables () ) { notifier.add ( std::get<1> ( e ) ) ; }
+    //
+    for ( Long64_t entry = 0 ; entry < nEntries ; ++entry ) 
+    {
+      if ( tree->GetEntry ( entry ) < 0 ) { break ; }
+      //
+      // prepare TMVA input 
+      for ( auto& e : reader.variables() ) 
+      { std::get<2>(e) = std::get<1> ( e )->evaluate () ; }
+      //
+      // evalaute TMVA and fill braches
+      for ( auto& branch : branches ) 
+      {
+        // call TMVA here ... 
+        const double result    = reader.reader()->EvaluateMVA ( std::get<1>( branch ). c_str () , aux ) ;
+        std::get<2> ( branch ) = result ;
+        std::get<0> ( branch ) -> Fill () ;  
+      }
+      // 
+    }
+    //
+    return Ostap::StatusCode::SUCCESS ;
+  } ;
+  // ==========================================================================
+  // Chopping 
+  // ==========================================================================
+  typedef std::vector<READER2>   READERS2 ;
+  // ==========================================================================
+  Ostap::StatusCode _add_chopping_response_ 
+  ( TTree*             tree     , 
+    Ostap::Formula&    chopping ,
+    const std::string& category ,
+    READERS2&          readers  ,
+    const std::string& prefix   , 
+    const std::string& suffix   ,
+    const double       aux      )
+  {
+    //
+    const Long64_t nEntries = tree->GetEntries() ;
+    if  ( 0 == nEntries ) { return Ostap::StatusCode::SUCCESS ; }
+    //    
+    typedef std::tuple<TBranch*,std::string,double> Branch   ;
+    typedef std::vector<Branch>                     Branches ;
+    //
+    // Variables
+    //
+    Branches branches {readers[0].methods().size() } ;
+    unsigned short index = 0 ;
+    for(  auto& branch : branches ) 
+    {
+      const std::string method = readers[0].methods()[ index ] ;
+      const std::string bname  = prefix + method + suffix       ;
+      //
+      std::get<1>( branch ) = method ;
+      std::get<2>( branch ) = 0.0    ;
+      std::get<0>( branch ) = tree->Branch ( bname.c_str() , &std::get<2> ( branch) , ( bname+"/D").c_str() ) ;
+      //
+      if ( !std::get<0>( branch ) ) { return Ostap::TMVA::InvalidBranch ; } 
+      //
+      ++index ;
+    }
+    //
+    Ostap::Utils::Notifier  notifier{ tree , &chopping } ;
+    //
+    for ( auto&  reader :readers ) 
+    { for ( auto& e : readers[0].variables () ) { notifier.add ( std::get<1> ( e ) ) ; } }
+    //
+    // category in Tree:
+    //
+    UInt_t i_category = 0 ;
+    TBranch* bcat = tree->Branch( category.c_str() , &i_category , ( category + "/i" ).c_str() ) ;
+    //
+    if ( !bcat ) { return Ostap::TMVA::InvalidBranch ; } 
+    //
+    const unsigned int N = readers.size() ;
+    //
+    for ( Long64_t entry = 0 ; entry < nEntries ; ++entry ) 
+    {
+      if ( tree->GetEntry ( entry ) < 0 ) { break ; }
+      //
+      const double  chopval = chopping.evaluate() ;
+      if ( !Ostap::Math::islong ( chopval ) ) { return Ostap::TMVA::InvalidChoppingCategory ; }
+      const long         choplong = std::lround ( chopval ) ;
+      const unsigned int index    = choplong % N ;
+      i_category =  index  ;
+      bcat       -> Fill() ;
+      //
+      // prepare TMVA input 
+      READER2& reader = readers[index] ;
+      for ( auto& e : reader.variables() ) 
+      { std::get<2>(e) = std::get<1> ( e )->evaluate () ; }
+      //
+      // evaluate TMVA and fill braches
+      for ( auto& branch : branches ) 
+      {
+        // call TMVA here ... 
+        const double result    = reader.reader()->EvaluateMVA ( std::get<1>( branch ). c_str () , aux ) ;
+        std::get<2> ( branch ) = result ;
+        std::get<0> ( branch ) -> Fill () ;  
+      }
+    }
+    //
+    return Ostap::StatusCode::SUCCESS ;
+  }
+  // ==========================================================================
 }
 // ============================================================================
 /*  Add TMVA response to dataset 
- *  The  function add variables  "prefix+methos+suffix" that 
+ *  The  function add variables  "prefix+methods+suffix" that 
  *  are the responses of TMVA. TMNVA  configurtaion for methods 
  *  is read from the trained (xml) weight-files 
  *  @param data         (UPDATE) dataset 
@@ -287,88 +521,43 @@ Ostap::StatusCode Ostap::TMVA::addResponse
                           suffix  , 
                           aux     ) ;
 }
-// ========================================================================
-/*  Add TMVA response to dataset 
- *  The  function add variables  "prefix+methos+suffix" that 
- *  are the responses of TMVA. TMNVA  configurtaion for methods 
- *  is read from the trained (xml) weight-files 
- *  @param data         (UPDATE) dataset 
- *  @param inputs       (INPUT) [ (varnname,formula)   , ...  ] 
- *  @param weight_files (INPUT) [ (method,weight_file) , ...  ]
- *  @param prefix       (INPUT) the prefix for added varibales 
- *  @param suffix       (INPUT) the suffix for added varibales 
- */ 
-// ========================================================================
-Ostap::StatusCode Ostap::TMVA::addResponse
-( RooDataSet& data                       ,
-  const Ostap::TMVA::PAIRS& inputs       , 
-  const Ostap::TMVA::PAIRS& weight_files , 
-  const std::string&        options      , 
-  const std::string&        prefix       , 
-  const std::string&        suffix       ,
-  const double              aux          )
-{
-  MAP _i ;
-  for ( const auto& p : inputs     ) { _i[p.first] = p.second ; }
-  if  ( _i.size() != inputs.size() ) { return InvalidInputVariables ; }
-  //
-  return addResponse (  data , _i , weight_files , options , prefix , suffix , aux ) ;
-}
-// =======================================================================-----
-/*  Add TMVA response to dataset 
- *  The  function add variables  "prefix+methos+suffix" that 
- *  are the responses of TMVA. TMNVA  configurtaion for methods 
- *  is read from the trained (xml) weight-files 
- *  @param data         (UPDATE) dataset 
- *  @param inputs       (INPUT) [ (varnname,formula)   , ...  ] 
- *  @param weight_files (INPUT) map  { method  : weight_file }  
- *  @param prefix       (INPUT) the prefix for added varibales 
- *  @param suffix       (INPUT) the suffix for added varibales 
- */
-// =======================================================================-----
-Ostap::StatusCode Ostap::TMVA::addResponse
-( RooDataSet& data                       ,
-  const Ostap::TMVA::PAIRS& inputs       , 
-  const Ostap::TMVA::MAP&   weight_files , 
-  const std::string&         options      , 
-  const std::string&        prefix       , 
-  const std::string&        suffix       ,
-  const double              aux          )
-{
-  MAP _i;
-  for ( const  auto& p : inputs    ) { _i[p.first] = p.second ; }
-  if  ( _i.size() != inputs.size() ) { return InvalidInputVariables ; }
-  //
-  return addResponse (  data , _i , weight_files , options , prefix , suffix , aux ) ; 
-}
-// =======================================================================-----
-/*  Add TMVA response to dataset 
- *  The  function add variables  "prefix+methos+suffix" that 
- *  are the responses of TMVA. TMNVA  configurtaion for methods 
- *  is read from the trained (xml) weight-files 
- *  @param data         (UPDATE) dataset 
- *  @param inputs       (INPUT) map  { varname : formula     }  
- *  @param weight_files (INPUT) [ (method,weight_file) , ...  ]
- *  @param prefix       (INPUT) the prefix for added varibales 
- *  @param suffix       (INPUT) the suffix for added varibales 
- */
-// =======================================================================-----
-Ostap::StatusCode Ostap::TMVA::addResponse
-( RooDataSet& data                       ,
-  const Ostap::TMVA::MAP&   inputs       , 
-  const Ostap::TMVA::PAIRS& weight_files , 
-  const std::string&         options      , 
-  const std::string&        prefix       , 
-  const std::string&        suffix       ,
-  const double              aux          )
-{
-  MAP _w ;
-  for ( const auto& p : weight_files    ) { _w[p.first] = p.second ; }
-  if ( _w.size() != weight_files.size() ) { return InvalidWeightFiles  ; }
-  //
-  return addResponse (  data , inputs , _w , options , prefix , suffix , aux ) ;
-}
 // ============================================================================
+/*  Add TMVA response to TTree
+ *  The  function add branches <code>prefix+method+suffix</code> that 
+ *  are the responses of TMVA. 
+ *  - TMVA  configuration for all methods 
+ *  is read from the trained (xml) weight-files 
+ *  @param tree         (UPDATE) input TTree
+ *  @param inputs       (INPUT) map  { varname : formula     }  
+ *  @param weight_files (INPUT) map  { method  : weight_file }  
+ *  @param prefix       (INPUT) the prefix for added variables 
+ *  @param suffix       (INPUT) the suffix for added variables 
+ *  @param aux          (INPUT) obligatory for the cuts method
+ *                              where it represents the efficiency cutoff
+ */ 
+// ============================================================================
+Ostap::StatusCode Ostap::TMVA::addResponse
+( TTree*                  tree          ,
+  const Ostap::TMVA::MAP& inputs        , 
+  const Ostap::TMVA::MAP& weight_files  ,
+  const std::string&      options       ,
+  const std::string&      prefix        , 
+  const std::string&      suffix        , 
+  const double            aux           ) 
+{
+  if ( nullptr == tree ) { return InvalidTree ; }
+  // create the helper structure  
+  READER2 reader  ( tree , inputs , weight_files ) ;
+  Ostap::StatusCode sc =  reader.build ( options ) ;
+  if ( sc.isFailure() ) { return sc ; }
+  //
+  return _add_response_ ( tree    ,
+                          reader  , 
+                          prefix  , 
+                          suffix  , 
+                          aux     ) ; 
+}
+// ========================================================================
 // Chopping 
 // ============================================================================
 Ostap::StatusCode Ostap::TMVA::addChoppingResponse 
@@ -409,9 +598,71 @@ Ostap::StatusCode Ostap::TMVA::addChoppingResponse
                                    prefix    , 
                                    suffix    ,
                                    aux       )  ;
-  //
-  return  Ostap::StatusCode::SUCCESS ;
 } 
+// ============================================================================
+/*  Add TMVA/Chopping response to TTree
+ *  The  function add branches <code>prefix+method+suffix</code> that 
+ *  are the responses of TMVA. 
+ *  - TMVA  configuration for all methods 
+ *  is read from the trained (xml) weight-files 
+ *  @param tree         (UPDATE) input tree 
+ *  @param chopping     (INPUT) chopping variable/expression
+ *  @param chopping     (INPUT) chopping category 
+ *  @param N            (INPUT) number of categories 
+ *  @param inputs       (INPUT) map  { varname : formula     }  
+ *  @param weight_files (INPUT) map  { method  : weight_file }  
+ *  @param prefix       (INPUT) the prefix for added variables 
+ *  @param suffix       (INPUT) the suffix for added variables 
+ *  @param aux          (INPUT) obligatory for the cuts method
+ *                              where it represents the efficiency cutoff
+ */ 
+// ============================================================================
+Ostap::StatusCode Ostap::TMVA::addChoppingResponse 
+( TTree*                   tree          ,
+  const std::string&       chopping      , // category function 
+  const std::string&       category_name , // category variable 
+  const unsigned short     N             , // number of categories 
+  const Ostap::TMVA::MAP&  inputs        , // mapping of input variables 
+  const Ostap::TMVA::MAPS& weight_files  ,
+  const std::string&       options       ,
+  const std::string&       prefix        , 
+  const std::string&       suffix        ,
+  const double             aux           ) 
+{
+  if ( nullptr == tree ) { return InvalidTree ; }
+  // ==========================================================================
+  if  ( 0 == N || N != weight_files.size() ) { return InvalidChoppingWeightFiles ; }
+  // ==========================================================================
+  //
+  auto chop_var = std::make_unique<Ostap::Formula> ( chopping , chopping  , tree ) ;
+  if ( !chop_var || !chop_var->ok() ) { return Ostap::TMVA:: InvalidFormula ; }      
+  //
+  READERS2 readers ;
+  readers.reserve ( N ) ;
+  //
+  for ( const auto& wfs : weight_files )
+  { readers.emplace_back ( tree , inputs ,  wfs ) ;}
+  //
+  // initialize the  readers:
+  bool first = true ;
+  for ( auto& r : readers ) 
+  {
+    Ostap::StatusCode sc =  r.build( first ? options : "" ) ;
+    if   ( sc.isFailure () ) { return sc ; }  
+    first = false ;
+  }
+  //
+  return _add_chopping_response_ ( tree          ,
+                                   *chop_var     , 
+                                   category_name ,
+                                   readers       , 
+                                   prefix        , 
+                                   suffix        ,
+                                   aux           );
+}
+
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

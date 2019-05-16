@@ -3,7 +3,7 @@
 find_package(ROOT 6 CONFIG REQUIRED )
 
 if(ROOT_FIND_VERSION VERSION_LESS "6.16.0")
-    include(${CMAKE_SOURCE_DIR}/cmake/ROOT_6_14.cmake)
+    include(CMakeROOT_6_14.cmake)
 else()
-    include(${CMAKE_SOURCE_DIR}/cmake/ROOT_6.16.cmake)
+    include(CMakeROOT_6.16.cmake)
 endif()

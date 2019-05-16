@@ -42,7 +42,7 @@ Ostap::Functions::FuncFormula::FuncFormula
 ( const std::string& expression , 
   const TTree*       tree       ,
   const std::string& name       )
-  : Ostap::IFuncTree()
+: Ostap::IFuncTree()
   , TObject      () 
   , m_tree       ( tree       ) 
   , m_formula    ( nullptr    )    
@@ -54,6 +54,20 @@ Ostap::Functions::FuncFormula::FuncFormula
                              "Ostap::Function::FuncFormula"           , 
                              Ostap::StatusCode(700)                   ) ; }
 }
+// ============================================================================
+// copy
+// ============================================================================
+Ostap::Functions::FuncFormula::FuncFormula
+( const Ostap::Functions::FuncFormula& right )  
+  : Ostap::IFuncTree( right )
+  , TObject         ( right ) 
+  , m_tree          ( nullptr            )  // ATTENTION! 
+  , m_formula       ( nullptr            )    
+  , m_expression    ( right.m_expression )  
+  , m_name          ( right.m_name       )  
+{}
+// ============================================================================
+
 // ============================================================================
 // destructor
 // ============================================================================
@@ -70,7 +84,7 @@ bool Ostap::Functions::FuncFormula::make_formula () const
 {
   m_formula.reset ( nullptr ) ;
   if ( nullptr == m_tree ) { return false ; }
-  TTree* t = const_cast<TTree*> ( m_tree ) ;
+  TTree* t  = const_cast<TTree*> ( m_tree ) ;
   m_formula = std::make_unique<Ostap::Formula> ( m_name , m_expression , t ) ; 
   return  ( m_formula && m_formula -> ok () ) ?  m_formula->Notify() : false ;  
 }
@@ -205,6 +219,18 @@ Ostap::Functions::FuncTH::FuncTH
   , m_extrapolate  ( extrapolate   ) 
   , m_density      ( density       )   
 {}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::FuncTH::FuncTH
+( const Ostap::Functions::FuncTH&  right ) 
+  : Ostap::IFuncTree ( right               ) 
+  , TObject          ( right               ) 
+  , m_tree           ( nullptr             )  //  ATTENTION! Tree is not copied!
+  , m_edges          ( right.m_edges       ) 
+  , m_extrapolate    ( right.m_extrapolate ) 
+  , m_density        ( right.m_density     ) 
+{}
 // ======================================================================
 // destructor 
 // ======================================================================
@@ -280,13 +306,26 @@ Ostap::Functions::FuncTH1::FuncTH1
   const bool           edges         ,
   const bool           extrapolate   , 
   const bool           density       )
-  : FuncTH1 ( xvar , tree , tx , edges  , extrapolate , density ) 
+  : FuncTH1( xvar , tree , tx , edges  , extrapolate , density ) 
 {
   /// copy the histogram 
   histo.Copy ( m_h1 ) ;
   m_h1.SetDirectory ( nullptr ) ;
   ///
 }
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::FuncTH1::FuncTH1
+( const Ostap::Functions::FuncTH1&  right ) 
+  : FuncTH     ( right            ) 
+  , m_xvar     ( nullptr          ) 
+  , m_xvar_exp ( right.m_xvar_exp ) 
+  , m_tx       ( right.m_tx       ) 
+  , m_h1       ( right.m_h1       ) 
+{}
+// ============================================================================
+// destructor
 // ============================================================================
 Ostap::Functions::FuncTH1::~FuncTH1(){}
 // ============================================================================
@@ -303,7 +342,8 @@ bool Ostap::Functions::FuncTH1::make_xvar() const
   if ( nullptr == m_tree ) { return false ; }
   m_xvar.reset ( nullptr ) ;
   TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_xvar = std::make_unique<Ostap::Formula> ( "" , m_xvar_exp , t ) ;
+  m_xvar   = std::make_unique<Ostap::Formula> ( "" , m_xvar_exp , t ) ;
+  if ( m_tree && m_xvar && m_xvar->ok() ) { m_xvar->Notify() ; }
   return m_xvar && m_xvar->ok () ;
 }
 // ============================================================================
@@ -312,19 +352,28 @@ bool Ostap::Functions::FuncTH1::make_xvar() const
 double Ostap::Functions::FuncTH1::operator() ( const TTree* tree ) const
 {
   //
+  // the tree 
   if ( nullptr != tree  && tree != m_tree )
   { 
     m_tree = tree  ;
     m_xvar.reset ( nullptr ) ;
   }
-  //
   Ostap::Assert ( nullptr != m_tree , 
                   "Invalid Tree"    , 
                   "Ostap::Function::FuncTH1" ) ;
   //
+  // check consistency
+  if ( m_xvar && ( m_xvar -> GetTree() != m_tree ) ) { m_xvar.reset ( nullptr ) ; }
+  //
+  // the  axis 
   if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
   Ostap::Assert ( m_xvar && m_xvar->ok()                 , 
                   "Invalid Formula '" + m_xvar_exp + "'" , 
+                  "Ostap::Function::FuncTH1"             ) ;
+  //
+  // agree? 
+  Ostap::Assert ( m_tree == m_xvar->GetTree()            , 
+                  "mismatch in tree"                     ,
                   "Ostap::Function::FuncTH1"             ) ;
   //
   const double xvar = m_xvar->evaluate() ;
@@ -425,6 +474,20 @@ Ostap::Functions::FuncTH2::FuncTH2
   m_h2.SetDirectory ( nullptr ) ;
   ///
 }
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::FuncTH2::FuncTH2
+( const Ostap::Functions::FuncTH2&  right ) 
+  : FuncTH     ( right      ) 
+  , m_xvar     ( nullptr    ) 
+  , m_yvar     ( nullptr    ) 
+  , m_xvar_exp ( right.m_xvar_exp ) 
+  , m_yvar_exp ( right.m_yvar_exp ) 
+  , m_tx       ( right.m_tx ) 
+  , m_ty       ( right.m_ty )
+  , m_h2       ( right.m_h2 )
+{}
 // ============================================================================
 //  destructor 
 // ============================================================================
@@ -603,6 +666,23 @@ Ostap::Functions::FuncTH3::FuncTH3
   m_h3.SetDirectory ( nullptr ) ;
   ///
 }
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::FuncTH3::FuncTH3
+( const Ostap::Functions::FuncTH3&  right ) 
+  : FuncTH     ( right      ) 
+  , m_xvar     ( nullptr    ) 
+  , m_yvar     ( nullptr    ) 
+  , m_zvar     ( nullptr    ) 
+  , m_xvar_exp ( right.m_xvar_exp ) 
+  , m_yvar_exp ( right.m_yvar_exp ) 
+  , m_zvar_exp ( right.m_zvar_exp ) 
+  , m_tx       ( right.m_tx ) 
+  , m_ty       ( right.m_ty )
+  , m_tz       ( right.m_tz )
+  , m_h3       ( right.m_h3 )
+{}
 // ============================================================================
 //  destructor 
 // ============================================================================

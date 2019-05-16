@@ -64,6 +64,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PY
 #---Create a shared library 
 add_library(ostap SHARED src/format.cpp
                          src/gauss.cpp
+                         src/AddBranch.cpp
                          src/BLOB.cpp
                          src/BSpline.cpp
                          src/Bernstein.cpp

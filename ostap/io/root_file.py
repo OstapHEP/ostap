@@ -64,7 +64,8 @@ __date__    = "2011-06-07"
 __all__     = (
     'ROOTCWD'      , ## context manager to keep Current Directory
     'open_mode'    , ## decode open-mode for ROOT-files
-    'open'         , ## just for completness 
+    'open'         , ## just for completness
+    'REOPEN'       , ## context manager to <code>ROOT.TFileReOpen('UPDATE')</code>
     ) 
 # =============================================================================
 import ROOT, os , cppyy              ## attention here!!
@@ -552,7 +553,6 @@ def _rf_exit_  ( self , *_ ) :
     except:
         pass
             
-
 # =============================================================================
 ## the basic protocol:
 
@@ -639,7 +639,6 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
         logger.debug ("Open  ROOT file %s/'%s'" % ( fname , mode ) )
         result = rfile._old_init_ ( fname , open_mode ( mode ) , *args )
         if not rfile or not rfile.IsOpen() :
-            ## logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
             raise IOError   ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
         return result
     
@@ -650,19 +649,22 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
 #  f = ROOT.TFile.Open('test_file.root','recreate')
 #  print ROOT.gROOT.CurrentDirectory()
 #  @endcode
-#  @attention  No exceptions are raised for invalid file/open_mode 
-def _rf_new_open_ ( fname , mode = '' , *args ) :
+#  @attention  No exceptions are raised for invalid file/open_mode, unless specified 
+def _rf_new_open_ ( fname , mode = '' , args = () , exception = False ) :
     """Open/create ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile.Open('test_file.root','recreate')
     >>> print ROOT.gROOT.CurrentDirectory()
-    ATTENTION: No exceptions are raised for invalid file/open_mode 
+    ATTENTION: No exceptions are raised for invalid file/open_mode, unless specified 
     """
     with ROOTCWD() :
         logger.debug ( "Open  ROOT file %s/'%s'" % ( fname , mode ) )
         fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
         if not fopen or not fopen.IsOpen() :
-            logger.error ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            if  exception : 
+                raise IOError ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            else :
+                logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
             
         return fopen
         
@@ -727,7 +729,6 @@ if not hasattr ( ROOT.TFile , 'close' ) :
     ROOT.TFile.close = ROOT.TFile._new_close_
 
 
-
 # =============================================================================
 def top_dir ( rdir ) :
     """```topdir'': get the top directory for the given directory"""
@@ -749,6 +750,52 @@ def top_dir ( rdir ) :
 
 ROOT.TDirectory.topdir = property ( top_dir , None , None )
 
+
+# ==============================================================================
+## Trivial context manager to treat TFile.ReOpen for 'UPDATE' mode
+#  @code
+#  tdir = ...
+#  with REOPEN ( tdir ) as rfile : 
+#     ...
+#     rfile.Write("", ROOT.TFile.kOverwrite )
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-05-16
+class REOPEN(object) :
+    """Trivial context manager to treat TFile.ReOpen for 'UPDATE' mode
+    >>> tdir = ...
+    >>> with REOPEN ( tdir ) as rfile : 
+    ...     ...
+    ...     rfile.Write("", ROOT.TFile.kOverwrite )
+    """
+    def __init__ ( self , rfile ) :
+        
+        self.tfile = top_dir ( rfile ) 
+        assert rfile and self.tfile and isinstance ( self.tfile , ROOT.TFile ),\
+               'Invalid file directory %s' %   ( rfile.GetName() if rfile else 'INVALID' )
+
+    ##  enter the context: try to ReOpen fiel with <code>ReOpen('UPDATE')</code>
+    def __enter__ ( self ) :
+        """Enter the context: make a try to reopen the file with `ReOpen('UPDATE')`
+        """
+        
+        self.read = self.tfile.GetOption() == 'READ'
+        if self.read :
+            with ROOTCWD() : 
+                r = self.tfile.ReOpen ('UPDATE' ) 
+                if r < 0 : logger.error ("Can't reopen the file for UPDATE!")
+                
+        return self.tfile
+
+    ## exit the context : return the mode to <code>READ</code> is needed 
+    def __exit__ (  self , *_ ) :
+        """Exit the context: return mode to READ if needed 
+        """
+
+        if self.read :
+            with ROOTCWD() : 
+                r = self.tfile.ReOpen ('READ' ) 
+                if r < 0 : logger.error ("Can't reopen the file for READ!")            
 
 # =============================================================================
 _decorated_classes_ = (

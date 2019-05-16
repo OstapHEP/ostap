@@ -117,10 +117,10 @@ def getLumi ( data , *args ) :
         ## try :
         with rootError() : ## suppress errors from ROOT
             
-            if hasattr ( data , 'pstatVar' ) :
-                stat = data.pstatVar ( [ lumi , lumi_err ] , lumi_cuts , chunk_size = -1 , max_files = 10 )
-            else  :
-                stat = data. statVar ( [ lumi , lumi_err ] , lumi_cuts )
+            ## if hasattr ( data , 'pstatVar' ) :
+            ##    stat = data.pstatVar ( [ lumi , lumi_err ] , lumi_cuts , chunk_size = -1 , max_files = 10 )
+            ## else  :
+            stat = data. statVar ( [ lumi , lumi_err ] , lumi_cuts )
 
             ##
             s1 = stat[ lumi     ]

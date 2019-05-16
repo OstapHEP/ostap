@@ -24,6 +24,9 @@ __all__     = (
     'h3_axes'         , ## book 3D-histogram from axes
     'axis_bins'       , ## convert list of bin edges to axis
     've_adjust'       , ## adjust the efficiency to be in physical range
+    'Histo1DFun'      , ## 1D-histogram as function object 
+    'Histo2DFun'      , ## 2D-histogram as function object 
+    'Histo3DFun'      , ## 3D-histogram as function object 
     )
 # =============================================================================
 import ROOT, sys, math
@@ -707,7 +710,7 @@ _interpolate_3D_ = Ostap.Math.HistoInterpolation.interpolate_3D
 def _h1_call_ ( h1                    ,
                 x                     ,
                 func = lambda s : s   ,
-                interpolate   = 1     ,
+                interpolate   = True  ,
                 edges         = True  ,
                 extrapolate   = False ,
                 density       = False ) :
@@ -737,8 +740,53 @@ def _h1_call_ ( h1                    ,
     #
     return func ( result )
 
+# =============================================================================
+## histogram as trivial function object
+#  @code
+#  histo = ...
+#  fun   = Histo1DFun( histo )
+#  @endcode
+#  @author Vanya BELYAEV IvanBelyaev@itep.ru
+#  @date 2019-05-14
+class Histo1DFun (object) :
+    """Histogram as trivial function object
+    >>> histo = ...
+    >>> fun   = Histo1DFun( histo )
+    """
+    def __init__ ( self                     ,
+                   h1                       ,
+                   func        = lambda : s ,
+                   interpolate = True       ,
+                   edges       = True       ,
+                   extrapolate = False      ,
+                   density     = False      ) :
         
+        assert isinstance ( h1 , ROOT.TH1 ) and not isinstance ( h1 , ROOT.TH2 ),\
+               'Invalid histogram type!'
+        
+        self.__histo  = h1
+        self.__config = {
+            'func'        : func        ,
+            'interpolate' : interpolate ,
+            'edges'       : edges       ,
+            'extrapolate' : extrapolate ,
+            'density'     : density
+            }
+    ##  the only one imporant method
+    def __call__ ( x ) :
+        return self.__histo ( x , **self.__confif )
+    @property
+    def histo ( self )  :
+        """``histo'': the  histogram itself"""
+        return self.__histo 
+    @property
+    def config ( self ) :
+        """``config'' : the configuration (immutable)"""
+        cnf = {}
+        cnf.update ( self.__config )
+        return cnf 
 
+        
 ROOT.TH1F  . __call__     = _h1_call_
 ROOT.TH1D  . __call__     = _h1_call_
 
@@ -1020,6 +1068,53 @@ def _h2_call_ ( h2 ,
 
     return func ( result )
 
+# =============================================================================
+## histogram as trivial function object
+#  @code
+#  histo = ...
+#  fun   = Histo2DFun( histo )
+#  @endcode
+#  @author Vanya BELYAEV IvanBelyaev@itep.ru
+#  @date 2019-05-14
+class Histo2DFun (object) :
+    """Histogram as trivial function object
+    >>> histo = ...
+    >>> fun   = Histo2DFun( histo )
+    """
+    def __init__ ( self                     ,
+                   h2                       ,
+                   func        = lambda : s ,
+                   interpolate = True       ,
+                   edges       = True       ,
+                   extrapolate = False      ,
+                   density     = False      ) :
+        
+        assert isinstance ( h2 , ROOT.TH2 ) and not isinstance ( h2 , ROOT.T32 ),\
+               'Invalid histogram type!'
+        
+        self.__histo  = h2
+        self.__config = {
+            'func'        : func        ,
+            'interpolate' : interpolate ,
+            'edges'       : edges       ,
+            'extrapolate' : extrapolate ,
+            'density'     : density
+            }
+    ##  the only one imporant method
+    def __call__ ( x , y ) :
+        return self.__histo ( x , y , **self.__confif )
+    @property
+    def histo ( self )  :
+        """``histo'': the  histogram itself"""
+        return self.__histo 
+    @property
+    def config ( self ) :
+        """``config'' : the configuration (immutable)"""
+        cnf = {}
+        cnf.update ( self.__config )
+        return cnf 
+
+
 
 ROOT.TH2   . __call__     = _h2_call_
 ROOT.TH2F  . __getitem__  = _h2_get_item_
@@ -1080,10 +1175,56 @@ def _h3_call_ ( h3                         ,
 
     return func ( result )
 
+
+# =============================================================================
+## histogram as trivial function object
+#  @code
+#  histo = ...
+#  fun   = Histo3DFun( histo )
+#  @endcode
+#  @author Vanya BELYAEV IvanBelyaev@itep.ru
+#  @date 2019-05-14
+class Histo3DFun (object) :
+    """Histogram as trivial function object
+    >>> histo = ...
+    >>> fun   = Histo3DFun( histo )
+    """
+    def __init__ ( self                     ,
+                   h3                       ,
+                   func        = lambda : s ,
+                   interpolate = True       ,
+                   edges       = True       ,
+                   extrapolate = False      ,
+                   density     = False      ) :
+        
+        assert isinstance ( h3 , ROOT.TH3 ) ,\
+               'Invalid histogram type!'
+        
+        self.__histo  = h3
+        self.__config = {
+            'func'        : func        ,
+            'interpolate' : interpolate ,
+            'edges'       : edges       ,
+            'extrapolate' : extrapolate ,
+            'density'     : density
+            }
+    ##  the only one imporant method
+    def __call__ ( x , y , z ) :
+        return self.__histo ( x , y , z , **self.__confif )
+    @property
+    def histo ( self )  :
+        """``histo'': the  histogram itself"""
+        return self.__histo 
+    @property
+    def config ( self ) :
+        """``config'' : the configuration (immutable)"""
+        cnf = {}
+        cnf.update ( self.__config )
+        return cnf 
+
 ROOT.TH3   . __call__     = _h3_call_
 ROOT.TH3F  . __getitem__  = _h3_get_item_
 ROOT.TH3D  . __getitem__  = _h3_get_item_
-
 
 # =============================================================================
 # iterate over items
@@ -6428,6 +6569,9 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
            ROOT.TH2F , ROOT.TH2D ,
            ROOT.TH3F , ROOT.TH3D ) :
     t.density = _h_density_
+
+
+
 
 # =============================================================================
 _decorated_classes_ = (

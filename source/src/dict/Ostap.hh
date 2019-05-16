@@ -6,6 +6,7 @@
 // ============================================================================
 // Include files
 // ============================================================================
+#include "Ostap/AddBranch.h"
 #include "Ostap/BLOB.h"
 #include "Ostap/BSpline.h"
 #include "Ostap/Bernstein.h"

@@ -12,7 +12,7 @@ class RooAbsData  ; // From RooFit
 namespace Ostap 
 {
   // ==========================================================================
-  /** @class ITreeFunc Ostap/IFuncs.h
+  /** @class IFuncTree Ostap/IFuncs.h
    *  Helper abstract class to evaluate certain TTree-functions 
    */
   class IFuncTree 
@@ -20,7 +20,7 @@ namespace Ostap
   public :
     // ========================================================================
     /// evaluate the function from TTree 
-    virtual double operator() ( const TTree* tree = nullptr ) const = 0 ;
+    virtual double     operator () ( const TTree* tree ) const = 0 ;
     /// virtual destructor 
     virtual ~IFuncTree  () ;
     // ========================================================================
@@ -34,7 +34,7 @@ namespace Ostap
   public :
     // ========================================================================
     /// evaluate the function from TTree 
-    virtual double operator ()  ( const RooAbsData* tree = nullptr ) const = 0 ;
+    virtual double operator ()  ( const RooAbsData* tree ) const = 0 ;
     /// virtual destructor 
     virtual ~IFuncData () ;
     // ========================================================================

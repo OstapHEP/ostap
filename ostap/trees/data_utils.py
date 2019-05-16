@@ -39,7 +39,6 @@ the original ``Ostap'' code by Alexander BARANOV
 
 """
 # =============================================================================
-# =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
@@ -49,7 +48,7 @@ __all__     = (
     'Data2'       , ## collect files and create two TChain objects 
     )
 # =============================================================================
-import ROOT, glob 
+import ROOT, glob, random, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -225,7 +224,7 @@ class Files(object):
     __ror__ = __add__
     __ior__ = __iadd__
 
-      ## get an intersection of two datasets 
+    ## get an intersection of two datasets 
     def __and__ (  self , other ) :
         """ get intersection of two sets
         >>> ds1 = ...
@@ -270,6 +269,38 @@ class Files(object):
         result.silent   = self.silent 
                                      
         return result 
+
+    ## get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
+    def sample_files ( self ,  n , sort ) :
+        
+        if   isinstance ( n , int   ) and 1 <= n <= len  ( self.files ) :
+            files = random.sample ( self.files , n )
+            if sort : files.sort()
+            return files 
+        elif isinstance ( n , float ) and 0 < n < 1 :
+            n = int ( math.floor ( len ( self.files ) * n ) )
+            return self.sample_files ( n , sort ) 
+        else  :
+            raise IndexError ( "Invalid fraction: %s/%s" % ( n , len( self.files ) ) )
+
+    # =========================================================================
+    ##  Get a sub-sample
+    #   @code
+    #   files = ...
+    #   f1 = files.sample ( 5   ) ##  5     files
+    #   f2 = files.samlpe ( 0.1 ) ## 10% of files 
+    #   @endcode
+    def sample ( self , n , sort = True , **kwargs ) :
+        """Get a sub-sample
+        >>> files = ...
+        >>> f1 = files.sample ( 5   ) ##  5     files
+        >>> f2 = files.sample ( 0.1 ) ## 10% of files 
+        """
+        files = self.sample_files ( n , sort )
+        return Files ( files       = files ,
+                       description = kwargs.get( 'description' , self.description ) ,
+                       maxfiles    = kwargs.get( 'maxfiles'    , self.maxfiles    ) ,
+                       silent      = kwargs.get( 'silent'      , self.silent      ) )
     
     ##  reload!
     def reload ( self ) :
@@ -323,7 +354,7 @@ class Data(Files):
             if not quick :
                 logger.warning("Patterns are not compatible with quick search, switch to ``quick=False''")
         
-        self.e_list1    = set()  
+        self.e_list1    = set()        
         self.chain      = ROOT.TChain ( chain ) if isinstance ( chain , str ) else chain 
         if not description : description = self.chain.GetName()
         ##
@@ -508,6 +539,28 @@ class Data(Files):
         ## 
         from copy import deepcopy
         self.add_files ( deepcopy ( self.patterns ) )
+
+    # =========================================================================
+    ##  Get a sub-sample
+    #   @code
+    #   files = ...
+    #   f1 = files.sample ( 5   ) ##  5     files
+    #   f2 = files.samlpe ( 0.1 ) ## 10% of files 
+    #   @endcode
+    def sample ( self , n , sort = True , **kwargs ) :
+        """Get a sub-sample
+        >>> files = ...
+        >>> f1 = files.sample ( 5   ) ##  5     files
+        >>> f2 = files.sample ( 0.1 ) ## 10% of files 
+        """
+        files = self.sample_files ( n , sort )
+        return Data ( files       = files ,
+                      chain       = kwargs.get ( 'chain'       , self.chain.GetName() ) , 
+                      description = kwargs.get ( 'description' , self.description     ) ,
+                      maxfiles    = kwargs.get ( 'maxfiles'    , self.maxfiles        ) ,
+                      silent      = kwargs.get ( 'silent'      , self.silent          ) ,
+                      quick       = kwargs.get ( 'quick'       , self.quick           ) )
+    
 
 # =============================================================================
 ## @class Data2
@@ -795,6 +848,30 @@ class Data2(Data):
         ##
         self.chain1  = self.chain 
 
+    # =========================================================================
+    ##  Get a sub-sample
+    #   @code
+    #   files = ...
+    #   f1 = files.sample ( 5   ) ##  5     files
+    #   f2 = files.samlpe ( 0.1 ) ## 10% of files 
+    #   @endcode
+    def sample ( self , n , sort = True , **kwargs ) :
+        """Get a sub-sample
+        >>> files = ...
+        >>> f1 = files.sample ( 5   ) ##  5     files
+        >>> f2 = files.sample ( 0.1 ) ## 10% of files 
+        """
+        files = self.sample_files ( n , sort )
+        return Data2 ( files       = files ,
+                       chain1      = kwargs.get ( 'chain1'      , self.chain1.GetName() ) , 
+                       chain2      = kwargs.get ( 'chain2'      , self.chain2.GetName() ) , 
+                       description = kwargs.get ( 'description' , self.description      ) ,
+                       maxfiles    = kwargs.get ( 'maxfiles'    , self.maxfiles         ) ,
+                       silent      = kwargs.get ( 'silent'      , self.silent           ) ,
+                       quick       = kwargs.get ( 'quick'       , self.quick            ) ,
+                       missing1st  = kwargs.get ( 'missing1st'  , self.missing1st       ) ,
+                       missing2nd  = kwargs.get ( 'missing2nd'  , self.missing2nd       ) )
+    
 # =============================================================================
 
 # =============================================================================

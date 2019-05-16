@@ -100,7 +100,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     #
     from ostap.tools.tmva import Trainer 
     trainer = Trainer (
-        name    = 'TestTMVA' ,   
+        name    = 'TestTMVA2' ,   
         methods = [ # type               name   configuration
         ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator" ) ,
         ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=2" ) , 
@@ -182,32 +182,12 @@ methods = reader.methods[:]
 ## # =============================================================================
 
 
-## 3) Run Ostap to   fill   RooDataSet 
-dsS = SelectorWithVars (
-    variables = variables    ,
-    selection = "var1 < 100" , 
-    )
-dsB = SelectorWithVars (
-    variables = variables    , 
-    selection = "var1 < 100" ,
-    )
-
 ## read input data file 
 with ROOT.TFile.Open( data_file ,'READ') as datafile :
     
     datafile.ls()
     tSignal  = datafile['S']
     tBkg     = datafile['B']
-
-    from ostap.utils.timing import timing
-    with timing("Process signal"     ) : tSignal.process ( dsS )
-    with timing("Process backrgound" ) : tBkg   .process ( dsB )
-    
-    ds1 = dsS.data
-    ds2 = dsB.data
-
-    del variables   ## attention: reader must be deleted explicitely 
-    del reader      ## attention: reader must be deleted explicitely 
 
     # =========================================================================
     ## B: addTMVAResponse
@@ -218,35 +198,31 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     
     from ostap.tools.tmva import addTMVAResponse
 
-    logger.info ('dataset SIG: %s' %  ds1 )
-    logger.info ('dataset BKG: %s' %  ds2 )
-    addTMVAResponse ( ds1 ,
-                      inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                      weights_files = tar_file ,
-                      prefix        = 'tmva_'     ,
-                      suffix        = '_response' )
-    addTMVAResponse ( ds2    ,
-                      inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                      weights_files = tar_file ,
-                      prefix        = 'tmva_'     ,
-                      suffix        = '_response' )
+    tSignal = addTMVAResponse ( tSignal ,
+                                inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                                weights_files = tar_file ,
+                                prefix        = 'tmva_'     ,
+                                suffix        = '_response' )
+    tBkg    = addTMVAResponse ( tBkg    ,
+                                inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                                weights_files = tar_file ,
+                                prefix        = 'tmva_'     ,
+                                suffix        = '_response' )
+    
     # =========================================================================
     ## The END of addTMVAResponse  fragment
     # =========================================================================
-
-
     
-    logger.info ('dataset SIG: %s' %  ds1 )
-    logger.info ('dataset BKG: %s' %  ds2 )
-
-
-for m in methods :
-
-    ms = ds1.statVar('tmva_%s_response' % m )
-    mb = ds2.statVar('tmva_%s_response' % m )
+    logger.info ('tree SIG: %s' %  tSignal )
+    logger.info ('tree BKG: %s' %  tBkg    )
     
-    logger.info('TMVA:%-11s for signal&background: %+.2f+-%.2f(S) vs %+.2f+-%.2f(B)' % ( m, ms.mean().value() , ms.rms() , mb.mean().value() , mb.rms() ) )
-
+    for m in methods :
+        
+        ms = tSignal.statVar('tmva_%s_response' % m )
+        mb = tBkg   .statVar('tmva_%s_response' % m )
+        
+        logger.info('TMVA:%-11s for signal&background: %+.2f+-%.2f(S) vs %+.2f+-%.2f(B)' % ( m, ms.mean().value() , ms.rms() , mb.mean().value() , mb.rms() ) )
+        
 
 # =============================================================================
 # The END

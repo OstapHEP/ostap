@@ -1143,6 +1143,62 @@ class Reader(object) :
 
 
 # =============================================================================
+def _add_response_tree ( tree , *args ) :
+    """Specific action to ROOT.TTree
+    """
+    
+    import ostap.trees.trees
+    from   ostap.core.core    import Ostap, ROOTCWD
+    from   ostap.io.root_file import REOPEN
+    
+    tdir  = tree.GetDirectory()
+    
+    with ROOTCWD () , REOPEN ( tdir )  as tfile  : 
+        
+        tdir.cd()
+        
+        sc = Ostap.TMVA.addChoppingResponse ( tree , *args  )
+        if sc.isFailure() :
+            logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+            
+        if tfile.IsWritable() :
+            tfile.Write( "" , ROOT.TFile.kOverwrite )
+            return sc , tdir.Get ( tree.GetName() )    ## RETURN
+        
+        else : logger.warning ( "Can't write TTree back to the file" )
+        
+        return sc , tree                               ## RETURN
+
+# =============================================================================
+def _add_response_chain ( chain , *args ) :
+    """Specific action to ROOT.TChain
+    """
+    
+    import ostap.trees.trees
+    
+    files  = chain.files()
+    cname  = chain.GetName() 
+    
+    status = None 
+    
+    verbose = False
+    from ostap.utils.progress_bar import progress_bar
+    for f in progress_bar ( files , len ( files ) , silent = not verbose ) :
+
+        with  ROOT.TFile.Open ( f , 'UPDATE' ) as ff  :
+            ## get the tree 
+            tt      = ff.Get(cname)
+            ## treat the tree 
+            sc , nt = _add_response_tree ( tt , *args )
+            if status is None or sc.isFailure() : status = sc 
+            
+    newc = ROOT.TChain ( cname )
+    for f in  files : newc.Add ( f  )
+ 
+    return status, newc
+  
+
+# =============================================================================
 ## Helper function to add TMVA/chopping response into dataset
 #  @code
 #  tar_file = trainer.tar_file
@@ -1166,7 +1222,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
                           N                           , ## number of categrories
                           inputs                      , ## input variables 
                           weights_files               , ## files with TMVA weigths (tar/gz or xml)
-                          category_name = 'chopping'  , ## categroy name 
+                          category_name = 'chopping'  , ## category name 
                           prefix        = 'tmva_'     , ## prefix for TMVA-variable         
                           suffix        = '_response' , ## suffix for TMVA-variable 
                           options       =  ''         , ## TMVA-reader options
@@ -1180,7 +1236,42 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     >>> dataset.addChoppingResponse ( dataset , chopper ,  inputs , tar_file , prefix = 'tmva_' )
     """
     assert isinstance ( N , int ) and 1 < N < 10000 , 'Invalid "N" %s' % N
+
     
+    ## decode inputs&weights
+    
+    from ostap.tools.tmva import _inputs2map_ , _weights2map_ , opts_replace
+    
+    _inputs = _inputs2map_  ( inputs )
+
+    files   = WeightsFiles  ( weights_files ).files
+    files_  = [ _weights2map_ ( f ) for f in files ]
+
+    from ostap.core.core import cpp, std, Ostap
+    MAP   = std.map    ( 'std::string', 'std::string' )
+    MAPS  = std.vector ( MAP ) 
+    _maps = MAPS()
+    for m in files_ : _maps.push_back( m ) 
+
+    options = opts_replace ( options , 'V:'      ,     verbose )
+    options = opts_replace ( options , 'Silent:' , not verbose )
+    
+    from ostap.utils.basic import isatty
+    options = opts_replace ( options , 'Color:'  , verbose and isatty() )
+
+
+    if   isinstance ( dataset , ROOT.TChain  ) :
+        sc , nc = _add_response_chain ( dataset , chopper ,  category_name , N ,
+                                        _inputs , _maps , options , prefix , suffix , aux )
+        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+        return nc  
+    elif isinstance ( dataset , ROOT.TTree   ) :
+        sc , nt = _add_response_tree  ( dataset , chopper ,  category_name , N ,
+                                        _inputs , _maps , options , prefix , suffix , aux )
+        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+        return nt  
+        
+                                        
     if isinstance ( chopper , str ) :
         
         if chopper in dataset :
@@ -1205,27 +1296,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
         else           : cn = category_name + '_%d'    % i
         ##
         category.defineType ( cn , i )
-        
-    ## decode inputs&weights
-    
-    from ostap.tools.tmva import _inputs2map_ , _weights2map_ , opts_replace
-    
-    _inputs = _inputs2map_  ( inputs )
 
-    files   = WeightsFiles  ( weights_files ).files
-    files_  = [ _weights2map_ ( f ) for f in files ]
-
-    from ostap.core.core import cpp, std, Ostap
-    MAP   = std.map    ( 'std::string', 'std::string' )
-    MAPS  = std.vector ( MAP ) 
-    _maps = MAPS()
-    for m in files_ : _maps.push_back( m ) 
-
-    options = opts_replace ( options , 'V:'      ,     verbose )
-    options = opts_replace ( options , 'Silent:' , not verbose )
-    
-    from ostap.utils.basic import isatty
-    options = opts_replace ( options , 'Color:'  , verbose and isatty() )
     
     sc = Ostap.TMVA.addChoppingResponse ( dataset  ,
                                           chopper  ,
@@ -1237,9 +1308,10 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
                                           prefix   ,
                                           suffix   ,
                                           aux      )
-    if sc.isFailure() :
-        logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
-    return sc 
+
+    if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+        
+    return dataset 
 
 # =============================================================================
 if '__main__' == __name__ :

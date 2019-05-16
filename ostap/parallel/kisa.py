@@ -510,7 +510,88 @@ class ChopperTraining(Parallel.Task) :
             tarfiles . sort()
             logfiles . sort()
             self.output = weights , classes , outputs , tarfiles, dirnames , logfiles  
-                            
+
+# ===================================================================================
+## @class AddBranch
+#  parallel adding of new branch for looong TChains
+#  @see ostap/trees/trees.py
+class AddBranch(Parallel.Task) :
+    """Add new branch  to loooong TChain in parallel
+    """
+
+    def __init__          ( self , branch_name  , function ) :
+        self.branch_name = branch_name
+        self.function    = function 
+        self.output = ()
+    
+    def initializeLocal   ( self ) : self.output = () 
+    def process           ( self , tree ) :
+
+        import ostap.trees.trees
+
+        if isinstace ( self.function ,  str ) : function = self.function
+        else :
+            ftype    = type ( function )
+            function = ftype ( function )
+
+        files = set() 
+        tree.chain.add_new_branch ( self.branch_name , function , verbose = False ) 
+        for f in tree.files : files.add ( f )
+
+        ## list of processed  files 
+        self.output = list ( files )
+        
+    ## merge results/datasets 
+    def _mergeResults( self , result) :
+        if not  self.output : self.output = result
+        else :
+            s = set()
+            for r in self.output : s.add ( r )
+            for r in      result : s.add ( r )
+            s = list ( s )
+            s.sort()
+            self.output = tuple( s ) 
+
+
+# ===================================================================================
+## @class AddChopping
+#  Add chopping response to looong TChain 
+#  @see ostap/trees/trees.py
+class AddChopping(Parallel.Task) :
+    """Add new branch  to loooong TChain in parallel
+    """
+
+    def __init__          ( self , *args , **kwargs ) :
+        self.  args =   args
+        self.kwargs = kwargs
+        self.output = ()
+    
+    def initializeLocal   ( self ) : self.output = () 
+    def process           ( self , tree ) :
+
+        import ostap.trees.trees
+        from   ostap.tools.chopping import addChoppingResponse        
+
+        addChoppingResponse ( tree.chain , *self.args , **self.kwargs )
+        
+        files = set()
+        for f in tree.files : files.add ( f )
+
+        ## list of processed  files 
+        self.output = list ( files )
+        
+    ## merge results/datasets 
+    def _mergeResults( self , result) :
+        if not  self.output : self.output = result
+        else :
+            s = set()
+            for r in self.output : s.add ( r )
+            for r in      result : s.add ( r )
+            s = list ( s )
+            s.sort()
+            self.output = tuple( s ) 
+
+            
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
 #  @code
@@ -569,7 +650,76 @@ ROOT.TChain.pprocess =  _pprocess_
 ROOT.TTree.pprocess  =  _pprocess_ 
 
 
+# =================================================================================
+def _padd_new_branch_ ( chain , branch_name , function , verbose = True ) :
 
+    if   isinstance ( chain , ROOT.TChain ) : pass 
+    elif isinstance ( chain , ROOT.TTree  ) : 
+        return chain.add_new_branch ( branch_name , function , verbose = False ) 
+    
+    from ostap.trees.trees import Chain
+    ch    = Chain ( chain ) 
+    
+    task  = AddBranch ( branch_name ,  function  )
+    wmgr  = Parallel.WorkManager ( silent = not verbose  )
+    trees = ch.split ( max_files = 1  )
+
+    wmgr.process( task , trees )
+
+    nc = ROOT.TChain ( chain.name )
+    for f in ch.files :  nc.Add ( f )
+    
+    return nc 
+
+ROOT.TTree .padd_new_branch = ROOT.TTree. add_new_branch 
+ROOT.TChain.padd_new_branch = _padd_new_branch_
+
+# =====================================================================================
+## Add ``Chopping'' (k-fold  cross-validation) response to TTree/TChain
+#  @see ostap.tools.chopping
+#  @see ostap.tools.chopping.addChoppingResponse
+def  _add_chopping_ ( chain , *args , **kwargs ) :
+    """ Add ``Chopping'' (k-fold  cross-validation) response to TTree/TChain
+    - see ostap.tools.chopping
+    - see ostap.tools.chopping.addChoppingResponse
+    """
+    from ostap.tool.chopping import addChoppingResponse
+    return addChoppingResponse ( chain , *args , **kwargs )
+
+# =====================================================================================
+## Add ``Chopping'' (k-fold  cross-validation) response to TTree/TChain
+#  (parallel version)
+#  @see ostap.tools.chopping
+#  @see ostap.tools.chopping.addChoppingResponse
+def  _padd_chopping_ ( chain , *args , **kwargs ) :
+    """ Add ``Chopping'' (k-fold  cross-validation) response to TTree/TChain
+    (parallel version)
+    - see ostap.tools.chopping
+    - see ostap.tools.chopping.addChoppingResponse
+    """
+    
+    if   isinstance ( chain , ROOT.TChain ) : pass 
+    elif isinstance ( chain , ROOT.TTree  ) :
+        return _add_chopping_ ( chain , *args , **kwargs ) 
+
+    from ostap.trees.trees import Chain
+    ch    = Chain ( chain ) 
+
+    task  = AddChopping ( *args , **kwargs  )
+    wmgr  = Parallel.WorkManager ( silent = False )
+    trees = ch.split ( max_files = 1  )
+
+    wmgr.process( task , trees )
+
+    nc = ROOT.TChain ( chain.name )
+    for f in ch.files :  nc.Add ( f )
+    
+    return nc
+
+ROOT.TTree . add_chopping =  _add_chopping_
+ROOT.TChain. add_chopping =  _add_chopping_
+ROOT.TTree .padd_chopping =  _add_chopping_
+ROOT.TChain.padd_chopping = _padd_chopping_
 
 # ===================================================================================
 ## parallel processing of loooong chain/tree 

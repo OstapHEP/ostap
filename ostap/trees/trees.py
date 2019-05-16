@@ -18,10 +18,10 @@ __all__     = (
   ) 
 # =============================================================================
 import ROOT
-from ostap.core.core    import std , Ostap, VE, hID
-from ostap.core.ostap_types   import integer_types , long_type
-from ostap.logger.utils import multicolumn
-from ostap.utils.basic  import terminal_size, isatty 
+from ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
+from ostap.core.ostap_types import integer_types , long_type, string_types 
+from ostap.logger.utils     import multicolumn
+from ostap.utils.basic      import terminal_size, isatty
 # =============================================================================
 # logging 
 # =============================================================================
@@ -321,7 +321,6 @@ def _tt_project_ ( tree               ,
         return rr , histo
 
     ## the basic case 
-    from ostap.core.core import ROOTCWD
     with ROOTCWD() :
         ROOT.gROOT.cd ()
         ## make projection 
@@ -1330,6 +1329,86 @@ ROOT.TChain.__radd__ = _tc_add_
 
 from ostap.io.root_file import top_dir
 ROOT.TTree.topdir = property ( top_dir , None , None ) 
+
+# ==============================================================================
+## add new branch to the chain
+#  @see Ostap::Trees::add_branch
+#  @see Ostap::IFuncTree   
+def _chain_add_new_branch ( chain , name , function , verbose = True ) :
+    """ Add new branch to the tree
+    - see Ostap::Trees::add_branch
+    - see Ostap::IFuncTree 
+    """
+    assert isinstance ( chain , ROOT.TChain ), 'Invalid chain!'
+    
+    assert not name in chain.branches() ,'Branch %s already exists!' % name 
+    
+    files = chain.files   ()
+    cname = chain.GetName () 
+    
+    from ostap.utils.progress_bar import progress_bar
+    
+    for fname in progress_bar ( files , len ( files ) , silent = not verbose ) :
+
+        with ROOT.TFile.Open ( fname , 'UPDATE' , exception = True )  as  rfile :
+            ## get the tree 
+            tt = rfile.Get ( cname )
+            ## treat the tree 
+            add_new_branch ( tt , name , function ) 
+            
+    ## recollect the chain 
+    newc = ROOT.TChain ( cname )
+    for f in files : newc.Add ( f  )
+    
+    return newc 
+
+# ==============================================================================
+## add new branch to the tree
+#  @see Ostap::Trees::add_branch
+#  @see Ostap::IFuncTree 
+def add_new_branch ( tree , name , function , verbose = True ) :
+    """ Add new branch to the tree
+    - see Ostap::Trees::add_branch
+    - see Ostap::IFuncTree 
+    """
+    if isinstance (  tree  , ROOT.TChain ) :
+        return _chain_add_new_branch ( tree , name , function , verbose )
+
+    if not tree :
+        logger.error (  "Invalid Tree!" )
+        return
+    
+    assert not name in tree.branches() ,'Branch %s already exists!' % name 
+
+    if isinstance ( function , string_types ) :
+        the_function = function
+    else :
+        ftype        = type  ( function )
+        the_function = ftype ( function )
+
+    from ostap.io.root_file    import REOPEN 
+
+    tname = tree.GetName      ()
+    tdir  = tree.GetDirectory ()
+    
+    with ROOTCWD() , REOPEN ( tdir ) as tfile :
+        
+        tdir.cd()
+        
+        branch = Ostap.Trees.add_branch ( tree , name , the_function )
+        if not branch : logger.error("Branch is null!")
+        
+        if tfile.IsWritable() :
+            
+            tfile.Write( "" , ROOT.TObject.kOverwrite )
+            return tdir.Get ( tname )                           ## RETURN 
+        
+        else : logger.error ( "Can't write TTree back to the file" )
+                
+        return tree                                             ## RETURN 
+    
+    
+ROOT.TTree.add_new_branch = add_new_branch 
 
 # =============================================================================
 from ostap.utils.utils import CleanUp

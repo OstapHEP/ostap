@@ -93,6 +93,7 @@ class PDF (MakeVar) :
             
         self.__alist1     = ROOT.RooArgList()
         self.__alist2     = ROOT.RooArgList()
+        self.__alist3     = []
         self.__config     = {}
         self.__pdf        = None
 
@@ -210,7 +211,8 @@ class PDF (MakeVar) :
     @property
     def title ( self ) :
         """``title'' : get the title for RooAbsPdf"""
-        return self.pdf.title if self.pdf else self.name     
+        return self.pdf.title if self.pdf else self.name
+    
     @property
     def alist1 ( self ) :
         """list/RooArgList of PDF components for compound PDF"""
@@ -219,6 +221,7 @@ class PDF (MakeVar) :
     def alist1 ( self , value ) :
         assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
         self.__alist1 = value
+        
     @property
     def alist2 ( self ) :
         """list/RooArgList of PDF  component's fractions (or yields for exteded fits) for compound PDF"""        
@@ -226,7 +229,22 @@ class PDF (MakeVar) :
     @alist2.setter
     def alist2 ( self , value ) :
         assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
-        self.__alist2 = value
+        self.__alist2 = value                    
+
+    @property
+    def alist3 ( self ) :
+        """``alist3'' : list of components as PDFs"""
+        if len (  self.alist1 ) != len ( self.__alist3 ) : self.error ( "Mismatch for ``alist1/alis3''" )
+        return self.__alist3
+    @alist3.setter
+    def alist3 ( self , value ) :
+        nv = [] 
+        for v in value :
+            assert isinstance ( v , PDF ) , 'Invalid component type %s/%s' % ( v , type ( v ) )
+            nv.append ( v )
+        if len (  self.alist1 ) != len ( self.__alist3 ) : self.error ( "Mismatch for ``alist1/alis3''" )
+        self.__alist2 = nv 
+        
     @property
     def signals     ( self ) :
         """The list/ROOT.RooArgList of all ``signal'' components, e.g. for visualization"""
@@ -2408,11 +2426,12 @@ class Sum1D(PDF) :
                                           'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
                                           'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
                                           fraction , 0 , 1 ) 
-        self.alist1 = ROOT.RooArgList (
+        self.alist1     = ROOT.RooArgList (
             self.__pdf1.pdf ,
             self.__pdf2.pdf )
-        self.alist2 = ROOT.RooArgList (
+        self.alist2     = ROOT.RooArgList (
             self.__fraction  )
+        self.alist3     = self.__pdf1 , self.__pdf2
         
         self.pdf = ROOT.RooAddPdf ( name , 
                                     '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1, self.alist2 )
@@ -2714,8 +2733,8 @@ class Fit1D (PDF) :
 
             ns = len ( self.__all_signals )
             if 1 == ns :
-                sf = self.make_var ( get_i ( S , 0 ) , "S"+suffix , "Signal"     + suffix , None , 1 , 0 , 1.e+7 )
-                self.alist1.add ( self.__all_signals[0]  )
+                sf = self.make_var  ( get_i ( S , 0 ) , "S"+suffix , "Signal"     + suffix , None , 1 , 0 , 1.e+7 )
+                self.alist1    .add ( self.__all_signals[0]  )
                 self.__nums_signals.append ( sf ) 
             elif 2 <= ns : 
                 fis = self.make_fracs ( ns , 'S%s_%%d' % suffix ,  'S%s_%%d'  % suffix , fractions  = False , fracs = S )

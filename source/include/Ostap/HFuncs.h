@@ -47,8 +47,16 @@ namespace Ostap
                const bool           extrapolate   = false    , 
                const bool           density       = false    );
       // ======================================================================
+      /// copy constrctor
+      FuncTH ( const FuncTH& right ) ;
+      // ======================================================================
       /// destructor 
       virtual ~FuncTH () ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// get the histogram 
+      virtual const TH1* histo() const = 0 ;
       // ======================================================================
     protected:
       // ======================================================================
@@ -109,6 +117,9 @@ namespace Ostap
                 const bool           extrapolate   = false    , 
                 const bool           density       = false    );
       // ======================================================================
+      // copy constructor
+      FuncTH1 ( const FuncTH1& right ) ;
+      // ======================================================================
       /// default constructor, needed for serialization 
       FuncTH1 () = default ;
       /// destructor 
@@ -135,7 +146,12 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  TTree
-      double operator() ( const TTree* tree = nullptr ) const override ;
+      double operator() ( const TTree* tree ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the histogram 
+      const TH1D* histo() const override { return &m_h1 ;}
       // ======================================================================
     public:
       // ======================================================================
@@ -221,12 +237,15 @@ namespace Ostap
                 const bool           extrapolate   = false    , 
                 const bool           density       = false    );
       // ======================================================================
+      // copy constructor
+      FuncTH2 ( const FuncTH2& right ) ;
+      // ======================================================================
       /// default constructor, needed for serialization 
       FuncTH2 () = default ;
       /// destructor 
       virtual ~FuncTH2 () ;
       // ======================================================================
-    protected : // private constructor withtou histogram 
+    protected : // private constructor without histogram 
       // ======================================================================
       /** constructor without histogram 
        *  @param histo         (INPUT) the historgam 
@@ -253,7 +272,12 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  TTree
-      double operator() ( const TTree* tree = nullptr ) const override ;
+      double operator() ( const TTree* tree ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the histogram 
+      const TH2D* histo() const override { return &m_h2 ;}
       // ======================================================================
     public:
       // ======================================================================
@@ -357,12 +381,16 @@ namespace Ostap
                 const bool           extrapolate   = false    , 
                 const bool           density       = false    );
       // ======================================================================
+      // copy contructor
+      // ======================================================================
+      FuncTH3 ( const FuncTH3& right ) ;
+      // ======================================================================
       /// default constructor, needed for serialization 
       FuncTH3 () = default ;
       /// destructor 
       virtual ~FuncTH3 () ;
       // ======================================================================
-    protected : // private constructor withtou histogram 
+    protected : // private constructor without histogram 
       // ======================================================================
       /** constructor without histogram 
        *  @param xvar          (INPUT) the expression/variable 
@@ -393,7 +421,12 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  TTree
-      double operator() ( const TTree* tree = nullptr ) const override ;
+      double operator() ( const TTree* tree ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the histogram 
+      const TH3D* histo() const override { return &m_h3 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -436,8 +469,7 @@ namespace Ostap
       ///  the histogram 
       TH3D           m_h3             {       } ; // the histogram
       // ======================================================================
-    } ;
- 
+    } ; 
     // ========================================================================
   } //                                    The end of namespace Ostap::Functions
   // ==========================================================================

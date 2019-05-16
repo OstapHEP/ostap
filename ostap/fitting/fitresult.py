@@ -29,7 +29,7 @@ from ostap.core.ostap_types import integer_types
 # =============================================================================
 ## representation of TFitResult object 
 #  @code 
-#  fit_result = hiisto.Fit( func , 'S' , ... )
+#  fit_result = histo.Fit( func , 'S' , ... )
 #  print fit_result
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -55,7 +55,7 @@ def _fit_repr_ ( self ) :
 # =============================================================================
 ## get number of parameters
 #  @code 
-#  fit_result = hiisto.Fit( func , 'S' , ... )
+#  fit_result = histo.Fit( func , 'S' , ... )
 #  print len(fit_result)
 #  @endcode 
 def _fit_len_ ( r ) :
