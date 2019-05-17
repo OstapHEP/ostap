@@ -651,13 +651,24 @@ ROOT.TTree.pprocess  =  _pprocess_
 
 
 # =================================================================================
+## Add new branch  to TChain in parallel
+#  @see ROOT.TTree.add_new_branch
+#  @code
+#  chain = ....
+#  chain.padd_new_branch ( 'new_branch' , 'px*py' ) 
+#  @endcode
 def _padd_new_branch_ ( chain , branch_name , function , verbose = True ) :
-
+    """Add new branch for loong chain in parallel
+    - see ROOT.TTree.add_new_branch
+    >>> chain = ....
+    >>> chain.padd_new_branch ( 'new_branch' , 'px*py' )     
+    """
+    from ostap.trees.trees import Chain
+    
     if   isinstance ( chain , ROOT.TChain ) : pass 
     elif isinstance ( chain , ROOT.TTree  ) : 
         return chain.add_new_branch ( branch_name , function , verbose = False ) 
     
-    from ostap.trees.trees import Chain
     ch    = Chain ( chain ) 
     
     task  = AddBranch ( branch_name ,  function  )
@@ -671,8 +682,7 @@ def _padd_new_branch_ ( chain , branch_name , function , verbose = True ) :
     
     return nc 
 
-ROOT.TTree .padd_new_branch = ROOT.TTree. add_new_branch 
-ROOT.TChain.padd_new_branch = _padd_new_branch_
+ROOT.TTree .padd_new_branch = _padd_new_branch_
 
 # =====================================================================================
 ## Add ``Chopping'' (k-fold  cross-validation) response to TTree/TChain
