@@ -65,6 +65,7 @@ __all__     = (
     ##
     'counted'            , ## decorator to create 'counted'-function
     ##
+    'cmd_exists'         , ## check the existence of the certain command/executable 
    )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
@@ -74,6 +75,7 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
 else                       : logger = getLogger( __name__            )
 del getLogger
 # =============================================================================
+from sys                import version_info  as python_version 
 ## timing stuff
 from ostap.utils.timing import clocks, timing, timer
 ## other useful stuff 
@@ -260,7 +262,6 @@ def get_file_names_from_file_number(fds):
         names.append(os.readlink('/proc/self/fd/%d' % fd))
     return names
 
-
 # =============================================================================
 ## helper context manager to activate ROOT Error -> Python exception converter 
 #  @see Ostap::Utils::useErrorHandler
@@ -323,11 +324,13 @@ class Batch(object) :
     >>> with Batch() :
     ... do something here 
     """
+    def __init__  ( self , batch = True ) :
+        self.__batch = batch 
     ## contex manahger: ENTER
-    def __enter__ ( self , batch = True ) :
+    def __enter__ ( self ) :
         import ROOT
         self.old_state = ROOT.gROOT.IsBatch()
-        if self.old_state != batch : ROOT.gROOT.SetBatch ( batch ) 
+        if self.old_state != self.__batch : ROOT.gROOT.SetBatch ( self.__batch ) 
         return self
     ## contex manager: EXIT
     def __exit__  ( self , *_ ) :
@@ -400,7 +403,7 @@ class KeepCanvas(object) :
     """
     def __enter__ ( self ) :
         import ROOT 
-        self.canvas = ROOT.gPad.func()
+        self.canvas = ROOT.gPad
     def __exit__  ( self , *_ ) :
         if self.canvas:
             self.canvas.cd()
@@ -588,6 +591,25 @@ def implicitMT ( enable = True ) :
     """
     return ImplicitMT ( enable ) 
 
+
+# =============================================================================
+## get the command
+#  @code
+#  >>> if cmd_exists ( 'epstopdf' ) : ... 
+#  @endcode 
+#  @see https://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
+def cmd_exists ( command ) :
+    """Check the existence of certain command/executable
+    >>> if cmd_exists ( 'epstopdf' ) : ...
+    
+    """
+    if ( python_version.major , python_version.minor ) >= (3,3) : 
+        import shutils
+        return shutil.which( command ) is not None
+    
+    return any( os.access ( os.path.join ( path , command  ) , os.X_OK ) for path in os.environ["PATH"].split(os.pathsep) )
+
+
 # =============================================================================
 ## @class CleanUp
 #  Simple (base) class to get temporary files and directories and to remove them at axit
@@ -658,6 +680,7 @@ class  CleanUp(object) :
         CleanUp._tmpfiles.add ( fname )
         logger.debug ( 'CleanUp: temporary file      requested %s' % fname )
         return fname
+
 
 # =============================================================================
 import atexit

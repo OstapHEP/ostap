@@ -196,6 +196,7 @@ class Trainer(object) :
                    chop_signal       = False         ,   # chop the signal     ?
                    chop_background   = True          ,   # chop the background ?
                    logging           = True          ,   # create log-files    ?
+                   make_plots        = True          ,   # make standard plots ?
                    parallel          = True          ) : # paralell trainingg  ? 
         
         """Create TMVA ``chopping'' trainer
@@ -248,8 +249,9 @@ class Trainer(object) :
         self.__configuration     = configuration
         
         self.__name              = name
-        self.__verbose           = True if verbose else False 
-
+        self.__verbose           = True if verbose    else False 
+        self.__make_plots        = True if make_plots else False
+        
         self.__sig_histos        = ()
         self.__bkg_histos        = ()
         
@@ -325,15 +327,16 @@ class Trainer(object) :
                           configuration     = self.configuration     ,
                           signal_weight     = self.signal_weight     ,
                           background_weight = self.background_weight ,
-                          output_file       = ''           , 
+                          output_file       = ''              , 
                           ##
-                          signal_cuts       = scuts        , 
-                          background_cuts   = bcuts        ,
+                          signal_cuts       = scuts           , 
+                          background_cuts   = bcuts           ,
                           ##
-                          name              = nam          ,
-                          verbose           = self.verbose ,
-                          logging           = self.logging ,
-                          category          = i            )
+                          name              = nam             ,
+                          verbose           = self.verbose    ,
+                          logging           = self.logging    ,
+                          make_plots        = self.make_plots ,
+                          category          = i               )
         
         return t
     
@@ -371,6 +374,11 @@ class Trainer(object) :
     def logging  ( self ) :
         """``logging'' : create the log-files"""
         return self.__logging
+    
+    @property
+    def make_plots ( self ) :
+        """``make_plots'' : make standard TMVA plots?"""
+        return self.__make_plots
     
     @property
     def N        ( self ) :
@@ -1181,7 +1189,7 @@ def _add_response_chain ( chain , *args ) :
     
     status = None 
     
-    verbose = False
+    verbose = True
     from ostap.utils.progress_bar import progress_bar
     for f in progress_bar ( files , len ( files ) , silent = not verbose ) :
 

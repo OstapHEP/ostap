@@ -230,7 +230,29 @@ class DataAndLumi(Data2):
                              maxfiles    = kwargs.get ( 'maxfiles'    , self.maxfiles         ) ,
                              silent      = kwargs.get ( 'silent'      , self.silent           ) ,
                              missing     = kwargs.get ( 'missing'     , self.missing1st       ) )
-    
+
+    # =========================================================================
+    ##  Get an element or slice 
+    #   @code
+    #   files = ...
+    #   f1 = files[5] 
+    #   f2 = files[4:10]
+    #   @endcode
+    def __getitem__ ( self , item ) :
+        """Get a sub-sample
+        >>> files = ...
+        >>> f1 = files[5] 
+        >>> f2 = files[4:10]
+        """
+        files = self.files[ item ]
+        return DataAndLumi ( files       = files                  ,
+                             chain       = self.chain1.GetName () ,
+                             lumi_chain  = self.chain2.GetName () ,                             
+                             description = self.description       ,
+                             maxfiles    = self.maxfiles          ,
+                             silent      = self.silent            ,
+                             missing     = self.missing1st        )
+
 # =============================================================================
 if '__main__' == __name__ :
     

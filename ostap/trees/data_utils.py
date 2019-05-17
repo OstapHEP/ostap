@@ -308,6 +308,25 @@ class Files(object):
         from copy import deepcopy
         self.add_files ( deepcopy ( self.patterns ) )
         
+
+    # =========================================================================
+    ##  Get an element or slice 
+    #   @code
+    #   files = ...
+    #   f1 = files[5] 
+    #   f2 = files[4:10]
+    #   @endcode
+    def __getitem__ ( self , item ) :
+        """Get a sub-sample
+        >>> files = ...
+        >>> f1 = files[5] 
+        >>> f2 = files[4:10]
+        """
+        files = self.files[ item ]
+        return Files ( files       = files            ,
+                       description = self.description ,
+                       maxfiles    = self.maxfiles    ,
+                       silent      = self.silent      )
     ## printout 
     def __str__(self):
         """The specific printout
@@ -318,7 +337,7 @@ class Files(object):
     def __nonzero__ ( self ) : return bool(self.files)
     def __len__     ( self ) : return len (self.files)
   
-   
+
 # =============================================================================
 ## @class Data
 #  Simple utility to access to certain chain in the set of ROOT-files
@@ -561,6 +580,26 @@ class Data(Files):
                       silent      = kwargs.get ( 'silent'      , self.silent          ) ,
                       quick       = kwargs.get ( 'quick'       , self.quick           ) )
     
+    # =========================================================================
+    ##  Get an element or slice 
+    #   @code
+    #   files = ...
+    #   f1 = files[5] 
+    #   f2 = files[4:10]
+    #   @endcode
+    def __getitem__ ( self , item ) :
+        """Get a sub-sample
+        >>> files = ...
+        >>> f1 = files[5] 
+        >>> f2 = files[4:10]
+        """
+        files = self.files[ item ]
+        return Data ( files       = files                 ,
+                      chain       = self.chain.GetName () , 
+                      description = self.description      ,
+                      maxfiles    = self.maxfiles         ,
+                      silent      = self.silent           ,
+                      quick       = self.quick            )
 
 # =============================================================================
 ## @class Data2
@@ -872,6 +911,30 @@ class Data2(Data):
                        missing1st  = kwargs.get ( 'missing1st'  , self.missing1st       ) ,
                        missing2nd  = kwargs.get ( 'missing2nd'  , self.missing2nd       ) )
     
+    # =========================================================================
+    ##  Get an element or slice 
+    #   @code
+    #   files = ...
+    #   f1 = files[5] 
+    #   f2 = files[4:10]
+    #   @endcode
+    def __getitem__ ( self , item ) :
+        """Get a sub-sample
+        >>> files = ...
+        >>> f1 = files[5] 
+        >>> f2 = files[4:10]
+        """
+        files = self.files[ item ]
+        return Data2 ( files       = files                  ,
+                       chain1      = self.chain1.GetName () , 
+                       chain2      = self.chain2.GetName () , 
+                       description = self.description       ,
+                       maxfiles    = self.maxfiles          ,
+                       silent      = self.silent            ,
+                       quick       = self.quick             ,
+                       missing1st  = self.missing1st        ,
+                       missing2nd  = self.missing2nd        )
+ 
 # =============================================================================
 
 # =============================================================================

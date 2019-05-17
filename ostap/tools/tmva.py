@@ -247,6 +247,7 @@ class Trainer(object):
                    verbose           = True   ,
                    logging           = True   ,
                    name              = 'TMVA' ,
+                   make_plots        = True   ,
                    category          = -1     ) : 
         """Constructor with list of methods
         
@@ -282,6 +283,7 @@ class Trainer(object):
         self.__background_cuts   = background_cuts 
         self.__background_weight = background_weight
         self.__category          = int ( category )
+        self.__make_plots        = True if make_plots else False
         
         self.__spectators        = [] 
         
@@ -390,7 +392,6 @@ class Trainer(object):
         """``signal_weight'' : weight to be applied for ``signal'' sample"""
         return self.__signal_weight
     
-
     @property
     def background ( self ) :
         """``background'' :  TTree for background events"""
@@ -426,6 +427,11 @@ class Trainer(object):
         """``logging'' : logging flag : produce log-file?"""
         return self.__logging
 
+    @property
+    def make_plots ( self ) :
+        """``make_plots'' : make standard TMVA plots?"""
+        return self.__make_plots
+    
     @property
     def dirname  ( self ) :
         """``dirname''  : the output directiory name"""
@@ -531,7 +537,9 @@ class Trainer(object):
                 logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.tar_file      ) )
                 if self.verbose : 
                     with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
-                    
+
+            if  self.make_plots : self.makePlots()
+            
             return result
     
             
@@ -608,6 +616,32 @@ class Trainer(object):
             if self.background_cuts :
                 logger.info ( "Trainer(%s): Background   cuts:``%s''" % ( self.name , self.background_cuts ) )
             #
+            if self.verbose :
+                sc = ROOT.TCut ( self.    signal_cuts )
+                bc = ROOT.TCut ( self.background_cuts )
+                if self.    signal_weight : sc *= self.    signal_weight
+                if self.background_weight : sc *= self.background_weight
+                
+                ss = self.signal    .statVar ( '1' , sc )
+                sb = self.background.statVar ( '1' , bc )
+                
+                ns = ss.nEntries()
+                sw = ss.sum ()
+                
+                nb = sb.nEntries()
+                bw = sb.sum ()
+                
+                if self.signal_weight     :
+                    logger.info ( 'Trainer(%s): Signal           : %s/%s ' % ( self.name , ns , sw ) )
+                else :
+                    logger.info ( 'Trainer(%s): Signal           : %s    ' % ( self.name , ns      ) )
+                
+                if self.background_weight :
+                    logger.info ( 'Trainer(%s): Background       : %s/%s ' % ( self.name , nb , bw ) )
+                else :
+                    logger.info ( 'Trainer(%s): Background       : %s    ' % ( self.name , nb      ) )
+
+                
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
             dataloader.AddTree ( self.background , 'Background' , 1.0 , ROOT.TCut ( self.background_cuts ) )
             #
@@ -629,6 +663,7 @@ class Trainer(object):
                 bo.sort() 
                 if  self.verbose : logger.info  ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
                 else             : logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
+                
                 factory.BookMethod ( dataloader , *m )
            
             # Train MVAs
@@ -690,7 +725,50 @@ class Trainer(object):
                         
         return self.tar_file 
 
+    ## make the standard TMVA plots 
+    def makePlots ( self ) :
+        """Make the standard TMVA plots"""
 
+        output = self.output_file 
+        if not output :
+            logger.warning ('No outputfile is registered!')
+            return
+        if not os.path.exists ( output ) or not os.path.isfile ( output ) :
+            logger.error   ('No outputfile %s is found ! % output ')
+            return
+        
+        try :
+            import ostap.io.root_file
+            with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
+                pass   
+        except IOError :
+            logger.error ("Output %s can't be opened!"   % output )
+            return
+
+        #
+        ## make the plots in TMVA  style
+        #
+        
+        logger.info ('Making the standard TMVA plots') 
+        from ostap.utils.utils import batch , cmd_exists 
+        show_plots = self.category in ( 0 , -1 ) and self.verbose 
+        with batch ( not show_plots ) : 
+            ROOT.TMVA.variables                          ( self.name , output     )
+            ROOT.TMVA.correlations                       ( self.name , output     )
+            for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
+            ROOT.TMVA.mvaeffs                            ( self.name , output     )
+            for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
+
+        if cmd_exists ( 'epstopdf' ) :
+            odir, _  = os.path.split ( output           )
+            odir     = os.path.join  ( odir , self.name ) 
+            plotdir  = os.path.join  ( odir , 'plots'   )
+            import glob, subprocess
+            eps      = os.path.join ( plotdir , '*.eps')
+            for i in glob.iglob ( eps ) :
+                r =  subprocess.call ( [ 'epstopdf' , i ] )
+                if r != 0 : logger.warning('epstopdf: unable convert %s to PDF: %s' % ( i , r ) ) 
+                                                              
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader
@@ -1251,9 +1329,9 @@ def _add_response_chain ( chain , *args ) :
     from ostap.utils.progress_bar import progress_bar
     for f in progress_bar ( files , len ( files ) , silent = not verbose ) :
         
-        with ROOT.TFile.Open ( fname , 'UPDATE' ,  exception = True ) as rfile :
+        with ROOT.TFile.Open ( f , 'UPDATE' ,  exception = True ) as rfile :
             ## get the tree
-            rr =   rfile.Gen ( cname )
+            tt =   rfile.Get ( cname )
             ## treat the tree
             sc , nt = _add_response_tree ( tt  , *args )
             if status is None or sc.isFailure() : status = sc
