@@ -17,7 +17,11 @@ __all__     = ()  ## nothing to be imported
 import ROOT,os,  random  
 import ostap.core.pyrouts 
 from   ostap.utils.timing import timing 
-import ostap.parallel.kisa  ## ATTENTION! 
+##  
+import ostap.parallel.kisa              ## ATTENTION!
+import ostap.parallel.parallel_project  ## ATTENTION!
+import ostap.parallel.parallel_fill     ## ATTENTION!
+
 # =============================================================================
 # logging 
 # =============================================================================

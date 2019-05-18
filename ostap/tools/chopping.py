@@ -640,34 +640,24 @@ class Trainer(object) :
         >>> output_files  = trainer. output_files ## output ROOT files 
         >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
         """
-        from ostap.parallel.kisa import ChopperTraining, WorkManager
-
-        import sys 
-        task   = ChopperTraining()
-        wmgr   = WorkManager ( silent = False )
-        params = [ ( i , self ) for i in range ( self.N ) ]
-
-        sys.stdout.flush()
-        sys.stderr.flush()
+        from ostap.parallel.parallel_chopping import chopping_training as _training_
         
-        wmgr.process ( task, params )
+        ##  train it! 
+        results = _training_ ( self )
 
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        assert self.N == len(task.output[0]), 'Invalid number of weights files '
-        assert self.N == len(task.output[1]), 'Invalid number of   class files '
-        assert self.N == len(task.output[2]), 'Invalid number of  output files '
-        assert self.N == len(task.output[3]), 'Invalid number of     tar files '
-        assert self.N == len(task.output[4]), 'Invalid number of     dir files '
-        assert self.N == len(task.output[5]), 'Invalid number of     log files '
+        assert self.N == len ( results [0] ) , 'Invalid number of weights files '
+        assert self.N == len ( results [1] ) , 'Invalid number of   class files '
+        assert self.N == len ( results [2] ) , 'Invalid number of  output files '
+        assert self.N == len ( results [3] ) , 'Invalid number of     tar files '
+        assert self.N == len ( results [4] ) , 'Invalid number of     dir files '
+        assert self.N == len ( results [5] ) , 'Invalid number of     log files '
         
-        weights  = [ i[1] for i in task.output[0]         ]
-        classes  = [ i[1] for i in task.output[1]         ]
-        outputs  = [ i[1] for i in task.output[2]         ]
-        tarfiles = [ i[1] for i in task.output[3]         ]
-        dirnames = [ i[1] for i in task.output[4]         ]
-        logfiles = [ i[1] for i in task.output[5] if i[1] ]
+        weights  = [ i[1] for i in results [0]         ]
+        classes  = [ i[1] for i in results [1]         ]
+        outputs  = [ i[1] for i in results [2]         ]
+        tarfiles = [ i[1] for i in results [3]         ]
+        dirnames = [ i[1] for i in results [4]         ]
+        logfiles = [ i[1] for i in results [5] if i[1] ]
         
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
@@ -1189,7 +1179,7 @@ def _add_response_chain ( chain , *args ) :
     
     status = None 
     
-    verbose = True
+    verbose = 1 < len ( files )
     from ostap.utils.progress_bar import progress_bar
     for f in progress_bar ( files , len ( files ) , silent = not verbose ) :
 

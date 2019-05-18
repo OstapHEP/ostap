@@ -30,7 +30,7 @@ __version__ = '$Revision$'
 __all__     = (
     "Trainer"         , ## the basic TMVA trainer 
     "Reader"          , ## the basic TMVA reader
-    "addTMVAResponse" , ## add TMVA responce to RooDataSet
+    "addTMVAResponse" , ## add TMVA response to RooDataSet/TTree/TChain
     "tmvaGUI"
     )
 # =============================================================================
@@ -1400,6 +1400,7 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
     
     return dataset 
+
 
 # =============================================================================
 if '__main__' == __name__ :

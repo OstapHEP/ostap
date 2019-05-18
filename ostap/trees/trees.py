@@ -1347,6 +1347,8 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
     cname = chain.GetName () 
     
     from ostap.utils.progress_bar import progress_bar
+
+    verbose = verbose and 1 < len ( files )
     
     for fname in progress_bar ( files , len ( files ) , silent = not verbose ) :
 

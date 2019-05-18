@@ -100,8 +100,9 @@ else :
 #
 ## make reweighting iterations
 # 
-from ostap.tools.reweight     import Weight, makeWeights, WeightingPlot
-from ostap.fitting.selectors  import SelectorWithVars, Variable 
+from   ostap.tools.reweight     import Weight, makeWeights, WeightingPlot
+from   ostap.fitting.selectors  import SelectorWithVars, Variable 
+import ostap.parallel.parallel_fill
 
 ## start iterations:
 for iter in range ( 0 , maxIter ) :

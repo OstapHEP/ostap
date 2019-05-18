@@ -75,7 +75,7 @@ def create_tree ( item ) :
 def prepare_data ( tmpdir , nfiles =  100 ,  nentries = 100 , ppservers = () , silent = True ) :
     
     ## Use generic Task from Kisa 
-    from ostap.parallel.kisa import GenericTask as Task  
+    from ostap.parallel.parallel import GenericTask as Task  
     task  = Task ( processor = create_tree ) 
     
     ## task  = PrepareTask () 
