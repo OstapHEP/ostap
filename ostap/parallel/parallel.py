@@ -31,19 +31,19 @@ else                      : logger = getLogger ( __name__         )
 # =============================================================================
 import operator
 
-## try:
-         
-## from ostap.parallel.mp_pathos import Task, WorkManager 
-## logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
+try:
     
-## except ImportErorr :
+    from ostap.parallel.mp_pathos import Task, WorkManager 
+    logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
     
-##     logger.error ("Can't import ostap.parallel.mp_pathos:" )  ## , exc_info = True )
-##     from ostap.parallel.mp_gaudi import Task, WorkManager 
-##     logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
+except ImportErorr :
+    
+    logger.error ("Can't import ostap.parallel.mp_pathos:" )  ## , exc_info = True )
+    from ostap.parallel.mp_gaudi import Task, WorkManager 
+    logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
 
-from ostap.parallel.mp_gaudi import Task, WorkManager 
-logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
+## from ostap.parallel.mp_gaudi import Task, WorkManager 
+## logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
     
 # =============================================================================
 ## @class GenericTask
