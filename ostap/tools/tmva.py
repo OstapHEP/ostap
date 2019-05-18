@@ -756,7 +756,7 @@ class Trainer(object):
             ROOT.TMVA.variables                          ( self.name , output     )
             ROOT.TMVA.correlations                       ( self.name , output     )
             for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
-            ROOT.TMVA.mvaeffs                            ( self.name , output     )
+            ## ROOT.TMVA.mvaeffs                         ( self.name , output     )
             for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
 
         if cmd_exists ( 'epstopdf' ) :
