@@ -65,7 +65,9 @@ __all__     = (
     ##
     'counted'            , ## decorator to create 'counted'-function
     ##
-    'cmd_exists'         , ## check the existence of the certain command/executable 
+    'cmd_exists'         , ## check the existence of the certain command/executable
+    ##
+    'which'              , ## which command (from shutil)
    )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
@@ -82,8 +84,6 @@ from ostap.utils.timing import clocks, timing, timer
 from ostap.utils.basic  import isatty, with_ipython
 ## ... and more useful stuff 
 from ostap.utils.memory import memory, virtualMemory, Memory 
-# =============================================================================
-
 # =============================================================================
 ## @class Profiler
 #  Very simple profiler, based on cProfile module
@@ -591,6 +591,83 @@ def implicitMT ( enable = True ) :
     """
     return ImplicitMT ( enable ) 
 
+# =============================================================================
+## Return the path to an executable which would be run if the given <code>cmd</code> was called.
+#  If no <code>cmd</code> would be called, return <code>None</code>.
+#  - <code>mode</code> is a permission mask passed to <code>os.access()</code>,
+#    by default determining if the file exists and executable.
+#  - When no <code>path</code> is specified, the results of <code>os.environ()</code> are used,
+#    returning either the <code>“PATH”</code> value or a fallback of <code>os.defpath</code>.
+#  - copied from <code>shutil</cdde> module
+def local_which ( cmd, mode=os.F_OK | os.X_OK, path=None):
+    """Given a command, mode, and a PATH string, return the path which
+    conforms to the given mode on the PATH, or None if there is no such
+    file.
+
+    `mode` defaults to os.F_OK | os.X_OK. `path` defaults to the result
+    of os.environ.get("PATH"), or can be overridden with a custom search
+    path.
+
+    """
+    # Check that a given file can be accessed with the correct mode.
+    # Additionally check that `file` is not a directory, as on Windows
+    # directories pass the os.access check.
+    def _access_check(fn, mode):
+        return (os.path.exists(fn) and os.access(fn, mode)
+                and not os.path.isdir(fn))
+
+    # If we're given a path with a directory part, look it up directly rather
+    # than referring to PATH directories. This includes checking relative to the
+    # current directory, e.g. ./script
+    if os.path.dirname(cmd):
+        if _access_check(cmd, mode):
+            return cmd
+        return None
+
+    if path is None:
+        path = os.environ.get("PATH", os.defpath)
+    if not path:
+        return None
+    path = path.split(os.pathsep)
+
+    if sys.platform == "win32":
+        # The current directory takes precedence on Windows.
+        if not os.curdir in path:
+            path.insert(0, os.curdir)
+
+        # PATHEXT is necessary to check on Windows.
+        pathext = os.environ.get("PATHEXT", "").split(os.pathsep)
+        # See if the given file matches any of the expected path extensions.
+        # This will allow us to short circuit when given "python.exe".
+        # If it does match, only test that one, otherwise we have to try
+        # others.
+        if any(cmd.lower().endswith(ext.lower()) for ext in pathext):
+            files = [cmd]
+        else:
+            files = [cmd + ext for ext in pathext]
+    else:
+        # On other platforms you don't have things like PATHEXT to tell you
+        # what file suffixes are executable, so just pass on cmd as-is.
+        files = [cmd]
+
+    seen = set()
+    for dir in path:
+        normdir = os.path.normcase(dir)
+        if not normdir in seen:
+            seen.add(normdir)
+            for thefile in files:
+                name = os.path.join(dir, thefile)
+                if _access_check(name, mode):
+                    return name
+    return None
+
+
+# =============================================================================
+
+try :
+    from shutil import which
+except ImportError :
+    which  = local_which 
 
 # =============================================================================
 ## get the command
@@ -603,11 +680,9 @@ def cmd_exists ( command ) :
     >>> if cmd_exists ( 'epstopdf' ) : ...
     
     """
-    if ( python_version.major , python_version.minor ) >= (3,3) : 
-        import shutils
-        return shutil.which( command ) is not None
-    
-    return any( os.access ( os.path.join ( path , command  ) , os.X_OK ) for path in os.environ["PATH"].split(os.pathsep) )
+    return which ( command ) is not None
+
+## return any( os.access ( os.path.join ( path , command  ) , os.X_OK ) for path in os.environ["PATH"].split(os.pathsep) )
 
 
 # =============================================================================
