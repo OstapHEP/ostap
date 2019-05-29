@@ -707,6 +707,7 @@ class  CleanUp(object) :
     def tmpdirs  ( self ) :
         """``tmpdirs'' - list of currently registered managed temporary directories"""
         return tuple ( self._tmpdirs )
+    
     @tmpdirs.setter
     def tmpdirs ( self, values ) :
         if instance ( values , str ) : values = [ values ]
@@ -718,7 +719,8 @@ class  CleanUp(object) :
     @property 
     def tmpfiles ( self ) :
         """``tempfiles'' : list of registered managed temporary files"""
-        return list ( self._tmpfiles ) 
+        return list ( self._tmpfiles )
+    
     @tmpfiles.setter
     def tmpfiles ( self , other ) :
         if isinstance ( other , str ) : other = [ other ]
@@ -756,7 +758,54 @@ class  CleanUp(object) :
         logger.debug ( 'CleanUp: temporary file      requested %s' % fname )
         return fname
 
+    @staticmethod
+    def remove_file ( fname ) :
+        """Remove the (temporary) file
+        """
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+            logger.verbose ( 'CleanUp: remove temporary file : %s' % fname )
+            try    : os.remove ( fname )
+            except : pass
+        if os.path.exists  ( fname ) and os.path.isfile ( fname ) :
+            logger.error   ( 'CleanUp: failed to remove file : %s' %  fname  )
+            return False 
+        return True 
 
+    @staticmethod
+    def remove_dir ( fdir ) :
+        """Remove the (temporary) directory
+        """
+        if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
+            logger.verbose ( 'CleanUp: remove temporary dir : %s' % fdir  )
+            ## 1: collect all files & subdirectories 
+            for root, subdirs, files in os.walk ( fdir  , topdown = False ):
+                ## 2: remove all files 
+                for ff in files : CleanUp.remove_file ( os.path.join ( root , ff  ) ) 
+                ## 3: remove all directories 
+                for dd in subdirs :
+                    dd = os.path.join ( root , dd )
+                    logger.verbose ( 'CleanUp: remove subdirectory %s in temporary directory %s ' % ( dd , fdir ) )
+                    try    : os.rmdir   ( dd  )
+                    except : pass
+                    if os.path.exists ( dd ) and os.path.isdir ( dd )   :
+                        logger.error ( 'CleanUp: failed to remove %s in temporary directory %s ' % ( dd , fdir ) )                        
+            ## 4: finally remove the root
+            try    : os.rmdir ( fdir )
+            except : pass
+        if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
+            logger.error ( 'CleanUp: failed to  remove : %s' % fdir  )
+            
+
+    @staticmethod
+    def remove ( fname ) :
+        """Remove temporary object (if any) 
+        """
+        if   os.path.exists ( fname ) and os.path.isdir  ( fname ) :
+            return CleanUp.remove_dir  ( fname )
+        elif os.path.exists ( fname ) and os.path.isfile ( fname ) :
+            return CleanUp.remove_file ( fname )
+        
+        
 # =============================================================================
 import atexit
 @atexit.register
@@ -764,38 +813,17 @@ def _cleanup_ () :
 
     ## 1. clean up the files 
     tmp_files  = CleanUp._tmpfiles
-    logger.debug ( 'CleanUp: remove temporary files: %s' % list ( tmp_files ) ) 
+    logger.debug ( 'CleanUp: remove temporary files: %s' % list ( tmp_files ) )
     while tmp_files :
-        f = tmp_files.pop() 
-        if os.path.exists ( f ) and os.path.isfile ( f ) :
-            logger.verbose ( 'CleanUp: remove temporary file: %s' % f )
-            try    : os.remove ( f )
-            except : pass
+        f = tmp_files.pop()
+        CleanUp.remove_file ( f )
 
     ## 2. clean up  the directories 
     tmp_dirs = CleanUp._tmpdirs
-    logger.debug ( 'CleanUp: remove temporary directories: %s' % list ( tmp_dirs ) ) 
+    logger.debug ( 'CleanUp: remove temporary directories: %s' % list ( tmp_dirs ) )
     while tmp_dirs :
         f = tmp_dirs.pop()
-        if os.path.exists ( f ) and os.path.isdir ( f ) :
-            ## collect all files & subdirectories 
-            for root, subdirs, files in os.walk ( f  , topdown = False ):
-                ## 2.1 remove all files 
-                for ff in files :
-                    ff = os.path.join ( root , ff )
-                    logger.verbose ( 'CleanUp: remove file %s in temporary directory : %s' %  ( ff , f ) )
-                    try    : os.remove  ( ff  )
-                    except : pass
-                ## 2.2 remove all directories 
-                for dd in subdirs :
-                    dd = os.path.join ( root , dd )
-                    logger.verbose ( 'CleanUp: remove subdirectory %s in temporary directory %s ' % ( dd , f ) )
-                    try    : os.rmdir   ( dd  )
-                    except : pass 
-            ## 2.3 finally remove the root
-            logger.debug ( 'CleanUp: remove temporary directory: %s' % f )
-            try    : os.rmdir ( f  )
-            except : pass
+        CleanUp.remove_dir ( f )
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -1716,7 +1716,7 @@ def _gr_transpose_ ( self ) :
     """
     new_graph = ROOT.TGraph( len ( self ) )
     for i , x , y in self.iteritems() :
-        ng[i] = x , y
+        new_graph[i] = y , x 
     return new_graph 
 
 # =============================================================================
@@ -1734,7 +1734,7 @@ def _gre_transpose_ ( self ) :
     """
     new_graph = ROOT.TGraphErrors ( len ( self ) )
     for i , x , y in self.iteritems() :
-        ng[i] = x , y
+        new_graph[i] = y , x 
     return new_graph 
 
 # =============================================================================
@@ -1751,7 +1751,9 @@ def _grae_transpose_ ( self ) :
     >>> graph_T = graph.T() ## ditto 
     """
     new_graph = ROOT.TGraphAsymmErrors ( len ( self ) )
-    for item in self.iteritems() : ng[ item[0] ] = item[1:]
+    for item in self.iteritems() :
+        ip, x , exl , exh , y , eyl , eyh =  item 
+        new_graph [ ip ] = y , eyl , eyh , x , exl , exh         
     return new_graph 
 
 ROOT.TGraph.transpose            =   _gr_transpose_ 

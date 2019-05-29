@@ -974,6 +974,36 @@ class PDF (MakeVar) :
         return result, self.draw ( hdataset , nbins = nbins , silent = silent , **draw_opts )
 
     # =========================================================================
+    ## creat  NLL
+    #  @code
+    #  model.fitTo ( dataset , ... )
+    #  nll = model.nll ( 'dataset )
+    #  @endcode
+    #  @see RooAbsPdf::createNLL 
+    def nll ( self            ,
+              dataset         ,
+              silent  = True  , 
+              args    = ()    , **kwargs ) :
+        """Get NLL object from the pdf
+        >>> model.fitTo ( dataset , ... )
+        >>> nll = model.nll ( dataset )
+        - see RooAbsPdf::createNLL 
+        """
+        
+        nllopts  = [ ROOT.RooFit.CloneData ( False ) ]
+        ncpu     = kwargs.pop ( 'ncpu'  , numcpu () )
+        if    isinstance ( ncpu , ROOT.RooCmdArg ) :
+            nllopts.append ( ncpu ) 
+        elif  isinstance ( ncpu , int            ) :
+            nllopts.append ( ROOT.RooFit.NumCPU (  ncpu ) )
+        else                                       :
+            nllopts.apepnd ( ROOT.RooFit.NumCPU ( *ncpu ) )
+        ##
+        nllopts = tuple ( nllopts )
+        #
+        return self.pdf.createNLL ( dataset , *nllopts ) 
+
+    # =========================================================================
     ## draw/prepare NLL or LL-profiles for selected variable
     #  @code
     #  model.fitTo ( dataset , ... )
@@ -996,7 +1026,8 @@ class PDF (MakeVar) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
                 self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
-                hdataset        = self.histo_data.dset 
+                hdataset        = self.histo_data.dset
+                kwargs['ncpu']  = 2   
                 return self.draw_nll ( var     = var      ,
                                        dataset = hdataset ,
                                        profile = profile  ,
@@ -1031,9 +1062,11 @@ class PDF (MakeVar) :
         if kwargs : self.warning("draw_nll: unknown parameters, ignore: %s"    % kwargs)
         ##
         largs.append  ( ROOT.RooFit.ShiftToZero() ) 
-        largs = tuple ( largs ) 
-    
-        nll    = self.pdf.createNLL ( dataset , ROOT.RooFit.NumCPU (  numcpu() ) ) 
+        largs  = tuple ( largs ) 
+        
+        ## create NLL 
+        nll    = self.nll ( dataset , silent = silent , args = args , kwargs = kwargs )
+        
         result = nll
 
         ## make profile? 
@@ -1088,7 +1121,8 @@ class PDF (MakeVar) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
                 self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
-                hdataset        = self.histo_data.dset 
+                hdataset        = self.histo_data.dset
+                kwargs['ncpu']  = 1 
                 return self.wilks ( var     = var      ,
                                     dataset = hdataset ,
                                     args    = args     , **kwargs )    
@@ -1098,19 +1132,16 @@ class PDF (MakeVar) :
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars
 
-        if silent : nargs = ROOT.RooFit.NumCPU ( numcpu() ) , ROOT.RooFit.Verbose ( False )
-        else      : nargs = ROOT.RooFit.NumCPU ( numcpu() ) , 
-
         with roo_silent ( silent ) :
             
             ## create NLL object
-            nll = self.pdf.createNLL ( dataset , *nargs ) 
+            nll = self.nll ( dataset , silent = silent , args = args , kwargs = kwargs ) 
             
             ## unpack the range 
             minv , maxv = range
-            
+
             if maxv is None : maxv = var.value
-            
+
             error = -1 
             if isinstance ( maxv , VE ) :
                 if 0 < maxv.cov2() : error = maxv.error() 
@@ -1118,22 +1149,27 @@ class PDF (MakeVar) :
 
             vv = var.getVal() 
             with RangeVar ( var , minv , maxv ) :
-                
-                var.setVal ( minv )
-                val_minv = nll.getVal ()
-                
-                var.setVal ( maxv )
-                val_maxv = nll.getVal ()
+
+                with SETVAR ( var ) : 
+                    var.setVal ( minv )
+                    val_minv = nll.getVal ()
+
+                with SETVAR ( var ) : 
+                    var.setVal ( maxv )
+                    val_maxv = nll.getVal ()
+                    
                 dnll     = val_minv -  val_maxv
                 
                 if 0 < error :
-                    
-                    var.setVal ( maxv + error )
-                    val_maxvp = nll.getVal()
-                    
-                    var.setVal ( maxv - error )
-                    val_maxvm = nll.getVal()
-                    
+
+                    with SETVAR ( var ) : 
+                        var.setVal ( maxv + error ) 
+                        val_maxvp = nll.getVal()
+
+                    with SETVAR ( var ) :  
+                        var.setVal ( maxv - error )
+                        val_maxvm = nll.getVal()
+                        
                     dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm )**2 )
                     
                 var.setVal( vv  )
@@ -1313,7 +1349,7 @@ class PDF (MakeVar) :
     #  @code
     #  data = ...
     #  pdf  = ...
-    #  m    = pdf.minos  ( data )
+    #  m    = pdf.minuit  ( data )
     #  m.migrad()
     #  m.hesse ()
     #  m.minos ( param )
@@ -1321,7 +1357,8 @@ class PDF (MakeVar) :
     #  @see RooMinimizer
     def minuit ( self , dataset   ,
                  max_calls = -1   ,
-                 max_iter  = -1   ,
+                 max_iter  = -1   , 
+                 optconst  = True , ## optimize const 
                  strategy  = None , *args , **kwargs  ):
         """Get the actual minimizer for the explicit manipulations
         >>> data = ...
@@ -1334,16 +1371,18 @@ class PDF (MakeVar) :
         """
 
         ## parse the arguments 
-        opts = self.parse_args  ( dataset , ROOT.RooFit.Offset ( True ) , *args , **kwargs )
-
+        opts = self.parse_args    ( dataset ,
+                                    ROOT.RooFit.Offset    ( True  ) ,
+                                    ROOT.RooFit.CloneData ( False ) , *args , **kwargs )
         nll  = self.pdf.createNLL ( dataset , *opts )
         
         m = ROOT.RooMinimizer ( nll )
+        if isinstance  ( optconst  , bool ) : m.optimizeConst ( optconst ) 
         if isinstance  ( max_calls , integer_types ) and 1 < max_calls :
             m.setMaxFunctionCalls ( max_calls )
         if isinstance  ( max_iter  , integer_types ) and 1 < max_iter  :
             m.setMaxIterations    ( max_iter  )
-        if isinstance  ( strategy , integer_types  ) and 0 <=  strategy <= 2 :
+        if isinstance  ( strategy , integer_types  ) and 0 <= strategy <= 2 :
             m.setStrategy ( strategy )
             
         return m  

@@ -129,7 +129,8 @@ def  cproject ( chain                ,
                 cuts                 ,
                 nentries   = -1      ,
                 first      =  0      ,
-                chunk_size = 1000000 ,
+                chunk_size = -1      ,
+                max_files  =  5      , 
                 silent     = False   ) :
     """Make a projection of the loooong chain into histogram
     >>> chain = ... ## large chain
@@ -146,7 +147,7 @@ def  cproject ( chain                ,
     
     task  = ProjectTask            ( histo , what , cuts )
     wmgr  = WorkManager   ( silent = silent )
-    wmgr.process ( task, ch.split  ( chunk_size  = chunk_size  ) )
+    wmgr.process ( task, ch.split  ( chunk_size  = chunk_size , max_files = max_files ) )
     
     filtered   = task.output[0] 
     histo     += task.output[1]
@@ -184,6 +185,7 @@ def  tproject ( tree                 ,   ## the tree
                 nentries   = -1      ,   ## number of entries 
                 first      =  0      ,   ## the first entry 
                 chunk_size = 1000000 ,   ## chunk size 
+                max_files  = 5       ,   ## not-used .... 
                 silent     = False   ) : ## silent processing 
     """Make a projection of the loooong tree into histogram
     >>> tree  = ... ## large chain

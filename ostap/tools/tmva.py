@@ -63,6 +63,7 @@ class WeightsFiles(Utils.CleanUp) :
     """
     def __init__ ( self , weights_files ) :
 
+        self.__trash = None 
         ## string ? treat it a a single tar-file 
         if isinstance ( weights_files , str  ) :
             
@@ -78,10 +79,11 @@ class WeightsFiles(Utils.CleanUp) :
                 with tarfile.open ( weights_files , 'r' ) as tar :
                     ## tar.list() 
                     xmls   = [ f for f in xml_files ( tar ) ] 
-                    tmpdir = self.tmpdir 
+                    tmpdir = self.tempdir ( prefix = 'weights_' )
                     tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                     weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
+                    self.__trash = tmpdir 
             else :
                 weights_files = [ weights_files ]
 
@@ -121,15 +123,27 @@ class WeightsFiles(Utils.CleanUp) :
         import copy
         self.__weights_files = copy.deepcopy ( weights_files ) 
 
+    # ========================================================================
+    ## clean the temporary trash
+    def clean ( self ) :
+        if self.__trash :
+            self.remove_dir ( self.__trash )
+            self.__trash = None 
+            
+    ## delete the file 
+    def __del__ (  self ):
+        self.clean ()
+
     @property
     def methods ( self ) :
         "``methods'': the known methods from weights-file"
         return self.__methods
     @property
     def files   ( self ) :
-        "``files'': the weigths file"
+        "``files'': the weights file"
         import copy
-        return copy.deepcopy ( self.__weights_files ) 
+        return copy.deepcopy ( self.__weights_files )
+
 # =============================================================================
 ## some manipulations with TMVA options 
 def opts_replace ( opts , expr , direct = True ) :
@@ -729,12 +743,13 @@ class Trainer(object):
     def makePlots ( self ) :
         """Make the standard TMVA plots"""
 
-        output = self.output_file 
+        output = self.output_file
+        
         if not output :
-            logger.warning ('No outputfile is registered!')
+            logger.warning ('No output file is registered!')
             return
         if not os.path.exists ( output ) or not os.path.isfile ( output ) :
-            logger.error   ('No outputfile %s is found ! % output ')
+            logger.error   ('No output file %s is found !' % output )
             return
         
         try :
@@ -742,7 +757,7 @@ class Trainer(object):
             with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
                 pass   
         except IOError :
-            logger.error ("Output %s can't be opened!"   % output )
+            logger.error ("Output file %s can't be opened!"   % output )
             return
 
         #
@@ -787,7 +802,7 @@ class Trainer(object):
 #  - single tar/tgz/tar.gz-file with weights files
 #  - list of xml-files with weights
 #  If the xml-filenames follow TMVA Trainer convention, the training method will be
-#  extracted frmo the file name, otherwise it needs to be specified as dictionary   
+#  extracted from the file name, otherwise it needs to be specified as dictionary   
 #  with the key being the method name: 
 #  @code
 #  weights_files = { 'MPL' : 'my_weights.xml', 'BDTG' : 'weights2.xml' } 
@@ -941,7 +956,7 @@ class Reader(object)  :
         self.__name   = name
 
         ## treat the weigths files
-        weights = WeightsFiles ( weights_files )
+        self.__weights = WeightsFiles ( weights_files )
 
         ##  book the variables:
         #   dirty trick with arrays is needed due to a bit strange reader interface.
@@ -982,9 +997,9 @@ class Reader(object)  :
         for v in self.__variables :
             self.__reader.AddVariable ( v[0] , v[2] )            
         
-        self.__methods = weights.methods
+        self.__methods = self.weights.methods
 
-        for method , xml in  items_loop ( weights.files ) :
+        for method , xml in  items_loop ( self.weights.files ) :
             m = self.__reader.BookMVA ( method , xml )
             assert  m , 'Error in booking %s/%s' % (  method  , xml )
             logger.debug ('TMVA Reader(%s) is booked for method:%s xml: %s' % (  self.__name ,
@@ -1003,7 +1018,12 @@ class Reader(object)  :
     def reader ( self ) :
         """``reader'' - the  actual TMVA.Reader object"""
         return self.__reader
-    
+
+    @property
+    def weights ( self ) :
+        """``weigths'' : weights-files """
+        return self.__weights 
+        
     @property
     def methods ( self ) :
         """``methods'' - the  list/tuple of booked TMVA methods"""
@@ -1268,25 +1288,27 @@ def _inputs2map_ ( inputs ) :
     assert not _inputs .empty() and _inputs.size() == len ( inputs ), \
            'Invalid MAP size %s for %s' % ( _inputs.size() , inputs ) 
 
-    return _inputs 
+    return _inputs
+
 # =============================================================================
-## convert weights structure to Ostap.TMVA.PAIRS 
-def _weights2map_ ( weights_files ) :
+## convert weights structure to Ostap.TMVA.MAP
+def _weights2map_ ( weights ) :
     
     from ostap.core.core import cpp, std, Ostap
     MAP = std.map   ( 'std::string', 'std::string' )
     
-    weights  = WeightsFiles ( weights_files )
-    _weights = MAP() 
+    if not isinstance ( weights , WeightsFiles ) : 
+        weights  = WeightsFiles ( weights  )
+
+    _map = MAP() 
     for method , xml in items_loop ( weights.files ) :
-        _weights [ method ] = xml
+        _map [ method ] = xml
 
-    assert not _weights .empty() , \
-           'Invalid MAP size %s for' % ( _weights.size() , weights )
+    assert not _map .empty() , \
+           'Invalid MAP size %s for' % ( _map.size() , weights )
     
-    assert not _weights.empty() , "Invalid weights_files: %s"  % weights.files
-    return _weights 
-
+    assert not _map.empty() , "Invalid weights_files: %s"  % weights.files
+    return _map , weights  
 
 # =============================================================================
 def _add_response_tree  ( tree  , *args ) :
@@ -1325,7 +1347,7 @@ def _add_response_chain ( chain , *args ) :
     
     status = None 
     
-    verbose = True
+    verbose = True and 1 < len ( files )
     from ostap.utils.progress_bar import progress_bar
     for f in progress_bar ( files , len ( files ) , silent = not verbose ) :
         
@@ -1377,29 +1399,31 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     
     from ostap.core.core import cpp, std, Ostap
 
-    _inputs  = _inputs2map_  ( inputs        )
-    _weights = _weights2map_ ( weights_files )
+    _inputs       = _inputs2map_  ( inputs        )
     
-    options = opts_replace ( options , 'V:'      ,     verbose )
-    options = opts_replace ( options , 'Silent:' , not verbose )
+    weights_files = WeightsFiles  ( weights_files ) 
+    _map , _w     = _weights2map_ ( weights_files )
+    
+    options = opts_replace   ( options , 'V:'      ,     verbose )
+    options = opts_replace   ( options , 'Silent:' , not verbose )
     
     from ostap.utils.basic import isatty
     options = opts_replace ( options , 'Color:'  , verbose and isatty() )
     
-    args = dataset , _inputs, _weights, options, prefix , suffix , aux
+    args = dataset , _inputs, _map, options, prefix , suffix , aux
     
     if   isinstance ( dataset , ROOT.TChain     ) :
-        sc , nc = _add_response_chain ( *args )
+        sc , newdata = _add_response_chain ( *args )
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
-        return  nc
     elif isinstance ( dataset , ROOT.TTree      ) :
-        sc , nt = _add_response_tree  ( *args )
+        sc , newdata = _add_response_tree  ( *args )
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
     else                                          :
         sc = Ostap.TMVA.addResponse  ( *args )  
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
-    
-    return dataset 
+        newdata = dataset
+
+    return newdata
 
 
 # =============================================================================

@@ -35,8 +35,10 @@ from ostap.utils.utils import CleanUp
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva_' )
 if not os.path.exists( data_file ) :
     import random 
-    nB = 10000
-    nS = 10000
+    nB =  10000
+    nS =  10000
+    ## nB =  100000
+    ## nS =   20000
     logger.info('Prepare input ROOT file with data  %s' % data_file )
     with ROOT.TFile.Open( data_file ,'recreate') as test_file:
         ## test_file.cd()
@@ -103,20 +105,17 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         name    = 'TestTMVA' ,   
         methods = [ # type               name   configuration
         ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator" ) ,
+        ( ROOT.TMVA.Types.kMLP        , "MLPT"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
+        ( ROOT.TMVA.Types.kBDT        , "BDTG0"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
+        ( ROOT.TMVA.Types.kBDT        , "BDTGT"       , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3:VarTransform=G,D" ) , 
         ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
-        ## ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=1000:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20" )  , 
-        ## ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=1000:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=Decorrelate" ) ,        
+        ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
+        ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
         ( ROOT.TMVA.Types.kCuts       , "Cuts"        , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
         ( ROOT.TMVA.Types.kFisher     , "Fisher"      , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
-        ## ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:VarTransform=Gauss"  ),
-        ## ( ROOT.TMVA.Types.kFisher     , "FisherB"     , "H:!V:Boost_Num=20:Boost_Transform=log:Boost_Type=AdaBoost:Boost_AdaBoostBeta=0.2:!Boost_DetailedMonitoring" ),
-        ## ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
-        ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ) ,
-        ## ( ROOT.TMVA.Types.kLikelihood , "LikelihoodD" , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmooth=5:NAvEvtPerBin=50:VarTransform=Decorrelate" ), 
-        ## ( ROOT.TMVA.Types.kHMatrix    , "HMatrix"     , "H:!V:VarTransform=None" ) ,
-        ## ( ROOT.TMVA.Types.kRuleFit    , "RuleFit"     , "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" ),
-        ## ( ROOT.TMVA.Types.kPDERS      , "PDERS"       , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
-        ## ( ROOT.TMVA.Types.kKNN        , "KNN"         , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
+        ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
+        ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
+        ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
         ] ,
         variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
         signal         = tSignal                  , ## ``Signal'' sample

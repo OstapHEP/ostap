@@ -106,6 +106,7 @@ def parse_args ( args = [] ) :
             setattr(namespace, self.dest, items)
             
     
+    import ostap.core.config as _cnf
     from argparse import ArgumentParser 
     parser = ArgumentParser ( prog = 'ostap' )
     #
@@ -115,13 +116,13 @@ def parse_args ( args = [] ) :
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
         help    = "Quite processing [default: %(default)s]" ,
-        default = False        )
+        default = _cnf.quiet   )
     group1.add_argument ( 
         "--verbose"     ,
         dest    = 'Verbose'    , 
         action  = 'store_true' ,
         help    = "Verbose processing [default: %(default)s]" ,
-        default = False        )
+        default = _cnf.verbose )
     #
     parser.add_argument (
         "files" ,

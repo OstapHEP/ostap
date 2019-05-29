@@ -171,11 +171,10 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         """ Standart constructor
         """
         ## initialize the base
-        self.__selection = selection 
+        self.__selection = str ( selection ) 
         Ostap.SelectorWithCuts.__init__ ( self , selection , None , self )
         if not self.cuts() :
             raise RuntimeError ("__init__:  Invalid Formula %s " % self.cuts() )
-        
     @property
     def selection ( self ) :
         """``selection'' -  selection to be used to preprocess TTree/TChain"""
@@ -330,6 +329,8 @@ class Variable(object) :
 ## is this expression corresponds to valid formula?
 def valid_formula ( expression , varset ) :
 
+    if isinstance ( expression , ROOT.TCut ) : expression =  str ( expression )
+    
     expression = expression.strip()
     if not expression : return True
     

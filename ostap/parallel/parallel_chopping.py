@@ -41,21 +41,21 @@ class AddChopping(Task) :
         
     def initializeLocal   ( self ) : self.output = () 
     def process           ( self , trees ) :
-        
+
         import ostap.trees.trees
         from   ostap.tools.chopping  import addChoppingResponse as add_response 
         
-        if not isinstance ( trees , (tuple, list ) ) : trees = [ trees ]
+        if not isinstance ( trees , ( tuple , list ) ) : trees = [ trees ]
         
         files = set()
 
-        for tree in trees : 
+        for tree in trees :
             add_response ( tree.chain , *self.args , **self.kwargs )
             for f in tree.files : files.add ( f )
             
         ## list of processed  files 
         self.output = list ( files )
-        
+
     ## merge results/datasets 
     def _mergeResults( self , result) :
         if not  self.output : self.output = result

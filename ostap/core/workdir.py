@@ -23,6 +23,7 @@ else                       : logger = getLogger ( __name__              )
 # =============================================================================
 import os 
 # =============================================================================
+## import ostap.core.config as _config 
 workdir = os.environ.get('OSTAP_DIR') or os.environ.get('OSTAPDIR') or '$HOME/.ostap'
 
 workdir = os.path.expandvars ( workdir )
@@ -30,7 +31,7 @@ workdir = os.path.expanduser ( workdir )
 workdir = os.path.expandvars ( workdir )
 workdir = os.path.expanduser ( workdir )
 
-if not os.path.exists( workdir ):
+if not os.path.exists ( workdir ):
     try : 
         os.mkdir    ( workdir )
         wdir    = os.path.join(workdir, "cache")

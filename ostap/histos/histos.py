@@ -6570,9 +6570,6 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
            ROOT.TH3F , ROOT.TH3D ) :
     t.density = _h_density_
 
-
-
-
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1F  ,

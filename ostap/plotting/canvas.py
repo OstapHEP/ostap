@@ -24,7 +24,7 @@ __all__     = (
 # =============================================================================
 import ROOT, os, tempfile  
 import ostap.core.core
-import ostap.plotting.style  
+import ostap.plotting.style
 # =============================================================================
 # logging 
 # =============================================================================
@@ -34,13 +34,24 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 _canvases = {} 
 # =============================================================================
+## The default configuration 
+# =============================================================================
+import ostap.core.config as OCC
+width_  = OCC.canvas.get ( 'Width'  , fallback = '1000' )
+try               : width_  = int  ( width_ ) 
+except ValueError : width_  = 1000 
+height_ = OCC.canvas.get ( 'Height' , fallback =  '800' )
+try               : height_ = int  ( height_ ) 
+except ValueError : height_ = 800 
+
+# =============================================================================
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-10-19
 def getCanvas ( name   = 'glCanvas' ,   ## canvas name 
                 title  = 'Ostap'    ,   ## canvas title
-                width  = 1000       ,   ## canvas width
-                height = 800        ) : ## canvas height 
+                width  = width_     ,   ## canvas width
+                height = height_    ) : ## canvas height 
     """Get create canvas/create new canvas
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
@@ -605,7 +616,7 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
             ## redefine label size 
             axis.SetLabelSize ( fontsize  )
 
-        ## draw object ob the pad 
+        ## draw object on the pad 
         obj.draw ()
         
         if c : c.cd(0)

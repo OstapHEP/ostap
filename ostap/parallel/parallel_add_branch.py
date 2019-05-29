@@ -89,7 +89,7 @@ def add_new_branch ( chain , branch_name , function , verbose = True ) :
     ch    = Chain ( chain ) 
     
     task  = AddBranch ( branch_name ,  function  )
-    wmgr  = Parallel.WorkManager ( silent = not verbose  )
+    wmgr  = WorkManager ( silent = not verbose  )
     trees = ch.split ( max_files = 1  )
     
     wmgr.process( task , trees )

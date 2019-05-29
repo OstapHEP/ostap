@@ -140,7 +140,7 @@ def pStatVar ( chain        , what , cuts = ''    ,
     ch     = Chain ( chain , first = first , nevents = nevents )
 
     task   = StatVarTask ( what , cuts )
-    wmgr   = Parallel.WorkManager ( ppservers = ppservers , silent = silent )
+    wmgr   = WorkManager ( ppservers = ppservers , silent = silent )
 
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 

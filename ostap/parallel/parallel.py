@@ -11,7 +11,7 @@
 #  @date   2016-02-23
 #
 # =============================================================================
-"""   Useful utilities for multiprocessing and parallel processing for Ostap
+""" Useful utilities for multiprocessing and parallel processing for Ostap
 Actualy it is just a little bit upgraded version of original
 GaudiMP.Parallel module developed by Pere MATO Pere.Mato@cern.ch
 """
@@ -31,19 +31,19 @@ else                      : logger = getLogger ( __name__         )
 # =============================================================================
 import operator
 
-## try:
+try:
     
-##     from ostap.parallel.mp_pathos import Task, WorkManager 
-##     logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
+    from ostap.parallel.mp_pathos import Task, WorkManager 
+    logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
     
-## except ImportErorr :
+except ImportErorr :
     
-##     logger.error ("Can't import ostap.parallel.mp_pathos:" )  ## , exc_info = True )
-##     from ostap.parallel.mp_gaudi import Task, WorkManager 
-##     logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
+    logger.error ("Can't import ostap.parallel.mp_pathos:" )  ## , exc_info = True )
+    from ostap.parallel.mp_gaudi import Task, WorkManager 
+    logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
 
-from ostap.parallel.mp_gaudi import Task, WorkManager 
-logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
+## from ostap.parallel.mp_gaudi import Task, WorkManager 
+## logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
     
 # =============================================================================
 ## @class GenericTask

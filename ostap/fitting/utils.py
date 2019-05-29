@@ -458,6 +458,11 @@ class MakeVar ( object ) :
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
             elif kup in ( 'SAVE'     ,       ) and isinstance ( a , bool           ) :
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
+            elif kup in ( 'CLONE'            ,
+                          'CLONEDATA'        ) and isinstance ( a , bool           ) :
+                _args.append   (  ROOT.RooFit.CloneData    ( a )  )
+            elif kup in ( 'OFFSET'           ) and isinstance ( a , bool           ) :
+                _args.append   (  ROOT.RooFit.Offset       ( a )  )
             elif kup in ( 'FITOPTIONS'       ,
                           'FITOPTION'        ,
                           'FIT_OPTIONS'      ,
@@ -497,7 +502,8 @@ class MakeVar ( object ) :
         kset.discard  ( 'Timer'      ) ## trivial 
         kset.discard  ( 'PrintLevel' ) ## trivial 
         #
-        if kset : self.info  ( 'parse_args: Parsed arguments %s' % keys )
+        if kset : self.debug ( 'parse_args: Parsed arguments %s' % keys )
+        ## if kset : self.info  ( 'parse_args: Parsed arguments %s' % keys )
         else    : self.debug ( 'parse_args: Parsed arguments %s' % keys )
 
         return tuple ( _args )
