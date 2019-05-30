@@ -707,6 +707,47 @@ _new_methods_ += [
     ROOT.RooDataSet.project   ,
     ]
 
+# =============================================================================
+## get the s-factor for   (weighted) dataset, where
+#  s-factor is defined as
+#  \f$ s_{w} \equiv \frac{\sum w_i}{\sum w_i^2} \f$
+#  @see Ostap::SFactor::sFactor 
+#  @code
+#  dataset = ...
+#  sf = dataset.sFactor() 
+#  @endcode
+#  when the weigths comes from sPlot, the factor effectively accounts
+#  statitical fluctuations in background subtraction
+#  @see W. T. Eadie et al., Statistical methods in experimental physics,
+#       North Holland, Amsterdam, 1971.
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2019-05-30
+# =============================================================================
+def _rad_sFactor_ ( data ) :
+    """Get the s-factor for   (weighted) dataset, where
+    s-factor is defined as
+     s_{w} equiv frac{ sum w_i}{ sum w_i^2}
+     
+     - see Ostap::SFactor::sFactor 
+     - see W. T. Eadie et al., Statistical methods in experimental physics,
+     ...   North Holland, Amsterdam, 1971.
+     
+     >>> dataset = ...
+     >>> sf = dataset.sFactor() 
+     """
+    if 0 == data.numEntries() :
+        logger.warning ("RooAbsData.sFactor: dataset is empty, return 1.0")
+        return 1.0
+    
+    sf = Ostap.SFactor.sFactor ( data )
+    if    0 >  sf.cov2() :
+        logger.error   ('Ostap::SFactor::sFactor %s, return 1.0' % sf )
+        return 1.0 
+    elif  0 == sf.cov2() :
+        logger.warning ('Ostap::SFactor::sFactor %s, return 1.0' % sf )
+        return 1.0 
+    
+    return  sf.value() / sf.cov2()
 
 
 # =============================================================================
@@ -728,6 +769,7 @@ def _ds_print_ ( dataset ) :
 ROOT.RooDataSet.draw        = ds_draw
 ROOT.RooDataSet.project     = ds_project
 ROOT.RooDataSet.__getattr__ = _ds_getattr_
+ROOT.RooAbsData.sFactor     = _rad_sFactor_
 
 for d in ( ROOT.RooAbsData  ,
            ROOT.RooDataSet  ,
@@ -741,7 +783,9 @@ _new_methods_ += [
     ROOT.RooDataSet .project      ,
     ROOT.RooDataSet .__getattr__  ,
     ROOT.RooDataHist.__len__      ,
+    ROOT.RooAbsData .sFactor      
     ]
+
 
 # =============================================================================
 ## add variable to dataset 

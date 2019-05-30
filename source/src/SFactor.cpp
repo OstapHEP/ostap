@@ -5,6 +5,7 @@
 // ROOT 
 // ============================================================================
 #include "TTree.h"
+#include "RooAbsData.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -17,9 +18,6 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2013-04-27
  *
- *                    $Revision$
- *  Last modifictaion $Date$
- *                 by $Author$
  */
 // ==========================================================================
 /*  Get sum and sum of squares for the simple branch in Tree, e.g.
@@ -85,6 +83,54 @@ Ostap::SFactor::sFactor
   // recover the status 
   tree -> SetBranchStatus ( varname.c_str() , status ) ;
   //
+  return VE ( sumw , sumw2 ) ;
+}
+// ============================================================================
+/*  Get sum and sum of squares for the weights in sataset, e.g. 
+ *  s-factor from usage of s_weight 
+ *  The direct summation in python is rather slow, thus C++ routine helps
+ *  to speedup procedure drastically 
+ * 
+ *  @code 
+ *
+ *  data  = ...
+ *  sf    = data.sFactor ()
+ *  sumw  = sf.value () 
+ *  sumw2 = sf.cov2  () 
+ * 
+ *  scale = sumw/sumw2 ## use in fit! 
+ *
+ *  @endcode 
+ *  
+ *  Also it is a way to get the signal component (with right uncertainty)
+ *
+ *  @param  dataset (INPUT) the tree 
+ *  @return s-factor in a form of value +- sqrt(cov2)  
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2013-04-27
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::SFactor::sFactor ( const RooAbsData* data ) 
+{
+  //
+  typedef Ostap::Math::ValueWithError VE ;
+  //
+  if ( !data               ) { return VE ( -1 , -1 ) ; }
+  if ( !data->isWeighted() ) { return VE (  1 ,  1 ) ; }  // non-weighted dataset 
+  //
+  long double sumw  = 0 ;
+  long double sumw2 = 0 ;
+  const unsigned long nEntries = data->numEntries() ;
+  //
+  for ( unsigned long entry = 0 ; entry < nEntries ; ++entry )   
+  {
+    //
+    if ( 0 == data->get ( entry)  ) { break ; }           // BREAK
+    //
+    sumw  += data -> weight        () ;
+    sumw2 += data -> weightSquared () ;
+    //
+  }
   return VE ( sumw , sumw2 ) ;
 }
 // ============================================================================

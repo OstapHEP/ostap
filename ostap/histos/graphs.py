@@ -3,7 +3,6 @@
 # =============================================================================
 ## @file
 #  (T)Graph-related decorations 
-#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07 
 # =============================================================================
@@ -38,8 +37,9 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, cppyy              ## attention here!!
-from   ostap.core.core import cpp, VE, grID
-from   builtins        import range
+from   ostap.core.core        import cpp, VE, grID
+from   ostap.core.ostap_types import num_types 
+from   builtins               import range
 # 
 # =============================================================================
 # logging 
@@ -1695,6 +1695,723 @@ ROOT.TGraph  . xmax    = _gr_xmax_
 ROOT.TGraph  . xminmax = _gr_xminmax_
 
 
+# =============================================================================
+## a bit of trivial math-like operations  with graphs 
+# =============================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng = gr * 10 
+#  @endcode
+def _gr_mul_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = graph * 10 
+    """
+    
+    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraph (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , y * scale
+    return new_graph
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng = gr / 10 
+#  @endcode
+def _gr_div_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = graph / 10 
+    """
+    return graph * ( 1.0 / scale ) 
+
+# =============================================================================
+## scale the graph
+#  @code
+#  gr *= 10
+#  @endcode
+def _gr_imul_ ( graph , scale ) :
+    """Scale the graph
+    graph *= 10 
+    """    
+    if not isinstance ( scale , num_types +  ( VE , ) ) : return NotImplemented
+    
+    for i , x , y in graph.iteritems() :
+        graph [ i ] = x , y * scale
+    return graph
+
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr /= 10 
+#  @endcode
+def _gr_idiv_ ( graph , scale ) :
+    """Scale the graph
+    graph /= 10 
+    """
+    return _gr_imul_ ( graph ,  1.0 / scale )
+
+# =================================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng =  10 / gr 
+#  @endcode
+def _gr_rdiv_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = 10 / graph
+    """
+    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraph (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , 1.0 * scale / y 
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = gr + 10 
+#  @endcode
+def _gr_add_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = graph + 10 
+    """
+    
+    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraph (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , y + shift
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = gr - 10 
+#  @endcode
+def _gr_sub_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = graph - 10 
+    """
+    return _gr_add_ (  graph , -1.0 * shift )
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = 10 - gr
+#  @endcode
+def _gr_rsub_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = 10 - graph 
+    """
+    
+    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraph (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , shift - y
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr += 10
+#  @endcode
+def _gr_iadd_ ( graph , shift ) :
+    """Shift the graph
+    graph += 10 
+    """
+    
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    for i , x , y in graph.iteritems() :
+        graph [ i ] = x , y + shift
+    return graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr -= 10
+#  @endcode
+def _gr_isub_ ( graph , shift ) :
+    """Shift the graph
+    graph -= 10 
+    """
+    return _gr_iadd_ (  graph , -1.0 *  shift )
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph = ...
+#  newg  = graph << 14.5 
+#  @endcode 
+def _gr_lshift_ ( graph , shift ) :
+    """Left shift of the graph
+    >>> graph = ...
+    >>> newg  = graph << 14.5 
+    """
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraph (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x + shift  , y
+    return new_graph
+
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph = ...
+#  newg  = graph >> 14.5 
+#  @endcode 
+def _gr_rshift_ ( graph , shift ) :
+    """Right  shift of the graph
+    >>> graph = ...
+    >>> newg  = graph >> 14.5 
+    """
+    return _gr_lshift_ ( self , -1.0 * shift )
+
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph <<= 14.5 ...
+#  @endcode 
+def _gr_ilshift_ ( graph , shift ) :
+    """Left shift of the graph
+    >>> graph <<= 14.5 
+    """
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    for i , x , y in graph.iteritems() :
+        graph [ i ] = x + shift  , y
+    return graph
+    
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph >>= 14.5
+#  @endcode 
+def _gr_irshift_ ( graph , shift ) :
+    """Right  shift of the graph
+    >>> graph >>= 14.5
+    """
+    return _gr_ilshift_ ( self , -1.0 * shift )
+
+
+ROOT.TGraph. __mul__      = _gr_mul_
+ROOT.TGraph.__rmul__      = _gr_mul_
+ROOT.TGraph.__imul__      = _gr_imul_
+
+ROOT.TGraph. __div__      = _gr_div_
+ROOT.TGraph.__rdiv__      = _gr_idiv_
+ROOT.TGraph.__idiv__      = _gr_rdiv_
+
+ROOT.TGraph. __truediv__  = _gr_div_
+ROOT.TGraph.__itruediv__  = _gr_idiv_
+ROOT.TGraph.__rtruediv__  = _gr_rdiv_
+
+ROOT.TGraph. __add__      = _gr_mul_
+ROOT.TGraph.__radd__      = _gr_mul_
+ROOT.TGraph.__iadd__      = _gr_imul_
+ROOT.TGraph. __sub__      = _gr_sub_
+ROOT.TGraph.__rsub__      = _gr_sub_
+ROOT.TGraph.__isub__      = _gr_isub_
+
+ROOT.TGraph.__lshift__    = _gr_lshift_
+ROOT.TGraph.__rshift__    = _gr_rshift_
+ROOT.TGraph.__ilshift__   = _gr_ilshift_
+ROOT.TGraph.__irshift__   = _gr_irshift_
+
+
+# =============================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng = gr * 10 
+#  @endcode
+def _gre_mul_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = graph * 10 
+    """
+    
+    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphErrors (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , y * scale
+    return new_graph
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng = gr / 10 
+#  @endcode
+def _gre_div_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = graph / 10 
+    """
+    return graph * ( 1.0 / scale ) 
+
+# =============================================================================
+## scale the graph
+#  @code
+#  gr *= 10
+#  @endcode
+def _gre_imul_ ( graph , scale ) :
+    """Scale the graph
+    graph *= 10 
+    """    
+    if not isinstance ( scale , num_types +  ( VE , ) ) : return NotImplemented
+    
+    for i , x , y in graph.iteritems() :
+        graph [ i ] = x , y * scale
+    return graph
+
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr /= 10 
+#  @endcode
+def _gre_idiv_ ( graph , scale ) :
+    """Scale the graph
+    graph /= 10 
+    """
+    return _gre_imul_ ( graph ,  1.0 / scale )
+
+# =================================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng =  10 / gr 
+#  @endcode
+def _gre_rdiv_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = 10 / graph
+    """
+    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphErrors (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , 1.0 * scale / y 
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = gr + 10 
+#  @endcode
+def _gre_add_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = graph + 10 
+    """
+    
+    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphErrors (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , y + shift
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = gr - 10 
+#  @endcode
+def _gre_sub_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = graph - 10 
+    """
+    return _gre_add_ (  graph , -1.0 * shift )
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = 10 - gr
+#  @endcode
+def _gre_rsub_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = 10 - graph 
+    """
+    
+    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphErrors (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , shift - y
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr += 10
+#  @endcode
+def _gre_iadd_ ( graph , shift ) :
+    """Shift the graph
+    graph += 10 
+    """
+    
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    for i , x , y in graph.iteritems() :
+        graph [ i ] = x , y + shift
+    return graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr -= 10
+#  @endcode
+def _gre_isub_ ( graph , shift ) :
+    """Shift the graph
+    graph -= 10 
+    """
+    return _gre_iadd_ (  graph , -1.0 *  shift )
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph = ...
+#  newg  = graph << 14.5 
+#  @endcode 
+def _gre_lshift_ ( graph , shift ) :
+    """Left shift of the graph
+    >>> graph = ...
+    >>> newg  = graph << 14.5 
+    """
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphErrors (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x + shift  , y
+    return new_graph
+
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph = ...
+#  newg  = graph >> 14.5 
+#  @endcode 
+def _gre_rshift_ ( graph , shift ) :
+    """Right  shift of the graph
+    >>> graph = ...
+    >>> newg  = graph >> 14.5 
+    """
+    return _gre_lshift_ ( self , -1.0 * shift )
+
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph <<= 14.5 ...
+#  @endcode 
+def _gre_ilshift_ ( graph , shift ) :
+    """Left shift of the graph
+    >>> graph <<= 14.5 
+    """
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    for i , x , y in graph.iteritems() :
+        graph [ i ] = x + shift  , y
+    return graph
+    
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph >>= 14.5
+#  @endcode 
+def _gre_irshift_ ( graph , shift ) :
+    """Right  shift of the graph
+    >>> graph >>= 14.5
+    """
+    return _gre_ilshift_ ( self , -1.0 * shift )
+
+
+ROOT.TGraphErrors. __mul__      = _gre_mul_
+ROOT.TGraphErrors.__rmul__      = _gre_mul_
+ROOT.TGraphErrors.__imul__      = _gre_imul_
+
+ROOT.TGraphErrors. __div__      = _gre_div_
+ROOT.TGraphErrors.__rdiv__      = _gre_idiv_
+ROOT.TGraphErrors.__idiv__      = _gre_rdiv_
+
+ROOT.TGraphErrors. __truediv__  = _gre_div_
+ROOT.TGraphErrors.__itruediv__  = _gre_idiv_
+ROOT.TGraphErrors.__rtruediv__  = _gre_rdiv_
+
+ROOT.TGraphErrors. __add__      = _gre_mul_
+ROOT.TGraphErrors.__radd__      = _gre_mul_
+ROOT.TGraphErrors.__iadd__      = _gre_imul_
+ROOT.TGraphErrors. __sub__      = _gre_sub_
+ROOT.TGraphErrors.__rsub__      = _gre_sub_
+ROOT.TGraphErrors.__isub__      = _gre_isub_
+
+ROOT.TGraphErrors.__lshift__    = _gre_lshift_
+ROOT.TGraphErrors.__rshift__    = _gre_rshift_
+ROOT.TGraphErrors.__ilshift__   = _gre_ilshift_
+ROOT.TGraphErrors.__irshift__   = _gre_irshift_
+
+
+
+
+# =============================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng = gr * 10 
+#  @endcode
+def _grae_mul_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = graph * 10 
+    """
+    
+    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
+    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
+        new_graph [ i ] = x , exl , exh , y * scale , eyl * scale , eyh * scale 
+    return new_graph
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng = gr / 10 
+#  @endcode
+def _grae_div_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = graph / 10 
+    """
+    return graph * ( 1.0 / scale ) 
+
+# =============================================================================
+## scale the graph
+#  @code
+#  gr *= 10
+#  @endcode
+def _grae_imul_ ( graph , scale ) :
+    """Scale the graph
+    graph *= 10 
+    """    
+    if not isinstance ( scale , num_types +  ( VE , ) ) : return NotImplemented
+    
+    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
+        graph [ i ] = x , exl , exh , y * scale , eyl * scale , eyh * scale 
+    return graph
+
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr /= 10 
+#  @endcode
+def _grae_idiv_ ( graph , scale ) :
+    """Scale the graph
+    graph /= 10 
+    """
+    return _grae_imul_ ( graph ,  1.0 / scale )
+
+# =================================================================================
+## scale the graph
+#  @code
+#  gr = ...
+#  ng =  10 / gr 
+#  @endcode
+def _grae_rdiv_ ( graph , scale ) :
+    """Scale the graph
+    graph = ...
+    newg  = 10 / graph
+    """
+    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
+    for i , x , y in graph.iteritems() :
+        new_graph [ i ] = x , 1.0 * scale / y 
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = gr + 10 
+#  @endcode
+def _grae_add_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = graph + 10 
+    """
+    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
+    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
+        new_graph [ i ] = x , exl , exh , y + scale , eyl , eyh 
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = gr - 10 
+#  @endcode
+def _grae_sub_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = graph - 10 
+    """
+    return _grae_add_ (  graph , -1.0 * shift )
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr = ...
+#  ng = 10 - gr
+#  @endcode
+def _grae_rsub_ ( graph , shift ) :
+    """Shift the graph
+    graph = ...
+    newg  = 10 - graph 
+    """
+    
+    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
+    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
+        new_graph [ i ] = x , exl , exh , shift - y , -1.0 * abs ( eyh ) , abs ( eyl )  
+    return new_graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr += 10
+#  @endcode
+def _grae_iadd_ ( graph , shift ) :
+    """Shift the graph
+    graph += 10 
+    """
+    
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
+        graph [ i ] = x , exl , exh , y + scale , eyl , eyh 
+    return graph
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr -= 10
+#  @endcode
+def _grae_isub_ ( graph , shift ) :
+    """Shift the graph
+    graph -= 10 
+    """
+    return _grae_iadd_ (  graph , -1.0 *  shift )
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph = ...
+#  newg  = graph << 14.5 
+#  @endcode 
+def _grae_lshift_ ( graph , shift ) :
+    """Left shift of the graph
+    >>> graph = ...
+    >>> newg  = graph << 14.5 
+    """
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
+    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
+        new_graph [ i ] = x +  shift , exl , exh , y , eyl , eyh 
+    return new_graph
+
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph = ...
+#  newg  = graph >> 14.5 
+#  @endcode 
+def _grae_rshift_ ( graph , shift ) :
+    """Right  shift of the graph
+    >>> graph = ...
+    >>> newg  = graph >> 14.5 
+    """
+    return _grae_lshift_ ( self , -1.0 * shift )
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph <<= 14.5 ...
+#  @endcode 
+def _grae_ilshift_ ( graph , shift ) :
+    """Left shift of the graph
+    >>> graph <<= 14.5 
+    """
+    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
+    
+    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
+        graph [ i ] = x +  shift , exl , exh , y , eyl , eyh 
+    return graph
+    
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph >>= 14.5
+#  @endcode 
+def _grae_irshift_ ( graph , shift ) :
+    """Right  shift of the graph
+    >>> graph >>= 14.5
+    """
+    return _grae_ilshift_ ( self , -1.0 * shift )
+
+
+ROOT.TGraphAsymmErrors. __mul__      = _grae_mul_
+ROOT.TGraphAsymmErrors.__rmul__      = _grae_mul_
+ROOT.TGraphAsymmErrors.__imul__      = _grae_imul_
+
+ROOT.TGraphAsymmErrors. __div__      = _grae_div_
+ROOT.TGraphAsymmErrors.__rdiv__      = _grae_idiv_
+ROOT.TGraphAsymmErrors.__idiv__      = _grae_rdiv_
+
+ROOT.TGraphAsymmErrors. __truediv__  = _grae_div_
+ROOT.TGraphAsymmErrors.__itruediv__  = _grae_idiv_
+ROOT.TGraphAsymmErrors.__rtruediv__  = _grae_rdiv_
+
+ROOT.TGraphAsymmErrors. __add__      = _grae_mul_
+ROOT.TGraphAsymmErrors.__radd__      = _grae_mul_
+ROOT.TGraphAsymmErrors.__iadd__      = _grae_imul_
+ROOT.TGraphAsymmErrors. __sub__      = _grae_sub_
+ROOT.TGraphAsymmErrors.__rsub__      = _grae_sub_
+ROOT.TGraphAsymmErrors.__isub__      = _grae_isub_
+
+ROOT.TGraphAsymmErrors.__lshift__    = _grae_lshift_
+ROOT.TGraphAsymmErrors.__rshift__    = _grae_rshift_
+ROOT.TGraphAsymmErrors.__ilshift__   = _grae_ilshift_
+ROOT.TGraphAsymmErrors.__irshift__   = _grae_irshift_
 
 
 # =============================================================================
@@ -2127,6 +2844,30 @@ _new_methods_      = (
     ROOT.TGraph       .     items     ,
     ROOT.TGraph       . iteritems     ,
     #
+    ROOT.TGraph       .  __mul__      , 
+    ROOT.TGraph       . __rmul__      , 
+    ROOT.TGraph       . __imul__      ,
+    #
+    ROOT.TGraph       .  __div__      ,
+    ROOT.TGraph       . __rdiv__      ,
+    ROOT.TGraph       . __idiv__      ,
+    # 
+    ROOT.TGraph       .  __truediv__  ,
+    ROOT.TGraph       . __itruediv__  ,
+    ROOT.TGraph       . __rtruediv__  ,
+    #
+    ROOT.TGraph       .  __add__      ,
+    ROOT.TGraph       . __radd__      ,
+    ROOT.TGraph       . __iadd__      ,
+    ROOT.TGraph       .  __sub__      ,
+    ROOT.TGraph       . __rsub__      ,
+    ROOT.TGraph       . __isub__      ,
+    # 
+    ROOT.TGraph       .  __lshift__   , 
+    ROOT.TGraph       .  __rshift__   , 
+    ROOT.TGraph       . __ilshift__   , 
+    ROOT.TGraph       . __irshift__   , 
+    #
     ROOT.TGraph       . transform     ,
     #
     ROOT.TGraphErrors . __getitem__   ,
@@ -2138,6 +2879,30 @@ _new_methods_      = (
     ROOT.TGraphErrors . ymin          ,
     ROOT.TGraphErrors . xmax          ,
     ROOT.TGraphErrors . ymax          , 
+    #
+    ROOT.TGraphErrors .  __mul__      , 
+    ROOT.TGraphErrors . __rmul__      , 
+    ROOT.TGraphErrors . __imul__      ,
+    #
+    ROOT.TGraphErrors .  __div__      ,
+    ROOT.TGraphErrors . __rdiv__      ,
+    ROOT.TGraphErrors . __idiv__      ,
+    # 
+    ROOT.TGraphErrors .  __truediv__  ,
+    ROOT.TGraphErrors . __itruediv__  ,
+    ROOT.TGraphErrors . __rtruediv__  ,
+    #
+    ROOT.TGraphErrors .  __add__      ,
+    ROOT.TGraphErrors . __radd__      ,
+    ROOT.TGraphErrors . __iadd__      ,
+    ROOT.TGraphErrors .  __sub__      ,
+    ROOT.TGraphErrors . __rsub__      ,
+    ROOT.TGraphErrors . __isub__      ,
+    # 
+    ROOT.TGraphErrors .  __lshift__   , 
+    ROOT.TGraphErrors .  __rshift__   , 
+    ROOT.TGraphErrors . __ilshift__   , 
+    ROOT.TGraphErrors . __irshift__   , 
     #
     ROOT.TGraphAsymmErrors.__len__       ,
     ROOT.TGraphAsymmErrors.__contains__  ,
@@ -2151,6 +2916,30 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors . ymin        ,
     ROOT.TGraphAsymmErrors . xmax        ,
     ROOT.TGraphAsymmErrors . ymax        ,
+    #
+    ROOT.TGraphAsymmErrors .  __mul__      , 
+    ROOT.TGraphAsymmErrors . __rmul__      , 
+    ROOT.TGraphAsymmErrors . __imul__      ,
+    #
+    ROOT.TGraphAsymmErrors .  __div__      ,
+    ROOT.TGraphAsymmErrors . __rdiv__      ,
+    ROOT.TGraphAsymmErrors . __idiv__      ,
+    # 
+    ROOT.TGraphAsymmErrors .  __truediv__  ,
+    ROOT.TGraphAsymmErrors . __itruediv__  ,
+    ROOT.TGraphAsymmErrors . __rtruediv__  ,
+    #
+    ROOT.TGraphAsymmErrors .  __add__      ,
+    ROOT.TGraphAsymmErrors . __radd__      ,
+    ROOT.TGraphAsymmErrors . __iadd__      ,
+    ROOT.TGraphAsymmErrors .  __sub__      ,
+    ROOT.TGraphAsymmErrors . __rsub__      ,
+    ROOT.TGraphAsymmErrors . __isub__      ,
+    # 
+    ROOT.TGraphAsymmErrors .  __lshift__   , 
+    ROOT.TGraphAsymmErrors .  __rshift__   , 
+    ROOT.TGraphAsymmErrors . __ilshift__   , 
+    ROOT.TGraphAsymmErrors . __irshift__   , 
     #
     ROOT.TGraph       . integral          ,
     ROOT.TGraph       . asTF1             ,
