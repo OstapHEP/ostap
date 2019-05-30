@@ -1916,18 +1916,18 @@ ROOT.TGraph.__rmul__      = _gr_mul_
 ROOT.TGraph.__imul__      = _gr_imul_
 
 ROOT.TGraph. __div__      = _gr_div_
-ROOT.TGraph.__rdiv__      = _gr_idiv_
-ROOT.TGraph.__idiv__      = _gr_rdiv_
+ROOT.TGraph.__idiv__      = _gr_idiv_
+ROOT.TGraph.__rdiv__      = _gr_rdiv_
 
 ROOT.TGraph. __truediv__  = _gr_div_
 ROOT.TGraph.__itruediv__  = _gr_idiv_
 ROOT.TGraph.__rtruediv__  = _gr_rdiv_
 
-ROOT.TGraph. __add__      = _gr_mul_
-ROOT.TGraph.__radd__      = _gr_mul_
-ROOT.TGraph.__iadd__      = _gr_imul_
+ROOT.TGraph. __add__      = _gr_add_
+ROOT.TGraph.__radd__      = _gr_add_
+ROOT.TGraph.__iadd__      = _gr_iadd_
 ROOT.TGraph. __sub__      = _gr_sub_
-ROOT.TGraph.__rsub__      = _gr_sub_
+ROOT.TGraph.__rsub__      = _gr_rsub_
 ROOT.TGraph.__isub__      = _gr_isub_
 
 ROOT.TGraph.__lshift__    = _gr_lshift_
@@ -2155,18 +2155,18 @@ ROOT.TGraphErrors.__rmul__      = _gre_mul_
 ROOT.TGraphErrors.__imul__      = _gre_imul_
 
 ROOT.TGraphErrors. __div__      = _gre_div_
-ROOT.TGraphErrors.__rdiv__      = _gre_idiv_
-ROOT.TGraphErrors.__idiv__      = _gre_rdiv_
+ROOT.TGraphErrors.__idiv__      = _gre_idiv_
+ROOT.TGraphErrors.__rdiv__      = _gre_rdiv_
 
 ROOT.TGraphErrors. __truediv__  = _gre_div_
 ROOT.TGraphErrors.__itruediv__  = _gre_idiv_
 ROOT.TGraphErrors.__rtruediv__  = _gre_rdiv_
 
-ROOT.TGraphErrors. __add__      = _gre_mul_
-ROOT.TGraphErrors.__radd__      = _gre_mul_
-ROOT.TGraphErrors.__iadd__      = _gre_imul_
+ROOT.TGraphErrors. __add__      = _gre_add_
+ROOT.TGraphErrors.__radd__      = _gre_add_
+ROOT.TGraphErrors.__iadd__      = _gre_iadd_
 ROOT.TGraphErrors. __sub__      = _gre_sub_
-ROOT.TGraphErrors.__rsub__      = _gre_sub_
+ROOT.TGraphErrors.__rsub__      = _gre_rsub_
 ROOT.TGraphErrors.__isub__      = _gre_isub_
 
 ROOT.TGraphErrors.__lshift__    = _gre_lshift_
@@ -2394,18 +2394,18 @@ ROOT.TGraphAsymmErrors.__rmul__      = _grae_mul_
 ROOT.TGraphAsymmErrors.__imul__      = _grae_imul_
 
 ROOT.TGraphAsymmErrors. __div__      = _grae_div_
-ROOT.TGraphAsymmErrors.__rdiv__      = _grae_idiv_
-ROOT.TGraphAsymmErrors.__idiv__      = _grae_rdiv_
+ROOT.TGraphAsymmErrors.__idiv__      = _grae_idiv_
+ROOT.TGraphAsymmErrors.__rdiv__      = _grae_rdiv_
 
 ROOT.TGraphAsymmErrors. __truediv__  = _grae_div_
 ROOT.TGraphAsymmErrors.__itruediv__  = _grae_idiv_
 ROOT.TGraphAsymmErrors.__rtruediv__  = _grae_rdiv_
 
-ROOT.TGraphAsymmErrors. __add__      = _grae_mul_
-ROOT.TGraphAsymmErrors.__radd__      = _grae_mul_
-ROOT.TGraphAsymmErrors.__iadd__      = _grae_imul_
+ROOT.TGraphAsymmErrors. __add__      = _grae_add_
+ROOT.TGraphAsymmErrors.__radd__      = _grae_add_
+ROOT.TGraphAsymmErrors.__iadd__      = _grae_iadd_
 ROOT.TGraphAsymmErrors. __sub__      = _grae_sub_
-ROOT.TGraphAsymmErrors.__rsub__      = _grae_sub_
+ROOT.TGraphAsymmErrors.__rsub__      = _grae_rsub_
 ROOT.TGraphAsymmErrors.__isub__      = _grae_isub_
 
 ROOT.TGraphAsymmErrors.__lshift__    = _grae_lshift_

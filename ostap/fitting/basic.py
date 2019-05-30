@@ -977,7 +977,7 @@ class PDF (MakeVar) :
     ## creat  NLL
     #  @code
     #  model.fitTo ( dataset , ... )
-    #  nll = model.nll ( 'dataset )
+    #  nll, sfactor  = model.nll ( 'dataset )
     #  @endcode
     #  @see RooAbsPdf::createNLL 
     def nll ( self            ,
@@ -986,10 +986,13 @@ class PDF (MakeVar) :
               args    = ()    , **kwargs ) :
         """Get NLL object from the pdf
         >>> model.fitTo ( dataset , ... )
-        >>> nll = model.nll ( dataset )
+        >>> nll, sf = model.nll ( dataset )
         - see RooAbsPdf::createNLL 
         """
+
         
+        ##
+
         nllopts  = [ ROOT.RooFit.CloneData ( False ) ]
         ncpu     = kwargs.pop ( 'ncpu'  , numcpu () )
         if    isinstance ( ncpu , ROOT.RooCmdArg ) :
@@ -999,9 +1002,14 @@ class PDF (MakeVar) :
         else                                       :
             nllopts.apepnd ( ROOT.RooFit.NumCPU ( *ncpu ) )
         ##
-        nllopts = tuple ( nllopts )
+        nllopts = args + tuple ( nllopts )
         #
-        return self.pdf.createNLL ( dataset , *nllopts ) 
+        ## get s-Factor 
+        sf  = dataset.sFactor() 
+        
+        if kwargs : self.warning("nll: unknown parameters, ignore: %s"    % kwargs)
+
+        return self.pdf.createNLL ( dataset , *nllopts ) , sf 
 
     # =========================================================================
     ## draw/prepare NLL or LL-profiles for selected variable
@@ -1059,14 +1067,12 @@ class PDF (MakeVar) :
         width = kwargs.pop ( 'width' , None )        
         if width  : largs.append ( ROOT.RooFit.LineWidth ( width ) ) 
         ##
-        if kwargs : self.warning("draw_nll: unknown parameters, ignore: %s"    % kwargs)
-        ##
         largs.append  ( ROOT.RooFit.ShiftToZero() ) 
         largs  = tuple ( largs ) 
         
         ## create NLL 
-        nll    = self.nll ( dataset , silent = silent , args = args , kwargs = kwargs )
-        
+        nll, sf = self.nll ( dataset , silent = silent , kwargs = kwargs )  
+
         result = nll
 
         ## make profile? 
@@ -1085,7 +1091,13 @@ class PDF (MakeVar) :
             frame.SetXTitle  ( '' )
             frame.SetYTitle  ( '' )
             frame.SetZTitle  ( '' )
-        
+
+        ## scale it if needed
+        if 1 !=  sf :
+            logger.info ('Apply scale factor of %s'  %s )
+            graph  = frame.getObject (0)
+            graph *= sf 
+            
         ## draw it! 
         if not ROOT.gROOT.IsBatch() :
             with rootWarning ():
@@ -1135,7 +1147,7 @@ class PDF (MakeVar) :
         with roo_silent ( silent ) :
             
             ## create NLL object
-            nll = self.nll ( dataset , silent = silent , args = args , kwargs = kwargs ) 
+            nll , sf = self.nll ( dataset , silent = silent , args = args , kwargs = kwargs ) 
             
             ## unpack the range 
             minv , maxv = range
@@ -1172,11 +1184,14 @@ class PDF (MakeVar) :
                         
                     dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm )**2 )
                     
-                var.setVal( vv  )
+            ## apply scale factor
+            if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
+            dnll *= sf
+            
                 
-        ## convert difference in likelihoods into sigmas 
-        result = 2.0 * abs ( dnll )
-        result = result**0.5
+            ## convert the difference in likelihoods into sigmas 
+            result = 2.0 * abs ( dnll )
+            result = result**0.5
 
         return result if 0<=dnll else -1*result 
             
@@ -1186,7 +1201,7 @@ class PDF (MakeVar) :
     #  r,f = model.fitTo ( dataset )
     #  model.sPlot ( dataset ) 
     #  @endcode 
-    def sPlot ( self , dataset , silent = False ) : 
+    def sPlot ( self , dataset , silent = True ) : 
         """ Make sPlot analysis
         >>> r,f = model.fitTo ( dataset )
         >>> model.sPlot ( dataset ) 
