@@ -43,8 +43,9 @@ type(config).__repr__ = _cp_str_
 
 ## Define the major sections
 config [ 'General'  ] = {
-    'Quiet'   : 'False' ,
-    'Verbose' : 'False' ,
+    'Quiet'     : 'False' ,
+    'Verbose'   : 'False' ,
+    'Build_dir' : ''       
     }
 
 config [ 'Canvas'   ] = { 'Width' :  '1000' , 'Height' :  '800' } 

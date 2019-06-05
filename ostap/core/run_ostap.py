@@ -184,6 +184,12 @@ def parse_args ( args = [] ) :
         help    = "DisableImplicitMT" , 
         default = False               )
     # 
+    parser.add_argument ( 
+        '--build-dir'                        ,        
+        dest    = 'BuildDir'                 , 
+        help    = "Build directory for ROOT" , 
+        default = ''                         )
+    # 
     group2 = parser.add_mutually_exclusive_group()
     group2.add_argument ( '-i' ,  
                          '--interactive' , dest='batch', 
@@ -293,13 +299,22 @@ import ostap.fixes.fixes
 # =============================================================================
 # specify the build directory for ROOT 
 # =============================================================================
-import ostap.utils.utils as OUU
-td = OUU.CleanUp.tempdir ( prefix = 'build_' ) 
-logger.debug ('Set BuildDirectory to be "%s"' % td ) 
-ROOT.gSystem.SetBuildDir ( td ) 
-del td
-del OUU
-                           
+import ostap.core.build_dir
+if arguments.BuildDir :
+    
+    from ostap.utils.basic import good_dir , make_dir 
+    bdir = arguments.BuildDir
+    
+    if   good_dir ( bdir )                    : pass 
+    elif bdir and not os.path.exists ( bdir ) : make_dir ( bdir ) 
+
+    if good_dir ( bdir ) :
+        ROOT.gSystem.SetBuildDir ( bdir )
+        logger.info ( 'Build directory for ROOT: %s' % ostap.core.build_dir.build_dir )
+        ostap.core.build_dir.build_dir = bdir 
+        
+    del bdir, good_dir, make_dir
+    
 # =============================================================================
 ## ostap startup: history, readlines, etc... 
 # =============================================================================

@@ -73,8 +73,42 @@ def terminal_size():
         return th , tw  
     except :
         return 20 , 80
-    
 
+    
+# =============================================================================
+## good wrietable drectory?
+#  @code
+#  path = ...
+#  good_dir( path )
+#  @endcode
+def good_dir ( bdir ) :
+    """Good writeable directory?
+    >>> path = ...
+    >>> good_dir ( path )
+    """
+    return bdir                    and \
+           os.path.exists ( bdir ) and \
+           os.path.isdir  ( bdir ) and \
+           os.access      ( bdir , os.W_OK ) 
+
+# ===============================================================================
+## make directory
+#  @code
+#  path = ...
+#  make_dir( path )
+#  @endcode 
+def make_dir ( bdir ) :
+    """Good writeable directory?
+    >>> path = ...
+    >>> make_dir ( path )
+    """
+    try :
+        os.mkdir( bdir )
+    except OSError :
+        pass
+    
+    return bdir if good_dir ( bdir ) else ''
+    
 # =============================================================================
 if __name__ == '__main__' :
 

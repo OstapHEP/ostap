@@ -58,7 +58,7 @@ __all__     = (
     'items_loop'       , ## ditto
     )
 # =============================================================================
-import math, sys
+import math, sys, os 
 import ROOT
 import cppyy
 cpp = cppyy.gbl
@@ -72,18 +72,19 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
-from ostap.math.base      import ( Ostap    ,
-                                   iszero   , isequal ,
-                                   isint    , islong  ,
-                                   inrange  , strings , 
-                                   natural_number     ,
-                                   natural_entry      )
+from   ostap.math.base      import ( Ostap    ,
+                                     iszero   , isequal ,
+                                     isint    , islong  ,
+                                     inrange  , strings , 
+                                     natural_number     ,
+                                     natural_entry      )
 
-from sys                  import version_info  as python_version 
-from ostap.math.ve        import VE
-from ostap.stats.counters import SE , WSE 
-from builtins             import range 
-#
+from   sys                  import version_info  as python_version 
+from   ostap.math.ve        import VE
+from   ostap.stats.counters import SE , WSE 
+from   builtins             import range
+# =============================================================================
+
 binomEff        = Ostap.Math.binomEff
 binomEff2       = Ostap.Math.binomEff2
 zechEff         = Ostap.Math.zechEff
@@ -315,6 +316,10 @@ def loop_items ( d ) :
     """
     return items_loop ( d ) 
 
+
+# =============================================================================
+## define the build directory for ROOT 
+import ostap.core.build_dir 
 
 # =============================================================================
 if '__main__' == __name__ :
