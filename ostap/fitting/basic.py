@@ -895,10 +895,20 @@ class PDF (MakeVar) :
         
         """
         with RangeVar( self.xvar , *(histo.xminmax()) ) : 
-            
-            ## convert it! 
-            self.histo_data = H1D_dset ( histo , self.xvar , density , silent )
-            data            = self.histo_data.dset
+
+            hdata = getattr ( self , 'histo_data' , None )
+            if hdata and isinstance ( hdata , H1D_dset ) and \
+                   hdata.histo      is histo             and \
+                   hdata.density    == density           and \
+                   hdata.histo_hash == hash ( histo ) :
+                ## reuse the existing dataset
+                self.debug ('Reuse the existing H1D_dset') 
+                data = hdata.dset
+            else :                
+                ## convert it! 
+                self.debug ('Create new H1D_dset'        ) 
+                self.histo_data = H1D_dset ( histo , self.xvar , density , silent )
+                data            = self.histo_data.dset
 
             if  self.xminmax() :
                 

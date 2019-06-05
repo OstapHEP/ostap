@@ -137,6 +137,7 @@ Style      = OstapStyle (
     'Style' ,
     'The basic Ostap style for plots' )
 
+# ============================================================================
 ## default style 
 ostapStyle = Style
 
@@ -168,8 +169,8 @@ class UseStyle(object):
             elif '2'  == style                          : style = Style2
             elif '3'  == style                          : style = Style3
             elif style.upper() in ( 'Z' , '1Z' , 'Z1' ) : style = StyleZ 
-            elif style.upper() in ( 'Z' , '2Z' , 'Z2' ) : style = Style2Z 
-            elif style.upper() in ( 'Z' , '3Z' , 'Z3' ) : style = Style3Z 
+            elif style.upper() in (       '2Z' , 'Z2' ) : style = Style2Z 
+            elif style.upper() in (       '3Z' , 'Z3' ) : style = Style3Z 
 
         ## use the style by name 
         if isinstance   ( style , str ) :
@@ -179,7 +180,7 @@ class UseStyle(object):
                     style = s
                     break
                 
-        if style is None : pass  
+        if   style is None : pass  
         elif not isinstance  ( style , ROOT.TStyle ) :
             logger.warning ( 'No valid style "%s" is found, use default style' % style )
             style = ostapStyle

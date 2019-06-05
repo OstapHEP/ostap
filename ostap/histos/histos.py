@@ -6562,8 +6562,7 @@ def _h_hash_ ( histo) :
     >>> histo = ...
     >>> h     = hash ( histo ) 
     """
-    hv = hash (   histo.GetName  ()        )
-    hv = hash ( ( histo.GetTitle () , hv ) )
+    hv = hash ( ( histo.GetName  () , histo.GetTitle() , type ( histo ) ) ) 
     for item in histo.iteritems() :
         hv = hash ( item + ( hv, ) )
     return hv

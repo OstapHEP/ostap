@@ -326,11 +326,22 @@ class PDF3 (PDF2) :
         with     RangeVar ( self.xvar , *xminmax ) , \
                  RangeVar ( self.yvar , *yminmax ) , \
                  RangeVar ( self.xvar , *zminmax ): 
-            
-            ## convert it! 
-            self.histo_data = H3D_dset ( histo , self.xvar , self.yvar  , self.zvar ,
-                                         density , silent )
-            data = self.histo_data
+
+            hdata = getattr ( self , 'histo_data' , None )
+            if hdata and isinstance ( hdata  , H3D_dset ) and \
+                   hdata.histo      is histo              and \
+                   hdata.density    == density            and \
+                   hdata.histo_hash == hash ( histo ) :
+                ## reuse the existing dataset
+                self.debug ('Reuse the existing H3D_dset') 
+                data = hdata.dset
+            else :
+                ## convert it! 
+                self.debug ('Create new H3D_dset'        ) 
+                self.histo_data = H3D_dset ( histo , self.xvar , self.yvar  , self.zvar ,
+                                             density , silent )
+                data = self.histo_data
+                
             if chi2 : return self.chi2fitTo ( data              ,
                                               draw    = draw    ,
                                               silent  = False   ,

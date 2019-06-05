@@ -376,10 +376,21 @@ class PDF2 (PDF) :
 
         xminmax = histo.xminmax()
         yminmax = histo.yminmax()        
-        with RangeVar( self.xvar , *xminmax ) , RangeVar ( self.yvar , *yminmax ): 
-            ## convert it!
-            self.histo_data = H2D_dset ( histo , self.xvar , self.yvar  , density , silent )
-            data = self.histo_data.dset 
+        with RangeVar( self.xvar , *xminmax ) , RangeVar ( self.yvar , *yminmax ):
+            
+            hdata = getattr ( self , 'histo_data' , None )
+            if hdata and isinstance ( hdata  , H2D_dset ) and \
+                   hdata.histo      is histo              and \
+                   hdata.density    == density            and \
+                   hdata.histo_hash == hash ( histo ) :
+                ## reuse the existing dataset
+                self.debug ('Reuse the existing H2D_dset') 
+                data = hdata.dset
+            else :                
+                ## convert it!
+                self.debug ('Create new H2D_dset'        ) 
+                self.histo_data = H2D_dset ( histo , self.xvar , self.yvar  , density , silent )
+                data = self.histo_data.dset 
             
             ## fit it!!
             if chi2 : return self.chi2fitTo ( data                     ,

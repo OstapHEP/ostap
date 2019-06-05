@@ -750,8 +750,9 @@ class H1D_dset(MakeVar) :
         ## use mass-variable
         #
         assert isinstance ( histo , ROOT.TH1 ) , "``histo'' is not ROOT.TH1"
-        self.__histo = histo 
-
+        self.__histo      = histo 
+        self.__histo_hash = hash ( histo )
+        
         name           = histo.GetName()
         self.__xaxis   = self.make_var ( xaxis , 'x_%s' % name , 'x-axis(%s)' % name , None , *(histo.xminmax()) )
         
@@ -793,6 +794,11 @@ class H1D_dset(MakeVar) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
 
+    @property
+    def histo_hash ( self ) :
+        """Hash value for the histogram"""
+        return self.__histo_hash
+    
 # =============================================================================
 ## simple convertor of 2D-histo to data set
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -808,7 +814,8 @@ class H2D_dset(MakeVar) :
                    silent  = False ) :
         #
         assert isinstance ( histo , ROOT.TH2 ) , "``histo'' is not ROOT.TH2"
-        self.__histo = histo
+        self.__histo      =        histo
+        self.__histo_hash = hash ( histo )
 
         ## use mass-variable
         #
@@ -864,6 +871,11 @@ class H2D_dset(MakeVar) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
 
+    @property
+    def histo_hash ( self ) :
+        """Hash value for the histogram"""
+        return self.__histo_hash
+    
 # =============================================================================
 ## simple convertor of 3D-histo to data set
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -880,7 +892,8 @@ class H3D_dset(MakeVar) :
                    silent  = False ) :
         
         assert isinstance ( histo , ROOT.TH3 ) , "``histo'' is not ROOT.TH3"
-        self.__histo = histo
+        self.__histo      =        histo
+        self.__histo_hash = hash ( histo )
         #
         ## use mass-variable
         #
@@ -945,6 +958,11 @@ class H3D_dset(MakeVar) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
 
+    @property
+    def histo_hash ( self ) :
+        """Hash value for the histogram"""
+        return self.__histo_hash
+    
 # =============================================================================
 ## @class Phases
 #  helper class to build/keep the list of ``phi''-arguments
