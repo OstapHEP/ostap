@@ -26,6 +26,7 @@ from   ostap.fitting.variables      import SETVAR
 import ostap.fitting.roocollections
 import ostap.fitting.roofitresult
 import ostap.fitting.printable
+import ostap.fitting.roocmdarg   
 from   ostap.fitting.dataset        import setStorage, useStorage
 # =============================================================================
 # logging 
@@ -159,76 +160,9 @@ class PDF_fun(object):
             return self.pdf.getVal()
 
 
-# =============================================================================
-## print RooCmdArg object 
-def _rca_print_ ( self ) :
-    """Print RooCmdArg object 
-    """
-    name = self.GetName()
-    if   'NumCPU'               == name : return 'NumCPU(%d,%d)'        % ( self.getInt ( 0 ) , self.getInt ( 1 ) ) 
-    elif 'Verbose'              == name : return 'Verbose(%r)'          %   self.getBool () 
-    elif 'Strategy'             == name : return 'Strategy(%d)'         %   self.getInt ( 0 ) 
-    elif 'PrintLevel'           == name : return 'PrintLevel(%d)'       %   self.getInt ( 0 ) 
-    elif 'PrintEvalErrors'      == name : return 'PrintEvalErrors(%d)'  %   self.getInt ( 0 ) 
-    elif 'Timer'                == name : return 'Timer(%r)'            %   self.getBool () 
-    elif 'Warnings'             == name : return 'Warnings(%r)'         %   self.getBool () 
-    elif 'SumW2Error'           == name : return 'SumW2Error(%r)'       %   self.getBool () 
-    elif 'Extended'             == name : return 'Extended(%r)'         %   self.getBool () 
-    elif 'Range'                == name : return 'Range(%s,%s,%r)'      % ( self.getDouble ( 0 ) ,
-                                                                            self.getDouble ( 1 ) ,
-                                                                            True if self.getInt ( 0 ) else False )
-    elif 'RangeWithName'        == name : return "Range('%s',%r)"       % ( self.getString ( 0 ) , self.getBool() )
-    elif 'Hesse'                == name : return 'Hesse(%r)'            %   self.getBool () 
-    elif 'InitialHesse'         == name : return 'InitialHesse(%r)'     %   self.getBool () 
-    elif 'Optimize'             == name : return 'Optimize(%r)'         %   self.getBool () 
-    elif 'Minos'                == name : return 'Minos(%r)'            %   self.getBool () if self.getSet(0) else 'Minos({.})'      
-    elif 'Save'                 == name : return 'Save(%r)'             %   self.getBool () 
-    elif 'FitOptions'           == name : return "FitOptions('%s')"     % ( self.getString ( 0 ) )
-    elif 'ExternalConstraints'  == name : return 'ExternalConstraints({.})'
-    elif 'DataError'            == name : return 'DataError(%d)'        % ( self.getInt    ( 0 ) )
-    elif 'Minimizer'            == name : return "Minimizer('%s','%s')" % ( self.getString ( 0 ) , self.getString( 1 ) )
-
-    elif 'ProjectedObservables' == name : return "ProjectedObservables({.})" 
-    elif 'CutRange'             == name : return "CutRange('%s')"       %   self.getString ( 0 ) 
-    elif 'LineColor'            == name : return 'LineColor(%d)'        %   self.getInt    ( 0 ) 
-    elif 'LineStyle'            == name : return 'LineStyle(%d)'        %   self.getInt    ( 0 ) 
-    elif 'LineWidth'            == name : return 'LineWidth(%d)'        %   self.getInt    ( 0 )     
-    elif 'FillColor'            == name : return 'FillColor(%d)'        %   self.getInt    ( 0 ) 
-    elif 'FillStyle'            == name : return 'FillStyle(%d)'        %   self.getInt    ( 0 ) 
-    elif 'MarkerColor'          == name : return 'MarkerColor(%d)'      %   self.getInt    ( 0 ) 
-    elif 'MarkerStyle'          == name : return 'MarkerStyle(%d)'      %   self.getInt    ( 0 ) 
-    elif 'MarkerSize'           == name : return 'MarkerSize (%s)'      %   self.getDouble ( 0 ) 
-    elif 'DrawOption'           == name : return "DrawOptions('%s')"    %   self.getString ( 0 ) 
-    elif 'VLines'               == name : return "VLines()" 
-    elif 'VisualizeError'       == name : return "VisializeError({.})" 
-    elif 'VisualizeErrorData'   == name : return "VisializeError({.})" 
-    elif 'ShowProgress'         == name : return "ShowProgress()"
-    
-    elif 'CutSpec'              == name : return "Cut('%s')"            %   self.getString ( 0 ) 
-    elif 'BinningName'          == name : return "Binning('%s')"        %   self.getString ( 0 ) 
-    elif 'BinningSpec'          == name : return 'Binning(%d,%s,%s)'    % ( self.getInt    ( 0 ) , self.getDouble ( 0 ) , self.getDouble ( 1 ) )
-    elif 'Normalization'        == name : return 'Normalization(%s,%d)' % ( self.getDouble ( 0 ) , self.getInt    ( 0 ) )
-    elif 'SelectCompSpec'       == name : return "Component('%s')"      %   self.getString ( 0 ) 
-
-    
-    return name
-
-def _rca_bool_ ( self ) :
-    """Get boolean value"""
-    return True if self.getInt ( 0 ) else False
-
-ROOT.RooCmdArg .__str__  = _rca_print_
-ROOT.RooCmdArg .__repr__ = _rca_print_
-ROOT.RooCmdArg .getBool  = _rca_bool_ 
-
-_new_methods_ += [
-    ROOT.RooCmdArg.__repr__ , 
-    ROOT.RooCmdArg.__str__  , 
-    ROOT.RooCmdArg.getBool  , 
-    ]
 
 # =============================================================================
-_decorated_classes_ = ()
+_decorated_classes_ = ( )
 
 _new_methods_ = tuple ( _new_methods_ ) 
 

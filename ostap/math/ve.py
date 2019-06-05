@@ -306,6 +306,21 @@ def _ve_minmax_ ( s , n = 1 ) :
 VE.minmax = _ve_minmax_
 
 # =============================================================================
+## hashing for VE object
+#  @code
+#  v = VE   ( ... )
+#  h = hash ( v   ) 
+#  @endcode
+def _ve_hash_ ( v ) :
+    """HAshing function for VE objecte
+    >>> v = VE   ( ... )
+    >>> h = hash ( v   ) 
+    """
+    return  hash ( ( v.value() , v.cov2() ) )
+
+VE.__hash__ = _ve_hash_
+
+# =============================================================================
 from random import gauss as _gauss     
 # =============================================================================
 ## get the (gaussian) random number according to parameters
@@ -422,6 +437,7 @@ _new_methods_ = (
     VE . __ge__           , 
     VE . __eq__           , 
     VE . __ne__           , 
+    VE . __hash__         , 
     VE . minmax           ,
     VE . gauss            , 
     VE . poisson          ,

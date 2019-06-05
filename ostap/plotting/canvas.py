@@ -436,17 +436,24 @@ def canvas_partition ( canvas               ,
             ROOT.SetOwnership ( pad , True )
             
             if not hasattr ( canvas , 'pads' ) : canvas.pads = {}
-            canvas.pads[ (ix,iy) ] = pad
-            
+            canvas.pads[  ( ix , iy ) ] = pad
+
+    pds  = canvas.pads
+    keys = pds.keys()
+    import collections as _C
+    _p  =_C.OrdereDict()
+    for k in  sorted ( keys ) :
+        _p[k] = pds[k]
+    canvas.pads = _p 
+    
     return canvas.pads 
 
 
 ROOT.TCanvas.partition = canvas_partition
 
 
-
 # ==============================================================================
-##  Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+## Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
 #  @code
 #  canvas    = ...
 #  pad_u, pud_b= canvas.pull_partition ( 0.20 )    
@@ -591,8 +598,11 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
     
     seq = zip ( objects , pads )
 
-    for obj , pad in seq :
-
+    for obj , pad_ in seq :
+        
+        if isinstance ( pad_ , ROOT.TPad ) : pad = pad_
+        else                               : pad = pads [ pad ] 
+        
         c = pad.GetCanvas()
         if c : c.cd(0)
         

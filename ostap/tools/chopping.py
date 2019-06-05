@@ -317,8 +317,9 @@ class Trainer(object) :
             scuts = icategory * scuts if scuts else icategory
         if self.chop_background :
             bcuts = icategory * bcuts if bcuts else icategory
-            
-        t = TMVATrainer ( methods           = self.methods           ,
+
+        mp = self.make_plots and ( self.verbose or 0 == i ) 
+        t  = TMVATrainer ( methods           = self.methods           ,
                           variables         = self.variables         ,
                           signal            = self.signal            ,
                           background        = self.background        ,
@@ -335,7 +336,7 @@ class Trainer(object) :
                           name              = nam             ,
                           verbose           = self.verbose    ,
                           logging           = self.logging    ,
-                          make_plots        = self.make_plots ,
+                          make_plots        = mp              ,
                           category          = i               )
         
         return t

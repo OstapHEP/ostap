@@ -1,45 +1,152 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file fit_draw.py
-#  Default drawing options
+## @file ostap/plotting/fit_draw.py
+#  The default drawing options for Ostap/RooFit.
+#
+#  The module defines the drawing options for Ostap/RooFit.
+#  The options are split into two categories:
+#   - <code>options</code>: RooFit optioms that are the same for the given component
+#             class, e.g. options that are common for all "signal" or "backround: components 
+#   - <code>styles</code>: RooFit options that are the same for the given component
+#             class, e.g. options that are common for all "signal" or "backround: components 
+#
+#  The major options and  styles  are :
+#   - data_options'                 : data options to draw the data points 
+#   - signal_options'               : draw options for "signal"       component(s)
+#   - background_options'           : draw options for "background"   component(s)
+#   - background2D_options'         : draw options for "background2D" component(s)
+#   - crossterm1_options'           : draw options for "crossterm1"   component(s)
+#   - crossterm2_options'           : draw options for "crossterm2"   component(s)    
+#   - component_options'            : draw options for "other"        component(s)
+#   - total_fit_options'            : draw options for the total fit curve
+#
+#  The drawing can be done via the explicit usage of the options
+#  @code
+#  pdf.fitTo ( ... )
+#  pdf.draw  ( ... , signal_options = ... , signal_style = ... ) 
+#  @endcode
+#
+#  Also one can specify the drawing options for PDF :
+#  @code
+#  pdf.draw_options['data_options'] = ...
+#  pdf.draw_options['signal_style'] = ...
+#  pdf.fitTo ( ... )
+#  pdf.draw  ( ... ) 
+#  @endcode
+#
+#  The options can be specified also via the <code>[Fit Draw]</code> section in
+#  the configuration file: 
+#  @code
+#  ``
+#  [Fit Draw]
+#  Data_options = ROOT.RooFit.MarkerStyle ( 20   ) ,
+#                 ROOT.RooFit.DrawOption  ( "zp" ) 
+#  Signal_style = Style ( linecolor = ROOT.kRed ,
+#                         linewidth = 2         ,
+#                         fillcolor = ROOT.kRed ,
+#                         fillstyle = 1001      )
+#  ''
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""Default drawing options"""
+"""Default drawing options for Ostap/RooFit 
+
+The module defines the drawing options for Ostap/RooFit.
+The options are split into two categories:
+- options : RooFit optioms that are the same for the given component
+  class, e.g. options that are common for all 'signal' or 'backround' components 
+- styles  : RooFit options that are the same for the given component
+class, e.g. options that are common for all 'signal' or 'backround' components 
+
+The major options and  styles  are :
+- data_options'                 : data options to draw the data points 
+- signal_options'               : draw options for 'signal '      component(s)
+- background_options'           : draw options for 'background'   component(s)
+- background2D_options'         : draw options for 'background2D' component(s)
+- crossterm1_options'           : draw options for 'crossterm1'   component(s)
+- crossterm2_options'           : draw options for 'crossterm2'   component(s)    
+- component_options'            : draw options for 'other'        component(s)
+- total_fit_options'            : draw options for the total fit curve
+
+The drawing can be done via the explicit usage of the options
+
+>>> pdf.fitTo ( ... )
+>>> pdf.draw  ( ... , signal_options = ... , signal_style = ... ) 
+
+Also one can specify the drawing options for PDF :
+
+>>> pdf.draw_options['data_options'] = ...
+>>> pdf.draw_options['signal_style'] = ...
+>>> pdf.fitTo ( ... )
+>>> pdf.draw  ( ... ) 
+
+The options can be specified also via the [Fit Draw] section in the configuration file: 
+
+``
+[Fit Draw]
+Data_options = ROOT.RooFit.MarkerStyle ( 20   ) ,
+               ROOT.RooFit.DrawOption  ( 'zp' ) 
+Signal_style = Style ( linecolor = ROOT.kRed ,
+                       linewidth = 2         ,
+                       fillcolor = ROOT.kRed ,
+                       fillstyle = 1001      )
+''
+"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'lineWidth'             , ## line width
-    'lineColor'             , ## line color 
-    'lineStyle'             , ## line style 
+    'lineWidth'                    , ## line width
+    'lineColor'                    , ## line color 
+    'lineStyle'                    , ## line style 
     ##
-    'keys'                  , ## predefines keys for draw-options
-    'draw_options'          , ## pickup draw-options from the dictionary
+    'keys'                         , ## predefines keys for draw-options
+    'draw_options'                 , ## pickup draw-options from the dictionary
     ##
-    'data_options'          , ## draw options for data 
-    'data_options_nobars'   , ## draw options for data without bars 
-    'signal_options'        , ## draw options for "signal"     component(s) 
-    'background_options'    , ## draw options for "background" component(s)
-    'crossterm1_options'    , ## draw options for "crossterm1" component(s)
-    'crossterm2_options'    , ## draw options for "crossterm2" component(s)    
-    'component_options'     , ## draw options for "other"      component(s)
-    'total_fit_options'     , ## draw options for the total fit curve
+    'data_options_plain'           , ## draw options for data 
+    'data_options_nobars'          , ## draw options for data without bars
+    'data_options_small'           , ## draw options for data without bars, small markers
     ##
-    'signal_style'          , ## style for "signal"        component(s)
-    'background_style'      , ## style for "background"    component(s)
-    'background2D_style'    , ## style for "background-2D" component(s)
-    'crossterm1_style'      , ## style for "crossterm1"    component(s)
-    'crossterm2_style'      , ## style for "crossterm2"    component(s)
-    'component_style'       , ## style for "other"         component(s)
+    'data_options'                 , ## data options to draw the data points 
+    'signal_options'               , ## draw options for "signal"       component(s)
+    'background_options'           , ## draw options for "background"   component(s)
+    'background2D_options'         , ## draw options for "background2D" component(s)
+    'crossterm1_options'           , ## draw options for "crossterm1"   component(s)
+    'crossterm2_options'           , ## draw options for "crossterm2"   component(s)    
+    'component_options'            , ## draw options for "other"        component(s)
+    'total_fit_options'            , ## draw options for the total fit curve
     ##
-    'Style'                 , ## helper class to define the style for the component
-    'Line'                  , ## helper class to define the style for the component
-    'Area'                  , ## helper class to define the style for the component
-    'Styles'                , ## helper class to define the style for the component
+    'signal_style'                 , ## style for "signal"        component(s)
+    'background_style'             , ## style for "background"    component(s)
+    'background2D_style'           , ## style for "background-2D" component(s)
+    'crossterm1_style'             , ## style for "crossterm1"    component(s)
+    'crossterm2_style'             , ## style for "crossterm2"    component(s)
+    'component_style'              , ## style for "other"         component(s)
+    ##
+    'default_data_options'         , ## defautl data options
+    'default_signal_options'       , ## default options for the signal component
+    'default_background_options'   , ## draw options for "background" component(s)
+    'default_background2D_options' , ## draw options for "background" component(s)
+    'default_crossterm1_options'   , ## draw options for "crossterm1" component(s)
+    'default_crossterm2_options'   , ## draw options for "crossterm2" component(s)
+    'default_component_options'    , ## draw options for "other"      component(s)
+    'default_total_fit_options'    , ## draw options for the total fit curve    
+    ##
+    'default_signal_style'         , ## style for "signal"        component(s)
+    'default_background_style'     , ## style for "background"    component(s)
+    'default_background2D_style'   , ## style for "background-2D" component(s)
+    'default_crossterm1_style'     , ## style for "crossterm1"    component(s)
+    'default_crossterm2_style'     , ## style for "crossterm2"    component(s)
+    'default_component_style'      , ## style for "other"         component(s)
+    ##
+    'Style'                        , ## helper class to define the style for the component
+    'Line'                         , ## helper class to define the style for the component
+    'Area'                         , ## helper class to define the style for the component
+    'Styles'                       , ## helper class to define the style for the component
     )
 # =============================================================================
 import ROOT
@@ -47,6 +154,7 @@ from   ostap.core.ostap_types import integer_types, list_types
 from   ostap.core.core  import items_loop
 import ostap.plotting.style  
 import ostap.plotting.canvas
+import ostap.fitting.roocmdarg   
 # =============================================================================
 from   ostap.logger.logger  import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.plotting.fit_draw' )
@@ -62,6 +170,9 @@ keys = (
     ##
     'background_options'    ,
     'background_style'      ,
+    ##
+    'background2D_options'  ,
+    'background2D_style'    ,
     ##
     'crossterm1_options'    ,
     'crossterm1_style'      ,
@@ -80,13 +191,13 @@ keys = (
     )
 # =============================================================================
 ## get draw options:
-#  Collect predefined keys from  the dictioary
+#  Collect predefined keys from  the dictionary
 #  @code
 #  def somefunc (  ... , **kwargs ) :
 #      draw_opts = draw_options ( kwargs )
 #  @endcode 
 def draw_options ( **kwargs ) :
-    """Collect predefined keys from  the dictioary
+    """Collect predefined keys from  the dictionary
     >>> def somefunc (  ... , **kwargs ) :
     ...      draw_opts = draw_options ( kwargs )
     """
@@ -97,38 +208,14 @@ def draw_options ( **kwargs ) :
             if isinstance ( v , dict ) : options.update ( v ) 
     return options
 
+
 # =============================================================================
-## plain, default
-data_options           = ()
-
-## suppress small bars at the end of error bars 
-data_options_nobars     = ( ROOT.RooFit.MarkerStyle ( 20   ) ,
-                            ROOT.RooFit.DrawOption  ( "zp" ) )
-
-## signal: 
-signal_options          = ()
-
-## 1D background: 
-background_options      = () 
-
-## "component":   
-component_options       = ()
-
-## total fit curve: thick red orange line 
-total_fit_options       = lineWidth ( 3 ) , lineColor ( ROOT.kOrange + 1 ) , 
-
-## background:  thin short-dashed line
-background2D_options    = background_options  
-crossterm1_options      = ()  
-crossterm2_options      = () 
-
-base_background_2D_color = 2 
-
-# ===========================================================================================
 ## @class Style
 #  Store the drawinng style for the component 
 class Style(object):
-
+    """Store the drawinng style for the component 
+    """
+    
     def __init__ ( self                     ,
                    linecolor = ROOT.kBlack  ,
                    linestyle = 1            ,
@@ -228,41 +315,6 @@ class Style(object):
     def fillcolor ( self ) : return self.__fillcolor
     @property
     def fillstyle ( self ) : return self.__fillstyle
-
-    
-# =============================================================================
-## @class Line
-#  Define style for the line
-#  @code
-#  l = Line ( ROOT.kRed )
-#  l = Line ( ROOT.kRed , linestyle = 2 ) 
-#  l = Line ( ROOT.kRed , linewidth = 3 ) 
-#  @endcode
-class Line (Style) :
-    """Define the line style:
-    >>> l = Line ( ROOT.kRed )
-    >>> l = Line ( ROOT.kRed , linestyle = 2 ) 
-    >>> l = Line ( ROOT.kRed , linewidth = 3 )     
-    """
-    def __init__ ( self                     ,
-                   linecolor = ROOT.kBlack  ,
-                   linestyle = 1            , 
-                   linewidth = 1            , *args ) :
-
-        Style.__init__( self ,
-                        linecolor = linecolor ,
-                        linestyle = linestyle ,
-                        linewidth = linewidth ,
-                        fillcolor = None      ,
-                        fillstyle = None      , *args ) 
-
-    def __str__ ( self ) :
-        return "Line(linecolor=%s,linestyle=%s,linewidth=%s)" % (
-            self.linecolor ,
-            self.linestyle ,
-            self.linewidth )
-    __repr__ = __str__
-
         
 # =============================================================================
 ## @class Area 
@@ -316,7 +368,8 @@ class Line (Style) :
 # =======================================================================================
 ## list of styles 
 class Styles(object) :
-
+    """List of styles
+    """
     def __init__ ( self            ,
                    styles     = [] ,
                    linecolors = [ i for i in range ( 1 , 51 ) ] ,
@@ -358,7 +411,8 @@ class Styles(object) :
         
         if   isinstance ( objects , integer_types   ) : return objects
         elif isinstance ( objects , ROOT.RooCmdArg  ) : return objects
-        elif callable   ( objects                   ) : return objects ( index ) 
+        elif callable   ( objects                   ) : return objects ( index )
+        
         return defval 
     
     @property
@@ -413,20 +467,129 @@ class Styles(object) :
         
         return ss
 
-    def __call__ ( self , index ) :
+    ## the effective length 
+    def __len__  ( self ) :
+        """The effective length
+        """
+        return max ( len ( self.__styles     ) , 
+                     len ( self.__linecolors ) , 
+                     len ( self.__linestyles ) , 
+                     len ( self.__linewidths ) , 
+                     len ( self.__fillcolors ) , 
+                     len ( self.__fillstyles ) )
 
+    ## iteration over the defined styles 
+    def __iter__ ( self ) :
+        """Iteration over the defined styles
+        """
+        for i in range ( len ( self ) ) :
+            yield self[ i ] 
+
+    ## get the style for the given index 
+    def __call__ ( self , index ) :
+        """Get the style for the given index
+        """
         ss = self[index]
         return ss.options
-    
-signal_style     = Styles ( styles = (
-    Style ( linecolor = ROOT.kRed      , linewidth = 2 , fillcolor = ROOT.kRed      , fillstyle = 1001 ) ,
-    Style ( linecolor = ROOT.kRed -  7 , linewidth = 2 , fillcolor = ROOT.kRed -  7 , fillstyle = 3295 ) ,
-    Style ( linecolor = ROOT.kRed +  2 , linewidth = 2 , fillcolor = ROOT.kRed +  2 , fillstyle = 3205 ) ,
-    Style ( linecolor = ROOT.kRed - 10 , linewidth = 2 , fillcolor = ROOT.kRed - 10 , fillstyle = 3495 ) ,    
-    Style ( linecolor = ROOT.kRed +  3 , linewidth = 2 , fillcolor = ROOT.kRed +  3 , fillstyle = 3405 ) ,    
-    ) )
 
-background_style = (
+    def __str__ ( self ) :
+
+        return str ( ( s for s in self )  )
+            
+
+# =============================================================================
+## plain, default
+data_options_plain             = ()
+
+## suppress small bars at the end of error bars 
+data_options_nobars            = ROOT.RooFit.MarkerStyle ( 20   ) , \
+                                 ROOT.RooFit.DrawOption  ( "zp" )
+## sutable for large number of bins: small markers 
+data_options_small             = ROOT.RooFit.MarkerStyle ( 20   ) , \
+                                 ROOT.RooFit.DrawOption  ( "zp" ) , \
+                                 ROOT.RooFit.MarkerSize  ( 0.5  ) 
+
+## default options 
+default_data_options            = data_options_nobars
+
+## default signal options 
+default_signal_options          = () 
+
+default_background_options      = () 
+## default option for "components" 
+default_component_options       = ()
+
+## default total fit curve : thick red orange line 
+default_total_fit_options       = lineWidth ( 3 ) , lineColor ( ROOT.kOrange + 1 ) ,
+
+## default optios for cross-terms 
+default_crossterm1_options      = ()  
+
+## default optios for cross-terms 
+default_crossterm2_options      = ()  
+
+## background:  thin short-dashed line
+default_background2D_options    = default_background_options
+
+# =============================================================================
+## get the optios from configurtaion parser 
+# =============================================================================
+def  get_options ( config , option , default ) :
+    
+    if not option in config : return default
+
+    opts = config.get ( option , fallback = '()' )
+    opts = opts.strip   ( ) 
+    opts = opts.replace ('\n', ' ' ) 
+    try : 
+        options = eval( opts , globals() )
+        if isinstance ( options , ROOT.RooCmdArg ) : options = options ,
+        if isinstance ( options , list           ) : options = tuple ( options )
+        if any ( not isinstance ( o , ROOT.RooCmdArg ) for o in options ) :
+            raise TypeError('Invalid type  for %s : %s' % ( option , opts ) ) 
+    except :
+        logger.error("Can't parse options %s : %s" % ( option , opts ) ) 
+        options = default 
+
+    return options
+    
+# =============================================================================
+## The actual drawing options
+# =============================================================================
+import ostap.core.config as CONFIG 
+data_options       = get_options (
+    CONFIG.fit_draw , 'data_options'         , default_data_options         )
+signal_options     = get_options (
+    CONFIG.fit_draw , 'signal_options'       , default_signal_options       )
+background_options = get_options (
+    CONFIG.fit_draw , 'background_options'   , default_background_options   )
+component_options  = get_options (
+    CONFIG.fit_draw , 'component_options'    , default_component_options    )
+crossterm1_options = get_options (
+    CONFIG.fit_draw , 'crossterm1_options'   , default_crossterm1_options   )
+crossterm2_options = get_options (
+    CONFIG.fit_draw , 'crossterm2_options'   , default_crossterm2_options   )
+total_fit_options  = get_options (
+    CONFIG.fit_draw , 'total_fit_options'    , default_total_fit_options    )
+background2D_options = get_options (
+    CONFIG.fit_draw , 'background2D_options' , default_background2D_options )
+
+
+
+# =============================================================================
+## Drawing styles
+# =============================================================================
+
+default_signal_style  = (
+    Style ( linecolor = ROOT.kRed      , linewidth = 2 , fillcolor = ROOT.kRed     , fillstyle = 1001 ) ,
+    Style ( linecolor = ROOT.kBlue     , linewidth = 2 , fillcolor = ROOT.kBlue    , fillstyle = 1001 ) ,
+    Style ( linecolor =    8           , linewidth = 2 , fillcolor =    8          , fillstyle = 1001 ) ,    
+    Style ( linecolor = ROOT.kMagenta  , linewidth = 2 , fillcolor = ROOT.kMagenta , fillstyle = 1001 ) ,
+    Style ( linecolor = ROOT.kCyan     , linewidth = 2 , fillcolor = ROOT.kCyan    , fillstyle = 1001 ) ,
+    Style ( linecolor = ROOT.kYellow   , linewidth = 2 , fillcolor = ROOT.kYellow  , fillstyle = 1001 ) ,
+    ) 
+
+default_background_style = (
     Line  ( linecolor = ROOT.kBlue         , linestyle =  7 ) ,
     Line  ( linecolor = ROOT.kBlue    -  9 , linestyle = 11 ) ,
     Line  ( linecolor = ROOT.kBlue    +  3 , linestyle = 12 ) ,
@@ -434,32 +597,72 @@ background_style = (
     Line  ( linecolor = ROOT.kBlue    - 10 , linestyle = 14 ) ,
     )
 
-component_style  = (
-    Style ( linecolor = 8            , fillcolor = 8            , fillstyle = 3254 ) ,
-    Style ( linecolor = 6            , fillcolor = 6            , fillstyle = 3245 ) ,
-    Style ( linecolor = 7            , fillcolor = 7            , fillstyle = 3290 ) ,
-    Style ( linecolor = 9            , fillcolor = 9            , fillstyle = 3490 ) ,
-    Style ( linecolor = ROOT.kPink   , fillcolor = ROOT.kPink   , fillstyle = 3454 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3445 ) ,
-    Style ( linecolor = 5            , fillcolor = 5            , fillstyle = 1001 ) ,
+default_component_style  = (
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3345 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3354 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3305 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3395 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3422 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3477 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3544 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3590 ) ,
+    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3509 ) ,
     )
 
-crossterm1_style = (
+default_crossterm1_style = (
     Line  ( linecolor = ROOT.kMagenta +  3 , linestyle = 11 ) ,
     Line  ( linecolor = ROOT.kMagenta - 10 , linestyle = 12 ) , 
     Line  ( linecolor = ROOT.kMagenta +  3 , linestyle = 13 ) , 
     Line  ( linecolor = ROOT.kMagenta -  3 , linestyle = 14 ) ,
     )
 
-crossterm2_style = (
+default_crossterm2_style = (
     Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 14 ) ,
     Line  ( linecolor = ROOT.kGreen   -  1 , linestyle = 13 ) ,
     Line  ( linecolor = ROOT.kGreen   - 10 , linestyle = 12 ) ,
     Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 11 ) ,
     ) 
 
-background2D_style = background_style 
+default_background2D_style = default_background_style 
 
+
+# =============================================================================
+## get the optios from configurtaion parser 
+# =============================================================================
+def  get_style ( config , style , default ) :
+    
+    if not style in config : return default
+
+    opts = config.get ( style , fallback = '()' )
+    opts = opts.strip   ( ) 
+    opts = opts.replace ('\n', ' ' ) 
+    try : 
+        options = eval( opts , globals() )
+        if isinstance ( options , Style ) : opts = opts ,
+        if isinstance ( options , list  ) : opts = tuple ( options )
+        if any ( not isinstance ( o , Style ) for o in options ) :
+            raise TypeError('Invalid style type for %s : %s' % ( style , opts ) ) 
+    except :
+        logger.error("Can't parse %s : %s" % (  style , opts ) ) 
+        options = default 
+
+    return options
+
+# =============================================================================
+## the actual styles 
+# =============================================================================
+signal_style       = get_style (
+    CONFIG.fit_draw , 'signal_style'       , ()  )
+background_style   = get_style (
+    CONFIG.fit_draw , 'background_style'   , default_background_style   )
+component_style    = get_style (
+    CONFIG.fit_draw , 'component_style'    , default_component_style    )
+crossterm1_style   = get_style (
+    CONFIG.fit_draw , 'crossterm1_style'   , default_crossterm1_style   )
+crossterm2_style   = get_style (
+    CONFIG.fit_draw , 'crossterm2_style'   , default_crossterm2_style   )
+background2D_style = get_style (
+    CONFIG.fit_draw , 'background2D_style' , default_background2D_style )
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -94,7 +94,7 @@ class Convolution(object):
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
-            assert isinstance ( nbins  , integer_types ) and 100   < abs ( nbins  )  , \
+            assert isinstance ( nbins  , integer_types ) and 500   < abs ( nbins  )  , \
                    "Invalid ``nbins''  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
             assert isinstance ( buffer ,  float        ) and 0.05  < buffer < 0.95   , \
                    "Invalid ``buffer'' parameter %s/%s for ``setBufferFraction''"   % ( buffer , type ( buffer ) )
@@ -105,13 +105,13 @@ class Convolution(object):
                 dm  = mx - mn
                 sv  = self.__resolution.sigma.getVal() 
                 dm /= sv
-                nb  = min ( 50 * ( int ( dm ) + 1  ) , 100000 )
+                nb  = min ( 50 * ( int ( dm ) + 1  ) , 2**14 )
                 nb  = 2**math.frexp(nb)[1]
                 if nb > self.nbinsFFT : 
                     self.__nbins  = nb       
-                    logger.info('Convolution: choose #bins %d' % self.__nbins ) 
-                
-            self.__xvar.setBins ( self.nbinsFFT, 'cache' )
+                    logger.info('Convolution: choose #bins %d' % self.__nbins )
+
+            self.__xvar.setBins ( self.nbinsFFT , 'cache' )
             
             self.__pdf = ROOT.RooFFTConvPdf (
                 'FFT'     + name       , 
@@ -192,7 +192,7 @@ class Convolution_pdf(PDF) :
                    resolution        ,   ## the convolution/resolution
                    xvar    = None    ,   ## the axis varable
                    useFFT  = True    ,   ## use  FastFourierTransform?
-                   nbins   = 10000   ,   ## #bins for FFT
+                   nbins   = 2**14   ,   ## #bins for FFT
                    buffer  = 0.25    ,   ## buffer fraction ## setBufferFraction
                    nsigmas = 6       ,   ## number of sigmas for setConvolutionWindow
                    name    = ''      ) : ## the name 
@@ -220,7 +220,7 @@ class Convolution_pdf(PDF) :
 
         ## make the actual convolution
         if isinstance ( resolution , Convolution ) :
-            assert resolution.xvar is  xvar, "Mismatch in ``xvar'': %s vs %s" % ( xvar , resolution.xvar )
+            assert resolution.xvar is xvar, "Mismatch in ``xvar'': %s vs %s" % ( xvar , resolution.xvar )
             self.__cnv = resolution
         else :
             self.__cnv = Convolution ( name       = name             ,

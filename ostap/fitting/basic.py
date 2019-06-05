@@ -416,6 +416,19 @@ class PDF (MakeVar) :
         opts = self.parse_args ( dataset , *opts , **kwargs )
         if not silent and opts : self.info ('fitTo options: %s ' % list ( opts ) )
 
+        ## play a bit with the binning cache for convolutions 
+        if self.xvar.hasBinning ( 'cache' ) :
+            nb1 = self.xvar.getBins( 'cache' ) 
+            xv  = getattr ( dataset , self.xvar.name , None )
+            if   xv and xv.hasBinning ( 'cache' ) :
+                nb2 = xv.getBins('cache')
+                if  nb1 != nb2 :
+                    xv.setBins ( max (  nb1 , nb2 ) , 'cache' )
+                    self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , xv.name ) )
+            elif xv :
+                xv.setBins (        nb1         , 'cache' )
+                self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
+                
         #
         ## define silent context
         with roo_silent ( silent ) :
@@ -1071,7 +1084,7 @@ class PDF (MakeVar) :
         largs  = tuple ( largs ) 
         
         ## create NLL 
-        nll, sf = self.nll ( dataset , silent = silent , kwargs = kwargs )  
+        nll, sf = self.nll ( dataset , silent = silent , **kwargs )  
 
         result = nll
 
@@ -1147,7 +1160,7 @@ class PDF (MakeVar) :
         with roo_silent ( silent ) :
             
             ## create NLL object
-            nll , sf = self.nll ( dataset , silent = silent , args = args , kwargs = kwargs ) 
+            nll , sf = self.nll ( dataset , silent = silent , args = args , **kwargs ) 
             
             ## unpack the range 
             minv , maxv = range

@@ -90,8 +90,10 @@ def docme( module , symbols = {} , logger = None ) :
         logger.info ( "Symbols : %s" % list(_all_) ) 
         for key in _all_ :
             sym = getattr ( module , key )            
-            if isinstance ( sym , primitive ) : continue            
-            if hasattr ( sym , '__doc__' ) and sym.__doc__ :
+            if isinstance ( sym , primitive ) : continue
+            if isinstance ( sym , (tuple, list, set) ) :
+                logger.info ( "Symbol ``%s''\n# - %s" % ( key , str ( sym ) ) )                
+            elif hasattr ( sym , '__doc__' ) and sym.__doc__ :
                 d = sym.__doc__.replace( '\n' , '\n#' )
                 logger.info ( "Symbol ``%s''\n# - %s" % ( key , d ) )
             else : 

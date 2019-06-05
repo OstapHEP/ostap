@@ -6531,9 +6531,9 @@ def dumpHisto ( histo , *args ) :
     >>> histo
     >>> print dumpHisto ( histo )
     
-    >>> print histo.dump()
-    >>> print histo.dump( 20 , 20 )
-    >>> print histo.dump( 20 , 20 , True )
+    >>> print histo.dump ()
+    >>> print histo.dump ( 20 , 20 )
+    >>> print histo.dump ( 20 , 20 , True )
     
     Uses:
     
@@ -6551,6 +6551,25 @@ for t in  ( ROOT.TH1D             ,
         if not hasattr ( t , method ) :
             setattr ( t , method , dumpHisto )
 
+# =============================================================================
+## Hashing finction for the histograms
+#  @code
+#  histo = ...
+#  h     = hash ( histo ) 
+#  @endcode
+def _h_hash_ ( histo) :
+    """
+    >>> histo = ...
+    >>> h     = hash ( histo ) 
+    """
+    hv = hash (   histo.GetName  ()        )
+    hv = hash ( ( histo.GetTitle () , hv ) )
+    for item in histo.iteritems() :
+        hv = hash ( item + ( hv, ) )
+    return hv
+
+ROOT.TH1.__hash__ = _h_hash_ 
+# =============================================================================
 
 # =============================================================================
 ## represent historgam as ``density''

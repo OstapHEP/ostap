@@ -125,7 +125,20 @@ class PDF2 (PDF) :
                                    silent  = silent  ,
                                    density = density ,
                                    chi2    = chi2    , args = args , **kwargs )
-
+        
+        ## play a bit with binning cache for convolutions 
+        if self.yvar.hasBinning ( 'cache' ) :
+            nb1 = self.yvar.getBins( 'cache' ) 
+            yv  = getattr ( dataset , self.yvar.name , None )
+            if   yv and yv.hasBinning ( 'cache' ) :
+                nb2 = yv.getBins('cache')
+                if  nb1 != nb2 :
+                    yv.setBins ( max (  nb1 , nb2 ) , 'cache' )
+                    self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , yv.name ) )
+            elif yv :
+                yv.setBins (        nb1         , 'cache' )
+                self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , yv.name )  )
+                                
         result , f = PDF.fitTo ( self            ,
                                  dataset         ,
                                  draw   = False  , ## false here!
