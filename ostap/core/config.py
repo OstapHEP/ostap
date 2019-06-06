@@ -43,14 +43,13 @@ type(config).__repr__ = _cp_str_
 
 ## Define the major sections
 config [ 'General'  ] = {
-    'Quiet'     : 'False' ,
-    'Verbose'   : 'False' ,
-    'Build_dir' : ''       
+    'Quiet'     : 'False'  ,
+    'Verbose'   : 'False'  ,
+    'Parallel'  : 'Pathos' 
     }
 
 config [ 'Canvas'   ] = { 'Width' :  '1000' , 'Height' :  '800' } 
 config [ 'Fit Draw' ] = {}
-config [ 'Parallel' ] = {}
 
 ## the list of processes config files 
 files_read = config.read ( [

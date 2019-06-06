@@ -693,7 +693,7 @@ class Trainer(object):
             
         # check the output.
         if os.path.exists ( self.output_file ) :
-            
+
             if self.output_file == '%s.root' % self.name and os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) : 
                 import shutil
                 try :
@@ -766,24 +766,27 @@ class Trainer(object):
         
         logger.info ('Making the standard TMVA plots') 
         from ostap.utils.utils import batch , cmd_exists 
-        show_plots = self.category in ( 0 , -1 ) and self.verbose 
-        with batch ( not show_plots ) : 
+        show_plots = self.category in ( 0 , -1 ) and self.verbose
+        with batch ( ROOT.gROOT.IsBatch () or not show_plots ) : 
             ROOT.TMVA.variables                          ( self.name , output     )
             ROOT.TMVA.correlations                       ( self.name , output     )
             for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
             ## ROOT.TMVA.mvaeffs                         ( self.name , output     )
             for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
 
+
+        ## convert EPS  files to PDF 
         if cmd_exists ( 'epstopdf' ) :
-            odir, _  = os.path.split ( output           )
-            odir     = os.path.join  ( odir , self.name ) 
-            plotdir  = os.path.join  ( odir , 'plots'   )
-            import glob, subprocess
-            eps      = os.path.join ( plotdir , '*.eps')
-            for i in glob.iglob ( eps ) :
-                r =  subprocess.call ( [ 'epstopdf' , i ] )
-                if r != 0 : logger.warning('epstopdf: unable convert %s to PDF: %s' % ( i , r ) ) 
-                                                              
+            odir, _ = os.path.split ( os.path.abspath ( output ) )
+            if os.path.exists ( odir ) and os.path.isdir ( odir ) :                
+                import glob, subprocess
+                for edir , _ , _ in os.walk ( odir ) :
+                    if not self.name in edir : continue                     
+                    for eps in glob.iglob ( os.path.join ( edir , '*.eps' ) ) :
+                        r =  subprocess.call ( [ 'epstopdf' , eps ] )                        
+                        if r != 0 : logger.warning('epstopdf: unable convert %s to PDF: %s' % ( eps , r ) ) 
+
+                            
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader

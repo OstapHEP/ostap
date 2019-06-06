@@ -29,21 +29,39 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'pstap.parallel.parallel')
 else                      : logger = getLogger ( __name__         ) 
 # =============================================================================
-import operator
+import os, operator 
 
-try:
-    
-    from ostap.parallel.mp_pathos import Task, WorkManager 
-    logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
-    
-except ImportErorr :
-    
-    logger.error ("Can't import ostap.parallel.mp_pathos:" )  ## , exc_info = True )
-    from ostap.parallel.mp_gaudi import Task, WorkManager 
-    logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
+workers = 'PATHOS' , 'GAUDIMP'
 
-## from ostap.parallel.mp_gaudi import Task, WorkManager 
-## logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'    )
+worker  = '' 
+
+if 'OSTAP_PARALLEL' in os.environ :
+    worker  = os.environ['OSTAP_PARALLEL'].upper()
+    if not  worker in workers : worker = ''
+
+if not worker :
+
+    import ostap.core.config as _CONFIG
+    if 'PARALLEL' in _CONFIG.general :
+        worker = _CONFIG.general.get('PARALLEL', fallback = '' ).upper() 
+        if not  worker in workers : worker = ''
+
+# ===============================================================================
+
+if  'GAUDIMP' != worker :
+    
+    try :
+        from ostap.parallel.mp_pathos import Task, WorkManager 
+        logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
+    except ImportError :
+        from ostap.parallel.mp_gaudi  import Task, WorkManager 
+        logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'     )
+
+else :
+    
+    from ostap.parallel.mp_gaudi  import Task, WorkManager 
+    logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'         )
+
     
 # =============================================================================
 ## @class GenericTask

@@ -451,16 +451,20 @@ def make_ostap_style ( name                           ,
     conf [ 'LabelSize_X'       ] = get_float ( config , 'LabelSize_X' , 0.05 * scale ) 
     conf [ 'LabelSize_Y'       ] = get_float ( config , 'LabelSize_Y' , 0.05 * scale ) 
     conf [ 'LabelSize_Z'       ] = get_float ( config , 'LabelSize_Z' , 0.05 * scale ) 
-        
-    conf [ 'TitleFont'         ] = get_int   ( config , 'TitleFont' , font ) 
     
+    conf [ 'TitleFont_X'       ] = get_int   ( config , 'TitleFont_X' , font ) 
+    conf [ 'TitleFont_Y'       ] = get_int   ( config , 'TitleFont_Y' , font ) 
+    conf [ 'TitleFont_Z'       ] = get_int   ( config , 'TitleFont_Z' , font ) 
+    
+    conf [ 'TitleSize_X'       ] = get_float ( config , 'TitleSize_X' , -1 ) 
+    conf [ 'TitleSize_Y'       ] = get_float ( config , 'TitleSize_Y' , 0.05 * scale  ) 
+    conf [ 'TitleSize_Z'       ] = get_float ( config , 'TitleSize_Z' , 0.05 * scale  ) 
     
     conf [ 'LineWidth'         ] = get_int   ( config , 'LineWidth'     , line_width  )
     conf [ 'FrameWidth'        ] = get_int   ( config , 'FrameWidth'    , line_width  ) 
     conf [ 'HistLineWidth'     ] = get_int   ( config , 'HistLineWidth' , line_width  ) 
     conf [ 'FuncWidth'         ] = get_int   ( config , 'FuncWidth'     , line_width  ) 
     conf [ 'GridWidth'         ] = get_int   ( config , 'FuncWidth'     , line_width  ) 
-
     
     conf [ 'MarkerStyle'       ] = get_int   ( config , 'MarkerStyle'   , 20  ) 
     conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'    , 1.2 )
@@ -468,11 +472,13 @@ def make_ostap_style ( name                           ,
     conf [ 'LabelOffset'       ] = get_float ( config , 'LabelOffset'   , 0.015 ) 
 
 
-    conf [ 'StatFormat'        ] = get_str   ( config , 'StatFormat' , '6.3g')
+    conf [ 'StatFormat'        ] = get_str   ( config , 'StatFormat'    , '6.3g')
     
-    conf [ 'OptTitle'          ] = get_int   ( config , 'OptTitle'      , 0 )
-    conf [ 'OptFit'            ] = get_int   ( config , 'OptFit'        , 0 )
-    conf [ 'OptStat'           ] = get_int   ( config , 'OptStat'       , 0 )
+    conf [ 'OptTitle'          ] = get_int   ( config , 'OptTitle'      , 0    )
+    conf [ 'OptFit'            ] = get_int   ( config , 'OptFit'        , 0    )
+    conf [ 'OptStat'           ] = get_int   ( config , 'OptStat'       , 0    )
+
+    conf [ 'LegendFont'        ] = get_int   ( config , 'LegendFont'    , font )
 
     
     ## size of small lines at the end of error bars

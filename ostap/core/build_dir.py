@@ -50,7 +50,7 @@ if not build_dir :
         if   good_dir ( bdir )                    : build_dir = bdir
         elif bdir and not os.path.exists ( bdir ) : make_dir ( bdir ) 
         
-    if good_dir ( bdir ) : build_dir = bdir
+        if good_dir ( bdir ) : build_dir = bdir
 
 # ==============================================================================
 # 3) use the temporary directory 
