@@ -34,7 +34,7 @@ else :
 
 with timing('Prepare data') :
     logger.info('Prepare data, it could take some time')
-    from ostap.utils.utils import CleanUp
+    from ostap.utils.cleanup import CleanUp
     tmpdir  = CleanUp().tmpdir 
     import prepare_test_kisa as PTK
     ## data = PTK.prepare_data ( tmpdir , nfiles = 250 , nentries = 200000 , silent = False ) 

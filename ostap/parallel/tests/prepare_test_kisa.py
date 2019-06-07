@@ -81,7 +81,7 @@ def prepare_data ( tmpdir , nfiles =  100 ,  nentries = 100 , ppservers = () , s
     ## task  = PrepareTask () 
     wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
 
-    from ostap.utils.utils import CleanUp
+    from ostap.utils.cleanup import CleanUp
     tmpfile = CleanUp.tempfile ( prefix = 'test_kisa_' , suffix = '.root' , dir = tmpdir )
     
     fname = '%s/test_kisa_%d.root'

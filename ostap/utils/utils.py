@@ -661,12 +661,11 @@ def local_which ( cmd, mode=os.F_OK | os.X_OK, path=None):
                     return name
     return None
 
-
 # =============================================================================
 
 try :
     from shutil import which
-except ImportError :
+except ImportError :    
     which  = local_which 
 
 # =============================================================================
@@ -685,145 +684,6 @@ def cmd_exists ( command ) :
 ## return any( os.access ( os.path.join ( path , command  ) , os.X_OK ) for path in os.environ["PATH"].split(os.pathsep) )
 
 
-# =============================================================================
-## @class CleanUp
-#  Simple (base) class to get temporary files and directories and to remove them at axit
-class  CleanUp(object) :
-    
-    _tmpfiles = set()
-    _tmpdirs  = set()
-
-    @property
-    def tmpdir ( self ) :
-        """``tmpdir'' : return the name of temporary managed directory
-        - the managed directory will be cleaned-up and deleted at-exit
-        >>> o    = CleanUp()
-        >>> tdir = o.tmpdir 
-        """
-        tdir = CleanUp.tempdir () 
-        return tdir
-    
-    @property
-    def tmpdirs  ( self ) :
-        """``tmpdirs'' - list of currently registered managed temporary directories"""
-        return tuple ( self._tmpdirs )
-    
-    @tmpdirs.setter
-    def tmpdirs ( self, values ) :
-        if instance ( values , str ) : values = [ values ]
-        for o in values :
-            if o and isinstance ( o ,  str ) :
-                self._tmpdirs.add ( o )
-                logger.debug ( 'CleanUp: temporary directory     added %s' % o )
-                
-    @property 
-    def tmpfiles ( self ) :
-        """``tempfiles'' : list of registered managed temporary files"""
-        return list ( self._tmpfiles )
-    
-    @tmpfiles.setter
-    def tmpfiles ( self , other ) :
-        if isinstance ( other , str ) : other = [ other ]
-        for o in other :
-            if o and isinstance ( o , str ) : 
-                self._tmpfiles.add ( o )
-                logger.debug ( 'CleanUp: temporary file          added %s' % o )
-
-    @staticmethod
-    def tempdir ( suffix = '' , prefix = 'tmp_' ) :
-        """Get the name of the temporary directory.
-        The directory will be cleaned-up and deleted at-exit.
-        >>> dirname = CleanUp.tempdir() 
-        """
-        import tempfile
-        tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
-        CleanUp._tmpdirs.add ( tmp )
-        logger.debug ( 'CleanUp: temporary directory requested %s' % tmp   )
-        return tmp        
-    
-    @staticmethod
-    def tempfile ( suffix = '' , prefix = 'tmp_' , dir = None ) :
-        """Get the name of the temporary file. The file will be deleted at-exit
-        >>> fname = CleanUp.tempfile() 
-        """
-        import tempfile, os 
-        _file = tempfile.NamedTemporaryFile( suffix = suffix ,
-                                             prefix = prefix ,
-                                             delete = False  )
-        fname = _file.name
-        _file.close()
-        os.unlink(fname)
-        assert not os.path.exists ( fname )
-        CleanUp._tmpfiles.add ( fname )
-        logger.debug ( 'CleanUp: temporary file      requested %s' % fname )
-        return fname
-
-    @staticmethod
-    def remove_file ( fname ) :
-        """Remove the (temporary) file
-        """
-        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
-            logger.verbose ( 'CleanUp: remove temporary file : %s' % fname )
-            try    : os.remove ( fname )
-            except : pass
-        if os.path.exists  ( fname ) and os.path.isfile ( fname ) :
-            logger.error   ( 'CleanUp: failed to remove file : %s' %  fname  )
-            return False 
-        return True 
-
-    @staticmethod
-    def remove_dir ( fdir ) :
-        """Remove the (temporary) directory
-        """
-        if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
-            logger.verbose ( 'CleanUp: remove temporary dir : %s' % fdir  )
-            ## 1: collect all files & subdirectories 
-            for root, subdirs, files in os.walk ( fdir  , topdown = False ):
-                ## 2: remove all files 
-                for ff in files : CleanUp.remove_file ( os.path.join ( root , ff  ) ) 
-                ## 3: remove all directories 
-                for dd in subdirs :
-                    dd = os.path.join ( root , dd )
-                    logger.verbose ( 'CleanUp: remove subdirectory %s in temporary directory %s ' % ( dd , fdir ) )
-                    try    : os.rmdir   ( dd  )
-                    except : pass
-                    if os.path.exists ( dd ) and os.path.isdir ( dd )   :
-                        logger.error ( 'CleanUp: failed to remove %s in temporary directory %s ' % ( dd , fdir ) )                        
-            ## 4: finally remove the root
-            try    : os.rmdir ( fdir )
-            except : pass
-        if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
-            logger.error ( 'CleanUp: failed to  remove : %s' % fdir  )
-            
-
-    @staticmethod
-    def remove ( fname ) :
-        """Remove temporary object (if any) 
-        """
-        if   os.path.exists ( fname ) and os.path.isdir  ( fname ) :
-            return CleanUp.remove_dir  ( fname )
-        elif os.path.exists ( fname ) and os.path.isfile ( fname ) :
-            return CleanUp.remove_file ( fname )
-        
-        
-# =============================================================================
-import atexit
-@atexit.register
-def _cleanup_ () :
-
-    ## 1. clean up the files 
-    tmp_files  = CleanUp._tmpfiles
-    logger.debug ( 'CleanUp: remove temporary files: %s' % list ( tmp_files ) )
-    while tmp_files :
-        f = tmp_files.pop()
-        CleanUp.remove_file ( f )
-
-    ## 2. clean up  the directories 
-    tmp_dirs = CleanUp._tmpdirs
-    logger.debug ( 'CleanUp: remove temporary directories: %s' % list ( tmp_dirs ) )
-    while tmp_dirs :
-        f = tmp_dirs.pop()
-        CleanUp.remove_dir ( f )
 
 # =============================================================================
 if '__main__' == __name__ :

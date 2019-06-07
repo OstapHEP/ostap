@@ -1413,7 +1413,7 @@ def add_new_branch ( tree , name , function , verbose = True ) :
 ROOT.TTree.add_new_branch = add_new_branch 
 
 # =============================================================================
-from ostap.utils.utils import CleanUp
+from ostap.utils.cleanup import CleanUp
 # =============================================================================
 ## @class Chain
 #  simple class to keep pickable definitinon of tree/chain

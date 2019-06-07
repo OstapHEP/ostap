@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# =============================================================================
+## @file ostap/core/default_config.py
+#  Default configuration of ostap
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2019-05-19
+# =============================================================================
+"""Default configuration of ostap
+"""
+# =============================================================================
+__version__ = "$Revision$"
+__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
+__date__    = "2019-05-19"
+__all__     = (
+    'quiet'    , ## quiet   processing?
+    'verbose'  , ## verbose processing? 
+    )
+# =============================================================================
+quiet        =  False
+verbose      =  False
+
+## configuration files to read 
+config_files = [ u'~/.ostaprc'               ,
+                 u'~/.config/ostap/.ostaprc' ,
+                 u'.ostaprc'                 ]
+
+
+# =============================================================================
+if '__main__' == __name__ :
+
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+    
+# =============================================================================
+##                                                                      The END 
+# =============================================================================

@@ -16,7 +16,7 @@ else                       : logger = getLogger ( __name__                  )
 # ============================================================================= 
 import ROOT, os 
 from ostap.frames.frames import DataFrame
-from ostap.utils.utils   import CleanUp
+from ostap.utils.cleanup import CleanUp
 from ostap.trees.trees   import Tree
 
 tmpdir = CleanUp().tmpdir

@@ -105,8 +105,8 @@ def parse_args ( args = [] ) :
             for v in values : items.append(v)
             setattr(namespace, self.dest, items)
             
-    
-    import ostap.core.config as _cnf
+
+    import ostap.core.default_config as _cnf 
     from argparse import ArgumentParser 
     parser = ArgumentParser ( prog = 'ostap' )
     #
@@ -116,7 +116,8 @@ def parse_args ( args = [] ) :
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
         help    = "Quite processing [default: %(default)s]" ,
-        default = _cnf.quiet   )
+        default =  _cnf.quiet  )
+    
     group1.add_argument ( 
         "--verbose"     ,
         dest    = 'Verbose'    , 
@@ -183,10 +184,18 @@ def parse_args ( args = [] ) :
         action  = 'store_true'        , 
         help    = "DisableImplicitMT" , 
         default = False               )
-    # 
+    #
+    parser.add_argument (
+        '--config'          , 
+        dest    = 'Config'  ,
+        nargs   = '*'       ,
+        action  = Collect   ,
+        help    = "Config files to be parsed [default:  %(default)s]" ,
+        default = []        , 
+        )
     parser.add_argument ( 
         '--build-dir'                        ,        
-        dest    = 'BuildDir'                 , 
+        dest    = 'build_dir'                , 
         help    = "Build directory for ROOT" , 
         default = ''                         )
     # 
@@ -228,6 +237,7 @@ from ostap.utils.basic import with_ipython
 # =============================================================================
 arguments = parse_args()
 
+
 # =============================================================================
 # logging 
 # =============================================================================
@@ -266,6 +276,17 @@ else:
     del _keys,_vars,_k,level  
 
 # =============================================================================
+if arguments.Config :
+    cc  = os.environ.get ('OSTAP_CONFIG','').split( os.pathsep )
+    cc += arguments.Config
+    cc  = os.pathsep.join ( cc )
+    os.environ['OSTAP_CONFIG'] = cc
+    ## print 'MODIFY OSTAP_CONFIG' ,  os.environ['OSTAP_CONFIG']
+
+logger.info('hreeee') 
+import ostap.core.config     
+    
+# =============================================================================
 ## use profiling ?
 if arguments.Profile :
     import cProfile as _profile
@@ -300,10 +321,10 @@ import ostap.fixes.fixes
 # specify the build directory for ROOT 
 # =============================================================================
 import ostap.core.build_dir
-if arguments.BuildDir :
+if arguments.build_dir :
     
     from ostap.utils.basic import good_dir , make_dir 
-    bdir = arguments.BuildDir
+    bdir = arguments.build_dir
     
     if   good_dir ( bdir )                    : pass 
     elif bdir and not os.path.exists ( bdir ) : make_dir ( bdir ) 

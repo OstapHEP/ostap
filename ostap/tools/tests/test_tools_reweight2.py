@@ -29,7 +29,7 @@ else :
 # =============================================================================    
 logger.info ( 'Test for 2D-Reweighting machinery')
 # ============================================================================
-from ostap.utils.utils import CleanUp
+from ostap.utils.cleanup import CleanUp
 testdata   = CleanUp.tempfile( suffix = '.root' , prefix ='test_tools_reweight2_' )
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'

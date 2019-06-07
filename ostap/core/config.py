@@ -27,7 +27,7 @@ __all__     = (
     )
 # =============================================================================
 import configparser, os, sys  
-
+import ostap.core.default_config as _config
 # =============================================================================
 ## print for configparger 
 def _cp_str_ ( cp ) :
@@ -43,20 +43,18 @@ type(config).__repr__ = _cp_str_
 
 ## Define the major sections
 config [ 'General'  ] = {
-    'Quiet'     : 'False'  ,
-    'Verbose'   : 'False'  ,
-    'Parallel'  : 'Pathos' 
+    'Quiet'     : str ( _config.quiet   ) ,
+    'Verbose'   : str ( _config.verbose ) ,
+    'Parallel'  : 'PATHOS'
     }
 
 config [ 'Canvas'   ] = { 'Width' :  '1000' , 'Height' :  '800' } 
 config [ 'Fit Draw' ] = {}
 
 ## the list of processes config files 
-files_read = config.read ( [
-    u'~/.ostaprc'                       ,
-    u'~/.config/ostap/.ostaprc'         ,
-    u'.ostaprc'                         ,
-    os.environ.get ( 'OSTAP_CONFIG', '' ) ] )
+files_read = config.read (
+    _config.config_files + 
+    os.environ.get ( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
 
 # =============================================================================
 ## sections

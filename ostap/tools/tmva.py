@@ -57,8 +57,8 @@ def dir_name ( name ) :
 # =============================================================================
 ## @class WeightFiles
 #  helper structure  to deal with weights files
-import ostap.utils.utils as Utils 
-class WeightsFiles(Utils.CleanUp) :
+from ostap.utils.cleanup import  CleanUp
+class WeightsFiles(CleanUp) :
     """Helper structure  to deal with weights files
     """
     def __init__ ( self , weights_files ) :

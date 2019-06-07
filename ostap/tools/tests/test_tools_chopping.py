@@ -29,7 +29,7 @@ if '__main__' == __name__  or '__builtin__'  == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    
-from ostap.utils.utils import CleanUp
+from ostap.utils.cleanup import CleanUp
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_chopping_' ) 
 
 if not os.path.exists( data_file ) :

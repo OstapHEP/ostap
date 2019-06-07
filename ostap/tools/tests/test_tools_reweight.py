@@ -27,7 +27,7 @@ else :
 # =============================================================================    
 logger.info ( 'Test for Reweighting machinery')
 # =============================================================================
-from ostap.utils.utils import CleanUp
+from ostap.utils.cleanup import CleanUp
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='test_tools_reweight_' )
 tag_data   = 'DATA_histogram'
 tag_mc     = 'MC_tree'
