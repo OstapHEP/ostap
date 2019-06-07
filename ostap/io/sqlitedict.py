@@ -148,8 +148,10 @@ class SqliteDict(DictClass):
         """
         self.in_temp = filename is None
         if self.in_temp:
-            randpart = hex(random.randint(0, 0xffffff))[2:]
-            filename = os.path.join(tempfile.gettempdir(), 'sqldict' + randpart)
+            import tempfile
+            filename = tempfile.mktemp  ( prefix = 'sql_'  )            
+            # randpart = hex(random.randint(0, 0xffffff))[2:]
+            # filename = os.path.join(tempfile.gettempdir(), 'sqldict' + randpart)
 
         if flag not in SqliteDict.VALID_FLAGS:
             raise RuntimeError("Unrecognized flag: %s" % flag)

@@ -33,7 +33,8 @@ from ostap.utils.utils import CleanUp
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_chopping_' ) 
 
 if not os.path.exists( data_file ) :
-    import random 
+    import random
+    
     nB = 20000
     nS = 10000
     
@@ -148,6 +149,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         signal         = tSignal                  , ## ``Signal'' sample
         background     = tBkg                     , ## ``Background'' sample         
         verbose        = True     ,
+        ## make_plots     = False    ,   
         logging        = True     ,  ## produce  log-files 
         parallel       = True     )  ## parallel training
 

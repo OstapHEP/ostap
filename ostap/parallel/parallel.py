@@ -47,6 +47,11 @@ if not worker :
         if not  worker in workers : worker = ''
 
 # ===============================================================================
+from sys import version_info  as python_version
+if  python_version.major > 2 :
+    worker = 'GAUDIMP'
+    
+# ===============================================================================
 
 if  'GAUDIMP' != worker :
     

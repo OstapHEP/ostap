@@ -74,8 +74,7 @@ def _ls_ ( self )  :
     
     """
     keys = self.keys()
-    keys.sort()
-    for k in keys : print ( k )
+    for k in sorted ( keys ) : print ( k )
 
 # =============================================================================
 ## replace the method in module, if not done yet

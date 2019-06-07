@@ -135,19 +135,21 @@ def test_shelves():
     with timing('Remove ROOT') : os.remove ( db_root_name )
 
 
-    db_sql_tmp  = sqliteshelve.tmpdb()
-    db_zip_tmp  = zipshelve   .tmpdb()
-    db_root_tmp = rootshelve  .tmpdb()
-    
-    for d in ( db_sql_tmp  , db_zip_tmp , db_root_tmp ) :
-        
-        d['h1'] = h1
-        d['h2'] = h2
-        d.ls()
+    for dbase in ( sqliteshelve.tmpdb() ,
+                   zipshelve   .tmpdb() ,
+                   rootshelve  .tmpdb() ) :
 
+        with dbase as db :
+            
+            db [ 'h1'] = h1
+            db [ 'h2'] = h2
+            db.ls()
+    
 # =============================================================================
 if '__main__' == __name__ :    
     test_shelves()
+
+    del h1 , h2
 
 # =============================================================================
 # The END

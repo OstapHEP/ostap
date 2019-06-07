@@ -23,7 +23,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, os 
-from ostap.utils.basic import good_dir, make_dir 
+from   ostap.utils.basic import good_dir, make_dir 
 
 build_dir = None
 
@@ -55,11 +55,11 @@ if not build_dir :
 # ==============================================================================
 # 3) use the temporary directory 
 if not build_dir :
-    
-    import ostap.utils.utils as OUU
-    bdir = OUU.CleanUp.tempdir ( prefix = 'build_' )
-    
+
+    from ostap.utils.utils import CleanUp as _CU
+    bdir = _CU.tempdir ( prefix = 'build_' )
     if good_dir ( bdir ) : build_dir = bdir
+    del _CU
 
 # =============================================================================
 if build_dir and good_dir ( build_dir ) : 

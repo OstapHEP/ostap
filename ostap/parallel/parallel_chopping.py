@@ -75,11 +75,15 @@ class ChopperTraining(Task) :
     def __init__          ( self ) : self.output = ()
     def initializeLocal   ( self ) : self.output = () 
     def process           ( self , params ) :
-
-        import ostap.tools.tmva
+        
+        import ROOT, ostap.tools.tmva        
         category , chopper = params
-        trainer  = chopper.create_trainer ( category , False )
-        trainer.train ()
+        from   ostap.utils.utils import batch
+        from   sys               import version_info as python_version 
+        in_batch = 2 < python_version.major or 0 != category 
+        with batch ( in_batch ) : 
+            trainer  = chopper.create_trainer ( category , False )
+            trainer.train ()
         self.output = (
             [ ( category , trainer.weights_files ) ] ,
             [ ( category , trainer.  class_files ) ] ,

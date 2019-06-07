@@ -125,7 +125,7 @@ PROTOCOL = 2
 #  @attention It CRUCIALLY depends on the proper TFile-decorations
 #                          from ostap.io.root_file module
 #  @code
-#  db = RooOnlyShelf('mydb.root','c')
+#  db = RootOnlyShelf('mydb.root','c')
 #  h1 = ...
 #  db ['histogram'] = h1
 #  db.ls()
@@ -344,7 +344,7 @@ def _pickled_setitem_ ( self , key , value ) :
     """
     ##
     if self.writeback:
-        self.cache[key] = value
+        self.cache [ key ] = value
 
     ## not TObject? pickle it and convert to Ostap.BLOB
     if not isinstance  ( value , ROOT.TObject ) :
@@ -359,7 +359,7 @@ def _pickled_setitem_ ( self , key , value ) :
         blob   = Ostap.BLOB            ( key      ) 
         status = Ostap.blob_from_bytes ( blob , z )
         value  = blob 
-        del z , f, p 
+        del z , f , p 
         
     ## finally use ROOT 
     self.dict[key] = value
@@ -403,7 +403,7 @@ def open ( filename              ,
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-07-31 
 class TmpRootShelf(RootShelf):
-    """The actual class for TEMPRARY ROOT-based shelve-like data base
+    """The actual class for TEMPORARY ROOT-based shelve-like data base
     it implement shelve-intergase with underlyinog ROOT-fiel storage
     - ROOT-object are stored directly in the ROOT-file,
     - other objects are pickled and stored via  ROOT.TObjString
@@ -427,13 +427,14 @@ class TmpRootShelf(RootShelf):
     def close ( self )  :
         ## close the shelve file
         fname = self.filename 
-        RootShelf.close ( self )
+        ## super(TmpRootShelf,self).close ()
+        shelve.Shelf.close ( self )
         ## delete the file
-        import os 
-        if os.path.exists ( fname ) : 
+        import os
+        if os.path.exists ( fname ) :
             try :
                 os.unlink ( fname )
-            except : 
+            except :
                 pass
             
 # =============================================================================

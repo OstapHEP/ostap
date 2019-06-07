@@ -744,7 +744,7 @@ class Trainer(object):
         """Make the standard TMVA plots"""
 
         output = self.output_file
-        
+
         if not output :
             logger.warning ('No output file is registered!')
             return
@@ -767,14 +767,15 @@ class Trainer(object):
         logger.info ('Making the standard TMVA plots') 
         from ostap.utils.utils import batch , cmd_exists 
         show_plots = self.category in ( 0 , -1 ) and self.verbose
-        with batch ( ROOT.gROOT.IsBatch () or not show_plots ) : 
+
+        with batch ( ROOT.gROOT.IsBatch () or not show_plots ) :
+
             ROOT.TMVA.variables                          ( self.name , output     )
             ROOT.TMVA.correlations                       ( self.name , output     )
             for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
             ## ROOT.TMVA.mvaeffs                         ( self.name , output     )
             for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
-
-
+        
         ## convert EPS  files to PDF 
         if cmd_exists ( 'epstopdf' ) :
             odir, _ = os.path.split ( os.path.abspath ( output ) )
