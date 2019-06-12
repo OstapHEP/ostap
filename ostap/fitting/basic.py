@@ -416,6 +416,7 @@ class PDF (MakeVar) :
         opts = self.parse_args ( dataset , *opts , **kwargs )
         if not silent and opts : self.info ('fitTo options: %s ' % list ( opts ) )
 
+        self.info ( 'HAS CACHE?   %s' % self.xvar.hasBinning ( 'cache' ) ) 
         ## play a bit with the binning cache for convolutions 
         if self.xvar.hasBinning ( 'cache' ) :
             nb1 = self.xvar.getBins( 'cache' ) 
@@ -755,6 +756,13 @@ class PDF (MakeVar) :
             if kwargs :
                 self.warning("draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
 
+            ## calculate chi2/ndf
+            frame.chi2dnf = None 
+            if dataset :            
+                pars          = self.pdf.getParameters ( dataset )
+                frame.chi2ndf = frame.chiSquare ( len ( pars ) )  
+                if not silent : self.info ('chi2/ndf is %s' % frame.chi2ndf )
+                
             if not residual and not pull:
                 return frame
 

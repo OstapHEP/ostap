@@ -160,8 +160,8 @@ namespace Ostap
        *  @param m0   the pole posiiton 
        *  @return mass-dependent width 
        */
-      double gamma      ( const double mass , 
-                          const double m0   ) const  ; // get the running width
+      //double gamma      ( const double mass , 
+      //                    const double m0   ) const  ; // get the running width
       // ======================================================================
       /** get the value of formfactor for  given mass and pole position
        *  @param mass rinning mass 
@@ -170,6 +170,10 @@ namespace Ostap
        */
       double formfactor ( const double mass ,  
                           const double m0   ) const ;
+      // ======================================================================
+      /// get the  mass-dependent (complex) widths for Flatte'-like formula
+      std::complex<double> gamma ( const double mass , 
+                                   const double m0   ) const ;
       // ======================================================================
     public: // print it 
       // ======================================================================
@@ -230,8 +234,8 @@ namespace Ostap
       /// get Breit-Wigner amplitude
       std::complex<double> amplitude ( const double x ) const ;
       /// get Breit-Wigner amplitude with given gamma 
-      std::complex<double> amplitude ( const double x ,
-                                       const double g ) const ;
+      std::complex<double> amplitude ( const std::complex<double> x ,
+                                       const std::complex<double> g ) const ;
       // ======================================================================
       double breit_wigner  ( const double x ) const ;
       // ======================================================================
@@ -277,7 +281,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// calculate the current width
-      double gamma ( const double x ) const ;
+      std::complex<double> gamma ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -569,10 +573,6 @@ namespace Ostap
       { return setGamma0 ( i , value ) ; }
       // ======================================================================
     } ;
-    // ========================================================================
-
-
-
     // ========================================================================
     /** @class Flatte
      *
@@ -1669,7 +1669,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// calculate the current width
-      double gamma ( const double x ) const { return m_bw->gamma ( x ) ; }
+      std::complex<double> 
+      gamma ( const double x ) const { return m_bw->gamma ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================

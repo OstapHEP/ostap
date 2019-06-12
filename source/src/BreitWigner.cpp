@@ -40,9 +40,9 @@ namespace
   // ==========================================================================
   /// get the complex Breit amplitude
   std::complex<double> breit_amp
-  ( const double x     ,
-    const double m0    ,
-    const double gamma )
+  ( const std::complex<double> x     ,
+    const double               m0    ,
+    const std::complex<double> gamma )
   {
     //
     static const std::complex<double> s_j ( 0 , 1 ) ;
@@ -75,6 +75,35 @@ namespace
     const double q0 = Ostap::Math::PhaseSpace2::q ( m0 , m1 , m2 ) ;
     //
     if ( 0 >= q || 0 >= q0 ) { return 0 ; }  // RETURN
+    //
+    const double r  = nullptr != F ? (*F) ( x  , m0 , m1 , m2 ) : 1.0 ;
+    const double r0 = nullptr != F ? (*F) ( m0 , m0 , m1 , m2 ) : 1.0 ;
+    //
+    if ( 0 >= r0 )           { return 0 ; }  // RETURN
+    //
+    return gam0 * ( m0 / x ) * Ostap::Math::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
+  }
+  // ==========================================================================
+  std::complex<double> gamma_run_complex
+  ( const double                   gam0  ,
+    const double                   x     ,
+    const double                   m1    ,
+    const double                   m2    ,
+    const double                   m0    ,
+    const unsigned int             L     ,
+    const Ostap::Math::FormFactor* F = 0 )
+  {
+    //
+    if ( x >= m1 + m2 && m0 >= m1 + m2 ) { return gamma_run ( gam0  , 
+                                                              x     , 
+                                                              m1    , 
+                                                              m2    , 
+                                                              m0    , 
+                                                              L     , 
+                                                              F     ) ; }
+    //
+    const std::complex<double> q  = Ostap::Math::PhaseSpace2::q1 ( x  , m1 , m2 ) ;
+    const std::complex<double> q0 = Ostap::Math::PhaseSpace2::q1 ( m0 , m1 , m2 ) ;
     //
     const double r  = nullptr != F ? (*F) ( x  , m0 , m1 , m2 ) : 1.0 ;
     const double r0 = nullptr != F ? (*F) ( m0 , m0 , m1 , m2 ) : 1.0 ;
@@ -513,10 +542,16 @@ bool Ostap::Math::Channel::setGamma0 ( const double value )
  *  @return mass-dependent width 
  */
 // ============================================================================
-double Ostap::Math::Channel::gamma
+//double Ostap::Math::Channel::gamma
+//( const double mass , 
+//  const double m0   ) const  // get the running width  
+//{ return gamma_run         ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
+// ============================================================================
+// get the  mass-dependent (complex) widths for Flatte'-like formula
+std::complex<double> Ostap::Math::Channel::gamma 
 ( const double mass , 
-  const double m0   ) const  // get the running width  
-{ return gamma_run ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
+  const double m0   ) const 
+{ return gamma_run_complex ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
 // ============================================================================
 /*  get the value of formfactor for the given mass and pole position
  *  @param mass rinning mass 
@@ -565,20 +600,18 @@ Ostap::Math::BreitWignerBase::clone() const
 std::complex<double>
 Ostap::Math::BreitWignerBase::amplitude ( const double x ) const
 {
-  if ( x < threshold() ) { return 0 ; }
-  const double g  = gamma ( x ) ;
-  return g <= 0 ? 0.0 : amplitude ( x , g ) ;  
+  const std::complex<double> g  = gamma ( x ) ;
+  return amplitude ( x , g ) ;  
 }
 // ============================================================================
 //  calculate the Breit-Wigner amplitude
 // ============================================================================
 std::complex<double>
 Ostap::Math::BreitWignerBase::amplitude 
-( const double x , 
-  const double g ) const
+( const std::complex<double> x , 
+  const std::complex<double> g ) const
 {
-  return threshold() > x || 0 >= g ? 0.0 : 
-  std::sqrt ( m0 () * gamma0 () ) * breit_amp ( x , m0() , g ) ;
+  return std::sqrt ( m0 () * gamma0 () ) * breit_amp ( x , m0() , g ) ;
 }
 // ============================================================================
 /*  calculate the Breit-Wigner shape
@@ -589,15 +622,19 @@ Ostap::Math::BreitWignerBase::amplitude
 double Ostap::Math::BreitWignerBase::breit_wigner 
 ( const double x ) const
 {
-  if ( x < threshold() ) { return 0 ; }
+  if ( x < threshold () ) { return 0 ; }
   // get the partial width  for the first channel 
-  const double g  = m_channels.front().gamma ( x , m_m0 ) ;
+  const double g0 = m_channels.front().gamma0 () ;
+  // choose normalization point: 
+  const double mm = m_m0 <= threshold() ? ( threshold () + 0.5 * g0 ) : m_m0 ;
+  // actually it is real (both values are above threshold) 
+  const double g  = m_channels.front().gamma ( x , mm ).real() ;
   if ( 0 >= g ) { return 0 ; }
   //
   // get the full Breit-Wigner amplitude 
   std::complex<double> a = amplitude ( x ) ;
   //
-  const double gamma_scale = 1.0 / m_channels.front().gamma0 () ;
+  const double gamma_scale = 1.0 / g0 ;
   // 
   return 2 * x * std::norm ( a ) * g * gamma_scale / M_PI  ;
 }
@@ -621,10 +658,11 @@ double Ostap::Math::BreitWignerBase::gamma0 () const
 // ============================================================================
 // calculate the current width
 // ============================================================================
-double Ostap::Math::BreitWignerBase::gamma ( const double x ) const
+std::complex<double> 
+Ostap::Math::BreitWignerBase::gamma ( const double x ) const
 {
-  if ( x < threshold() ) { return 0 ; }
-  double gamtot = 0 ;
+  // if ( x < threshold() ) { return 0 ; }
+  std::complex<double> gamtot = 0 ;
   for ( const auto& c : m_channels ) { gamtot += c.gamma ( x , m_m0 ) ; }
   return gamtot ;
 }
@@ -1983,8 +2021,8 @@ double Ostap::Math::Swanson::swanson ( const double x ) const
 {
   if ( m_bw.m1() + m_bw.m2() >= x ) { return 0 ; }
   //
-  const double g  = m_bw.gamma ( x ) ;
-  if ( 0 >= g ) { return 0 ; }
+  const double               g = m_bw.gamma ( x ).real()  ;
+  if ( 0 >= g                     ) { return 0 ; }  
   //
   const std::complex<double> a = amplitude ( x ) ;
   //

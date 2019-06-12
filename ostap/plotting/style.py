@@ -157,14 +157,15 @@ class UseStyle(object):
     def __init__ ( self, style = None ) :
         
         if   isinstance ( style , int ):
+            
             if    1  == style : style = Style 
             elif  2  == style : style = Style2
             elif  3  == style : style = Style3
             
-        elif isinstance ( style , str ):
-
+        if isinstance ( style , str ):
+            
             import ostap.plotting.makestyles as MS
-            if   style in MC.StyleStore.styles : style = MC.StyleStore.styles [ style ] 
+            if   style in MS.StyleStore.styles : style = MC.StyleStore.styles [ style ] 
             elif style.upper() in ( '' , '0' , '1' )    : style = Style 
             elif '2'  == style                          : style = Style2
             elif '3'  == style                          : style = Style3

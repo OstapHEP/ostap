@@ -328,7 +328,7 @@ def canvas_partition ( canvas               ,
     if   left_margin < 0 :   left_margin = abs (   left_margin ) / wsx
     if  right_margin < 0 :  right_margin = abs (  right_margin ) / wsx
     if bottom_margin < 0 : bottom_margin = abs ( bottom_margin ) / wsy
-    if    top_margin < 0 :    top_margin = abs ( bottom_margin ) / wsy
+    if    top_margin < 0 :    top_margin = abs (    top_margin ) / wsy
     
     if hSpacing      < 0 : hSpacing = abs ( hSpacing ) / wsx
     if vSpacing      < 0 : vSpacing = abs ( vSpacing ) / wsy
@@ -441,7 +441,7 @@ def canvas_partition ( canvas               ,
     pds  = canvas.pads
     keys = pds.keys()
     import collections as _C
-    _p  =_C.OrdereDict()
+    _p  =_C.OrderedDict ()
     for k in  sorted ( keys ) :
         _p[k] = pds[k]
     canvas.pads = _p 
@@ -572,7 +572,14 @@ def canvas_pull ( canvas               ,
         if not hasattr ( canvas , 'pads' ) : canvas.pads=[]
         canvas.pads.append ( pad ) 
         
-    canvas.pads =  tuple ( reversed ( canvas.pads ) )
+    pads =  tuple ( reversed ( canvas.pads ) )
+    
+    import collections as _C
+    _pads =_C.OrderedDict ()
+    for k, p in enumerate ( pads ) :
+        _pads [k] = p
+    canvas.pads = _pads 
+
     return canvas.pads 
 
 
@@ -596,12 +603,10 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
 
     assert isinstance  ( fontsize , int ) and 1 <= fontsize , 'Invalid fontsize %s [pixels] ' % fontsize
     
-    seq = zip ( objects , pads )
-
-    for obj , pad_ in seq :
+    for obj , pad_ in zip ( objects , pads ) : 
         
         if isinstance ( pad_ , ROOT.TPad ) : pad = pad_
-        else                               : pad = pads [ pad ] 
+        else                               : pad = pads [ pad_ ] 
         
         c = pad.GetCanvas()
         if c : c.cd(0)
@@ -610,13 +615,13 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
         pad.cd   ()
 
         ## redefne label font and size 
-        for attr in ( 'GetXaxis' , 'GetYaxis' ) :
+        for attr in ( 'GetXaxis' , 'GetYaxis' , 'GetZaxis' ) :
             if not hasattr ( obj , attr ) : continue
             
             axis = getattr ( obj , attr )()
             if not axis : continue
             
-            fnp  = axis.GetLabelFont()
+            fnp  = axis.GetLabelFont ()
             fn , prec = divmod  ( fnp , 10 ) 
             if 3 != prec :
                 ## redefine  label  font 
