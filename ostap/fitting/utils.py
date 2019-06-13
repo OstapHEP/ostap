@@ -595,50 +595,6 @@ class MakeVar ( object ) :
     
     # ==========================================================================
     ## Helper function to  create soft Gaussian constraint
-    #  to the sum of <code>a</code> and <code>b</code>
-    #  @code
-    #  N1 = ...
-    #  N2 = ...
-    #  rC = pdf.soft_sum_contraint ( N1 , N2 , VE (10,1**2) )
-    #  @endcode
-    def soft_sum_constraint ( self , a , b , value , name = '' , title = '' ) :
-        """Helper function to  create soft Gaussian constraint
-        to the ratio of the variables 
-        >>> N1 = ...
-        >>> N2 = ...
-        >>> rC = pdf.soft_sum_constraint ( N1 , N2 , VE (10,1**2) )
-        """
-        assert isinstance ( value , VE ) and 0 < value.cov2() ,\
-               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
-        
-        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
-
-            vlist   = ROOT.RooArgList    ( a , b )
-            
-            formula = '(%s)+(%s)' % ( a.name , b.name )
-            vname   = 'Sum_%s_%s' % ( a.name , b.name )
-            vtitle  = 'Sum %s+%s' % ( a.name , b.name )
-            
-            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
-            
-            self.aux_keep.append ( vlist  )
-            self.aux_keep.append ( var    )
-            
-            return self.soft_constraint ( var , value , name , title )
-
-        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
-            
-            return self.soft_constraint ( a , value - b , name , title )
-        
-        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
-            
-            return self.soft_constraint ( b , value - a  , name , title )
-
-        raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
-    
-    
-    # ==========================================================================
-    ## Helper function to  create soft Gaussian constraint
     #  to the product of <code>a</code> and <code>b</code>
     #  @code
     #  N1 = ...
@@ -700,6 +656,94 @@ class MakeVar ( object ) :
 
         return self.soft_ratio_constraint ( a , b , 1.0/value - 1.0 , name , value )
         
+    # ==========================================================================
+    ## Helper function to  create soft Gaussian constraint
+    #  to the sum of <code>a</code> and <code>b</code>
+    #  @code
+    #  N1 = ...
+    #  N2 = ...
+    #  rC = pdf.soft_sum_contraint ( N1 , N2 , VE (10,1**2) )
+    #  @endcode
+    def soft_sum_constraint ( self , a , b , value , name = '' , title = '' ) :
+        """Helper function to  create soft Gaussian constraint
+        to the sum of the variables 
+        >>> N1 = ...
+        >>> N2 = ...
+        >>> rC = pdf.soft_sum_constraint ( N1 , N2 , VE (10,1**2) )
+        """
+        assert isinstance ( value , VE ) and 0 < value.cov2() ,\
+               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+        
+        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
+
+            vlist   = ROOT.RooArgList    ( a , b )
+            
+            formula = '(%s)+(%s)' % ( a.name , b.name )
+            vname   = 'Sum_%s_%s' % ( a.name , b.name )
+            vtitle  = 'Sum %s+%s' % ( a.name , b.name )
+            
+            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
+            
+            self.aux_keep.append ( vlist  )
+            self.aux_keep.append ( var    )
+            
+            return self.soft_constraint ( var , value , name , title )
+
+        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( a , value - b , name , title )
+        
+        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( b , value - a  , name , title )
+
+        raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
+    
+    
+    # ==========================================================================
+    ## Helper function to  create soft Gaussian constraint
+    #  to the difference of <code>a</code> and <code>b</code>
+    #  @code
+    #  N1 = ...
+    #  N2 = ...
+    #  rC = pdf.soft_difference_contraint ( N1 , N2 , VE (10,1**2) )
+    #  @endcode
+    def soft_difference_constraint ( self , a , b , value , name = '' , title = '' ) :
+        """Helper function to  create soft Gaussian constraint
+        to the difference  of the variables 
+        >>> N1 = ...
+        >>> N2 = ...
+        >>> rC = pdf.soft_sum_constraint ( N1 , N2 , VE (10,1**2) )
+        """
+        assert isinstance ( value , VE ) and 0 < value.cov2() ,\
+               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+        
+        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
+
+            vlist   = ROOT.RooArgList    ( a , b )
+            
+            formula = '(%s)-(%s)'   % ( a.name , b.name )
+            vname   = 'Minus_%s_%s' % ( a.name , b.name )
+            vtitle  = 'Munus %s+%s' % ( a.name , b.name )
+            
+            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
+            
+            self.aux_keep.append ( vlist  )
+            self.aux_keep.append ( var    )
+            
+            return self.soft_constraint ( var , value , name , title )
+
+        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( a , value + b , name , title )
+        
+        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+            
+            return self.soft_constraint ( b , a - value , name , title )
+
+        raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
+    
+    
     # =========================================================================
     ## create ready-to-use soft Gaussian constraint
     #       and wrap it to ROOT.RooFit.ExternalConstraint

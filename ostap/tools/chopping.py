@@ -1283,7 +1283,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     if isinstance ( chopper , str ) :
         
         if chopper in dataset :
-            chopper = getattr ( varset , chopper )
+            chopper = getattr ( dataset , chopper )
         else : 
             varset  = dataset.get()
             varlist = ROOT.RooArgList()
