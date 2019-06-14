@@ -289,9 +289,9 @@ def canvas_partition ( canvas               ,
                        nx                   ,
                        ny                   ,
                        left_margin   = 0.10 ,
-                       right_margin  = 0.03 ,   
+                       right_margin  = 0.05 ,   
                        bottom_margin = 0.10 ,
-                       top_margin    = 0.03 ,
+                       top_margin    = 0.05 ,
                        hSpacing      = 0.0  ,
                        vSpacing      = 0.0  ) :
     """Perform partition of Canvas into pads with no inter-margins
@@ -468,9 +468,9 @@ ROOT.TCanvas.partition = canvas_partition
 #  @endcode 
 def canvas_pull ( canvas               ,
                   ratio         = 0.80 ,
-                  left_margin   = 0.14 ,
+                  left_margin   = 0.10 ,
                   right_margin  = 0.05 ,   
-                  bottom_margin = 0.14 ,
+                  bottom_margin = 0.10 ,
                   top_margin    = 0.05 ,
                   hSpacing      = 0.0  ,
                   vSpacing      = 0.0  ) :

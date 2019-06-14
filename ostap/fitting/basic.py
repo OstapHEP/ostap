@@ -416,7 +416,6 @@ class PDF (MakeVar) :
         opts = self.parse_args ( dataset , *opts , **kwargs )
         if not silent and opts : self.info ('fitTo options: %s ' % list ( opts ) )
 
-        self.info ( 'HAS CACHE?   %s' % self.xvar.hasBinning ( 'cache' ) ) 
         ## play a bit with the binning cache for convolutions 
         if self.xvar.hasBinning ( 'cache' ) :
             nb1 = self.xvar.getBins( 'cache' ) 
@@ -1022,7 +1021,9 @@ class PDF (MakeVar) :
         """
 
         
-        ##
+        ## convert if needed 
+        if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
+            dataset = dataset.dset 
 
         nllopts  = [ ROOT.RooFit.CloneData ( False ) ]
         ncpu     = kwargs.pop ( 'ncpu'  , numcpu () )
@@ -1071,7 +1072,12 @@ class PDF (MakeVar) :
                                        dataset = hdataset ,
                                        profile = profile  ,
                                        draw    = draw     ,
-                                       args    = args     , **kwargs )                
+                                       args    = args     , **kwargs )
+            
+        ## convert if needed 
+        if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
+            dataset = dataset.dset
+            
         ## get all parametrs
         pars = self.pdf.getParameters ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
@@ -1168,7 +1174,11 @@ class PDF (MakeVar) :
                 kwargs['ncpu']  = 1 
                 return self.wilks ( var     = var      ,
                                     dataset = hdataset ,
-                                    args    = args     , **kwargs )    
+                                    args    = args     , **kwargs )
+        ## convert if needed 
+        if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
+            dataset = dataset.dset 
+                          
         ## get all parametrs
         pars = self.pdf.getParameters ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var

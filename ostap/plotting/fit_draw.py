@@ -288,7 +288,7 @@ class Style(object):
         if _fillopt :
             options.append ( ROOT.RooFit.VLines     (      ) )
             options.append ( ROOT.RooFit.DrawOption ( "FL" ) )
-            
+
         self.__options = tuple ( options )
 
     def __str__ ( self ) :
@@ -497,6 +497,7 @@ class Styles(object) :
         return str ( ( s for s in self )  )
             
 
+precision = 1.e-4 
 # =============================================================================
 ## plain, default
 data_options_plain             = ()
@@ -513,20 +514,23 @@ data_options_small             = ROOT.RooFit.MarkerStyle ( 20   ) , \
 default_data_options            = data_options_nobars
 
 ## default signal options 
-default_signal_options          = () 
+default_signal_options          = ROOT.RooFit.Precision ( precision ) , 
 
-default_background_options      = () 
+default_background_options      = ROOT.RooFit.Precision ( precision ) , 
+
 ## default option for "components" 
-default_component_options       = ()
+default_component_options       = ROOT.RooFit.Precision ( precision ) , 
 
 ## default total fit curve : thick red orange line 
-default_total_fit_options       = lineWidth ( 3 ) , lineColor ( ROOT.kOrange + 1 ) ,
+default_total_fit_options       = ( lineWidth ( 3 )                     ,
+                                    lineColor ( ROOT.kOrange + 1 )      ,
+                                    ROOT.RooFit.Precision ( precision ) )
 
 ## default optios for cross-terms 
-default_crossterm1_options      = ()  
+default_crossterm1_options      = ROOT.RooFit.Precision ( precision  ) ,   
 
 ## default optios for cross-terms 
-default_crossterm2_options      = ()  
+default_crossterm2_options      = ROOT.RooFit.Precision ( precision  ) , 
 
 ## background:  thin short-dashed line
 default_background2D_options    = default_background_options
@@ -652,7 +656,7 @@ def  get_style ( config , style , default ) :
 ## the actual styles 
 # =============================================================================
 signal_style       = get_style (
-    CONFIG.fit_draw , 'signal_style'       , ()  )
+    CONFIG.fit_draw , 'signal_style'       , default_signal_style       )
 background_style   = get_style (
     CONFIG.fit_draw , 'background_style'   , default_background_style   )
 component_style    = get_style (
