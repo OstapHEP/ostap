@@ -115,7 +115,7 @@ def _rs_list_ ( self ) :
     return _l ;
 
 # =============================================================================
-## printout for   RooArgList 
+## printout for RooArgList 
 ROOT.RooArgList . __str__       = lambda s : str ( _rs_list_ ( s ) )  
 ROOT.RooArgList . __repr__      = lambda s : str ( _rs_list_ ( s ) )  
 
@@ -180,7 +180,22 @@ ROOT.RooArgSet . __nonzero__   = lambda s   : 0 != len ( s )
 ROOT.RooArgSet     . __str__   = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
 ROOT.RooArgSet     . __repr__  = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
 ROOT.RooLinkedList . __repr__  = lambda s : str (  _rs_list_ ( s ) )
-ROOT.RooLinkedList . __iter__  = _ras_iter_ 
+
+# =============================================================================
+## iterator for class RooLinkedList
+#  @code
+#  lst = ...
+#  for l in lst : print l 
+#  @endcode 
+def _rll_iter_  ( self ) :
+    """Iterator over RooLinekdList
+    >>> lst = ...
+    >>> for l in lst : print l     
+    """
+    l = len ( self )  
+    for i in range ( l ) : yield self.At ( i )
+        
+ROOT.RooLinkedList . __iter__  = _rll_iter_ 
 
 _new_methods_ += [
     ROOT.RooArgSet . __len__      ,
