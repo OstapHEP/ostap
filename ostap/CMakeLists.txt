@@ -47,7 +47,7 @@ foreach(filename ${allfiles})
    string(REPLACE fitting/utils  fitting_utils  test_name ${test_name})
    string(REPLACE logger/utils   logger_utils   test_name ${test_name})
    string(REPLACE utils/utils    utils_utils    test_name ${test_name})
-   string(REPLACE core/utils    utils_utils    test_name ${test_name})
+   string(REPLACE core/utils     utils_utils    test_name ${test_name})
 
    string(REPLACE fitting/basic  fitting_basic  test_name ${test_name})
    string(REPLACE utils/basic    utils_basic    test_name ${test_name})

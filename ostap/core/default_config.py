@@ -9,26 +9,31 @@
 """Default configuration of ostap
 """
 # =============================================================================
-__version__ = "$Revision$"
-__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
-__date__    = "2019-05-19"
-__all__     = (
-    'quiet'    , ## quiet   processing?
-    'verbose'  , ## verbose processing? 
+__version__  = "$Revision$"
+__author__   = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
+__date__     =  "2019-05-19"
+__all__      = (
+    'quiet'        , ## quiet   processing?
+    'verbose'      , ## verbose processing?
+    'config_files' , ## configuration files to read 
     )
 # =============================================================================
 quiet        =  False
 verbose      =  False
 
 ## configuration files to read 
-config_files = [ u'~/.ostaprc'               ,
-                 u'~/.config/ostap/.ostaprc' ,
-                 u'.ostaprc'                 ]
-
+config_files = [
+    u'~/.ostaprc'               ,
+    u'~/.config/ostap/.ostaprc' ,
+    u'.ostaprc'
+    ]
 
 # =============================================================================
 if '__main__' == __name__ :
-
+    
+    from   ostap.logger.logger import getLogger
+    logger = getLogger ( 'ostap.core.default_config' )
+    
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
