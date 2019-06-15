@@ -497,18 +497,22 @@ class Styles(object) :
         return str ( ( s for s in self )  )
             
 
-precision = 1.e-4 
+# =============================================================================
+## default drawing precision
+precision = 1.e-4
+
 # =============================================================================
 ## plain, default
-data_options_plain             = ()
+data_options_plain              = ()
 
 ## suppress small bars at the end of error bars 
-data_options_nobars            = ROOT.RooFit.MarkerStyle ( 20   ) , \
-                                 ROOT.RooFit.DrawOption  ( "zp" )
+data_options_nobars             = ROOT.RooFit.MarkerStyle ( 20   ) , \
+                                  ROOT.RooFit.DrawOption  ( "zp" )
+
 ## sutable for large number of bins: small markers 
-data_options_small             = ROOT.RooFit.MarkerStyle ( 20   ) , \
-                                 ROOT.RooFit.DrawOption  ( "zp" ) , \
-                                 ROOT.RooFit.MarkerSize  ( 0.5  ) 
+data_options_small              = ROOT.RooFit.MarkerStyle ( 20   ) , \
+                                  ROOT.RooFit.DrawOption  ( "zp" ) , \
+                                  ROOT.RooFit.MarkerSize  ( 0.5  ) 
 
 ## default options 
 default_data_options            = data_options_nobars

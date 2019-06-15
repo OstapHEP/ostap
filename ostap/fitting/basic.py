@@ -548,16 +548,27 @@ class PDF (MakeVar) :
         elif isinstance ( style , Style      ) : style = Styles ( [ style ] )
         elif isinstance ( style , list_types ) : style = Styles (   style   )   
                                   
-        i = 0
-        for cmp in what : 
-            cmps = ROOT.RooArgSet( cmp )
-            st   = style  ( i ) if callable  ( style ) else () 
-            opts = st + options
-            self.pdf .plotOn ( frame , ROOT.RooFit.Components ( cmps ) , *opts )
-            cmps = [ c.GetName() for c in cmps ]
-            if 1 == len ( cmps ) : cmps =  cmps[0]
-            self.debug ("draw ``%s'' with %s" % ( cmps , opts ) )
-            i += 1
+        for i , cmp in enumerate ( what ) :
+
+            st         = style  ( i ) if callable  ( style ) else ()
+
+            cmps       = ROOT.RooArgSet         ( cmp  )             
+            components = ROOT.RooFit.Components ( cmps )
+            
+            command    = ROOT.RooLinkedList()
+            command.add ( components )
+            
+            for s in st         : command.add ( s )
+            for o in options    : command.add ( o ) 
+
+            self.pdf .plotOn ( frame , command )
+            
+            ncmps = [ c.GetName() for c in cmps ]
+            if 1 == len ( ncmps )  :  ncmps = ncmps[0]
+            self.debug ("draw ``%s'' with %s" % ( ncmps , st + options ) )
+            
+            del command
+
                                             
     # ================================================================================
     ## draw fit results

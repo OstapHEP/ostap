@@ -784,8 +784,10 @@ class Trainer(object):
                 for edir , _ , _ in os.walk ( odir ) :
                     if not self.name in edir : continue                     
                     for eps in glob.iglob ( os.path.join ( edir , '*.eps' ) ) :
-                        r =  subprocess.call ( [ 'epstopdf' , eps ] )                        
-                        if r != 0 : logger.warning('epstopdf: unable convert %s to PDF: %s' % ( eps , r ) ) 
+                        pdf = eps[:-4] + '.pdf'
+                        if not os.path.exists ( pdf ) : 
+                            r   =  subprocess.call ( [ 'epstopdf' , eps ] )                        
+                            if r != 0 : logger.warning('epstopdf: unable convert %s to PDF: %s' % ( eps , r ) ) 
 
                             
 # =============================================================================
