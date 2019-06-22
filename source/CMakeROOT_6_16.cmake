@@ -44,6 +44,7 @@ endfunction( MAKE_DICT )
 add_library(ostap SHARED src/format.cpp
                          src/gauss.cpp
                          src/AddBranch.cpp
+                         src/AddVars.cpp
                          src/BLOB.cpp
                          src/BSpline.cpp
                          src/Bernstein.cpp

@@ -47,7 +47,7 @@ namespace Ostap
                const bool           extrapolate   = false    , 
                const bool           density       = false    );
       // ======================================================================
-      /// copy constrctor
+      /// copy constructor
       FuncTH ( const FuncTH& right ) ;
       // ======================================================================
       /// destructor 

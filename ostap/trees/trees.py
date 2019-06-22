@@ -1340,8 +1340,11 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
     - see Ostap::IFuncTree 
     """
     assert isinstance ( chain , ROOT.TChain ), 'Invalid chain!'
-    
-    assert not name in chain.branches() ,'Branch %s already exists!' % name 
+
+    names = name
+    if isinstance ( names , string_types )  : names =  [ names ]    
+    for n in names : 
+        assert not n in chain.branches() ,'Branch %s already exists!' % n 
     
     files = chain.files   ()
     cname = chain.GetName () 
@@ -1379,12 +1382,15 @@ def add_new_branch ( tree , name , function , verbose = True ) :
     if not tree :
         logger.error (  "Invalid Tree!" )
         return
-    
-    assert not name in tree.branches() ,'Branch %s already exists!' % name 
 
-    if isinstance ( function , string_types ) :
+    names = name 
+    if isinstance ( names , string_types ) : names = [ names ]    
+    for n in names : 
+        assert not n in tree.branches() ,'Branch %s already exists!' % n
+
+    if isinstance   ( function , ( string_types , ROOT.TH1 ) ) :
         the_function = function
-    else :
+    else : 
         ftype        = type  ( function )
         the_function = ftype ( function )
 
@@ -1392,12 +1398,15 @@ def add_new_branch ( tree , name , function , verbose = True ) :
 
     tname = tree.GetName      ()
     tdir  = tree.GetDirectory ()
+
+    args  = [ n for n in names ] + [ function ]
+    args  = tuple ( args )
     
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
         
         tdir.cd()
         
-        branch = Ostap.Trees.add_branch ( tree , name , the_function )
+        branch = Ostap.Trees.add_branch ( tree , *args )
         if not branch : logger.error("Branch is null!")
         
         if tfile.IsWritable() :

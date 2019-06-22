@@ -437,9 +437,9 @@ def make_ostap_style ( name                           ,
         else :  conf ['PaperSize'   ] = get_int ( config , 'PaperSize' , ROOT.TStyle.kA4 )
             
     conf [ 'PadTopMargin'      ] = get_float ( config , 'PadTopMargin'    , 0.05                   ) 
-    conf [ 'SetPadRightMargin' ] = get_float ( config , 'PadRightMargin'  , 0.14 if colz else 0.05 ) 
-    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'   , 0.14                   ) 
-    conf [ 'PadBottomMargin'   ] = get_float ( config , 'PadBottomMargin' , 0.14                   ) 
+    conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'  , 0.14 if colz else 0.05 ) 
+    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'   , 0.10                   ) 
+    conf [ 'PadBottomMargin'   ] = get_float ( config , 'PadBottomMargin' , 0.10                   ) 
     
     conf [ 'TextFont'          ] = get_int   ( config , 'TextFont'        , font         ) 
     conf [ 'TextSize'          ] = get_float ( config , 'FontSize'        , 0.08 * scale ) 

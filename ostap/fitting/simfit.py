@@ -358,12 +358,7 @@ class Sim1D(PDF) :
                'Category %s is not in %s' % ( category , self.samples )
         assert self.sample in dataset      ,\
                'Category %s is not in dataset' % self.sample.GetName()
-        
-        
-        dcut = ROOT.RooFit.Cut("%s==%s::%s"  % ( self.sample.GetName() ,
-                                                 self.sample.GetName() ,
-                                                 category              ) )  
-
+                
         ## 
         sname = self.sample.GetName() 
         dcut  = ROOT.RooFit.Cut ( "%s==%s::%s"  % ( sname , sname , category ) )

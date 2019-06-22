@@ -804,10 +804,65 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     return dataset 
 
 # =============================================================================
-ROOT.RooDataSet.addVar = _rds_addVar_
+## Add/calculate/sample variable to RooDataSet
+#  - Use formula expression 
+#  @code
+#  dataset.add_new_var ( 'ratio' , 'pt/pz' )  ## use RooFormulaVar
+#  @endcode 
+#  - Use  function:
+#  @code
+#  func = ...  ## Ostap.IFuncData object 
+#  dataset.add_new_var ( 'value' ,   func )
+#  @endcode
+#  - Sample from 1D-historgam
+#  @code
+#  h1 = ...## 1D histogram
+#  dataset.add_new_var ( 'nTracks' , h1 ) ## sample from 1D histogram
+#  @endcode 
+#  - Sample from 2D histogram
+#  @code
+#  h2 = ...## 2D histogram
+#  dataset.add_new_var ( 'Pt' , 'eta' , h2 ) ## sample from 2D histogram
+#  @encode
+#  - Sample  from 3D-histogram
+#  @code
+#  h3 = ...## 3D histogram
+#  dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+def add_new_var ( dataset , *args ) : 
+    """Add/calculate/sample variable to RooDataSet
+
+    >>> dataset.add_new_var ( 'ratio' , 'pt/pz' )  ## use RooFormulaVar
+    
+    >>> func = ...  ## Ostap.IFuncData object 
+    >>> dataste.add_new_var ( 'value' ,   func )
+
+    >>> h1 = ...## 1D histogram
+    >>> dataset.add_new_var ( 'nTracks' , h1 ) ## sample from 1D histogram
+    
+    >>> h2 = ...## 2D histogram
+    >>> dataset.add_new_var ( 'Pt' , 'eta' , h2 ) ## sample from 2D histogram
+    
+    >>> h3 = ...## 3D histogram
+    >>> dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
+    
+    """
+    
+    vv = Ostap.Functions.add_var ( dataset , *args )
+    if not  vv : logger.error('add_new_var: NULLPTR from Ostap.Functions.add_var')
+    #
+    return dataset 
+
+# =============================================================================
+ROOT.RooDataSet.addVar      = _rds_addVar_
+ROOT.RooDataSet.add_new_var = add_new_var 
+ROOT.RooDataSet.add_var     = add_new_var 
 
 _new_methods_ += [
-    ROOT.RooDataSet .addVar       ,
+    ROOT.RooDataSet .addVar      ,
+    ROOT.RooDataSet .add_new_var ,
+    ROOT.RooDataSet .add_var     ,
     ]
 
 # =============================================================================

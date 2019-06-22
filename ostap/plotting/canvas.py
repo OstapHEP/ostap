@@ -344,24 +344,12 @@ def canvas_partition ( canvas               ,
         raise AttributeError('partition: invalid bottom margin=%f' % bottom_margin )
     if 1 <=    top_margin :
         raise AttributeError('partition: invalid    top margin=%f' %    top_margin )
-    
-    if   hasattr ( canvas , 'pads' ) and isinstance ( canvas.pads , dict ) :
-        while canvas.pads :
-            i,p = canvas.pads.popitem()
-            if p :
-                logger.verbose ( 'delete pas %s' % p.GetName() )
-                del p
-        del canvas.pads
-        
-    elif hasattr ( canvas , 'pads' ) and isinstance ( canvas.pads , tuple ) :
-        for p in canvas.pads :
-            if p :
-                logger.verbose ( 'delete pas %s' % p.GetName() )
-                del p
-        del canvas.pads
+
+    ## delete the pad dictionary 
+    del canvas.pads 
         
     ## make new empty dictionary 
-    canvas.pads = {} 
+    pads = {} 
             
     vStep    = ( 1.0 - bottom_margin - top_margin   - (ny-1) * vSpacing ) / ny
     if 0 > vStep : raise AttributeError('partition: v-step=%f' % vStep  )
@@ -436,21 +424,38 @@ def canvas_partition ( canvas               ,
             ROOT.SetOwnership ( pad , True )
             
             if not hasattr ( canvas , 'pads' ) : canvas.pads = {}
-            canvas.pads[  ( ix , iy ) ] = pad
+            pads[  ( ix , iy ) ] = pad
 
-    pds  = canvas.pads
-    keys = pds.keys()
-    import collections as _C
-    _p  =_C.OrderedDict ()
-    for k in  sorted ( keys ) :
-        _p[k] = pds[k]
-    canvas.pads = _p 
-    
+    ## fill pads structure 
+    for iy in reversed ( range ( ny ) ) : 
+        for ix in range ( nx ) :
+            key = ix , iy 
+            canvas.pads [ key ] = pads[ key ]
+            
     return canvas.pads 
 
+# =============================================================================
+def _cnv_pads_ ( self ) :
+    """``pads'' : get an ordered dict of pads for the given canvas partition (if prepared)
+    """
+    if not hasattr ( self , '__pads' ) :
+        import collections as _C
+        self.__pads  = _C.OrderedDict ()
+    return self.__pads
+# =============================================================================
+def _cnv_del_pads_ ( self ) :
+    """ deleter for the created pad structure 
+    """
+    while self.pads :
+        key , pad = self.pads.popitem ()
+        if pad :
+            logger.verbose ( 'delete pad %s' % pad .GetName() )
+            del pad
+# ==============================================================================
+## property! 
+ROOT.TCanvas.pads = property ( _cnv_pads_ , None , _cnv_del_pads_ )
 
 ROOT.TCanvas.partition = canvas_partition
-
 
 # ==============================================================================
 ## Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
@@ -523,15 +528,17 @@ def canvas_pull ( canvas               ,
     hfactor = hposr - hposl
     hmarl   = left_margin / hfactor
     hmarr   = 0.0
+
     
-    if hasattr ( canvas ,  'pads' ) :
-        del canvas.pads
 
 
     vStep0 = 2 * vStep * 1     / ( 1 + ratio )
     vStep1 = 2 * vStep * ratio / ( 1 + ratio )
+
+    del canvas.pads
+    pads   = {}
     
-    ix = 0 
+    ix     = 0 
     for iy in range(2) :
         
         if 0 == iy : 
@@ -568,20 +575,15 @@ def canvas_pull ( canvas               ,
         pad.SetBorderSize      ( 0 )
         
         ROOT.SetOwnership ( pad , True )
-        
-        if not hasattr ( canvas , 'pads' ) : canvas.pads=[]
-        canvas.pads.append ( pad ) 
-        
-    pads =  tuple ( reversed ( canvas.pads ) )
-    
-    import collections as _C
-    _pads =_C.OrderedDict ()
-    for k, p in enumerate ( pads ) :
-        _pads [k] = p
-    canvas.pads = _pads 
 
+        pads[ (0,iy) ] = pad 
+
+    ## fill pads structure 
+    for iy in reversed ( range ( ny ) ) : 
+        key = 0 , iy 
+        canvas.pads [ key ] = pads [ key ]
+            
     return canvas.pads 
-
 
 ROOT.TCanvas.pull_partition = canvas_pull
 
@@ -601,7 +603,7 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
     >>> draw_pads ( frames , pads , fontsize = 25 ) 
     """
 
-    assert isinstance  ( fontsize , int ) and 1 <= fontsize , 'Invalid fontsize %s [pixels] ' % fontsize
+    assert isinstance  ( fontsize , int ) and 5 < fontsize , 'Invalid fontsize %s [pixels] ' % fontsize
     
     for obj , pad_ in zip ( objects , pads ) : 
         
