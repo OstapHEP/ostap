@@ -47,6 +47,7 @@ __all__     = (
     'EvalNVE'           , ## evaluate N-argument function with argument's uncertainties
     ##
     'complex_derivative',  ## evaluiate a complex derivatibe for analytical funtion
+    'ComplexDerivative' ,  ## evaluiate a complex derivatibe for analytical funtion (as object) 
     ) 
 # =============================================================================
 import ROOT, math
@@ -845,7 +846,7 @@ class Eval2VE(EvalNVE) :
 #  @param err  (INPUT) calcualte the uncertainty?
 #  @return the derivative d(fun)/dz  at point <code>z</code>
 #  
-def complex_derivative ( fun , z , h = 0 , I = 2 , err = False ) :
+def complex_derivative ( fun , z , h = 0 , I = 3 , err = False ,  real = True , imag = True ) :
     """Get a complex derivative
     - The function is assumed to be analytical (Cauchy-Riemann conditions are valid).
     >>> fun = ...
@@ -853,19 +854,29 @@ def complex_derivative ( fun , z , h = 0 , I = 2 , err = False ) :
     """
     
     Z = complex ( z )
+    
     X = Z.real
     Y = Z.imag
+
+    ## few altenatives to calculate the real and imaginary part
     
-    UX = lambda x : complex ( fun ( complex ( x , Y ) ) ).real
-    VX = lambda x : complex ( fun ( complex ( x , Y ) ) ).imag 
-    # UY = lambda y : complex ( fun ( complex ( X , y ) ) ).real
-    # VY = lambda y : complex ( fun ( complex ( X , y ) ) ).imag 
-    
-    ## Real part 
-    re = derivative ( UX , X , h = h , I = I , err = err )
-    
-    ## Imaginary part 
-    im = derivative ( VX , X , h = h , I = I , err = err )
+    if  real :
+        UX =  lambda x : complex ( fun ( complex ( x , Y ) ) ).real
+        ## Real part 
+        re =  derivative ( UX , X , h = h , I = I , err = err )
+    else :
+        VY =  lambda y : complex ( fun ( complex ( X , y ) ) ).imag             
+        ## Real part 
+        re =  derivative ( VY , Y , h = h , I = I , err = err )
+
+    if imag :  
+        VX =  lambda x : complex ( fun ( complex ( x , Y ) ) ).imag        
+        ## Imaginary part 
+        im =  derivative ( VX , X , h = h , I = I , err = err )
+    else :
+        UY =  lambda y : complex ( fun ( complex ( X , y ) ) ).real
+        ## Imaginary part 
+        im = -derivative ( UY , Y , h = h , I = I , err = err )
     
     if not err : return complex ( re , im )
     
@@ -873,7 +884,65 @@ def complex_derivative ( fun , z , h = 0 , I = 2 , err = False ) :
     error  = ( re.cov2() +  im.cov2() ) ** 0.5 
     
     return result , error 
-                         
+
+
+# =============================================================================
+## @class ComplexDerivative
+#  Calculate the first derivative for the function
+#  @see R. De Levie, "An improved numerical approximation for the first derivative"
+#  @see https://link.springer.com/article/10.1007/s12039-009-0111-y
+#  @see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+#  @code
+#  func  = cmath.sin
+#  deriv = ComplexDerivative ( func )    
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+class ComplexDerivative(Derivative) :
+    """Calculate the first derivative for the function
+    - see R. De Levie, ``An improved numerical approximation for the first derivative''
+    - see https://link.springer.com/article/10.1007/s12039-009-0111-y
+    - see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+    >>> func = cmath.sin
+    >>> deri = ComplexDerivative ( func )        
+    """
+    def __init__ ( self , func   ,
+                   real  = True  ,
+                   imag  = True  ,
+                   step  = 0     ,
+                   order = 2     ,
+                   err   = False ) :
+        
+        Derivative.__init__ ( self , func = func , step = step , order = order , err = err )
+        
+        self.__real = True if real else False 
+        self.__imag = True if imag else False 
+               
+    # =========================================================================
+    ## evaluate the derivative
+    #  @code 
+    #  func  = math.sin
+    #  deriv = Derivative ( func )
+    #  print deriv(0.1)
+    #  @endcode 
+    def __call__ ( self , x ) :
+        """Calculate the first derivative for the function
+        R. De Levie, ``An improved numerical approximation for the first derivative''
+        see http://www.ias.ac.in/chemsci/Pdf-Sep2009/935.pdf
+        
+        >>> func  = cmath.sin
+        >>> deriv = ComplexDerivative ( func )
+        
+        >>> print deriv(0.1) 
+        """
+        return complex_derivative ( self.func          ,
+                                    complex ( x )      ,
+                                    h    = self.step   ,
+                                    I    = self.order  ,
+                                    err  = self.err    ,
+                                    real = self.__real ,
+                                    imag = self.__imag )
+    
 # =============================================================================
 if '__main__' == __name__ :
     
