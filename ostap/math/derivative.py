@@ -36,15 +36,17 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-06"
 __all__     = (
     ##
-    "derivative" , ## numerical differentiation (as function)
-    "Derivative" , ## numerical differentiation (as object)
+    "derivative"        , ## numerical differentiation (as function)
+    "Derivative"        , ## numerical differentiation (as object)
     ## 
-    "partial"    , ## numerical partial derivatives (as function)
-    "Partial"    , ## numerical partial derivatives (as object) 
+    "partial"           , ## numerical partial derivatives (as function)
+    "Partial"           , ## numerical partial derivatives (as object) 
     ##
-    'EvalVE'     , ## evaluate the function taking argument's uncertainty 
-    'Eval2VE'    , ## evaluate 2-argument function with argument's uncertainties
-    'EvalNVE'    , ## evaluate N-argument function with argument's uncertainties
+    'EvalVE'            , ## evaluate the function taking argument's uncertainty 
+    'Eval2VE'           , ## evaluate 2-argument function with argument's uncertainties
+    'EvalNVE'           , ## evaluate N-argument function with argument's uncertainties
+    ##
+    'complex_derivative',  ## evaluiate a complex derivatibe for analytical funtion
     ) 
 # =============================================================================
 import ROOT, math
@@ -824,8 +826,54 @@ class Eval2VE(EvalNVE) :
             cov2 += 2 * cxy * dx * dy * math.sqrt ( xc2 * yc2 ) 
             
         return VE ( val , cov2 )
- 
-
+    
+# =============================================================================
+## Calcualte the  derivative from analytical function \f$ \frac{\deriv f }{\deriv z }\f$.
+#  The function is assumed to be analytical (Cauchy-Riemann conditions are valid).
+#  The derivative of the function
+#  \f$  f(z) \equiv u(x,y) + iv(x,u) \f$
+#  is calculated as 
+#  \f$ \frac{\deriv f}{\deriv z} \equiv \frac{\deriv u}{\deriv x} + i\frac{\deriv v}{\deriv x}\f$
+#  @code
+#  fun = ...
+#  d   = complex_derivative ( fun , x = 1+2j )
+#  @endcode
+#  @param fun  (INPUT) the analytical function
+#  @param z    (INPUT) the complex point
+#  @param h    (INPUT) the guess for the step used in numeric differentiation
+#  @param I    (INPUT) the rule to be used ("N-point rule" = 2*I+1)
+#  @param err  (INPUT) calcualte the uncertainty?
+#  @return the derivative d(fun)/dz  at point <code>z</code>
+#  
+def complex_derivative ( fun , z , h = 0 , I = 2 , err = False ) :
+    """Get a complex derivative
+    - The function is assumed to be analytical (Cauchy-Riemann conditions are valid).
+    >>> fun = ...
+    >>> d   = complex_derivative ( fun , x = 1+2j ) 
+    """
+    
+    Z = complex ( z )
+    X = Z.real
+    Y = Z.imag
+    
+    UX = lambda x : complex ( fun ( complex ( x , Y ) ) ).real
+    VX = lambda x : complex ( fun ( complex ( x , Y ) ) ).imag 
+    # UY = lambda y : complex ( fun ( complex ( X , y ) ) ).real
+    # VY = lambda y : complex ( fun ( complex ( X , y ) ) ).imag 
+    
+    ## Real part 
+    re = derivative ( UX , X , h = h , I = I , err = err )
+    
+    ## Imaginary part 
+    im = derivative ( VX , X , h = h , I = I , err = err )
+    
+    if not err : return complex ( re , im )
+    
+    result = complex ( re.value() , im.value() )
+    error  = ( re.cov2() +  im.cov2() ) ** 0.5 
+    
+    return result , error 
+                         
 # =============================================================================
 if '__main__' == __name__ :
     

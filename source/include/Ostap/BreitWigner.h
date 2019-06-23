@@ -82,7 +82,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      /** constrcutor from all parameters and no formfactor
+      /** constructor from all parameters and no formfactor
        *  @param gamma the width 
        *  @param m1    the mass of the 1st daughter
        *  @param m2    the mass of the 2nd daughter
@@ -145,7 +145,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /** get the mass-dependent width 
+      /** get the mass-dependent complex width 
        *  \f[ \Gamma(m) \equiv \Gamma_0 
        *     \left( \frac{q(m)}{q(m_0)} \right)^2L+1}
        *     \left( \frac{f(m,m_0,m_1,m_2)}{f(m_0,m_0,m_1,m_2)}\right)}
@@ -160,8 +160,8 @@ namespace Ostap
        *  @param m0   the pole posiiton 
        *  @return mass-dependent width 
        */
-      //double gamma      ( const double mass , 
-      //                    const double m0   ) const  ; // get the running width
+      std::complex<double> gamma ( const double mass , 
+                                   const double m0   ) const ;
       // ======================================================================
       /** get the value of formfactor for  given mass and pole position
        *  @param mass rinning mass 
@@ -170,10 +170,6 @@ namespace Ostap
        */
       double formfactor ( const double mass ,  
                           const double m0   ) const ;
-      // ======================================================================
-      /// get the  mass-dependent (complex) widths for Flatte'-like formula
-      std::complex<double> gamma ( const double mass , 
-                                   const double m0   ) const ;
       // ======================================================================
     public: // print it 
       // ======================================================================
@@ -201,7 +197,9 @@ namespace Ostap
      *  "Remarks on the Phenomenological Analysis of Resonances",
      *  In Nuovo Cimento, Vol. XXXIV, N.6
      *
-     *  http://www.springerlink.com/content/q773737260425652/
+     *  @see http://www.springerlink.com/content/q773737260425652/
+     *  
+     *  @see also http://pdg.lbl.gov/2019/reviews/rpp2018-rev-resonances.pdf
      *
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
@@ -491,8 +489,10 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class BreitWignerMC
-     *  function to describe Breit-Wigner signal with several channels 
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  function to describe Breit-Wigner signal with several channels,
+     *  including Flatte's behaviour 
+     *  @see http://pdg.lbl.gov/2019/reviews/rpp2018-rev-resonances.pdf
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2018-11-30
      */
     class  BreitWignerMC : public BreitWignerBase 

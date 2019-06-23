@@ -60,7 +60,12 @@ __all__     = (
     'genzmalik3'     , ## (3D) numerical integration using Genz&Malik's method
     #
     "IntegralCache"  , ## (1D) numerical integration (as object, using scipy is if ssible)
-    #    
+    #
+    'complex_integral'         , ## integrate complex function over the contour in complex plance 
+    'complex_line_integral'    , ## integrate complex function over the line    in complex plance 
+    'complex_circle_integral'  , ## integrate complex function over the circle arc in complex plance
+    'complex_polygon_integral' , ## integrate complex function over the closed polygon in complex plance
+    ##
     ) 
 # =============================================================================
 import ROOT, warnings, math 
@@ -1471,6 +1476,190 @@ class Integrate3D_YZ(Integrate3D_Y) :
         """High integration limit"""
         return self.__zmax
 
+# =============================================================================
+## calculate the contour integral
+#  @param func      the complex function
+#  @param contour   the contour in the complex plane, parameterized with the real parameter "t"
+#  @param cnt_deriv the derivative of contor parameterization 
+#  @param limits    the integration limits in  the real parameter "t"
+#  @param args      extra arguments for the function calls 
+#  @param err       should the error be estimated ?
+def complex_integral ( func                    ,
+                       contour                 ,                            
+                       limits    = ( 0. , 1. ) ,
+                       cnt_deriv = None        ,  
+                       args      = ( )         ,
+                       err       = False       ,
+                       **kwargs                ) :
+
+    if cnt_deriv is None :
+        
+        def cnt_deriv ( t ) :
+            
+            cnt_re = lambda t : complex ( contour ( t ) ).real
+            cnt_im = lambda t : complex ( contour ( t ) ).imag 
+            
+            from ostap.math.derivative import derivative 
+            return complex ( derivative ( cnt_re , t ) ,
+                             derivative ( cnt_im , t ) )
+        
+    elif isinstance ( cnt_deriv , ( float , complex , int ) )  :
+        cnt_deriv_  = complex ( cnt_deriv ) 
+        cnt_deriv__ = lambda t : cnt_deriv_
+        cnt_deriv   = cnt_deriv__
+
+    assert callable ( contour   ), "``contour'' is not callable!"
+    assert callable ( cnt_deriv ), "``cnt_deriv'' is not callable!"
+    
+    tmin = float ( limits [  0] ) 
+    tmax = float ( limits [ 1 ] ) 
+    
+    fun_re = lambda t : complex ( func ( contour ( t ) , *args ) * cnt_deriv ( t ) ) . real
+    fun_im = lambda t : complex ( func ( contour ( t ) , *args ) * cnt_deriv ( t ) ) . imag
+
+    ## calculate the real part intergal 
+    
+    int_re = integral ( fun_re ,
+                        xmin = tmin , xmax = tmax ,
+                        args = args , err  = err  , **kwargs )
+    
+    ## calculate the imaginary part integral 
+
+    int_im = integral ( fun_im ,
+                        xmin = tmin , xmax = tmax ,
+                        args = args , err  = err  , **kwargs )
+
+    ## no error  estimates: 
+    if not err : return int_re + int_im * 1j 
+    
+    result =   int_re.value()  + int_im.value()    * 1j 
+    error  = ( int_re.cov2 ()  + int_im.cov2 () ) ** 0.5
+    
+    return result , error 
+
+# ==============================================================================
+## Calculate the complex contour integral along the line in complex plane
+#  @code
+#  a   = 0
+#  b   = (1+1j)*2*math.pi 
+#  fun = cmath.exp
+#  r   = complex_line_integral ( func = cmath.exp , a = a , b = b , err = True ) 
+#  @endcode
+#  @param func  the complex function
+#  @param a     the initial point
+#  @param b     the final   point 
+#  @param args      extra arguments for the function calls 
+#  @param err       should the error be estimated ?
+def complex_line_integral ( func         ,
+                            a            ,                            
+                            b            ,
+                            args = ()    ,
+                            err  = False ,
+                            **kwargs     ) :
+    """ Calculate the complex contour integral along the line in complex plane
+    >>> a   = 0
+    >>> b   = (1+1j)*2*math.pi 
+    >>> result = complex_line_integral ( func = cmath.exp , a = a , b = b , err = True ) 
+    """
+
+    a = complex ( a )
+    b = complex ( b )
+    
+    return complex_integral (
+        func      =  func                       ,
+        contour   = lambda t : a + ( b - a )* t ,
+        limits    = ( 0. , 1. )                 ,
+        cnt_deriv = lambda t :       b - a      ,  
+        args      = args                        ,
+        err       = err                         ,
+        **kwargs                                ) 
+
+# ==========================================================================
+## Get a contour integral over the closed polygon
+#  @code
+#  func = ...
+#  r = complex_polygon_integral( func , ( -1 , 1 , 1+1j , -1+1j ) )
+#  @endcode
+def complex_polygon_integral ( func            ,
+                               polygon         ,
+                               args    = ()    ,
+                               err     = False ,
+                               **kwargs        ) :
+    """Get a contour integral over the closed polygon
+    >>> func = ...
+    >>> r = complex_polygon_integral( func , ( -1 , 1 , 1+1j , -1+1j ) )
+    """
+    
+    import collections
+    assert isinstance ( polygon , collections.Sequence ) and 2 <= len ( polygon ) ,\
+           'Invald type of polygon  %s/%s' % ( polygon , type ( polygon ) )
+    
+    ##  get points from the polygon 
+    points = [ complex ( p ) for p in polygon ]
+    
+    if 2 == len ( points ) :
+        return complex_line_integral ( func       ,
+                                       points [0] ,
+                                       points [1] ,
+                                       args = args , err = err , **kwargs )
+    ## make a closed polygon
+    N = len ( points ) 
+    points.append ( point[0] )
+    
+    result = complex(0,0)
+    error  = 0.0
+    
+    for i in range ( N ) :
+        p1 = points [ i     ]
+        p2 = points [ i + 1 ]
+        r  = complex_line_integral ( func , p1 , p2 , args = args , err = err , **kwargs )
+        
+        if err  :
+            result += r [ 0 ]
+            error  += r [ 1 ]  
+        else :
+            result += r
+
+    return result if not err else (result, error)
+
+
+                               
+# ===========================================================================
+## calculate the contour integral over the circle in the complex plane
+#  @code
+#  result = complex_circle_integral ( lambda z : 1.0/z , center = 0+0j , radius = 1 )
+#  @endcode
+#  @param  func  the complex function to integrate
+#  @param  center the center of the circle
+#  @param  radius the radius of the circle (must be real!)
+#  @param  limits the limits on the circle arc
+#  @param args      extra arguments for the function calls 
+#  @param err       should the error be estimated ?
+def complex_circle_integral ( func                         ,
+                              center                       ,                            
+                              radius                       ,
+                              limits = ( 0. , 2.*math.pi ) , 
+                              args   = ()                  ,
+                              err    = False               ,
+                              **kwargs                     ) :
+    """Calculate the contour integral over the circle in the complex plane
+    >>> result = complex_circle_integral ( lambda z : 1.0/z , center = 0+0j , radius = 1 )
+    """
+    
+    import cmath
+    
+    radius = float   ( radius )
+
+    cntr   = complex ( center )
+    
+    return complex_integral (
+        func      = func                                                ,
+        contour   = lambda t : cntr + radius * cmath.exp ( t*1j  )      ,
+        limits    = limits                                              ,
+        cnt_deriv = lambda t :        radius * cmath.exp ( t*1j  ) * 1j ,        
+        args      = args                                                ,
+        err       = err                                                 ,
+        **kwargs                                                        ) 
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -71,6 +71,8 @@ namespace
     //
     if ( m1 + m2 >= x ) { return 0 ; }   // RETURN
     //
+    if ( s_equal ( x , m0 ) ) { return gam0 ; }
+    //
     const double q  = Ostap::Math::PhaseSpace2::q ( x  , m1 , m2 ) ;
     const double q0 = Ostap::Math::PhaseSpace2::q ( m0 , m1 , m2 ) ;
     //
@@ -94,13 +96,15 @@ namespace
     const Ostap::Math::FormFactor* F = 0 )
   {
     //
-    if ( x >= m1 + m2 && m0 >= m1 + m2 ) { return gamma_run ( gam0  , 
-                                                              x     , 
-                                                              m1    , 
-                                                              m2    , 
-                                                              m0    , 
-                                                              L     , 
-                                                              F     ) ; }
+    if ( x > m1 + m2 && m0 > m1 + m2 ) { return gamma_run ( gam0  , 
+                                                            x     , 
+                                                            m1    , 
+                                                            m2    , 
+                                                            m0    , 
+                                                            L     , 
+                                                            F     ) ; }
+    //
+    if ( s_equal ( x , m0 ) ) { return gam0 ; }
     //
     const std::complex<double> q  = Ostap::Math::PhaseSpace2::q1 ( x  , m1 , m2 ) ;
     const std::complex<double> q0 = Ostap::Math::PhaseSpace2::q1 ( m0 , m1 , m2 ) ;
@@ -110,11 +114,12 @@ namespace
     //
     if ( 0 >= r0 )           { return 0 ; }  // RETURN
     //
-    return gam0 * ( m0 / x ) * Ostap::Math::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
+    // return gam0 * ( m0 / x ) * Ostap::Math::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
+    return gam0 * ( m0 / x ) * std::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
   }
   // ==========================================================================
   /** @var s_BUKIN
-   *  useful constant (neded for pseudo-Vogt)
+   *  useful constant (needed for pseudo-Vogt)
    *  \f$ \sqrt{ 2 \log 2 } \f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
@@ -548,7 +553,8 @@ bool Ostap::Math::Channel::setGamma0 ( const double value )
 //{ return gamma_run         ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
 // ============================================================================
 // get the  mass-dependent (complex) widths for Flatte'-like formula
-std::complex<double> Ostap::Math::Channel::gamma 
+std::complex<double> 
+Ostap::Math::Channel::gamma 
 ( const double mass , 
   const double m0   ) const 
 { return gamma_run_complex ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
@@ -625,6 +631,7 @@ double Ostap::Math::BreitWignerBase::breit_wigner
   if ( x < threshold () ) { return 0 ; }
   // get the partial width  for the first channel 
   const double g0 = m_channels.front().gamma0 () ;
+
   // choose normalization point: 
   const double mm = m_m0 <= threshold() ? ( threshold () + 0.5 * g0 ) : m_m0 ;
   // actually it is real (both values are above threshold) 

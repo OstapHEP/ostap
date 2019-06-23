@@ -30,6 +30,7 @@
 #  - quantile 
 #  - mode
 #  - width
+#  - FWHM
 #  - cl_symm and sl_asymm 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06  
@@ -61,6 +62,7 @@ All objects exists as classes/functors and as standalone simlpe functions
 - quantile 
 - mode
 - width
+- fwhm
 - cl_symm and sl_asymm 
 """
 # =============================================================================
@@ -70,32 +72,33 @@ __date__    = "2014-06-06"
 __all__     = (
     ##
     ## stat-quantities 
-    "Moment"        , ## calculate N-th moment of functions/distribitions, etc 
-    "CentralMoment" , ## calculate N-th central moment of functions/distribitions
-    "Mean"          , ## calculate "mean"     for functions/distribitions, etc 
-    "Variance"      , ## calculate "variance" for functions/distribitions, etc 
-    "RMS"           , ## calculate "RMS"      for functions/distribitions, etc 
-    "Skewness"      , ## calculate "skewness" for functions/distribitions, etc 
-    "Kurtosis"      , ## calculate "kurtosis" for functions/distribitions, etc 
-    "Median"        , ## calculate "median"   for functions/distribitions, etc 
-    "Quantile"      , ## calculate "quantile" for functions/distribitions, etc 
-    "Mode"          , ## calculate "mode"     for functions/distribitions, etc 
-    "Width"         , ## calculate "width"    for functions/distribitions, etc 
+    "Moment"        , ## calculate N-th moment of functions/distributions, etc 
+    "CentralMoment" , ## calculate N-th central moment of functions/distributions
+    "Mean"          , ## calculate "mean"     for functions/distributions, etc 
+    "Variance"      , ## calculate "variance" for functions/distributions, etc 
+    "RMS"           , ## calculate "RMS"      for functions/distributions, etc 
+    "Skewness"      , ## calculate "skewness" for functions/distributions, etc 
+    "Kurtosis"      , ## calculate "kurtosis" for functions/distributions, etc 
+    "Median"        , ## calculate "median"   for functions/distributions, etc 
+    "Quantile"      , ## calculate "quantile" for functions/distributions, etc 
+    "Mode"          , ## calculate "mode"     for functions/distributions, etc 
+    "Width"         , ## calculate "width"    for functions/distributions, etc 
     "CL_symm"       , ## calcualte symmetrical confidence intervals            
     "CL_asymm"      , ## calcualte asymmetrical confidence intervals           
     ##
     ## stat-quantities   
-    "moment"        , ## calculate N-th moment of functions/distribitions, etc 
-    "central_moment", ## calculate N-th moment of functions/distribitions, etc 
-    "mean"          , ## calculate "mean"     for functions/distribitions, etc 
-    "variance"      , ## calculate "variance" for functions/distribitions, etc 
-    "rms"           , ## calculate "RMS"      for functions/distribitions, etc 
-    "skewness"      , ## calculate "skeness"  for functions/distribitions, etc 
-    "kurtosis"      , ## calculate "kurtosis" for functions/distribitions, etc 
-    "median"        , ## calculate "median"   for functions/distribitions, etc 
-    "quantile"      , ## calculate "quantile" for functions/distribitions, etc 
-    "mode"          , ## calculate "mode"     for functions/distribitions, etc 
-    "width"         , ## calculate "width"    for functions/distribitions, etc 
+    "moment"        , ## calculate N-th moment of functions/distributions, etc 
+    "central_moment", ## calculate N-th moment of functions/distributions, etc 
+    "mean"          , ## calculate "mean"     for functions/distributions, etc 
+    "variance"      , ## calculate "variance" for functions/distributions, etc 
+    "rms"           , ## calculate "RMS"      for functions/distributions, etc 
+    "skewness"      , ## calculate "skeness"  for functions/distributions, etc 
+    "kurtosis"      , ## calculate "kurtosis" for functions/distributions, etc 
+    "median"        , ## calculate "median"   for functions/distributions, etc 
+    "quantile"      , ## calculate "quantile" for functions/distributions, etc 
+    "mode"          , ## calculate "mode"     for functions/distributions, etc 
+    "width"         , ## calculate "width"    for functions/distributions, etc
+    "fwhm"          , ## calculate "fwhm"     for functions/distributions, etc    
     "cl_symm"       , ## calculate symmetrical  confidence intervals            
     "cl_asymm"      , ## calculate asymmetrical confidence intervals           
     ##
@@ -1208,6 +1211,23 @@ def width ( func , xmin = None , xmax = None , height_factor = 0.5 ) :
     ## get the functions from ostap.stats.moments
     actor = lambda x1,x2 : Width  ( x1 , x2 , height_factor ) 
     return sp_action ( func , actor , xmin , xmax )
+
+# =============================================================================
+## get the FWHM, considering function to be PDF 
+#  @code 
+#  >>> fun   = ...
+#  >>> width = fwhm ( fun ,  xmin = 10 , xmax = 50 )
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-07-11
+def fwhm ( func , xmin = None , xmax = None  ) :
+    """ Get the width for the distribution
+    >>> fun   = ...
+    >>> x1,x2 = width ( fun ,  xmin = 10 , xmax = 50 )
+    >>> fwhm  = x2-x1   
+    """
+    x1 , x2 = width ( func , xmin = xmin , xmax = xmax , height_factor = 0.5 )
+    return  x2 - x1
 
 # =============================================================================
 ## get the symmetric confidence interval around x0 for (xmin,xmax) interval 

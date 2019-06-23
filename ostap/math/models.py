@@ -630,6 +630,7 @@ from ostap.stats.moments import median           as sp_median
 from ostap.stats.moments import quantile         as sp_quantile
 from ostap.stats.moments import mode             as sp_mode 
 from ostap.stats.moments import width            as sp_width
+from ostap.stats.moments import fwhm             as sp_fwhm
 from ostap.stats.moments import cl_symm          as sp_cl_symm
 from ostap.stats.moments import cl_asymm         as sp_cl_asymm
 
@@ -800,6 +801,11 @@ for model in ( Ostap.Math.Chebyshev              ,
     if not hasattr ( model , 'median'           ) : model.median           = sp_median
     if not hasattr ( model , 'mode'             ) : model.mode             = sp_mode 
     if not hasattr ( model , 'width'            ) : model.width            = sp_width
+    if not hasattr ( model , 'get_width'        ) : model.get_width        = sp_width
+    if not hasattr ( model , 'fwhm'             ) : model.fwhm             = sp_fwhm
+    if not hasattr ( model , 'get_fwhm'         ) : model.get_fwhm         = sp_fwhm
+    if not hasattr ( model , 'FWHM'             ) : model.FWHM             = sp_fwhm
+    if not hasattr ( model , 'get_FWHM'         ) : model.get_FWHM         = sp_fwhm
     if not hasattr ( model , 'moment'           ) : model.moment           = sp_moment
     if not hasattr ( model , 'central_moment'   ) : model.central_moment   = sp_central_moment
     if not hasattr ( model , 'quantile'         ) : model.quantile         = sp_quantile
