@@ -69,26 +69,6 @@ namespace
   // =========================================================================
   // Chebyshev polynomials (1st and 2nd kind) 
   // =========================================================================
-  /** evaluate chebychev polynomial (the 1st kind)
-   *  @param N  the polynomial degree
-   *  @param x  the argument 
-   *  @return value of chebyshev polynomial (1st kind) at point x 
-   */
-  inline double _chebyshev_ 
-  ( const unsigned int N , 
-    const double       x )
-  {
-    //
-    return 
-      0 == N             ? 1.0 :
-      1 == N             ?   x :
-      s_equal ( x ,  1 ) ?                 1.0          :     
-      s_equal ( x , -1 ) ?  ( 0 == N % 2 ? 1.0 : -1.0 ) :
-      // 2 * x * _chebyshev_ ( N - 1 , x ) - _chebyshev_ ( N - 2 , x ) ;  
-      ( 0 == N%2 ? 2 * std::pow ( _chebyshev_ ( N / 2 , x ) , 2 ) - 1  : 
-        _chebyshev_ ( N / 2 , x ) * _chebyshev_ ( N / 2 + 1 , x )  - x ) ;
-  }
-  // ==========================================================================
   /** evaluate chebyshev polinomial (the second kind)
    *  @param N  the polynomial degree 
    *  @param x  the argument 
@@ -128,12 +108,12 @@ namespace
     { return -_chebyshev_int_ ( N ,  high , low )  ; }
     //
     const double ihigh = 
-      _chebyshev_ ( N + 1 , high ) / ( N + 1 ) -
-      _chebyshev_ ( N - 1 , high ) / ( N - 1 ) ;
+      Ostap::Math::chebyshev_value ( N + 1 , high ) / ( N + 1 ) -
+      Ostap::Math::chebyshev_value ( N - 1 , high ) / ( N - 1 ) ;
     //
     const double ilow = 
-      _chebyshev_ ( N + 1 , low  ) / ( N + 1 ) -
-      _chebyshev_ ( N - 1 , low  ) / ( N - 1 ) ;
+      Ostap::Math::chebyshev_value ( N + 1 , low  ) / ( N + 1 ) -
+      Ostap::Math::chebyshev_value ( N - 1 , low  ) / ( N - 1 ) ;
     //
     return 0.5 * ( ihigh - ilow ) ;
   }
@@ -169,8 +149,8 @@ namespace
     else if ( high < low ) 
     { return -_chebyshevU_int_ ( N ,  high , low )  ; }
     //
-    const double ihigh = _chebyshev_ ( N + 1 , high ) / ( N + 1 ) ;
-    const double ilow  = _chebyshev_ ( N + 1 , low  ) / ( N + 1 ) ;
+    const double ihigh = Ostap::Math::chebyshev_value ( N + 1 , high ) / ( N + 1 ) ;
+    const double ilow  = Ostap::Math::chebyshev_value ( N + 1 , low  ) / ( N + 1 ) ;
     //
     return ihigh - ilow ;
   }
@@ -193,8 +173,8 @@ namespace
     else if ( s_equal ( x , -1 ) ) { return  
         n * ( n * n - 1 ) / 3.0 * ( 0 == N % 2 ? 1 : -1 ) ; }
     //
-    const double v1 = ( N + 1 ) * _chebyshev_  ( N + 1 , x ) ;
-    const double v2 =       x   * _chebyshevU_ ( N     , x ) ;
+    const double v1 = ( N + 1 ) * Ostap::Math::chebyshev_value  ( N + 1 , x ) ;
+    const double v2 =       x   *             _chebyshevU_      ( N     , x ) ;
     const double d2 = v1 - v2 ;
     //
     return d2 / ( x * x - 1 ) ;  // ATTENTION HERE!!! it should be safe...
@@ -202,11 +182,6 @@ namespace
   // ========================================================================== 
 }
 // ============================================================================
-// evaluate Chebyshev polynomial
-// ============================================================================
-double Ostap::Math::Chebyshev::operator() ( const double x ) const
-{ return _chebyshev_     ( m_N , x ) ; }
-// ============================================================================/
 // evaluate the derivative of Chebyshev polynomial
 // ============================================================================
 double Ostap::Math::Chebyshev::derivative ( const double x ) const
@@ -273,28 +248,12 @@ double Ostap::Math::ChebyshevU::integral
   const double high ) const 
 { return _chebyshevU_int_ ( m_N , low , high ) ; }
 // ============================================================================
+// ============================================================================
 namespace 
 {
   // =========================================================================
   // Legendre polynomial
   // =========================================================================
-  /** evaluate Legendre polynomial 
-   *  @param N  the polynomial degree
-   *  @param x  the argument 
-   *  @return value of chebyshev polynomial (1st kind) at point x 
-   */
-  inline long double _legendre_ 
-  ( const unsigned int N , 
-    const long double       x )
-  {
-    //
-    return 
-      0 == N             ? 1.0 :
-      1 == N             ?   x :
-      ( ( 2 * N - 1 ) * x * _legendre_ ( N - 1 , x ) - 
-        (     N - 1 )     * _legendre_ ( N - 2 , x ) ) / N ;
-  }
-  // ==========================================================================
   /** evaluate the integral for legendre polynomial
    *  @param N    the polynomial degree 
    *  @param low  low edge of integration 
@@ -313,8 +272,12 @@ namespace
     else if ( high < low ) 
     { return -_legendre_int_ ( N ,  high , low )  ; }
     //
-    const long double ihigh = _legendre_ ( N + 1 , high ) - _legendre_ ( N - 1 , high ) ;
-    const long double ilow  = _legendre_ ( N + 1 , low  ) - _legendre_ ( N - 1 , low  ) ;
+    const long double ihigh = 
+      Ostap::Math::legendre_value ( N + 1 , high ) * 1.0L - 
+      Ostap::Math::legendre_value ( N - 1 , high ) ;
+    const long double ilow  = 
+      Ostap::Math::legendre_value ( N + 1 , low  ) * 1.0L - 
+      Ostap::Math::legendre_value ( N - 1 , low  ) ;
     //
     return ( ihigh - ilow ) / ( 2 * N + 1 ) ;
   }
@@ -333,19 +296,15 @@ namespace
     //
     if      ( s_equal ( x ,  1 ) ) { return 0.5 * N * ( N + 1 ) ; }
     else if ( s_equal ( x , -1 ) ) 
-    { return 1 == N % 2 ?  0.5 * N * ( N + 1 ) : -0.5 * N * ( N + 1 ) ; }
+    { return 1 == N % 2 ? 0.5 * N * ( N + 1 ) : -0.5 * N * ( N + 1 ) ; }
     //
-    const long double t1 = x * _legendre_ ( N , x ) - _legendre_ ( N - 1 , x  ) ;
+    const long double t1 = 
+      x * Ostap::Math::legendre_value ( N , x ) - Ostap::Math::legendre_value ( N - 1 , x  ) ;
     //
     return N * t1 / ( x * x - 1 ) ;  // ATTENTION HERE!!! it should be safe...
   }
   // ==========================================================================
 }
-// ============================================================================
-// evaluate Legendre polynomial
-// ============================================================================
-double Ostap::Math::Legendre::evaluate ( const double x ) const
-{ return _legendre_     ( m_N , x ) ; }
 // ============================================================================/
 // evaluate the derivative of Chebyshev polynomial
 // ============================================================================
@@ -423,33 +382,39 @@ const std::vector<double>& Ostap::Math::Legendre::roots () const
 // ============================================================================
 namespace 
 {
-  // =========================================================================
+  // ==========================================================================
   //  Hermite polynomial
-  // =========================================================================
-  /** evaluate Hermite polynomial 
-   *  @param N  the polynomial degree
-   *  @param x  the argument 
-   *  @return value of hermite polynomial at point x 
-   */
-  inline double _hermite_ 
-  ( const unsigned int N , 
-    const double       x )
+  // ==========================================================================
+  /** evaluate the integral for Hermite polynomial
+   *  @param N    the polynomial degree 
+   *  @param low  low edge of integration 
+   *  @param high high edge of integration 
+   */  
+  inline long double _hermite_int_ 
+  ( const unsigned int N    ,
+    const long double  low  , 
+    const long double  high ) 
   {
+    // trivial cases 
+    if      ( s_equal ( low , high ) ) { return 0          ; }
+    else if ( 0 == N                 ) { return high - low ; }
+    else if ( 1 == N                 ) { return 0.5 * ( high * high - low * low ) ; }
+    else if ( high < low             ) { return -_hermite_int_ ( N ,  high , low )  ; }
     //
-    return 
-      0 == N             ? 1.0 :
-      1 == N             ?   x :
-       x * _hermite_ ( N - 1 , x ) - ( N - 1 ) * _hermite_ ( N - 2 , x ) ;
+    const long double ihigh = Ostap::Math::hermite_value ( N + 1 , high ) ;
+    const long double ilow  = Ostap::Math::hermite_value ( N + 1 , low  ) ;
+    //
+    return ( ihigh - ilow ) / ( N + 1 ) ;
   }
   // ==========================================================================
-}
+} 
 // ============================================================================
-// evaluate Hermite polynomial
+// get integral between low and high 
 // ============================================================================
-double Ostap::Math::Hermite::operator() ( const double x ) const
-{ return _hermite_     ( m_N , x ) ; }
-// ============================================================================/
-
+double Ostap::Math::Hermite::integral    
+( const double low  , 
+  const double high ) const 
+{ return  _hermite_int_ ( m_N , low ,  high ) ; }
 // ============================================================================
 // Base class for all polynomial sums 
 // ============================================================================

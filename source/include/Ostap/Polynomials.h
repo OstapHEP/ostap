@@ -36,6 +36,69 @@ namespace Ostap
       // ======================================================================
     }
     // ========================================================================
+    // Chebyshev 
+    // ========================================================================
+    namespace details
+    {
+      // ======================================================================
+      /** Evaluate Chebyshev polynom using the recurrence relation, 
+       *  based on the fictive summation of the Legendre series 
+       *  (0,0,...,0,1) using Clenshaw algorithm 
+       *  @param N (input) the order of Chebyshev polynomial
+       *  @param x (input) the point
+       *  @return the value of Chebyshev polynomial of order <code>N</code> at point <code>x</code>
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+       *  @date 2019-06-24
+       *  @see Ostap::Math::details::chebyshev_value
+       */
+      template <unsigned int N, typename TYPE>
+      struct   Chebyshev_eval_ ;
+      template <unsigned int N, typename TYPE>
+      struct   Chebyshev_eval_
+      {
+        /// start recursion 
+        static TYPE evaluate ( const TYPE x  , const TYPE b1 , const TYPE b2 ) 
+        { return Chebyshev_eval_<N-1,TYPE>::evaluate 
+            ( x , std::fma ( 2 * x ,  b1  , - b2 ) , b1 ) ; }
+      } ;
+      /// stop  recursion 
+      template <typename TYPE>
+      struct   Chebyshev_eval_<0,TYPE>
+      {
+        static TYPE evaluate ( const TYPE x  , const TYPE b1 , const TYPE b2 ) 
+        { return x * b1 - b2 ; }
+      } ;
+      // ======================================================================
+      constexpr inline long double chebyshev_eval_ ( const unsigned int N  , 
+                                                     const long double  x  , 
+                                                     const long double  b1 , 
+                                                     const long double  b2 )
+      {
+        return 
+          0 == N ? x * b1 - b2 : chebyshev_eval_ 
+          ( N - 1 , x , std::fma ( 2 * x , b1 , -b2 ) , b1 ) ; 
+      }
+      // =============================================================================
+    }
+    // ===============================================================================
+    /** Evaluate Chebyshev polynom using the recurrence relation, 
+     *  based on the fictive summation of the Chebyshev series 
+     *  (0,0,...,0,1) using Clenshaw algorithm 
+     *  @param N (input) the order of Chebyshev polynomial
+     *  @param x (input) the point
+     *  @return the value of Chebyshev polynomial of order <code>N</code> at point <code>x</code>
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-06-24
+     *  @see Ostap::Math::details::chebyshev_eval_ 
+     */
+    inline double chebyshev_value ( const unsigned int N , const double x ) 
+    {
+      return 
+        0 == N ? 1 : 
+        1 == N ? x :
+        details::chebyshev_eval_ ( N - 1 , x , 1 , 0 ) ; 
+    }
+    // ========================================================================
     //  Chebyshev 1st kind 
     // ========================================================================
     template <unsigned int N> class  Chebyshev_  ;
@@ -109,10 +172,13 @@ namespace Ostap
     template <unsigned int N>
     inline double Chebyshev_<N>::evaluate ( const double x ) 
     {
-      return 
-        0 == N % 2 ?  
-        2 * std::pow ( Chebyshev_<N/2>::evaluate ( x ) , 2 )                    - 1 :
-        2 * Chebyshev_<N/2>::evaluate ( x ) * Chebyshev_<N/2+1>::evaluate ( x ) - x ;
+      // partly optmized recursion :
+      // return 
+      //   0 == N % 2 ?  
+      //   2 * std::pow ( Chebyshev_<N/2>::evaluate ( x ) , 2 )                    - 1 :
+      //   2 * Chebyshev_<N/2>::evaluate ( x ) * Chebyshev_<N/2+1>::evaluate ( x ) - x ;
+      // optimized recursion 
+      return details::Chebyshev_eval_<N-1,long double>::evaluate ( x , 1 , 0 ) ;
     }
     // ========================================================================
     /// get the array of roots 
@@ -404,6 +470,68 @@ namespace Ostap
     double legendre_root ( const unsigned short k , 
                            const unsigned short n ) ;    
     // ========================================================================
+    namespace details
+    {
+      // ======================================================================
+      /** Evaluate Legendre polynom using the recurrence relation, 
+       *  based on the fictive summation of the Legendre series 
+       *  (0,0,...,0,1) using Clenshaw algorithm 
+       *  @param N (input) the order of Legendere polynomial
+       *  @param x (input) the point
+       *  @return the value of Legendre polynomial of order <code>N</code> at point <code>x</code>
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+       *  @date 2019-06-24
+       *  @see Ostap::Math::details::legendre_value
+       */
+      template <unsigned int N, typename TYPE>
+      struct   Legendre_eval_ ;
+      template <unsigned int N, typename TYPE>
+      struct   Legendre_eval_
+      {
+        /// start recursion 
+        static TYPE evaluate ( const TYPE x  , const TYPE b1 , const TYPE b2 ) 
+        { return Legendre_eval_<N-1,TYPE>::evaluate 
+            ( x , ( 2 * N + 1 ) * x * b1 / ( N + 1 ) - ( N + 1 ) * b2 / ( N + 2 ) , b1 ) ; }
+      };
+      /// stop  recursion 
+      template <typename TYPE>
+      struct   Legendre_eval_<0,TYPE>
+      {
+        static TYPE evaluate ( const TYPE x  , const TYPE b1 , const TYPE b2 ) 
+        { return x * b1 - b2 / 2 ; }
+      };
+      // ============================================================================
+      constexpr inline long double legendre_eval_ ( const unsigned int N  , 
+                                                    const long double  x  , 
+                                                    const long double  b1 , 
+                                                    const long double  b2 )
+      {
+        return 
+          0 == N ? x * b1 - b2 / 2 : legendre_eval_ 
+          ( N - 1 , x , ( 2 * N + 1 ) * x * b1 / ( N + 1 ) - ( N + 1 ) * b2 / ( N + 2 ) , b1 ) ; 
+      }
+      // ======================================================================
+    }
+    // ========================================================================
+    /** Evaluate Legendre polynom using the recurrence relation, 
+     *  based on the fictive summation of the Legendre series 
+     *  (0,0,...,0,1) using Clenshaw algorithm 
+     *  @param N (input) the order of Legendere polynomial
+     *  @param x (input) the point
+     *  @return the value of Legendre polynomial of order <code>N</code> at point <code>x</code>
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-06-24
+     *  @see Ostap::Math::details::Legendre_eval_
+     *  @see Ostap::Math::details::legendre_eval_
+     */
+    inline double legendre_value ( const unsigned int N , const double x ) 
+    {
+      return 
+        0 == N ? 1 : 
+        1 == N ? x :
+        details::legendre_eval_ ( N - 1 , x , 1 , 0 ) ; 
+    }
+    // ========================================================================
     //  Legendre 
     // ========================================================================
     template <unsigned int N> class  Legendre_   ;
@@ -464,11 +592,15 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /// should one use here legendre_eval ? 
     template <unsigned int N>
     inline double Legendre_<N>::evaluate ( const double x ) 
     {
-      return ( ( 2 * N - 1 ) * x * Legendre_<N-1>::evaluate ( x )  - 
-               (     N - 1 )     * Legendre_<N-2>::evaluate ( x ) ) / N ;
+      // naive recursive :
+      // return ( ( 2 * N - 1 ) * x * Legendre_<N-1>::evaluate ( x )  - 
+      // (     N - 1 )     * Legendre_<N-2>::evaluate ( x ) ) / N ;
+      // optimized recursive 
+      return details::Legendre_eval_<N-1,long double>::evaluate ( x , 1 , 0 ) ;
     }
     // ========================================================================
     /// get the array of roots 
@@ -490,6 +622,69 @@ namespace Ostap
         x >  0.999 && s_equal ( x ,  1 ) ? 0.5 * N * ( N + 1 )                      :
         x < -0.999 && s_equal ( x , -1 ) ? 0.5 * N * ( N + 1 ) * ( N % 2 ? 1 : -1 ) :
         N * ( x * Legendre_<N>::evaluate ( x ) - Legendre_<N-1>::evaluate ) / ( x * x - 1 ) ;
+    }
+    // ========================================================================
+    // Hermite
+    // ========================================================================
+    namespace details
+    {
+      // ======================================================================
+      /** Evaluate Hermite  polynom using the recurrence relation, 
+       *  based on the fictive summation of the Hermite series 
+       *  (0,0,...,0,1) using Clenshaw algorithm 
+       *  @param N (input) the order of Hermite polynomial
+       *  @param x (input) the point
+       *  @return the value of Chebyshev polynomial of order <code>N</code> at point <code>x</code>
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+       *  @date 2019-06-24
+       *  @see Ostap::Math::details::hermite_value
+       */
+      template <unsigned int N, typename TYPE>
+      struct   Hermite_eval_ ;
+      template <unsigned int N, typename TYPE>
+      struct   Hermite_eval_
+      {
+        /// start recursion 
+        static TYPE evaluate ( const TYPE x  , const TYPE b1 , const TYPE b2 ) 
+        { return Hermite_eval_<N-1,TYPE>::evaluate 
+            ( x , x * b1 - ( N + 1 ) * b2 ,  b1 ) ; }
+      } ;
+      /// stop  recursion 
+      template <typename TYPE>
+      struct   Hermite_eval_<0,TYPE>
+      {
+        static TYPE evaluate ( const TYPE x  , const TYPE b1 , const TYPE b2 ) 
+        { return x * b1 - b2 ; }
+      } ;
+      // ======================================================================
+      constexpr inline long double hermite_eval_ ( const unsigned int N  , 
+                                                   const long double  x  , 
+                                                   const long double  b1 , 
+                                                   const long double  b2 )
+      {
+        return 
+          0 == N ? x * b1 - b2 : hermite_eval_ 
+          ( N - 1 , x , x * b1 - ( N + 1 ) * b2 , b1 ) ; 
+      }
+      // =============================================================================
+    }
+    // ===============================================================================
+    /** Evaluate Hermite polynom using the recurrence relation, 
+     *  based on the fictive summation of the Hermite series 
+     *  (0,0,...,0,1) using Clenshaw algorithm 
+     *  @param N (input) the order of Hermite polynomial
+     *  @param x (input) the point
+     *  @return the value of Hermite polynomial of order <code>N</code> at point <code>x</code>
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-06-24
+     *  @see Ostap::Math::details::hermite_eval_ 
+     */
+    inline double hermite_value ( const unsigned int N , const double x ) 
+    {
+      return 
+        0 == N ? 1 : 
+        1 == N ? x :
+        details::hermite_eval_ ( N - 1 , x , 1 , 0 ) ; 
     }
     // ========================================================================
     // Hermite
@@ -544,7 +739,12 @@ namespace Ostap
     // ========================================================================
     template <unsigned int N>
     inline double Hermite_<N>::evaluate ( const double x ) 
-    { return x * Hermite_<N-1>::evaluate ( x ) - ( N - 1 ) * Hermite_<N-2>::evaluate ( x ) ; }
+    { 
+      // naive recursion 
+      // return x * Hermite_<N-1>::evaluate ( x ) - ( N - 1 ) * Hermite_<N-2>::evaluate ( x ) ; 
+      // optimized recursion 
+      return details::Hermite_eval_<N-1,long double>::evaluate ( x , 1 , 0 );
+    }
     // ========================================================================
     // Non-templated 
     // ========================================================================
@@ -563,7 +763,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the polynomial
-      double operator() ( const double x ) const ;
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate the polynomial
+      inline double evaluate   ( const double x ) const 
+      { return chebyshev_value ( m_N , x ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -642,8 +845,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the polynomial
-      double operator() ( const double x ) const { return evaluate ( x ) ; }
-      double evaluate   ( const double x ) const ;
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline double evaluate   ( const double x ) const 
+      { return legendre_value ( m_N , x ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -691,11 +895,22 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the polynomial
-      double operator() ( const double x ) const ;
+      inline double operator() ( const double x ) const { return   evaluate ( x ) ; }
+      inline double evaluate   ( const double x ) const 
+      { return hermite_value ( m_N , x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       unsigned int degree () const { return m_N ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// derivative 
+      double derivative ( const double x    ) const 
+      { return 0 == m_N ? 0 : m_N * hermite_value ( m_N - 1 , x ) ; }
+      // ======================================================================
+      /// get integral between low and high 
+      double integral   ( const double low  , const double high ) const ;
       // ======================================================================
     private:
       // ======================================================================
