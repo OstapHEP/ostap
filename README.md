@@ -27,15 +27,9 @@ There are several possibilities to start working with Ostap, you can build Ostap
 Linux
 -----
 Ostap requires the python2 version >2.7 or python3. 
-You need to provide ROOTSYS environment for building the library. The library should be built with the same compiler version and C++ standard as was used to build ROOT. Set ROOT environment with following commands
+You need to provide ROOTSYS environment for building the library. The library should be built with the same compiler version and C++ standard as was used to build ROOT. 
 
-    source /path/to/root/bin/thisroot.sh
-
-or, if you are working at the LHCb environment
-
-    lb-run ROOT bash
-
-e.g. at lxplus/7 you can do it with several LCG  versions  (93,94,95). Check on which platform is the preferred version of LCG located and run LbLogin, for instance for LCG 95 and  x86_64-centos7-gcc8-opt:
+At lxplus/7 you can do it with several LCG  versions  (94,95). Check on which platform is the preferred version of LCG located and run LbLogin, for instance for LCG 95 and  x86_64-centos7-gcc8-opt:
 
     LbLogin -c x86_64-centos7-gcc8-opt
     source /cvmfs/sft.cern.ch/lcg/views/LCG_95/${CMTCONFIG}/setup.sh
