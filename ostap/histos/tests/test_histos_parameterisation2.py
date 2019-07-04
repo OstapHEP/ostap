@@ -36,22 +36,31 @@ except ImportError :
     
 # =============================================================================
 from ostap.histos.param import legendre_sum, chebyshev_sum
-from ostap.core.core    import hID
+from ostap.core.core    import hID, fID 
 from ostap.utils.timing import timing
 
-h1 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h1.Sumw2() 
-h2 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h2.Sumw2() 
-h3 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h3.Sumw2() 
-h4 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h4.Sumw2() 
-h5 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h5.Sumw2() 
-h6 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h6.Sumw2() 
+h1   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h1.Sumw2() 
+h2   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h2.Sumw2() 
+h3   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h3.Sumw2() 
+h4   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h4.Sumw2() 
+h5   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h5.Sumw2() 
+h6   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h6.Sumw2() 
 
-f1 = ROOT.TF1  ( 'f3'  , '(x-1)**2'         , 0 , 1 )
-f2 = ROOT.TF1  ( 'f4'  , 'x**2'             , 0 , 1 )
-f3 = ROOT.TF1  ( 'f3'  , '1-(x-1)**2'       , 0 , 1 )
-f4 = ROOT.TF1  ( 'f4'  , '1-x**2'           , 0 , 1 )
-f5 = ROOT.TF1  ( 'f5'  , '4*(x-0.5)**2'     , 0 , 1 )
-f6 = ROOT.TF1  ( 'f5'  , '1-4*(x-0.5)**2'   , 0 , 1 )
+f1   = ROOT.TF1  ( fID() , '(x-1)**2'         , 0 , 1 )
+f2   = ROOT.TF1  ( fID() , 'x**2'             , 0 , 1 )
+f3   = ROOT.TF1  ( fID() , '1-(x-1)**2'       , 0 , 1 )
+f4   = ROOT.TF1  ( fID() , '1-x**2'           , 0 , 1 )
+f5   = ROOT.TF1  ( fID() , '4*(x-0.5)**2'     , 0 , 1 )
+f6   = ROOT.TF1  ( fID() , '1-4*(x-0.5)**2'   , 0 , 1 )
+
+f_2  = ROOT.TF2 ( fID() , 'x*x+y*y'     , -1 , 1 , 0 , 2          )
+f_3  = ROOT.TF3 ( fID() , 'x*x+y*y+z*z' , -1 , 1 , 0 , 2 , -1 , 2 )
+
+h_2  = ROOT.TH2F ( hID() , '' , 50 , -1 , 1 , 50 , 0 , 2 )
+h_3  = ROOT.TH3F ( hID() , '' , 20 , -1 , 1 , 20 , 0 , 2 , 20 , -1 , 2 ) 
+
+h_2 += f_2
+h_3 += f_3
 
 entries = 100000
 
@@ -121,6 +130,39 @@ def diff3 ( func , histo ) :
         
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
+# =============================================================================
+## qudratic difference between 2D-functions 
+def diff_2 ( fun1 , fun2 , xmin , xmax , ymin , ymax , N = 100000 ) :
+
+    d = 0
+    for i in range ( N ) :
+        x   = random.uniform ( xmin , xmax )
+        y   = random.uniform ( ymin , ymax )
+        f1  = fun1 ( x , y )
+        f2  = fun2 ( x , y )
+        d  += ( f1 - f2 ) * ( f1 - f2 ) 
+
+    d /= N
+    
+    return d
+
+# =============================================================================
+## qudratic difference between 3D-functions 
+def diff_3 ( fun1 , fun2 , xmin , xmax , ymin , ymax , zmin , zmax , N = 1000000 ) :
+
+    d = 0
+    for i in range ( N ) :
+        x   = random.uniform ( xmin , xmax )
+        y   = random.uniform ( ymin , ymax )
+        z   = random.uniform ( zmin , zmax )
+        f1  = fun1 ( x , y , z )
+        f2  = fun2 ( x , y , z )
+        d  +=  ( f1 - f2 ) * ( f1 - f2 ) 
+
+    d /= N
+    
+    return d
+    
 # =============================================================================
 def test_bernstein() :
     
@@ -357,6 +399,63 @@ def test_convex_only_spline () :
                                                                                 (rC6 , h6) ] ] )
         
 
+# =============================================================================
+def test_legendre_fast () :
+    
+    with timing ( 'LegendreFast[6]' , logger ) :
+        rL1 = h1.legendre_fast ( 6 )
+        rL2 = h2.legendre_fast ( 6 )
+        rL3 = h3.legendre_fast ( 6 )
+        rL4 = h4.legendre_fast ( 6 )
+        rL5 = h5.legendre_fast ( 6 )
+        rL6 = h6.legendre_fast ( 6 )        
+        logger.info ( 'LegendreFast[6]: diff %s ' %  [ diff1(*p) for p in [ (rL1 , h1) ,
+                                                                            (rL2 , h2) ,
+                                                                            (rL3 , h3) ,
+                                                                            (rL4 , h4) ,
+                                                                            (rL5 , h5) ,
+                                                                            (rL6 , h6) ] ] )
+        
+
+# =============================================================================
+def test_legendre2_fast () :
+    
+    with timing ( 'Legendre2D' , logger ) :
+        
+        r22 = h_2.legendre_fast ( 2 , 2 )
+        r32 = h_2.legendre_fast ( 3 , 2 )
+        r42 = h_2.legendre_fast ( 4 , 2 )
+        r52 = h_2.legendre_fast ( 5 , 2 )
+
+        r33 = h_2.legendre_fast ( 3 , 3 )
+        r43 = h_2.legendre_fast ( 4 , 3 )
+        r53 = h_2.legendre_fast ( 5 , 3 )
+        
+    limits = h_2.xmin() , h_2.xmax() , h_2.ymin() , h_2.ymax()
+    logger.info ( 'Legendre2D: diff %s ' %  [ diff_2(f,p,*limits) for f,p in [ (r22 , f_2) ,
+                                                                               (r32 , f_2) ,
+                                                                               (r42 , f_2) ,
+                                                                               (r52 , f_2) ,
+                                                                               (r33 , f_2) ,
+                                                                               (r43 , f_2) ,
+                                                                               (r53 , f_2) ] ] )
+    
+
+# =============================================================================
+def test_legendre3_fast () :
+    
+    with timing ( 'Legendre3D' , logger ) :
+        
+        r222 = h_3.legendre_fast ( 2 , 2 , 2 )  
+        r333 = h_3.legendre_fast ( 3 , 3 , 3 )
+        r432 = h_3.legendre_fast ( 4 , 3 , 2 ) 
+        r535 = h_3.legendre_fast ( 5 , 3 , 5 )
+        
+    limits = h_3.xmin() , h_3.xmax() , h_3.ymin() , h_3.ymax() , h_3.zmin() , h_3.zmax()
+    logger.info ( 'Legendre3D: diff %s ' %  [ diff_3(f,p,*limits) for f,p in [ ( r222 , f_3) ,
+                                                                               ( r333 , f_3) ,
+                                                                               ( r432 , f_3) ,
+                                                                               ( r535 , f_3) ] ] )
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -365,23 +464,27 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
     logger.info ( 100*'*')
     
-    test_bernstein         ()
-    test_legendre          ()
-    test_chebyshev         ()
-    test_monomial          ()
+    ## test_bernstein         ()
+    ## test_legendre          ()
+    ## test_chebyshev         ()
+    ## test_monomial          ()
 
-    test_monotonic         () 
-    test_convex            () 
-    test_convex_poly       ()
+    ## test_monotonic         () 
+    ## test_convex            () 
+    ## test_convex_poly       ()
     
-    test_fourier           ()
-    test_cosine            ()
+    ## test_fourier           ()
+    ## test_cosine            ()
 
-    test_generic_spline       () 
-    test_positive_spline      () 
-    test_monotonic_spline     () 
-    test_convex_spline        () 
-    test_convex_only_spline   () 
+    ## test_generic_spline       () 
+    ## test_positive_spline      () 
+    ## test_monotonic_spline     () 
+    ## test_convex_spline        () 
+    ## test_convex_only_spline   () 
+    
+    test_legendre_fast       ()
+    test_legendre2_fast      ()
+    test_legendre3_fast      ()
 
 # =============================================================================
 # The END 

@@ -16,6 +16,7 @@
  *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
  */
 // ============================================================================
+#include <iostream>
 namespace Ostap
 {
   // ==========================================================================
@@ -30,6 +31,87 @@ namespace Ostap
      */
     namespace Clenshaw
     {
+      // ======================================================================
+      /** Generic form of Clenshaw algorithm.
+       *
+       *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
+       *
+       *  Compute the finite sum of 
+       *  \f$ S(x) = \sum_{k=0}^{N} a_k \phi_k(x) \f$, 
+       *  where the functions  \f$ \phi_k(x) \f$ satisfy the linear recurrence relation:
+       *  \f$ \phi_{k+1}(x) = \alpha_{k}(x)\phi_{k}(x) + \beta_k(x)\phi_{k-1}(x) \f$ 
+       *
+       *  E.g. summation of Legendre series, 
+       *  where the recursve relation is 
+       *  \f$ P_{k+1}(x) = \frac{2k+1}{k+1}xP_k(x) - \frac{k}{k+1}P_{k-1}(x)\f$
+       *  with \f$ \alpha_k(x) = \frac{2k+1}{k+1}x\f$ and 
+       *  with \f$ \beta_k(x) = -\frac{k}{k+1}\f$ : 
+       *  @code
+       *  // array of coeffciencts 
+       *  std::array<long double,N> coeffs = ... ;
+       *  // coefficients 
+       *  auto ak    = [&coeffs] ( const unsigned int k ) -> long double { return coeffs[k] ; } 
+       *  // Legendre recursive relations 
+       *  auto alpha = [] ( const  unsigned int k , const long double x ) -> long double 
+       *  { return (2*k+1)*x/(k+1) ; } ;
+       *  auto beta  = [] ( const  unsigned int k , const long double x ) -> long double 
+       *  { return -1.0L*k/(k+1) ; } ;
+       *  // Legendre polynomial with index 0
+       *  auto phi0  = []  ( const long double x ) -> long double {  return 1.0L ; }
+       *  // Legendre polynomial with index 0
+       *  auto phi1  = []  ( const long double x ) -> long double {  return x    ; }
+       *
+       *  const double x = 0.3 ;
+       *  double result =  Ostap::Math::Clenshaw::sum  
+       *   ( x , N , ak , alpha , beta , phi0 , phi1 ) ;
+       *  @endcode 
+       *  
+       *  @param x     (INPUT) x-point
+       *  @param N     (INPUT) number of terms in the sequence
+       *  @param a     (INPUT) callable, that returns the coefficient \f$ a_k\f$
+       *  @param alpha (INPUT) callable, that returns the value of \f$ \alpha_k(x) \f$
+       *  @param beta  (INPUT) callable, that returns the value of \f$ \beta_k(x) \f$
+       *  @param phi0  (INPUT) callable, that returns the value of \f$ \phi_0(x) \f$ 
+       *  @param phi1  (INPUT) callable, that returns the value of \f$ \phi_1(x) \f$ 
+       *
+       *  @return the sum 
+       */
+      template <class COEFF , 
+                class ALPHA , 
+                class BETA  , 
+                class PHI0  , 
+                class PHI1  >
+      inline long double 
+      sum ( const long double  x     , 
+            const unsigned int N     ,
+            COEFF              a     , 
+            ALPHA              alpha , 
+            BETA               beta  , 
+            PHI0               phi0  , 
+            PHI1               phi1  )
+      {
+        //
+        const long double phi_0 = phi0 ( x ) ;
+        if ( 0 == N ) { return a ( 0 ) * phi_0                    ; }
+        //
+        const long double phi_1 = phi1 ( x ) ;
+        if ( 1 == N ) { return a ( 0 ) * phi_0  + a ( 1 ) * phi_1 ; }
+        //
+        long double b2 = 0 ;
+        long double b1 = 0 ;
+        long double b0 = 0 ;
+        //
+        unsigned int k = N ;
+        while (  1 <= k ) 
+        {
+          b0 = a ( k ) + alpha ( k , x ) * b1 + beta ( k + 1 , x ) * b2 ;
+          b2 = b1 ;
+          b1 = b0 ;
+          --k ;
+        }
+        //
+        return phi_0 * (  a ( 0 ) + beta( 1 , x ) * b2 ) + phi_1 * b1 ;
+      }
       // ======================================================================
       /** Clenshaw algorithm for summation of monomial series (aka "Horner's rule")
        *  \f$  f_1(x) = \sum_{i=0}^{n} a_i x^i     \f$ and 

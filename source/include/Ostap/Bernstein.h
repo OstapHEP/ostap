@@ -298,9 +298,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// copy
-      Bernstein ( const Bernstein&  ) = default ;
+      ///  Bernstein ( const Bernstein&  ) = default ;
       /// move
-      Bernstein (       Bernstein&& ) = default ;
+      /// Bernstein (       Bernstein&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================
@@ -553,10 +553,6 @@ namespace Ostap
       // ======================================================================
     public:  // various assignements
       // ======================================================================
-      /// copy assignement
-      Bernstein& operator=( const Bernstein&  right ) ;
-      /// move assignement
-      Bernstein& operator=(       Bernstein&& right ) ;
       /// assignement from the constant
       Bernstein& operator=( const double      right ) ;
       // ======================================================================

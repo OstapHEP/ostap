@@ -259,15 +259,46 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
     ## save old method
     ROOT.TObject._old_draw_ = ROOT.TObject.Draw
     ##  new draw method: silent draw
-    def _to_draw_ ( obj , *args , **kwargs ) :
+    def _to_draw_ ( obj , option = '', *args , **kwargs ) :
         """ (silent) Draw of ROOT object
         >>> obj
         >>> obj.Draw()  ##
         >>> obj.draw()  ## ditto
         """
+        
+        from ostap.utils.cidict import cidict
+        kw = cidict ( **kwargs )
+        
+        ## Line
+        
+        if 'LineColor'  in kw and hasattr ( obj , 'SetLineColor' ) :
+            obj.SetLineColor   ( kw.pop('LineColor' ) )
+        if 'LineStyle'  in kw and hasattr ( obj , 'SetLineStyle' ) :
+            obj.SetLineStyle   ( kw.pop('LineStyle' ) )
+        if 'LineWidth'  in kw and hasattr ( obj , 'SetLineWidth' ) :
+            obj.SetLineWidth   ( kw.pop('LineWidth' ) )
+
+        ## Marker
+            
+        if 'MarkerColor' in kw and hasattr ( obj , 'SetMarkerColor' ) :
+            obj.SetMarkerColor ( kw.pop('MarkerColor' ) )
+        if 'MarkerStyle' in kw and hasattr ( obj , 'SetMarkerStyle' ) :
+            obj.SetMarkerStyle ( kw.pop('MarkerStyle' ) )
+        if 'MarkerSize'  in kw and hasattr ( obj , 'SetMarkerSize'  ) :
+            obj.SetMarkerSize  ( kw.pop('MarkerSize'  ) )
+
+        ## Area
+            
+        if 'FillColor'   in kw and hasattr ( obj , 'SetFillColor' ) :
+            obj.SetFillColor   ( kw.pop('FillColor' ) )
+        if 'FillStyle'   in kw and hasattr ( obj , 'SetFillStyle' ) :
+            obj.SetFillStyle   ( kw.pop('FillStyle' ) )
+
+        if kw : logger.warning('draw: unknown attributes: %s' % kw.keys() )
+            
         from ostap.logger.utils import  rootWarning
         with rootWarning() :
-            return obj.Draw( *args , **kwargs )
+            return obj.Draw( option , *args )
 
     ROOT.TObject.draw = _to_draw_
 

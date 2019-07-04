@@ -56,6 +56,8 @@
 #include "Ostap/Notifier.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/NStatEntity.h"
+#include "Ostap/Parameterization.h"
+#include "Ostap/Params.h"
 #include "Ostap/Peaks.h"
 #include "Ostap/PDFs.h"
 #include "Ostap/PDFs2D.h"

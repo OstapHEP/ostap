@@ -41,13 +41,14 @@ foreach(filename ${allfiles})
    string(REPLACE FAKEfakeFAKEfake ququququ   test_name ${filename} )
 
    string(REPLACE fitting/param  fitting_param  test_name ${test_name})
+   string(REPLACE trees/param    trees_param    test_name ${test_name})
    string(REPLACE histos/param   histos_param   test_name ${test_name})
    string(REPLACE math/param     math_param     test_name ${test_name})
    
    string(REPLACE fitting/utils  fitting_utils  test_name ${test_name})
    string(REPLACE logger/utils   logger_utils   test_name ${test_name})
    string(REPLACE utils/utils    utils_utils    test_name ${test_name})
-   string(REPLACE core/utils     utils_utils    test_name ${test_name})
+   string(REPLACE core/utils     core_utils     test_name ${test_name})
 
    string(REPLACE fitting/basic  fitting_basic  test_name ${test_name})
    string(REPLACE utils/basic    utils_basic    test_name ${test_name})

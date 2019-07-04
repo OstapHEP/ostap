@@ -408,30 +408,6 @@ Ostap::Math::Bernstein::Bernstein
   : Ostap::Math::Bernstein::Bernstein ( xmin , xmax , r   , c ) 
 {}
 // ============================================================================
-// copy assignement 
-// ============================================================================
-Ostap::Math::Bernstein&
-Ostap::Math::Bernstein::operator=( const Ostap::Math::Bernstein&  right ) 
-{
-  if ( &right == this ) { return *this ; }
-  m_xmin = right.m_xmin ;
-  m_xmax = right.m_xmax ;
-  Ostap::Math::PolySum::operator=( right ) ;
-  return *this ;
-}
-// ============================================================================
-// move assignement 
-// ============================================================================
-Ostap::Math::Bernstein&
-Ostap::Math::Bernstein::operator=(       Ostap::Math::Bernstein&& right ) 
-{
-  if ( &right == this ) { return *this ; }
-  m_xmin = right.m_xmin ;
-  m_xmax = right.m_xmax ;
-  Ostap::Math::PolySum::operator=( std::move ( right ) ) ;
-  return *this ;
-}
-// ============================================================================
 // assignement from the constant 
 // ============================================================================
 Ostap::Math::Bernstein&
@@ -658,7 +634,7 @@ Ostap::Math::Bernstein::operator*=( const double a )
 {
   if      ( s_equal ( a , 1 ) ) { return *this ; }
   else if ( s_zero  ( a     ) ) { std::fill ( m_pars.begin() , m_pars.end() , 0 ) ; }
-  Ostap::Math::scale ( m_pars , a ) ;
+  else                          { Ostap::Math::scale ( m_pars , a ) ; }
   return *this ;
 }
 // ============================================================================

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file
+## @file ostap/trees/trees.py
 #  Module with decoration of Tree/Chain objects for efficient use in python
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -18,10 +18,11 @@ __all__     = (
   ) 
 # =============================================================================
 import ROOT
-from ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
-from ostap.core.ostap_types import integer_types , long_type, string_types 
-from ostap.logger.utils     import multicolumn
-from ostap.utils.basic      import terminal_size, isatty
+from   ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
+from   ostap.core.ostap_types import integer_types , long_type, string_types 
+from   ostap.logger.utils     import multicolumn
+from   ostap.utils.basic      import terminal_size, isatty
+import ostap.trees.param
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1825,5 +1826,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

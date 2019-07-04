@@ -281,9 +281,7 @@ if arguments.Config :
     cc += arguments.Config
     cc  = os.pathsep.join ( cc )
     os.environ['OSTAP_CONFIG'] = cc
-    ## print 'MODIFY OSTAP_CONFIG' ,  os.environ['OSTAP_CONFIG']
 
-logger.info('hreeee') 
 import ostap.core.config     
     
 # =============================================================================

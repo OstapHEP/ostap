@@ -357,8 +357,8 @@ class MakeVar ( object ) :
             kup  = k.upper ()
             
             ## skip "drawing" options 
-            if k.lower() in drawing_options                            : continue 
-            if k.lower() in ( 'draw' , 'draw_option', 'draw_options' ) : continue 
+            if   klow in drawing_options                            : continue 
+            if   klow in ( 'draw' , 'draw_option', 'draw_options' ) : continue 
             
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
             

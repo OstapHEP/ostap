@@ -143,7 +143,7 @@ else                       : logger = getLogger( __name__             )
 # =============================================================================
 logger.debug ( 'Some parameterization utilities for Histo objects')
 # =============================================================================
-from ostap.core.core     import cpp, VE, funID
+from ostap.core.core     import cpp, VE, funID, Ostap
 from ostap.math.param    import ( legendre_sum      ,
                                   chebyshev_sum     ,
                                   fourier_sum       ,
@@ -414,7 +414,44 @@ def _h1_legendre_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos
     from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax )  
 
-
+# ==============================================================================
+## (relatively) fast parameterization of 1D histogram as sum of
+#  legendre polynomials
+#  @code
+#  histo = ...
+#  func  = histo.legendre_fast ( 5 ) 
+#  @endcode
+#  @see Ostap::LegendreSum
+#  @see Ostap::LegendreSum::fill 
+def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
+    """(relatively) fast parameterization of 1D histogram as sum of Legendre polynomials
+    >>> histo = ...
+    >>> func  = histo.legendre_fast ( 5 )
+    - see Ostap.Math.LegendreSum
+    - see Ostap.Math.LegendreSum.fill
+    """
+    xmin = max ( xmin , h1.xmin() ) 
+    xmax = min ( xmax , h1.xmax() )
+    assert isinstance ( degree , int ) and 0 <= degree , \
+           "Invalid degree %s" % degree
+    assert xmin < xmax                                 , \
+           'Invalid xmin/xmax: %s/%s' % ( xmin , xmax )
+    
+    func = Ostap.Math.LegendreSum ( degree ,  xmin , xmax )
+    
+    wsum  = 0
+    
+    for i, x, y in h1.iteritems()  :
+        xv = x.value ()
+        if  not xmin <= xv <= xmax : continue 
+        yv = y.value ()
+        w  = 2*yv*x.error() 
+        ok = func.fill ( xv , w )
+        if ok : wsum +=       w 
+    
+    return func 
+        
+    
 # =============================================================================
 ## represent 1D-histo as Fourier polynomial
 #  @code
@@ -1120,28 +1157,30 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.concaveSpline  = _h1_concavespline_ 
     t.convexspline   = _h1_convexspline_ 
     t.concavespline  = _h1_concavespline_ 
+    t.legendre_fast  = _h1_legendre_fast_
 
-    _new_methods_ += [
-        _h1_bernstein_     ,
-        _h1_bernsteineven_ ,
-        _h1_chebyshev_     ,
-        _h1_legendre_      ,
-        _h1_fourier_       ,
-        _h1_polinomial_    ,
-        _h1_positive_      ,
-        _h1_positiveeven_  ,
-        _h1_monotonic_    ,
-        _h1_convex_        ,
-        _h1_convexpoly_    ,
-        _h1_concavepoly_   ,
-        _h1_bspline_       ,
-        _h1_pspline_       ,
-        _h1_mspline_       ,
-        _h1_cspline_       ,
-        _h1_convexspline_  ,
-        _h1_concavespline_ ,
-        ]
-    
+_new_methods_ += [
+    _h1_bernstein_     ,
+    _h1_bernsteineven_ ,
+    _h1_chebyshev_     ,
+    _h1_legendre_      ,
+    _h1_fourier_       ,
+    _h1_polinomial_    ,
+    _h1_positive_      ,
+    _h1_positiveeven_  ,
+    _h1_monotonic_    ,
+    _h1_convex_        ,
+    _h1_convexpoly_    ,
+    _h1_concavepoly_   ,
+    _h1_bspline_       ,
+    _h1_pspline_       ,
+    _h1_mspline_       ,
+    _h1_cspline_       ,
+    _h1_convexspline_  ,
+    _h1_concavespline_ ,
+    _h1_legendre_fast_ ,
+    ]
+
 # =============================================================================
 ## parameterize positive histogram with certain PDF
 def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
@@ -1943,18 +1982,161 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
     h.bernstein_sum     = _h1_bezier_sum_
     h.beziereven_sum    = _h1_beziereven_sum_
     h.bernsteineven_sum = _h1_beziereven_sum_
+    
+_new_methods_ .append ( _h1_legendre_sum_   )
+_new_methods_ .append ( _h1_chebyshev_sum_  )
+_new_methods_ .append ( _h1_fourier_sum_    )
+_new_methods_ .append ( _h1_cosine_sum_     )
+_new_methods_ .append ( _h1_bezier_sum_     )
+_new_methods_ .append ( _h1_beziereven_sum_ )
 
-    _new_methods_ .append ( legendre_sum   )
-    _new_methods_ .append ( chebyshev_sum  )
-    _new_methods_ .append ( fourier_sum    )
-    _new_methods_ .append ( cosine_sum     )
-    _new_methods_ .append ( bezier_sum     )
-    _new_methods_ .append ( beziereven_sum )
+
+# ==============================================================================
+## (relatively) fast parameterization of 2D histogram as sum of
+#  legendre polynomials
+#  @code
+#  histo = ...
+#  func  = histo.legendre      ( 5 , 3 ) 
+#  func  = histo.legendre_fast ( 5 , 3 ) ## ditto
+#  @endcode
+#  @see Ostap::LegendreSum2
+#  @see Ostap::LegendreSum2::fill 
+def _h2_legendre_fast_ ( h2  ,
+                         xdegree , ydegree , 
+                         xmin = inf_neg , xmax = inf_pos , 
+                         ymin = inf_neg , ymax = inf_pos ) :
+    """(relatively) fast parameterization of 2D histogram as sum of Legendre polynomials
+    >>> histo = ...
+    >>> func  = histo.legendre_fast ( 5 , 3  )
+    - see Ostap.Math.LegendreSum2
+    - see Ostap.Math.LegendreSum2.fill
+    """
+    
+    assert isinstance ( xdegree , int ) and 0 <= xdegree , \
+           "Invalid xdegree %s" % xdegree
+    
+    assert isinstance ( ydegree , int ) and 0 <= ydegree , \
+           "Invalid ydegree %s" % ydegree
+
+    xmin = max ( xmin , h2.xmin() ) 
+    xmax = min ( xmax , h2.xmax() )
+
+    assert xmin < xmax , 'Invalid xmin/xmax: %s/%s' % ( xmin , xmax )
+
+    ymin = max ( ymin , h2.ymin() ) 
+    ymax = min ( ymax , h2.ymax() )
+
+    assert ymin < ymax , 'Invalid ymin/ymax: %s/%s' % ( ymin , ymax )
+    
+    func = Ostap.Math.LegendreSum2 ( xdegree , ydegree ,  xmin , xmax , ymin , ymax )
+    
+    sum  = 0
+    for ix , iy , x , y , v in h2.iteritems()  :        
+        xv = x.value()
+        if not xmin <= xv <= xmax : continue        
+        yv = y.value()
+        if not ymin <= yv <= ymax : continue
+        vv = v.value()        
+        w  = 4 * vv * x.error() * y.error()        
+        ok = func.fill ( xv , yv , w )        
+        if ok : sum +=             w
+
+    return func 
+
+        
+for h in ( ROOT.TH2F , ROOT.TH2D ) :
+
+    h.legendre      = _h2_legendre_fast_
+    h.legendre_fast = _h2_legendre_fast_
+
+_new_methods_ .append ( _h2_legendre_fast_   )
+
+
+# ==============================================================================
+## (relatively) fast parameterization of 3D histogram as sum of
+#  legendre polynomials
+#  @code
+#  histo = ...
+#  func  = histo.legendre      ( 5 , 3 , 2 ) 
+#  func  = histo.legendre_fast ( 5 , 3 , 2 ) ## ditto
+#  @endcode
+#  @see Ostap::LegendreSum3
+#  @see Ostap::LegendreSum3::fill 
+def _h3_legendre_fast_ ( h3 , xdegree , ydegree , zdegree , 
+                         xmin = inf_neg , xmax = inf_pos  ,
+                         ymin = inf_neg , ymax = inf_pos  ,
+                         zmin = inf_neg , zmax = inf_pos  ) :
+    """(relatively) fast parameterization of 2D histogram as sum of Legendre polynomials
+    >>> histo = ...
+    >>> func  = histo.legendre_fast ( 5 , 3  )
+    - see Ostap.Math.LegendreSum2
+    - see Ostap.Math.LegendreSum2.fill
+    """
+    
+    assert isinstance ( xdegree , int ) and 0 <= xdegree , \
+           "Invalid xdegree %s" % xdegree
+    
+    assert isinstance ( ydegree , int ) and 0 <= ydegree , \
+           "Invalid ydegree %s" % ydegree
+    
+    assert isinstance ( zdegree , int ) and 0 <= zdegree , \
+           "Invalid zdegree %s" % zdegree
+
+    xmin = max ( xmin , h3.xmin() ) 
+    xmax = min ( xmax , h3.xmax() )
+
+    assert xmin < xmax , 'Invalid xmin/xmax: %s/%s' % ( xmin , xmax )
+
+    ymin = max ( ymin , h3.ymin() ) 
+    ymax = min ( ymax , h3.ymax() )
+
+    assert ymin < ymax , 'Invalid ymin/ymax: %s/%s' % ( ymin , ymax )
+
+    zmin = max ( zmin , h3.zmin() ) 
+    zmax = min ( zmax , h3.zmax() )
+
+    assert zmin < zmax , 'Invalid zmin/zmax: %s/%s' % ( zmin , zmax )
+    
+    func = Ostap.Math.LegendreSum3 ( xdegree , ydegree , zdegree ,
+                                     xmin , xmax ,
+                                     ymin , ymax ,
+                                     zmin , zmax )
+    
+    sum  = 0
+    
+    for ix , iy, iz , x , y , z , v in h3.iteritems()  :
+        
+        xv = x.value()
+        if not xmin <= xv <= xmax : continue
+        
+        yv = y.value()
+        if not ymin <= yv <= ymax : continue
+
+        zv = z.value()
+        if not zmin <= zv <= zmax : continue
+
+        vv = v.value()
+
+        w  = 8 * vv * x.error() * y.error() * z.error() 
+        ok = func.fill ( xv , yv , zv , w )
+        if ok : sum +=                  w
+
+    return func 
+
+        
+for h in ( ROOT.TH3F , ROOT.TH3D ) :
+
+    h.legendre      = _h3_legendre_fast_
+    h.legendre_fast = _h3_legendre_fast_
+
+_new_methods_ .append ( _h3_legendre_fast_   )
 
 # =============================================================================
 _decorated_classes = (
     ROOT.TH1D ,
     ROOT.TH1F ,
+    ROOT.TH2D ,
+    ROOT.TH2F ,
     )
 
 _new_methods_ = tuple ( _new_methods_ )

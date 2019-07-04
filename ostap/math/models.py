@@ -47,7 +47,7 @@ neg_infinity = float('-inf')
 def _tf1_ ( self                 ,
             xmin  = neg_infinity ,
             xmax  = pos_infinity ,
-            npars = 0            , *args ) :
+            npars = 0            , args = () ) :
     """Convert the function to TF1    
     >>> obj = ...
     >>> fun = obj.tf1 ( 3.0 , 3.2 )
@@ -68,8 +68,8 @@ def _tf1_ ( self                 ,
     
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
-    fun.SetNpx ( 500 ) 
-    #
+    fun.SetNpx ( 500 )
+    ##
     return fun 
 
 # =============================================================================
@@ -79,7 +79,7 @@ def _tf2_ ( self ,
             xmax  = pos_infinity ,
             ymin  = neg_infinity ,
             ymax  = pos_infinity ,
-            npars = 0            , *args ) :
+            npars = 0            , args = () ) :
     """Convert the function to TF2
     >>> obj = ...    
     >>> fun = obj.tf2 ( 3.0 , 3.2 , 3.0 , 3.2 )    
@@ -120,7 +120,7 @@ def _tf3_ ( self ,
             ymax  = pos_infinity ,
             zmin  = neg_infinity ,
             zmax  = pos_infinity ,
-            npars = 0            , *args ) :
+            npars = 0            , args = () ) :
     """Convert the function to TF3
     >>> obj = ...    
     >>> fun = obj.tf3 ( 3.0 , 3.2 , 3.0 , 3.2 , 1 , 2 )    
@@ -161,16 +161,23 @@ def _tf3_ ( self ,
 
 # =============================================================================
 ## draw the function 
-def _f1_draw_ ( self , opts ='' , *args , **kwargs ) :
+def _f1_draw_ ( self , opts ='' , **kwargs ) :
     """Drawing the function object through conversion to ROOT.TF1    
     >>> fun = ...
     >>> fun.draw()    
     """
     if not hasattr ( self , '_tf1'  ) :
-
-        self._tf1        = _tf1_ ( self , *args , **kwargs )
-        self._tf1_args   = tuple ( args   ) 
-        self._tf1_kwargs = dict  ( kwargs ) 
+ 
+        xmin  = kwargs.pop ( 'xmin'  , neg_infinity )
+        xmax  = kwargs.pop ( 'xmax'  , pos_infinity )
+        npars = kwargs.pop ( 'npars' , 0  ) 
+        args  = kwargs.pop ( 'args'  , () )
+        
+        self._tf1        = _tf1_ ( self          ,
+                                   xmin  = xmin  ,
+                                   xmax  = xmax  ,
+                                   npars = npars ,
+                                   args  = args  )
         
         if type(self) in ( Ostap.Math.Positive          ,
                            Ostap.Math.PositiveEven      , 
@@ -185,7 +192,63 @@ def _f1_draw_ ( self , opts ='' , *args , **kwargs ) :
                            Ostap.Math.TwoExpoPositive   ) :                                
             self._tf1.SetMinimum(0)
             
-    return self._tf1.Draw ( opts )
+    return self._tf1.draw ( opts , **kwargs )
+
+# =============================================================================
+## draw the function 
+def _f2_draw_ ( self , opts ='' , **kwargs ) :
+    """Drawing the function object through conversion to ROOT.TF2    
+    >>> fun = ...
+    >>> fun.draw()    
+    """
+    if not hasattr ( self , '_tf2'  ) :
+
+        xmin  = kwargs.pop ( 'xmin' , neg_infinity )
+        xmax  = kwargs.pop ( 'xmax' , pos_infinity )
+        ymin  = kwargs.pop ( 'ymin' , neg_infinity )
+        ymax  = kwargs.pop ( 'ymax' , pos_infinity )
+        npars = kwargs.pop ( 'npars' , 0  ) 
+        args  = kwargs.pop ( 'args' , () )
+
+        self._tf2        = _tf2_ ( self ,
+                                   xmin  = xmin  ,
+                                   xmax  = xmax  ,
+                                   ymin  = ymin  ,
+                                   ymax  = ymax  ,
+                                   npars = npars , 
+                                   args  = args  )
+        
+    return self._tf2.draw ( opts , **kwargs )
+
+# =============================================================================
+## draw the function 
+def _f3_draw_ ( self , opts ='' , **kwargs ) :
+    """Drawing the function object through conversion to ROOT.TF3    
+    >>> fun = ...
+    >>> fun.draw()    
+    """
+    if not hasattr ( self , '_tf3'  ) :
+
+        xmin  = kwargs.pop ( 'xmin' , neg_infinity )
+        xmax  = kwargs.pop ( 'xmax' , pos_infinity )
+        ymin  = kwargs.pop ( 'ymin' , neg_infinity )
+        ymax  = kwargs.pop ( 'ymax' , pos_infinity )
+        zmin  = kwargs.pop ( 'zmin' , neg_infinity )
+        zmax  = kwargs.pop ( 'zmax' , pos_infinity )
+        npars = kwargs.pop ( 'npars' , 0  ) 
+        args  = kwargs.pop ( 'args' , () )
+
+        self._tf3        = _tf3_ ( self ,
+                                   xmin  = xmin  ,
+                                   xmax  = xmax  ,
+                                   ymin  = ymin  ,
+                                   ymax  = ymax  ,
+                                   zmin  = zmin  ,
+                                   zmax  = zmax  ,
+                                   npars = npars , 
+                                   args  = args  )
+        
+    return self._tf3.draw ( opts , **kwargs )
 
 # =============================================================================
 ## get the regular complex value for amplitude 
@@ -647,10 +710,10 @@ def _tf1_getattr_ ( self , attr ) :
     >>> f.SetLineColor(4) ## delegate to TF1
     >>> f.SetLineWidth(2) ## delegate to TF1
     """
-    if  hasattr ( ROOT.TF1 , attr ) and hasattr  ( self , '_tf1' ) :
+    if  hasattr ( ROOT.TF1 , attr ) and hasattr  ( self , '_tf1' ) and self._tf1  :
         return getattr  ( self._tf1 , attr   )
     
-    raise AttributeError
+    raise AttributeError("Can't get attribute: %s" % attr )
 
 # =============================================================================
 ## helper function to delegate some methods/attributes to TF2
@@ -665,10 +728,10 @@ def _tf2_getattr_ ( self , attr ) :
     >>> f.SetLineColor(4) ## delegate to TF2
     >>> f.SetLineWidth(2) ## delegate to TF2
     """
-    if  hasattr ( ROOT.TF2 , attr ) and hasattr  ( self , '_tf2' ) :
+    if  hasattr ( ROOT.TF2 , attr ) and hasattr  ( self , '_tf2' ) and self._tf2 :
         return getattr  ( self._tf2 , attr   )
     
-    raise AttributeError
+    raise AttributeError("Can't get attribute: %s" % attr )
 
 # =============================================================================
 ## helper function to delegate some methods/attributes to TF3
@@ -683,10 +746,10 @@ def _tf3_getattr_ ( self , attr ) :
     >>> f.SetLineColor(4) ## delegate to TF2
     >>> f.SetLineWidth(2) ## delegate to TF2
     """
-    if  hasattr ( ROOT.TF3 , attr ) and hasattr  ( self , '_tf3' ) :
+    if  hasattr ( ROOT.TF3 , attr ) and hasattr  ( self , '_tf3' ) and self._tf3 :
         return getattr  ( self._tf3 , attr   )
     
-    raise AttributeError
+    raise AttributeError("Can't get attribute: %s" % attr )
 
 
 from ostap.math.minimize   import sp_minimum_1D, sp_maximum_1D 
@@ -869,7 +932,7 @@ Ostap.Math.Positive      .__str__  = lambda s : _f_print_ ( s , 'Positive'      
 Ostap.Math.PositiveEven  .__str__  = lambda s : _f_print_ ( s , 'PositiveEven'  )
 Ostap.Math.Convex        .__str__  = lambda s : _f_print_ ( s , 'Convex'        ) 
 Ostap.Math.ConvexOnly    .__str__  = lambda s : _f_print_ ( s , 'ConvexOnly'    )
-Ostap.Math.Monotonic    .__str__  = lambda s : _f_print_ ( s , 'Monotonic'    )
+Ostap.Math.Monotonic     .__str__  = lambda s : _f_print_ ( s , 'Monotonic'    )
 Ostap.Math.FourierSum    .__str__  = lambda s : _f_print_ ( s , 'FourierSum'    )
 Ostap.Math.CosineSum     .__str__  = lambda s : _f_print_ ( s , 'CosineSum'     )
 
@@ -883,9 +946,18 @@ Ostap.Math.Positive      .__repr__ = lambda s : _f_print_ ( s , 'Positive'      
 Ostap.Math.PositiveEven  .__repr__ = lambda s : _f_print_ ( s , 'PositiveEven'  )
 Ostap.Math.Convex        .__repr__ = lambda s : _f_print_ ( s , 'Convex'        ) 
 Ostap.Math.ConvexOnly    .__repr__ = lambda s : _f_print_ ( s , 'ConvexOnly'    )
-Ostap.Math.Monotonic    .__repr__ = lambda s : _f_print_ ( s , 'Monotonic'    )
+Ostap.Math.Monotonic     .__repr__ = lambda s : _f_print_ ( s , 'Monotonic'    )
 Ostap.Math.FourierSum    .__repr__ = lambda s : _f_print_ ( s , 'FourierSum'    )
 Ostap.Math.CosineSum     .__repr__ = lambda s : _f_print_ ( s , 'CosineSum'     )
+
+
+Ostap.Math.LegendreSum2  .__repr__ = lambda s : "LegendreSum2(%d,%d)"       % ( s.nx() , s.ny() )
+Ostap.Math.LegendreSum3  .__repr__ = lambda s : "LegendreSum3(%d,%d,%d)"    % ( s.nx() , s.ny() , s.nz() )
+Ostap.Math.LegendreSum4  .__repr__ = lambda s : "LegendreSum4(%d,%d,%d,%d)" % ( s.nx() , s.ny() , s.nz() , s.nu() )
+
+Ostap.Math.LegendreSum2  .__str__  =  Ostap.Math.LegendreSum2  .__repr__
+Ostap.Math.LegendreSum3  .__str__  =  Ostap.Math.LegendreSum3  .__repr__
+Ostap.Math.LegendreSum4  .__str__  =  Ostap.Math.LegendreSum4  .__repr__
 
 
 # =============================================================================
@@ -937,15 +1009,18 @@ for model in ( Ostap.Math.BSpline2D           ,
                Ostap.Math.PS2DPol3Sym         ,
                Ostap.Math.ExpoPS2DPol         ,
                Ostap.Math.Expo2DPol           ,
-               Ostap.Math.Expo2DPolSym        ) :
+               Ostap.Math.Expo2DPolSym        ,
+               Ostap.Math.LegendreSum2        ) :
     
-    model . tf2 = _tf2_ 
-    model . tf  = _tf2_ 
-    model.__getattr__     = _tf2_getattr_
+    model . tf2  = _tf2_ 
+    model . tf   = _tf2_
+    model . draw = _f2_draw_ 
     model.sp_integrate    = sp_integrate_2D
     model.sp_integrate_2D = sp_integrate_2D
     model.sp_integrate_x  = sp_integrate_2Dx
     model.sp_integrate_y  = sp_integrate_2Dy
+    
+    model.__getattr__     = _tf2_getattr_
 
     if sp_minimum_2D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_2D
     if sp_maximum_2D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_2D
@@ -961,10 +1036,12 @@ for model in ( Ostap.Math.Bernstein3D    ,
                Ostap.Math.Bernstein3DMix ,
                Ostap.Math.Positive3D     ,
                Ostap.Math.Positive3DSym  ,
-               Ostap.Math.Positive3DMix  ) :
+               Ostap.Math.Positive3DMix  ,
+               Ostap.Math.LegendreSum3   ) :
     
-    model . tf3 = _tf3_ 
-    model . tf  = _tf3_ 
+    model . tf3  = _tf3_ 
+    model . tf   = _tf3_ 
+    model . draw = _f3_draw_ 
     model.sp_integrate    = sp_integrate_3D
     model.sp_integrate_x  = sp_integrate_3Dx
     model.sp_integrate_y  = sp_integrate_3Dy

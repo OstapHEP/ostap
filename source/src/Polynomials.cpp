@@ -248,7 +248,6 @@ double Ostap::Math::ChebyshevU::integral
   const double high ) const 
 { return _chebyshevU_int_ ( m_N , low , high ) ; }
 // ============================================================================
-// ============================================================================
 namespace 
 {
   // =========================================================================
@@ -272,14 +271,7 @@ namespace
     else if ( high < low ) 
     { return -_legendre_int_ ( N ,  high , low )  ; }
     //
-    const long double ihigh = 
-      Ostap::Math::legendre_value ( N + 1 , high ) * 1.0L - 
-      Ostap::Math::legendre_value ( N - 1 , high ) ;
-    const long double ilow  = 
-      Ostap::Math::legendre_value ( N + 1 , low  ) * 1.0L - 
-      Ostap::Math::legendre_value ( N - 1 , low  ) ;
-    //
-    return ( ihigh - ilow ) / ( 2 * N + 1 ) ;
+    return Ostap::Math::legendre_integral ( N , low , high ) ;
   }
   // ========================================================================== 
   /** evaluate the derivative for legendre polynomial
@@ -380,6 +372,59 @@ const std::vector<double>& Ostap::Math::Legendre::roots () const
   return s_rootmap.insert ( Roots::value_type ( m_N , rs ) ).first->second ;
 }
 // ============================================================================
+/*  update  the Legendre expansion by addition of one "event" with 
+ *  the given weight
+ *  @code
+ *  LegendreSum sum = ... ;
+ *  for ( auto x : .... ) { sum.fill ( x ) ; }
+ *  @endcode
+ */
+// ============================================================================
+bool 
+Ostap::Math::LegendreSum::fill 
+( const double x      , 
+  const double weight ) 
+{
+  // no update 
+  if ( x < m_xmin || x > m_xmax ) { return false ; }
+  else if ( s_zero ( weight )   ) { return true  ; }
+  // 
+  const double tt  =  t ( x ) ;
+  //
+  const long double w = weight * 2.0L / ( m_xmax - m_xmin ) ;
+  //
+  const unsigned short N = degree() ;
+  //
+  m_pars[0] += w * 0.5L         ;
+  if ( 0 == N ) { return true ; } //  RETURN 
+  //
+  m_pars[1] += w * tt * 1.5L ;
+  if ( 1 == N ) { return true ; } //  RETURN 
+  //
+  long double p0  = 1  ;
+  long double p1  = tt ;
+  long double p_i = 0  ;
+  //
+  for ( unsigned short i = 2 ; i <= N ; ++i ) 
+  {
+    p_i        = ( ( 2 * i - 1 ) * tt * p1  - ( i - 1 ) * p0 ) / i ;
+    m_pars[i] += w * p_i * ( i + 0.5L ) ;
+    p0         = p1  ;
+    p1         = p_i ;
+  }
+  //
+  return true ;
+}
+// ============================================================================
+/// Associated Legendre polynomials/functions
+// ============================================================================
+Ostap::Math::PLegendre::PLegendre 
+( const unsigned int L , 
+  const unsigned int M ) 
+  : m_L ( L ) 
+  , m_M ( L )
+{}
+// ============================================================================
 namespace 
 {
   // ==========================================================================
@@ -409,6 +454,10 @@ namespace
   // ==========================================================================
 } 
 // ============================================================================
+// constructor
+// ============================================================================
+Ostap::Math::Hermite::Hermite ( const unsigned int N ) : m_N ( N ) {} 
+// ============================================================================
 // get integral between low and high 
 // ============================================================================
 double Ostap::Math::Hermite::integral    
@@ -416,72 +465,36 @@ double Ostap::Math::Hermite::integral
   const double high ) const 
 { return  _hermite_int_ ( m_N , low ,  high ) ; }
 // ============================================================================
-// Base class for all polynomial sums 
+// PARAMETERS
 // ============================================================================
-// constructor from polynomial degree
+// constructor from number of parameters 
 // ============================================================================
-Ostap::Math::PolySum::PolySum ( const unsigned short degree ) 
-  : m_pars ( degree + 1 , 0 ) 
+Ostap::Math::Parameters::Parameters 
+( const unsigned int          np ) 
+  : m_pars ( np , 0.0 ) 
 {}
 // ============================================================================
-// constructor from vector of parameters 
+// constructor from  the list of parameters 
 // ============================================================================
-Ostap::Math::PolySum::PolySum ( const std::vector<double>& pars ) 
-  : m_pars ( pars  ) 
-{ if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
-// ============================================================================
-// constructor from vector of parameters 
-// ============================================================================
-Ostap::Math::PolySum::PolySum ( std::vector<double>&& pars ) 
-  : m_pars ( std::forward<std::vector<double> >( pars ) )
-{ if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
-// ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::Math::PolySum::PolySum 
-( const Ostap::Math::PolySum&  right ) 
-  : m_pars ( right.m_pars ) 
+Ostap::Math::Parameters::Parameters 
+( const std::vector<double>&  pars   ) 
+  : m_pars ( pars ) 
 {}
 // ============================================================================
-// move constructor 
+// constructor from  the list of parameters 
 // ============================================================================
-Ostap::Math::PolySum::PolySum 
-(       Ostap::Math::PolySum&& right ) 
-  : m_pars ( std::move ( right.m_pars ) )  
+Ostap::Math::Parameters::Parameters 
+(       std::vector<double>&& pars   ) 
+  : m_pars ( std::forward<std::vector<double> > ( pars ) ) 
 {}
-// ============================================================================
-// swap two objects 
-// ============================================================================
-void Ostap::Math::PolySum::swap (  Ostap::Math::PolySum& right ) 
-{ std::swap ( m_pars ,  right.m_pars ); }
-// ============================================================================
-// copy assignement  
-// ============================================================================
-Ostap::Math::PolySum& 
-Ostap::Math::PolySum::operator=( const Ostap::Math::PolySum&  right ) 
-{
-  if ( &right == this ) { return *this ; }
-  m_pars = right.m_pars ;
-  return *this ;
-}
-// ============================================================================
-// move assignement 
-// ============================================================================
-Ostap::Math::PolySum& 
-Ostap::Math::PolySum::operator=(      Ostap::Math::PolySum&& right ) 
-{
-  if ( &right == this ) { return *this ; }
-  m_pars = std::move ( right.m_pars ) ;
-  return *this ;
-}
 // ============================================================================
 // all zero ?
 // ============================================================================
-bool Ostap::Math::PolySum::zero  () const { return s_vzero ( m_pars ) ; }
+bool Ostap::Math::Parameters::zero  () const { return s_vzero ( m_pars ) ; }
 // ============================================================================
 // set k-parameter
 // ============================================================================
-bool Ostap::Math::PolySum::setPar 
+bool Ostap::Math::Parameters::setPar 
 ( const unsigned short k , const double value ) 
 {
   if ( m_pars.size() <= k            ) { return false ; }
@@ -490,25 +503,66 @@ bool Ostap::Math::PolySum::setPar
   return true ;
 }
 // ============================================================================
+// swap two objects 
+// ============================================================================
+void Ostap::Math::Parameters::swap (  Ostap::Math::Parameters& right ) 
+{ std::swap ( m_pars ,  right.m_pars ); }
+// ============================================================================
+// simple  manipulations with parameters: scale it! 
+// ============================================================================
+// Ostap::Math::Parameters&
+// Ostap::Math::Parameters::operator*=( const double a ) 
+// {
+//  Ostap::Math::scale ( m_pars , a ) ;
+//  return *this ;
+// }
+// ============================================================================
+// simple  manipulations with parameters scale it! 
+// ============================================================================
+// Ostap::Math::Parameters&
+// Ostap::Math::Parameters::operator/=( const double a ) 
+// {
+//  Ostap::Math::scale ( m_pars , 1.0L/a ) ;
+//  return *this ;
+// } 
+// ============================================================================
+// Base class for all polynomial sums 
+// ============================================================================
+// constructor from polynomial degree
+// ============================================================================
+Ostap::Math::PolySum::PolySum ( const unsigned short degree ) 
+  : Parameters ( degree + 1 ) 
+{ if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
+// ============================================================================
+// constructor from vector of parameters 
+// ============================================================================
+Ostap::Math::PolySum::PolySum ( const std::vector<double>& pars ) 
+  : Parameters ( pars ) 
+{ if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
+// ============================================================================
+// constructor from vector of parameters 
+// ============================================================================
+Ostap::Math::PolySum::PolySum ( std::vector<double>&& pars ) 
+  : Parameters ( std::forward<std::vector<double> >( pars ) )
+{ if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
+// ============================================================================
 // simple  manipulations with polynoms: scale it! 
 // ============================================================================
-Ostap::Math::PolySum&
-Ostap::Math::PolySum::operator*=( const double a ) 
-{
-  for ( std::vector<double>::iterator it = m_pars.begin() ; m_pars.end() != it ; ++it ) 
-  {  (*it ) *= a ; }
-  return *this ;
-}
+// Ostap::Math::PolySum&
+// Ostap::Math::PolySum::operator*=( const double a ) 
+// {
+//  Parameters::operator*=( a ) ;
+//  return *this ;
+// }
 // ============================================================================
 // simple  manipulations with polynoms: scale it! 
 // ============================================================================
-Ostap::Math::PolySum&
-Ostap::Math::PolySum::operator/=( const double a ) 
-{
-  for ( std::vector<double>::iterator it = m_pars.begin() ; m_pars.end() != it ; ++it ) 
-  {  (*it ) /= a ; }
-  return *this ;
-}
+// Ostap::Math::PolySum&
+// Ostap::Math::PolySum::operator/=( const double a ) 
+// {
+//  Parameters::operator/=( a ) ;
+//  return *this ;
+// }
 // ============================================================================
 /* Clenshaw algorithm for summation of Chebyshev polynomials 
  *  \f$ f(x) = \sum_i p_i T_i(x)\f$
@@ -652,7 +706,7 @@ bool Ostap::Math::affine_transform
   { result = input ;                  return true  ; } // trivial transformation 
   //
   result.resize ( input.size() ) ;
-  std::fill ( result.begin() , result.end() , 0 ) ;
+  std::fill ( result.begin() , result.end () , 0 ) ;
   //
   for ( unsigned int i = 0 ; i < input.size() ; ++i ) 
   { 

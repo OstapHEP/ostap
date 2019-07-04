@@ -1350,7 +1350,7 @@ def _h2_iteritems_ ( h2 ) :
 
     ay = h2.GetYaxis()
     sy = ay.GetNbins()
-    
+
     for ix in range( 1 , sx + 1 ) :  
         x   =       ax.GetBinCenter ( ix )
         xe  = 0.5 * ax.GetBinWidth  ( ix )
@@ -2054,7 +2054,7 @@ def objectAsFunction ( obj ) :
         
         val  = float  ( obj ) 
         func = lambda x,*y : VE ( val , 0 )
-        return func                                     ## RETURN
+        return func                                      ## RETURN
     
     elif isinstance ( obj  ,    VE ) :
         
@@ -2062,23 +2062,24 @@ def objectAsFunction ( obj ) :
         func = lambda x,*y : val
         return func                                      ## RETURN
     
+    elif isinstance ( obj ,   ROOT.TF3 ) :
+        
+        f3   = obj
+        func = lambda x,y,z,*t : VE ( f3 ( float ( x ) , float ( y ) , float ( z ) , 0 ) )
+        return func                                      ## RETURN 
+
+    elif isinstance ( obj ,   ROOT.TF2 ) :
+        
+        f2   = obj
+        func = lambda x , y , *z   : VE ( f2 ( float ( x ) , float ( y ) , 0 ) )
+        return func                                      ## RETURN 
+
     elif isinstance ( obj ,   ROOT.TF1 ) :
         
         f1   = obj
         func = lambda x,*y     : VE ( f1 ( float ( x ) , 0 ) )
         return func                                      ## RETURN 
 
-    elif isinstance ( obj ,   ROOT.TF2 ) :
-        
-        f2   = obj
-        func = lambda x,y,*z   : VE ( f2 ( float ( x ) , float ( y ) , 0 ) )
-        return func                                      ## RETURN 
-
-    elif isinstance ( obj ,   ROOT.TF3 ) :
-        
-        f3   = obj
-        func = lambda x,y,z,*t : VE ( f3 ( float ( x ) , float ( y ) , float ( z ) , 0 ) )
-        return func                                      ## RETURN 
 
     ## the original stuff 
     return obj
@@ -2838,14 +2839,15 @@ def _h2_ioper_ ( h1 , h2 , oper ) :
     #
     f2 = objectAsFunction ( h2 )
     # 
-    for ix1,iy1,x1,y1,z1 in h1.items() :
+    for ix1 , iy1 , x1 , y1 , z1 in h1.items() :
         #
         h1.SetBinContent ( ix1 , iy1 , 0 ) 
         h1.SetBinError   ( ix1 , iy1 , 0 )
         #
         z2 = f2 ( x1.value() , y1.value() ) 
         #
-        v  = VE ( oper ( z1 , z2 ) ) 
+        v  = VE ( oper ( z1 , z2 ) )
+
         #
         if not v.isfinite() : continue 
         #

@@ -107,6 +107,8 @@ add_library(ostap SHARED src/format.cpp
                          src/NStatEntity.cpp
                          src/Notifier.cpp
                          src/OstapDataFrame.cpp
+                         src/Parameterization.cpp
+                         src/Params.cpp
                          src/Peaks.cpp
                          src/PDFs.cpp
                          src/PDFs2D.cpp

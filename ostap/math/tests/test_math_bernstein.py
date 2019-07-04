@@ -26,6 +26,7 @@ def test_solve ():
     """Test solution of equation  B(x) = c 
     """
 
+    logger.info ('test_solve') 
     # 1) construct function with known roots
     
     ## roots in [0,1]
@@ -52,6 +53,7 @@ def test_nroots ():
     """Check number of roots using Sturm' sequence 
     """
 
+    logger.info ('test_nroots') 
     # 1) construct function with known roots
     
     ## roots in [0,1]
@@ -84,6 +86,9 @@ def test_nroots ():
 def test_interpolation ():
     """Test bernstein interpolation
     """
+
+    logger.info ('test_interpolation')
+    
     from math import sin,pi, sqrt
 
     fun = lambda x  : sin(2*pi*x) 
@@ -106,6 +111,7 @@ def test_division ():
     """Test polynomial division
     """
 
+    logger.info ('test_division')
     # 1) construct function with known roots
     
     ## roots in [0,1]
@@ -140,6 +146,7 @@ def check_equality ( a ,  b , message = '' , tolerance = 1.e-7 ) :
 ## test for elevate/reduce
 def test_elevatereduce () :
 
+    logger.info ('test_elevatereduce')
     BP = Ostap.Math.Bernstein
     
     b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
@@ -163,6 +170,7 @@ def test_elevatereduce () :
 ## test  for polynomials 
 def test_poly () :
     
+    logger.info ('test_poly')
     BP = Ostap.Math.Bernstein
     
     # 1) create & evaluate the polynom 
@@ -195,6 +203,7 @@ def test_poly () :
 def test_even () :
 
     
+    logger.info ('test_even')
     BP = Ostap.Math.BernsteinEven
     
     
@@ -218,6 +227,8 @@ def test_even () :
 ## test  for monotonic polynomial 
 def test_monotonic () :
     
+    logger.info ('test_monothonic')
+
     ## 8-9) check for Monotonic 
     BPM = Ostap.Math.Monotonic
     
@@ -261,6 +272,7 @@ def test_convex () :
     """Test for Convex positive polynmomials 
     """
     
+    logger.info ('test_convex')
     BPC = Ostap.Math.Convex
     
     b_11 = BPC ( 5 , 0 , 2 , True  , True  )
@@ -307,6 +319,7 @@ def test_convexonly () :
     """Test for Convex-Only positive polynmomials 
     """
     
+    logger.info ('test_convexonly')
     BPC = Ostap.Math.ConvexOnly
     
     b_11 = BPC ( 5 , 0 , 2 , True  )
@@ -345,6 +358,8 @@ def test_integration () :
     """Test for polynomial interation
     """
     
+    logger.info ('test_integration')
+    
     BP = Ostap.Math.Bernstein
     
     b = BP ( 5 , 0 , 2  )
@@ -374,6 +389,8 @@ def test_transformation () :
     """Test for transformation
     """
     
+    logger.info ('test_transformation')
+
     BP = Ostap.Math.Bernstein
     MS = Ostap.Math.Polynomial   ## monomial sum 
     CS = Ostap.Math.ChebyshevSum ## chebyshev sum 
@@ -418,7 +435,7 @@ def test_transformation () :
 
 # =============================================================================
 if '__main__' == __name__ :
-        
+
     test_poly           ()
     test_even           ()
     test_monotonic      ()
@@ -431,7 +448,7 @@ if '__main__' == __name__ :
     test_elevatereduce  ()
     test_integration    ()
     test_transformation ()
-    
+
 # =============================================================================
 # The END 
 # =============================================================================

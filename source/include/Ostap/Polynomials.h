@@ -13,6 +13,7 @@
 // Ostap 
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Clenshaw.h"
 // ============================================================================
 /** @file Ostap/Polynomials.h
  *  various polinomials 
@@ -38,18 +39,18 @@ namespace Ostap
     // ========================================================================
     // Chebyshev 
     // ========================================================================
-    namespace details
+    namespace detail
     {
       // ======================================================================
       /** Evaluate Chebyshev polynom using the recurrence relation, 
-       *  based on the fictive summation of the Legendre series 
+       *  based on the fictive summation of the Chebyshev series 
        *  (0,0,...,0,1) using Clenshaw algorithm 
        *  @param N (input) the order of Chebyshev polynomial
        *  @param x (input) the point
        *  @return the value of Chebyshev polynomial of order <code>N</code> at point <code>x</code>
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2019-06-24
-       *  @see Ostap::Math::details::chebyshev_value
+       *  @see Ostap::Math::detail::chebyshev_value
        */
       template <unsigned int N, typename TYPE>
       struct   Chebyshev_eval_ ;
@@ -69,10 +70,11 @@ namespace Ostap
         { return x * b1 - b2 ; }
       } ;
       // ======================================================================
-      constexpr inline long double chebyshev_eval_ ( const unsigned int N  , 
-                                                     const long double  x  , 
-                                                     const long double  b1 , 
-                                                     const long double  b2 )
+      constexpr inline long double chebyshev_eval_
+      ( const unsigned int N  , 
+        const long double  x  , 
+        const long double  b1 , 
+        const long double  b2 )
       {
         return 
           0 == N ? x * b1 - b2 : chebyshev_eval_ 
@@ -89,14 +91,14 @@ namespace Ostap
      *  @return the value of Chebyshev polynomial of order <code>N</code> at point <code>x</code>
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-06-24
-     *  @see Ostap::Math::details::chebyshev_eval_ 
+     *  @see Ostap::Math::detail::chebyshev_eval_ 
      */
     inline double chebyshev_value ( const unsigned int N , const double x ) 
     {
       return 
         0 == N ? 1 : 
         1 == N ? x :
-        details::chebyshev_eval_ ( N - 1 , x , 1 , 0 ) ; 
+        detail::chebyshev_eval_ ( N - 1 , x , 1 , 0 ) ; 
     }
     // ========================================================================
     //  Chebyshev 1st kind 
@@ -178,7 +180,7 @@ namespace Ostap
       //   2 * std::pow ( Chebyshev_<N/2>::evaluate ( x ) , 2 )                    - 1 :
       //   2 * Chebyshev_<N/2>::evaluate ( x ) * Chebyshev_<N/2+1>::evaluate ( x ) - x ;
       // optimized recursion 
-      return details::Chebyshev_eval_<N-1,long double>::evaluate ( x , 1 , 0 ) ;
+      return detail::Chebyshev_eval_<N-1,long double>::evaluate ( x , 1 , 0 ) ;
     }
     // ========================================================================
     /// get the array of roots 
@@ -470,7 +472,7 @@ namespace Ostap
     double legendre_root ( const unsigned short k , 
                            const unsigned short n ) ;    
     // ========================================================================
-    namespace details
+    namespace detail
     {
       // ======================================================================
       /** Evaluate Legendre polynom using the recurrence relation, 
@@ -481,7 +483,7 @@ namespace Ostap
        *  @return the value of Legendre polynomial of order <code>N</code> at point <code>x</code>
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2019-06-24
-       *  @see Ostap::Math::details::legendre_value
+       *  @see Ostap::Math::detail::legendre_value
        */
       template <unsigned int N, typename TYPE>
       struct   Legendre_eval_ ;
@@ -501,10 +503,11 @@ namespace Ostap
         { return x * b1 - b2 / 2 ; }
       };
       // ============================================================================
-      constexpr inline long double legendre_eval_ ( const unsigned int N  , 
-                                                    const long double  x  , 
-                                                    const long double  b1 , 
-                                                    const long double  b2 )
+      constexpr inline long double legendre_eval_
+      ( const unsigned int N  , 
+        const long double  x  , 
+        const long double  b1 , 
+        const long double  b2 )
       {
         return 
           0 == N ? x * b1 - b2 / 2 : legendre_eval_ 
@@ -521,15 +524,66 @@ namespace Ostap
      *  @return the value of Legendre polynomial of order <code>N</code> at point <code>x</code>
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-06-24
-     *  @see Ostap::Math::details::Legendre_eval_
-     *  @see Ostap::Math::details::legendre_eval_
+     *  @see Ostap::Math::detail::Legendre_eval_
      */
     inline double legendre_value ( const unsigned int N , const double x ) 
     {
       return 
         0 == N ? 1 : 
         1 == N ? x :
-        details::legendre_eval_ ( N - 1 , x , 1 , 0 ) ; 
+        detail::legendre_eval_ ( N - 1 , x , 1 , 0 ) ; 
+    }
+    // ========================================================================
+    /** calculate sequence of Legendre polynomials \f$ a_i = P_i(x) \f$  
+     *  @param begin start  of the sequece
+     *  @param end   end  of the sequence
+     *  @param x     x-value 
+     */
+    template <class ITERATOR>
+    inline void legendre_values
+    ( ITERATOR          begin, 
+      ITERATOR          end  ,
+      const long double x    )
+    {
+      if ( begin == end ) { return ; }
+      long double p_0 = 1 ;
+      *begin = p_0 ; ++begin;
+      if ( begin == end ) { return ; }
+      long double p_1 = x ;
+      *begin = p_1 ; ++begin;
+      if ( begin == end ) { return ; }
+      long double p_i = 0 ;
+      unsigned int  i = 2 ;
+      while ( begin != end ) 
+      {
+        //
+        p_i    =  ( ( 2 * i - 1 ) * x * p_1  - ( i - 1 ) * p_0 ) / i ;
+        p_0    = p_1 ;
+        p_1    = p_i ;
+        //
+        *begin = p_i ;
+        ++begin ;
+        ++i     ;
+      }
+    } 
+    // ========================================================================
+    /** calculate the integral for Legendre polynomial
+     *  \f$ \int_{x_{low}}^{x_{high}}P_N(x)\deriv x \f$ 
+     *  @param N the order/degree of Legendre polynomial
+     *  @param xlow  the low  edge 
+     *  @param xhigh the high edge 
+     *  @return the integral
+     */
+    inline long double legendre_integral 
+    ( const unsigned int N     , 
+      const long double  xlow  , 
+      const long double  xhigh ) 
+    {
+      return 
+        0 == N ?       xhigh - xlow                      :
+        0 == 1 ? 0.5*( xhigh - xlow ) * ( xhigh + xlow ) :
+        ( detail::legendre_eval_( N - 2 , xhigh , -1 + ( 2 * N - 1 ) * xhigh * xhigh / N , xhigh ) -
+          detail::legendre_eval_( N - 2 , xlow  , -1 + ( 2 * N - 1 ) * xlow  * xlow  / N , xlow  ) ) / ( N + 1 ) ;
     }
     // ========================================================================
     //  Legendre 
@@ -600,7 +654,7 @@ namespace Ostap
       // return ( ( 2 * N - 1 ) * x * Legendre_<N-1>::evaluate ( x )  - 
       // (     N - 1 )     * Legendre_<N-2>::evaluate ( x ) ) / N ;
       // optimized recursive 
-      return details::Legendre_eval_<N-1,long double>::evaluate ( x , 1 , 0 ) ;
+      return detail::Legendre_eval_<N-1,long double>::evaluate ( x , 1 , 0 ) ;
     }
     // ========================================================================
     /// get the array of roots 
@@ -613,20 +667,39 @@ namespace Ostap
       return s_roots ;
     }
     // =======================================================================
-    /// calculte the derivative 
+    /// calculate the derivative 
     template <unsigned int N>
     inline double Legendre_<N>::derivative ( const double x ) 
     {
-      static const Ostap::Math::Equal_To<double> s_equal {} ;
-      return 
-        x >  0.999 && s_equal ( x ,  1 ) ? 0.5 * N * ( N + 1 )                      :
-        x < -0.999 && s_equal ( x , -1 ) ? 0.5 * N * ( N + 1 ) * ( N % 2 ? 1 : -1 ) :
-        N * ( x * Legendre_<N>::evaluate ( x ) - Legendre_<N-1>::evaluate ) / ( x * x - 1 ) ;
+      // /// 1) naive recursive algorithm, not safe when |x| is  close to 1 
+      // static const Ostap::Math::Equal_To<double> s_equal {} ;
+      // return 
+      //   x >  0.999 && s_equal ( x ,  1 ) ? 0.5 * N * ( N + 1 )                      :
+      //   x < -0.999 && s_equal ( x , -1 ) ? 0.5 * N * ( N + 1 ) * ( N % 2 ? 1 : -1 ) :
+      //   N * ( x * Legendre_<N>::evaluate ( x ) - Legendre_<N-1>::evaluate ) / ( x * x - 1 ) ;
+      //
+      // /// 2) the recursive algorithm that is safe for |x| close to 1 
+      // return 
+      //   N * Legendre_<N-1>::evaluate   ( x ) + 
+      //   x * Legendre_<N-1>::derivative ( x ) ;
+      //
+      /// 3) and this algorithm is much faster (linear):
+      auto ak = []  ( const unsigned int k )  -> unsigned int 
+        { return (k+N)%2 ? 2*k+1 : 0 ; };
+      auto alpha = [] ( const unsigned int k , const long double    y    ) -> long double 
+        { return (2*k+1)*y/(k+1) ; } ;
+      auto beta  = [] ( const unsigned int k , const long double /* y */ ) -> long double 
+        { return -1.0L*k*1.0L/(k+1) ; } ;
+      auto phi0  = [] ( const long double /* y */ ) -> long double { return 1 ; } ;
+      auto phi1  = [] ( const long double    y    ) -> long double { return y ; } ;
+      //
+      return Ostap::Math::Clenshaw::sum 
+        ( x  , N-1  , ak , alpha , beta , phi0 , phi1 );
     }
     // ========================================================================
     // Hermite
     // ========================================================================
-    namespace details
+    namespace detail
     {
       // ======================================================================
       /** Evaluate Hermite  polynom using the recurrence relation, 
@@ -637,7 +710,7 @@ namespace Ostap
        *  @return the value of Chebyshev polynomial of order <code>N</code> at point <code>x</code>
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2019-06-24
-       *  @see Ostap::Math::details::hermite_value
+       *  @see Ostap::Math::detail::hermite_value
        */
       template <unsigned int N, typename TYPE>
       struct   Hermite_eval_ ;
@@ -657,10 +730,11 @@ namespace Ostap
         { return x * b1 - b2 ; }
       } ;
       // ======================================================================
-      constexpr inline long double hermite_eval_ ( const unsigned int N  , 
-                                                   const long double  x  , 
-                                                   const long double  b1 , 
-                                                   const long double  b2 )
+      constexpr inline long double hermite_eval_
+      ( const unsigned int N  , 
+        const long double  x  , 
+        const long double  b1 , 
+        const long double  b2 )
       {
         return 
           0 == N ? x * b1 - b2 : hermite_eval_ 
@@ -677,14 +751,14 @@ namespace Ostap
      *  @return the value of Hermite polynomial of order <code>N</code> at point <code>x</code>
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-06-24
-     *  @see Ostap::Math::details::hermite_eval_ 
+     *  @see Ostap::Math::detail::hermite_eval_ 
      */
     inline double hermite_value ( const unsigned int N , const double x ) 
     {
       return 
         0 == N ? 1 : 
         1 == N ? x :
-        details::hermite_eval_ ( N - 1 , x , 1 , 0 ) ; 
+        detail::hermite_eval_ ( N - 1 , x , 1 , 0 ) ; 
     }
     // ========================================================================
     // Hermite
@@ -743,8 +817,204 @@ namespace Ostap
       // naive recursion 
       // return x * Hermite_<N-1>::evaluate ( x ) - ( N - 1 ) * Hermite_<N-2>::evaluate ( x ) ; 
       // optimized recursion 
-      return details::Hermite_eval_<N-1,long double>::evaluate ( x , 1 , 0 );
+      return detail::Hermite_eval_<N-1,long double>::evaluate ( x , 1 , 0 );
     }
+    // ========================================================================
+    // Associated Legendre functions 
+    // ========================================================================
+    namespace detail
+    {
+      // ======================================================================
+      /// evaluate normalized assiciated Legendre polynomials/functions
+      template <unsigned int L, unsigned int M , typename = void>
+      class PLegendre_helper_ ;
+      // 
+      template <unsigned int L, unsigned int M>
+      class PLegendre_helper_<L,M,typename std::enable_if<L==0&&M==0>::type>
+      {
+      public : 
+        inline double operator()      ( const double    x ) const { return evaluate ( x ) ; }
+        static inline double evaluate ( const double /* x */ )    
+        {
+          static const long double s_P00 = std::sqrt ( 1.0L / ( 4 * M_PIl ) ) ;
+          return s_P00 ; 
+        }
+      };
+      //
+      template <unsigned int L, unsigned int M>
+      class PLegendre_helper_<L,M,typename std::enable_if<L==1&&M==1>::type>
+      {
+      public : 
+        inline double operator()      ( const double x ) const { return evaluate ( x ) ; }
+        static inline double evaluate ( const double x )    
+        { 
+          static const long double s_n = - std::sqrt( 3.0L / 2.0L ) * 
+            PLegendre_helper_<0,0>::evaluate ( 0 ) ;
+          return s_n * std::sqrt ( 1.0L - x * x ) ;
+        }
+      };
+      //
+      template <unsigned int L, unsigned int M>
+      class PLegendre_helper_<L,M,typename std::enable_if<L==M&&L!=0&&L!=1>::type>
+      {
+      public : 
+        inline double operator()      ( const double x ) const { return evaluate ( x ) ; }
+        static inline double evaluate ( const double x )    
+        { 
+          static const long double s_n = 
+            std::sqrt (  ( 2 * M + 1 ) * ( 2 * M - 1 ) * 0.25L / ( M * ( M - 1 ) ) ) ;
+          return s_n * ( 1.0L -  x * x ) * PLegendre_helper_<L-2,L-2>::evaluate ( x ) ;
+        }
+      };
+      //
+      template <unsigned int L, unsigned int M>
+      class PLegendre_helper_<L,M,typename std::enable_if<L==M+1>::type>
+      {
+      public : 
+        inline double operator()      ( const double x ) const { return evaluate ( x ) ; }
+        static inline double evaluate ( const double x )    
+        { 
+          static const long double s_n = std::sqrt ( 2 * M + 3.0L ) ;
+          return s_n * x * PLegendre_helper_<M,M>::evaluate ( x ) ;
+        }
+      };
+      //
+      template <unsigned int L, unsigned int M>
+      class PLegendre_helper_<L,M,typename std::enable_if<M+2<=L>::type>
+      {
+      public : 
+        inline double operator()      ( const double x ) const { return evaluate ( x ) ; }
+        static inline double evaluate ( const double x )    
+        {
+          //
+          long double p0 = PLegendre_helper_<M  ,M>::evaluate ( x ) ;
+          long double p1 = PLegendre_helper_<M+1,M>::evaluate ( x ) ;
+          long double pN = 0 ;
+          //
+          unsigned int N = M + 2 ;
+          while ( L >= N ) 
+          {
+            pN = a ( N ) * x * p1 - b ( N ) * p0 ;
+            p0 = p1 ;
+            p1 = pN ;
+            ++N ;
+          }
+          //
+          return pN ;
+        }
+      private :
+        // ====================================================================
+        static inline long double a ( const unsigned int J ) 
+        {
+          auto   afun = [] ( const unsigned int K ) -> long  double 
+            {
+              const unsigned int I = K + M + 1 ;
+              return std::sqrt ( ( 2 * I - 1 ) * 1.0L * ( 2 * I + 1 ) / ( I * I - M * M ) ) ;
+            } ;
+          static const std::array<long double, L-M> s_a = 
+            detail::make_array ( afun , std::make_index_sequence<L-M>() ) ;
+          return s_a [ J - ( M + 1 ) ] ;
+        }
+        static inline long double b ( const unsigned int J ) 
+        { 
+          auto   bfun = [] ( const unsigned int K ) -> long  double 
+            { 
+              const unsigned int I = K + M + 2 ;
+              return  PLegendre_helper_<L,M>::a(I)/PLegendre_helper_<L,M>::a(I-1) ;
+            } ;
+          static const std::array<long double, L-M-1> s_b = 
+            detail::make_array ( bfun , std::make_index_sequence<L-M-1>() ) ;
+          return s_b [ J - ( M + 2 ) ] ;
+        }
+        // ====================================================================
+      };
+      // =====================================================================
+      /** evaluate the normalized associated legendre polynomials/function 
+       *  \$ P^{m}_{l}(z)\$ with normalization suitbale for spherical harmonics :
+       *  \f$ \int_{-1}{+1}P^m_l(x)P^m_{l}(x)\deriv x = \frac{1}{2\pi}\f$
+       */
+      inline long double plegendre_eval_ 
+      ( const unsigned int L , 
+        const unsigned int M , 
+        const long double  x ) 
+      {
+        //
+        if ( M  >  L ){ return 0 ; }
+        else if ( L == 0 && M == 0   ) { return PLegendre_helper_<0,0>::evaluate ( x ) ; }
+        else if ( L == 1 && M == 1   ) { return PLegendre_helper_<1,1>::evaluate ( x ) ; }
+        else if ( L == M ) 
+        {
+          long double result = ( 0 == L%2 ) ? 
+            PLegendre_helper_<0,0>::evaluate ( x ) :
+            PLegendre_helper_<1,1>::evaluate ( x ) ;
+          const unsigned int L0 = ( 0 == L%2 ) ? 2 : 3 ;
+          for ( unsigned int l  = L0 ; l <= M ; l += 2 ) 
+          {
+            result *= ( 1.0L - x * x ) *   
+              std::sqrt ( ( l + 0.5L ) * ( l - 0.5L ) / ( ( l - 1.0L ) * l ) ) ;
+          } 
+          return result ;
+        }
+        else if ( L == M && 0 == L%2 ) 
+        {
+          long double result = PLegendre_helper_<0,0>::evaluate ( x ) ;
+          for ( unsigned int l = 2;  l <= M ; l += 2 ) 
+          {
+            result *= ( 1.0L - x * x ) *   
+              std::sqrt ( ( l + 0.5L ) * ( l - 0.5L ) / ( ( l - 1.0L ) * l ) ) ;
+          } 
+          return result ;
+        }
+        else if ( L == M + 1 ) 
+        { return std::sqrt ( 2 * M + 3.0L ) * x * plegendre_eval_ ( M , M , x ) ; }
+        //
+        /// regular case 
+        //
+        long double p0 = plegendre_eval_ ( M     , M , x ) ;
+        long double p1 = plegendre_eval_ ( M + 1 , M , x ) ;
+        // long double p1 = std::sqrt ( 2 * M + 3.0L ) * x * p0 ; 
+        long double pN = 0 ;
+        //
+        auto afun = []      ( const unsigned int J , const unsigned int M ) -> long double 
+          { return std::sqrt ( ( 2 * J - 1 ) * 1.0L * ( 2 * J + 1 ) / ( J * J - M * M ) ) ; } ;
+        auto bfun = [&afun] ( const unsigned int J , const unsigned int M ) -> long double 
+          { return afun ( J , M ) / afun ( J - 1 , M ) ; } ;
+        //
+        unsigned int N = M + 2 ;
+        while ( L >= N ) 
+        {
+          pN = afun ( N , M ) * x * p1 - bfun ( N , M ) * p0 ;
+          p0 = p1 ;
+          p1 = pN ;
+          ++N ;
+        } 
+        //
+        return pN ;
+      } ;
+      // ======================================================================
+    }
+    // ========================================================================
+    /** @class PLegendre_
+     *  The normalized associated Legendre polynomials/functions 
+     *  Normalization is suitable for usage of them for the spherical harmonics.
+     *  @see https://arxiv.org/abs/1410.1748
+     *  \f$ \int _{-1}^{1} P_l^m(x)P_l^{m}(x) \deriv x = \frac{1}{2\pi}\f$  
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-06-27
+     */
+    template  <unsigned int L , unsigned int M>
+    class PLegendre_ : public detail::PLegendre_helper_<L,M>
+    { static_assert ( M <= L , "PLegendre_ : M must me  M <= L" ); }; 
+    // =====================================================================
+    /** evaluate the normalized associated legendre polynomials/function 
+     *  \$ P^{m}_{l}(z)\$ with normalization suitbale for spherical harmonics :
+     *  \f$ \int_{-1}{+1}P^m_l(x)P^m_{l}(x)\deriv x = \frac{1}{2\pi}\f$
+     */
+    inline double plegendre_value
+    ( const unsigned int L , 
+      const unsigned int M , 
+      const double       x ) 
+    { return  detail::plegendre_eval_ ( L  , M , x ) ; }
     // ========================================================================
     // Non-templated 
     // ========================================================================
@@ -830,6 +1100,44 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Hermite
+     *  evaluate the Hermite polynomials
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2011-04-19
+     */
+    class Hermite
+    {
+    public :
+      // ======================================================================
+      /// constructor
+      Hermite ( const unsigned int N = 0  ) ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the polynomial
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline double evaluate   ( const double x ) const 
+      { return hermite_value ( m_N , x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      unsigned int degree () const { return m_N ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// derivative 
+      double derivative  ( const double x ) const 
+      { return 0 == m_N ? 0 : m_N * hermite_value ( m_N - 1 , x ) ; }
+      // ======================================================================
+      /// get integral between low and high 
+      double integral    ( const double low  , const double high ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      unsigned int m_N ;
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Legendre
      *  evaluate the Legendre polynomials
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -880,41 +1188,40 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Hermite
-     *  evaluate the Hermite polynomials
+    /** @class PLegendre
+     *  evaluate the associative Legendre polynomials/functions 
+     *  \f$P^{m}_{l}(x)\f$
+     *  Normalization is sutable for spherical harmonics 
+     *  \f$ \int_{-1}^{+1} P^{m}_{l}(x)P^{m}_{l}(x) \deriv x = \frac{1}{2\pi} \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class Hermite 
+    class PLegendre
     {
     public :
       // ======================================================================
       /// constructor
-      Hermite ( const unsigned int N = 0 ) : m_N ( N ) {}
+      PLegendre ( const unsigned int L = 0 , 
+                  const unsigned int M = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// evaluate the polynomial
       inline double operator() ( const double x ) const { return   evaluate ( x ) ; }
       inline double evaluate   ( const double x ) const 
-      { return hermite_value ( m_N , x ) ; }
+      { return plegendre_value ( m_L , m_M , x ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      unsigned int degree () const { return m_N ; }
+      unsigned int L () const { return m_L ; }
+      unsigned int M () const { return m_M ; }
+      unsigned int l () const { return m_L ; }
+      unsigned int m () const { return m_M ; }
       // ======================================================================
     public:
       // ======================================================================
-      /// derivative 
-      double derivative ( const double x    ) const 
-      { return 0 == m_N ? 0 : m_N * hermite_value ( m_N - 1 , x ) ; }
-      // ======================================================================
-      /// get integral between low and high 
-      double integral   ( const double low  , const double high ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      unsigned int m_N ;
+      unsigned int m_L ;
+      unsigned int m_M ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -937,41 +1244,37 @@ namespace Ostap
     /// forward declarations 
     class Bernstein ; // forward declarations 
     // ========================================================================
-    /** @class PolySum
-     *  Base class for polynomial sums 
-     *  \f$ f(x) = \sum_i \alpha_i P_i(x) \f$
+    /** @class Parameters 
+     *  Holder for parameters 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
      */
-    class PolySum 
+    class Parameters 
     {
     public:
-      // ======================================================================
-      /// constructor from polynomial degree 
-      PolySum ( const unsigned short degree = 0 ) ;
-      /// constructor from vector of parameters 
-      PolySum ( const std::vector<double>&  pars ) ;
-      /// constructor from vector of parameters 
-      PolySum (       std::vector<double>&& pars ) ;
-      /// constructor from sequence of parameters 
+      // =======================================================================
+      /// constructor from number of parameters 
+      Parameters ( const unsigned int          np = 1 ) ; 
+      /// constructor from  the list of parameters 
+      Parameters ( const std::vector<double>&  pars   ) ;
+      /// constructor from  the list of parameters 
+      Parameters (       std::vector<double>&& pars   ) ;
+      /// templated constructor from the sequnce of parameters 
       template <class ITERATOR>
-        PolySum ( ITERATOR begin , 
-                  ITERATOR end   )
+      Parameters ( ITERATOR begin , 
+                   ITERATOR end   )
         : m_pars ( begin , end )
-      { if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
-      // ======================================================================
-      /// copy contructor
-      PolySum ( const PolySum&  right ) ;
-      /// move constructor 
-      PolySum (       PolySum&& right ) ;
+      {}
+      /// copy constructor  
+      /// Parameters ( const Parameters&  ) = default ;
+      /// move constructor  
+      /// Parameters (       Parameters&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================
-      /// degree  of polynomial 
-      unsigned short degree () const { return m_pars.size() - 1 ; }
       /// number of parameters 
       unsigned short npars  () const { return m_pars.size()     ; }
-      /// all zero ?
+      /// all parameters are zero ?
       bool           zero   () const ;
       /** set k-parameter
        *  @param k index
@@ -994,29 +1297,52 @@ namespace Ostap
       /// get all parameters:
       const std::vector<double>& pars () const { return m_pars ; }
       // ======================================================================
-    public: // simple  manipulations with polynoms 
+    public: // simple  manipulations with parameters 
       // ======================================================================
-      /// simple  manipulations with polynoms: scale it! 
-      PolySum& operator *= ( const double a ) ;     // scale it! 
-      /// simple  manipulations with polynoms: scale it! 
-      PolySum& operator /= ( const double a ) ;     // scale it! 
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// swap two polynomials 
-      void swap ( PolySum& right ) ;
+      /// simple  manipulations with parameters: scale it! 
+      /// Parameters& operator *= ( const double a ) ;     // scale it! 
+      /// simple  manipulations with parameters: scale it! 
+      /// Parameters& operator /= ( const double a ) ;     // scale it! 
       // ======================================================================
     protected:
       // ======================================================================
-      /// copy assignement  
-      PolySum& operator=( const PolySum&  right ) ;
-      /// move assignement 
-      PolySum& operator=(       PolySum&& right ) ;
+      /// swap two parameter sets 
+      void swap ( Parameters& right ) ;
       // ======================================================================
     protected :
       // ======================================================================
       /// parameters 
-      std::vector<double>  m_pars ; // parameters 
+      std::vector<double> m_pars ; //  vector of parameters 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class PolySum
+     *  Base class for polynomial sums 
+     *  \f$ f(x) = \sum_i \alpha_i P_i(x) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2015-02-10
+     */
+    class PolySum : public Parameters 
+    {
+    public:
+      // ======================================================================
+      /// constructor from polynomial degree 
+      PolySum ( const unsigned short degree = 0  ) ;
+      /// constructor from vector of parameters 
+      PolySum ( const std::vector<double>&  pars ) ;
+      /// constructor from vector of parameters 
+      PolySum (       std::vector<double>&& pars ) ;
+      /// constructor from sequence of parameters 
+      template <class ITERATOR>
+        PolySum ( ITERATOR begin , 
+                  ITERATOR end   )
+        : Parameters ( begin , end )
+      { if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// degree  of polynomial 
+      unsigned short degree () const { return m_pars.size() - 1 ; }
       // ======================================================================
     } ;  
     // ========================================================================    
@@ -1478,21 +1804,36 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      LegendreSum  __radd__  ( const double a ) const ;
-      LegendreSum  __rsub__  ( const double a ) const ;
-      LegendreSum  __rmul__  ( const double a ) const ;
+      LegendreSum  __radd__      ( const double a ) const ;
+      LegendreSum  __rsub__      ( const double a ) const ;
+      LegendreSum  __rmul__      ( const double a ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      LegendreSum  __add__   ( const LegendreSum& a ) const ;
-      LegendreSum  __sub__   ( const LegendreSum& a ) const ;
+      LegendreSum  __add__       ( const LegendreSum& a ) const ;
+      LegendreSum  __sub__       ( const LegendreSum& a ) const ;
       // ======================================================================
     public:
       // ======================================================================
       // negate it! 
       LegendreSum __neg__ () const ; // negate it!
       // ======================================================================
-     private:
+    public:
+      // ======================================================================
+      /** update  the Legendre expansion by addition of one "event" with 
+       *  the given weight
+       *  @code
+       *  LegendreSum sum = ... ;
+       *  for ( auto x : .... ) { sum.fill ( x ) ; }
+       *  @endcode
+       *  This is a useful function to make an unbinned parameterization 
+       *  of certain distribution and/or efficiency 
+       *  @parameter x      the event content 
+       *  @parameter weight the weight 
+       */
+      bool fill ( const double x , const double weight = 1 ) ;
+      // ======================================================================
+    private:
       // ======================================================================
       /// x-min 
       double              m_xmin ; // x-min

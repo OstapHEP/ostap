@@ -3,7 +3,7 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-# @file test_fitting_models.py
+# @file ostap/fitting/tests/test_fitting_poly.py
 # Test module for ostap/fitting/models.py
 # - It tests various ``background-like'' smooth polynomial shapes
 # ============================================================================= 
