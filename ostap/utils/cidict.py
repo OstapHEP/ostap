@@ -23,15 +23,34 @@ else                          : from collections     import  MutableMapping
 # =============================================================================
 ## @class cidict
 #  Case-insensitive dictionary
+#  @code
+#  d = cidict ( a = 1 , A = 2 , b = 1 , B = 2 )
+#  @endcode
+#  Other key transformations are also possible:
+#  @code
+#  d = cidict ( a_1 = 1 , a1 = 2 ,
+#               A_1 = 3 , a___1 = 4 ,
+#               transform = lambda k : k.lower().replace('_','') )
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-07-03
 class cidict(MutableMapping) :
     """Case-insensitive dictionary
+    >>> d = cidict ( a = 1 , A = 2 , b = 1 , B = 2 )
+
+    Other key transformations are also possible:
+    >>> d = cidict ( a_1 = 1 , a1 = 2 ,
+    ...              A_1 = 3 , a___1 = 4 ,
+    ...              transform = lambda k : k.lower().replace('_','') )
     """
     
-    def __init__ ( self , dct = {}  , **kwargs ) :
+    def __init__ ( self                           ,
+                   dct       = {}                 ,
+                   transform = lambda k : k.lower ,
+                   **kwargs ) :
 
-        self.__store = {}
+        self.__transform = transform 
+        self.__store     = {}
         
         dtmp = dict ( dct )
         for k in dtmp :
@@ -42,10 +61,10 @@ class cidict(MutableMapping) :
             
             kk = self.the_key( k )
             self.__store [ kk ] = kwargs [ k ]
-            
-    @staticmethod
-    def the_key ( key ) : return key.lower()
 
+    def the_key ( self , key ) :
+        return self.__transform ( key )
+    
     def __getitem__ ( self , key ) :
         return self.__store[ self.the_key ( key )  ]
     

@@ -259,15 +259,32 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
     ## save old method
     ROOT.TObject._old_draw_ = ROOT.TObject.Draw
     ##  new draw method: silent draw
-    def _to_draw_ ( obj , option = '', *args , **kwargs ) :
-        """ (silent) Draw of ROOT object
+    def _TO_draw_ ( obj , option = '', *args , **kwargs ) :
+        """ (silent) Draw of ROOT object, optionally setting the drawing attributes when applicable:
+        
+        - LineColor
+        - LineStyle
+        - LineWidth
+        - MarkerColor
+        - MarkerStyle
+        - MarkerSize
+        - FillColor
+        - FillStyle
+
+        - see ROOT.TAttLine, ROOT.TAttMarker and ROOT.TAttFill
+
+        (case-insensitive and underscore-blind)
+        
         >>> obj
-        >>> obj.Draw()  ##
-        >>> obj.draw()  ## ditto
+        >>> obj.draw ()  ##
+        >>> obj.draw ( linecolor   = 2 ) 
+        >>> obj.draw ( LineColor   = 2 , fill_style = 1003 ) 
+        >>> obj.draw ( markerStyle = 22  )
+
         """
         
         from ostap.utils.cidict import cidict
-        kw = cidict ( **kwargs )
+        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
         
         ## Line
         
@@ -296,11 +313,22 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         if kw : logger.warning('draw: unknown attributes: %s' % kw.keys() )
             
-        from ostap.logger.utils import  rootWarning
-        with rootWarning() :
-            return obj.Draw( option , *args )
+        from ostap.logger.utils import  rootWarning,   rooSilent 
+        with rootWarning() , rooSilent ( 2 )  :
+            result = obj.Draw( option , *args )
+            
+        pad = ROOT.gROOT.GetSelectedPad()
+        if   pad and not ROOT.gPad :
+            c = pad.GetCanvas()
+            if c : c.Update()
+        elif ROOT.gPad :
+            c = ROOT.gPad
+            if c : c.Update()
+            
+        return result 
 
-    ROOT.TObject.draw = _to_draw_
+    ROOT.TObject.draw       = _TO_draw_
+    ROOT.TObject.draw_ostap = _TO_draw_
 
 # =============================================================================
 ## Set/Set name/title 

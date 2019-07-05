@@ -233,7 +233,7 @@ def _TO_draw_ ( obj , option = '' , *args , **kwargs ) :
     with rootWarning() , rooSilent ( 2 ) :
 
         from ostap.utils.cidict import cidict
-        kw = cidict ( **kwargs )
+        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
         
         ## Line
         
@@ -278,13 +278,24 @@ def _TO_draw_ ( obj , option = '' , *args , **kwargs ) :
 ## decorate ROOT.TObject
 if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
     
-    ## add new method  
-    ROOT.TObject.draw_with_autoplot = _TO_draw_
-    ## save old method 
-    if hasattr ( ROOT.TObject ,  'draw' ) :
-        ROOT.TObject._draw_backup = ROOT.TObject.draw
-        
-    ROOT.TObject.draw       = ROOT.TObject.draw_with_autoplot
+    
+    def _TO_draw_with_auto_ ( obj  , option = '' , *args , **kwargs ) :
+        """ Draw an object     
+        """
+        result = obj.draw_ostap ( option, *args , **kwargs ) 
+
+        if ROOT.gPad :
+            plot = AutoPlots.plot()
+            if plot : ROOT.gPad >> plot
+            
+        return result
+    
+    _TO_draw_with_auto_.__doc__ += '\n' + ROOT.TObject.draw_ostap.__doc__
+    
+    ## add new method
+    ROOT.TObject.draw_with_autoplot = _TO_draw_with_auto_ 
+    
+    ROOT.TObject.draw = ROOT.TObject.draw_with_autoplot
         
 # =============================================================================
 ## get all known canvases 
