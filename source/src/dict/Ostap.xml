@@ -41,6 +41,8 @@
     <class pattern = "ROOT::Math::PositionVector*"     />
     <class pattern = "ROOT::Math::DisplacementVector*" />
     <class pattern = "ROOT::Math::LorentzVector*"      />
+    <class pattern = "ROOT::Math::Impl::Plane3D*"      />
+    
     
     <class name    = "Ostap::Math::WorkSpace">
       <field name  = "m_workspace"/>      

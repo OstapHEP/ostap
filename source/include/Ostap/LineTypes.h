@@ -13,13 +13,10 @@
 namespace Ostap
 {
   // ==========================================================================
-  namespace Math
-  {
-    // ========================================================================
-    /// the line type 
-    typedef Line<XYZPoint, XYZVector> XYZLine; ///< 3D cartesian line (double)
-    // ========================================================================
-  }
+  /// the line type 
+  typedef Ostap::Math::Line<XYZPoint, XYZVector> XYZLine; ///< 3D cartesian line (double)
+  /// the line type 
+  typedef Ostap::Math::Line<XYZPoint, XYZVector> Line3D ; ///< 3D cartesian line (double)
   // ==========================================================================
 }
 // ============================================================================

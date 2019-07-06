@@ -362,18 +362,26 @@ _V3D.__pow__ = _v3_pow_
 _P3D.__pow__ = _v3_pow_
 
 # =============================================================================
-## Self-printout of 3D-points and 3D-vectors
-def _v3_str_ ( self , fmt = "(%g,%g,%g) ") :
-    """Self-printout of 3D-points and 3D-vectors
+## Self-printout of 3D-vectors
+def _v3_str_ ( self , fmt = "Vector3D(%g,%g,%g)") :
+    """Self-printout of 3D-vectors
+    >>> print v3 
+    """
+    return fmt % ( self.X() , self.Y( ), self.Z() )
+
+# =============================================================================
+## Self-printout of 3D-points
+def _p3_str_ ( self , fmt = "Point3D(%g,%g,%g)") :
+    """Self-printout of 3D-pointsx
     >>> print p3 
     """
     return fmt % ( self.X() , self.Y( ), self.Z() )
 
 # =============================================================================
 if not hasattr ( _P3D , '_new_str_' ) :
-    _P3D . _new_str_ = _v3_str_
-    _P3D . __str__   = _v3_str_
-    _P3D . __repr__  = _v3_str_
+    _P3D . _new_str_ = _p3_str_
+    _P3D . __str__   = _p3_str_
+    _P3D . __repr__  = _p3_str_
 
 # =============================================================================
 if not hasattr ( _V3D , '_new_str_' ) :
@@ -390,7 +398,7 @@ def _l_str_ ( self ) :
     >>> line = ... 
     >>> print line 
     """
-    return "(%s,%s)" % ( self.beginPoint() , self.direction() )
+    return "Line3D(%s,%s)" % ( self.beginPoint() , self.direction() )
 
 if not hasattr ( Ostap.Math.XYZLine , '_new_str_' ) :
     Ostap.Math.XYZLine._new_str_ = _l_str_
@@ -402,17 +410,17 @@ if not hasattr ( Ostap.Math.XYZLine , '_new_str_' ) :
 ## Self-printout of 3D-plane
 #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
 #  @date 2009-09-12
-def _p_str_ ( self ) :
-    """Self-printout of 3D-plane: (point, normal)
+def _pl_str_ ( self ) :
+    """Self-printout of 3D-plane: (normal,point)
     >>> plane = ...
     >>> print plane 
     """
-    return "(%s,%s)" % ( self.ProjectOntoPlane( Ostap.XYZPoint()) , self.Normal() )
+    return "Plane3D(%s,%s)" % ( self.Normal() , self.project ( Ostap.XYZPoint() ) )
 
 if not hasattr ( Ostap.Plane3D , '_new_str_' ) :
-    Ostap.Plane3D._new_str_ = _p_str_
-    Ostap.Plane3D.__str__   = _p_str_
-    Ostap.Plane3D.__repr__  = _p_str_
+    Ostap.Plane3D._new_str_ = _pl_str_
+    Ostap.Plane3D.__str__   = _pl_str_
+    Ostap.Plane3D.__repr__  = _pl_str_
 
 # =============================================================================
 ## various decorators for GeomFun.h
@@ -430,6 +438,23 @@ if not hasattr ( Ostap , 'XYZGeomFun' ) :
 
 _GeomFun = Ostap.Math.XYZGeomFun
 
+# ==============================================================================
+## project the point into plane
+#  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+#  @date 2009-10-22
+def _project_onto_plane_ ( plane , point ) :
+    """Project the point into plane
+    >>> point = ...
+    >>> plane = ...
+    >>> result = plane.project ( point ) 
+    """
+    d  = plane.Distance ( point )
+    return Ostap.XYZPoint ( point . X () - plane . A () * d ,
+                            point . Y () - plane . B () * d ,
+                            point . Z () - plane . C () * d )
+
+if not  hasattr ( Ostap.Plane3D , 'project' ) :
+    Ostap.Plane3D.project = _project_onto_plane_ 
 
 # =============================================================================
 ## intersection of line and plane

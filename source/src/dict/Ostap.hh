@@ -138,6 +138,10 @@ namespace Ostap
                               const aLine& line1 )
       { return Ostap::Math::distance<aLine, aLine>(line0, line1); }
       
+      static aPoint project ( const aPlane& plane , 
+                              const aPoint& point ) 
+      { return plane.ProjectOntoPlane ( point ) ; }
+      
       static  bool closestPoints( const aLine& line0 ,
                                   const aLine& line1 ,
                                   aPoint&      p0    ,
@@ -203,7 +207,6 @@ namespace Ostap
       // ======================================================================
     public: // eigen vectors
       // ======================================================================
-
     public: // eigen vectors
       // ======================================================================
       // 2x2
@@ -251,7 +254,10 @@ namespace
   {
     Ostap_Instantiations();
     //
-    Ostap::Math::XYZLine       __lineXYZ;
+    Ostap::XYZLine               __lineXYZ;
+    Ostap::XYZVector             __vectXYZ;
+    Ostap::Plane3D              __planeXYZ;
+    Ostap::XYZPoint             __pointXYZ;
     //
     Ostap::Math::XYZGeomFun __geomFunXYZ;
     //
@@ -295,8 +301,9 @@ namespace
     //
   };
   // ==========================================================================
-}
-
+} //                                             The end of anonymous namespace 
+// ============================================================================
+//                                                                      The END 
 // ============================================================================
 #endif // OSTAP_OSTAP_HH
 // ============================================================================

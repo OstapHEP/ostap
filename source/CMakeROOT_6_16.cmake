@@ -33,8 +33,8 @@ include(${ROOT_USE_FILE})
 function( MAKE_DICT name header selection )
    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection} OPTIONS -D__MATH_LONG_DOUBLE_CONSTANT -Wno-inconsistent-missing-override)
    add_library( ${name}Dict MODULE ${name}.cxx)
-   add_dependencies(${name}Dict ${name}-dictgen ostap ROOT::MathMore ROOT::PyROOT)
-   target_link_libraries   ( ${name}Dict ostap ROOT::MathMore ROOT::PyROOT )
+   add_dependencies(${name}Dict ${name}-dictgen ostap ROOT::MathMore ROOT::GenVector ROOT::PyROOT)
+   target_link_libraries   ( ${name}Dict ostap ROOT::MathMore ROOT::GenVector ROOT::PyROOT )
 endfunction( MAKE_DICT )
 
 ## include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
@@ -127,7 +127,7 @@ set_target_properties(ostap
     NO_SYSTEM_FROM_IMPORTED ON
     )
 target_compile_features    (ostap PUBLIC cxx_std_17 )
-target_link_libraries      (ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::PyROOT ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::TMVA ROOT::ROOTDataFrame ${PYTHON_LIBRARIES})
+target_link_libraries      (ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector ROOT::PyROOT ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::TMVA ROOT::ROOTDataFrame ${PYTHON_LIBRARIES})
 
 target_include_directories (ostap
     PUBLIC 

@@ -18,7 +18,9 @@ namespace Ostap
 {
   // ==========================================================================
   /// the point type 
-  typedef ROOT::Math::XYZPoint         XYZPoint;        ///< 3D cartesian point (double)
+  typedef ROOT::Math::XYZPoint         XYZPoint;  ///< 3D cartesian point (double)
+  /// the point type 
+  typedef ROOT::Math::XYZPoint         Point3D ;  ///< 3D cartesian point (double)
   // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
