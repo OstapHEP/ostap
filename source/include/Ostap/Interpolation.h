@@ -1469,7 +1469,7 @@ namespace Ostap
       template <class FUNCTION>
       Newton ( FUNCTION                        fun , 
                const Interpolation::Abscissas& a   )
-        : m_table ( fun , a )
+        : m_table ( a  , fun )
         , m_diffs ( a.size() )
       { this->get_differences() ; }
       // ======================================================================

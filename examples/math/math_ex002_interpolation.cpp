@@ -20,11 +20,12 @@
 int math_ex002_interpolation () 
 {
   
-  using Ostap::Math::Interpolation::Abscissas ;
-  using Ostap::Math::Interpolation::lagrange  ;
-  using Ostap::Math::Interpolation::bernstein ;
-  using Ostap::Math::Interpolation::newton    ;
-  using Ostap::Math::Interpolation::TABLE     ;
+  using Ostap::Math::Interpolation::Abscissas  ;
+  using Ostap::Math::Interpolation::lagrange   ;
+  using Ostap::Math::Interpolation::bernstein  ;
+  using Ostap::Math::Interpolation::bernstein_ ;
+  using Ostap::Math::Interpolation::newton     ;
+  using Ostap::Math::Interpolation::TABLE      ; 
   
   // the function to be interpolated 
   auto fun = [] ( double x ) { return std::sin ( x ) ; } ;
@@ -42,19 +43,19 @@ int math_ex002_interpolation ()
   // ==========================================================================
 
   // 0) Barycentric innterpolant with uniform abscissas 
-  auto l0 = lagrange  ( fun , Abscissas ( N , low , high , Abscissas::Uniform   ) ) ;
+  auto l0 = lagrange   ( fun , Abscissas ( N , low , high , Abscissas::Uniform   ) ) ;
   
   // 1) Barycentric interpolant with Chebyshev abscissas 
-  auto l1 = lagrange  ( fun , Abscissas ( N , low , high , Abscissas::Chebyshev ) ) ;
+  auto l1 = lagrange   ( fun , Abscissas ( N , low , high , Abscissas::Chebyshev ) ) ;
   
   // 2) Barycentric interpolant with Lobatto abscissas 
-  auto l2 = lagrange  ( fun , Abscissas ( N , low , high , Abscissas::Lobatto   ) ) ;
+  auto l2 = lagrange   ( fun , Abscissas ( N , low , high , Abscissas::Lobatto   ) ) ;
   
   // 3) Barycentric intepolant with given abscissas 
-  auto l3 = lagrange  ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } ) ;
+  auto l3 = lagrange   ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } ) ;
   
   // 4) Bernstein interpolant with given abscissas 
-  auto l4 = bernstein ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } , low , high ) ;
+  auto l4 = bernstein_ ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } , low , high ) ;
 
   // ==========================================================================
   // (B,C) get interpolation data in a form of std::map or Interpolation::Table
@@ -77,11 +78,11 @@ int math_ex002_interpolation ()
   // 5) Barycentric interpolant from std::map  
   auto l5 = lagrange ( map ) ;
 
-  // 6) Barycentric interpolant frmo the interpolaton table 
+  // 6) Barycentric interpolant from the interpolation table 
   auto l6 = lagrange ( table ) ;
 
   // 7) Newton interpolant with given abscissas  
-  auto l7 = newton    ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } ) ;
+  auto l7 = newton   ( fun , { 0.0 , 0.3 , 0.6 , 0.8 , 1.5 , 2.0 , 2.5 , 3.0 , 3.5 , 4.0 } ) ;
 
 
   // ==========================================================================
