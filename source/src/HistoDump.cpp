@@ -490,7 +490,7 @@ namespace
  *  @date 2009-09-19
  */
 // ============================================================================
-std::ostream& Ostap::Utils::Histos::histoDump
+std::ostream& Ostap::Utils::Histos::histoDump_
 ( const TH1*                histo  ,
   std::ostream&             stream ,
   const std::size_t         width  ,
@@ -498,7 +498,7 @@ std::ostream& Ostap::Utils::Histos::histoDump
   const bool                errors )
 {
   const TProfile* profile = dynamic_cast<const TProfile*> ( histo ) ;
-  if ( profile ) { return histoDump  ( profile , stream , width , height ) ; }
+  if ( profile ) { return histoDump_  ( profile , stream , width , height ) ; }
   //
   stream << std::endl ;
   if ( !histo     ) { return stream ; }  // RETURN
@@ -558,7 +558,7 @@ std::ostream& Ostap::Utils::Histos::histoDump
  *  @date 2009-09-19
  */
 // ============================================================================
-std::ostream& Ostap::Utils::Histos::histoDump
+std::ostream& Ostap::Utils::Histos::histoDump_
 ( const TProfile*           histo  ,
   std::ostream&             stream ,
   const std::size_t         width  ,
@@ -637,7 +637,7 @@ std::string Ostap::Utils::Histos::histoDump
   const bool                errors )
 {
   std::ostringstream stream ;
-  histoDump ( histo , stream , width , height , errors );
+  histoDump_ ( histo , stream , width , height , errors );
   return stream.str() ;
 }
 // ============================================================================
@@ -656,7 +656,7 @@ std::string Ostap::Utils::Histos::histoDump
   const std::size_t         height )
 {
   std::ostringstream stream ;
-  histoDump ( histo , stream , width , height );
+  histoDump_ ( histo , stream , width , height );
   return stream.str() ;
 }
 // ============================================================================

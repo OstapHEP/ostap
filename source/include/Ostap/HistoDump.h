@@ -34,7 +34,7 @@ namespace Ostap
        *  @author Vanya BELYAEV  Ivan.BElyaev@nikhef.nl
        *  @date 2009-09-19
        */ 
-      std::ostream& histoDump
+      std::ostream& histoDump_
       ( const TProfile*           histo           , 
         std::ostream&             stream          ,
         const std::size_t         width   = 80    , 
@@ -63,7 +63,7 @@ namespace Ostap
        *  @author Vanya BELYAEV  Ivan.BElyaev@nikhef.nl
        *  @date 2009-09-19
        */ 
-      std::ostream& histoDump
+      std::ostream& histoDump_
       ( const TH1*                histo           , 
         std::ostream&             stream          ,
         const std::size_t         width   = 80    , 

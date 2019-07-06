@@ -523,26 +523,36 @@ class ImplicitMT(object) :
     - see ROOT::IsImplicitMTEnabled
     """
     def __init__  ( self , enable = True ) :
-        self.enable = enable
+
+        if   isisnatnce ( enable , bool ) : 
+            self.__enable   =        enable
+            self.__nthreads =        0
+        elif isinstance ( enable , int  ) and 0 <= enable : 
+            self.__enable   = bool ( enable ) 
+            self.__nthreads =        enable 
+        else :
+            raise  TypeError ( "ImplicitMT: invalid ``enable'' flag :%s/%s" % ( enable , type ( enable ) ) )
         
     ## Context manager: ENTER 
     def __enter__ ( self ) :
-        self.enabled = ROOT.ROOT. IsImplicitMTEnabled ()
+            
+        self.__initial = ROOT.ROOT. IsImplicitMTEnabled ()
         
         if bool ( self.enabled ) == bool ( self.enable ) : pass 
-        elif self.enable : ROOT.ROOT.EnableImplicitMT  ()
+        elif self.enable : ROOT.ROOT.EnableImplicitMT  ( self.__nthreads )
         else             : ROOT.ROOT.DisableImplicitMT ()
 
         return self
     
     ## Context manager: EXIT
     def __exit__ ( self , *_ ) :
-        ##
-        enabled = ROOT.ROOT.IsImplicitMTEnabled()
-        if bool ( enabled ) == bool ( self.enabled ) : pass 
-        elif self.enabled : ROOT.ROOT.EnableImplicitMT  ()
-        else              : ROOT.ROOT.DisableImplicitMT ()
 
+        _curr = ROOT.ROOT.IsImplicitMTEnabled()
+
+        if   _current == self.__initial : pass
+        elif _current                   : ROOT.ROOT.DisableImplicitMT ()
+        else                            : ROOT.ROOT.EnableImplicitMT  ()
+            
 
 # =============================================================================
 ## create 'counted' function to know number of function calls

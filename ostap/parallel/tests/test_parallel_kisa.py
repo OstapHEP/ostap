@@ -53,7 +53,7 @@ def test_kisa () :
     
     with timing('SEQUENTIAL(%s):' % len(chain) , logger ) :
         chain. project ( h1 , 'mass' , '3<=mass && mass<=3.2 && 0<=c2dtf && c2dtf<5' )
-        
+
     logger.info ( h1.dump(100,30) ) 
     
     with timing('PARALLEL(%s):' % len(chain) , logger ) :

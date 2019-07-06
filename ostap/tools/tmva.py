@@ -262,7 +262,9 @@ class Trainer(object):
                    logging           = True   ,
                    name              = 'TMVA' ,
                    make_plots        = True   ,
-                   category          = -1     ) : 
+                   category          = -1     ,
+                   multithread       = False  ) :
+        
         """Constructor with list of methods
         
         >>> from ostap.tools.tmva import Trainer
@@ -322,7 +324,7 @@ class Trainer(object):
         self.__tar_file      = None 
         self.__log_file      = None
 
-        
+
         #
         ## minor adjustment
         #
@@ -370,7 +372,9 @@ class Trainer(object):
         self.__dirname     = dirname
         self.__pattern_xml = pattern_xml 
         self.__pattern_C   = pattern_C 
-        
+
+        self.__multithread = multithread and 61800 <= ROOT.gROOT.GetVersionInt() 
+
     @property
     def name    ( self ) :
         """``name''    : the name of TMVA trainer"""
@@ -474,11 +478,15 @@ class Trainer(object):
         return str(self.__log_file) if self.__log_file else None 
 
     @property
-    def category ( self ) :
+    def category    ( self ) :
         """``category''  : chopping category"""
         return self.__category
-    
 
+    @property 
+    def multithread ( self ) :
+        """``multithread'' : make try to use multithreading in TMVA"""
+        return self.__multithread 
+    
     # =========================================================================
     ## train TMVA 
     #  @code
@@ -505,17 +513,19 @@ class Trainer(object):
             from ostap.logger.utils import TeeCpp , OutputC  
             context  = TeeCpp ( log ) if self.verbose and self.category in ( 0 , -1 ) else OutputC ( log , True , True ) 
 
-            from ostap.logger.logger import noColor
-            context2 = noColor()
-
         else    :
 
             from ostap.logger.utils  import MuteC  , NoContext
             context  = NoContext () if self.verbose and self.category in ( 0 , -1 ) else MuteC     ()
 
-            context2 = NoContext ()
 
-        with context : ## ,  context2 :
+            
+        from ostap.logger.utils import NoContext
+        from ostap.utils.utils  import ImplicitMT
+        
+        context2 = ImplicitMT ( True ) if self.multithread else NoContext () 
+
+        with context , context2 :
             
             result = self.__train ()
             
