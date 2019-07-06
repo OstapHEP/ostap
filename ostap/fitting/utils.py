@@ -509,6 +509,287 @@ class MakeVar ( object ) :
         return tuple ( _args )
     
     # =========================================================================
+    ## Create some expressions with variables
+    # =========================================================================
+    
+    # =============================================================================
+    ## construct (on-flight) RooFormularVar for the product of
+    #  <code>var1</code> and <code>var1</code>
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_multiply ( var2 )
+    #  var4 = xxx.vars_multiply ( var1 , 2.0  )    
+    #  var3 = xxx.vars_product  ( var2 )
+    #  var4 = xxx.vars_product  ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_multiply ( self , var1 , var2 , name = '' , title = '' ) :
+        """Construct (on-flight) RooFormularVar  for var1*var2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_multiply ( var1 , var2   )
+        >>> var4 = xxx.vars_multiply ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        >>> var3 = xxx.vars_product  ( var1 , var2   )
+        >>> var4 = xxx.vars_product  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res   = float ( var1 ) * float ( var2 )
+            name  = name  if name   else 'CONST_%s'     % res
+            title = title if title  else 'Constant(%s)' % res
+            var   = ROOT.RooConstVar ( name , title , res )
+            self.aux_keep.append ( var )
+            return  var
+        elif f1 : 
+            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            self.aux_keep.append ( var1 )
+            return self.vars_multiply ( var1 , var2 , name , title )
+        elif f2 : 
+            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            self.aux_keep.append ( var2 )
+            return self.vars_multiply ( var1 , var2 , name , title )
+        
+        vnames = var1.name , var2.name 
+        
+        name  = name  if name  else 'Multiply_%s_%s'  % vnames 
+        title = title if title else '(%s) times (%s)' % vnames 
+        
+        formula = '(%s*%s)' % vnames
+        varlist = ROOT.RooArgList    ( var1 , var2                     )
+        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        #
+        self.aux_keep.append ( varlist )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) RooFormularVar for the sum  of
+    #  <code>var1</code> and <code>var1</code>
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_add ( var1 , var2 )
+    #  var4 = xxx.vars_add ( var1 , 2.0  )    
+    #  var5 = xxx.vars_sum ( var1 , var2 )
+    #  var6 = xxx.vars_sum ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_add ( self , var1 , var2 , name = '' , title = '' ) :
+        """Construct (on-flight) RooFormularVar  for var1+var2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_add ( var1 , var2   )
+        >>> var4 = xxx.vars_add ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        >>> var5 = xxx.vars_sum ( var1 , var2   )
+        >>> var6 = xxx.vars_sum ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res   = float ( var1 ) + float ( var2 )
+            name  = name  if name   else 'CONST_%s'     % res
+            title = title if title  else 'Constant(%s)' % res
+            var   = ROOT.RooConstVar ( name , title , res )
+            self.aux_keep.append ( var )
+            return  var
+        elif f1 : 
+            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            self.aux_keep.append ( var1 )
+            return self.vars_add ( var1 , var2 , name , title )
+        elif f2 : 
+            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            self.aux_keep.append ( var2 )
+            return self.vars_add ( var1 , var2 , name , title )
+        
+        vnames = var1.name , var2.name 
+        
+        name  = name  if name  else 'Add_%s_%s'  % vnames 
+        title = title if title else '(%s) plus (%s)' % vnames 
+        
+        formula = '(%s+%s)' % vnames
+        varlist = ROOT.RooArgList    ( var1 , var2                     )
+        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        #
+        self.aux_keep.append ( varlist )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+
+    # =============================================================================
+    ## construct (on-flight) RooFormularVar for the subtraction  of
+    #  <code>var1</code> and <code>var1</code>
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_subtract   ( var1 , var2 )
+    #  var4 = xxx.vars_subtract   ( var1 , 2.0  )    
+    #  var5 = xxx.vars_difference ( var1 , var2 )
+    #  var6 = xxx.vars_difference ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_subtract ( self , var1 , var2 , name = '' , title = '' ) :
+        """Construct (on-flight) RooFormularVar  for var1-var2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_subtract   ( var1 , var2   )
+        >>> var4 = xxx.vars_subtract   ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        >>> var5 = xxx.vars_difference ( var1 , var2   )
+        >>> var6 = xxx.vars_difference ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res   = float ( var1 ) - float ( var2 )
+            name  = name  if name   else 'CONST_%s'     % res
+            title = title if title  else 'Constant(%s)' % res
+            var   = ROOT.RooConstVar ( name , title , res )
+            self.aux_keep.append ( var )
+            return  var
+        elif f1 : 
+            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            self.aux_keep.append ( var1 )
+            return self.vars_subtract ( var1 , var2 , name , title )
+        elif f2 : 
+            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            self.aux_keep.append ( var2 )
+            return self.vars_subtract ( var1 , var2 , name , title )
+        
+        vnames = var1.name , var2.name 
+        
+        name  = name  if name  else 'Subtract_%s_%s'  % vnames 
+        title = title if title else '(%s) minus (%s)' % vnames 
+        
+        formula = '(%s-%s)' % vnames
+        varlist = ROOT.RooArgList    ( var1 , var2                     )
+        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        #
+        self.aux_keep.append ( varlist )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) RooFormularVar for the division of
+    #  <code>var1</code> and <code>var1</code>
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_divide ( var1 , var2 )
+    #  var4 = xxx.vars_divide ( var1 , 2.0  )    
+    #  var5 = xxx.vars_ratio  ( var1 , var2 )
+    #  var6 = xxx.vars_ratio  ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_divide ( self , var1 , var2 , name = '' , title = '' ) :
+        """Construct (on-flight) RooFormularVar  for var1/var2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_divide ( var1 , var2   )
+        >>> var4 = xxx.vars_divide ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        >>> var5 = xxx.vars_ratio  ( var1 , var2   )
+        >>> var6 = xxx.vars_ratio  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res   = float ( var1 ) / float ( var2 )
+            name  = name  if name   else 'CONST_%s'     % res
+            title = title if title  else 'Constant(%s)' % res
+            var   = ROOT.RooConstVar ( name , title , res )
+            self.aux_keep.append ( var )
+            return  var
+        elif f1 : 
+            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            self.aux_keep.append ( var1 )
+            return self.vars_divide ( var1 , var2 , name , title )
+        elif f2 : 
+            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            self.aux_keep.append ( var2 )
+            return self.vars_divide ( var1 , var2 , name , title )
+        
+        vnames = var1.name , var2.name 
+        
+        name  = name  if name  else 'Divide_%s_%s'     % vnames 
+        title = title if title else '(%s) divide (%s)' % vnames 
+        
+        formula = '(%s/%s)' % vnames
+        varlist = ROOT.RooArgList    ( var1 , var2                     )
+        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        #
+        self.aux_keep.append ( varlist )
+        self.aux_keep.append ( result  )
+        
+        return result
+    
+    vars_sum        = vars_add 
+    vars_product    = vars_multiply
+    vars_ratio      = vars_divide
+    vars_difference = vars_subtract
+
+    # =============================================================================
+    ## construct (on-flight) RooFormularVar for the fraction  of
+    #  <code>var1</code> and <code>var1</code>
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_fraction ( var1 , var2 )
+    #  var4 = xxx.vars_fraction ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_fraction ( self , var1 , var2 , name = '' , title = '' ) :
+        """Construct (on-flight) RooFormularVar  for var1/(var2+var1)
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_fraction ( var1 , var2   )
+        >>> var4 = xxx.vars_fraction ( var1 , 2 , 'sigma2' , title = 'exression' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res   = float ( var1 ) /  ( float ( var2 ) + float ( var1 ) )
+            name  = name  if name   else 'CONST_%s'     % res
+            title = title if title  else 'Constant(%s)' % res
+            var   = ROOT.RooConstVar ( name , title , res )
+            self.aux_keep.append ( var )
+            return  var
+        elif f1 : 
+            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            self.aux_keep.append ( var1 )
+            return self.vars_fraction ( var1 , var2 , name , title )
+        elif f2 : 
+            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            self.aux_keep.append ( var2 )
+            return self.vars_fraction ( var1 , var2 , name , title )
+        
+        vnames = var1.name , var2.name 
+        
+        name  = name  if name  else 'Fraction_%s_%s'     % vnames 
+        title = title if title else '(%s) fraction (%s)' % vnames 
+        
+        formula = '(%s/(%s+%s))' %   ( var1.name , var1.name , var2.name )
+        varlist = ROOT.RooArgList    ( var1 , var2                     )
+        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        #
+        self.aux_keep.append ( varlist )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+    
+    # =========================================================================
+    ## Soft/Gaussian constraints 
+    # =========================================================================
+    
+    # =========================================================================
     ## Helper function to prepare ``soft'' Gaussian constraint for the variable
     #  @attention the constraint is prepared, but not applied!
     #  @code
@@ -567,29 +848,22 @@ class MakeVar ( object ) :
         
         if 1 < abs ( value.value() )  :
             return self.soft_ratio_constraint ( b , a , 1.0 / value )
-        
-        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
 
-            vlist   = ROOT.RooArgList    ( a , b )
+        fa = isinstance ( a , ROOT.RooAbsReal )
+        fb = isinstance ( b , ROOT.RooAbsReal )
+
+        if   fa and fv :
             
-            formula = '(%s)/(%s)'   % ( a.name , b.name )
-            vname   = 'Ratio_%s_%s' % ( a.name , b.name )
-            vtitle  = 'Ratio %s/%s' % ( a.name , b.name )
-            
-            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
-            
-            self.aux_keep.append ( vlist  )
-            self.aux_keep.append ( var    )
-            
+            var = self.vars_ratio ( a , b )        
             return self.soft_constraint ( var , value , name , title )
-
-        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+        
+        elif fa and isinstance ( b , num_types + (VE,) ) :
             
             return self.soft_constraint ( a , value * b , name , title )
         
-        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+        elif fb and isinstance ( a , num_types + (VE,) ) :
             
-            return self.soft_constraint ( b , a / v , name , title )
+            return self.soft_constraint ( b , a / value  , name , title )
         
         raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
     
@@ -610,31 +884,26 @@ class MakeVar ( object ) :
         """
         assert isinstance ( value , VE ) and 0 < value.cov2() ,\
                "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
-                
-        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
 
-            vlist   = ROOT.RooArgList    ( a , b )
+
+        fa = isinstance ( a , ROOT.RooAbsReal )
+        fb = isinstance ( b , ROOT.RooAbsReal )
+
+        if   fa and fv :
             
-            formula = '(%s)*(%s)'     % ( a.name , b.name )
-            vname   = 'Product_%s_%s' % ( a.name , b.name )
-            vtitle  = 'Product %s+%s' % ( a.name , b.name )
-            
-            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
-            
-            self.aux_keep.append ( vlist  )
-            self.aux_keep.append ( var    )
-            
+            var = self.vars_multiply ( a , b )        
             return self.soft_constraint ( var , value , name , title )
-
-        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+        
+        elif fa and isinstance ( b , num_types + (VE,) ) :
             
             return self.soft_constraint ( a , value / b , name , title )
         
-        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+        elif fb and isinstance ( a , num_types + (VE,) ) :
             
-            return self.soft_constraint ( b , 1 / value , name , title )
+            return self.soft_constraint ( b , value / a  , name , title )
         
-        raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) ) 
+        raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
+
                         
     # ==========================================================================
     ## Helper function to  create soft Gaussian constraint
@@ -654,7 +923,7 @@ class MakeVar ( object ) :
         assert isinstance ( value , VE ) and 0 < value.cov2() ,\
                "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
 
-        return self.soft_ratio_constraint ( a , b , 1.0/value - 1.0 , name , value )
+        return self.soft_ratio_constraint ( b , a , 1.0/value - 1.0 , name , value )
         
     # ==========================================================================
     ## Helper function to  create soft Gaussian constraint
@@ -671,34 +940,24 @@ class MakeVar ( object ) :
         >>> N2 = ...
         >>> rC = pdf.soft_sum_constraint ( N1 , N2 , VE (10,1**2) )
         """
-        assert isinstance ( value , VE ) and 0 < value.cov2() ,\
-               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
-        
-        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
 
-            vlist   = ROOT.RooArgList    ( a , b )
+        fa = isinstance ( a , ROOT.RooAbsReal )
+        fb = isinstance ( b , ROOT.RooAbsReal )
+
+        if   fa and fv :
             
-            formula = '(%s)+(%s)' % ( a.name , b.name )
-            vname   = 'Sum_%s_%s' % ( a.name , b.name )
-            vtitle  = 'Sum %s+%s' % ( a.name , b.name )
-            
-            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
-            
-            self.aux_keep.append ( vlist  )
-            self.aux_keep.append ( var    )
-            
+            var = self.vars_add ( a , b )        
             return self.soft_constraint ( var , value , name , title )
-
-        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+        
+        elif fa and isinstance ( b , num_types + (VE,) ) :
             
             return self.soft_constraint ( a , value - b , name , title )
         
-        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+        elif fb and isinstance ( a , num_types + (VE,) ) :
             
             return self.soft_constraint ( b , value - a  , name , title )
-
+        
         raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
-    
     
     # ==========================================================================
     ## Helper function to  create soft Gaussian constraint
@@ -718,31 +977,24 @@ class MakeVar ( object ) :
         assert isinstance ( value , VE ) and 0 < value.cov2() ,\
                "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
         
-        if isinstance ( a , ROOT.RooAbsReal ) and isinstance ( a , ROOT.RooAbsReal ) :
+        fa = isinstance ( a , ROOT.RooAbsReal )
+        fb = isinstance ( b , ROOT.RooAbsReal )
 
-            vlist   = ROOT.RooArgList    ( a , b )
+        if   fa and fv :
             
-            formula = '(%s)-(%s)'   % ( a.name , b.name )
-            vname   = 'Minus_%s_%s' % ( a.name , b.name )
-            vtitle  = 'Munus %s+%s' % ( a.name , b.name )
-            
-            var     = ROOT.RooFormulaVar ( vname , vtitle , formula , vlist )
-            
-            self.aux_keep.append ( vlist  )
-            self.aux_keep.append ( var    )
-            
+            var = self.vars_subtract ( a , b )        
             return self.soft_constraint ( var , value , name , title )
-
-        elif isinstance ( a , ROOT.RooAbsReal ) and isinstance ( b , num_types + (VE,) ) :
+        
+        elif fa and isinstance ( b , num_types + (VE,) ) :
             
             return self.soft_constraint ( a , value + b , name , title )
         
-        elif isinstance ( b , ROOT.RooAbsReal ) and isinstance ( a , num_types + (VE,) ) :
+        elif fb and isinstance ( a , num_types + (VE,) ) :
             
-            return self.soft_constraint ( b , a - value , name , title )
-
+            return self.soft_constraint ( b , a - value  , name , title )
+        
         raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
-    
+
     
     # =========================================================================
     ## create ready-to-use soft Gaussian constraint

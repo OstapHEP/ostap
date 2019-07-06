@@ -211,18 +211,49 @@ def draw_options ( **kwargs ) :
 
 # =============================================================================
 ## @class Style
-#  Store the drawinng style for the component 
+#  Store the drawing style for the component.
+#  Known attributes :
+#  - LineColor
+#  - LineStyle
+#  - LineWidth
+#  - FillColor
+#  - FillStyle
+#
+#  The specification  is case-insensitive and underscore-blind 
+#  @code
+#  s = Style(  line_color = 4 , lineWidth = 3 , LineStyle =4 ) 
+#  s = Style( ROOT.RooFit.LineColor ( 4 ) )
+#  s = Style(  FillColor = 4 , fill_style = 1004  ) 
+#  @endcode 
 class Style(object):
-    """Store the drawinng style for the component 
-    """
+    """Store the drawing style for the component
+    - LineColor
+    - LineStyle
+    - LineWidth
+    - FillColor
+    - FillStyle
     
-    def __init__ ( self                     ,
-                   linecolor = ROOT.kBlack  ,
-                   linestyle = 1            ,
-                   linewidth = 1            ,                   
-                   fillcolor = None         ,
-                   fillstyle = None         , *args ) :
+    The specification  is case-insensitive and underscore-blind
+    
+    >>> s = Style (  line_color = 4 , lineWidth = 3 , LineStyle =4 ) 
+    >>> s = Style ( ROOT.RooFit.LineColor ( 4 ) )
+    >>> s = Style (  FillColor = 4 , fill_style = 1004  ) 
+    
+    """
+    def __init__ ( self  , *args , **kwargs ) :
+        
+        from ostap.utils.cidict import cidict
+        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
 
+        linecolor    = kw.pop ( 'linecolor'    , ROOT.kBlack )
+        linestyle    = kw.pop ( 'linestyle'    , 1           )
+        linewidth    = kw.pop ( 'linewidth'    , 1           )
+        fillcolor    = kw.pop ( 'fillcolor'    , None        )
+        fillstyle    = kw.pop ( 'fillstyle'    , None        )
+        transparency = kw.pop ( 'transparency' , 0.35        )
+        
+        if kw : logger.warning ("Style: Unknown arguments: %s" % kw.keys() )
+        
         options = []
 
         self.__linecolor = None
@@ -231,15 +262,29 @@ class Style(object):
         self.__fillcolor = None
         self.__fillstyle = None
         
-        if isinstance ( linecolor , ROOT.TColor ) : linecolor = linecolor.GetNumber()
-        if isinstance ( fillcolor , ROOT.TColor ) : fillcolor = fillcolor.GetNumber()
-
-        for a in args :
+        for i , a in enumerate ( args ) :
+            
             if isinstance  ( a , ROOT.RooCmdArg ) :
+                
                 if   'LineColor' == a.GetName () : linecolor = a
                 elif 'LineStyle' == a.GetName () : linestyle = a
                 elif 'FillColor' == a.GetName () : fillcolor = a
                 elif 'FillStyle' == a.GetName () : fillstyle = a
+                else : logger.warning('Style:Unknown argument: %s ' % a )
+                
+            elif i == 0 and isinstance ( a , ROOT.TColor )                 : linecolor    = a
+            elif i == 0 and isinstance ( a , int         ) and 0 <= a      : linecolor    = a
+            elif i == 1 and isinstance ( a , int         ) and 0 <= a      : linestyle    = a
+            elif i == 2 and isinstance ( a , int         ) and 0 <= a      : linewidth    = a
+            elif i == 3 and isinstance ( a , ROOT.TColor )                 : fillcolor    = a
+            elif i == 3 and isinstance ( a , int         ) and 0 <= a      : fillcolor    = a
+            elif i == 4 and isinstance ( a , int         ) and 0 <= a      : fillstyle    = a
+            elif i == 5 and isinstance ( a , float       ) and 0 <  a <  1 : transparency = a
+            else :
+                logger.warning('Style:Unknown argument #%d : %s/%s '  % ( i , a , type ( a ) ) )
+                
+        if isinstance ( linecolor , ROOT.TColor ) : linecolor = linecolor.GetNumber()
+        if isinstance ( fillcolor , ROOT.TColor ) : fillcolor = fillcolor.GetNumber()
 
         if   isinstance ( linecolor , integer_types ) and 0 < linecolor :
             self.__linecolor = linecolor 
@@ -268,7 +313,7 @@ class Style(object):
             cc = ROOT.gROOT.GetColor ( fillcolor )
             if cc and 1.0 == cc.GetAlpha () :
                 ## add tranparency
-                fillcolor = ROOT.TColor.GetColorTransparent ( fillcolor , 0.35 ) ## transparency!!
+                fillcolor = ROOT.TColor.GetColorTransparent ( fillcolor , transparency ) 
             options.append ( ROOT.RooFit.FillColor ( fillcolor ) )
             _fillopt = True 
         elif isinstance ( fillcolor , ROOT.RooCmdArg ) and 'FillColor' == fillcolor.GetName () :
@@ -292,7 +337,7 @@ class Style(object):
         self.__options = tuple ( options )
 
     def __str__ ( self ) :
-        return "Style(linecolor=%s,linestyle=%s,linewidth=%s,fillcolor=%s,fillstyle=%s)" % (
+        return "Style(LineColor=%s,LineStyle=%s,LineWidth=%s,FillColor=%s,FillStyle=%s)" % (
             self.linecolor ,
             self.linestyle ,
             self.linewidth ,
@@ -328,16 +373,21 @@ class Area (Style) :
     >>> l = Area ( ROOT.kRed )
     >>> l = Area ( ROOT.kRed , fillstyle = 3315 ) 
     """
-    def __init__ ( self                     ,
-                   fillcolor = ROOT.kRed    ,
-                   fillstyle = 1001         , *args ) :
+    def __init__ ( self , color = ROOT.kRed , style = 1001 , **kwargs ) :
+
+        from ostap.utils.cidict import cidict
+        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
         
-        Style.__init__( self ,
-                        linecolor = None      ,
-                        linestyle = None      ,
+        fillcolor = kw.pop ( 'fill_color' , color )
+        fillstyle = kw.pop ( 'fill_style' , style )
+        
+        linecolor = kw.pop ( 'line_color' , None  ) ## ignore 
+        linestyle = kw.pop ( 'line_style' , None  ) ## ignore 
+        linewidth = kw.pop ( 'line_width' , None  ) ## ignore 
+        
+        Style.__init__( self                  , 
                         fillcolor = fillcolor ,
-                        fillstyle = fillstyle ,
-                        linewidth = None      , *args )
+                        fillstyle = fillstyle , **kw)
         
 # =============================================================================
 ## @class Line
@@ -353,17 +403,26 @@ class Line (Style) :
     >>> l = Line ( ROOT.kRed , linestyle = 2 ) 
     >>> l = Line ( ROOT.kRed , linewidth = 3 )     
     """
-    def __init__ ( self                     ,
-                   linecolor = ROOT.kBlack  ,
-                   linestyle = 1            , 
-                   linewidth = 1            , *args ) :
+    def __init__ ( self                 ,             
+                   color = ROOT.kBlack  ,
+                   style = 1            , 
+                   width = 1            , **kwargs ) :
 
-        Style.__init__( self ,
+        
+        from ostap.utils.cidict import cidict
+        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
+        
+        fillcolor = kw.pop ( 'fill_color' , None  ) ## ignore 
+        fillstyle = kw.pop ( 'fill_style' , None  ) ## ignore 
+        
+        linecolor = kw.pop ( 'line_color' , color ) ## ignore 
+        linestyle = kw.pop ( 'line_style' , style ) ## ignore 
+        linewidth = kw.pop ( 'line_width' , width ) ## ignore 
+
+        Style.__init__( self                  , 
                         linecolor = linecolor ,
                         linestyle = linestyle ,
-                        linewidth = linewidth ,
-                        fillcolor = None      ,
-                        fillstyle = None      , *args ) 
+                        linewidth = linewidth , **kw  )
 
 # =======================================================================================
 ## list of styles 
