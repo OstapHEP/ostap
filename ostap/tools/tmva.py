@@ -494,28 +494,29 @@ class Trainer(object):
         log = self.logging 
 
         self.__log_file = None
-        
+
         if  log :
             
             try :
                 if os.path.exists ( log ) and os.path.isfile ( log ) : os.remove ( log )
             except :
                 pass
-            
+
             from ostap.logger.utils import TeeCpp , OutputC  
             context  = TeeCpp ( log ) if self.verbose and self.category in ( 0 , -1 ) else OutputC ( log , True , True ) 
-            
+
             from ostap.logger.logger import noColor
-            context2 = noColor()             
+            context2 = noColor()
 
         else    :
-            
+
             from ostap.logger.utils  import MuteC  , NoContext
-            context  = NoContext () if self.verbose and self.category in ( 0 , -1 ) else MuteC     ()   
+            context  = NoContext () if self.verbose and self.category in ( 0 , -1 ) else MuteC     ()
+
             context2 = NoContext ()
 
         with context : ## ,  context2 :
-
+            
             result = self.__train ()
             
             if log and os.path.exists ( log ) and os.path.isfile ( log ) :
@@ -568,7 +569,7 @@ class Trainer(object):
         - returns the names of output XML file with the weights 
         >>> trainer.train () 
         """
-        
+
         import glob,os
         rf = [] 
         for f in glob.glob ( self.__pattern_xml ) :
@@ -579,10 +580,12 @@ class Trainer(object):
             os.remove ( f )
         if rf : logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
 
-        ROOT.TMVA.Tools.Instance()
+        ## ROOT 6/18 crashes here...
+        ## if ROOT.gROOT.GetVersion() < 61800 : 
+        ##    ROOT.TMVA.Tools.Instance()
 
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
-            
+
             logger.debug ( 'Trainer(%s): output ROOT file: %s ' % ( self.name , outFile.GetName() ) )
 
             ## the final adjustment 
@@ -603,19 +606,20 @@ class Trainer(object):
                 self.name             ,
                 outFile               ,
                 self.bookingoptions   )
-    
+
             factory.SetVerbose( self.verbose )
+
         
             ## 
             dataloader = ROOT.TMVA.DataLoader ( self.dirname )
-            
+
             #
             for v in self.variables :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 dataloader.AddVariable  ( *vv )    
             logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) ) 
-               
+
             for v in self.spectators :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )             
@@ -623,7 +627,7 @@ class Trainer(object):
                 #
             if self.spectators : 
                 logger.info ( "Trainer(%s):        spectators:%s" % ( self.name , self.spectators ) )
-            #
+            #            
             if self.signal_cuts :
                 logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) )
                     
@@ -680,6 +684,8 @@ class Trainer(object):
                 
                 factory.BookMethod ( dataloader , *m )
            
+            print 'here-10'
+
             # Train MVAs
             ms = tuple( i[1] for i in  self.methods )
             logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
@@ -947,7 +953,8 @@ class Reader(object)  :
         
         """            
         
-        ROOT.TMVA.Tools.Instance()
+        if ROOT.gROOT.GetVersionInt() < 61800 : 
+            ROOT.TMVA.Tools.Instance()
         
         verbose = True if verbose else False
         ##

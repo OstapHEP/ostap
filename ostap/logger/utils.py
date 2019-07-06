@@ -308,18 +308,19 @@ class TeeCpp(object) :
     def __init__ ( self , fname ) :
         sys.stdout.flush ()
         sys.stderr.flush ()
-        self._tee = cpp.Ostap.Utils.Tee ( fname )
+        self.__tee = cpp.Ostap.Utils.Tee ( fname ) 
         
     ## context manager
     def __enter__ ( self      ) :
         sys.stdout.flush ()
         sys.stderr.flush ()
-        self._tee.enter ()
-        return self 
+        self.__tee.enter ()
+        return self
+    
     ## context manager
     def __exit__  ( self , *_ ) :
-        self._tee.exit  ()
-        del self._tee
+        self.__tee.exit  ()
+        del self.__tee
         sys.stdout.flush ()
         sys.stderr.flush ()
         

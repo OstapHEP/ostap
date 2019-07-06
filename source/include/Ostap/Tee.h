@@ -27,18 +27,16 @@ namespace Ostap
     public: 
       // ======================================================================
       /// constructor from filename 
-      Tee  ( const std::string&  filename   = "tee.out" ) ; 
+      Tee  ( const std::string&  filename = "tee.out" ) ; 
       /// constructor from the stream 
-      Tee  ( std::ostream& filestream ) ; 
+      // Tee  ( std::ostream& filestream ) ; 
       // destructor 
-      ~Tee ( ) ;
+      ~Tee () ;
       // ======================================================================
-    private:
+    public:
       // ======================================================================
-      /// copy     constructor is disabled 
-      Tee ( const Tee& ) ;                   // copy    constructor is disabled 
-      /// assignement operator is disabled 
-      Tee& operator=( const Tee& );         // assignement operator is disabled 
+      Tee           ( const Tee& ) = delete ;
+      Tee& operator=( const Tee& ) = delete ;
       // ======================================================================
     public: // helper stuff to use it in python as Context Manager 
       // ======================================================================
@@ -51,7 +49,7 @@ namespace Ostap
       // ======================================================================
     private: 
       // ======================================================================
-      /// the file itself 
+      // the file itself 
       std::unique_ptr<std::ostream>   m_file     ; // the file itself 
       /// is the file owned?
       bool                            m_own      ; // is the file owned?

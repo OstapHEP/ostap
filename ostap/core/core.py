@@ -143,7 +143,8 @@ class ROOTCWD(object) :
                 
                 
         self._dir = None 
-            
+
+root_version_int = ROOT.gROOT.GetVersionInt() 
 # =============================================================================
 ## global identifier for ROOT objects 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -159,11 +160,7 @@ def rootID ( prefix = 'o_' ) :
         
         _id  = _fun ( _root_ID )
         grd  = ROOT.gROOT
-        cwd  = grd.CurrentDirectory()
-        while grd.FindObject    ( _id ) or \
-              grd.FindObjectAny ( _id ) or \
-              cwd.FindObject    ( _id ) or \
-              cwd.FindObjectAny ( _id ) : 
+        while grd.FindObject ( _id ) :
                 
             _root_ID += 10 
             _id       = _fun ( _root_ID ) 

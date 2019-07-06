@@ -156,10 +156,10 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     from ostap.utils.timing import timing
 
     # train it!  
-    with timing ( 'for TMVA training' , logger ) : 
+    with timing ( 'for TMVA/Chopping training' , logger ) : 
         trainer.train () 
         tar_file      = trainer.tar_file
-        
+
 # =============================================================================
 # remove unnesessary output files
 for f in trainer.output_files :
@@ -196,7 +196,8 @@ variables = [
 
 ## 2) create TMVA/Chopping reader
 from ostap.tools.chopping import Reader
-reader = Reader(
+
+reader = Reader (
     N             = N         , ##  number of   categories
     categoryfunc  = category  , ## category 
     ## other argument  as for plain TMVA     
@@ -205,6 +206,7 @@ reader = Reader(
                       ('var2' , lambda s : s.var2 )   ,
                       ('var3' , lambda s : s.var3 ) ] ,
     weights_files = tar_file )
+
 
 methods = reader.methods[:]
 

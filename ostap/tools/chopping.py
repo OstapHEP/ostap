@@ -856,6 +856,7 @@ class Reader(object) :
         - single tar/tgz/tar.gz-file with weights files (output from ``Trainer.tar_file'')
         - the structure of xml-files with weights       (output from ``Trainer.weights_files'')
         """
+
         assert isinstance ( N , integer_types ) and 1 <= N , "``N'' is illegal %s/%s"  % ( N , type(N) )
 
         self.__name          = str(name) 
@@ -869,13 +870,13 @@ class Reader(object) :
         import copy
         self.__weights        = WeightsFiles ( weights_files )
         files = self.weights.files
-        
+
         self.__weights_files = copy.deepcopy ( files )
         assert len ( self.weights_files ) == N , "Invalid length of ``weights_files''"
 
         self.__readers   = []
         for i in range ( self.N ) :
-
+            
             inam = '%s_%03d'   % ( self.name , i )
             
             self.__readers.append ( TMVAReader ( name          = inam                  ,
@@ -887,7 +888,6 @@ class Reader(object) :
         self.__readers  = tuple   ( self.__readers )
         self.__histo    = h1_axis ( [ -0.5 + i for i in range ( self.N + 1 ) ] ,
                                     title ="Category population" )
-
         for r in self.__readers :
             mr = list ( r.methods )
             if not self.__methods : self.__methods = mr
@@ -896,7 +896,7 @@ class Reader(object) :
             assert m1 == m2 , "Inconsistent configuration of readers is detected"
 
         self.__methods = tuple (  self.__methods ) 
-            
+        
     @property
     def name ( self ) :
         """```name'' - the name of Chopper Reader"""

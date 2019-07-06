@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 // Include 
 // ============================================================================
@@ -17,10 +16,6 @@
  *  @see Gaudi::Utils::Mute
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2013-07-07
- *
- *  Version           $Revision$
- *  Last Modification $Date$
- *                 by $Author$ 
  */
 // ============================================================================
 namespace std 
@@ -132,17 +127,17 @@ Ostap::Utils::Tee::Tee  ( const std::string&  filename   )
 // ============================================================================
 // constructor from the stream
 // ============================================================================
-Ostap::Utils::Tee::Tee  ( std::ostream&  filestream   )
-  : m_file   ( &filestream ) 
-  , m_own    ( false       ) 
-  , m_buffer (   ) 
-  , m_keep   ( nullptr     ) 
-{
-  std::cout << std::flush ;
-  m_keep   = std::cout.rdbuf() ;
-  m_buffer.reset ( new std::teebuf ( m_keep , m_file->rdbuf() ) ) ;
-  std::cout.rdbuf ( m_buffer.get() ) ;
-}
+// Ostap::Utils::Tee::Tee  ( std::ostream&  filestream   )
+//   : m_file   ( &filestream ) 
+//   , m_own    ( false       ) 
+//   , m_buffer (   ) 
+//   , m_keep   ( nullptr     ) 
+// {
+//   std::cout << std::flush ;
+//   m_keep   = std::cout.rdbuf() ;
+//   m_buffer.reset ( new std::teebuf ( m_keep , m_file->rdbuf() ) ) ;
+//   std::cout.rdbuf ( m_buffer.get() ) ;
+// }
 // ============================================================================
 // destructor 
 // ============================================================================
@@ -168,8 +163,6 @@ void Ostap::Utils::Tee::exit  ()
   // 3. delete/close  the file (if needed) 
   if ( m_own ) { m_file.reset   () ; }
   else         { m_file.release () ; }
-  //
-  std::cout << std::flush ;
   //
   m_keep = nullptr ;
 }
