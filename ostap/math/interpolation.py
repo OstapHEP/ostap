@@ -748,6 +748,7 @@ def points ( func , abscissas  = None ) :
     from ostap.math.base import doubles
     ##
     if _A : return Ostap.Math.Interpolation.Table (   abscissas   , doubles ( func ) )
+    ##
     return Ostap.Math.Interpolation.Table ( doubles ( abscissas ) , doubles ( func ) )
 
 

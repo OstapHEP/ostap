@@ -301,8 +301,8 @@ namespace Ostap
          *  @param abscissas interpolation abscissas 
          */
         template <class FUNCTION>
-        Table ( FUNCTION         fun , 
-                const Abscissas& a   )
+        Table ( const Abscissas& a   , 
+                FUNCTION         fun )                
           : m_table ( a.size() ) 
         {
           // ==================================================================
@@ -324,7 +324,7 @@ namespace Ostap
         Table  ( FUNCTION fun   , 
                  ITERATOR begin , 
                  ITERATOR end   ) 
-          : Table ( fun , Abscissas ( begin, end ) ) {}
+          : Table ( Abscissas ( begin, end ) , fun ) {}
         // ====================================================================
         /** templated constructor 
          *  @param fun  function object 
@@ -339,7 +339,7 @@ namespace Ostap
                 const double          low  ,   
                 const double          high , 
                 const Abscissas::Type t    ) 
-          : Table ( fun , Abscissas ( n , low , high , t ) ) {}
+          : Table ( Abscissas ( n , low , high , t ) , fun ) {}
         // ====================================================================
         /// default constructor
         Table () = default ;

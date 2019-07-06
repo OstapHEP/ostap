@@ -1052,12 +1052,12 @@ namespace Ostap
       template <class XITERATOR, class YITERATOR>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( XITERATOR    xbegin , 
-                  XITERATOR    xend   ,   
-                  YITERATOR    ybegin , 
-                  YITERATOR    yend   , 
-                  const double xmin   , 
-                  const double xmax   )
+      bernstein_ ( XITERATOR    xbegin , 
+                   XITERATOR    xend   ,   
+                   YITERATOR    ybegin , 
+                   YITERATOR    yend   , 
+                   const double xmin   , 
+                   const double xmax   )
       { return bernstein ( Table ( xbegin , xend , ybegin , yend ) , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1086,10 +1086,10 @@ namespace Ostap
       template <class XITERATOR, class YITERATOR>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( XITERATOR    xbegin , 
-                  XITERATOR    xend   ,   
-                  YITERATOR    ybegin , 
-                  YITERATOR    yend   )
+      bernstein_ ( XITERATOR    xbegin , 
+                   XITERATOR    xend   ,   
+                   YITERATOR    ybegin , 
+                   YITERATOR    yend   )
       { return bernstein ( Table ( xbegin , xend , ybegin , yend ) ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1116,11 +1116,11 @@ namespace Ostap
       template <class XITERATOR, class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( FUNCTION     func   , 
-                  XITERATOR    xbegin ,  
-                  XITERATOR    xend   ,  
-                  const double xmin   , 
-                  const double xmax   )
+      bernstein_ ( FUNCTION     func   , 
+                   XITERATOR    xbegin ,  
+                   XITERATOR    xend   ,  
+                   const double xmin   , 
+                   const double xmax   )
       { return bernstein ( Table ( func , xbegin , xend ) , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1145,9 +1145,9 @@ namespace Ostap
       template <class XITERATOR, class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( FUNCTION     func   , 
-                  XITERATOR    xbegin ,  
-                  XITERATOR    xend   ) 
+      bernstein_ ( FUNCTION     func   , 
+                   XITERATOR    xbegin ,  
+                   XITERATOR    xend   ) 
       { return bernstein ( Table ( func , xbegin , xend ) ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1171,11 +1171,11 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( FUNCTION               func , 
-                  const Abscissas::Data& x    , 
-                  const double           xmin , 
-                  const double           xmax )
-      { return bernstein ( func , x.begin () , x.end () , xmin , xmax ) ; }
+      bernstein_ ( FUNCTION               func , 
+                   const Abscissas::Data& x    , 
+                   const double           xmin , 
+                   const double           xmax )
+      { return bernstein_ ( func , x.begin () , x.end () , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param func the function 
@@ -1198,9 +1198,9 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( FUNCTION               func , 
-                  const Abscissas::Data& x    ) 
-      { return bernstein ( func , x.begin () , x.end () ) ; }
+      bernstein_ ( FUNCTION               func , 
+                   const Abscissas::Data& x    ) 
+      { return bernstein_ ( func , x.begin () , x.end () ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param func the function 
@@ -1223,11 +1223,11 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( FUNCTION         func , 
-                  const Abscissas& a    ,
-                  const double     xmin , 
-                  const double     xmax )
-      { return bernstein ( Table ( func , a ) , xmin , xmax ) ; }
+      bernstein_ ( FUNCTION         func , 
+                   const Abscissas& a    ,
+                   const double     xmin , 
+                   const double     xmax )
+      { return bernstein ( Table ( a , func ) , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param func the function 
@@ -1250,9 +1250,9 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( FUNCTION         func , 
-                  const Abscissas& a    ) 
-      { return bernstein ( Table ( func , a ) ) ; }
+      bernstein_ ( FUNCTION         func ,
+                   const Abscissas& a    ) 
+      { return bernstein ( Table ( a , func ) ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param func      the function 
@@ -1275,13 +1275,13 @@ namespace Ostap
       template <class XITERATOR, class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein ( FUNCTION              func  , 
-                  const unsigned short  N     ,
-                  const double          xmin  , 
-                  const double          xmax  , 
-                  const Abscissas::Type t     ) 
+      bernstein_ ( FUNCTION              func  , 
+                   const unsigned short  N     ,
+                   const double          xmin  , 
+                   const double          xmax  , 
+                   const Abscissas::Type t     ) 
       {
-        return bernstein 
+        return bernstein_
           ( func , Abscissas ( N , xmin , xmax , t ) , xmin , xmax ) ;
       }
       // ================================================================================

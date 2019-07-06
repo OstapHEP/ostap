@@ -88,10 +88,11 @@ def test_interpolation ():
     """
 
     logger.info ('test_interpolation')
-    
-    from math import sin,pi, sqrt
 
-    fun = lambda x  : sin(2*pi*x) 
+    from math import sin,pi, sqrt
+    
+    fun = lambda x  : sin(2*pi*x)
+
     bs  =  ostap.math.bernstein.interpolate ( fun , [0] + [  random.uniform(0.01,0.99) for i in range(25) ] + [1] , 0 , 1 )
     
     from ostap.stats.counters import SE

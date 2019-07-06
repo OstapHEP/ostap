@@ -135,7 +135,7 @@ Ostap::Math::Interpolation::Abscissas::Abscissas
 // ============================================================================
 /* add one more abscissa in the list 
  * @param xnew value to be added 
- * @return -1 if point is NOT added or new inndex for added points  
+ * @return -1 if point is NOT added or new index for added points  
  */
 // ============================================================================
 int Ostap::Math::Interpolation::Abscissas::add ( const double xnew ) 

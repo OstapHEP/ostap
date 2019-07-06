@@ -756,7 +756,7 @@ def lcm ( f  ,  g ) :
 #  b3 = interpolate ( [0,0.25,1,4] , [ 0,0.5, 1,2]    , 0 , 4 )  
 #  @endcode 
 #  @param func  the function or list of function values
-def interpolate ( func , abscissas , xmin = 0 , xmax = 1 ) :
+def interpolate ( func , abscissas , xmin = 0.0 , xmax = 1.0 ) :
     """Construct the interpolation Bernstein polynomial
     It relies on Newton-Bernstein algorithm
     - see http://arxiv.org/abs/1510.09197
@@ -782,6 +782,9 @@ def interpolate ( func , abscissas , xmin = 0 , xmax = 1 ) :
 
     from ostap.math.interpolation import points
     pnts = points ( func , abscissas )
+    ##
+    xmin = float ( xmin ) 
+    xmax = float ( xmax ) 
     ##
     return Ostap.Math.Interpolation.bernstein ( pnts , xmin , xmax ) 
 
