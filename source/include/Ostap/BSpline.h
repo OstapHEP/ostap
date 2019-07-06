@@ -1620,7 +1620,7 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::StatusCode
-      bspline 
+      bspline_ 
       ( FUNCTION                   func , 
         const std::vector<double>& x    ,
         Ostap::Math::BSpline&      bs   )
