@@ -599,7 +599,7 @@ default_crossterm2_options      = ROOT.RooFit.Precision ( precision  ) ,
 default_background2D_options    = default_background_options
 
 # =============================================================================
-## get the optios from configurtaion parser 
+## get the options from configuration parser 
 # =============================================================================
 def  get_options ( config , option , default ) :
     
@@ -615,7 +615,7 @@ def  get_options ( config , option , default ) :
         if any ( not isinstance ( o , ROOT.RooCmdArg ) for o in options ) :
             raise TypeError('Invalid type  for %s : %s' % ( option , opts ) ) 
     except :
-        logger.error("Can't parse options %s : %s" % ( option , opts ) ) 
+        logger.error("Can't parse/eval option %s : %s" % ( option , opts ) ) 
         options = default 
 
     return options
