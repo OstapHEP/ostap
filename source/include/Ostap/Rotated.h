@@ -8,7 +8,6 @@
 // ============================================================================
 #include <cmath>
 #include <functional>
-#include <iostream>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -159,15 +158,9 @@ namespace Ostap
       double test ( double x ,  double y ) const 
       {
         Ostap::Math::Integrator::function2 f2 = std::cref ( *this ) ;
-        std::cout << " test(" << x << "," <<  y << ")=" <<  f2 ( x , y ) 
-                  << std::endl ;
         auto fx  = std::bind ( f2 , std::placeholders::_1 , y ) ;
         auto fy  = std::bind ( f2 , x , std::placeholders::_1 ) ; 
         //
-        std::cout << " test(" << x << "," <<  y << ")=" <<  f2 ( x , y ) 
-                  << " fx(x)=" << fx ( x )   
-                  << " fy(y)=" << fy ( y )
-                  << std::endl ;
         return f2 ( x , y ) ;
       }
       // ======================================================================

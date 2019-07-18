@@ -14,6 +14,11 @@
 #include "Math/SVector.h"
 #include "Math/Vector4D.h"
 // ============================================================================
+// Ostap 
+// ============================================================================
+#include "Ostap/Vector3DTypes.h"
+#include "Ostap/Vector4DTypes.h"
+// ============================================================================
 /** @file Ostap/Kinematics.h
  *  Collection of useful mathematical utilities related to the kinematics
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -164,7 +169,7 @@ namespace Ostap
      *   const LHCb::Particle* B = ... ;
      *
      *   const double chi2 = 
-     *       chi2mass ( 5.279 * Gaudi::Units::GeV , 
+     *       chi2mass ( 5.279 * GeV , 
      *                  B -> momentum()           , 
      *                  B -> momCovMatrix()       ) ; 
      *
@@ -206,7 +211,7 @@ namespace Ostap
     }
     // ========================================================================
     /** evaluate the dispersion of p from the particle 4-vector and 
-     *  the covarinace matrix
+  *  the covarinace matrix
      *
      *  @code
      *
@@ -429,9 +434,685 @@ namespace Ostap
       return ROOT::Math::Similarity ( covariance , dYdP_i ) ;
     }
     // ========================================================================
+  } //                                        The end of namespace Ostyap::Math
+  // ==========================================================================
+  namespace Kinematics 
+  {
+    // ========================================================================
+    /** calculate the ``triangle'' function, aka ``lambda'' or ``Kallen'' function 
+     *  \f[ \lambda ( a , b, c ) = a^2 + b^2 + c^2 - 2ab - 2bc - 2ca \f]
+     *  @see see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function          
+     *  @param a parameter a
+     *  @param b parameter b
+     *  @param c parameter c
+     *  @return the value of triangle function
+     */
+    double triangle
+    ( const double a ,
+      const double b ,
+      const double c ) ;
+    // ========================================================================
+    /** calculate the ``triangle'' function, aka ``lambda'' or ``Kallen'' function 
+     *  \f[ \lambda ( a , b, c ) = a^2 + b^2 + c^2 - 2ab - 2bc - 2ca \f]
+     *  @see see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function          
+     *  @param a parameter a
+     *  @param b parameter b
+     *  @param c parameter c
+     *  @return the value of triangle function
+     */
+    inline double kallen 
+    ( const double a ,
+      const double b ,
+      const double c ) { return triangle ( a , b , c ) ; }
+    // ========================================================================
+    /** universal four-particle kinematical function, aka "tetrahedron-function"
+     *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+     *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+     *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf
+     *  E.g. physical range for 2->2 scattering process is defined as
+     * \f$ G(s,t,m_2^2, m_a^2, m_b^2, m_1^2) \le 0 \f$
+     * or the physical range  for Dalitz plot is
+     * \f$ G(s_2, s_1,  m_3^2, m_1^2, s , m_2^2) \le 0 \f$
+     *
+     * Actually the formula in E.Byckling & K.Kajantie  has a typo.
+     * 
+     * See the correct formula in: 
+     * @see  P. Nyborg, H.S. Song, W. Kernan, R.H. Good,
+     *       Phase-Space Considerations for Four-Particle Final States"
+     *       Phys.Rev. 140 (1965) B914-B920, DOI: 10.1103/PhysRev.140.B914  
+     * @see https://journals.aps.org/pr/pdf/10.1103/PhysRev.140.B914
+     * @see http://inspirehep.net/record/49679?ln=en
+     * 
+     *  The correct formula is :
+     *  \f[ G(x,y,z.u,v,w) =  
+     *   x^2y + xy^2 + z^2u + zu^2  + v^2w + vw^2 
+     *   + xzw + zuv + yzv + yuw 
+     *   - x y ( z + u + v + w ) 
+     *   - z u ( x + y + v + w ) 
+     *   - v w ( x + y + z + u ) \f] 
+     *  - B&K gives \f$ yzw\f$ instead of \f$yzv\f$  
+     */ 
+    double G 
+    ( const double x , 
+      const double y , 
+      const double z , 
+      const double u ,
+      const double v , 
+      const double w ) ;
+    // ========================================================================
+    /** universal four-particle kinematical function, aka "tetrahedron-function"
+     *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+     *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+     *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf
+     *  E.g. physical range for 2->2 scattering process is defined as
+     * \f$ G(s,t,m_2^2, m_a^2, m_b^2, m_1^2) \le 0 \f$
+     * or the physical range  for Dalitz plot is
+     * \f$ G(s_2, s_1,  m_3^2, m_1^2, s , m_2^2) \le 0 \f$ 
+     * 
+     * Actually the formula in E.Byckling & K.Kajantie  has a typo.
+     * 
+     * See the correct formula in: 
+     * @see  P. Nyborg, H.S. Song, W. Kernan, R.H. Good,
+     *       Phase-Space Considerations for Four-Particle Final States"
+     *       Phys.Rev. 140 (1965) B914-B920, DOI: 10.1103/PhysRev.140.B914  
+     * @see https://journals.aps.org/pr/pdf/10.1103/PhysRev.140.B914
+     * @see http://inspirehep.net/record/49679?ln=en
+     */ 
+    inline double tetrahedron 
+    ( const double x , 
+      const double y , 
+      const double z , 
+      const double u ,
+      const double v , 
+      const double w ) { return G ( x , y , z , u , v , w ) ; }
+    // ========================================================================
+    /** @class Gram
+     *  Calculate a few simplest Gram determinants:
+     *  \f$ G\left( \begin{array}{lcr} p_1, & ... & p_n \\ 
+     *                                 q_1, & ... & q_n \right) \equiv 
+     *  \left| \begin{array}{lcl}
+     *    p_1q_1   & ... &   p_1q_n \\
+     *    ...      & ... &   ...    \\
+     *    p_nq_1   & ... &   p_nq_n \right|\f$          
+     *
+     *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+     *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+     *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-07012
+     */
+    class Gram 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** non-symmetric Gram determinant
+       *  \f$ G \left(\begin{array}{ll} p_1 , & p_2 \\
+       *                                q_1 , & q_2 \end{array}\right) 
+       *  = \left| \begin{array}{ll}
+       *  p_1q_1 & p_1q_2 \\
+       *  p_2q_1 & p_2q_2 \end{array} \right| f\$
+       */
+      static double G 
+      ( const Ostap::LorentzVector& p1 , 
+        const Ostap::LorentzVector& p2 ,
+        const Ostap::LorentzVector& q1 , 
+        const Ostap::LorentzVector& q2 ) ;
+      // ======================================================================
+      /** non-symmetric Gram determinant
+       *  \f$ G \left(\begin{array}{lll} p_1 , & p_2, & p_3 \\
+       *                                 q_1 , & q_2, & q_3 \end{array}\right) 
+       *  = \left| \begin{array}{lll}
+       *  p_1q_1 & p_1q_2 & p_1q_3 \\
+       *  p_2q_1 & p_2q_2 & p_2q_3 \\
+       *  p_3q_1 & p_3q_2 & p_3q_3 \end{array} \right| f\$
+       */
+      static double G 
+      ( const Ostap::LorentzVector& p1 , 
+        const Ostap::LorentzVector& p2 ,
+        const Ostap::LorentzVector& p3 ,
+        const Ostap::LorentzVector& q1 ,
+        const Ostap::LorentzVector& q2 ,
+        const Ostap::LorentzVector& q3 ) ;
+      // ======================================================================
+      /** non-symmetric Gram determinant
+       *  \f$ G \left(\begin{array}{llll} p_1 , & p_2,& p_3, &p_4 \\
+       *                                 q_1 , & q_2, & q_3, &q_4 \end{array}\right) 
+       *  = \left| \begin{array}{llll}
+       *  p_1q_1 & p_1q_2 & p_1q_3 & p_1q_4\\
+       *  p_2q_1 & p_2q_2 & p_2q_3 & p_2q_4\\
+       *  p_3q_1 & p_3q_2 & p_3q_3 & p_3q_4\\ 
+       *  p_4q_1 & p_4q_2 & p_4q_3 & p_4q_4\end{array} \right| f\$
+       */
+      static double G 
+      ( const Ostap::LorentzVector& p1 , 
+        const Ostap::LorentzVector& p2 ,
+        const Ostap::LorentzVector& p3 ,
+        const Ostap::LorentzVector& p4 ,
+        const Ostap::LorentzVector& q1 ,
+        const Ostap::LorentzVector& q2 ,
+        const Ostap::LorentzVector& q3 ,
+        const Ostap::LorentzVector& q4 ) ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /** symmetric Gram determinant
+       *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+       *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+       *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
+       */  
+      static double Delta  
+      ( const Ostap::LorentzVector& p1 ) ;
+      // ======================================================================
+      /** symmetric Gram determinant
+       *  \f$ Delta( p_1, p_2) \equiv 
+       *   G \left( \begin{array}{ll}p_1,& p_2 \\ 
+       *                             p_1,& p_2 \end{array} \right) \f$ 
+       *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+       *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+       *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
+       */  
+      static double Delta  
+      ( const Ostap::LorentzVector& p1 , 
+        const Ostap::LorentzVector& p2 ) ;
+      // ======================================================================
+      /** symmetric Gram determinant
+       *  \f$ Delta( p_1, p_2, p_3 ) \equiv 
+       *   G \left( \begin{array}{lll}p_1,& p_2, &p_3 \\ 
+       *                              p_1,& p_2, &p_3 \end{array} \right) \f$ 
+       *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+       *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+       *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
+       */
+      static double Delta
+      ( const Ostap::LorentzVector& p1 , 
+        const Ostap::LorentzVector& p2 ,
+        const Ostap::LorentzVector& p3 ) ;
+      // ======================================================================
+      /** symmetric Gram determinant
+       *  \f$ Delta( p_1, p_2, p_3, p_4 ) \equiv 
+       *   G \left( \begin{array}{llll}p_1,& p_2, &p_3,&p_4 \\ 
+       *                               p_1,& p_2, &p_3,&p_4 \end{array} \right) \f$ 
+       *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+       *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+       *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
+       */
+      static double Delta
+      ( const Ostap::LorentzVector& p1 , 
+        const Ostap::LorentzVector& p2 ,
+        const Ostap::LorentzVector& p3 ,
+        const Ostap::LorentzVector& p4 ) ;
+      // ======================================================================
+    } ;    
+    // ========================================================================
+    /** boost Lorentz vector into  rest-frame of another Lorentz vector 
+     *  @param what   the vextro to be bosted 
+     *  @param frame  the 4-vector of the frame 
+     *  @return boosted vector 
+     */
+      Ostap::LorentzVector boost 
+      ( const Ostap::LorentzVector& what  ,
+        const Ostap::LorentzVector& frame ) ;  
+    // ========================================================================
+    /** simple function which evaluates the magnitude of 3-momentum
+     *  of particle "v" in the rest system of particle "M"
+     *
+     *  \f{displaymath} \left|\vec{p}\right| =
+     *     \sqrt{  \frac{\left(v\cdot M\right)^2}{M^2} -v^2} \f}
+     *
+     *  Note that this is clear Lorentz invarinat expresssion.
+     *
+     *  @attention particle M must be time-like particle: M^2 > 0 !
+     *  For invalid configurations large negative number is returned 
+     *
+     *  @param v the vector to be checked
+     *  @param M the defintion of "rest"-system
+     *  @return the magnitude of 3D-momentum of v in rest-frame of M
+     *  @date 2008-07-27
+     */
+    double restMomentum 
+    ( const Ostap::LorentzVector& v ,
+      const Ostap::LorentzVector& M ) ;
+    // ========================================================================
+    /** simple function which evaluates the energy
+     *  of particle "v" in the rest system of particle "M"
+     *
+     *  \f[ e = \frac{ v \cdot M }{\sqrt{ M^2 } } \f]
+     *
+     *  Note that this is clear Lorentz invarinat expresssion.
+     *
+     *  @attention particle M must be time-like particle: M^2 > 0 !
+     *
+     *  @param v the vector to be checked
+     *  @param M the defintion of "rest"-system
+     *  @return the energy of v in rest-frame of M
+     *  @date 2008-07-27
+     */
+    double restEnergy 
+    ( const Ostap::LorentzVector& v ,
+      const Ostap::LorentzVector& M ) ;
+    // =======================================================================
+    /**  simple function for evaluation of the euclidiam norm
+     *  for LorentzVectors (E**2+Px**2+Py**2+Pz**2)
+     *  @param vct the vector
+     *  @return euclidian norm squared
+     *  @date 2006-01-17
+     */
+    double euclidianNorm2 ( const Ostap::LorentzVector& vct ) ;
+    // ========================================================================
+    /** simple function which evaluates the transverse
+     *  momentum with respect a certain 3D-direction:
+     *
+     * \f$ r_T = \left| \vec{r} \right| = \left| \vec{v} -
+     *    \vec{d}\frac{\left(\vec{v}\vec{d}\right)}
+     *  { \left| \vec{d} \right|^2 } \right| \f$
+     *
+     *  @param mom the momentum
+     *  @param dir the direction
+     *  @return the transverse moementum with respect to the direction
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-01-17
+     */
+    double transverseMomentumDir
+    ( const Ostap::Vector3D& mom, 
+      const Ostap::Vector3D& dir );
+    // ========================================================================
+    /** simple function which evaluates the transverse
+     *  momentum with respect a certain 3D-direction:
+     *
+     * \f$ r_T = \left| \vec{r} \right| =  = \left| \vec{v} -
+     * \vec{d}\frac{\left(\vec{v}\vec{d}\right)}
+     *  { \left| \vec{d} \right|^2 } \right| \f$
+     *
+     *  @param mom the momentum
+     *  @param dir the direction
+     *  @return the transverse moementum with respect to the direction
+     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @date 2006-01-17
+     */
+    inline double transverseMomentumDir
+    ( const Ostap::LorentzVector& mom, 
+      const Ostap::Vector3D&      dir ) 
+    { return transverseMomentumDir( mom.Vect(), dir ); }
+    // ========================================================================
+    /** This routine returns the cosine angle theta
+     *  The decay angle calculated  is that between
+     *  the flight direction of the daughter meson, "D",
+     *  in the rest frame of "Q" (the parent of "D"),
+     *  with respect to "Q"'s flight direction in "P"'s
+     *  (the parent of "Q") rest frame
+     *
+     *  \f[
+     *  \cos \theta = \frac
+     *  { \left(P \cdot D\right)Q^2 -
+     *    \left(P \cdot Q\right)\left(D \cdot Q \right) }
+     *  {\sqrt{ \left[ \left( P \cdot Q \right)^2 - Q^2 P^2 \right]
+     *          \left[ \left( D \cdot Q \right)^2 - Q^2 D^2 \right] } }
+     *  \f]
+     *
+     *  Note that the expression has the symmetry: \f$ P \leftrightarrow D \f$
+     *
+     *  Essentially it is a rewritten <c>EvtDecayAngle(P,Q,D)</c>
+     *  routine from EvtGen package
+     *
+     *  @param D 4-momentum of the daughter particle
+     *  @param Q 4-momentum of mother particle
+     *  @param P "rest frame system"
+     *  @return cosine of decay angle
+     *
+     *  @see Ostap::LorentzVector
+     *
+     *  - The function <c>Ostap::Kinematics::cos_theta</c> provides  
+     *    the alternative way to calculate the same quantity as 
+     *    <code>Ostap::Kinematics::cos_theta ( P , -D , Q )</code>
+     *
+     *  - The function <c>Ostap::Kinematics::cosThetaRest</c> provides  
+     *    the alternative way to calculate the same quantity as 
+     *    <code>Ostap::Kinematics::cosThetaRest ( P , -D , Q )</code>
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2004-12-03
+     */
+    double decayAngle 
+    ( const Ostap::LorentzVector& P , 
+      const Ostap::LorentzVector& Q ,
+      const Ostap::LorentzVector& D ) ;    
+    // ========================================================================
+    /** This routine returns the cosine angle theta
+     *  The decay angle calculated  is that between
+     *  the flight direction of the daughter meson, "D",
+     *  in the rest frame of "M" (the parent of "D"),
+     *  with respect to the boost direction from
+     *  "M"'s rest frame
+     *
+     *  @param D 4-momentum of the daughter particle
+     *  @param M 4-momentum of mother particle
+     *  @return cosine of decay angle
+     *
+     *  Clearly it is a variant of 3-argument with the
+     *  P-argument to be of type (0,0,0,E)
+     *  (=="laborator frame")
+     *
+     *  @see Ostap::LorentzVector
+     *  @see Ostap::Kinematics::decayAngle 
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2004-12-03
+     */
+    double decayAngle
+    ( const Ostap::LorentzVector& D , 
+      const Ostap::LorentzVector& M ) ;
+    // ========================================================================
+    /** simple function to evaluate the cosine angle between
+     *  two directions (v1 and v2) in the rest system of M
+     *
+     * \f[
+     * \cos\theta =
+     * \frac{\vec{p}_1\vec{p}_2}{\left|\vec{p}_1\right|
+     * \left|\vec{p}_2\right|} =
+     * \frac{1}{\left|\vec{p}_1\right|\left|\vec{p}_2\right|}
+     * \left( E_1E_2 -\frac{1}{2}
+     * \left(\left(v_1+v_2\right)^2-v_1^2-v_2^2 \right) \right),
+     * \f]
+     *
+     *  where
+     *  \f[
+     *  E_1 E_2 = \frac{ \left ( v_1 \cdot M\right) \left (v_2 \cdot M \right ) }{M^2}
+     *  \f]
+     *  and
+     *  \f[
+     * \left|\vec{p}_1\right|\left|\vec{p}_2\right| =
+     * \sqrt{
+     * \left( \frac{\left(v_1\cdot M\right)^2}{M^2}-v_1^2 \right)
+     *      \left( \frac{\left(v_2\cdot M\right)^2}{M^2}-v_2^2 \right) }
+     * \f]
+     *
+     *  Note that the expressions are clear Lorentz invariant
+     *
+     *  @attention the particle M must be time-like particle: M^2 > 0 !
+     *  @param v1 the first vector
+     *  @param v2 the last vector
+     *  @param M  the defintion of rest-system
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-07-27
+     *  - The function <c>Ostap::Kinematics::cos_theta</c> provides  
+     *    the alternative way to calcualet the same quantity 
+     *  @see Ostap::Kinematics::cos_theta     
+     */
+    double cosThetaRest
+    ( const Ostap::LorentzVector& v1 , 
+      const Ostap::LorentzVector& v2 ,
+      const Ostap::LorentzVector& M  ) ;
+    // ========================================================================
+    /** Cosine of the angle between p1 and p2 in the rest frame of M
+     *  \f$ \cos \theta = - \frac 
+     *  { G   \left( \begin{array}{ll} M, &p_1 \\ M,& p_2 \end{array}\right) }
+     *  { \left\[ \Delta_2(M,p_1)\Delta_2(M,p_2)\right\]^{1/2} }\f$  
+     *  @param v1 the first vector
+     *  @param v2 the last vector
+     *  @param M  the defintion of rest-system
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-07-17
+     *  - The function <c>Ostap::Kinematics::cosThetaRest</c> provides  
+     *    the alternative way to calcualet the same quantity 
+     *  @see Ostap::Kinematics::cosThetaRest
+     */
+    double cos_theta 
+    ( const Ostap::LorentzVector& p1 ,
+      const Ostap::LorentzVector& p2 ,
+      const Ostap::LorentzVector& M  ) ;  
+    // ========================================================================
+    /** Sine squared  of the angle between p1 and p2 in the rest frame of M
+     *  \f$ \sin^2 \theta = \frac { \Delta ( M ) \Delta ( M , p_1 , p_2 ) }
+     *  { \Delta ( M, p_1  ) \Delta ( M , p_2 ) } \f$ 
+     *  @param v1 the first vector
+     *  @param v2 the last vector
+     *  @param M  the defintion of rest-system
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-07-17
+     */
+    double sin2_theta 
+    ( const Ostap::LorentzVector& p1 ,
+      const Ostap::LorentzVector& p2 ,
+      const Ostap::LorentzVector& M  ) ;  
+    // ========================================================================
+    /** evaluate the angle \f$\chi\f$
+     *  beween two decay planes,
+     *  formed by particles v1&v2 and h1&h2 correspondingly.
+     *  The angle is evaluated in the rest frame
+     *  of "mother" particles (defined as v1+v2+h1+h2)
+     *
+     *  @param d1 the 1st daughter
+     *  @param d2 the 2nd daughter
+     *  @param h1 the 3rd daughter
+     *  @param h2 the 4th daughter
+     *  @return angle chi
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-07-27
+     */
+    double decayAngleChi 
+    ( const Ostap::LorentzVector& d1 , 
+      const Ostap::LorentzVector& d2 ,
+      const Ostap::LorentzVector& h1 , 
+      const Ostap::LorentzVector& h2 );
+    // ========================================================================
+    /** evaluate \f$\cos \chi\f$, where \f$\chi\f$ if the angle
+     *  beween two decay planes, formed by particles d1&d2
+     *  and h1&h2 correspondingly.
+     *
+     *  The angle is evaluated in the rest frame
+     *  of "mother" particles (defined as d1+d2+h1+h2)
+     *
+     *  The angle is evaluated using the explicit
+     *  Lorenzt-invariant expression:
+     *  \f[
+     *  \cos \chi =
+     *   - \frac{ L_D^{\mu} L_H^{\mu} }
+     *     { \sqrt{ \left[ -L_D^2 \right]\left[ -L_H^2 \right] }},
+     &   =
+     *   - \frac{
+           *     \epsilon_{ijkl}d_1^{j}d_2^{k}\left(h_1+h_2\right)^l
+     *     \epsilon_{imnp}h_1^{m}h_2^{n}\left(d_1+d_2\right)^p }
+     *     { \sqrt{ \left[ -L_D^2 \right]\left[ -L_H^2 \right] }},
+     *  \f]
+     *  where "4-normales" are defined as:
+     *  \f[
+     *   L_D^{\mu} = \epsilon_{\mu\nu\lambda\kappa}
+     *                d_1^{\nu}d_2^{\lambda}\left(h_1+h_2\right)^{\kappa}
+     *  \f]
+     *   and
+     *  \f[
+     *   L_H^{\mu} = \epsilon_{\mu\lambda\delta\rho}
+     *                h_1^{\lambda}h_2^{\delta}\left(d_1+d_2\right)^{\rho}
+     *   \f]
+     *
+     *  @param d1 the 1st daughter
+     *  @param d2 the 2nd daughter
+     *  @param h1 the 3rd daughter
+     *  @param h2 the 4th daughter
+     *  @return cos(chi)
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-07-27
+     */
+    double cosDecayAngleChi
+    ( const Ostap::LorentzVector& d1 , 
+      const Ostap::LorentzVector& d2 ,
+      const Ostap::LorentzVector& h1 , 
+      const Ostap::LorentzVector& h2 ) ;
+    // ========================================================================    
+    /** evaluate \f$\sin\chi\f$, where \f$\chi\f$ is the angle
+     *  beween two decay planes,
+     *  formed by particles v1&v2 and h1&h2 correspondingly.
+     *  The angle is evaluated in the rest frame
+     *  of "mother" particles (defined as v1+v2+h1+h2)
+     *
+     *  The angle is  calculated using the explicit
+     *   Lorentz-invariant expression:
+     *  \f[
+     *   \sin \chi =
+     *   \frac  {
+     *   \epsilon_{\mu\nu\lambda\delta}
+     *   L_D^{\mu}L_H^{\nu}H^{\lambda}M^{\delta} }
+     *   { \sqrt{
+     *   \left[ -L_D^2 \right]\left[ -L_H^2 \right]
+     *   \left[ \left( H\ cdot M\right)^2-H^2M^2 \right]
+     *   }} = \frac {
+     *   \epsilon_{\mu\nu\lambda\delta}
+     *   d_1^{\mu}d_2^{\nu}h_1^{\lambda}h_2^{\delta}
+     *   \left( \left( D \cdot H \right)^2 - D^2H^2 \right) }
+     *   { \sqrt{
+     *   \left[ -L_D^2 \right]\left[ -L_H^2    \right]
+     *   \left[ \left(H\cdot M\right)^2-H^2M^2 \right]
+     *   }},
+     *  \f]
+     *  where "4-normales" are defined as:
+     *  \f$
+     *  L_D^{\mu} = \epsilon_{\mu\nu\lambda\kappa}
+     *                d_1^{\nu}d_2^{\lambda}\left(h_1+h_2\right)^{\kappa}
+     *  \f$,
+     *  \f$
+     *  L_H^{\mu} = \epsilon_{\mu\lambda\delta\rho}
+     *  h_1^{\lambda}h_2^{\delta}\left(d_1+d_2\right)^{\rho}
+     *  \f$
+     *  and   \f$ D = d_1 + d_2 \f$,
+     *        \f$ H = h_1 + h_2 \f$,
+     *        \f$ M = D + H = d_1 + d_2 + h_1+h_2 \f$.
+     *
+     *  @param d1 the 1st daughter
+     *  @param d2 the 2nd daughter
+     *  @param h1 the 3rd daughter
+     *  @param h2 the 4th daughter
+     *  @return angle chi
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-07-27
+     */
+    double sinDecayAngleChi 
+    ( const Ostap::LorentzVector& d1 , 
+      const Ostap::LorentzVector& d2 ,
+      const Ostap::LorentzVector& h1 , 
+      const Ostap::LorentzVector& h2 ) ;
+    // ========================================================================
+    /** evaluate the Armenteros-Podolanski variable \f$\mathbf{\alpha}\f$,
+     *  defined as:
+     *  \f[
+     *  \mathbf{\alpha} = \frac
+     *  { \mathrm{p}^{\mathrm{L},1} - \mathrm{p}^{\mathrm{L},1} }
+     *  { \mathrm{p}^{\mathrm{L},1} + \mathrm{p}^{\mathrm{L},1} },
+     *  \f]
+     *  where
+     *   \f$ \mathrm{p}^{\mathrm{L},1}\f$ and
+     *   \f$ \mathrm{p}^{\mathrm{L},2}\f$ are longitudinal momentum
+     *   components for the first and the second daughter particles
+     *   with respect to the total momentum direction.
+     *
+     *  Clearly this expression could be rewritten in an equivalent
+     *  form which however much more easier for calculation:
+     *  \f[
+     *  \mathbf{\alpha} = \frac
+     *  { \vec{\mathbf{p}}_1^2 - \vec{\mathbf{p}}_2^2 }
+     *  { \left( \vec{\mathbf{p}}_1 + \vec{\mathbf{p}}_2 \right)^2 }
+     *  \f]
+     *
+     *  @attention instead of
+     *     2D \f$\left(\mathrm{p_T},\mathbf{\alpha}\right)\f$ diagram,
+     *     in the case of twobody decays it is much better to
+     *     use 2D diagram \f$\left(\cos \theta, \mathrm{m} \right)\f$
+     *     diagram, where \f$\cos\theta\f$-is the decay
+     *     angle, and \f$\mathrm{m}\f$ is an
+     *     invariant evalauted for some (fixed) mass prescription,
+     *     e.g. \f$\pi^+\pi^-\f$.
+     *
+     *  @param d1  three momentum of the first  daughter particle
+     *  @param d2  three momentum of the second daughter particle
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-09-21
+     */
+    double armenterosPodolanskiX 
+    ( const Ostap::Vector3D& d1 , 
+      const Ostap::Vector3D& d2 );
+    // ========================================================================
+    /** evaluate the Armenteros-Podolanski variable \f$\mathbf{\alpha}\f$,
+     *  defined as:
+     *  \f[
+     *  \mathbf{\alpha} = \frac
+     *  { \mathrm{p}^{\mathrm{L},1} - \mathrm{p}^{\mathrm{L},1} }
+     *  { \mathrm{p}^{\mathrm{L},1} + \mathrm{p}^{\mathrm{L},1} },
+     *  \f]
+     *  where
+     *   \f$ \mathrm{p}^{\mathrm{L},1}\f$ and
+     *   \f$ \mathrm{p}^{\mathrm{L},2}\f$ are longitudinal momentum
+     *   components for the first and the second daughter particles
+     *   with respect to the total momentum direction.
+     *
+     *  Clearly this expression could be rewritten in an equivalent
+     *  form which however much more easier for calculation:
+     *  \f[
+     *  \mathbf{\alpha} = \frac
+     *  { \vec{\mathbf{p}}_1^2 - \vec{\mathbf{p}}_2^2 }
+     *  { \left( \vec{\mathbf{p}}_1 + \vec{\mathbf{p}}_2 \right)^2 }
+     *  \f]
+     *
+     *  @attention instead of
+     *     2D \f$\left(\mathrm{p_T},\mathbf{\alpha}\right)\f$ diagram,
+     *     in the case of twobody decays at it is much better to
+     *     use 2D diagram \f$\left(\cos \theta, \mathrm{m} \right)\f$
+     *     diagram, where \f$\cos\theta\f$-is the decay
+     *     angle, and \f$\mathrm{m}\f$ is an
+     *     invariant evalauted for some (fixed) mass prescription,
+     *     e.g. \f$\pi^+\pi^-\f$.
+     *
+     *  @param d1  four momentum of the first  daughter particle
+     *  @param d2  four momentum of the second daughter particle
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2008-09-21
+     */
+    inline double armenterosPodolanskiX
+    ( const Ostap::LorentzVector& d1 , 
+      const Ostap::LorentzVector& d2 ) 
+    { return armenterosPodolanskiX ( d1.Vect() , d2.Vect() ) ; }
+    // ========================================================================
+    /** trivial function to get the component of "a", transverse to "b"
+     *  @param a (INPUT)  three vector
+     *  @param b (INPUT)  reference direction
+     *  @return component of "a", transverse to "b"
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2015-02-04
+     */
+    Ostap::Vector3D transverse
+    ( const Ostap::ThreeVector& a, 
+      const Ostap::ThreeVector& b );
+    // ========================================================================
+    /** trivial function to get the component of "a" parallel to "b"
+     *  @param a (INPUT)  three vector
+     *  @param b (INPUT)  reference direction
+     *  @return component of "a" parallel to "b"
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2015-02-04
+     */
+    Ostap::Vector3D parallel
+    ( const Ostap::Vector3D& a  , 
+      const Ostap::Vector3D& b  ) ;
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap
+// ============================================================================
+namespace ROOT 
+{
+  // ==========================================================================
+  namespace Math 
+  {
+    // ========================================================================
+    /** scalar product of two 4-vectors 
+     */
+    template <class TYPE>
+    inline typename TYPE::Scalar 
+    operator* ( const LorentzVector<TYPE>& a , 
+                const LorentzVector<TYPE>& b ) { return a.Dot ( b ) ; }
+    // ========================================================================
+  } //                                          The end of namespace ROOT::Math
+  // ==========================================================================
+} //                                                  The end of namespace ROOT
 // ============================================================================
 //                                                                      The END
 // ============================================================================

@@ -296,10 +296,10 @@ def _v4_as_v4_ ( self ) :
 V4D.asSVector = _v4_as_v4_ 
 
 # =============================================================================
-__euclidianNorm2 = Ostap.Math.euclidianNorm2 
-__restMomentum   = Ostap.Math.restMomentum
-__restEnergy     = Ostap.Math.restEnergy 
-__boost          = Ostap.Math.boost
+__euclidianNorm2 = Ostap.Kinematics.euclidianNorm2 
+__restMomentum   = Ostap.Kinematics.restMomentum
+__restEnergy     = Ostap.Kinematics.restEnergy 
+__boost          = Ostap.Kinematics.boost
 # =============================================================================
 def _v4_en2_ ( v ) :
     """Get ``euclidian  norm squared'' of 4-vector
@@ -524,7 +524,7 @@ def kallen ( x , y , z ) :
     return x * x + y * y + z * z - 2.0 * x * y - 2.0 * y * z -  2.0 * z * x
 
 # =============================================================================
-## Calculate the two-body phase space
+## Calculate the full two-body phase space
 #  \f$ R_2 = \frac{ \pi \lambda^{1/2}( M^2 , m_1^2 , m_2^2) }{2*M^2} \f$ 
 #  @code
 #  M, m1  , m2 = ...
@@ -546,7 +546,7 @@ def phasespace2 ( M ,  m1 , m2 ) :
     return math.pi * math.sqrt ( kallen ( s , m1 * m1 , m2 * m2 ) ) / ( 2.0 * s ) 
 
 # =============================================================================
-## Calculate the three body phase space 
+## Calculate the full three-body phase space 
 #  @code
 #  M, m1  , m2 , m3 = ...
 #  ps3 = phasespace3 ( M , m1  , m2 , m3 ) 
@@ -581,7 +581,7 @@ def phasespace3 ( M ,  m1 , m2 , m3 ) :
 
 
 # =============================================================================
-## Calculate the four body phase space 
+## Calculate the full four-body phase space 
 #  @code
 #  M, m1  , m2 , m3 , m4 = ...
 #  ps4 = phasespace4 ( M , m1  , m2 , m3 , m4 ) 
@@ -639,8 +639,8 @@ def phasespace ( M , *args ) :
     
     k  = N/2
 
-    args1 = args[k:]
-    args2 = args[:k]
+    args1 = args [ k :   ]
+    args2 = args [   : k ]
 
     low  =     sum ( args1 )
     high = M - sum ( args2 ) 
@@ -680,7 +680,6 @@ def G ( x , y , z , u , v , w ) :
     
     return 0.0 + r1 + r2 + r3 + r4 + r5 
     
-
     
 # =============================================================================
 if '__main__' == __name__ :

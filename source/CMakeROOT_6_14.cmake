@@ -77,6 +77,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Choose.cpp
                          src/Combine.cpp
                          src/Chi2Fit.cpp
+                         src/Dalitz.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
                          src/Exception.cpp
@@ -97,6 +98,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Interpolation.cpp
                          src/Iterator.cpp
 			 src/Integrator.cpp
+                         src/Kinematics.cpp
                          src/Lomont.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp

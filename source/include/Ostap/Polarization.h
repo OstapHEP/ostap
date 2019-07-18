@@ -164,59 +164,6 @@ namespace Ostap
       // =====================================================================      
     } ; //                                The end of Ostap::Math::Polarization
     // =======================================================================
-    /** boost Lorentz vector into  rest-frame of another Lorentz vector 
-     *  @param what   the vextro to be bosted 
-     *  @param frame  the 4-vector of the frame 
-     *  @return boosted vector 
-     */
-      Ostap::LorentzVector boost 
-      ( const Ostap::LorentzVector& what  ,
-        const Ostap::LorentzVector& frame ) ;  
-    // ========================================================================
-    /** simple function which evaluates the magnitude of 3-momentum
-     *  of particle "v" in the rest system of particle "M"
-     *
-     *  \f{displaymath} \left|\vec{p}\right| =
-     *     \sqrt{  \frac{\left(v\cdot M\right)^2}{M^2} -v^2} \f}
-     *
-     *  Note that this is clear Lorentz invarinat expresssion.
-     *
-     *  @attention particle M must be time-like particle: M^2 > 0 !
-     *  For invalid configurations large negative number is returned 
-     *
-     *  @param v the vector to be checked
-     *  @param M the defintion of "rest"-system
-     *  @return the magnitude of 3D-momentum of v in rest-frame of M
-     *  @date 2008-07-27
-     */
-    double restMomentum ( const Ostap::LorentzVector& v ,
-                          const Ostap::LorentzVector& M ) ;
-    // ========================================================================
-    /** simple function which evaluates the energy
-     *  of particle "v" in the rest system of particle "M"
-     *
-     *  \f[ e = \frac{ v \cdot M }{\sqrt{ M^2 } } \f]
-     *
-     *  Note that this is clear Lorentz invarinat expresssion.
-     *
-     *  @attention particle M must be time-like particle: M^2 > 0 !
-     *
-     *  @param v the vector to be checked
-     *  @param M the defintion of "rest"-system
-     *  @return the energy of v in rest-frame of M
-     *  @date 2008-07-27
-     */
-    double restEnergy ( const Ostap::LorentzVector& v ,
-                        const Ostap::LorentzVector& M ) ;
-    // =======================================================================
-    /**  simple function for evaluation of the euclidiam norm
-     *  for LorentzVectors (E**2+Px**2+Py**2+Pz**2)
-     *  @param vct the vector
-     *  @return euclidian norm squared
-     *  @date 2006-01-17
-     */
-    double euclidianNorm2 ( const Ostap::LorentzVector& vct ) ;
-    // =======================================================================
   } //                                        The end of namespace Ostap::Math
   // =========================================================================
 } //                                                The end of namespace Ostap 

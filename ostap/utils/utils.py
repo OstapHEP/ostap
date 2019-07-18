@@ -71,6 +71,7 @@ __all__     = (
    )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
+from   builtins         import range
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
@@ -694,6 +695,25 @@ def cmd_exists ( command ) :
 ## return any( os.access ( os.path.join ( path , command  ) , os.X_OK ) for path in os.environ["PATH"].split(os.pathsep) )
 
 
+# =============================================================================
+## loop over values between x_min and x_max 
+#  @code
+#  for x in vrange ( x_min , x_max , 200 ) :
+#         print (x) 
+#  @endcode
+def vrange ( x_min , x_max , n = 100 ) :
+    """ Loop  over range of values betwene x_min and x_max 
+    >>> for x in vrange ( x_min , x_max , 200 ) :
+    ...                print (x) 
+    """
+    assert isinstance ( n , int ) and 0 < n,\
+           'Invalid N=%s/%s' % ( n  , type ( n ) ) 
+
+    fn =  1.0 / float ( n ) 
+    for i in range ( n + 1 ) :
+        f2 = i * fn
+        f1 = 1 - f2
+        yield  x_min * f1 + f2 * x_max 
 
 # =============================================================================
 if '__main__' == __name__ :

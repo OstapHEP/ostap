@@ -61,9 +61,9 @@
 # =============================================================================
 from __future__ import print_function
 # =============================================================================
-__author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
+__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2009-09-12"
-__version__ = "Version$Revision$"
+__version__ = "Version: $Revision$"
 # =============================================================================
 __all__     = (
     'iszero'         , ## zero     for doubles 
@@ -340,11 +340,32 @@ def strings ( *args ) :
     ## if not args :  return vs 
     ## return _add_to ( vs , std.string , args[0] , *args[1:] )
 
-SPD = std.pair('double','double')
-SPD.asTuple  = lambda s :      (s.first,s.second)
-SPD.__str__  = lambda s : str( (s.first,s.second) )
-SPD.__repr__ = SPD.__str__
 
+SPD = std.pair('double','double')
+SPD.asTuple  = lambda s :       ( s.first , s.second )
+SPD.__str__  = lambda s : str(  ( s.first , s.second ) )
+SPD.__repr__ = SPD.__str__
+SPD.__len__  = lambda s : 2
+def _spd_getitem_ ( s ,  i ) :
+    """Get item form the pair:
+    >>> p = ...
+    >>> p[0], p[1]
+    """
+    if   0 == i : return s.first 
+    elif 1 == i : return s.second
+    raise IndexError('Invalid index %s' % i )
+def _spd_setitem_ ( s ,  i , value ) :
+    """Set item from the pair:
+    >>> p = ...
+    >>> p[0] = 1
+    >>> p[1] = 2
+    """
+    if   0 == i : s.first  = value 
+    elif 1 == i : s.second = value 
+    raise IndexError('Invalid index %s' % i )
+SPD.__getitem__ = _spd_getitem_
+SPD.__setitem__ = _spd_setitem_
+    
 # =============================================================================
 # Improve operations with std.complex 
 # =============================================================================
@@ -575,7 +596,9 @@ def is_complex ( value ) :
 
 ## decorated classes 
 _decorated_classes_  = (
-    COMPLEX ,
+    COMPLEX  ,
+    COMPLEXf ,
+    COMPLEXl ,
     )
 
 # =============================================================================

@@ -12,6 +12,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Workspace.h"
+#include "Ostap/Dalitz.h"
 // ============================================================================
 /** @file Ostap/PhaseSpace.h
  *  collection of functions relaetd to phase space 
@@ -81,19 +82,6 @@ namespace Ostap
       double m_m2 ; // the second mass
       // ======================================================================
     public :
-      // ======================================================================
-      /** calculate the ``triangle'' function, aka ``lambda'' or ``Kallen'' function 
-       *  \f[ \lambda ( a , b, c ) = a^2 + b^2 + c^2 - 2ab - 2bc - 2ca \f]
-       *  @see see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function          
-       *  @param a parameter a
-       *  @param b parameter b
-       *  @param c parameter c
-       *  @return the value of triangle function
-       */
-      static double triangle
-      ( const double a ,
-        const double b ,
-        const double c ) ;
       // ======================================================================
       /** calculate the particle momentum in rest frame
        *  \f[ q = \frac{1}{2}\frac{ \lambda^{\frac{1}{2}}
@@ -419,6 +407,74 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class PSDalitz 
+     *  @see Ostap::Kinematics::Dalitz
+     */
+    class PSDalitz 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from Dalizt plot          
+      PSDalitz ( const Ostap::Kinematics::Dalitz& dalitz ) ;
+      /// constructor from all masses  
+      PSDalitz ( const double M  = 1 , 
+                 const double m1 = 0 , 
+                 const double m2 = 0 , 
+                 const double m3 = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the value of PDF 
+       *  @see Ostap::Kinematics::Dalitz::dRdm12 
+       */
+      double operator () ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the underlaying Dalitz plot 
+      const Ostap::Kinematics::Dalitz& dalitz() const { return m_dalitz ; }
+      /// get the overall mass 
+      double M  () const { return m_dalitz.M  () ; }
+      /// the first mass 
+      double m1 () const { return m_dalitz.m1 () ; }
+      /// the second mass 
+      double m2 () const { return m_dalitz.m2 () ; }
+      /// the third mass 
+      double m3 () const { return m_dalitz.m3 () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      double xmin () const { return m1() + m2 () ;  }
+      double xmax () const { return M () - m3 () ;  }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral
+      double integral () const ;
+      /// get the integral between low and high limits
+      double integral ( const double low  ,
+                        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag  
+      std::size_t tag () const ; // get the hash 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// Dalitz plot istself 
+      Ostap::Kinematics::Dalitz m_dalitz ; // Dalitz plot istself 
+      /// normalization constant
+      double                    m_norm   ; // normalization constant
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
+      // ======================================================================
+    };
     // ========================================================================
     /** @class PhaseSpace23L
      *  simple function to represent the phase

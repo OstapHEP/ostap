@@ -19,6 +19,7 @@ namespace Ostap
   // ==========================================================================
   typedef ROOT::Math::XYZVector            XYZVector;       ///<  Cartesian 3D vector (double)
   typedef ROOT::Math::XYZVector            Vector3D ;       ///<  Cartesian 3D vector (double)
+  typedef ROOT::Math::XYZVector            ThreeVector ;    ///<  Cartesian 3D vector (double)
   typedef ROOT::Math::Polar3DVector        Polar3DVector;   ///<  Polar 3D vector (double)
   typedef ROOT::Math::RhoEtaPhiVector      RhoEtaPhiVector; ///<  RhoEtaPhi 3D vector (double)
   typedef ROOT::Math::RhoZPhiVector        RhoZPhiVector;   ///<  RhoZPhi 3D vector (double)

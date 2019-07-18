@@ -10,10 +10,7 @@
 // ============================================================================
 #include "Ostap/Polarization.h"
 #include "Ostap/Tensors.h"
-// ============================================================================
-// ROOT
-// ============================================================================
-#include "Math/Boost.h"
+#include "Ostap/Kinematics.h"
 // ============================================================================
 /** @file 
  *  Implementation file for functions from namespace Ostap::Polarization
@@ -30,85 +27,6 @@ namespace
   constexpr double s_INVALID = -0.9 * std::numeric_limits<float>::max () ;
   static_assert (  s_INVALID <  0   , "invalid negative number"    ) ;
   // ==========================================================================
-}
-// ============================================================================
-/*  Boost LorentzVector into rest-frame of another Lorentz vector 
- *  @param what   the vextro to be bosted 
- *  @param frame  the 4-vector of the frame 
- *  @return boosted vector 
- */
-// ============================================================================
-Ostap::LorentzVector Ostap::Math::boost 
-( const Ostap::LorentzVector& what  ,
-  const Ostap::LorentzVector& frame )
-{
-  const ROOT::Math::Boost b { frame.BoostToCM() } ;
-  return b ( what ) ;
-}
-// ============================================================================
-/*  simple function which evaluates the magnitude of 3-momentum
- *  of particle "v" in the rest system of particle "M"
- *
- *  \f$ \left|\vec{p}\right|
- *     \sqrt{  \frac{\left(v\cdot M\right)^2}{M^2} -v^2} \f$
- *
- *  @attention particle M must be time-like particle!
- *  @param v the vector to be checked
- *  @param M the defintion of "rest"-system
- *  @return the magnitude of 3D-momentum of v in rest-frame of M
- *  @date 2008-07-27
- */
-// ============================================================================
-double Ostap::Math::restMomentum
-( const Ostap::LorentzVector& v ,
-  const Ostap::LorentzVector& M )
-{
-  const double M2 = M.M2 ( ) ;
-  if ( 0 >= M2 ) { return s_INVALID ; } //   ATTENTION!
-  const double vM = v.Dot(M) ;
-  const double P2 = vM * vM / M2 - v.M2() ;
-  if ( 0 >  P2 ) { return s_INVALID ; } //   ATTENTION!
-  return 0 <= P2 ? std::sqrt ( P2 ) : -std::sqrt ( std::abs ( P2 ) ) ;
-}
-// ============================================================================
-/*  simple function which evaluates the energy
- *  of particle "v" in the rest system of particle "M"
- *
- *  \f$ e = \frac{v\cdot M}{\sqrt{M^2}} \f$
- *
- *  @attention particle M must be time-like particle: M^2 > 0 !
- *  @param v the vector to be checked
- *  @param M the defintion of "rest"-system
- *  @return the energy of v in rest-frame of M
- *  @author Vanya BELYAEV Ivan.BElyaev@nikhef.nl
- *  @date 2008-07-27
- */
-// ============================================================================
-double Ostap::Math::restEnergy
-( const Ostap::LorentzVector& v ,
-  const Ostap::LorentzVector& M )
-{
-  const double M2 = M.M2 () ;
-  if ( 0 >= M2 ) { return s_INVALID ;  } //  RETURN 
-  // evaluate the energy
-  return v.Dot( M ) / std::sqrt ( M2 ) ;
-}
-// ============================================================================
-/*  simple function for evaluation of the euclidiam norm
- *  for LorentzVectors
- *  (E**2+Px**2+Py**2+Pz**2)
- *  @param vct the vector
- *  @return euclidian norm squared
- *  @date 2006-01-17
- */
-// ============================================================================
-double Ostap::Math::euclidianNorm2 ( const Ostap::LorentzVector& vct )
-{
-  return
-    vct.e() * vct.e() +
-    vct.x() * vct.x() +
-    vct.y() * vct.y() +
-    vct.z() * vct.z() ;
 }
 // ============================================================================
 namespace 
@@ -237,7 +155,7 @@ Ostap::Math::Polarization::cosines
 ( const Ostap::LorentzVector&             p , 
   const Ostap::Math::Polarization::Frame& f ) 
 {
-  const double irm = -1 / restMomentum ( p , f[3] ) ;
+  const double irm = -1 / Ostap::Kinematics::restMomentum ( p , f[3] ) ;
   return {{  f[0].Dot(p)*irm , f[1].Dot(p)*irm ,f[2].Dot(p)*irm }} ;
 }
 // ============================================================================

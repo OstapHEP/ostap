@@ -8,6 +8,8 @@
 // Ostap
 // ============================================================================
 #include "Ostap/PhaseSpace.h"
+#include "Ostap/Dalitz.h"
+#include "Ostap/Kinematics.h"
 // ============================================================================
 // GSL
 // ============================================================================
@@ -142,27 +144,13 @@ double Ostap::Math::PhaseSpace2::phasespace
   if ( m < m1 + m2                ) { return 0 ; } // RETURN
   //
   const double msq = m * m ;
-  const double lam = triangle ( msq  , m1 * m1 , m2 * m2 ) ;
+  const double lam = Ostap::Kinematics::triangle ( msq  , m1 * m1 , m2 * m2 ) ;
   //
   static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
   //
   return 0 < lam ?
     s_inv8pi * Ostap::Math::pow ( std::sqrt ( lam ) / msq , 2 * L + 1 ) : 0.0 ;
 }
-// ============================================================================
-/*  calculate the triangle function
- *  \f$ \lambda ( a , b, c ) = a^2 + b^2 + c^2 - 2ab - 2bc - 2 ca \f$
- *  @param a parameter a
- *  @param b parameter b
- *  @param c parameter b
- */
-// ============================================================================
-double
-Ostap::Math::PhaseSpace2::triangle
-( const double a ,
-  const double b ,
-  const double c )
-{ return a * a + b * b + c * c - 2 * a * b - 2 * b * c - 2 * a * c ; }
 // ============================================================================
 /*  calculate the particle momentum in rest frame
  *  @param m  the mass
@@ -179,7 +167,7 @@ double Ostap::Math::PhaseSpace2::q
   //
   if ( 0 >= m || 0 > m1 || 0 > m2 ) { return 0 ; }
   //
-  const double lam = triangle ( m * m  , m1 * m1 , m2 * m2 ) ;
+  const double lam = Ostap::Kinematics::triangle ( m * m  , m1 * m1 , m2 * m2 ) ;
   //
   return 0 < lam ? 0.5  * std::sqrt (  lam ) / m : 0 ;
 }
@@ -201,15 +189,13 @@ Ostap::Math::PhaseSpace2::q1
   //
   if ( 0 >= m || 0 > m1 || 0 > m2 ) { return 0 ; }
   //
-  const double lam = triangle ( m * m , m1 * m1 , m2 * m2 ) ;
+  const double lam = Ostap::Kinematics::triangle ( m * m , m1 * m1 , m2 * m2 ) ;
   //
   return
     0 <= lam ?
     std::complex<double> (     0.5  * std::sqrt (  lam ) / m , 0 ) :
     std::complex<double> ( 0 , 0.5  * std::sqrt ( -lam ) / m     ) ;
 }
-// ============================================================================
-
 // ============================================================================
 /*  constructor from three masses
  *  @param m1 the mass of the first  particle
@@ -233,7 +219,7 @@ Ostap::Math::PhaseSpace3::PhaseSpace3
   , m_tmp ( 0  )   
 {}
 // ============================================================================
-// deststructor
+// destructor
 // ============================================================================
 Ostap::Math::PhaseSpace3::~PhaseSpace3 () {}
 // ============================================================================
@@ -710,6 +696,86 @@ double  Ostap::Math::PhaseSpaceNL::integral() const
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpaceNL::tag () const  // get the tag
 { return std::hash_combine ( m_L , m_N , m_threshold1 , m_threshold2 ) ; }
+// ============================================================================
+
+// ============================================================================
+// constructor from all masses
+// ============================================================================
+Ostap::Math::PSDalitz::PSDalitz
+( const double M  , 
+  const double m1 , 
+  const double m2 , 
+  const double m3 ) 
+  : PSDalitz (  Ostap::Kinematics::Dalitz ( M , m1 , m2 , m3 ) )
+{}
+// ============================================================================
+// constructor from Dalizt plot 
+// ============================================================================
+Ostap::Math::PSDalitz::PSDalitz
+( const Ostap::Kinematics::Dalitz& dalitz )
+  : m_dalitz     ( dalitz ) 
+  , m_norm       ( -1     )
+  , m_workspace  (        )
+{
+  m_norm = 1.0 / integral() ;
+}
+// ============================================================================
+/*  get the value of PDF 
+ *  @see Ostap::Kinematics::Dalitz::dRdm12 
+ */
+// ============================================================================
+double Ostap::Math::PSDalitz::operator () ( const double x ) const 
+{ return ( 0 < m_norm ? m_norm : 1.0 ) * m_dalitz.dRdm12 ( x ) ; }
+// ============================================================================
+// get the integral between low and high limits
+// ============================================================================
+double  Ostap::Math::PSDalitz::integral
+( const double low  ,
+  const double high ) const
+{
+  if ( s_equal ( low , high ) ) { return                 0.0        ; } // RETURN
+  if (           low > high   ) { return - integral ( high , low  ) ; } // RETURN
+  //
+  const double x_min = xmin () ;
+  const double x_max = xmax () ;
+  //
+  if ( low >= x_max || high <= x_min ) { return 0 ; }
+  //
+  const double xlow  = std::max ( low  , x_min ) ;
+  const double xhigh = std::min ( high , x_max ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<PSDalitz> s_integrator {} ;
+  static char s_message[] = "Integral(PSDalitz)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag ()        ,
+      &F            , 
+      xlow          , xhigh     ,    // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_SIZE              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the integral
+// ============================================================================
+double  Ostap::Math::PSDalitz::integral() const
+{ return m_norm > 0 ? m_norm : integral ( m1() + m2() , M() - m3 () ) ; }
+// ============================================================================
+// get the tag  
+// ============================================================================
+std::size_t Ostap::Math::PSDalitz::tag () const  // get the tag
+{ return std::hash_combine ( M() , m1() , m2() , m3 () ) ; }
 // ============================================================================
 
 

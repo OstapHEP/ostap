@@ -21,6 +21,7 @@
 #include "Ostap/Choose.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Combine.h"
+#include "Ostap/Dalitz.h"
 #include "Ostap/Digit.h"
 #include "Ostap/EigenSystem.h"
 #include "Ostap/Error2Exception.h"

@@ -1020,30 +1020,41 @@ class PDF (MakeVar) :
     #  model.fitTo ( dataset , ... )
     #  nll, sfactor  = model.nll ( 'dataset )
     #  @endcode
-    #  @see RooAbsPdf::createNLL 
+    #  @see RooAbsPdf::createNLL
+    # 
+    #  @attention Due to the bug/typo in<c> RooAbsPdf.clreateNLL</c>, line 817 
+    #  <c>CloneData</c> depends on <c>Optimize</c>
+    #  @todo report problem to RooFit and fix it! 
     def nll ( self            ,
               dataset         ,
-              silent  = True  , 
+              silent  = True  ,
               args    = ()    , **kwargs ) :
         """Get NLL object from the pdf
         >>> model.fitTo ( dataset , ... )
         >>> nll, sf = model.nll ( dataset )
         - see RooAbsPdf::createNLL 
         """
-
         
         ## convert if needed 
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
             dataset = dataset.dset 
 
-        nllopts  = [ ROOT.RooFit.CloneData ( False ) ]
+        clone   = kwargs.pop ('clone', False )
+        nllopts = [ ROOT.RooFit.CloneData ( clone ) ]
+
+        ## due to the bug in<c> RooAbsPdf.clreateNLL</c>,
+        #   <c>CloneData</c> depends on <c>Optimize</c>
+        #  @todo report problem to RooFit and fix it! 
+        if not clone :
+            nllopts.append ( ROOT.RooFit.Optimize ( False ) )             
+        
         ncpu     = kwargs.pop ( 'ncpu'  , numcpu () )
         if    isinstance ( ncpu , ROOT.RooCmdArg ) :
             nllopts.append ( ncpu ) 
         elif  isinstance ( ncpu , int            ) :
             nllopts.append ( ROOT.RooFit.NumCPU (  ncpu ) )
         else                                       :
-            nllopts.apepnd ( ROOT.RooFit.NumCPU ( *ncpu ) )
+            nllopts.append ( ROOT.RooFit.NumCPU ( *ncpu ) )
         ##
         nllopts = args + tuple ( nllopts )
         #
@@ -1195,11 +1206,11 @@ class PDF (MakeVar) :
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars
-
+        
         with roo_silent ( silent ) :
             
-            ## create NLL object
-            nll , sf = self.nll ( dataset , silent = silent , args = args , **kwargs ) 
+            nll , sf = self.nll ( dataset , silent = silent , clone = False ,
+                                  args = nargs , **kwargs ) 
             
             ## unpack the range 
             minv , maxv = range
@@ -1245,6 +1256,8 @@ class PDF (MakeVar) :
             result = 2.0 * abs ( dnll )
             result = result**0.5
 
+            del nll
+            
         return result if 0<=dnll else -1*result 
             
     # =========================================================================
