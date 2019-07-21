@@ -288,11 +288,16 @@ class PDF2 (PDF) :
         Make 1D-plot:
         """
         
+        if   drawvar in ( 'x'  , 'X' , '1' , 1 , self.xvar.name ) : drawvar = self.xvar
+        elif drawvar in ( 'y'  , 'Y' , '2' , 2 , self.yvar.name ) : drawvar = self.yvar
+
         #
         ## special case:  do we need it? 
-        # 
-        if not drawvar : return self.draw_H2D( dataset , nbins , ybins )
+        #
 
+        if drawvar is None : return self.draw_H2D( dataset , nbins , ybins )
+        
+        
         ## copy arguments:
         args = kwargs.copy ()
         
@@ -330,11 +335,6 @@ class PDF2 (PDF) :
             args [ 'crossterm2_options' ] = crossterm2_options
             args [  'total_fit_options' ] =  total_fit_options
             
-            ## background_options  = self.draw_option ('background_options' , **args )
-            ## background_style    = self.draw_option (  'background_style' , **args )
-            ## args [ 'background_options' ] = background_options
-            ## args [ 'background_style'   ] = background_style
-        
         #
         ## redefine the drawing variable:
         # 
@@ -342,7 +342,7 @@ class PDF2 (PDF) :
         
         #
         ## delegate the actual drawing to the base class
-        # 
+        #
         result = PDF.draw ( self            ,
                             dataset         ,
                             nbins  = nbins  ,

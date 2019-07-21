@@ -211,6 +211,7 @@ __all__ = (
     'RooKeys3D_pdf'     , ## 3D-wrapper for RooNDKeysPdf 
     #
     ## simultaneous  fit
+    'SimFit'            , ##    Simultaneous fit 
     'Sim1D'             , ## 1D-simultaneous fit 
     # 
     ## helpers
@@ -263,10 +264,10 @@ from ostap.fitting.fit3d         import *
 logger.debug ("Import 3D background        models from ``models_3d''"    )
 from ostap.fitting.models_3d     import *  
 logger.debug ("Import simultaneous fit            from ``simfit''"       )
-from ostap.fitting.simfit        import Sim1D
+from ostap.fitting.simfit        import Sim1D, SimFit 
 logger.debug ("Import convolution          models from ``convolution''"  )
 from ostap.fitting.convolution   import *  
-logger.debug ("Import resoltuion           models from ``resoltuion''"   )
+logger.debug ("Import resoltuion           models from ``resolution''"   )
 from ostap.fitting.resolution    import *  
 logger.debug ("Import adjustment           models from ``adjust''"       )
 from ostap.fitting.adjust        import *  

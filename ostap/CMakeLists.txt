@@ -63,6 +63,8 @@ foreach(filename ${allfiles})
    ##string(PREPEND tname test_runit_)
    string(CONCAT tname test_runit_ ${tname})
 
+   ## MESSAGE ( 'test' ${tname} "---" ${test_name} "---" ${filename} ) 
+
    if( ${NOSE_EXECUTABLE-FOUND} )
      add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=5000 )
    else  () 

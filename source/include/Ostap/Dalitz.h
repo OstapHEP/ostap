@@ -14,10 +14,11 @@ namespace Ostap
   namespace Kinematics 
   {
     // ========================================================================
-    /** simple Kinematics of Dalitz plot 
-     *  @see Section V.1
+    /** @class Dalitz Ostap/Dalitz.h 
+     *  Simple Kinematics of Dalitz plot 
      *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
      *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)     
+     *  @see Section V.1
      *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
      */
     class Dalitz
@@ -178,16 +179,16 @@ namespace Ostap
       // ======================================================================
       ///  full energy in (1,2)-rest frame 
       inline double E_R12  ( const double s1 , const double /* s2 */ ) const    
-      { return ( s () + s1 - m_m3 * m_m3 )            / ( 2 * std::sqrt ( s1 ) ) ; }      
+      { return ( s () + s1 - m3sq ()  )     / ( 2 * std::sqrt ( s1 ) ) ; }      
       /// energy of 1st  particle in (2,3)-rest frame 
       inline double E1_R12 ( const double s1 , const double /* s2 */ ) const    
-      { return ( s1   +  m_m1 * m_m1 - m_m2 * m_m2  ) / ( 2 * std::sqrt ( s1 ) ) ; }
+      { return ( s1   + m1sq () - m2sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
       /// energy of 2nd  particle in (2,3)-rest frame 
       inline double E2_R12 ( const double s1 , const double /* s2 */ ) const    
-      { return ( s1   +  m_m2 * m_m2 - m_m1 * m_m1  ) / ( 2 * std::sqrt ( s1 ) ) ; }
+      { return ( s1   + m2sq () - m1sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
       /// energy of 3rd  particle in (2,3)-rest frame 
       inline double E3_R12 ( const double s1 , const double /* s2 */ ) const    
-      { return ( s () - s1 - m_m3 * m_m3 )            / ( 2 * std::sqrt ( s1 ) ) ; }
+      { return ( s () - s1 - m3sq ()  )     / ( 2 * std::sqrt ( s1 ) ) ; }
       /// total momentum in (1,2)-rest frame
       double P_R12   ( const double    s1 , const double s2 ) const ;
       /// momentum of 3rd particle in (1,2)-rest frame 
@@ -214,16 +215,16 @@ namespace Ostap
       // ======================================================================
       ///  full energy in (2,3)-rest frame 
       inline double E_R23  ( const double /* s1 */ , const double s2 ) const    
-      { return ( s () + s2 - m_m1 * m_m1 )            / ( 2 * std::sqrt ( s2 ) ) ; }
+      { return ( s () + s2 - m1sq () )        / ( 2 * std::sqrt ( s2 ) ) ; }
       /// energy of 1st  particle in (2,3)-rest frame 
       inline double E1_R23 ( const double /* s1 */ , const double s2 ) const    
-      { return ( s () - s2 - m_m1 * m_m1 )            / ( 2 * std::sqrt ( s2 ) ) ; }
+      { return ( s () - s2 - m1sq ()  )       / ( 2 * std::sqrt ( s2 ) ) ; }
       /// energy of 2nd  particle in (2,3)-rest frame 
       inline double E2_R23 ( const double /* s1 */ , const double s2 ) const    
-      { return ( s2   +  m_m2 * m_m2 - m_m3 * m_m3  ) / ( 2 * std::sqrt ( s2 ) ) ; }
+      { return ( s2   +  m2sq () - m3sq ()  ) / ( 2 * std::sqrt ( s2 ) ) ; }
       /// energy of 3rd  particle in (2,3)-rest frame 
       inline double E3_R23 ( const double /* s1 */ , const double s2 ) const    
-      { return ( s2   +  m_m3 * m_m3 - m_m2 * m_m2  ) / ( 2 * std::sqrt ( s2 ) ) ; }
+      { return ( s2   +  m3sq () - m2sq () ) / ( 2 * std::sqrt ( s2 ) ) ; }
       /// total momentum in (2,3)-rest frame
       double P_R23   ( const double /* s1 */ , const double s2 ) const ;
       /// momentum of 1st particle in (2,3)-rest frame 
@@ -253,25 +254,25 @@ namespace Ostap
       inline double E_R31  ( const double s1 , const double s2 ) const    
       { 
         const double s3_ = s3 ( s1 , s2 ) ;
-        return ( s () + s3_ - m_m2 * m_m2 )            / ( 2 * std::sqrt ( s3_) ) ; 
+        return ( s () + s3_ - m2sq ()  )     / ( 2 * std::sqrt ( s3_) ) ; 
       }
       /// energy of 1st  particle in (3,1)-rest frame 
       inline double E1_R31 ( const double  s1 , const double s2 ) const    
       { 
         const double s3_ = s3 ( s1 , s2 ) ;
-        return ( s3_ +  m_m1 * m_m1 - m_m3 * m_m3 ) / ( 2 * std::sqrt ( s3_ ) ) ;
+        return ( s3_ +  m1sq ()  - m3sq () ) / ( 2 * std::sqrt ( s3_ ) ) ;
       }
       /// energy of 2nd  particle in (3,1)-rest frame 
       inline double E2_R31 ( const double s1 , const double s2 ) const    
       { 
         const double s3_ = s3 ( s1 , s2 ) ;
-        return ( s () - s3_ - m_m2 * m_m2 )        / ( 2 * std::sqrt ( s3_ ) ) ; 
+        return ( s () - s3_ - m2sq ()  )    / ( 2 * std::sqrt ( s3_ ) ) ; 
       }
       /// energy of 3rd  particle in (2,3)-rest frame 
       inline double E3_R31 ( const double s1 , const double s2 ) const    
       { 
         const double s3_ = s3 ( s1 , s2 ) ;
-        return ( s3_ +  m_m3 * m_m3 - m_m1 * m_m1 ) / ( 2 * std::sqrt ( s3_ ) ) ; 
+        return ( s3_ +  m3sq ()  - m1sq () ) / ( 2 * std::sqrt ( s3_ ) ) ; 
       }
       /// total momentum in (3,1)-rest frame
       double P_R31   ( const double /* s1 */ , const double s2 ) const ;

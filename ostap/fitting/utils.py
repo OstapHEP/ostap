@@ -32,7 +32,7 @@ __all__     = (
     'RooPolyBase'       , ##  helper class for RooFit polynomials
     )
 # =============================================================================
-import ROOT, math
+import ROOT, math, string
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   ostap.core.core     import rootID, VE, items_loop
@@ -150,6 +150,18 @@ class RangeVar(object) :
 ## keep the list of local loggers  
 _loggers  = {}           
 # =============================================================================
+def val2str ( value , format = 'CONST_%s' ) :
+    #
+    result = format % value
+    result = result.replace ( '-' , '_negate_')
+    result = result.replace ( '.' , '_dot_'   )
+    result = result.replace ( '+' , '_plus_'  )
+    #
+    if ( not result ) or ( result[0] not in string.ascii_letters ) :
+        result = 'v_' + result
+    #
+    return result
+# ============================================================================
 ## @class MakeVar
 #  Helper class that allows implement several purely  technical methods:
 #   - creation of <code>ROOT.RooRealVar objects</code>
@@ -538,17 +550,17 @@ class MakeVar ( object ) :
 
         if f1 and f2 :
             res   = float ( var1 ) * float ( var2 )
-            name  = name  if name   else 'CONST_%s'     % res
+            name  = name  if name   else val2str ( res ) 
             title = title if title  else 'Constant(%s)' % res
             var   = ROOT.RooConstVar ( name , title , res )
             self.aux_keep.append ( var )
             return  var
         elif f1 : 
-            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
             self.aux_keep.append ( var1 )
             return self.vars_multiply ( var1 , var2 , name , title )
         elif f2 : 
-            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
             self.aux_keep.append ( var2 )
             return self.vars_multiply ( var1 , var2 , name , title )
         
@@ -592,17 +604,17 @@ class MakeVar ( object ) :
 
         if f1 and f2 :
             res   = float ( var1 ) + float ( var2 )
-            name  = name  if name   else 'CONST_%s'     % res
+            name  = name  if name   else val2str ( res )
             title = title if title  else 'Constant(%s)' % res
             var   = ROOT.RooConstVar ( name , title , res )
             self.aux_keep.append ( var )
             return  var
         elif f1 : 
-            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
             self.aux_keep.append ( var1 )
             return self.vars_add ( var1 , var2 , name , title )
         elif f2 : 
-            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
             self.aux_keep.append ( var2 )
             return self.vars_add ( var1 , var2 , name , title )
         
@@ -647,17 +659,17 @@ class MakeVar ( object ) :
 
         if f1 and f2 :
             res   = float ( var1 ) - float ( var2 )
-            name  = name  if name   else 'CONST_%s'     % res
+            name  = name  if name   else val2str ( res ) 
             title = title if title  else 'Constant(%s)' % res
             var   = ROOT.RooConstVar ( name , title , res )
             self.aux_keep.append ( var )
             return  var
         elif f1 : 
-            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
             self.aux_keep.append ( var1 )
             return self.vars_subtract ( var1 , var2 , name , title )
         elif f2 : 
-            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
             self.aux_keep.append ( var2 )
             return self.vars_subtract ( var1 , var2 , name , title )
         
@@ -701,17 +713,17 @@ class MakeVar ( object ) :
 
         if f1 and f2 :
             res   = float ( var1 ) / float ( var2 )
-            name  = name  if name   else 'CONST_%s'     % res
+            name  = name  if name   else val2str ( res ) 
             title = title if title  else 'Constant(%s)' % res
             var   = ROOT.RooConstVar ( name , title , res )
             self.aux_keep.append ( var )
             return  var
         elif f1 : 
-            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
             self.aux_keep.append ( var1 )
             return self.vars_divide ( var1 , var2 , name , title )
         elif f2 : 
-            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
             self.aux_keep.append ( var2 )
             return self.vars_divide ( var1 , var2 , name , title )
         
@@ -756,17 +768,17 @@ class MakeVar ( object ) :
 
         if f1 and f2 :
             res   = float ( var1 ) /  ( float ( var2 ) + float ( var1 ) )
-            name  = name  if name   else 'CONST_%s'     % res
+            name  = name  if name   else val2str ( res ) 
             title = title if title  else 'Constant(%s)' % res
             var   = ROOT.RooConstVar ( name , title , res )
             self.aux_keep.append ( var )
             return  var
         elif f1 : 
-            var1 = ROOT.RooConstVar  ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
+            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
             self.aux_keep.append ( var1 )
             return self.vars_fraction ( var1 , var2 , name , title )
         elif f2 : 
-            var2 = ROOT.RooConstVar  ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
+            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
             self.aux_keep.append ( var2 )
             return self.vars_fraction ( var1 , var2 , name , title )
         

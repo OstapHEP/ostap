@@ -288,7 +288,7 @@ class PDF (MakeVar) :
                                  
     @property
     def draw_var ( self ) :
-        """``draw_var''  :  varibale to be drawn if not specified explicitely"""
+        """``draw_var''  :  variable to be drawn if not specified explicitely"""
         return self.__draw_var
     @draw_var.setter
     def draw_var ( self , value ) :
@@ -298,7 +298,7 @@ class PDF (MakeVar) :
 
     @property
     def draw_options ( self ) :
-        """``draw_options'' : disctionarie with predefined draw-opptions for this PDF
+        """``draw_options'' : disctionary with predefined draw-options for this PDF
         """
         return self.__draw_options
 
@@ -673,11 +673,11 @@ class PDF (MakeVar) :
 
             drawvar = self.draw_var if self.draw_var else self.xvar  
 
-            binned = dataset  and isinstance ( dataset , ROOT.RooDataHist )
-            
-            if nbins :  frame = drawvar.frame ( nbins )
+            binned = dataset and isinstance ( dataset , ROOT.RooDataHist )
+
+            if nbins :  frame = drawvar.frame ( nbins )            
             else     :  frame = drawvar.frame ()
-            
+
             #
             ## draw invizible data (for normalzation of fitting curves)
             #
@@ -1015,7 +1015,7 @@ class PDF (MakeVar) :
         return result, self.draw ( hdataset , nbins = nbins , silent = silent , **draw_opts )
 
     # =========================================================================
-    ## creat  NLL
+    ## create NLL
     #  @code
     #  model.fitTo ( dataset , ... )
     #  nll, sfactor  = model.nll ( 'dataset )
@@ -2438,7 +2438,7 @@ class Generic1D_pdf(PDF) :
     >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
     """
     ## constructor 
-    def __init__ ( self , pdf , xvar ,
+    def __init__ ( self , pdf , xvar = None  ,
                    name           = None  ,
                    special        = False ,
                    add_to_signals = True  ) :
@@ -2446,8 +2446,8 @@ class Generic1D_pdf(PDF) :
         >>> raw_pdf = RooGaussian   ( ...     )
         >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
         """
-        assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
-        assert isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf'' must be ROOT.RooAbsReal"
+        assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
+        assert pdf  and isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf'' must be ROOT.RooAbsReal"
         
         name = name if name else pdf.GetName ()        
         ## initialize the base 

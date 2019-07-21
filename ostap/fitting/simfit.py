@@ -13,14 +13,16 @@ __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
-    'Sim1D'          , ## fit model for simultaneous 1D-fit
+    'SimFit'         , ## fit model for simultaneon     fit
+    'Sim1D'          , ## fit model for simultaneous 1D-fit (obsolete) 
     'combined_data'  , ## prepare combined dataset for the simultaneous fit
     'combined_hdata' , ## prepare combined binned dataset for the simultaneous fit
     )
 # =============================================================================
-import ROOT, math,  random
+import ROOT, math,  random , warnings 
 from   ostap.core.core     import std , Ostap , dsID , items_loop 
-from   ostap.fitting.basic import PDF , Generic1D_pdf  
+from   ostap.fitting.utils import MakeVar
+from   ostap.fitting.basic import PDF , Generic1D_pdf
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.simfit' )
@@ -182,6 +184,8 @@ class Sim1D(PDF) :
                    xvar       = None ,
                    name       = None , 
                    title      = ''   ) :
+
+        warnings.warn("Usage of obsolete Sim1D. Use SimFit instead")
         
         if isinstance ( sample , ( tuple , list ) ) :
             _cat = ROOT.RooCategory ( 'sample' , 'sample' )
@@ -384,12 +388,6 @@ class Sim1D(PDF) :
         kwargs [ 'component_options'  ] = cmpoptions 
         kwargs [ 'total_fit_options'  ] = totoptions 
 
-        _signals     = self.signals    .clone()
-        _backgrounds = self.backgrounds.clone()
-        _components  = self.components .clone()
-        _crossterms1 = self.crossterms1.clone()
-        _crossterms2 = self.crossterms2.clone()
-
         from ostap.fitting.roocollections import KeepArgs
 
         cat_pdf = self.categories[ category ]
@@ -437,6 +435,367 @@ for _a in (
             raise AttributeError ( "'%s' object has no attribute '%s'" % ( type ( self ) , _a ) )
         setattr ( Sim1D , _a , _suppress_ ) 
         logger.verbose ( 'Remove attribute %s from Sim1D' ) 
+
+
+# =============================================================================        
+## @class SimFit
+#  Helper class to simplify creation and usage of simultaneous PDF
+#  @code
+#  @endcode 
+#  @see RooSimultaneous
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2018-11-23
+class SimFit ( MakeVar ) :
+    """Helper class to simplify the creation and usage of simultaneous PDF
+    
+    - see RooSimultaneous 
+    """
+    
+    def __init__ ( self              ,
+                   sample            , 
+                   categories        ,
+                   name       = None , 
+                   title      = ''   ) :
+        
+        if isinstance ( sample , ( tuple , list ) ) :
+            _cat = ROOT.RooCategory ( 'sample' , 'sample' )
+            for i in sample : _cat.defineType ( i ) 
+            sample =  _cat
+            
+        assert isinstance ( sample , ROOT.RooCategory ),\
+               'Invalid type for "sample":' % ( sample ,  type ( sample ) )
+        
+        if not name  : name  = 'SimFit_'                 +          sample.GetName()
+        if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
+
+        ## propagatethe name 
+        self.name = name
+        
+        self.__sample       = sample 
+        self.__categories   = {}
+
+        # =====================================================================
+        ## components
+        # =====================================================================
+        labels = sample.labels()
+
+        from ostap.fitting.basic import PDF 
+        from ostap.fitting.fit2d import PDF2
+        from ostap.fitting.fit3d import PDF3
+
+        _xv = None 
+        for label in labels :
+            
+            cmp   = None 
+            if isinstance ( categories , dict ) : cmp = categories [ label ]
+            else :
+                for ii in categories :
+                    if ii[0] == label :
+                        cmp = ii[1]
+                        break
+
+            if not isinstance  ( cmp , PDF  ) :
+                raise TypeError ( 'Can not find the proper category component: "%s"' % label ) 
+            
+            self.__categories [ label ] = cmp
+            _xv = cmp.xvar
+            
+        sim_pdf     = PDF ( self.name , xvar = _xv )
+        sim_pdf.pdf = ROOT.RooSimultaneous ( 'Sim_' + self.name , title , self.sample )
+        
+        keys = self.categories.keys()
+        for key in sorted ( keys ) :
+            sim_pdf.pdf.addPdf ( self.categories[key].pdf , key )
+
+        self.__pdf = sim_pdf 
+        
+        for k , cmp in items_loop ( self.categories ) :
+            
+            for c in cmp.signals      : self.pdf.signals    .add ( c ) 
+            for c in cmp.backgrounds  : self.pdf.backgrounds.add ( c ) 
+            for c in cmp.crossterms1  : self.pdf.crossterms1.add ( c ) 
+            for c in cmp.crossterms2  : self.pdf.crossterms2.add ( c )
+            
+            self.pdf.draw_options.update ( cmp.draw_options )
+            
+        # =====================================================================
+        ##  drawing helpers
+        # =====================================================================
+        
+        self.__drawpdfs   = {}
+        for key in sorted ( keys ) :
+
+            cmp = self.categories [ key ] 
+            if isinstance  ( cmp , PDF3 ) :
+                from ostap.fitting.fit3d import Generic3D_pdf                
+                dpdf = Generic3D_pdf ( sim_pdf.pdf ,
+                                       cmp.xvar    ,
+                                       cmp.yvar    ,
+                                       cmp.zvar    ,
+                                       add_to_signals = False )
+            elif isinstance  ( cmp , PDF2 ) :
+                from ostap.fitting.fit2d import Generic2D_pdf                                
+                dpdf = Generic2D_pdf ( sim_pdf.pdf ,
+                                       cmp.xvar    ,
+                                       cmp.yvar    ,
+                                       add_to_signals = False )
+            elif isinstance  ( cmp , PDF  ) :
+                from ostap.fitting.basic import Generic1D_pdf   
+                dpdf = Generic1D_pdf ( sim_pdf.pdf ,
+                                       cmp.xvar    ,
+                                       add_to_signals = False )
+                
+            for c in cmp.signals     : dpdf.signals    .add ( c ) 
+            for c in cmp.backgrounds : dpdf.backgrounds.add ( c ) 
+            for c in cmp.crossterms1 : dpdf.crossterms1.add ( c ) 
+            for c in cmp.crossterms2 : dpdf.crossterms2.add ( c )
+
+
+            dpdf.draw_options.update ( cmp.draw_options )
+                        
+            self.__drawpdfs [ key ]  = dpdf
+
+        self.config = {
+            'name'       : self.name       ,
+            'title'      : title           ,            
+            'sample'     : self.sample     ,
+            'categories' : self.categories ,
+            }
+
+    
+    @property
+    def sample  ( self ) :
+        "``sample'' : RooCategory object for simultaneous PDF"
+        return self.__sample
+
+    @property
+    def pdf     ( self ) :
+        "``pdf''  : the actual PDF with RooSimultaneous "
+        return self.__pdf
+    
+    @property
+    def samples ( self ) :
+        "``samples'' : list/tuple of known categories"
+        return tuple ( self.__categories.keys() ) 
+
+    @property
+    def categories ( self ) :
+        "``categories'' : map { category : pdf } "
+        return self.__categories
+
+    @property
+    def drawpdfs ( self ) :
+        "``drawpdfs'' dictionary with PDFs for drawing"
+        return self.__drawpdfs
+
+    @property
+    def draw_options ( self ) :
+        """``draw_options'' : disctionary with predefined draw-options for this PDF
+        """
+        return self.pdf.draw_options
+
+    # =========================================================================
+    ## get the certain predefined drawing option
+    #  @code
+    #  options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
+    #  pdf = ...
+    #  pdf.draw_options['signal_style'] = [ options ]
+    #  ## and later:
+    #  options = pdf.draw_option ( 'signal_style' )
+    #  @endcode 
+    def draw_option ( self , key , default = () , **kwargs ) :
+        """Get the certain predefined drawing option
+        >>> options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
+        >>> pdf = ...
+        >>> pdf.draw_options['signal_style'] = [ options ]
+        - and later:
+        >>> options = pdf.draw_option ( 'signal_style' )
+        """
+        return self.pdf.draw_option ( key , default , **kwargs ) 
+
+    # =========================================================================
+    ## delegate  attribute search to the components 
+    def __getattr__ ( self , attr ) :
+        """Delegate attribute search to the category components
+        """
+        if attr in self.samples : return self.components[attr]
+        
+        raise  AttributeError('Unknown attibute %s' % attr )
+
+    # =========================================================================
+    ## make the actual fit (and optionally draw it!)
+    #  @code
+    #  r,f = model.fitTo ( dataset )
+    #  r,f = model.fitTo ( dataset , weighted = True )    
+    #  r,f = model.fitTo ( dataset , ncpu     = 10   )    
+    #  r,f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
+    #  @endcode 
+    def fitTo ( self           ,
+                dataset        ,
+                draw   = False ,
+                nbins  = 100   ,
+                silent = False ,
+                refit  = False ,
+                timer  = False ,
+                args   = ()    , **kwargs ) :
+        """
+        Perform the actual fit (and draw it)
+        >>> r,f = model.fitTo ( dataset )
+        >>> r,f = model.fitTo ( dataset , weighted = True )    
+        >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
+        >>> r,f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
+        """
+        assert self.sample in dataset      ,\
+               'Category %s is not in dataset' % self.sample.GetName()
+
+        res , frame = self.pdf.fitTo ( 
+            dataset = dataset ,
+            draw    = False   , ## ATTENTION! False is here! 
+            nbins   = nbins   ,
+            silent  = silent  ,
+            refit   = refit   ,
+            timer   = timer   , 
+            args    = args    , **kwargs )
+        
+        if   not draw                  : return res , None
+        elif draw in self.samples      : pass
+        elif isinstance ( draw , str ) :
+            draw , s , dvar = draw.partition('/')
+            if not draw in self.samples : 
+                self.error ('Unknown category for drawing %s' % draw )
+                return res , None
+        
+        from ostap.plotting.fit_draw import draw_options
+        draw_opts = draw_options ( **kwargs )
+
+        frame = self.draw ( category = draw    ,
+                            dataset  = dataset ,
+                            nbins    = nbins   ,
+                            silent   = silent  , **draw_opts )
+        
+        return res , frame
+    
+    # ========================================================================
+    ## Draw the PDF&data for the given category
+    #  @code
+    #  pdf.fitTo ( dataset )
+    #  pdf.draw ( 'signal' , dataset , nbins = 100 ) 
+    #  @endcode 
+    def draw ( self           ,
+               category       ,  ## must be specified! 
+               dataset        ,  ## must be specified!
+               nbins   =  100 ,
+               silent  = True ,
+               **kwargs       ) :
+        """
+        Draw the PDF&data for the given   category
+        >>> pdf.fitTo ( dataset )
+        >>> pf.draw ( 'signal' , dataset , nbins = 100 ) 
+        """
+        dvar = None 
+        if isinstance ( category , str ) : 
+            category , s , dvar = category.partition('/')
+            if dvar :
+                try :
+                    ivar = int ( dvar )
+                    dvar = ivar 
+                except ValueError :
+                    pass
+
+        print 'I MA HERE    #%s# and #%s/%s#' % (  category , dvar , type(dvar) )
+        
+        assert category    in self.samples ,\
+               'Category %s is not in %s' % ( category , self.samples )
+        assert self.sample in dataset      ,\
+               'Category %s is not in dataset' % self.sample.GetName()
+                
+        ## 
+        sname = self.sample.GetName() 
+        dcut  = ROOT.RooFit.Cut ( "%s==%s::%s"  % ( sname , sname , category ) )
+        
+        data_options = self.draw_option ( 'data_options' , **kwargs ) +  ( dcut , ) 
+        
+        self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
+        _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  ) 
+        _slice = ROOT.RooFit.Slice      ( self.sample    , category )
+
+        bkgoptions   = self.draw_option ( 'backrground_options' , **kwargs ) + ( _slice , _proj )
+        ct1options   = self.draw_option ( 'crossterm1_options'  , **kwargs ) + ( _slice , _proj )
+        ct2options   = self.draw_option ( 'crossterm2_options'  , **kwargs ) + ( _slice , _proj )        
+        cmpoptions   = self.draw_option (  'component_options'  , **kwargs ) + ( _slice , _proj )
+        sigoptions   = self.draw_option (     'signal_options'  , **kwargs ) + ( _slice , _proj )
+        totoptions   = self.draw_option (  'total_fit_options'  , **kwargs ) + ( _slice , _proj )
+        
+        kwargs [ 'data_options'       ] = data_options
+        kwargs [ 'signal_options'     ] = sigoptions 
+        kwargs [ 'background_options' ] = bkgoptions 
+        kwargs [ 'crossterm1_options' ] = ct1options 
+        kwargs [ 'crossterm2_options' ] = ct2options
+        kwargs [ 'component_options'  ] = cmpoptions 
+        kwargs [ 'total_fit_options'  ] = totoptions 
+
+        from ostap.fitting.roocollections import KeepArgs
+
+        cat_pdf  = self.categories [ category ]
+        draw_pdf = self.drawpdfs   [ category ]
+
+        if 1 < 2 : 
+        ## with KeepArgs     ( draw_pdf . signals     , cat_pdf . signals     ) as _k1 ,\
+        ##          KeepArgs ( draw_pdf . backgrounds , cat_pdf . backgrounds ) as _k2 ,\
+        ##          KeepArgs ( draw_pdf . components  , cat_pdf . components  ) as _k3 ,\
+        ##          KeepArgs ( draw_pdf . crossterms1 , cat_pdf . crossterms1 ) as _k4 ,\
+        ##          KeepArgs ( draw_pdf . crossterms2 , cat_pdf . crossterms2 ) as _k5 :
+
+            from ostap.fitting.basic import PDF 
+            from ostap.fitting.fit2d import PDF2
+            from ostap.fitting.fit3d import PDF3
+
+            print  'HERE-1', dvar, cat_pdf, draw_pdf 
+            
+            if   isinstance ( draw_pdf , PDF3 ) :
+
+                print '3D?'
+                
+                if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) : 
+                    return draw_pdf.draw3 ( dataset = dataset ,
+                                            nbins   = nbins   ,
+                                            silent  = silent  , **kwargs )
+                elif 2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) : 
+                    return draw_pdf.draw2 ( dataset = dataset ,
+                                            nbins   = nbins   ,
+                                            silent  = silent  , **kwargs )
+                elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
+                    return draw_pdf.draw1 ( dataset = dataset ,
+                                            nbins   = nbins   ,
+                                            silent  = silent  , **kwargs )
+                else :
+                    self.error('Unknown ``dvar'' for 3D-draw pdf!')
+                    return None
+                
+            elif isinstance ( draw_pdf , PDF2 ) :
+
+                print '2D?'
+
+                if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
+                    print 'here2'
+                    return draw_pdf.draw2 ( dataset = dataset ,
+                                            nbins   = nbins   ,
+                                            silent  = silent  , **kwargs )
+                elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
+                    print 'here1'
+                    return draw_pdf.draw1 ( dataset = dataset ,
+                                            nbins   = nbins   ,
+                                            silent  = silent  , **kwargs )
+                else :
+                    self.error('Unknown ``dvar'' for 2D-draw pdf! %s' %  dvar )
+                    return None 
+
+            elif isinstance ( draw_pdf , PDF  ) :
+                
+                return draw_pdf.draw ( dataset = dataset ,
+                                       nbins   = nbins   ,
+                                       silent  = silent  , **kwargs )
+            
         
 # =============================================================================
 if '__main__' == __name__ :

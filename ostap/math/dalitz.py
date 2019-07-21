@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/math/dalitz.py
-#  Set of useful "kinematic" utilities for dealing with Dalitz plot 
+#  Set of useful "kinematic" utilities for dealing with Dalitz plot
+#  @see Ostap::Kinematics::Dalitz
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-07-15
 # =============================================================================
-""" Set of useful ``kinematic'' utilities for delaing woith Dalitz plot 
+""" Set of useful ``kinematic'' utilities for Dalitz plot 
+- see Ostap.Kinematics.Dalitz
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"

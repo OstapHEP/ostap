@@ -295,7 +295,30 @@ class PDF3 (PDF2) :
                            ybins    = 20        , ## fake 
                            silent   = silent    ,
                            in_range = in_range  , **kwargs )
-
+    
+    
+    # =========================================================================
+    ## make 1D-plot
+    def draw ( self                         ,
+               drawvar               = None ,
+               dataset               = None ,
+               nbins                 =  100 ,
+               silent                = True ,
+               in_range              = None ,
+               **kwargs                     ) : 
+        """
+        Make 1D-plot:
+        """
+        if drawvar in ( 'z'  , 'Z' , '3' , 3 , self.zvar.name ) :
+            drawvar = self.zvar
+            
+        return PDF2.draw  ( self ,
+                            drawvar  = drawvar  ,
+                            dataset  = dataset  ,
+                            nbins    = nbins    ,
+                            silent   =  silent  ,
+                            in_range = in_range , **kwargs )
+                            
     # =========================================================================
     ## fit the 3D-histogram (and draw it)
     #
