@@ -692,18 +692,19 @@ class SimFit ( MakeVar ) :
         >>> pdf.fitTo ( dataset )
         >>> pf.draw ( 'signal' , dataset , nbins = 100 ) 
         """
-        dvar = None 
-        if isinstance ( category , str ) : 
-            category , s , dvar = category.partition('/')
-            if dvar :
-                try :
-                    ivar = int ( dvar )
-                    dvar = ivar 
-                except ValueError :
-                    pass
-
-        print 'I MA HERE    #%s# and #%s/%s#' % (  category , dvar , type(dvar) )
-        
+        dvar = None
+        if   isinstance ( category , ( tuple , list ) ) and 2 == len ( category ) :
+            category, dvar = category 
+        elif isinstance ( category , str ) :
+            category , _ , dvar = category.partition('/')
+            
+        if dvar :
+            try :
+                ivar = int ( dvar )
+                dvar = ivar 
+            except ValueError :
+                pass
+            
         assert category    in self.samples ,\
                'Category %s is not in %s' % ( category , self.samples )
         assert self.sample in dataset      ,\
@@ -750,12 +751,8 @@ class SimFit ( MakeVar ) :
             from ostap.fitting.fit2d import PDF2
             from ostap.fitting.fit3d import PDF3
 
-            print  'HERE-1', dvar, cat_pdf, draw_pdf 
-            
             if   isinstance ( draw_pdf , PDF3 ) :
 
-                print '3D?'
-                
                 if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) : 
                     return draw_pdf.draw3 ( dataset = dataset ,
                                             nbins   = nbins   ,
@@ -773,8 +770,6 @@ class SimFit ( MakeVar ) :
                     return None
                 
             elif isinstance ( draw_pdf , PDF2 ) :
-
-                print '2D?'
 
                 if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
                     print 'here2'
