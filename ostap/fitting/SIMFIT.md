@@ -4,11 +4,51 @@
 
 Collection of utilities that simplify Simultaneous fit using [`RooFit`](https://root.cern.ch/roofit).
 
+## Prepare the data set for the simultaneous fit :
+
+### `combine_data` 
+
+Helper function to create the "combined" data set for the simultanaeous fit 
+```python
+## sample  category:
+sample  = ROOT.RooCategory('Sample','sample','A','B','C')
+
+dataset_A = ... # regular RooDataSet
+dataset_B = ... # regular RooDataSet
+dataset_C = ... # regular RooDataSet
+## variables to be combined into the final data set
+vars     = ROOT.RooArgSet ( var1 , var2 , .. , varN )
+dataset  = combined_data ( sample , vars , { 'A' : dataset_A , 'B' : dataset_B , 'C' : dataset_C } ) 
+```
+
+This function can not combine the weighted data sets!  If weighted data sets are needed, combine non-weighed samples,  but provide the weight variable:
+```python
+## variables to be combined into final dataset
+SS_sw    = ... ## weigth variable in datasets 
+vars     = ROOT.RooArgSet ( var1 , var2 , SS_sw )
+dataset  = combined_data  ( sample , vars , 
+   { 'A' : dataset_A , 'B' : dataset_B , 'C' : dataset_C } , 
+   args = ( ROOT.RooFit.WeightVar ( SS_sw.name ) , ) )
+```
+
+
+### `combine_hdata` 
+
+Helper function to create "combined" data set directly from the the 1D-histograms 
+```python
+h_A     = ...
+h_B     = ...
+h_C     = ...
+vars    = ROOT.RooArgSet ( mass ) 
+dataset = combine_hdata ( sample , vars , {'A' : h_A , 'B' : h_B , 'C' : h_C } )
+```
+
+
+
 ## `SimFit`
 
 The helper PDF-like object that builds `RooSimultaneous` from set of Ostap-based pdfs 
 ```python
-sample  = ROOT.RooCategory('Sample','sample','A','B','C')
 pdf_A   = ...  ## the regular Ostap's PDF, can be 1D,2D or 3D 
 pdf_B   = ...  ## the regular Ostap's PDF, can be 1D,2D or 3D 
 pdf_C   = ...  ## the regular Ostap's PDF, can be 1D,2D or 3D 
@@ -72,41 +112,5 @@ frame = sim_fit.draw ( ('C','3')      , dataset , nbins = 100 ) ## ditto
 frame = sim_fit.draw ( ('C','z')      , dataset , nbins = 100 ) ## ditto 
 frame = sim_fit.draw ( ('C','Z')      , dataset , nbins = 100 ) ## ditto
 frame = sim_fit.draw ( ('C','mass3')  , dataset , nbins = 100 ) ## ditto 
-```
-
-## Prepare the data set for the simultaneous fit :
-
-### `combine_data` 
-
-Helper function to create the "combined" data set for the simultanaeous fit 
-```python
-dataset_A = ... # regular RooDataSet
-dataset_B = ... # regular RooDataSet
-dataset_C = ... # regular RooDataSet
-## variables to be combined into the final data set
-vars     = ROOT.RooArgSet ( var1 , var2 , .. , varN )
-dataset  = combined_data ( sample , vars , { 'A' : dataset_A , 'B' : dataset_B , 'C' : dataset_C } ) 
-```
-
-This function can not combine the weighted data sets!  If weighted data sets are needed, combine non-weighed samples,  but provide the weight variable:
-```python
-## variables to be combined into final dataset
-SS_sw    = ... ## weigth variable in datasets 
-vars     = ROOT.RooArgSet ( var1 , var2 , SS_sw )
-dataset  = combined_data  ( sample , vars , 
-   { 'A' : dataset_A , 'B' : dataset_B , 'C' : dataset_C } , 
-   args = ( ROOT.RooFit.WeightVar ( SS_sw.name ) , ) )
-```
-
-
-### `combine_hdata` 
-
-Helper function to create "combined" data set directly from the the 1D-histograms 
-```python
-h_A     = ...
-h_B     = ...
-h_C     = ...
-vars    = ROOT.RooArgSet ( mass ) 
-dataset = combine_hdata ( sample , vars , {'A' : h_A , 'B' : h_B , 'C' : h_C } )
 ```
 
