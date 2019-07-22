@@ -69,10 +69,15 @@ r , f   = sim_pdf.fitTo ( dataset , draw = True , silent = True , sumw2 = True ,
  
 ### Drawing the fit results 
 
-Drawing the results is delegated to the individual fit components (`pdf_A`, `pdf_B`, `pdf_C` as in this example). The methdod `SimFit.draw` require the  first argument to code the  sample category and the drawing variable, e.g, assuming that `pdf_A` is 1D-pdf:  
+Drawing the results is delegated to the individual fit components (`pdf_A`, `pdf_B`, `pdf_C` as in this example). The methdod `SimFit.draw` requires the  first argument to be decoded into the  sample category and the drawing variable, e.g, assuming that `pdf_A` is 1D-pdf:  
 ```python
-frame = sim_fit.draw ( 'A'  , dataset , nbins = 100 )  ## assumong pdf_A is 1D-pdf
+frame = sim_fit.draw ( 'A'  , dataset , nbins = 100 )  ## assuming pdf_A is 1D-pdf
 ```
+All parameters are the same as for `PDF.draw` methods. Also all 'per-pdf' drawing options, set for 
+`pdf_A`, ... , `pdf_Z` are respected and re-used. 
+
+### 2D and 3D cases 
+
 For 2D and 3D-pdfs, one needs to indicate also the drawoing variable. 
 e.g. assume `pdf_B` is 2D-pdf, `PDF2`,
  with  1st variable named `mass1` and the second variable 
