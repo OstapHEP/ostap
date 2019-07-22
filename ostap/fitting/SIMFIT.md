@@ -45,7 +45,7 @@ dataset = combine_hdata ( sample , vars , {'A' : h_A , 'B' : h_B , 'C' : h_C } )
 
 
 
-## `SimFit`
+## Simultaneous fit using `SimFit`  
 
 The helper PDF-like object that builds `RooSimultaneous` from set of Ostap-based pdfs 
 ```python
