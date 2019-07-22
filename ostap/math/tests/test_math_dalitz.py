@@ -129,13 +129,13 @@ def test_dalitz2 () :
     gr32  = d.graph32 () 
     gr32m = d.graph32 ( masses = True ) 
 
-    gr21.draw  ( 'al' )
-    gr31.draw  ( 'al' )
-    gr32.draw  ( 'al' )
+    gr21.draw  ( 'alc' )
+    gr31.draw  ( 'alc' )
+    gr32.draw  ( 'alc' )
 
-    gr21m.draw ( 'al' )
-    gr31m.draw ( 'al' )
-    gr32m.draw ( 'al' )
+    gr21m.draw ( 'alc' )
+    gr31m.draw ( 'alc' )
+    gr32m.draw ( 'alc' )
     
 # =============================================================================
 if '__main__' == __name__ :

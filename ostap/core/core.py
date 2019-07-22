@@ -267,6 +267,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         - MarkerSize
         - FillColor
         - FillStyle
+        - Min/Minimal
+        - Max/Maximal
 
         - see ROOT.TAttLine, ROOT.TAttMarker and ROOT.TAttFill
 
@@ -277,6 +279,9 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         >>> obj.draw ( linecolor   = 2 ) 
         >>> obj.draw ( LineColor   = 2 , fill_style = 1003 ) 
         >>> obj.draw ( markerStyle = 22  )
+
+        >>> obj.draw ( minimal     = -1  )
+        >>> obj.draw ( max         = 100 )
 
         """
         
@@ -307,6 +312,17 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             obj.SetFillColor   ( kw.pop('FillColor' ) )
         if 'FillStyle'   in kw and hasattr ( obj , 'SetFillStyle' ) :
             obj.SetFillStyle   ( kw.pop('FillStyle' ) )
+
+        ## Min/max values  
+            
+        if   'Minimum'     in kw and hasattr ( obj , 'SetMinimum' ) :
+            obj.SetMinimum     ( kw.pop ( 'Minimum' ) )
+        elif 'Min'         in kw and hasattr ( obj , 'SetMinimum' ) :
+            obj.SetMinimum     ( kw.pop ( 'Min'     ) )
+        if   'Maximum'     in kw and hasattr ( obj , 'SetMaximum' ) :
+            obj.SetMaximum     ( kw.pop ( 'Maximum' ) )
+        elif 'Max'         in kw and hasattr ( obj , 'SetMaximum' ) :
+            obj.SetMaximum     ( kw.pop ( 'Max'     ) )
 
         if kw : logger.warning('draw: unknown attributes: %s' % kw.keys() )
             
