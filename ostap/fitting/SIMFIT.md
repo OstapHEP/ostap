@@ -91,10 +91,11 @@ dataset  = combined_data ( sample , vars , { 'A' : dataset_A , 'B' : dataset_B ,
 This function can not combine the weighted data sets!  If weighted data sets are needed, combine non-weighed samples,  but provide the weight variable:
 ```python
 ## variables to be combined into final dataset
+SS_sw    = ... ## weigth variable in datasets 
 vars     = ROOT.RooArgSet ( var1 , var2 , SS_sw )
 dataset  = combined_data  ( sample , vars , 
    { 'A' : dataset_A , 'B' : dataset_B , 'C' : dataset_C } , 
-   args = ( ROOT.RooFit.WeighrtVar ( SS_sw.name ) , ) )
+   args = ( ROOT.RooFit.WeightVar ( SS_sw.name ) , ) )
 ```
 
 
