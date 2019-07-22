@@ -20,7 +20,7 @@ dataset_C = ... # regular RooDataSet
 vars     = ROOT.RooArgSet ( var1 , var2 , .. , varN )
 dataset  = combined_data ( sample , vars , { 'A' : dataset_A , 'B' : dataset_B , 'C' : dataset_C } ) 
 ```
-
+#### Combine the weighted data sets 
 This function can not combine the weighted data sets!  If weighted data sets are needed, combine non-weighed samples,  but provide the weight variable:
 ```python
 ## variables to be combined into final dataset
