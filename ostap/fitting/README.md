@@ -197,3 +197,7 @@ v = result.subtract ('Signal','Background') ## calculate
 v = result.fraction ('Signal','Background') ## calculate Signal/(Signal+Background)
 ```
 
+## [simfit.py](simfit.py)
+
+Collection of utilities that simplify Simultaneous fit using [`RooFit`](https://root.cern.ch/roofit).
+See [here](SIMFIT.md) for more details. 

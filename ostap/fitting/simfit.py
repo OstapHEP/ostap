@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file  ostap/fitting/simfit.py
-#  Helper classes to simplify simultaneous fit
+#  Collection of utilities that simplify Simultaneous fit
 #  @see RooSimultaneous
+#  @see https://github.com/OstapHEP/ostap/blob/master/ostap/fitting/SIMFIT.md
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-23
 # =============================================================================
-"""Helper classes to simplify simultaneous fit"""
+""" Collection of utilities that simplify Simultaneous fit
+- see https://github.com/OstapHEP/ostap/blob/master/ostap/fitting/SIMFIT.md
+"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
