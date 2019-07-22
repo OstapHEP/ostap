@@ -8,7 +8,10 @@
 # - It tests the most simple "Simultaneous fit"
 # ============================================================================= 
 """ Test module for ostap/fitting/simfit.py
-- It tests the most simple ``Simultaneous fit''\
+- It tests the most simple ``Simultaneous fit'' :
+
+Simultannepous fit of two 1D-distributions
+
 """
 # ============================================================================= 
 from builtins    import range 
@@ -122,7 +125,7 @@ dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
 
 
 ## combine PDFs
-model_sim  = Models.Sim1D (
+model_sim  = Models.SimFit (
     sample , { 'A' : model1  , 'B' : model2 } , name = 'X'
     )
 
@@ -132,7 +135,7 @@ r , f = model_sim.fitTo ( dataset , silent = True )
 r , f = model_sim.fitTo ( dataset , silent = True )
 
 fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-fB = model_sim.draw ( 'A' , dataset , nbins = 50 )
+fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
 
 logger.info ( 'Fit  results are: %s ' % r )
 

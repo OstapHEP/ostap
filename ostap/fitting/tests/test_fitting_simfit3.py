@@ -6,11 +6,13 @@
 # @file ostap/fitting/tests/test_fitting_simfit3.py
 # Test module for ostap/fitting/simfit.py
 # - It tests the most simple "Simultaneous fit"
-# - simultaneous 1D/2D-fit for two different ranges/observables
+#
+#  Simultaneous fit of 1D and 2D-distributions 
 # ============================================================================= 
 """ Test module for ostap/fitting/simfit.py
 - It tests the most simple ``Simultaneous fit''
-- simultaneous 1D/2D-fit for two different ranges/observables 
+
+Simultaneous fit of 1D and 2D-distributions 
 """
 # ============================================================================= 
 from builtins    import range 

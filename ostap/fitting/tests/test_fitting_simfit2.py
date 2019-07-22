@@ -6,11 +6,13 @@
 # @file ostap/fitting/tests/test_fitting_simfit2.py
 # Test module for ostap/fitting/simfit.py
 # - It tests the most simple "Simultaneous fit"
-# - simultabnepous 1D-fit for two different ranges/observables
+#
+# Simultaneous fit for two different 1D-distributions/ranges/observables 
 # ============================================================================= 
 """ Test module for ostap/fitting/simfit.py
 - It tests the most simple ``Simultaneous fit''
-- simultaneous 1D-fit for two different ranges/observables 
+
+Simultaneous fit for two different 1D-distributions/ranges/observables 
 """
 # ============================================================================= 
 from builtins    import range 
@@ -28,7 +30,7 @@ from   ostap.logger.utils   import rooSilent
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_fitting_simfit1' )
+    logger = getLogger ( 'test_fitting_simfit2' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
