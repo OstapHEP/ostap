@@ -25,7 +25,7 @@ namespace Ostap
     {
     public :
       // ======================================================================
-      /** constrcutor from all masses 
+      /** constructor from all masses 
        *  - M  : overlal mass of the system, \f$\sqrt{s}\f$;
        *  - m1 : the mass of the first particle  \f$ m_1 \f$;
        *  - m2 : the mass of the second particle  \f$ m_2 \f$;
@@ -345,14 +345,6 @@ namespace Ostap
        *  \f$ 
        */
       double dRds1   ( const double s2 ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the full integrated phase space 
-       *  \f$ \Phi = \int\int \phi(s_1,s_2) \deriv s_1 \deriv s_2 \f$ 
-       *  Actually the phase space is precalcualed  once
-       */
-      double phasespace () const ;
       // ======================================================================
     public: // Dalitz density as function of masses 
       // ======================================================================

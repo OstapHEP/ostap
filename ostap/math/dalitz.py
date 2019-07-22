@@ -67,7 +67,8 @@ def _dp_points_ ( dp , npoints = 250 ) :
           ( s1_max , dp.s2_minmax_for_s1 ( s1_max ).second ) ,  
           ( dp.s1_minmax_for_s2 ( s2_min ).first  , s2_min ) ]
 
-
+    P = [ p for p in P if s1_min <= p[0] <= s1_max and s2_min <= p[1] <= s2_max ]
+    
     pnts = []
 
     from   ostap.utils.utils    import vrange 
@@ -83,10 +84,11 @@ def _dp_points_ ( dp , npoints = 250 ) :
         if not s2min < s2max : continue 
         
         x       = s1
-        y1 , y2 = s2min , s2max 
-            
-        pnts.append ( ( x , y2 ) )
-        pnts.append ( ( x , y1 ) )
+        y1 , y2 = s2min , s2max
+        
+        if s1_min <= x <= s1_max :
+            if s2_min <= y1 <= s2_max : pnts.append ( ( x , y1 ) )
+            if s2_min <= y2 <= s2_max : pnts.append ( ( x , y2 ) )
 
     ## fill branches 2 and 4 :
     for v in vrange ( s2_min , s2_max , npoints ) :
@@ -101,17 +103,17 @@ def _dp_points_ ( dp , npoints = 250 ) :
             y       = s2
             x1, x2  = s1min , s1max 
 
-            pnts.append ( ( x2 , y ) )
-            pnts.append ( ( x1 , y ) )
+            if s2_min <= y <= s2_max :
+                if s1_min <= x1 <= s1_max : pnts.append ( ( x1 , y ) )
+                if s1_min <= x2 <= s1_max : pnts.append ( ( x2 , y ) )
 
     pnts = P + pnts 
 
 
-    ## find some point "inside" Dalizty plot
+    ## find some point "inside" Dalitz plot
     ## first guess 
     x0 = 0.5 * ( s1_min + s1_max )
     y0 = 0.5 * ( s2_min + s2_max )
-    ss = dp.sums()
     ## find another point if needed 
     while not dp.inside ( x0 , y0 ) :
         import random 
