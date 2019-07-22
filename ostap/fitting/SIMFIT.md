@@ -6,12 +6,22 @@ Collection of utilities that simplify Simultaneous fit using [`RooFit`](https://
 
 ## Prepare the data set for the simultaneous fit :
 
+first one needs to define the fitting  sample category, e.g. in this case one has three categries   `A`, `B` and `C`  (note the extended constructor of class `ROOT.RooCategory`): 
+```python
+## sample  category:
+sample  = ROOT.RooCategory('Sample','fitting sample category','A','B','C')
+#
+# print knowwn categories/labels:
+for label in sample.labels() : 
+      print ( 'Label', label ) 
+```
+
 ### `combine_data` 
 
 Helper function to create the "combined" data set for the simultanaeous fit 
 ```python
 ## sample  category:
-sample  = ROOT.RooCategory('Sample','sample','A','B','C')
+sample  = ROOT.RooCategory('Sample','fitting sample category','A','B','C')
 
 dataset_A = ... # regular RooDataSet
 dataset_B = ... # regular RooDataSet
