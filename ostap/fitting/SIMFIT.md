@@ -1,6 +1,6 @@
 # Simultaneous fit 
 
-* [ostap.fitting.simfit](SIMFIT.md)
+* [ostap.fitting.simfit](SIMFIT.md), [`simfit.py`](simfit.py).
 
 Collection of utilities that simplify Simultaneous fit using [`RooFit`](https://root.cern.ch/roofit).
 
