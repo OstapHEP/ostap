@@ -60,11 +60,11 @@ sim_pdf = SimFit ( sample , { 'A' : pdf_A , 'B' : pdf_B , 'C' : pdf_C } , name =
 Performing the simultaneous fit is trivial:
 ```python
 dataset = ... ## data set for simultaneous fit  (see below...)
-r , f   = sim_pdf.fitTo ( dataset ) 
+result , frame = sim_pdf.fitTo ( dataset ) 
 ```
 All the arguments of `SimFit.fitTo` method are the same as for `PDF.fitTo`, e.g.
 ```python
-r , f   = sim_pdf.fitTo ( dataset , draw = True , silent = True , sumw2 = True , ....) 
+result , frame = sim_pdf.fitTo ( dataset , draw = True , silent = True , sumw2 = True , ....) 
 ```
  
 ### Drawing the fit results 
