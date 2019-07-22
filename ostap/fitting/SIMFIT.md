@@ -20,9 +20,6 @@ for label in sample.labels() :
 
 Helper function to create the "combined" data set for the simultanaeous fit 
 ```python
-## sample  category:
-sample  = ROOT.RooCategory('Sample','fitting sample category','A','B','C')
-
 dataset_A = ... # regular RooDataSet
 dataset_B = ... # regular RooDataSet
 dataset_C = ... # regular RooDataSet
