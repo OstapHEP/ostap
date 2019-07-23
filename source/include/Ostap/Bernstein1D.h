@@ -145,9 +145,11 @@ namespace Ostap
       BernsteinEven __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       // ======================================================================
       Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return a + m_bernstein ; }
       Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
-      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
       Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
+      Bernstein __mul__  ( const Bernstein& a ) const { return m_bernstein * a ; }
+      Bernstein __rmul__ ( const Bernstein& a ) const { return a * m_bernstein ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -219,6 +221,9 @@ namespace Ostap
     inline Bernstein operator+ ( const Bernstein& b , const BernsteinEven&  a ) { return a + b ; }
     inline Bernstein operator- ( const Bernstein& b , const BernsteinEven&  a ) 
     { return b - a.bernstein () ; }
+    inline Bernstein operator* ( const BernsteinEven&  a , const Bernstein& b ) 
+    { return a.bernstein () * b ; }
+    inline Bernstein operator* ( const Bernstein& b , const BernsteinEven&  a ) { return a * b ; }
     // ========================================================================
     /** @class Positive
      *  The "positive" polynomial of order N
@@ -346,10 +351,12 @@ namespace Ostap
       Bernstein __neg__     () const { return -m_bernstein ; }
       // ======================================================================
       Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return a + m_bernstein ; }
       Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
-      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
       Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
-      // ======================================================================
+      Bernstein __mul__  ( const Bernstein& a ) const { return m_bernstein * a ; }
+      Bernstein __rmul__ ( const Bernstein& a ) const { return a * m_bernstein ; }
+       // ======================================================================
     public:
       // ======================================================================
       /// get the tag
@@ -396,6 +403,9 @@ namespace Ostap
     inline Bernstein operator+ ( const Bernstein& b , const Positive&  a ) { return a + b ; }
     inline Bernstein operator- ( const Bernstein& b , const Positive&  a ) 
     { return b - a.bernstein () ; }
+    inline Bernstein operator* ( const Positive&  a , const Bernstein& b ) 
+    { return a.bernstein () * b ; }
+    inline Bernstein operator* ( const Bernstein& b , const Positive&  a ) { return a * b ; }
     // ========================================================================
     /** @class PositiveEven
      *  The "positive" polynomial of order N, symmetric as
@@ -520,9 +530,11 @@ namespace Ostap
       BernsteinEven __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       // ======================================================================
       Bernstein __add__  ( const Bernstein& a ) const { return m_even + a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return a + m_even ; }
       Bernstein __sub__  ( const Bernstein& a ) const { return m_even - a ; }
-      Bernstein __radd__ ( const Bernstein& a ) const { return m_even + a ; }
       Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_even ; }
+      Bernstein __mul__  ( const Bernstein& a ) const { return m_even * a ; }
+      Bernstein __rmul__ ( const Bernstein& a ) const { return a * m_even ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -572,7 +584,10 @@ namespace Ostap
     inline Bernstein operator+ ( const Bernstein& b , const PositiveEven&  a ) { return a + b ; }
     inline Bernstein operator- ( const Bernstein& b , const PositiveEven&  a ) 
     { return b - a.bernstein () ; }
-    // ========================================================================
+    inline Bernstein operator* ( const PositiveEven&  a , const Bernstein& b ) 
+    { return a.bernstein () * b ; }
+    inline Bernstein operator* ( const Bernstein& b , const PositiveEven&  a ) { return a * b ; }
+   // ========================================================================
     /** @class Monotonic
      *  The "positive" monotonic polynomial of order N
      *  Actually it is a sum of basic bernstein polynomials with
@@ -702,10 +717,12 @@ namespace Ostap
       Bernstein __neg__     () const { return -m_bernstein ; }
       // ======================================================================
       Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return a + m_bernstein ; }
       Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
-      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
       Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
-      // ======================================================================
+      Bernstein __mul__  ( const Bernstein& a ) const { return m_bernstein * a ; }
+      Bernstein __rmul__ ( const Bernstein& a ) const { return a * m_bernstein ; }
+       // ======================================================================
     public:
       // ======================================================================
       /// get the tag
@@ -754,7 +771,10 @@ namespace Ostap
     inline Bernstein operator+ ( const Bernstein& b , const Monotonic& a ) { return a + b ; }
     inline Bernstein operator- ( const Bernstein& b , const Monotonic& a ) 
     { return b - a.bernstein () ; }
-    // ========================================================================
+    inline Bernstein operator* ( const Monotonic& a , const Bernstein& b ) 
+    { return a.bernstein () * b ; }
+    inline Bernstein operator* ( const Bernstein& b , const Monotonic& a ) { return a * b ; }
+     // ========================================================================
     /** @class Convex
      *  The "positive" polynomial of order N with
      *  fixed sign of first and second derivatives
@@ -891,10 +911,12 @@ namespace Ostap
       Bernstein __neg__     () const { return -m_bernstein ; }
       // ======================================================================
       Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return a + m_bernstein ; }
       Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
-      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
       Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
-      // ======================================================================
+      Bernstein __mul__  ( const Bernstein& a ) const { return m_bernstein * a ; }
+      Bernstein __rmul__ ( const Bernstein& a ) const { return a * m_bernstein ; }
+       // ======================================================================
     public:
       // ======================================================================
       /// get the tag
@@ -945,6 +967,9 @@ namespace Ostap
     inline Bernstein operator+ ( const Bernstein& b , const Convex&  a ) { return a + b ; }
     inline Bernstein operator- ( const Bernstein& b , const Convex&  a ) 
     { return b - a.bernstein () ; }
+    inline Bernstein operator* ( const Convex&    a , const Bernstein& b ) 
+    { return a.bernstein () * b ; }
+    inline Bernstein operator* ( const Bernstein& b , const Convex&    a ) { return a * b ; }
     // ========================================================================
     /** @class ConvexOnly
      *  The "positive" polynomial of order N with
@@ -1073,9 +1098,11 @@ namespace Ostap
       Bernstein __neg__     () const { return -m_bernstein ; }
       // ======================================================================
       Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return a + m_bernstein ; }
       Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
-      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
       Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
+      Bernstein __mul__  ( const Bernstein& a ) const { return m_bernstein * a ; }
+      Bernstein __rmul__ ( const Bernstein& a ) const { return a * m_bernstein ; }
       // ======================================================================
       public:
       // ======================================================================
@@ -1125,6 +1152,9 @@ namespace Ostap
     inline Bernstein operator+ ( const Bernstein& b , const ConvexOnly&  a ) { return a + b ; }
     inline Bernstein operator- ( const Bernstein& b , const ConvexOnly&  a ) 
     { return b - a.bernstein () ; }
+    inline Bernstein operator* ( const ConvexOnly& a , const Bernstein&  b ) 
+    { return a.bernstein () * b ; }
+    inline Bernstein operator* ( const Bernstein&  b , const ConvexOnly& a ) { return a * b ; }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
