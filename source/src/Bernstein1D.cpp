@@ -127,8 +127,6 @@ Ostap::Math::BernsteinEven::__truediv__   ( const double value ) const
 // ============================================================================
 
 
-    
-
 
 // ============================================================================
 // POSITIVE 
@@ -139,9 +137,9 @@ Ostap::Math::BernsteinEven::__truediv__   ( const double value ) const
 // constructor from the order
 // ============================================================================
 Ostap::Math::Positive::Positive
-( const unsigned short      N    ,
-  const double              xmin ,
-  const double              xmax )
+( const unsigned short      N     ,
+  const double              xmin  ,
+  const double              xmax  )
   : m_bernstein ( N , xmin , xmax )
   , m_sphere    ( N , 3 ) 
 {
@@ -171,35 +169,6 @@ Ostap::Math::Positive::Positive
 {
   updateBernstein () ;
 }
-// ============================================================================
-// copy 
-// ============================================================================
-Ostap::Math::Positive::Positive
-( const Ostap::Math::Positive&  right ) 
-  : m_bernstein ( right.m_bernstein ) 
-  , m_sphere    ( right.m_sphere    ) 
-{}
-// ============================================================================
-// move 
-// ============================================================================
-Ostap::Math::Positive::Positive
-(       Ostap::Math::Positive&& right ) 
-  : m_bernstein ( std::move ( right.m_bernstein ) ) 
-  , m_sphere    ( std::move ( right.m_sphere    ) ) 
-{}
-// ============================================================================
-Ostap::Math::Positive::~Positive() {}
-// ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::Positive::setPar ( const unsigned short k , const double value )
-{
-  //
-  const bool update = m_sphere.setPhase ( k , value ) ;
-  if ( !update ) { return false ; }   // no actual change 
-  //
-  return updateBernstein () ;
-}
 // =============================================================================
 // update bernstein coefficients
 // =============================================================================
@@ -215,12 +184,12 @@ bool Ostap::Math::Positive::updateBernstein ()
   //
   // few simple cases 
   //
-  if       ( 0 == o ) { return m_bernstein.setPar( 0 , norm ) ; }
+  if       ( 0 == o ) { return m_bernstein.setPar ( 0 , norm ) ; }
   else if  ( 1 == o )  
   {
-    const bool updated0 = m_bernstein.setPar ( 0 , m_sphere.x2(0) * norm ) ;
+    const bool updated0 = m_bernstein.setPar ( 0 , m_sphere.x2 ( 0 ) * norm ) ;
     update              = updated0 || update ;
-    const bool updated1 = m_bernstein.setPar ( 1 , m_sphere.x2(1) * norm ) ;
+    const bool updated1 = m_bernstein.setPar ( 1 , m_sphere.x2 ( 1 ) * norm ) ;
     update              = updated1 || update ;
     //
     return update ;
@@ -286,32 +255,6 @@ bool Ostap::Math::Positive::updateBernstein ()
   //
   return update ;
 }
-// ============================================================================
-// copy assignement 
-// ============================================================================
-Ostap::Math::Positive&
-Ostap::Math::Positive::operator=( const Ostap::Math::Positive&  right ) 
-{
-  if ( &right == this ) { return *this ; }
-  m_bernstein = right.m_bernstein ;
-  m_sphere    = right.m_sphere    ;
-  return *this ;
-}
-// ============================================================================
-// move assignement 
-// ============================================================================
-Ostap::Math::Positive&
-Ostap::Math::Positive::operator=(      Ostap::Math::Positive&& right ) 
-{
-  if ( &right == this ) { return *this ; }
-  m_bernstein = std::move ( right.m_bernstein ) ;
-  m_sphere    = std::move ( right.m_sphere    ) ;
-  return *this ;
-}
-// =============================================================================
-// get the integral between xmin and xmax
-// =============================================================================
-double Ostap::Math::Positive::integral () const { return 1 ; } 
 // =============================================================================
 // get the integral between low and high 
 // =============================================================================
@@ -370,18 +313,6 @@ Ostap::Math::PositiveEven::PositiveEven
   updateBernstein () ;
 }
 // ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::PositiveEven::setPar 
-( const unsigned short k , const double value )
-{
-  //
-  const bool update = m_sphere.setPhase ( k , value ) ;
-  if ( !update ) { return false ; }   // no actual change 
-  //
-  return updateBernstein () ;
-}
-// =============================================================================
 // update bernstein coefficients
 // =============================================================================
 bool Ostap::Math::PositiveEven::updateBernstein ()
@@ -446,10 +377,6 @@ bool Ostap::Math::PositiveEven::updateBernstein ()
   return update ;
 }
 // =============================================================================
-// get the integral between xmin and xmax
-// =============================================================================
-double Ostap::Math::PositiveEven::integral () const { return 1 ; } 
-// =============================================================================
 // get the integral between low and high 
 // =============================================================================
 double Ostap::Math::PositiveEven::integral
@@ -459,9 +386,7 @@ double Ostap::Math::PositiveEven::integral
     s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
     m_even.integral ( low , high )  ; 
 }
-
-
-
+// ============================================================================
 
 
 // ============================================================================
@@ -472,8 +397,9 @@ Ostap::Math::Monotonic::Monotonic
   const double              xmin       ,
   const double              xmax       , 
   const bool                increasing ) 
-  : Ostap::Math::Positive ( N , xmin , xmax )  
-  , m_increasing          ( increasing      )  
+  : m_bernstein  ( N , xmin , xmax ) 
+  , m_sphere     ( N , 3           )
+  , m_increasing ( increasing      )  
 {
   updateBernstein () ;
 }
@@ -485,34 +411,12 @@ Ostap::Math::Monotonic::Monotonic
   const double               xmin       ,
   const double               xmax       ,
   const bool                 increasing ) 
-  : Ostap::Math::Positive ( pars , xmin , xmax )  
-  , m_increasing          ( increasing      )  
+  : m_bernstein  ( pars.size () , xmin , xmax ) 
+  , m_sphere     ( pars , 3   ) 
+  , m_increasing ( increasing )  
 {
   updateBernstein () ;
 }
-// ============================================================================
-// constructor from the spline 
-// ============================================================================
-Ostap::Math::Monotonic::Monotonic 
-( const Ostap::Math::Positive& spline   ,
-  const bool                 increasing ) 
-  : Ostap::Math::Positive ( spline      )  
-  , m_increasing          ( increasing  )  
-{
-  updateBernstein () ;
-}
-// ============================================================================
-// constructor from the spline 
-// ============================================================================
-Ostap::Math::Monotonic::Monotonic 
-( const Ostap::Math::Monotonic& right ) 
-  : Ostap::Math::Positive ( right              )  
-  , m_increasing          ( right.m_increasing )
-{}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::Monotonic::~Monotonic (){}
 // ============================================================================
 // update bernstein coefficients
 // =============================================================================
@@ -548,7 +452,7 @@ bool Ostap::Math::Monotonic::updateBernstein ()
 double Ostap::Math::Monotonic::fun_min () const
 {
   const std::vector<double>& ps = m_bernstein.pars() ;
-  return  std::min( ps.front() , ps.back() ) ;
+  return  std::min ( ps.front() , ps.back() ) ;
 }
 // ============================================================================
 // get the maximal value of function 
@@ -559,6 +463,16 @@ double Ostap::Math::Monotonic::fun_max () const
   return  std::max( ps.front() , ps.back() ) ;
 }
 // ============================================================================
+// get the integral between low and high 
+// =============================================================================
+double Ostap::Math::Monotonic::integral
+( const double low , const double high ) const 
+{ 
+  return 
+    s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
+    m_bernstein.integral ( low , high )  ; 
+}
+// ============================================================================
 // constructor from the order
 // ============================================================================
 Ostap::Math::Convex::Convex
@@ -567,8 +481,10 @@ Ostap::Math::Convex::Convex
   const double              xmax       , 
   const bool                increasing ,
   const bool                convex     ) 
-  : Ostap::Math::Monotonic ( N , xmin, xmax , increasing ) 
-  , m_convex                ( convex )  
+  : m_bernstein  ( N , xmin , xmax ) 
+  , m_sphere     ( N , 3      ) 
+  , m_increasing ( increasing )
+  , m_convex     ( convex     )  
 {
   updateBernstein () ;
 }
@@ -581,43 +497,13 @@ Ostap::Math::Convex::Convex
   const double               xmax       ,
   const bool                 increasing ,
   const bool                 convex     ) 
-  : Ostap::Math::Monotonic ( pars  , xmin, xmax , increasing ) 
-  , m_convex                ( convex     )  
+  : m_bernstein  ( pars.size() , xmin, xmax ) 
+  , m_sphere     ( pars , 3   ) 
+  , m_increasing ( increasing )
+  , m_convex     ( convex     )  
 {
   updateBernstein () ;
 }
-// ============================================================================
-// constructor from the 
-// ============================================================================
-Ostap::Math::Convex::Convex
-( const Ostap::Math::Positive& poly      ,
-  const bool                  increasing ,
-  const bool                  convex     ) 
-  : Ostap::Math::Monotonic ( poly , increasing ) 
-  , m_convex                ( convex     )  
-{
-  updateBernstein () ;
-}
-// ============================================================================
-// constructor from the 
-// ============================================================================
-Ostap::Math::Convex::Convex
-( const Ostap::Math::Monotonic& poly   ,
-  const bool                     convex ) 
-  : Ostap::Math::Monotonic ( poly       ) 
-  , m_convex                ( convex     )  
-{
-  updateBernstein () ;
-}
-// ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::Math::Convex::Convex ( const Ostap::Math::Convex& right  ) 
-  : Ostap::Math::Monotonic ( right           ) 
-  , m_convex                ( right.m_convex  )  
-{}
-// ============================================================================
-Ostap::Math::Convex::~Convex (){}
 // ============================================================================
 // update bernstein coefficients
 // =============================================================================
@@ -625,6 +511,30 @@ bool Ostap::Math::Convex::updateBernstein ()
 {
   //
   bool   update = false ;
+  //  
+  /// degree 
+  const unsigned short o = degree() ;
+  //
+  const double   norm    = m_bernstein.npars() / 
+    ( m_bernstein.xmax() -  m_bernstein.xmin () ) ;
+  //
+  // few simple cases 
+  //
+  if       ( 0 == o ) { return m_bernstein.setPar ( 0 , norm ) ; }
+  else if  ( 1 == o )  
+  {
+    const double a  =  m_sphere.x2 ( 0 ) ;
+    const double b  =  m_sphere.x2 ( 1 ) ;
+    const double x0 =  m_increasing ? a     : a + b ;
+    const double x1 =  m_increasing ? a + b : a     ;
+    //
+    const bool updated0 = m_bernstein.setPar ( 0 , x0 * norm / ( 2 * a + b ) ) ;
+    update              = updated0 || update ;
+    const bool updated1 = m_bernstein.setPar ( 1 , x1 * norm / ( 2 * a + b ) ) ;
+    update              = updated1 || update ;
+    //
+    return update ;
+  }
   //
   // get sphere coefficients 
   //
@@ -680,6 +590,31 @@ bool Ostap::Math::Convex::updateBernstein ()
   return update ;  
 }
 // ============================================================================
+// get the minimal value of function 
+// ============================================================================
+double Ostap::Math::Convex::fun_min () const
+{
+  const std::vector<double>& ps = m_bernstein.pars() ;
+  return  std::min ( ps.front() , ps.back() ) ;
+}
+// ============================================================================
+// get the maximal value of function 
+// ============================================================================
+double Ostap::Math::Convex::fun_max () const
+{
+  const std::vector<double>& ps = m_bernstein.pars() ;
+  return  std::max( ps.front() , ps.back() ) ;
+}
+// ============================================================================
+// get the integral between low and high 
+// =============================================================================
+double Ostap::Math::Convex::integral
+( const double low , const double high ) const 
+{ 
+  return 
+    s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
+    m_bernstein.integral ( low , high )  ; 
+}
 
 
 
@@ -692,8 +627,9 @@ Ostap::Math::ConvexOnly::ConvexOnly
   const double              xmin   ,
   const double              xmax   , 
   const bool                convex ) 
-  : Ostap::Math::Positive ( N , xmin , xmax )  
-  , m_convex          ( convex )  
+  : m_bernstein ( N , xmin , xmax ) 
+  , m_sphere    ( N , 3  )
+  , m_convex    ( convex )  
 {
   updateBernstein () ;
 }
@@ -705,44 +641,35 @@ Ostap::Math::ConvexOnly::ConvexOnly
   const double               xmin    ,
   const double               xmax    ,
   const bool                 convex  ) 
-  : Ostap::Math::Positive ( pars , xmin , xmax )  
-  , m_convex          ( convex      )  
+  : m_bernstein ( pars.size()  , xmin , xmax ) 
+  , m_sphere    ( pars , 3  )
+  , m_convex    ( convex )  
 {
   updateBernstein () ;
 }
-// ============================================================================
-// constructor from the spline 
-// ============================================================================
-Ostap::Math::ConvexOnly::ConvexOnly 
-( const Ostap::Math::Positive& poly   ,
-  const bool                   convex ) 
-  : Ostap::Math::Positive ( poly   )  
-  , m_convex              ( convex )  
-{
-  updateBernstein () ;
-}
-// ============================================================================
-// constructor from the spline 
-// ============================================================================
-Ostap::Math::ConvexOnly::ConvexOnly 
-( const Ostap::Math::ConvexOnly& right ) 
-  : Ostap::Math::Positive ( right )  
-  , m_convex ( right.m_convex )  
-{}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::ConvexOnly::~ConvexOnly (){}
 // ============================================================================
 // update bernstein coefficients
 // =============================================================================
 bool Ostap::Math::ConvexOnly::updateBernstein ()
 {
-  //
-  // linear function...
-  if ( 2 > degree() ) { return Ostap::Math::Positive::updateBernstein() ; }
-  //
+  // 
   bool   update = false ;
+  // 
+  const unsigned short o = degree() ;
+  //
+  const double   norm    = m_bernstein.npars() / 
+    ( m_bernstein.xmax() -  m_bernstein.xmin () ) ;
+  //
+  if       ( 0 == o ) { return m_bernstein.setPar( 0 , norm ) ; }
+  else if  ( 1 == o )  
+  {
+    const bool updated0 = m_bernstein.setPar ( 0 , m_sphere.x2 ( 0 ) * norm ) ;
+    update              = updated0 || update ;
+    const bool updated1 = m_bernstein.setPar ( 1 , m_sphere.x2 ( 1 ) * norm ) ;
+    update              = updated1 || update ;
+    //
+    return update ;
+  }
   //
   // get sphere coefficients 
   //
@@ -830,9 +757,18 @@ bool Ostap::Math::ConvexOnly::updateBernstein ()
   return update ;
 }
 // ============================================================================
+// get the integral between low and high 
+// =============================================================================
+double Ostap::Math::ConvexOnly::integral
+( const double low , const double high ) const 
+{ 
+  return 
+    s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
+    m_bernstein.integral ( low , high )  ; 
+}
 
 
 
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

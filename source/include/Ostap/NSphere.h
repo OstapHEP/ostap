@@ -109,6 +109,7 @@ namespace Ostap
       unsigned short             npars   () const { return nPhi()    ; }
       /// get all phases 
       const std::vector<double>& pars    () const { return phases()  ; }
+      // ======================================================================
       /** set new value for phi(i)      
        *  @param index (input) the index (0 <= index < nPhi)
        *  @param value new value to be set 

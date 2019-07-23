@@ -30,6 +30,13 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
+    // Forward declarations of important classes 
+    // ========================================================================
+    class Positive   ;
+    class Monotonic  ;
+    class Convex     ;
+    class ConvexOnly ;
+    // ========================================================================
     /** @class BernsteinEven
      *  A special case of BErnstein polynomial with symmetry:
      *  \f$ f( \frac{x_{max}+x_{min}}{2} - x ) \equiv  \frac{x_{max}+x_{min}}{2} + x ) \f$
@@ -137,6 +144,11 @@ namespace Ostap
       BernsteinEven __truediv__ ( const double value ) const ;
       BernsteinEven __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       // ======================================================================
+      Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
+      // ======================================================================
     public:
       // ======================================================================
       /// get the integral between xmin and xmax
@@ -177,6 +189,7 @@ namespace Ostap
       Bernstein      m_bernstein ; // the actual Bernstein polynomial
       // ======================================================================
     } ;
+    // ========================================================================
     ///  Bernstein plus      constant
     inline BernsteinEven operator+( const BernsteinEven& p , const double v )
     { return BernsteinEven ( p ) += v ; } //  Bernstein plus constant
@@ -198,6 +211,14 @@ namespace Ostap
     ///  Constant minus Bernstein
     inline BernsteinEven operator-( const double v , const BernsteinEven& p )
     { return v + -1*p; }
+    // ========================================================================
+    inline Bernstein operator+ ( const BernsteinEven&  a , const Bernstein& b ) 
+    { return a.bernstein () + b ; }
+    inline Bernstein operator- ( const BernsteinEven&  a , const Bernstein& b ) 
+    { return a.bernstein () - b ; }
+    inline Bernstein operator+ ( const Bernstein& b , const BernsteinEven&  a ) { return a + b ; }
+    inline Bernstein operator- ( const Bernstein& b , const BernsteinEven&  a ) 
+    { return b - a.bernstein () ; }
     // ========================================================================
     /** @class Positive
      *  The "positive" polynomial of order N
@@ -227,13 +248,6 @@ namespace Ostap
                  const double                xmin = 0  ,
                  const double                xmax = 0  ) ;
       // ======================================================================
-      /// copy
-      Positive ( const Positive&  right ) ;
-      /// move
-      Positive (       Positive&& right ) ;
-      // ======================================================================
-      virtual ~Positive () ;
-      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -244,7 +258,11 @@ namespace Ostap
       /// get number of parameters
       std::size_t npars () const { return m_sphere.nPhi () ; }
       /// set k-parameter
-      bool setPar       ( const unsigned short k , const double value ) ;
+      bool setPar       ( const unsigned short k , const double value ) 
+      { 
+        const bool update = m_sphere.setPhase ( k , value ) ;
+        return update ? updateBernstein () : false ;
+      }
       /// set k-parameter
       bool setParameter ( const unsigned short k , const double value )
       { return setPar   ( k , value ) ; }
@@ -276,18 +294,18 @@ namespace Ostap
     public:
       // ======================================================================
       /// decreasing?
-      bool decreasing  () const { return m_bernstein.decreasing()     ; }
+      bool decreasing  () const { return m_bernstein.decreasing()      ; }
       /// increasing?
-      bool increasing  () const { return m_bernstein.increasing()     ; }
+      bool increasing  () const { return m_bernstein.increasing()      ; }
       /// monotonic?
-      bool monotonic  () const { return increasing() || decreasing() ; }
+      bool monotonic   () const { return increasing () || decreasing() ; }
       //// constant 
-      bool constant    () const { return m_bernstein.constant()       ; }
+      bool constant    () const { return m_bernstein.constant()        ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the integral between xmin and xmax
-      double integral   () const ;
+      double integral   () const { return 1 ; }
       /// get the integral between low and high
       double integral   ( const double low , const double high ) const ;
       /// get the derivative
@@ -307,13 +325,6 @@ namespace Ostap
       Bernstein derivative          () const
       { return m_bernstein.derivative          () ; }
       // ======================================================================
-    public:
-      // ======================================================================
-      /// copy assignement
-      Positive& operator=( const Positive&  right ) ;
-      /// move assignement
-      Positive& operator=(       Positive&& right ) ;
-      // ======================================================================
     public:  /// basic operations  for python
       // ======================================================================
       /// Sum of Bernstein polynomial and a constant
@@ -332,17 +343,22 @@ namespace Ostap
       Bernstein __truediv__ ( const double value ) const { return m_bernstein / value   ; }
       Bernstein __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate Bernstein polynomial
-      Bernstein __neg__   () const { return -m_bernstein ; }
+      Bernstein __neg__     () const { return -m_bernstein ; }
+      // ======================================================================
+      Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the tag
       std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
-    protected:
+    private : 
       // ======================================================================
       /// update bernstein coefficiencts
-      virtual bool updateBernstein () ;
+      bool updateBernstein () ;
       // ======================================================================
     protected:
       // ======================================================================
@@ -372,6 +388,14 @@ namespace Ostap
     ///  Constant minus Positive
     inline Bernstein operator-( const double v , const Positive& p )
     { return v - p.bernstein() ; }
+    // ========================================================================
+    inline Bernstein operator+ ( const Positive&  a , const Bernstein& b ) 
+    { return a.bernstein () + b ; }
+    inline Bernstein operator- ( const Positive&  a , const Bernstein& b ) 
+    { return a.bernstein () - b ; }
+    inline Bernstein operator+ ( const Bernstein& b , const Positive&  a ) { return a + b ; }
+    inline Bernstein operator- ( const Bernstein& b , const Positive&  a ) 
+    { return b - a.bernstein () ; }
     // ========================================================================
     /** @class PositiveEven
      *  The "positive" polynomial of order N, symmetric as
@@ -418,7 +442,11 @@ namespace Ostap
       /// get number of parameters
       std::size_t npars () const { return m_sphere.nPhi () ; }
       /// set k-parameter
-      bool setPar       ( const unsigned short k , const double value ) ;
+      bool setPar       ( const unsigned short k , const double value )        
+      {
+        const bool update = m_sphere.setPhase ( k , value ) ;
+        return update ? updateBernstein () : false ; ;
+      }
       /// set k-parameter
       bool setParameter ( const unsigned short k , const double value )
       { return setPar   ( k , value ) ; }
@@ -450,7 +478,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the integral between xmin and xmax
-      double integral   () const ;
+      double integral   () const { return 1 ; }
       /// get the integral between low and high
       double integral   ( const double low , const double high ) const ;
       /// get the derivative
@@ -491,6 +519,11 @@ namespace Ostap
       BernsteinEven __truediv__ ( const double value ) const { return m_even / value        ; }
       BernsteinEven __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       // ======================================================================
+      Bernstein __add__  ( const Bernstein& a ) const { return m_even + a ; }
+      Bernstein __sub__  ( const Bernstein& a ) const { return m_even - a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return m_even + a ; }
+      Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_even ; }
+      // ======================================================================
     public:
       // ======================================================================
       /// get the tag 
@@ -509,6 +542,7 @@ namespace Ostap
       Ostap::Math::NSphere       m_sphere ;
       // ======================================================================
     } ;
+    // ========================================================================
     ///  Positive plus      constant
     inline BernsteinEven operator+( const PositiveEven& p , const double v )
     { return p.even() + v ; }
@@ -531,42 +565,81 @@ namespace Ostap
     inline BernsteinEven operator-( const double v , const PositiveEven& p )
     { return v - p.even() ; }
     // ========================================================================
+    inline Bernstein operator+ ( const PositiveEven& a , const Bernstein& b ) 
+    { return a.bernstein () + b ; }
+    inline Bernstein operator- ( const PositiveEven& a , const Bernstein& b ) 
+    { return a.bernstein () - b ; }
+    inline Bernstein operator+ ( const Bernstein& b , const PositiveEven&  a ) { return a + b ; }
+    inline Bernstein operator- ( const Bernstein& b , const PositiveEven&  a ) 
+    { return b - a.bernstein () ; }
+    // ========================================================================
     /** @class Monotonic
      *  The "positive" monotonic polynomial of order N
      *  Actually it is a sum of basic bernstein polynomials with
-     *  non-negative coefficients
+     *  non-negative coefficients that form the monothonic sequence 
      */
-    class Monotonic : public Ostap::Math::Positive
+    class Monotonic
     {
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from the order
       Monotonic
-        ( const unsigned short       N          =    1 ,
-          const double               xmin       =    0 ,
-          const double               xmax       =    1 ,
-          const bool                 increasing = true ) ;
+      ( const unsigned short       N          =    1 ,
+        const double               xmin       =    0 ,
+        const double               xmax       =    1 ,
+        const bool                 increasing = true ) ;
       // ======================================================================
       /// constructor from N phases
       Monotonic
-        ( const std::vector<double>& pars              ,
-          const double               xmin       =    0 ,
-          const double               xmax       =    1 ,
-          const bool                 increasing = true ) ;
+      ( const std::vector<double>& pars              ,
+        const double               xmin       =    0 ,
+        const double               xmax       =    1 ,
+        const bool                 increasing = true ) ;
       // ======================================================================
-      /// constructor positive spline
-      Monotonic
-        ( const Positive&            poly              ,
-          const bool                 increasing        ) ;
+    public:
       // ======================================================================
-      /// copy  constructor
-      Monotonic ( const Monotonic&  right ) ;
-      /// move
-      Monotonic (       Monotonic&& right ) = default ;
+      /// get the value
+      double operator () ( const double x ) const { return m_bernstein ( x ) ; }
       // ======================================================================
-      virtual ~Monotonic() ;
+    public:
       // ======================================================================
+      /// get number of parameters
+      std::size_t npars () const { return m_sphere.nPhi () ; }
+      /// set k-parameter
+      bool setPar       ( const unsigned short k , const double value ) 
+      { 
+        const bool update = m_sphere.setPhase ( k , value ) ;
+        return update ? updateBernstein () : false ;
+      }
+      /// set k-parameter
+      bool setParameter ( const unsigned short k , const double value )
+      { return setPar   ( k , value ) ; }
+      /// get the parameter value
+      double  par       ( const unsigned short k ) const
+      { return m_sphere.par ( k ) ; }
+      /// get all parameters (phases on sphere)
+      const std::vector<double>& pars  () const { return m_sphere   .pars () ; }
+      /// get bernstein coefficients
+      const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
+      // ======================================================================
+    public:  // some characteristics
+      // ======================================================================
+      /// degree
+      unsigned short degree      () const { return m_bernstein.degree() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the parameter value
+      double  parameter ( const unsigned short k ) const { return par ( k ) ; }
+      /// get lower edge
+      double xmin () const { return m_bernstein.xmin () ; }
+      /// get upper edge
+      double xmax () const { return m_bernstein.xmax () ; }
+      /// transform variables
+      double x ( const double t ) const { return m_bernstein. x ( t )  ; }
+      double t ( const double x ) const { return m_bernstein. t ( x )  ; }
+       // ======================================================================
     public:
       // ======================================================================
       /// increasing ?
@@ -574,7 +647,9 @@ namespace Ostap
       /// decreasing ?
       bool decreasing () const { return !increasing () ; }
       /// monotonic
-      bool monotonic () const { return  true  ; }
+      bool monotonic  () const { return  true  ; }
+      //// constant 
+      bool constant   () const { return m_bernstein.constant () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -583,17 +658,102 @@ namespace Ostap
       /// get the maximal value of function
       double fun_max () const ; // get the maximal value of function
       // ======================================================================
-    protected:
+    public:
+      // ======================================================================
+      /// get the integral between xmin and xmax
+      double integral   () const { return 1 ; } 
+      /// get the integral between low and high
+      double integral   ( const double low , const double high ) const ;
+      /// get the derivative
+      double derivative ( const double x ) const
+      { return m_bernstein.derivative ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the underlying Bernstein polynomial
+      const Ostap::Math::Bernstein& bernstein () const { return m_bernstein ; }
+      /// get the parameter sphere
+      const Ostap::Math::NSphere&   sphere    () const { return m_sphere    ; }
+      /// get the indefinite integral
+      Bernstein indefinite_integral ( const double C = 0 ) const
+      { return m_bernstein.indefinite_integral ( C ) ; }
+      /// get the derivative
+      Bernstein derivative          () const
+      { return m_bernstein.derivative          () ; }
+      // ======================================================================
+    public:  /// basic operations  for python
+      // ======================================================================
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein __add__     ( const double value ) const { return m_bernstein + value   ; }
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein __radd__    ( const double value ) const { return m_bernstein + value   ; }
+      /// Product of Bernstein polynomial and a constant
+      Bernstein __mul__     ( const double value ) const { return m_bernstein * value   ; }
+      /// Product of Bernstein polynomial and a constant
+      Bernstein __rmul__    ( const double value ) const { return m_bernstein * value   ; }
+      /// Subtract a constant from Benrstein polynomial
+      Bernstein __sub__     ( const double value ) const { return m_bernstein - value   ; }
+      /// Constant minus Bernstein polynomial
+      Bernstein __rsub__    ( const double value ) const { return value - m_bernstein   ; }
+      /// Divide Bernstein polynomial by a constant
+      Bernstein __truediv__ ( const double value ) const { return m_bernstein / value   ; }
+      Bernstein __div__     ( const double value ) const { return __truediv__ ( value ) ; }
+      /// Negate Bernstein polynomial
+      Bernstein __neg__     () const { return -m_bernstein ; }
+      // ======================================================================
+      Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag
+      std::size_t tag () const { return m_bernstein.tag () ; }
+      // ======================================================================
+    private : 
       // ======================================================================
       /// update bernstein coefficients
-      bool updateBernstein () override;
+      bool updateBernstein () ;
       // ======================================================================
     protected:
       // ======================================================================
+      /// the actual bernstein polynomial
+      Ostap::Math::Bernstein m_bernstein  ; // the actual bernstein polynomial
+      /// parameters sphere
+      Ostap::Math::NSphere   m_sphere     ;
       /// increasing ?
       bool                   m_increasing ; // increasing ?
       // ======================================================================
     } ;
+    // ========================================================================
+    ///  Monotonic plus      constant
+    inline Bernstein operator+( const Monotonic& p , const double v )
+    { return p.bernstein() + v ; }
+    ///  Monotonic multiply  constant
+    inline Bernstein operator*( const Monotonic& p , const double v )
+    { return p.bernstein() * v ; }
+    ///  Monotonic minus     constant
+    inline Bernstein operator-( const Monotonic& p , const double v )
+    { return p.bernstein() - v ; }
+    ///  Monotonic divide constant
+    inline Bernstein operator/( const Monotonic& p , const double v )
+    { return p.bernstein() / v ; }
+    ///  Constant plus  Monotonic
+    inline Bernstein operator+( const double v , const Monotonic& p ) { return p + v  ; }
+    ///  Constant times Mononitic
+    inline Bernstein operator*( const double v , const Monotonic& p ) { return p * v  ; }
+    ///  Constant minus Monotonic 
+    inline Bernstein operator-( const double v , const Monotonic& p )
+    { return v - p.bernstein() ; }
+    // ========================================================================
+    inline Bernstein operator+ ( const Monotonic& a , const Bernstein& b ) 
+    { return a.bernstein () + b ; }
+    inline Bernstein operator- ( const Monotonic& a , const Bernstein& b ) 
+    { return a.bernstein () - b ; }
+    inline Bernstein operator+ ( const Bernstein& b , const Monotonic& a ) { return a + b ; }
+    inline Bernstein operator- ( const Bernstein& b , const Monotonic& a ) 
+    { return b - a.bernstein () ; }
     // ========================================================================
     /** @class Convex
      *  The "positive" polynomial of order N with
@@ -601,65 +761,190 @@ namespace Ostap
      *  Actually it is a sum of basic bernstein polynomials with
      *  non-negative coefficients
      */
-    class Convex : public Ostap::Math::Monotonic
+    class Convex 
     {
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from the order
       Convex
-        ( const unsigned short       N          =    1 ,
-          const double               xmin       =    0 ,
-          const double               xmax       =    1 ,
-          const bool                 increasing = true ,
-          const bool                 convex     = true ) ;
+      ( const unsigned short       N          =    1 ,
+        const double               xmin       =    0 ,
+        const double               xmax       =    1 ,
+        const bool                 increasing = true ,
+        const bool                 convex     = true ) ;
       // ======================================================================
       /// constructor from N phases
       Convex
-        ( const std::vector<double>& pars              ,
-          const double               xmin       =    0 ,
-          const double               xmax       =    1 ,
-          const bool                 increasing = true ,
-          const bool                 convex     = true ) ;
-      // ======================================================================
-      /// constructor from polynom
-      Convex
-        ( const Positive&            poly       ,
-          const bool                 increasing ,
-          const bool                 convex     ) ;
-      // ======================================================================
-      /// constructor from polynom
-      Convex
-        ( const Monotonic&          poly      ,
-          const bool                 convex    ) ;
-      // ======================================================================
-      /// copy constructor
-      Convex ( const Convex&         right     ) ;
-      /// move
-      Convex (       Convex&&        right     ) = default ;
-      // ======================================================================
-      virtual ~Convex() ;
+      ( const std::vector<double>& pars              ,
+        const double               xmin       =    0 ,
+        const double               xmax       =    1 ,
+        const bool                 increasing = true ,
+        const bool                 convex     = true ) ;
       // ======================================================================
     public:
       // ======================================================================
-      /// convex     ?
-      bool   convex    () const { return  m_convex    ; }
-      /// convex     ?
-      bool   concave   () const { return   !convex () ; }
+      /// get the value
+      double operator () ( const double x ) const { return m_bernstein ( x ) ; }
       // ======================================================================
-    protected:
+    public:
+      // ======================================================================
+      /// get number of parameters
+      std::size_t npars () const { return m_sphere.nPhi () ; }
+      /// set k-parameter
+      bool setPar       ( const unsigned short k , const double value ) 
+      { 
+        const bool update = m_sphere.setPhase ( k , value ) ;
+        return update ? updateBernstein () : false ;
+      }
+      /// set k-parameter
+      bool setParameter ( const unsigned short k , const double value )
+      { return setPar   ( k , value ) ; }
+      /// get the parameter value
+      double  par       ( const unsigned short k ) const
+      { return m_sphere.par ( k ) ; }
+      /// get all parameters (phases on sphere)
+      const std::vector<double>& pars  () const { return m_sphere   .pars () ; }
+      /// get bernstein coefficients
+      const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
+      // ======================================================================
+    public:  // some characteristics
+      // ======================================================================
+      /// degree
+      unsigned short degree      () const { return m_bernstein.degree() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the parameter value
+      double  parameter ( const unsigned short k ) const { return par ( k ) ; }
+      /// get lower edge
+      double xmin () const { return m_bernstein.xmin () ; }
+      /// get upper edge
+      double xmax () const { return m_bernstein.xmax () ; }
+      /// transform variables
+      double x ( const double t ) const { return m_bernstein. x ( t )  ; }
+      double t ( const double x ) const { return m_bernstein. t ( x )  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      //// constant 
+      bool constant   () const { return m_bernstein.constant () ; }
+      /// increasing ?
+      bool increasing () const { return  m_increasing  ; }
+      /// decreasing ?
+      bool decreasing () const { return !increasing () ; }
+      /// monotonic
+      bool monotonic  () const { return  true          ; }
+      /// convex     ?
+      bool   convex    () const { return  m_convex     ; }
+      /// convex     ?
+      bool   concave   () const { return   !convex ()  ; }
+      // ======================================================================
+     public:
+      // ======================================================================
+      /// get the minimal value of function
+      double fun_min () const ; // get the minimal value of function
+      /// get the maximal value of function
+      double fun_max () const ; // get the maximal value of function
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between xmin and xmax
+      double integral   () const { return 1 ; }
+      /// get the integral between low and high
+      double integral   ( const double low , const double high ) const ;
+      /// get the derivative
+      double derivative ( const double x ) const
+      { return m_bernstein.derivative ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the underlying Bernstein polynomial
+      const Ostap::Math::Bernstein& bernstein () const { return m_bernstein ; }
+      /// get the parameter sphere
+      const Ostap::Math::NSphere&   sphere    () const { return m_sphere    ; }
+      /// get the indefinite integral
+      Bernstein indefinite_integral ( const double C = 0 ) const
+      { return m_bernstein.indefinite_integral ( C ) ; }
+      /// get the derivative
+      Bernstein derivative          () const
+      { return m_bernstein.derivative          () ; }
+      // ======================================================================
+    public:  /// basic operations  for python
+      // ======================================================================
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein __add__     ( const double value ) const { return m_bernstein + value   ; }
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein __radd__    ( const double value ) const { return m_bernstein + value   ; }
+      /// Product of Bernstein polynomial and a constant
+      Bernstein __mul__     ( const double value ) const { return m_bernstein * value   ; }
+      /// Product of Bernstein polynomial and a constant
+      Bernstein __rmul__    ( const double value ) const { return m_bernstein * value   ; }
+      /// Subtract a constant from Benrstein polynomial
+      Bernstein __sub__     ( const double value ) const { return m_bernstein - value   ; }
+      /// Constant minus Bernstein polynomial
+      Bernstein __rsub__    ( const double value ) const { return value - m_bernstein   ; }
+      /// Divide Bernstein polynomial by a constant
+      Bernstein __truediv__ ( const double value ) const { return m_bernstein / value   ; }
+      Bernstein __div__     ( const double value ) const { return __truediv__ ( value ) ; }
+      /// Negate Bernstein polynomial
+      Bernstein __neg__     () const { return -m_bernstein ; }
+      // ======================================================================
+      Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag
+      std::size_t tag () const { return m_bernstein.tag () ; }
+      // ======================================================================
+    private :
       // ======================================================================
       /// update bernstein coefficients
-      bool updateBernstein () override;
+      bool updateBernstein () ;
       // ======================================================================
     protected:
       // ======================================================================
+      /// the actual bernstein polynomial
+      Ostap::Math::Bernstein m_bernstein  ; // the actual bernstein polynomial
+      /// parameters sphere
+      Ostap::Math::NSphere   m_sphere     ;
+      /// increasing ?
+      bool                   m_increasing ; // increasing ?
       /// convex ?
-      bool                   m_convex     ; // iconvex ?
+      bool                   m_convex     ; // convex ?
       // ======================================================================
     } ;
     // ========================================================================
-
+    ///  Convex plus      constant
+    inline Bernstein operator+( const Convex& p , const double v )
+    { return p.bernstein() + v ; }
+    ///  Convex multiply  constant
+    inline Bernstein operator*( const Convex& p , const double v )
+    { return p.bernstein() * v ; }
+    ///  Convex minus     constant
+    inline Bernstein operator-( const Convex& p , const double v )
+    { return p.bernstein() - v ; }
+    ///  Convex divide constant
+    inline Bernstein operator/( const Convex& p , const double v )
+    { return p.bernstein() / v ; }
+    ///  Consstant plus  Convex
+    inline Bernstein operator+( const double v , const Convex& p ) { return p + v  ; }
+    ///  Constant  times Convex
+    inline Bernstein operator*( const double v , const Convex& p ) { return p * v  ; }
+    ///  Constant  minus Convex
+    inline Bernstein operator-( const double v , const Convex& p )
+    { return v - p.bernstein() ; }
+    // ========================================================================
+    inline Bernstein operator+ ( const Convex&  a , const Bernstein& b ) 
+    { return a.bernstein () + b ; }
+    inline Bernstein operator- ( const Convex&  a , const Bernstein& b ) 
+    { return a.bernstein () - b ; }
+    inline Bernstein operator+ ( const Bernstein& b , const Convex&  a ) { return a + b ; }
+    inline Bernstein operator- ( const Bernstein& b , const Convex&  a ) 
+    { return b - a.bernstein () ; }
     // ========================================================================
     /** @class ConvexOnly
      *  The "positive" polynomial of order N with
@@ -667,7 +952,7 @@ namespace Ostap
      *  Actually it is a sum of basic bernstein polynomials with
      *  non-negative coefficients
      */
-    class ConvexOnly : public Ostap::Math::Positive
+    class ConvexOnly 
     {
       // ======================================================================
     public:
@@ -686,36 +971,160 @@ namespace Ostap
           const double               xmax       =    1 ,
           const bool                 convex     = true ) ;
       // ======================================================================
-      /// constructor from polynom
-      ConvexOnly
-        ( const Positive&            poly       ,
-          const bool                 convex     ) ;
+    public:
       // ======================================================================
-      /// copy constructor
-      ConvexOnly ( const ConvexOnly&   right     ) ;
-      /// move
-      ConvexOnly (       ConvexOnly&&  right     ) = default ;
-      // ======================================================================
-      virtual ~ConvexOnly() ;
+      /// get the value
+      double operator () ( const double x ) const { return m_bernstein ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      /// convex     ?
-      bool   convex    () const { return  m_convex    ; }
-      /// convex     ?
-      bool   concave   () const { return   !convex () ; }
+      /// get number of parameters
+      std::size_t npars () const { return m_sphere.nPhi () ; }
+      /// set k-parameter
+      bool setPar       ( const unsigned short k , const double value ) 
+      { 
+        const bool update = m_sphere.setPhase ( k , value ) ;
+        return update ? updateBernstein () : false ;
+      }
+      /// set k-parameter
+      bool setParameter ( const unsigned short k , const double value )
+      { return setPar   ( k , value ) ; }
+      /// get the parameter value
+      double  par       ( const unsigned short k ) const
+      { return m_sphere.par ( k ) ; }
+      /// get all parameters (phases on sphere)
+      const std::vector<double>& pars  () const { return m_sphere   .pars () ; }
+      /// get bernstein coefficients
+      const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
       // ======================================================================
-    protected:
+    public:  // some characteristics
+      // ======================================================================
+      /// degree
+      unsigned short degree      () const { return m_bernstein.degree() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the parameter value
+      double  parameter ( const unsigned short k ) const { return par ( k ) ; }
+      /// get lower edge
+      double xmin () const { return m_bernstein.xmin () ; }
+      /// get upper edge
+      double xmax () const { return m_bernstein.xmax () ; }
+      /// transform variables
+      double x ( const double t ) const { return m_bernstein. x ( t )  ; }
+      double t ( const double x ) const { return m_bernstein. t ( x )  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      //// constant 
+      bool constant    () const { return m_bernstein.constant   () ; }
+      /// increasing ?
+      bool increasing  () const { return m_bernstein.increasing () ; }
+      /// decreasing ?
+      bool decreasing  () const { return m_bernstein.decreasing () ; }
+      /// monotonic
+      bool monotonic   () const { return m_bernstein.monotonic  () ; }
+      /// convex     ?
+      bool convex      () const { return  m_convex     ; }
+      /// convex     ?
+      bool concave     () const { return   !convex ()  ; }
+      // ====================================================================== 
+    public:
+      // ======================================================================
+      /// get the integral between xmin and xmax
+      double integral   () const { return 1 ; }
+      /// get the integral between low and high
+      double integral   ( const double low , const double high ) const ;
+      /// get the derivative
+      double derivative ( const double x ) const
+      { return m_bernstein.derivative ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the underlying Bernstein polynomial
+      const Ostap::Math::Bernstein& bernstein () const { return m_bernstein ; }
+      /// get the parameter sphere
+      const Ostap::Math::NSphere&   sphere    () const { return m_sphere    ; }
+      /// get the indefinite integral
+      Bernstein indefinite_integral ( const double C = 0 ) const
+      { return m_bernstein.indefinite_integral ( C ) ; }
+      /// get the derivative
+      Bernstein derivative          () const
+      { return m_bernstein.derivative          () ; }
+      // ======================================================================
+    public:  /// basic operations  for python
+      // ======================================================================
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein __add__     ( const double value ) const { return m_bernstein + value   ; }
+      /// Sum of Bernstein polynomial and a constant
+      Bernstein __radd__    ( const double value ) const { return m_bernstein + value   ; }
+      /// Product of Bernstein polynomial and a constant
+      Bernstein __mul__     ( const double value ) const { return m_bernstein * value   ; }
+      /// Product of Bernstein polynomial and a constant
+      Bernstein __rmul__    ( const double value ) const { return m_bernstein * value   ; }
+      /// Subtract a constant from Benrstein polynomial
+      Bernstein __sub__     ( const double value ) const { return m_bernstein - value   ; }
+      /// Constant minus Bernstein polynomial
+      Bernstein __rsub__    ( const double value ) const { return value - m_bernstein   ; }
+      /// Divide Bernstein polynomial by a constant
+      Bernstein __truediv__ ( const double value ) const { return m_bernstein / value   ; }
+      Bernstein __div__     ( const double value ) const { return __truediv__ ( value ) ; }
+      /// Negate Bernstein polynomial
+      Bernstein __neg__     () const { return -m_bernstein ; }
+      // ======================================================================
+      Bernstein __add__  ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __sub__  ( const Bernstein& a ) const { return m_bernstein - a ; }
+      Bernstein __radd__ ( const Bernstein& a ) const { return m_bernstein + a ; }
+      Bernstein __rsub__ ( const Bernstein& a ) const { return a - m_bernstein ; }
+      // ======================================================================
+      public:
+      // ======================================================================
+      /// get the tag
+      std::size_t tag () const { return m_bernstein.tag () ; }
+      // ======================================================================
+    private :
       // ======================================================================
       /// update bernstein coefficients
-      bool updateBernstein () override;
+      bool updateBernstein () ;
       // ======================================================================
-    protected:
+    private :
       // ======================================================================
+      /// the actual bernstein polynomial
+      Ostap::Math::Bernstein m_bernstein  ; // the actual bernstein polynomial
+      /// parameters sphere
+      Ostap::Math::NSphere   m_sphere     ;
       /// convex ?
-      bool                   m_convex     ; // iconvex ?
+      bool                   m_convex     ; // convex ?
       // ======================================================================
     } ;
+    // ========================================================================
+    ///  ConvexOnly plus      constant
+    inline Bernstein operator+( const ConvexOnly& p , const double v )
+    { return p.bernstein() + v ; }
+    ///  ConvexOnly multiply  constant
+    inline Bernstein operator*( const ConvexOnly& p , const double v )
+    { return p.bernstein() * v ; }
+    ///  ConvexOnly minus     constant
+    inline Bernstein operator-( const ConvexOnly& p , const double v )
+    { return p.bernstein() - v ; }
+    ///  ConvexOnly divide constant
+    inline Bernstein operator/( const ConvexOnly& p , const double v )
+    { return p.bernstein() / v ; }
+    ///  Constant plus  ConvexOnly
+    inline Bernstein operator+( const double v , const ConvexOnly& p ) { return p + v  ; }
+    ///  Constant times ConvexOnly
+    inline Bernstein operator*( const double v , const ConvexOnly& p ) { return p * v  ; }
+    ///  Constant minus ConvexOnly
+    inline Bernstein operator-( const double v , const ConvexOnly& p )
+    { return v - p.bernstein() ; }
+    // ========================================================================
+    inline Bernstein operator+ ( const ConvexOnly&  a , const Bernstein& b ) 
+    { return a.bernstein () + b ; }
+    inline Bernstein operator- ( const ConvexOnly&  a , const Bernstein& b ) 
+    { return a.bernstein () - b ; }
+    inline Bernstein operator+ ( const Bernstein& b , const ConvexOnly&  a ) { return a + b ; }
+    inline Bernstein operator- ( const Bernstein& b , const ConvexOnly&  a ) 
+    { return b - a.bernstein () ; }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

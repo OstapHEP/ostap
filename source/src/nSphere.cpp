@@ -79,8 +79,8 @@ Ostap::Math::NSphere::NSphere
 Ostap::Math::NSphere::NSphere 
 ( const unsigned short N       ,
   const unsigned short rotated ) 
-  : Ostap::Math::NSphere::NSphere ( std::vector<double>(N,0)         , 
-                                    rotated < N + 1 ? rotated : N+ 1 ) 
+  : Ostap::Math::NSphere::NSphere ( std::vector<double> ( N , 0.0 )   , 
+                                    rotated < N + 1 ? rotated : N + 1 ) 
 {}
 // ============================================================================
 /*  Standard constructor
