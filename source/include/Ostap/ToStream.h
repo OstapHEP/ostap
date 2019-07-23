@@ -35,7 +35,7 @@ namespace Ostap
     // ========================================================================
     /** the generic implementation of the printout to the std::ostream
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
     template<class TYPE>
@@ -86,7 +86,7 @@ namespace Ostap
      *  @param close (INPUT)  "close"-symbol
      *  @param delim (INPUT)  "delimiter"-symbol
      *  @return the stream
-     *  @author Vanya BELYAEV Ivan.BElyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2009-09-15
      */
     template <class ITERATOR>
@@ -101,7 +101,7 @@ namespace Ostap
     /** the printtout of the strings.
      *  the string is printed a'la Python using the quotes
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
     inline std::ostream& toStream
@@ -112,7 +112,7 @@ namespace Ostap
     }
     // ========================================================================
     /** the printout of boolean values "a'la Python"
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-09-09
      */
     inline std::ostream& toStream
@@ -120,7 +120,7 @@ namespace Ostap
     { return s << ( obj ? "True" : "False" ) ; }
     // ========================================================================
     /** the printout of float values with the reasonable precision
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-09-09
      */
     inline std::ostream& toStream
@@ -131,7 +131,7 @@ namespace Ostap
     }
     // ========================================================================
     /** the printout of double values with the reasonable precision
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-09-09
      */
     inline std::ostream& toStream
@@ -142,7 +142,7 @@ namespace Ostap
     }
     // ========================================================================
     /** the printout of long double values with the reasonable precision
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-09-09
      */
     inline std::ostream& toStream
@@ -156,7 +156,7 @@ namespace Ostap
      *  <c>std::pair<KTYPE,VTYPE></c> printout
      *  the pair is printed a'la Python tuple: " ( a , b )"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
     template<class KTYPE, class VTYPE>
@@ -167,7 +167,7 @@ namespace Ostap
     /** the partial template specialization of <c>std::vector<TYPE,ALLOCATOR></c>
      *  printout. The vector is printed a'la Python list: "[ a, b, c ]"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
     template<class TYPE,class ALLOCATOR>
@@ -178,7 +178,7 @@ namespace Ostap
     /** the partial template specialization of <c>std::list<TYPE,ALLOCATOR></c>
      *  printout. The vector is printed a'la Python list: "[ a, b, c ]"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-04-08
      */
     template<class TYPE,class ALLOCATOR>
@@ -189,7 +189,7 @@ namespace Ostap
     /** the partial template specialization of <c>std::set<TYPE,CMP,ALLOCATOR></c>
      *  printout. The vector is printed a'la Python list: "[ a, b, c ]"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
     template<class TYPE,class CMP,class ALLOCATOR>
@@ -199,7 +199,7 @@ namespace Ostap
     /** the partial template specialization of <c>std::array<TYPE,N></c>
      *  printout. The vector is printed a'la Python list: "[ a, b, c ]"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
     template <class T, std::size_t N >
@@ -210,7 +210,7 @@ namespace Ostap
      *  <c>std::map<KTYPE,VTYPE,CMP,ALLOCATOR></c> printout
      *  the map is printed a'la Python dict: " ( a : b , c: d , e : f )"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
     template<class KTYPE, class VTYPE,class CMP,class ALLOCATOR>
@@ -226,7 +226,7 @@ namespace Ostap
     }
     // ========================================================================
     /** the specialization for C-arrays, a'la python tuple
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2009-10-05
      */
     template <class TYPE, unsigned int N>
@@ -234,7 +234,7 @@ namespace Ostap
     { return toStream ( obj , obj + N , s , "( " , " )" , " , " ) ; }
     // ========================================================================
     /** the specialization for C-arrays, a'la python tuple
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2009-10-05
      */
     template <class TYPE, unsigned int N>
@@ -242,7 +242,7 @@ namespace Ostap
     { return toStream ( obj , obj + N , s , "( " , " )" , " , " ) ; }
     // ========================================================================
     /** the specialization for C-string, a'la python tuple
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2009-10-05
      */
     template <unsigned int N>
@@ -250,7 +250,7 @@ namespace Ostap
     { return toStream ( std::string ( obj , obj+N ) , s ) ; }
     // ========================================================================
     /** the specialization for C-string, a'la python tuple
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2009-10-05
      */
     template <unsigned int N>
@@ -258,7 +258,7 @@ namespace Ostap
     { return toStream ( std::string ( obj , obj+N ) , s ) ; }
     // ========================================================================
     /** the specialization for C-string, a'la python tuple
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2009-10-05
      */
     inline std::ostream& toStream ( const char* obj , std::ostream& s )
@@ -267,7 +267,7 @@ namespace Ostap
     
     /** the generic implementation of the printout to the std::ostream
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
     template<class TYPE>
@@ -283,7 +283,7 @@ namespace Ostap
      *  @param close (INPUT)  "close"-symbol
      *  @param delim (INPUT)  "delimiter"-symbol
      *  @return the stream
-     *  @author Vanya BELYAEV Ivan.BElyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2009-09-15
      */
     template <class ITERATOR>
@@ -315,7 +315,7 @@ namespace Ostap
     // ========================================================================
     /** the generic implementation of the type conversion to the string
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      *  @see  Ostap::Utils::toStream
      *  @todo need to be compared with boost::lexical_cast
@@ -335,7 +335,7 @@ namespace Ostap
   // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
-// The END
+//                                                                      The END
 // ============================================================================
 #endif
 // ============================================================================

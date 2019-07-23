@@ -233,7 +233,7 @@ namespace Ostap
        *  @attention Fast!no checks are performed!
        *  @param input   GSL vector to be copyed (source)
        *  @param output  MathLib vector (destination)
-       *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2006-05-24
        */
       template <class T, unsigned int D>
@@ -246,7 +246,7 @@ namespace Ostap
        *  @attention Fast!no checks are performed!
        *  @param input  GSL matrix (source)
        *  @param output MathLib matrix (destination)
-       *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2006-05-24
        */
       template < class T, unsigned int D, class R> 
@@ -259,7 +259,7 @@ namespace Ostap
        *  @attention Fast!no checks are performed!
        *  @param input  MathLib symmetric matrix (source)
        *  @param output GSL matrix  (destination)
-       *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2006-05-24
        */
       template < class T, unsigned int D> 

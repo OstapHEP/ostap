@@ -18,7 +18,7 @@
 /** @file 
  *  Collection of useful objects with associated "covarinaces".
  *  The concept has been stollen from Wouter Hulsbergen's lines 
- *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 20090603
  */
 namespace Ostap
@@ -28,7 +28,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class LorentzVectorWithError Ostap/LorentzVectorWithError.h
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2009-06-12
      */
     class LorentzVectorWithError : public Ostap::LorentzVector

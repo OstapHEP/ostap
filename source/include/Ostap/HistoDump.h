@@ -31,7 +31,7 @@ namespace Ostap
        *  @param width  (INPUT) the maximal column width 
        *  @param height (INPUT) the proposed coulmn height 
        *  @return the stream 
-       *  @author Vanya BELYAEV  Ivan.BElyaev@nikhef.nl
+       *  @author Vanya BELYAEV  Ivan.BElyaev@itep.ru
        *  @date 2009-09-19
        */ 
       std::ostream& histoDump_
@@ -45,7 +45,7 @@ namespace Ostap
        *  @param width  (INPUT) the maximal column width 
        *  @param height (INPUT) the propsoed coulmn height 
        *  @return string representation of the histogram       
-       *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
        *  @date 2009-09-19
        */ 
       std::string   histoDump 
@@ -60,7 +60,7 @@ namespace Ostap
        *  @param height (INPUT) the proposed coulmn height 
        *  @param errors (INPUT) print/plot errors
        *  @return the stream 
-       *  @author Vanya BELYAEV  Ivan.BElyaev@nikhef.nl
+       *  @author Vanya BELYAEV  Ivan.BElyaev@itep.ru
        *  @date 2009-09-19
        */ 
       std::ostream& histoDump_
@@ -76,7 +76,7 @@ namespace Ostap
        *  @param height (INPUT) the propsoed coulmn height 
        *  @param errors (INPUT) print/plot errors
        *  @return string representation of the histogram       
-       *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
        *  @date 2009-09-19
        */ 
       std::string   histoDump 
@@ -91,7 +91,7 @@ namespace Ostap
   // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================
 #endif // OSTAP_HISTODUMP_H
 // ============================================================================

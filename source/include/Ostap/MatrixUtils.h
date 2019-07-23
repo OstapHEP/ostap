@@ -161,7 +161,7 @@ namespace Ostap
      *  @param m      (input/output)vector  to be modified
      *  @param value  (input) new value for all vector elements 
      *  @return number of modified vector elemenets (for consistency)
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T, unsigned int D>
@@ -190,7 +190,7 @@ namespace Ostap
      *  @param m      (input/output) matrix to be modified
      *  @param value  (input) new value for all matrix elements 
      *  @return number of modified matrix elemenets 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R>
@@ -217,7 +217,7 @@ namespace Ostap
      * 
      *  @param[in,out] m  matrix to be modified 
      *  @param[in] value  value to be used as diagonal elements
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */  
     template <class T, unsigned int D, class R>
@@ -250,7 +250,7 @@ namespace Ostap
      *  @param m      (input/output) matrix to be modified
      *  @param value  (input) scaling coefficient 
      *  @return number of modified matrix elemenets 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R>
@@ -277,7 +277,7 @@ namespace Ostap
      *  @param m      (input/output) vector to be modified
      *  @param value  (input) scaling coefficient 
      *  @return number of modified vector elemenets  (for consistency) 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T, unsigned int D>
@@ -292,7 +292,7 @@ namespace Ostap
     // ========================================================================
     /** @struct _AbsCompare
      *  The trivial structure for comparison of "numbers" by the absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-25
      */
     template <class T>
@@ -305,7 +305,7 @@ namespace Ostap
     /** find the maximal element in matrix 
      *  @param m (input) matrix to be studied
      *  @return the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D1,unsigned int D2, class R>
@@ -317,7 +317,7 @@ namespace Ostap
     /** find the minimal element in matrix 
      *  @param m (input) matrix to be studied
      *  @return the minimal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D1,unsigned int D2, class R>
@@ -329,7 +329,7 @@ namespace Ostap
     /** find the maximal element in vector 
      *  @param m (input) vector to be studied
      *  @return the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D>
@@ -341,7 +341,7 @@ namespace Ostap
     /** find the minimal element in vector 
      *  @param m (input) vector to be studied
      *  @return the minimal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D>
@@ -368,7 +368,7 @@ namespace Ostap
      *  
      *  @param m (input) matrix to be studied
      *  @return the element with the maximal absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D1,unsigned int D2, class R>
@@ -380,7 +380,7 @@ namespace Ostap
     /** find the element in matrix with the minimal absolute value  
      *  @param m (input) matrix to be studied
      *  @return the element with the minimal absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D1,unsigned int D2, class R>
@@ -393,7 +393,7 @@ namespace Ostap
      *  @param m (input) matrix to be studied
      *  @param cmp comparison criteria
      *  @return the pair (i,j)-index of the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D1,unsigned int D2, class R, class CMP>
@@ -421,7 +421,7 @@ namespace Ostap
      *  @param m (input) symmetric matrix to be studied
      *  @param cmp comparison criteria
      *  @return the pair (i,j)-index of the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D, class CMP>
@@ -448,7 +448,7 @@ namespace Ostap
     /** find an index of the  maximal element in matrix 
      *  @param m (input) matrix to be studied
      *  @return the pair (i,j)-index of the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D1,unsigned int D2, class R>
@@ -461,7 +461,7 @@ namespace Ostap
      *  @param m (input) matrix to be studied
      *  @param cmp comparison criteria
      *  @return the pair (i,j)-index of the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D1,unsigned int D2, class R, class CMP>
@@ -489,7 +489,7 @@ namespace Ostap
      *  @param m (input) symmetric matrix to be studied
      *  @param cmp comparison criteria
      *  @return the pair (i,j)-index of the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D, class CMP>
@@ -532,7 +532,7 @@ namespace Ostap
      *
      *  @param m (input) matrix to be studied 
      *  @return the pair of indices for (the first) minimal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R>
@@ -545,7 +545,7 @@ namespace Ostap
      *  @param m (input) vector to be studied
      *  @param cmp comparison criteria
      *  @return the index of the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D, class CMP>
@@ -558,7 +558,7 @@ namespace Ostap
      *  @param m (input) vector to be studied
      *  @param cmp comparison criteria
      *  @return the index of the minimal  element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D, class CMP>
@@ -570,7 +570,7 @@ namespace Ostap
     /** find an index of the maximal element in the vector 
      *  @param m (input) vector to be studied
      *  @return the index of the maximal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D>
@@ -582,7 +582,7 @@ namespace Ostap
     /** find an index of the minimal element in the vector 
      *  @param m (input) vector to be studied
      *  @return the index of the minimal element 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D>
@@ -611,7 +611,7 @@ namespace Ostap
      *  @param m (input) matrix to be studied 
      *  @return the pair of indices for the element with 
      *          the maximal absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R>
@@ -640,7 +640,7 @@ namespace Ostap
      *  @param m (input) matrix to be studied 
      *  @return the pair of indices for the element with 
      *          the maximal absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */    
     template <class T, unsigned int D1, unsigned int D2, class R>
@@ -652,7 +652,7 @@ namespace Ostap
     /** find an index of the element with maximal absolute value
      *  @param m (input) vector to be studied
      *  @return the index of the element with the maximal absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D>
@@ -664,7 +664,7 @@ namespace Ostap
     /** find an index of the element with minimal absolute value 
      *  @param m (input) vector to be studied
      *  @return the index of the element with minimal absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T,unsigned int D>
@@ -689,7 +689,7 @@ namespace Ostap
      *
      *  @param m (input) matrix to be studied 
      *  @return trace (sum of diagonal elements) of the matrix 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T, unsigned int D, class R>
@@ -717,7 +717,7 @@ namespace Ostap
      *
      *  @param m (input) matrix to be studied 
      *  @return trace (sum of diagonal elements) of the matrix 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class B, class T, unsigned int D, class R>
@@ -907,7 +907,7 @@ namespace Ostap
      *  @param m    (input) matrix to be studied 
      *  @param pred (input) predicate to be tested 
      *  @return number of elements for which the predicate is valid 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R, class P>
@@ -947,7 +947,7 @@ namespace Ostap
      *  @param m    (input) symmetric matrix to be studied 
      *  @param pred (input) predicate to be tested 
      *  @return number of elements for which the predicate is valid 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */
     template <class T, unsigned int D, class P>
@@ -989,7 +989,7 @@ namespace Ostap
      *  @param m    (input) square matrix to be studied 
      *  @param pred (input) predicate to be tested 
      *  @return number of diagonal elements for which the predicate is valid 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */
     template <class T, unsigned int D, class R, class P>
@@ -1029,7 +1029,7 @@ namespace Ostap
      *  @param m    (input)    matrix to be checked 
      *  @param pred (input) predicate tobe tested 
      *  @return true if at least one element is in the matrix 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R, class P>
@@ -1060,7 +1060,7 @@ namespace Ostap
      *  @param m    (input) square matrix to be checked 
      *  @param pred (input) predicate to be tested 
      *  @return true if at least one element is in the matrix 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */
     template <class T, unsigned int D, class R, class P>
@@ -1107,7 +1107,7 @@ namespace Ostap
      *  @param m2   (input) the second matrix to be checked 
      *  @param pred (input) predicate to be tested 
      *  @return true if at least once false == pred( m1(i,j) , m2(i,j) )
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */    
     template <class T1 , class T2 ,
@@ -1160,7 +1160,7 @@ namespace Ostap
      *  @param m2   (input) the second matrix to be checked 
      *  @param pred (input) predicate to be tested 
      *  @return true if at least once false == pred( m1(i,j) , m2(i,j) )
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */
     template <class T,unsigned int D1, unsigned int D2,class R,class P>

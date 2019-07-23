@@ -26,7 +26,7 @@ namespace Ostap
     /** @class SVectorWithError Ostap/SVectorWithError.h
      *  Simple class with represent SVector with 
      *  the associated covariance matrix
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
     template <unsigned int N, typename SCALAR=double>
     class SVectorWithError

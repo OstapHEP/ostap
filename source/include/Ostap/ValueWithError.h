@@ -31,7 +31,7 @@ namespace Ostap
     /** @class ValueWithError 
      *  The most simple representation of "value with associated error"
      *  The concept has been stollen from Wouter Hulsbergen's lines 
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 20090603
      */
     class ValueWithError 
@@ -943,7 +943,7 @@ namespace Ostap
      *  @param b  (input) the second value 
      *  @param c  (input) the correlation coefficient
      *  @return a+b 
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-11-09
      */
     ValueWithError  sum 
@@ -957,7 +957,7 @@ namespace Ostap
      *  @param b  (input) the second value 
      *  @param c  (input) the correlation coefficient
      *  @return a+b 
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-11-09
      */
     ValueWithError  sum2 
@@ -971,7 +971,7 @@ namespace Ostap
      *  @param b  (input) the second value 
      *  @param c  (input) the correlation coefficient
      *  @return a-b 
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-11-09
      */
     ValueWithError  subtract
@@ -985,7 +985,7 @@ namespace Ostap
      *  @param b  (input) the second value 
      *  @param c  (input) the correlation coefficient
      *  @return a*b 
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-11-09
      */
     ValueWithError  multiply
@@ -999,7 +999,7 @@ namespace Ostap
      *  @param b  (input) the second value 
      *  @param c  (input) the correlation coefficient
      *  @return a/b 
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-11-09
      */
     ValueWithError  divide
@@ -1013,7 +1013,7 @@ namespace Ostap
      *  @param b  (input) the second value 
      *  @param c  (input) the correlation coefficient
      *  @return a/(a+b)
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-11-09
      */
     ValueWithError  fraction
@@ -1049,7 +1049,7 @@ namespace Ostap
      *  @param b  (input) the second value 
      *  @param c  (input) the correlation coefficient
      *  @return (a-b)/(a+b)
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-11-09
      */
     ValueWithError  asymmetry

@@ -50,7 +50,7 @@
  *  @see Ostap::Math::Bits 
  *  @see Ostap::Math::bits
  *
- *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2008-08-01
  */
 // ============================================================================
@@ -66,7 +66,7 @@ namespace Ostap
       /** @struct Check 
        *  Simple structure to check the if the type has sufficient 
        *  length to address Nth bit 
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-08-01
        */
       template <class TYPE,unsigned int N>
@@ -84,7 +84,7 @@ namespace Ostap
       // ======================================================================
       /** @struct _IBit 
        *  Simple helper structure to extract Nth bit of the integral type 
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-08-01
        */
       template <class TYPE, 
@@ -108,7 +108,7 @@ namespace Ostap
       /** @struct _IBits 
        *  Simple helper structure to extract N1->N2th 
        *  bits of the integral type 
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-08-01
        */
       template <class TYPE,
@@ -139,7 +139,7 @@ namespace Ostap
       // ======================================================================
       /** @struct _Bit 
        *  Simple helper structure to extract Nth bit of the integral type 
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-08-01
        */
       template <class TYPE, unsigned int N>
@@ -164,7 +164,7 @@ namespace Ostap
       // ======================================================================
       /** @struct _Bits 
        *  Simple helper structure to extract N1->N2 bits of the integral type 
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-08-01
        */
       template <class TYPE,unsigned int N1,unsigned int N2>
@@ -214,7 +214,7 @@ namespace Ostap
      *
      *  @attention the least significant bit is numbered as bit#0 
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-07-09
      */
     template <class TYPE, 
@@ -235,7 +235,7 @@ namespace Ostap
      *
      *  @endcode 
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-08-01
      */    
     template <class TYPE,
@@ -260,7 +260,7 @@ namespace Ostap
      *
      *  @attention the least significant bit is numbered as bit#0 
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-07-09
      */
     template <class TYPE, unsigned int N>
@@ -281,7 +281,7 @@ namespace Ostap
      *
      *  @endcode 
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-08-01
      */
     template <class TYPE, unsigned int N1, unsigned int N2>
@@ -300,7 +300,7 @@ namespace Ostap
      *
      *  @attention the least significant bit is numbered as bit#0 
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-07-09
      */
     template <class TYPE>

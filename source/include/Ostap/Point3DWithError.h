@@ -17,7 +17,7 @@
 /** @file Ostap/Point3DWithError.h
  *  Collection of useful objects with associated "covarinaces".
  *  The concept has been stollen from Wouter Hulsbergen's lines 
- *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 20090603
  */
 namespace Ostap

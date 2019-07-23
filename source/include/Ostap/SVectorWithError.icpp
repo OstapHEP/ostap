@@ -15,7 +15,7 @@
 // ============================================================================
 /** @file Ostap/SVectorWithError.icpp
  *  The implementation file for class Ostap::Math::SVectorWithError
- *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2009-06-13
  */
 // ============================================================================

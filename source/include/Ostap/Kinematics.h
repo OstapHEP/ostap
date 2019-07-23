@@ -223,7 +223,7 @@ namespace Ostap
      *  @param momentum   (in) the particle momentum
      *  @param covariance (in) 4x4 covarinnce matrix
      *  @return the estimate for dispersion of p
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-05-25
      */
     template <class C, class T>
@@ -273,7 +273,7 @@ namespace Ostap
      *  @param momentum   (in) the particle momentum
      *  @param covariance (in) 4x4 covarinnce matrix
      *  @return the estimate for sigma of p
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-05-25
      */
     template <class C, class T>
@@ -309,7 +309,7 @@ namespace Ostap
      *  @param momentum   (in) the particle momentum
      *  @param covariance (in) 4x4 covarinnce matrix
      *  @return the estimate for dispersion of pt
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-05-25
      */
     template <class C, class T>
@@ -359,7 +359,7 @@ namespace Ostap
      *  @param momentum   (in) the particle momentum
      *  @param covariance (in) 4x4 covarinnce matrix
      *  @return the estimate for sigma of pt
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-05-25
      */
     template <class C, class T>
@@ -710,7 +710,7 @@ namespace Ostap
      *  @param mom the momentum
      *  @param dir the direction
      *  @return the transverse moementum with respect to the direction
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-01-17
      */
     double transverseMomentumDir
@@ -727,7 +727,7 @@ namespace Ostap
      *  @param mom the momentum
      *  @param dir the direction
      *  @return the transverse moementum with respect to the direction
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-01-17
      */
     inline double transverseMomentumDir

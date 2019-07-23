@@ -11,7 +11,7 @@
 /** @file Ostap/Power.h
  *  This file is taken from the LoKi project - 
  *    "C++ ToolKit  for Smart and Friendly Physics Analysis"
- *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2001-01-23 
  */
 // ============================================================================

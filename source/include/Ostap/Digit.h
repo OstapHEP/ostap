@@ -50,7 +50,7 @@
  *  @see Ostap::Math::Digits 
  *  @see Ostap::Math::digits
  *
- *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2008-08-01
  */
 // ============================================================================
@@ -72,7 +72,7 @@ namespace Ostap
        *
        *  @attention the least significat decimal digir is numbered as #0
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-08-01
        */
       template <class TYPE,unsigned int N>
@@ -100,7 +100,7 @@ namespace Ostap
        *
        *  @attention the least significat decimal digir is numbered as #0
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-08-01
        */
       template <class TYPE,
@@ -300,7 +300,7 @@ namespace Ostap
      *
      *  @attention the least significat decimal digit is numbered as #0
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-07-31 
      */
     template <class TYPE, unsigned int N>
@@ -322,7 +322,7 @@ namespace Ostap
      *
      *  @attention the least significat decimal digit is numbered as #0
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-07-31 
      */
     template <class        TYPE , 
@@ -344,7 +344,7 @@ namespace Ostap
      * 
      *  @attention the least significat decimal digit is numbered as #0
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-07-09
      */
     template <class TYPE>
@@ -388,7 +388,7 @@ namespace Ostap
      * 
      *  @attention the least significat decimal digit is numbered as #0
      *
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-07-09
      */
     template <class TYPE>

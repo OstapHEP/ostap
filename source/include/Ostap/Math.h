@@ -104,7 +104,7 @@ namespace Ostap
     // ======================================================================
     /** @struct abs_less 
      *  comparison by absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-08-17
      */
     template <class TYPE>
@@ -124,7 +124,7 @@ namespace Ostap
     // ========================================================================
     /** @struct abs_greater
      *  comparison by absolute value 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-08-17
      */
     template <class TYPE>
@@ -143,7 +143,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** return "min_by_abs"
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-08-17
      */        
     template <class TYPE> 
@@ -151,7 +151,7 @@ namespace Ostap
     { return std::min ( std::fabs ( v1 ) , std::fabs ( v2 ) ) ; }
     // ========================================================================
     /** return  "max_by_abs"
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-08-17
      */
     template <class TYPE> 
@@ -166,7 +166,7 @@ namespace Ostap
      *  @param value1  (INPUT) the first value 
      *  @param value2  (INPUT) the second value 
      *  @param epsilon (INPUT) the (relative) precision 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-11-27
      */
     bool knuth_equal_to_double
@@ -180,7 +180,7 @@ namespace Ostap
      *  @param mULPS  (INPUT) the precision 
      *  @see Ostap::Math::lomont_compare_double 
      *  @see Ostap::Math::mULPS_double 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-11-27
      */
     inline bool equal_to_double
@@ -191,7 +191,7 @@ namespace Ostap
     // ========================================================================
     /** @struct Equal_To
      *  helper structure for comparison of floating values
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-11-27
      */
     template <class TYPE>
@@ -772,7 +772,7 @@ namespace Ostap
      *  @param mULPS the precision 
      *  @see Ostap::Math::lomont_compare_double 
      *  @see Ostap::Math::mULPS_double
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-09-17
      */
     bool equal_to_int 
@@ -786,7 +786,7 @@ namespace Ostap
      *  @param mULPS the precision 
      *  @see Ostap::Math::lomont_compare_double 
      *  @see Ostap::Math::mULPS_double
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-09-17
      */        
     inline bool equal_to_int 
@@ -801,7 +801,7 @@ namespace Ostap
      *  @param mULPS the precision 
      *  @see Ostap::Math::lomont_compare_double 
      *  @see Ostap::Math::mULPS_double
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-09-17
      */        
     bool equal_to_uint 
@@ -815,7 +815,7 @@ namespace Ostap
      *  @param mULPS the precision 
      *  @see Ostap::Math::lomont_compare_double 
      *  @see Ostap::Math::mULPS_double
-     *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-09-17
      */        
     inline bool equal_to_uint 

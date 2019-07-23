@@ -1,4 +1,3 @@
-// $Id$
 // ============================================================================
 #ifndef OSTAP_MATRIXTRANSFORMS_H 
 #define OSTAP_MATRIXTRANSFORMS_H 1
@@ -55,7 +54,7 @@ namespace Ostap
      *  @param  source (input)  3D-point
      *  @param  dest   (output) Linear Algebra vector 
      *  @return linear algebra vector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C,class T>
@@ -86,7 +85,7 @@ namespace Ostap
      *  @param source (input)  3D-Vector 
      *  @param dest   (output) Linear Algebra vector 
      *  @return linear algebra vector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C,class T>
@@ -117,7 +116,7 @@ namespace Ostap
      *  @param source (input) Lorentz Vector 
      *  @param dest   (output) Linear Algebra vector 
      *  @return linear algebra vector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C,class T>
@@ -150,7 +149,7 @@ namespace Ostap
      *  @param source (input) Lorentz Vector 
      *  @param dest   (output) Linear Algebra vector 
      *  @return linear algebra vector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C,class T>
@@ -181,7 +180,7 @@ namespace Ostap
      *  @param source (input)  Linear Algebra vector 
      *  @param dest   (output) 3D-point 
      *  @return linear algebra vector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C,class T>
@@ -212,7 +211,7 @@ namespace Ostap
      *  @param source (input)  Linear Algebra vector 
      *  @param dest   (output) 3D-vector 
      *  @return linear algebra vector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C,class T>
@@ -243,7 +242,7 @@ namespace Ostap
      *  @param source (input) Lorentz Vector 
      *  @param dest   (output) Linear Algebra vector 
      *  @return linear algebra vector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C,class T>
@@ -283,7 +282,7 @@ namespace Ostap
      *  @param matrix (input) symmetric (3x3) matrix used for similarity
      *  @param delta  (input) 3D- vector 
      *  @return reult of v^T*M*v (similarity) operation
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */ 
     template <class C,class T>
@@ -319,7 +318,7 @@ namespace Ostap
      *  @param matrix (input) symmetric (3x3) matrix used for similarity
      *  @param delta  (input) 3D- vector 
      *  @return result of v^T*M*v (similarity) operation
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */ 
     template <class C,class T>
@@ -352,7 +351,7 @@ namespace Ostap
      *  @param delta  (input) Lorentz vector 
      *  @param matrix (input) symmetric (4x4) matrix used for similarity
      *  @return result of v^T*M*v (similarity) operation
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */ 
     template <class C,class T>
@@ -388,7 +387,7 @@ namespace Ostap
      *  @param matrix (input) symmetric (4x4) matrix used for similarity
      *  @param delta  (input) Lorentz vector 
      *  @return result of v^T*M*v (similarity) operation
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */ 
     template <class C,class T>
@@ -413,7 +412,7 @@ namespace Ostap
      *  @param v1 (input/output) LorentzVector to be updated 
      *  @param v2 (input) Linear Algebra vector, to be added to LorentzVector 
      *  @return the updated LorenzVector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C, class T>
@@ -439,7 +438,7 @@ namespace Ostap
      *  @param v1 (input/output) LorentzVector to be updated 
      *  @param v2 (input) Linear Algebra vector, to be added to LorentzVector 
      *  @return the updated LorenzVector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C, class T>
@@ -465,7 +464,7 @@ namespace Ostap
      *  @param v1 (input/output) LorentzVector to be updated 
      *  @param v2 (input) Linear Algebra vector, to be added to LorentzVector 
      *  @return the updated LorenzVector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C, class T>
@@ -491,7 +490,7 @@ namespace Ostap
      *  @param v1 (input/output) LorentzVector to be updated 
      *  @param v2 (input) Linear Algebra vector, to be subtracted 3D-point
      *  @return the updated LorenzVector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C, class T>
@@ -517,7 +516,7 @@ namespace Ostap
      *  @param v1 (input/output) LorentzVector to be updated 
      *  @param v2 (input) Linear Algebra vector, to be subtracted from Vector 
      *  @return the updated LorenzVector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C, class T>
@@ -543,7 +542,7 @@ namespace Ostap
      *  @param v1 (input/output) LorentzVector to be updated 
      *  @param v2 (input) Linear Algebra vector, to be subtracted from  LorentzVector 
      *  @return the updated LorenzVector 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class C, class T>
@@ -569,7 +568,7 @@ namespace Ostap
      *  @param matrix symmetric matrix to be updated 
      *  @param other matrix, upper traingle is used for updating
      *  @return the updated symmetric matrix 
-     *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
     template <class T1,class T2,unsigned int D, class R>
@@ -974,7 +973,7 @@ namespace Ostap
        *  @param  v2 the linear algebra vector 
        *  @return the effective position vector 
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date   2008-03-05
        */
       template <class C, class T>
@@ -1399,7 +1398,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BEYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BEYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class C, class T> 
@@ -1443,7 +1442,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BEYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BEYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class C, class T> 
@@ -1485,7 +1484,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BEYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BEYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class C, class T> 
@@ -1527,7 +1526,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class T, class C, class R, unsigned int D>
@@ -1565,7 +1564,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class T, class C, class R, unsigned int D>
@@ -1603,7 +1602,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class T, class C, class R, unsigned int D>
@@ -1641,7 +1640,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class T, class C, class R, unsigned int D>
@@ -1679,7 +1678,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class T, class C, class R, unsigned int D>
@@ -1717,7 +1716,7 @@ namespace Ostap
        *
        *  @endcode 
        *
-       *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2008-03-03
        */
       template <class T, class C, class R, unsigned int D>

@@ -520,11 +520,15 @@ PvsPtEta  . asTF2 = _as_TF2_
 #  @see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function
 #  @see Ostap::Kinematics::kallen
 #  @see Ostap::Kinematics::triangle
+#  Suprisingly, it is a little bit faster than calling the C++ version
 def kallen ( x , y , z ) :
     """ Kallen function, aka ``triangle'' function 
     - see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function
+    - see Ostap.Kinematics.kallen
+    - see Ostap.Kinematics.triangle
+    Suprisingly, it is a little bit faster than calling the C++ version
     """
-    return x * x + y * y + z * z - 2.0 * x * y - 2.0 * y * z -  2.0 * z * x
+    return x * x + y * y + z * z - 2.0 * x * y - 2.0 * y * z - 2.0 * z * x
 
 # =============================================================================
 ## Calculate the full two-body phase space
@@ -554,10 +558,12 @@ def phasespace2 ( M ,  m1 , m2 ) :
 #  M, m1  , m2 , m3 = ...
 #  ps3 = phasespace3 ( M , m1  , m2 , m3 ) 
 #  @endcode 
+#  @attention The algorithm includes two embedded numerical integration -> could be slow 
 def phasespace3 ( M ,  m1 , m2 , m3 ) :
     """Calculate the full three body phase space:
     >>> M, m1  , m2 , m3 = ...
     >>> ps3 = phasespace3 ( M , m1  , m2 , m3 ) 
+    - The algorithm includes two embedded numerical integration -> could be slow 
     """
     assert 0 <=M and 0<=m1 and 0<=m2 and 0<=m3 , 'Invalid setting of masses!'
 
@@ -589,14 +595,14 @@ def phasespace3 ( M ,  m1 , m2 , m3 ) :
 #  M, m1  , m2 , m3 , m4 = ...
 #  ps4 = phasespace4 ( M , m1  , m2 , m3 , m4 ) 
 #  @endcode
-#  The algorithm includes two embedded numerical integration -> could be relatively slow 
+#  @attention The algorithm includes two embedded numerical integration -> could be relatively slow 
 def phasespace4 ( M ,  m1 , m2 , m3 , m4 ) :
     """Calculate the full four body phase space
     >>> M, m1  , m2 , m3 , m4 = ...
     >>> ps4 = phasespace4 ( M , m1  , m2 , m3 , m4 ) 
     - The algorithm includes two embedded numerical integration -> could be relatively slow 
     """
-    assert 0<M and 0<=m1 and 0<=m2 and 0<=m3 and 0<=m4 , 'Invalid setting of masses!'
+    assert 0<=M and 0<=m1 and 0<=m2 and 0<=m3 and 0<=m4 , 'Invalid setting of masses!'
 
     ##
     if m1 + m2 + m3 + m4 >= M : return 0   ## RETURN! 
@@ -624,7 +630,7 @@ def phasespace ( M , *args ) :
     - The algorithm includes embedded numerical integrations -> could be relatively slow 
     """
     
-    assert 0 < M and 2 <= len ( args ) , 'Invalid setting of masses!'
+    assert 0 <= M and 2 <= len ( args ) , 'Invalid setting of masses!'
     
     summ = 0.0
     for m in args :
@@ -758,10 +764,10 @@ if '__main__' == __name__ :
     logger.info ( 'Lorentz-vector ((px,py,pz),E)    : %s' % lv5 )
 
 
-    logger.info ( 'Plus     %s' % (lv3+lv2) )
-    logger.info ( 'Minus    %s' % (lv3-lv2) )
-    logger.info ( 'Multiply %s' % (lv3*lv2) )
-    logger.info ( 'Pow      %s' % (lv3**2 ) )
+    logger.info ( 'Plus     %s' % ( lv3 +  lv2 ) )
+    logger.info ( 'Minus    %s' % ( lv3 -  lv2 ) )
+    logger.info ( 'Multiply %s' % ( lv3 *  lv2 ) )
+    logger.info ( 'Pow      %s' % ( lv3 ** 2   ) )
     
     
     logger.info ( 80*'*' ) 

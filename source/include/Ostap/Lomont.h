@@ -28,7 +28,7 @@ namespace Ostap
      *
      *  @attention Only the specializations of this class has sense!
      *
-     *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2009-10-22
      */
     template <class TYPE> class Lomont ;
@@ -77,7 +77,7 @@ namespace Ostap
      *  @param  bf the second number 
      *  @param  maxULPs the maximal metric deviation in the terms of
      *                 maximal number of units in the last place
-     *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2008-11-08
      */
     bool lomont_compare_float
@@ -117,7 +117,7 @@ namespace Ostap
      *  @param  bf the second number 
      *  @param  maxULPs the maximal metric deviation in the terms of
      *                 maximal number of units in the last place
-     *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2008-11-08
      */
     bool lomont_compare_double
@@ -141,7 +141,7 @@ namespace Ostap
      *  @see class Ostap::Math::Lomont 
      *  @attention The default precision is not specified!
      *  @see Ostap::Math::lomont_compare_float 
-     *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2009-10-22
      */
     template <>
@@ -187,7 +187,7 @@ namespace Ostap
      *  
      *  @endcode 
      * 
-     *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2009-10-22
      */
     template <>
@@ -230,7 +230,7 @@ namespace Ostap
      *  @param af the reference number 
      *  @param ulps the bias 
      *  @return the biased float number (on distance "ulps")
-     *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2008-11-08
      */  
     float next_float ( const float af , const short ulps ) ;
@@ -248,7 +248,7 @@ namespace Ostap
      *  @param af the reference number 
      *  @param ulps the bias 
      *  @return the biased float number (on distance "ulps")
-     *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2008-11-08
      */  
     double next_double ( const double  af , const short ulps ) ;
