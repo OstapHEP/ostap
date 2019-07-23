@@ -61,14 +61,14 @@ The options are split into two categories:
 class, e.g. options that are common for all 'signal' or 'backround' components 
 
 The major options and  styles  are :
-- data_options'                 : data options to draw the data points 
-- signal_options'               : draw options for 'signal '      component(s)
-- background_options'           : draw options for 'background'   component(s)
-- background2D_options'         : draw options for 'background2D' component(s)
-- crossterm1_options'           : draw options for 'crossterm1'   component(s)
-- crossterm2_options'           : draw options for 'crossterm2'   component(s)    
-- component_options'            : draw options for 'other'        component(s)
-- total_fit_options'            : draw options for the total fit curve
+- `data_options'                 : data options to draw the data points 
+- `signal_options'               : draw options for `signal '      component(s)
+- `background_options'           : draw options for `background'   component(s)
+- `background2D_options'         : draw options for `background2D' component(s)
+- `crossterm1_options'           : draw options for `crossterm1'   component(s)
+- `crossterm2_options'           : draw options for `crossterm2'   component(s)    
+- `component_options'            : draw options for `other'        component(s)
+- `total_fit_options'            : draw options for the total fit curve
 
 The drawing can be done via the explicit usage of the options
 

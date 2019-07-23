@@ -18,7 +18,7 @@ for label in sample.labels() :
 
 ### `combine_data` 
 
-Helper function to create the "combined" data set for the simultanaeous fit 
+Helper function to create the "combined" data set for the simultaneous fit 
 ```python
 dataset_A = ... # regular RooDataSet
 dataset_B = ... # regular RooDataSet

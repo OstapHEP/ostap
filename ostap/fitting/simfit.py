@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file  ostap/fitting/simfit.py
-#  Collection of utilities that simplify Simultaneous fit
+#  Collection of utilities that simplify the Simultaneous fit
 #  @see RooSimultaneous
 #  @see https://github.com/OstapHEP/ostap/blob/master/ostap/fitting/SIMFIT.md
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-23
 # =============================================================================
-""" Collection of utilities that simplify Simultaneous fit
+""" Collection of utilities that simplify the Simultaneous fit
 - see https://github.com/OstapHEP/ostap/blob/master/ostap/fitting/SIMFIT.md
 """
 # =============================================================================
@@ -50,7 +50,7 @@ if not hasattr ( ROOT.RooCategory , '_old_init_' ) :
 ## Get the list/tuple of categories 
 #  @code
 #  cat = ....
-#  labels = cat.labels()
+#  labels = cat.labels ()
 #  @endcode
 #  @see RooCategory
 def _rc_labels_ ( self ) :
@@ -794,7 +794,14 @@ class SimFit ( MakeVar ) :
                                        nbins   = nbins   ,
                                        silent  = silent  , **kwargs )
             
-        
+# =============================================================================
+_decorated_classes_  = (
+    ROOT.RooCategory , 
+    )
+_new_methods_        = (
+    ROOT.RooCategory.__init__ ,
+    ROOT.RooCategory.labels   ,
+    )
 # =============================================================================
 if '__main__' == __name__ :
     
