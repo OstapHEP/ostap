@@ -15,7 +15,7 @@
 #include "Ostap/Dalitz.h"
 // ============================================================================
 /** @file Ostap/PhaseSpace.h
- *  collection of functions relaetd to phase space 
+ *  collection of functions related to the phase space calculations 
  *  @author Vanya Belyaev
  */  
 // ============================================================================

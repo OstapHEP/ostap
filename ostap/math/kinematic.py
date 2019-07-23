@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/math/kinematic.py
-#  Set of useful "kinematic" utilities 
+#  Set of useful "kinematic" utilities
+#  see also namespace Ostap::Kinematics
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2009-09-12
 # =============================================================================
@@ -23,13 +24,13 @@ __all__     = (
     'PtVsPEta'    , ## pt=pt(p,eta) 
     'PvsPtEta'    , ## p= p(pt,eta)
     ##
-    'kallen'      , ## Kallen ``lambda''/``triangle'' function
     'phasespace2' , ## 2-body phase space 
     'phasespace3' , ## the full 3-body phase space
     'phasespace4' , ## the full 4-body phase space
     'phasespace'  , ## the full N-body phase space
     ##
-    'G'           , ## the basic universal 4-body function
+    'kallen'      , ## Kallen ``lambda''/``triangle'' function
+    'G'           , ## the basic universal 4-body function ``tetrahedron-function''
     ##
     )
 # =============================================================================
@@ -517,6 +518,8 @@ PvsPtEta  . asTF2 = _as_TF2_
 # =============================================================================
 ## Kallen function, aka ``lambda''/``triangle'' function 
 #  @see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function
+#  @see Ostap::Kinematics::kallen
+#  @see Ostap::Kinematics::triangle
 def kallen ( x , y , z ) :
     """ Kallen function, aka ``triangle'' function 
     - see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function
@@ -536,7 +539,7 @@ def phasespace2 ( M ,  m1 , m2 ) :
     >>> M, m1  , m2 = ...
     >>> ps = phasespace2 ( M , m1 , m2 ) 
     """    
-    assert 0<M and 0<=m1 and 0<=m2, 'Invalid setting of masses!'
+    assert 0 <= M and 0<=m1 and 0<=m2 , 'Invalid setting of masses!'
     
     ##
     if m1 + m2 >= M : return 0   ## RETURN!
@@ -556,7 +559,7 @@ def phasespace3 ( M ,  m1 , m2 , m3 ) :
     >>> M, m1  , m2 , m3 = ...
     >>> ps3 = phasespace3 ( M , m1  , m2 , m3 ) 
     """
-    assert 0<M and 0<=m1 and 0<=m2 and 0<=m3 , 'Invalid setting of masses!'
+    assert 0 <=M and 0<=m1 and 0<=m2 and 0<=m3 , 'Invalid setting of masses!'
 
     ##
     if m1 + m2 + m3 >= M : return 0   ## RETURN! 
@@ -651,35 +654,84 @@ def phasespace ( M , *args ) :
     
     return integral ( func ,  low , high , err = False )
 
-
 # =============================================================================
-## the basic universal 4-body function G
+## Universal four-particle kinematical function, aka "tetrahedron-function"
 #  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
-#       London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+#              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
 #  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf
 #  E.g. physical range for 2->2 scattering process is defined as
-#  \f$ G(s,t,m_2^2, m_a^2, m_b^2, m_1^2) \le 0 \f$
-# or the phsyical range  for Dalitz plot is
-#   \f$ G(s_2, s_1,  m_3^2, m_1^2, s , m_2^2) \le 0 \f$ 
+# \f$ G(s,t,m_2^2, m_a^2, m_b^2, m_1^2) \le 0 \f$
+# or the physical range  for Dalitz plot is
+# \f$ G(s_2, s_1,  m_3^2, m_1^2, s , m_2^2) \le 0 \f$
+#
+# Actually the formula in E.Byckling & K.Kajantie  has a typo.
+# 
+# See the correct formula in: 
+# @see  P. Nyborg, H.S. Song, W. Kernan, R.H. Good,
+#       Phase-Space Considerations for Four-Particle Final States"
+#       Phys.Rev. 140 (1965) B914-B920, DOI: 10.1103/PhysRev.140.B914  
+# @see https://journals.aps.org/pr/pdf/10.1103/PhysRev.140.B914
+# @see http://inspirehep.net/record/49679?ln=en
+#  
+# The correct formula is :
+#  \f[ G(x,y,z.u,v,w) =  
+#   x^2y + xy^2 + z^2u + zu^2  + v^2w + vw^2 
+#   + xzw + zuv + yzv + yuw 
+#   - x y ( z + u + v + w ) 
+#   - z u ( x + y + v + w )
+#   - v w ( x + y + z + u ) \f] 
+#  - B&K gives \f$ yzw\f$ instead of \f$yzv\f$  
+#  @see Ostap::Kinematics::G 
+#  @see Ostap::Kinematics::tetrahedron 
 def G ( x , y , z , u , v , w ) :
-    r"""The basic universal 4-body function G
-    - see E.Byckling, K.Kajantie, ``Particle kinematics'', John Wiley & Sons,
-    London, New York, Sydney, Toronto, 1973 p.89, eq. (5.23)
+    """Universal four-particle kinematical function, aka ``tetrahedron-function''
+    - see E.Byckling, K.Kajantie, ``Particle kinematics'' , John Wiley & Sons,
+               London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+
     - see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf
     
     E.g. physical range for 2->2 scattering process is defined as
-    \f$ G(s,t,m_2^2, m_a^2, m_b^2 , m_1^2)     \le 0 \f$
-    or the physical range  for Dalitz plot is
-    \f$ G(s_2, s_1,  m_3^2, m_1^2 , s , m_2^2) \le 0 \f$ 
+
+     G( s , t , m_2^2 , m_a^2, m_b^2 , m_1^2 ) <= 0
+     
+     or the physical range  for Dalitz plot is
+     
+     G( s_2 , s_1 , m_3^2 , m_1^2, s , m_2^2)  <= 0 
+    
+    Actually the formula in E.Byckling & K.Kajantie  has a typo.
+    
+    See the correct formula in: 
+    - see  P. Nyborg, H.S. Song, W. Kernan, R.H. Good,
+    ``Phase-Space Considerations for Four-Particle Final States''
+    Phys.Rev. 140 (1965) B914-B920, DOI: 10.1103/PhysRev.140.B914  
+    - see https://journals.aps.org/pr/pdf/10.1103/PhysRev.140.B914
+    - see http://inspirehep.net/record/49679?ln=en
+    
+    The correct formula is :
+    G(x,y,z.u,v,w) =  
+    x^2y + xy^2 + z^2u + zu^2  + v^2w + vw^2 
+    + xzw + zuv + yzv + yuw 
+    - x y ( z + u + v + w ) 
+    - z u ( x + y + v + w ) 
+    - v w ( x + y + z + u )
+    
+    - ( B&K gives yzw instead of yzv $ )
+
+    - see Ostap.Kinematics.G 
+    - see Ostap.Kinematics.tetrahedron 
     """
-    r1 = x * x * y + x * y * y + z * z * x + z * u * u + v * v * w + v *  w * w 
-    r2 = x * y * w + x * u * v + y * z * w + y * u * w
-    r3 = - x * y * ( z + u + v + w )
-    r4 = - z * y * ( x + y + v + w )
-    r5 = - v * w * ( x + y + z + u )
-    
-    return 0.0 + r1 + r2 + r3 + r4 + r5 
-    
+    result  = 0.0 
+    result += x * x * y + x * y * y  
+    result += z * z * u + z * u * u 
+    result += v * v * w + v * w * w  
+    result += x * z * w + x * u * v  
+    ## result +=  y * z * w + y * u * w  ## <--  typo in  E.Byckling & K.Kajantie
+    result += y * z * v + y * u * w      ## <--  correct line 
+    result -= x * y * ( z + u + v + w ) 
+    result -= z * u * ( x + y + v + w ) 
+    result -= v * w * ( x + y + z + u )
+    ##
+    return result 
     
 # =============================================================================
 if '__main__' == __name__ :
