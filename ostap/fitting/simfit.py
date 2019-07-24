@@ -127,7 +127,10 @@ def combined_data ( sample        ,
                 
         assert isinstance ( dset , ROOT.RooAbsData ),\
                'Invalid data set for label %s' % label
-        
+
+        assert not dset.isNonPoissonWeighted () ,\
+               'Weighted data cannot be combined!'
+                    
         largs.append (  ROOT.RooFit.Import ( label , dset ) )
 
     name  = name  if name  else dsID()
@@ -145,17 +148,92 @@ def combined_data ( sample        ,
 
 # =============================================================================
 ## create combined binned dataset for simultaneous fit
+#  - combine 2D histograms:
+#  @code
+#  sample = ROOT.RooCategory ( 'sample' , 'fitting sample' , 'A' , 'B' )
+#  hA  = ...
+#  hB  = ...
+#  var = ROOT.RooRealVar ( ... )
+#  ds  = combined_hdata ( sample , var , { 'A' : hA , 'B' : hB } )  
+#  @endcode
+#  - combine 2D histograms:
+#  @code
+#  sample = ROOT.RooCategory ( 'sample' , 'fitting sample' , 'A' , 'B' )
+#  hA   = ...
+#  hB   = ...
+#  xvar = ROOT.RooRealVar ( ... )
+#  yvar = ROOT.RooRealVar ( ... )
+#  ds   = combined_hdata ( sample , (xvar, yvar) , { 'A' : hA , 'B' : hB } )  
+#  @endcode
+#  - combine 3D histograms:
+#  @code
+#  sample = ROOT.RooCategory ( 'sample' , 'fitting sample' , 'A' , 'B' )
+#  hA   = ...
+#  hB   = ...
+#  xvar = ROOT.RooRealVar ( ... )
+#  yvar = ROOT.RooRealVar ( ... )
+#  zvar = ROOT.RooRealVar ( ... )
+#  ds   = combined_hdata ( sample , (xvar, yvar, zvar) , { 'A' : hA , 'B' : hB } )  
+#  @endcode
 def combined_hdata ( sample        ,
                      varset        ,
                      histograms    ,
                      name     = '' ,
                      title    = '' ) :
+    """Create combined binned dataset for simultaneous fit
+    - combine 2D histograms:
+
+    >>> sample = ROOT.RooCategory ( 'sample' , 'fitting sample' , 'A' , 'B' )
+    >>> hA  = ...
+    >>> hB  = ...
+    >>> var = ROOT.RooRealVar ( ... )
+    >>> ds  = combined_hdata ( sample , var , { 'A' : hA , 'B' : hB } )  
+
+    - combine 2D histograms:
+
+    >>> sample = ROOT.RooCategory ( 'sample' , 'fitting sample' , 'A' , 'B' )
+    >>> hA   = ...
+    >>> hB   = ...
+    >>> xvar = ROOT.RooRealVar ( ... )
+    >>> yvar = ROOT.RooRealVar ( ... )
+    >>> ds   = combined_hdata ( sample , (xvar, yvar) , { 'A' : hA , 'B' : hB } )  
+
+    - combine 3D histograms:
+
+    >>> sample = ROOT.RooCategory ( 'sample' , 'fitting sample' , 'A' , 'B' )
+    >>> hA   = ...
+    >>> hB   = ...
+    >>> xvar = ROOT.RooRealVar ( ... )
+    >>> yvar = ROOT.RooRealVar ( ... )
+    >>> zvar = ROOT.RooRealVar ( ... )
+    >>> ds   = combined_hdata ( sample , (xvar, yvar, zvar) , { 'A' : hA , 'B' : hB } )  
+    """
 
     MAP  = std.map  ( 'std::string'       , 'TH1*' )
     PAIR = std.pair ( 'const std::string' , 'TH1*' )
     mm   = MAP()
-    for key in histograms : 
-        mm.insert ( PAIR ( key , histograms [ key ] ) ) 
+    
+    d1   = 0 
+    d2   = 0 
+    d3   = 0
+    
+    labels = sample.labels ()
+    
+    for label in labels :
+        
+        histo = histograms.pop  ( label ) 
+        
+        if   isinstance ( histo , ROOT.TH3 ) : d3 += 1
+        elif isinstance ( histo , ROOT.TH2 ) : d2 += 1
+        elif isinstance ( histo , ROOT.TH1 ) : d1 += 1
+        
+        mm.insert ( PAIR ( label , histo ) )
+
+
+    assert not historgams, 'Unknown histograms: %s' % histograms.keys() 
+        
+    assert ( d3 or d2 ) and ( d3 or d1 ) and ( d2 or d1 ), \
+           'Histograms of different dimensions cannot be combined !'
         
     name  = name  if name  else dsID()
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
@@ -164,6 +242,11 @@ def combined_hdata ( sample        ,
     if isinstance ( varset , ROOT.RooAbsReal ) : varlst.add ( varset )
     else :  
         for v in varset : varlst.add ( v )
+
+    assert ( d3 and 3 == len ( varlst ) ) or \
+           ( d2 and 2 == len ( varlst ) ) or \
+           ( d1 and 1 == len ( varlst ) )  , \
+           'Invalid dimension of dataset!'
     
     return ROOT.RooDataHist ( name , title , varlst , sample  , mm ) 
     

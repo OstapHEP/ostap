@@ -35,10 +35,10 @@ __all__     = (
 import ROOT, math, string
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
-from   ostap.core.core     import rootID, VE, items_loop
-from   ostap.core.ostap_types    import num_types, list_types, integer_types
-from   ostap.logger.utils  import roo_silent
-from   sys                 import version_info as python_version 
+from   ostap.core.core        import rootID, VE, items_loop
+from   ostap.core.ostap_types import num_types, list_types, integer_types, string_types 
+from   ostap.logger.utils     import roo_silent
+from   sys                    import version_info as python_version 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
@@ -244,7 +244,7 @@ class MakeVar ( object ) :
     #  @endcode
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date 2013-12-01
-    def make_var ( self , var , name , comment , fix = None , *args ) :
+    def make_var ( self , var , name , comment = '' , fix = None , *args ) :
         """Make/modify  the variable:
         
         v = self.make_var ( 10   , 'myvar' , 'mycomment' )
@@ -258,16 +258,24 @@ class MakeVar ( object ) :
         # var = ( min , max )
         # var = ( value , min , max ) 
         if   isinstance   ( var , tuple ) :
+            assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name 
             var = ROOT.RooRealVar ( name , comment , *var )
 
+        ## if only name is specified :
+        if   isinstance  ( var , string_types ) and 2 <= len ( args ):
+            assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
+            var = ROOT.RooRealVar( var , name + comment , *args )
+            
         # var = value 
         if isinstance   ( var , num_types ) :
+            assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             if   not    args       : var = ROOT.RooRealVar ( name , comment , var             )
             elif 2 == len ( args ) : var = ROOT.RooRealVar ( name , comment , var , *args     )
             elif 3 == len ( args ) : var = ROOT.RooRealVar ( name , comment , var , *args[1:] )
         
         ## create the variable from parameters 
         if not isinstance ( var , ROOT.RooAbsReal ) : 
+            assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var = ROOT.RooRealVar ( name , comment , *args )
             self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
         
@@ -276,11 +284,11 @@ class MakeVar ( object ) :
         elif isinstance ( fix , num_types  ) :
                 
             if hasattr ( var , 'getMin)') and fix < var.getMin() and hasattr ( var , 'setMin' ) :                                                                             
-                self.warning ( "make_var: min-value for %s is redefined to be %s " % ( var.GetName () , fix ) )
+                self.warning ( "make_var: min-value for %s is redefined to be %s" % ( var.GetName () , fix ) )
                 var.setMin ( fix )
             
             if hasattr ( var , 'getMax' ) and fix > var.getMax() and hasattr ( var , 'setMax' ) : 
-                self.warning ( "make_var: max-value for %s is redefined to be %s " % ( var.GetName () , fix ) )
+                self.warning ( "make_var: max-value for %s is redefined to be %s" % ( var.GetName () , fix ) )
                 var.setMax ( fix )
             
             if not var.isConstant () and hasattr ( var , 'fix'    ) : var.fix    ( fix )

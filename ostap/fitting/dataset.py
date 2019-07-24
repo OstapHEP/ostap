@@ -696,9 +696,10 @@ _new_methods_ += [
     ]
 
 # =============================================================================
-ROOT.RooDataSet.draw        = ds_draw
-ROOT.RooDataSet.project     = ds_project
-ROOT.RooDataSet.__getattr__ = _ds_getattr_
+ROOT.RooDataSet.draw         = ds_draw
+ROOT.RooDataSet.project      = ds_project
+ROOT.RooDataSet .__getattr__ = _ds_getattr_
+ROOT.RooDataHist.__getattr__ = _ds_getattr_
 
 ROOT.RooDataHist.__len__    = lambda s : s.numEntries() 
 
@@ -782,6 +783,7 @@ _new_methods_ += [
     ROOT.RooDataSet .draw         ,
     ROOT.RooDataSet .project      ,
     ROOT.RooDataSet .__getattr__  ,
+    ROOT.RooDataHist.__getattr__  ,
     ROOT.RooDataHist.__len__      ,
     ROOT.RooAbsData .sFactor      
     ]
