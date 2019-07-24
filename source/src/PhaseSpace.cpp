@@ -770,12 +770,12 @@ double  Ostap::Math::PSDalitz::integral
 // get the integral
 // ============================================================================
 double  Ostap::Math::PSDalitz::integral() const
-{ return m_norm > 0 ? m_norm : integral ( m1() + m2() , M() - m3 () ) ; }
+{ return 0 < m_norm ? 1.0 / m_norm : integral ( m1() + m2() , M() - m3 () ) ; }
 // ============================================================================
 // get the tag  
 // ============================================================================
 std::size_t Ostap::Math::PSDalitz::tag () const  // get the tag
-{ return std::hash_combine ( M() , m1() , m2() , m3 () ) ; }
+{ return std::hash_combine ( M () , m1 () , m2 () , m3 () ) ; }
 // ============================================================================
 
 
@@ -896,48 +896,9 @@ std::size_t Ostap::Math::PhaseSpace23L::tag () const  // get the tag
 // ============================================================================
 
 
+
 // ============================================================================
-namespace 
-{
-  // ==========================================================================
-  struct DalitzAux2 
-  {
-    DalitzAux2 (  const Ostap::Kinematics::Dalitz* d ) : m_d ( d ) {} ;
-    DalitzAux2 () = delete ;
-    double operator () ( const double x ) const 
-    {
-      //
-      const double s2 = x ;
-      const double f1 = Ostap::Kinematics::triangle ( s2 , m_d -> s    () , m_d -> m1sq () ) ;
-      const double f2 = Ostap::Kinematics::triangle ( s2 , m_d -> m2sq () , m_d -> m3sq () ) ;
-      //
-      return  ( f1 <= 0 || f2 <= 0 ) ? 0.0 : std::sqrt ( f1 * f2 ) / s2 ;
-    }
-    const Ostap::Kinematics::Dalitz* m_d ;
-  } ;
-  // ==========================================================================
-  struct DalitzAux1
-  {
-    DalitzAux1 (  const Ostap::Kinematics::Dalitz* d ) : m_d ( d ) {} ;
-    DalitzAux1 () = delete ;
-    double operator () ( const double x ) const 
-    {
-      //
-      const double s1 = x ;
-      const double f1 = Ostap::Kinematics::triangle ( s1 , m_d -> s    () , m_d -> m3sq () ) ;
-      const double f2 = Ostap::Kinematics::triangle ( s1 , m_d -> m1sq () , m_d -> m2sq () ) ;
-      //
-      return  ( f1 <= 0 || f2 <= 0 ) ? 0.0 : std::sqrt ( f1 * f2 ) / s1 ;
-    }
-    const Ostap::Kinematics::Dalitz* m_d ;
-  } ;
-  // ==========================================================================
-  // workspace for Dalitz integrals 
-  Ostap::Math::WorkSpace s_ws_dalitz ;
-  // ==========================================================================
-}
-// ============================================================================
-/** Get a full integrated phase space over Dalitz plot 
+/*  Get a full integrated phase space over Dalitz plot 
  *  \f$  R(s) = \int \int R(s_1,s_2) \deriv s_1 \deriv s_2 =
  *  \int _{(m_2+m_3)^2}^{ (\sqrt{s}-m_1)^2}
  *   \frac{\deriv s_2}{s_2}
@@ -947,80 +908,7 @@ namespace
 // ============================================================================
 double Ostap::Kinematics::phase_space 
 ( const Ostap::Kinematics::Dalitz& dalitz )  
-{ 
-  //
-  static const long double s_norm1 = 0.125L * M_PI * M_PI ;
-  static const long double s_norm2 = 0.250L * M_PI * M_PI ;
-  //
-  // all three masses are zero 
-  if       ( ( s_zero ( dalitz.m1 () ) || s_zero ( dalitz.m1sq () ) ) && 
-             ( s_zero ( dalitz.m2 () ) || s_zero ( dalitz.m2sq () ) ) && 
-             ( s_zero ( dalitz.m3 () ) || s_zero ( dalitz.m3sq () ) ) )
-  {
-    return s_norm1 * dalitz.s() ;
-  }
-  // m2 and m2 are zero =>  s1_min is not zero
-  else if  ( ( s_zero ( dalitz.m2 () ) || s_zero ( dalitz.m2sq () ) ) && 
-             ( s_zero ( dalitz.m3 () ) || s_zero ( dalitz.m3sq () ) ) ) 
-  {
-    const double x_low  = dalitz.s1_min () ;
-    const double x_high = dalitz.s1_max () ;
-    //
-    static const Ostap::Math::GSL::Integrator1D<DalitzAux1> s_integrator {} ;
-    static char s_message[] = "Integral(DalitzAux1)" ;
-    //
-    const std::size_t tag = 
-      std::hash_combine ( dalitz.M  () , dalitz.m1 () , dalitz.m2 () , dalitz.m3 () ) ;
-    //
-    const DalitzAux1 aux { &dalitz } ;
-    const auto F = s_integrator.make_function ( &aux ) ;
-    int    ierror   = 0   ;
-    double result   = 1.0 ;
-    double error    = 1.0 ;
-    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
-      ( tag    , 
-        &F     , 
-        x_low  , x_high     ,          // low & high edges
-        workspace ( s_ws_dalitz ) ,    // workspace
-        s_PRECISION         ,          // absolute precision
-        s_PRECISION         ,          // relative precision
-        s_SIZE              ,          // size of workspace
-        s_message           , 
-        __FILE__ , __LINE__ ) ;
-    //
-    return result * s_norm2 / dalitz.s() ;
-  }
-  // 
-  const double x_low  = dalitz.s2_min () ;
-  const double x_high = dalitz.s2_max () ;
-    //
-  static const Ostap::Math::GSL::Integrator1D<DalitzAux2> s_integrator {} ;
-  static char s_message[] = "Integral(DalitzAux2)" ;
-  //
-  const std::size_t tag = 
-    std::hash_combine ( dalitz.M  () , dalitz.m1 () , dalitz.m2 () , dalitz.m3 () ) ;
-  //
-  const DalitzAux2 aux { &dalitz } ;
-  const auto F = s_integrator.make_function ( &aux ) ;
-  int    ierror   = 0   ;
-  double result   = 1.0 ;
-  double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
-    ( tag    , 
-      &F     , 
-      x_low  , x_high     ,          // low & high edges
-      workspace ( s_ws_dalitz ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result * s_norm2 / dalitz.s() ;
-}
-// ============================================================================
-
-
+{ return Ostap::Math::PSDalitz ( dalitz ).phasespace () ; }
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
