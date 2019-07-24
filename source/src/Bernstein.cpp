@@ -98,15 +98,6 @@ Ostap::Math::Bernstein::Bernstein
   , m_xmax ( std::max ( xmin , xmax ) )
 {}
 // ============================================================================
-// swap 
-// ============================================================================
-void Ostap::Math::Bernstein::swap ( Ostap::Math::Bernstein&  right ) 
-{
-  PolySum::swap ( right ) ;
-  std::swap ( m_xmin ,  right.m_xmin ) ;
-  std::swap ( m_xmax ,  right.m_xmax ) ;  
-}
-// ============================================================================
 // constructor  from Bernstein polynomial from *different* domai
 // ============================================================================
 namespace 
@@ -447,6 +438,40 @@ bool Ostap::Math::Bernstein::decreasing   () const
   return true ;
 }
 // ============================================================================
+// is it a convex function?
+// ============================================================================
+bool Ostap::Math::Bernstein::convex   () const 
+{
+  if ( m_pars.size() <= 2 ) { return true ; }
+  for ( std::vector<double>::const_iterator it = m_pars.begin() + 2 ; 
+        m_pars.end() != it ; ++it ) 
+  {
+    const double p0 = * it       ;
+    const double p1 = *(it - 1 ) ;
+    const double p2 = *(it - 2 ) ;
+    //
+    if  ( ( p2 + p0 ) < 2 * p1 && !s_equal ( p2 + p0 , 2 * p2 ) ) { return false ; }
+  }
+  return true ;
+}
+// ============================================================================
+// is it a concave function?
+// ============================================================================
+bool Ostap::Math::Bernstein::concave   () const 
+{
+  if ( m_pars.size() <= 2 ) { return true ; }
+  for ( std::vector<double>::const_iterator it = m_pars.begin() + 2 ; 
+        m_pars.end() != it ; ++it ) 
+  {
+    const double p0 = * it       ;
+    const double p1 = *(it - 1 ) ;
+    const double p2 = *(it - 2 ) ;
+    //
+    if  ( ( p2 + p0 ) > 2 * p1 && !s_equal ( p2 + p0 , 2 * p2 ) ) { return false ; }
+  }
+  return true ;
+}
+// ============================================================================
 // is it a constant function?
 // ============================================================================
 bool Ostap::Math::Bernstein::constant () const 
@@ -465,8 +490,8 @@ bool Ostap::Math::Bernstein::constant () const
 double Ostap::Math::Bernstein::integral () const
 {
   return
-    ( m_xmax - m_xmin ) *
-    std::accumulate ( m_pars.begin() , m_pars.end() , 0.0 ) / npars() ;
+    ( m_xmax - m_xmin ) * 1.0L * 
+    std::accumulate ( m_pars.begin() , m_pars.end() , 0.0L ) / npars() ;
 }
 // ============================================================================
 /*  filter out very small terms
@@ -754,23 +779,14 @@ Ostap::Math::Bernstein::subtract ( const Ostap::Math::Bernstein& other ) const
   return sum ( b ) ;  
 }
 // ============================================================================
-// Sum of Bernstein polynomials (the same domain)
+// swap two polynomials 
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__add__   
-( const  Ostap::Math::Bernstein& other ) const { return sum ( other ) ; }
-// ============================================================================
-// Subtraction of Bernstein polynomials (the same domain)
-// ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__sub__   
-( const  Ostap::Math::Bernstein& other ) const { return subtract ( other ) ; }
-// ============================================================================
-// Multipky twp Bernstein polynomials (the same domain)
-// ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__mul__   
-( const  Ostap::Math::Bernstein& other ) const { return multiply ( other ) ; }
+void Ostap::Math::Bernstein::swap ( Ostap::Math::Bernstein& right ) 
+{ 
+  Ostap::Math::PolySum::swap ( right ) ;
+  std::swap ( m_xmin ,  right.m_xmin ) ;
+  std::swap ( m_xmax ,  right.m_xmax ) ;
+}
 // ============================================================================
 namespace 
 {
@@ -1441,11 +1457,11 @@ Ostap::Math::Bernstein::quotient ( const Ostap::Math::Bernstein& g ) const
 // ============================================================================
 /*  polynomial division 
  *  \f$  f(x) = q(z)*g(x) + r(x) \f$ 
- *  @return the reminder r(x)
+ *  @return the remainder r(x)
  */
 // ============================================================================
 Ostap::Math::Bernstein
-Ostap::Math::Bernstein::reminder ( const Ostap::Math::Bernstein& g ) const
+Ostap::Math::Bernstein::remainder ( const Ostap::Math::Bernstein& g ) const
 { return _divmod_ ( *this , g ) . second ; }
 // ============================================================================
 /* de Casteljau algorithm for summation of Bernstein polynomials 
@@ -2153,10 +2169,6 @@ double Ostap::Math::right_line_hull ( const Ostap::Math::Bernstein& b )
 // ============================================================================
 //  DUAL BASIC 
 // ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::BernsteinDualBasis::~BernsteinDualBasis() {}
-// ============================================================================
 // constructor from the order
 // ============================================================================
 Ostap::Math::BernsteinDualBasis::BernsteinDualBasis
@@ -2189,35 +2201,14 @@ Ostap::Math::BernsteinDualBasis::BernsteinDualBasis
   } 
 }
 // ============================================================================
-// copy constructor 
+// swap  them!
 // ============================================================================
-Ostap::Math::BernsteinDualBasis::BernsteinDualBasis
-( const Ostap::Math::BernsteinDualBasis&  right ) 
-  : m_k         ( right.m_k         ) 
-  , m_bernstein ( right.m_bernstein ) 
-{}
-// ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::BernsteinDualBasis::BernsteinDualBasis
-( Ostap::Math::BernsteinDualBasis&& right ) 
-  : m_k         (             right.m_k           ) 
-  , m_bernstein ( std::move ( right.m_bernstein ) ) 
-{}
-// ============================================================================
-void Ostap::Math::BernsteinDualBasis::swap
-( Ostap::Math::BernsteinDualBasis&  right ) 
+void Ostap::Math::BernsteinDualBasis::swap 
+( Ostap::Math::BernsteinDualBasis& right ) 
 {
   std::swap         ( m_k          , right.m_k         ) ;
   Ostap::Math::swap ( m_bernstein  , right.m_bernstein ) ;
 }
-  
-
-
-
-
-
-
 // ============================================================================
 // Interpolation stuff 
 // ============================================================================

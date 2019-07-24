@@ -53,6 +53,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
   , m_bz   ()
 {
   //
+  m_bx.reserve ( m_nx + 1 ) ;
+  m_by.reserve ( m_ny + 1 ) ;
+  m_bz.reserve ( m_nz + 1 ) ;
+  //
   typedef  Ostap::Math::Bernstein::Basic BB ;
   for ( unsigned short ix = 0 ; ix <= nX ; ++ix )
   { m_bx.push_back ( Bernstein ( BB ( ix , nX ) , xmin , xmax ) ) ; }
@@ -62,6 +66,60 @@ Ostap::Math::Bernstein3D::Bernstein3D
   //
   for ( unsigned short iz = 0 ; iz <= nZ ; ++iz )
   { m_bz.push_back ( Bernstein ( BB ( iz , nZ ) , zmin , zmax ) ) ; }
+  //
+}
+// ======================================================================
+/*  As a product of three 1D-polynomials:
+ *  \f[  B_{n^x,n^y,n^z}(x,y,z) \equiv 
+ *      B^{n^x}(x)B^{n^y}(y)B^{n^z}(z) = 
+ *  \left(\sum_{i=0}{n^{x}} \alpha_{i} B_{n^{x}}^i(x)]\right)
+ *  \left(\sum_{j=0}{n^{y}} \beta_{j} B_{n^{y}}^j(y)]\right) = 
+ *  \left(\sum_{k=0}{n^{z}} \gamma_{k} B_{n^{z}}^k(z)]\right) = 
+ *    \sum_{i=0}{n^{x}}
+ *    \sum_{j=0}{n^{y}} 
+ *    \sum_{k=0}{n^{z}} 
+ *   \alpha_{i}\beta_{j}\gamma_{k} 
+ *    B_{n^{x}}^i(x) B_{n^{y}}^j(y) B_{n^{z}}^k(z) \f]
+ */          
+// ======================================================================
+Ostap::Math::Bernstein3D::Bernstein3D
+( const Ostap::Math::Bernstein& bx , 
+  const Ostap::Math::Bernstein& by ,
+  const Ostap::Math::Bernstein& bz ) 
+  : m_nx   ( bx. n   () )
+  , m_ny   ( by. n   () )
+  , m_nz   ( bz. n   () )
+  , m_pars ( ( bx.n  () + 1 ) * ( by.n () + 1 ) * ( bz.n () + 1 ) , 0.0 )
+  , m_xmin ( bx.xmin () )
+  , m_xmax ( bx.xmax () )
+  , m_ymin ( by.xmin () )
+  , m_ymax ( by.xmax () )
+  , m_zmin ( bz.xmin () )
+  , m_zmax ( bz.xmax () )
+    //
+  , m_bx   () 
+  , m_by   ()
+  , m_bz   ()
+{
+  //
+  m_bx.reserve ( m_nx + 1 ) ;
+  m_by.reserve ( m_ny + 1 ) ;
+  m_bz.reserve ( m_nz + 1 ) ;
+  //
+  typedef  Ostap::Math::Bernstein::Basic BB ;
+  for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+  { m_bx.push_back ( Bernstein ( BB ( ix , m_nx ) , m_xmin , m_xmax ) ) ; }
+  //
+  for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+  { m_by.push_back ( Bernstein ( BB ( iy , m_ny ) , m_ymin , m_ymax ) ) ; }
+  //
+  for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+  { m_bz.push_back ( Bernstein ( BB ( iz , m_nz ) , m_zmin , m_zmax ) ) ; }
+  //
+  for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix ) 
+  { for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+    { for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz ) 
+      { setPar ( ix , iy , iz , bx.par ( ix ) * by.par ( iy ) ) * bz.par ( iz ) ; } } }
   //
 }
 // ============================================================================
@@ -86,6 +144,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
   , m_by   ()
   , m_bz   ()
 {
+  //
+  m_bx.reserve ( m_nx + 1 ) ;
+  m_by.reserve ( m_ny + 1 ) ;
+  m_bz.reserve ( m_nz + 1 ) ;
   //
   typedef  Ostap::Math::Bernstein::Basic BB ;
   for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
@@ -121,6 +183,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
   , m_bz   ()
 {
   //
+  m_bx.reserve ( m_nx + 1 ) ;
+  m_by.reserve ( m_ny + 1 ) ;
+  m_bz.reserve ( m_nz + 1 ) ;
+  //
   typedef  Ostap::Math::Bernstein::Basic BB ;
   for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
   { m_bx.push_back ( Bernstein ( BB ( ix , m_nx ) , m_xmin , m_xmax ) ) ; }
@@ -132,25 +198,6 @@ Ostap::Math::Bernstein3D::Bernstein3D
   { m_bz.push_back ( Bernstein ( BB ( iz , m_nz ) , m_zmin , m_zmax ) ) ; }
   //
 }
-// ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Bernstein3D::Bernstein3D
-(       Ostap::Math::Bernstein3D&& right )
-  : m_nx   ( std::move ( right.m_nx   ) ) 
-  , m_ny   ( std::move ( right.m_ny   ) ) 
-  , m_nz   ( std::move ( right.m_nz   ) ) 
-  , m_pars ( std::move ( right.m_pars ) ) 
-  , m_xmin ( std::move ( right.m_xmin ) ) 
-  , m_xmax ( std::move ( right.m_xmax ) ) 
-  , m_ymin ( std::move ( right.m_ymin ) ) 
-  , m_ymax ( std::move ( right.m_ymax ) ) 
-  , m_zmin ( std::move ( right.m_zmin ) ) 
-  , m_zmax ( std::move ( right.m_zmax ) ) 
-  , m_bx   ( std::move ( right.m_bx   ) ) 
-  , m_by   ( std::move ( right.m_by   ) ) 
-  , m_bz   ( std::move ( right.m_bz   ) ) 
-{}
 // ============================================================================
 // swap  two 3D-polynomials 
 // ============================================================================
@@ -835,17 +882,6 @@ Ostap::Math::Bernstein3DSym::Bernstein3DSym
   //
 }
 // ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Bernstein3DSym::Bernstein3DSym
-(       Ostap::Math::Bernstein3DSym&& right )
-  : m_n    ( std::move ( right.m_n    ) ) 
-  , m_pars ( std::move ( right.m_pars ) ) 
-  , m_xmin ( std::move ( right.m_xmin ) ) 
-  , m_xmax ( std::move ( right.m_xmax ) ) 
-  , m_b    ( std::move ( right.m_b    ) ) 
-{}
-// ============================================================================
 // swap  two 3D-polynomials 
 // ============================================================================
 void Ostap::Math::Bernstein3DSym::swap
@@ -1340,21 +1376,6 @@ Ostap::Math::Bernstein3DMix::Bernstein3DMix
   { m_bz.push_back ( Bernstein ( BB ( iz , m_nz ) , m_zmin , m_zmax ) ) ; }
   //
 }
-// ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Bernstein3DMix::Bernstein3DMix
-(       Ostap::Math::Bernstein3DMix&& right )
-  : m_n    ( std::move ( right.m_n    ) ) 
-  , m_nz   ( std::move ( right.m_nz   ) ) 
-  , m_pars ( std::move ( right.m_pars ) ) 
-  , m_xmin ( std::move ( right.m_xmin ) ) 
-  , m_xmax ( std::move ( right.m_xmax ) ) 
-  , m_zmin ( std::move ( right.m_zmin ) ) 
-  , m_zmax ( std::move ( right.m_zmax ) ) 
-  , m_b    ( std::move ( right.m_b    ) ) 
-  , m_bz   ( std::move ( right.m_bz   ) ) 
-{}
 // ============================================================================
 // swap  two 3D-polynomials 
 // ============================================================================
@@ -1927,14 +1948,6 @@ Ostap::Math::Positive3D::Positive3D
   updateBernstein () ;
 }
 // ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Positive3D::Positive3D
-(       Ostap::Math::Positive3D&& right ) 
-  : m_bernstein ( std::move ( right.m_bernstein ) ) 
-  , m_sphere    ( std::move ( right.m_sphere    ) ) 
-{}
-// ============================================================================
 // swap  two 2D-polynomials 
 // ============================================================================
 void Ostap::Math::Positive3D::swap ( Ostap::Math::Positive3D&  right ) 
@@ -2027,14 +2040,6 @@ Ostap::Math::Positive3DSym::Positive3DSym
 {
   updateBernstein () ;
 }
-// ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Positive3DSym::Positive3DSym
-(       Ostap::Math::Positive3DSym&& right ) 
-  : m_bernstein ( std::move ( right.m_bernstein ) ) 
-  , m_sphere    ( std::move ( right.m_sphere    ) ) 
-{}
 // ============================================================================
 // swap  two 2D-polynomials 
 // ============================================================================
@@ -2132,14 +2137,6 @@ Ostap::Math::Positive3DMix::Positive3DMix
 {
   updateBernstein () ;
 }
-// ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Positive3DMix::Positive3DMix
-(       Ostap::Math::Positive3DMix&& right ) 
-  : m_bernstein ( std::move ( right.m_bernstein ) ) 
-  , m_sphere    ( std::move ( right.m_sphere    ) ) 
-{}
 // ============================================================================
 // swap  two 2D-polynomials 
 // ============================================================================

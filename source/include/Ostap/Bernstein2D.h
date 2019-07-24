@@ -54,13 +54,19 @@ namespace Ostap
                     const double               ymin  =  0 ,
                     const double               ymax  =  1 ) ;
       // ======================================================================
+      /** As a product of two 1D-polynomials:
+       *  \f[  B_{n^x,n^y}(x,y) \equiv 
+       *      B^{n^x}(x)B^{n^y}(y) = 
+       *  \left(\sum_{i=0}{n^{x}} \alpha_{i} B_{n^{x}}^i(x)]\right)
+       *  \left(\sum_{j=0}{n^{y}} \beta_{j} B_{n^{y}}^j(y)]\right) = 
+       *    \sum_{i=0}{n^{x}}
+       *    \sum_{j=0}{n^{y}} \alpha_{i}\beta_{j} B_{n^{x}}^i(x) B_{n^{y}}^j(y) \f]
+       */          
+      Bernstein2D ( const Bernstein& bx , 
+                    const Bernstein& by ) ;
+      // ======================================================================
       /// from symmetric variant 
       Bernstein2D ( const Bernstein2DSym& right ) ;
-      // ======================================================================
-      /// copy
-      Bernstein2D ( const Bernstein2D&    right ) = default ;
-      /// move 
-      Bernstein2D (       Bernstein2D&&   right ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -347,10 +353,6 @@ namespace Ostap
                    const double               xmax  =  1 ,
                    const double               ymin  =  0 ,
                    const double               ymax  =  1 ) ;
-      /// copy 
-      Positive2D ( const Positive2D&  right ) = default ;
-      /// move 
-      Positive2D (       Positive2D&& right ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -527,10 +529,6 @@ namespace Ostap
       Bernstein2DSym ( const unsigned short       n     =  1 ,
                        const double               xmin  =  0 ,
                        const double               xmax  =  1 ) ;
-      /// copy
-      Bernstein2DSym ( const Bernstein2DSym&  right ) = default ;
-      /// move 
-      Bernstein2DSym (       Bernstein2DSym&& right ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -802,10 +800,6 @@ namespace Ostap
       Positive2DSym ( const unsigned short       Nx    =  1 ,
                       const double               xmin  =  0 ,
                       const double               xmax  =  1 ) ;
-      /// copy 
-      Positive2DSym ( const Positive2DSym&  right ) =  default ;
-      /// mobe 
-      Positive2DSym (       Positive2DSym&& right ) ;
       // ======================================================================
     public:
       // ======================================================================

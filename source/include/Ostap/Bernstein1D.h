@@ -82,12 +82,14 @@ namespace Ostap
       unsigned short npars () const { return m_N + 1 ; }
       /// all zero ?
       bool           zero  () const { return m_bernstein.zero() ; }
+      // ======================================================================
       /** set k-parameter
        *  @param k index
        *  @param value new value
        *  @return true if parameter is actually changed
        */
       bool setPar          ( const unsigned short k , const double value ) ;
+      // ======================================================================
       /** set k-parameter
        *  @param k index
        *  @param value new value
@@ -178,6 +180,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// swap two objects 
+      void swap ( BernsteinEven& right ) 
+      {
+        std::swap         ( m_N         , right.m_N         ) ;
+        Ostap::Math::swap ( m_bernstein , right.m_bernstein ) ;
+      } 
+      // ======================================================================
+    public:
+      // ======================================================================
       /// convert to normal bernstein polynomial
       const Bernstein& bernstein() const { return m_bernstein ; }
       /// convert to normal bernstein polynomial
@@ -224,6 +235,9 @@ namespace Ostap
     inline Bernstein operator* ( const BernsteinEven&  a , const Bernstein& b ) 
     { return a.bernstein () * b ; }
     inline Bernstein operator* ( const Bernstein& b , const BernsteinEven&  a ) { return a * b ; }
+    // ========================================================================
+    /// Swapping function for even bernstein polynomials 
+    inline void swap ( BernsteinEven& a , BernsteinEven& b ) { a.swap ( b ) ; }
     // ========================================================================
     /** @class Positive
      *  The "positive" polynomial of order N
@@ -299,13 +313,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// decreasing?
-      bool decreasing  () const { return m_bernstein.decreasing()      ; }
+      bool decreasing  () const { return m_bernstein.decreasing () ; }
       /// increasing?
-      bool increasing  () const { return m_bernstein.increasing()      ; }
+      bool increasing  () const { return m_bernstein.increasing () ; }
       /// monotonic?
-      bool monotonic   () const { return increasing () || decreasing() ; }
-      //// constant 
-      bool constant    () const { return m_bernstein.constant()        ; }
+      bool monotonic   () const { return m_bernstein.monotonic  () ; }
+      /// constant 
+      bool constant    () const { return m_bernstein.constant   () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -362,6 +376,15 @@ namespace Ostap
       /// get the tag
       std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// swap two objects 
+      void swap ( Positive& right ) 
+      {
+        Ostap::Math::swap ( m_bernstein , right.m_bernstein ) ;
+        Ostap::Math::swap ( m_sphere    , right.m_sphere    ) ;
+      } 
+      // ======================================================================
     private : 
       // ======================================================================
       /// update bernstein coefficiencts
@@ -406,6 +429,9 @@ namespace Ostap
     inline Bernstein operator* ( const Positive&  a , const Bernstein& b ) 
     { return a.bernstein () * b ; }
     inline Bernstein operator* ( const Bernstein& b , const Positive&  a ) { return a * b ; }
+    // ========================================================================
+    /// Swapping function for positive bernstein polynomials 
+    inline void swap ( Positive&      a , Positive&      b ) { a.swap ( b ) ; }
     // ========================================================================
     /** @class PositiveEven
      *  The "positive" polynomial of order N, symmetric as
@@ -541,7 +567,16 @@ namespace Ostap
       /// get the tag 
       std::size_t tag () const { return m_even.tag () ; }
       // ======================================================================
-    protected:
+    public:
+      // ======================================================================
+      /// swap two objects 
+      void swap ( PositiveEven& right ) 
+      {
+        Ostap::Math::swap ( m_sphere , right.m_sphere ) ;
+        Ostap::Math::swap ( m_even   , right.m_even   ) ;
+      } 
+      // ======================================================================
+    private: 
       // ======================================================================
       /// update bernstein coefficients
       bool updateBernstein () ;
@@ -587,11 +622,14 @@ namespace Ostap
     inline Bernstein operator* ( const PositiveEven&  a , const Bernstein& b ) 
     { return a.bernstein () * b ; }
     inline Bernstein operator* ( const Bernstein& b , const PositiveEven&  a ) { return a * b ; }
-   // ========================================================================
+    // ========================================================================
+    /// Swapping function for positive even bernstein polynomials 
+    inline void swap ( PositiveEven&  a , PositiveEven&  b ) { a.swap ( b ) ; }
+    // ========================================================================
     /** @class Monotonic
      *  The "positive" monotonic polynomial of order N
      *  Actually it is a sum of basic bernstein polynomials with
-     *  non-negative coefficients that form the monothonic sequence 
+     *  non-negative coefficients that form the monotonic sequence 
      */
     class Monotonic
     {
@@ -658,9 +696,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// increasing ?
-      bool increasing () const { return  m_increasing  ; }
+      bool increasing () const { return degree() < 1 ||  m_increasing ; }
       /// decreasing ?
-      bool decreasing () const { return !increasing () ; }
+      bool decreasing () const { return degree() < 1 || !m_increasing ; }
       /// monotonic
       bool monotonic  () const { return  true  ; }
       //// constant 
@@ -728,6 +766,16 @@ namespace Ostap
       /// get the tag
       std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// swap two objects 
+      void swap ( Monotonic& right ) 
+      {
+        Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
+        Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;
+        std::swap         ( m_increasing , right.m_increasing ) ;
+      } 
+      // ======================================================================
     private : 
       // ======================================================================
       /// update bernstein coefficients
@@ -774,7 +822,10 @@ namespace Ostap
     inline Bernstein operator* ( const Monotonic& a , const Bernstein& b ) 
     { return a.bernstein () * b ; }
     inline Bernstein operator* ( const Bernstein& b , const Monotonic& a ) { return a * b ; }
-     // ========================================================================
+    // ========================================================================
+    /// Swapping function for positive monotonic polynomials 
+    inline void swap ( Monotonic&     a , Monotonic&     b ) { a.swap ( b ) ; }
+    // ========================================================================
     /** @class Convex
      *  The "positive" polynomial of order N with
      *  fixed sign of first and second derivatives
@@ -847,18 +898,18 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// convex     ?
+      bool convex     () const { return degree () < 2 ||  m_convex     ; }
+      /// convex     ?
+      bool concave    () const { return degree () < 2 || !m_convex     ; }
+      /// increasing ?
+      bool increasing () const { return degree () < 1 ||  m_increasing ; }
+      /// decreasing ?
+      bool decreasing () const { return degree () < 1 || !m_increasing ; }
+      /// monotonic
+      bool monotonic  () const { return  true  ; }
       //// constant 
       bool constant   () const { return m_bernstein.constant () ; }
-      /// increasing ?
-      bool increasing () const { return  m_increasing  ; }
-      /// decreasing ?
-      bool decreasing () const { return !increasing () ; }
-      /// monotonic
-      bool monotonic  () const { return  true          ; }
-      /// convex     ?
-      bool   convex    () const { return  m_convex     ; }
-      /// convex     ?
-      bool   concave   () const { return   !convex ()  ; }
       // ======================================================================
      public:
       // ======================================================================
@@ -922,6 +973,17 @@ namespace Ostap
       /// get the tag
       std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// swap two objects 
+      void swap ( Convex& right ) 
+      {
+        Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
+        Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;
+        std::swap         ( m_increasing , right.m_increasing ) ;
+        std::swap         ( m_convex     , right.m_convex     ) ;
+      } 
+      // ======================================================================
     private :
       // ======================================================================
       /// update bernstein coefficients
@@ -970,6 +1032,9 @@ namespace Ostap
     inline Bernstein operator* ( const Convex&    a , const Bernstein& b ) 
     { return a.bernstein () * b ; }
     inline Bernstein operator* ( const Bernstein& b , const Convex&    a ) { return a * b ; }
+    // ========================================================================
+    /// Swapping function for positive monotonic convex/concave polynomials 
+    inline void swap ( Convex&        a , Convex&        b ) { a.swap ( b ) ; }
     // ========================================================================
     /** @class ConvexOnly
      *  The "positive" polynomial of order N with
@@ -1041,19 +1106,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      //// constant 
-      bool constant    () const { return m_bernstein.constant   () ; }
+      /// convex     ?
+      bool convex     () const { return degree () < 2 ||  m_convex     ; }
+      /// convex     ?
+      bool concave    () const { return degree () < 2 || !m_convex     ; }
       /// increasing ?
-      bool increasing  () const { return m_bernstein.increasing () ; }
+      bool increasing () const { return m_bernstein.increasing () ; }
       /// decreasing ?
-      bool decreasing  () const { return m_bernstein.decreasing () ; }
+      bool decreasing () const { return m_bernstein.decreasing () ; }
       /// monotonic
-      bool monotonic   () const { return m_bernstein.monotonic  () ; }
-      /// convex     ?
-      bool convex      () const { return  m_convex     ; }
-      /// convex     ?
-      bool concave     () const { return   !convex ()  ; }
-      // ====================================================================== 
+      bool monotonic  () const { return m_bernstein.monotonic  () ; }
+      //// constant 
+      bool constant   () const { return m_bernstein.constant   () ; }
+      // ======================================================================
     public:
       // ======================================================================
       /// get the integral between xmin and xmax
@@ -1109,7 +1174,17 @@ namespace Ostap
       /// get the tag
       std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
-    private :
+     public:
+      // ======================================================================
+      /// swap two objects 
+      void swap ( ConvexOnly& right ) 
+      {
+        Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
+        Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;
+        std::swap         ( m_convex     , right.m_convex     ) ;
+      } 
+      // ======================================================================
+   private :
       // ======================================================================
       /// update bernstein coefficients
       bool updateBernstein () ;
@@ -1156,9 +1231,12 @@ namespace Ostap
     { return a.bernstein () * b ; }
     inline Bernstein operator* ( const Bernstein&  b , const ConvexOnly& a ) { return a * b ; }
     // ========================================================================
-  } //                                             end of namespace Ostap::Math
+    /// Swapping function for positive convex/concave polynomials 
+    inline void swap ( ConvexOnly&    a , ConvexOnly&    b ) { a.swap ( b ) ; }
+    // ========================================================================
+  } //                                         The end of namespace Ostap::Math
   // ==========================================================================
-} //                                                     end of namespace Ostap
+} //                                                 The end of namespace Ostap
 // ============================================================================
 //                                                                      The END
 // ============================================================================

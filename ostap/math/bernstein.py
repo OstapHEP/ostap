@@ -881,7 +881,7 @@ def _b_floordiv_ ( b , p ) :
 #   @code
 #   f = ... # the first polynom
 #   g = ... # the second  polynom
-#   r = f % g # get reminder 
+#   r = f % g # get remainder 
 #   @endcode
 def _b_mod_ ( b , p ) :
     """Long polynomial division

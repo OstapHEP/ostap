@@ -51,6 +51,9 @@ Ostap::Math::Bernstein2D::Bernstein2D
   , m_by   ()
 {
   //
+  m_bx.reserve ( m_nx + 1 ) ;
+  m_by.reserve ( m_ny + 1 ) ;
+  //
   typedef  Ostap::Math::Bernstein::Basic BB ;
   for ( unsigned short ix = 0 ; ix <= nX ; ++ix ) 
   { m_bx.push_back ( Bernstein ( BB ( ix , nX ) , xmin , xmax ) ) ; }
@@ -90,27 +93,52 @@ Ostap::Math::Bernstein2D::Bernstein2D
     setPar ( ix , ix , right.par ( ix , ix ) ) ;
     for ( unsigned short iy = 0 ; iy < ix  ; ++iy ) 
     {
-      const double p = right.par ( ix ,iy ) ;
+      const double p = right.par ( ix , iy ) ;
       setPar ( ix , iy , p ) ;
       setPar ( iy , ix , p ) ;
     }
   }
 }
 // ============================================================================
-// Move constructor 
+/* As a product of two 1D-polynomials:
+ *  \f[  B_{n^x,n^y}(x,y) \equiv 
+ *      B^{n^x}(x)B^{n^y}(y) = 
+ *  \left(\sum_{i=0}{n^{x}} \alpha_{i} B_{n^{x}}^i(x)]\right)
+ *  \left(\sum_{j=0}{n^{y}} \beta_{i} B_{n^{y}}^i(y)]\right) = 
+ *    \sum_{i=0}{n^{x}}
+ *    \sum_{j=0}{n^{y}} \alpha_{i}\beta_{j} B_{n^{x}}^i(x) B_{n^{y}}^j(y) \f]
+ */          
 // ============================================================================
-Ostap::Math::Bernstein2D::Bernstein2D
-(       Ostap::Math::Bernstein2D&& right ) 
-  : m_nx   ( std::move ( right.m_nx   ) ) 
-  , m_ny   ( std::move ( right.m_ny   ) ) 
-  , m_pars ( std::move ( right.m_pars ) ) 
-  , m_xmin ( std::move ( right.m_xmin ) ) 
-  , m_xmax ( std::move ( right.m_xmax ) ) 
-  , m_ymin ( std::move ( right.m_ymin ) ) 
-  , m_ymax ( std::move ( right.m_ymax ) ) 
-  , m_bx   ( std::move ( right.m_bx   ) ) 
-  , m_by   ( std::move ( right.m_by   ) ) 
-{}
+Ostap::Math::Bernstein2D::Bernstein2D 
+( const Ostap::Math::Bernstein& bx , 
+  const Ostap::Math::Bernstein& by ) 
+  : m_nx   ( bx.n    () ) 
+  , m_ny   ( by.n    () ) 
+  , m_pars ( ( bx.n  () + 1 ) * ( by.n () + 1 ) , 0.0 )    
+  , m_xmin ( bx.xmin () )
+  , m_xmax ( bx.xmax () )
+  , m_ymin ( by.xmin () )
+  , m_ymax ( by.xmax () )
+    //
+  , m_bx   () 
+  , m_by   ()
+{
+  //
+  m_bx.reserve ( m_nx + 1 ) ;
+  m_by.reserve ( m_ny + 1 ) ;
+  //
+  typedef  Ostap::Math::Bernstein::Basic BB ;
+  for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix ) 
+  { m_bx.push_back ( Bernstein ( BB ( ix , m_nx ) , m_xmin , m_xmax ) ) ; }
+  //
+  for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy ) 
+  { m_by.push_back ( Bernstein ( BB ( iy , m_ny ) , m_ymin , m_ymax ) ) ; }
+  //
+  for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix ) 
+  { for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy ) 
+    { setPar ( ix , iy , bx.par ( ix ) * by.par ( iy ) ) ; } }
+  //
+}
 // ============================================================================
 // swap  two 2D-polynomials 
 // ============================================================================
@@ -473,17 +501,6 @@ Ostap::Math::Bernstein2DSym::Bernstein2DSym
   //
 }
 // ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Bernstein2DSym::Bernstein2DSym
-(    Ostap::Math::Bernstein2DSym&& right )
-  : m_n    ( std::move ( right.m_n    )  )
-  , m_pars ( std::move ( right.m_pars )  )
-  , m_xmin ( std::move ( right.m_xmin )  )
-  , m_xmax ( std::move ( right.m_xmax )  )
-  , m_b    ( std::move ( right.m_b    )  )
-{}
-// ============================================================================
 // swap
 // ============================================================================
 void Ostap::Math::Bernstein2DSym::swap( Ostap::Math::Bernstein2DSym& right )
@@ -797,14 +814,6 @@ Ostap::Math::Positive2D::Positive2D
   updateBernstein () ;
 }
 // ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Positive2D::Positive2D
-(       Ostap::Math::Positive2D&& right ) 
-  : m_bernstein ( std::move ( right.m_bernstein ) ) 
-  , m_sphere    ( std::move ( right.m_sphere    ) ) 
-{}
-// ============================================================================
 // swap 
 // ============================================================================
 void Ostap::Math::Positive2D::swap ( Ostap::Math::Positive2D& right ) 
@@ -889,14 +898,6 @@ Ostap::Math::Positive2DSym::Positive2DSym
 {
   updateBernstein () ;
 }
-// ============================================================================
-// move constructor 
-// ============================================================================
-Ostap::Math::Positive2DSym::Positive2DSym
-(       Ostap::Math::Positive2DSym&& right ) 
-  : m_bernstein ( std::move ( right.m_bernstein ) )
-  , m_sphere    ( std::move ( right.m_sphere    ) ) 
-{}
 // ============================================================================
 // swap 
 // ============================================================================

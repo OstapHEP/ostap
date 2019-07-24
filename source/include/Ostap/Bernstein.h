@@ -19,6 +19,9 @@
 /** @file Ostap/Bernstein.h
  *  Set of useful math-functions, related to Bernstein polynomials
  *  @see http://en.wikipedia.org/wiki/Bernstein_polynomial
+ *  @see  Rida Farouki, ``The Bernstein polynomial basis: A centennial retrospective'', 
+ *        Computer Aided Geometric Design, 29 (2012) 379. 
+ *  @see http://dx.doi.org/10.1016/j.cagd.2012.03.001
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
@@ -57,11 +60,8 @@ namespace Ostap
       public:
         // ====================================================================
         explicit
-          Basic ( const unsigned short k = 0 ,
-                  const unsigned short N = 0 )
-          : m_k ( k )
-          , m_N ( N )
-        {}
+        Basic ( const unsigned short k = 0 ,
+                const unsigned short N = 0 ) : m_k ( k ) , m_N ( N ) {}
         // ====================================================================
       public :
         // ====================================================================
@@ -297,13 +297,6 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// copy
-      ///  Bernstein ( const Bernstein&  ) = default ;
-      /// move
-      /// Bernstein (       Bernstein&& ) = default ;
-      // ======================================================================
-    public:
-      // ======================================================================
       /// get the value of polynomial
       double evaluate ( const double x ) const ;
       // ======================================================================
@@ -322,14 +315,21 @@ namespace Ostap
       // ======================================================================
       /// all coefficients are so small that  P(x) + c == c ? 
       bool   small         ( const double c = 1.0 ) const ;
-      /// is it a decreasing function?
-      bool   decreasing    () const ;
-      /// is it a increasing function?
-      bool   increasing    () const ;
-      /// is it a monotonical function?
-      bool   monotonic     () const { return increasing() || decreasing() ; }
-      /// is it a constant function?
-      bool   constant      () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// Is it a constant function:   \f$ f^{\prime} \equiv 0 \f$ ?
+      bool   constant   () const ;
+      /// Is it a decreasing function: \f$ f^{\prime} \le 0 \f$ ?
+      bool   decreasing () const ;
+      /// Is it a increasing function: \f$ f^{\prime} \ge 0 \f$ ?
+      bool   increasing () const ;
+      /// Is it a monotonical function ?
+      bool   monotonic  () const { return increasing () || decreasing () ; }
+      /// Is it a convex   function: \f$ f^{\prime\prime}\ge 0 \f$ ?
+      bool   convex     () const ;
+      /// Is it a concave  function: \f$ f^{\prime\prime}\le 0 \f$ ?
+      bool   concave    () const ;
       // ======================================================================
     public: // convert from local to global variables
       // ======================================================================
@@ -448,19 +448,19 @@ namespace Ostap
        *  \f$  f(x) = q(z)*g(x) + r(x) \f$
        *  @return the pair q(x),r(x)
        */
-      std::pair<Bernstein,Bernstein> divmod   ( const Bernstein& g ) const ;
+      std::pair<Bernstein,Bernstein> divmod    ( const Bernstein& g ) const ;
       // ======================================================================
       /** polynomial division
        *  \f$  f(x) = q(z)*g(x) + r(x) \f$
        *  @return the quotient q(x)
        */
+      Bernstein                      quotient  ( const Bernstein& g ) const ;
       // ======================================================================
-      Bernstein                      quotient ( const Bernstein& g ) const ;
       /** polynomial division
        *  \f$  f(x) = q(z)*g(x) + r(x) \f$
-       *  @return the reminder r(x)
+       *  @return the remainder r(x)
        */
-      Bernstein                      reminder ( const Bernstein& g ) const ;
+      Bernstein                      remainder ( const Bernstein& g ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -472,13 +472,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// simple  manipulations with polynoms: shift it!
+      /// simple  manipulations with polynomial: shift it!
       Bernstein& operator += ( const double a ) ;
-      /// simple  manipulations with polynoms: shift it!
+      /// simple  manipulations with polynomial: shift it!
       Bernstein& operator -= ( const double a ) ;
-      /// simple  manipulations with polynoms: scale it!
+      /// simple  manipulations with polynomial: scale it!
       Bernstein& operator *= ( const double a ) ;
-      /// simple  manipulations with polynoms: scale it!
+      /// simple  manipulations with polynomial: scale it!
       Bernstein& operator /= ( const double a ) ;
       // ======================================================================
     public:
@@ -500,20 +500,27 @@ namespace Ostap
       Bernstein __sub__     ( const double value ) const ;
       /// Constant minus Bernstein polynomial
       Bernstein __rsub__    ( const double value ) const ;
-      /// Divide Benrstein polynomial by a constant
+      /// Divide Bernstein polynomial by a constant
       Bernstein __truediv__ ( const double value ) const ;
       Bernstein __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate Bernstein polynomial
-      Bernstein __neg__   () const ;
+      Bernstein __neg__     () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// Sum of   Bernstein polynomials
-      Bernstein __add__   ( const Bernstein& other ) const ;
+      Bernstein __add__      ( const Bernstein& other ) const { return sum       ( other ) ; }
       /// Subtract Bernstein polynomials
-      Bernstein __sub__   ( const Bernstein& other ) const ;
+      Bernstein __sub__      ( const Bernstein& other ) const { return subtract  ( other ) ; }
       /// Multiply Bernstein polynomials
-      Bernstein __mul__   ( const Bernstein& other ) const ;
+      Bernstein __mul__      ( const Bernstein& other ) const { return multiply  ( other ) ; }
+      /// Polynomial division :  quotient  
+      Bernstein __floordiv__ ( const Bernstein& other ) const { return quotient  ( other ) ; }
+      /// Polynomial division :  remainder 
+      Bernstein __mod__      ( const Bernstein& other ) const { return remainder ( other ) ; }
+      /// Polynomial division : (quotient, remainder)
+      std::pair<Bernstein,Bernstein> 
+      __divmod__             ( const Bernstein& other ) const { return divmod    ( other ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -596,9 +603,9 @@ namespace Ostap
     ///  polynomial division: quotient
     inline Bernstein operator/( const Bernstein& a , const Bernstein& b  )
     { return a.quotient ( b ) ; } // polynomial division: quotient
-    ///  polynomial division: reminder
+    ///  polynomial division: remainder
     inline Bernstein operator%( const Bernstein& a , const Bernstein& b  )
-    { return a.reminder ( b ) ; } // polynomial division: reminder
+    { return a.remainder ( b ) ; } // polynomial division: remainder
     // ========================================================================
     /// swap  them!
     inline void swap ( Bernstein& a , Bernstein& b ) { a.swap ( b ) ; }
@@ -712,12 +719,6 @@ namespace Ostap
       /// constructor from the order
       BernsteinDualBasis ( const unsigned short N     = 0 ,
                            const unsigned short k     = 0 ) ;
-      /// copy constructor
-      BernsteinDualBasis  ( const BernsteinDualBasis&  right ) ;
-      /// cconstructor
-      BernsteinDualBasis  (       BernsteinDualBasis&& right ) ;
-      /// destructor
-      ~BernsteinDualBasis () ;
       // ======================================================================
     public:
       // ======================================================================

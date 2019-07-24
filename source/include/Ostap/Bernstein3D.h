@@ -48,10 +48,21 @@ namespace Ostap
                     const double               zmin  =  0 ,
                     const double               zmax  =  1 ) ;
       // ======================================================================
-      /// copy constructor 
-      Bernstein3D ( const Bernstein3D&    right ) = default ;   
-      /// move constructor 
-      Bernstein3D (       Bernstein3D&&   right ) ;
+      /** As a product of three 1D-polynomials:
+       *  \f[  B_{n^x,n^y,n^z}(x,y,z) \equiv 
+       *      B^{n^x}(x)B^{n^y}(y)B^{n^z}(z) = 
+       *  \left(\sum_{i=0}{n^{x}} \alpha_{i} B_{n^{x}}^i(x)]\right)
+       *  \left(\sum_{j=0}{n^{y}} \beta_{j} B_{n^{y}}^j(y)]\right) = 
+       *  \left(\sum_{k=0}{n^{z}} \gamma_{k} B_{n^{z}}^k(z)]\right) = 
+       *    \sum_{i=0}{n^{x}}
+       *    \sum_{j=0}{n^{y}} 
+       *    \sum_{k=0}{n^{z}} 
+       *   \alpha_{i}\beta_{j}\gamma_{k} 
+       *    B_{n^{x}}^i(x) B_{n^{y}}^j(y) B_{n^{z}}^k(z) \f]
+       */          
+      Bernstein3D ( const Bernstein& bx , 
+                    const Bernstein& by ,
+                    const Bernstein& bz ) ;
       // ======================================================================
       /// from symmetric variant 
       explicit Bernstein3D ( const Bernstein3DSym& right ) ;
@@ -451,11 +462,6 @@ namespace Ostap
                        const double               xmin  =  0 ,
                        const double               xmax  =  1 ) ;
       // ======================================================================
-      /// copy constructor 
-      Bernstein3DSym ( const Bernstein3DSym&  right ) = default ;   
-      /// move constructor 
-      Bernstein3DSym (       Bernstein3DSym&& right ) ;
-      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -841,11 +847,6 @@ namespace Ostap
                        const double               xmax  =  1 ,
                        const double               zmin  =  0 ,
                        const double               zmax  =  1 ) ;
-      // ======================================================================
-      /// copy constructor 
-      Bernstein3DMix ( const Bernstein3DMix&  right ) = default ;   
-      /// move constructor 
-      Bernstein3DMix (       Bernstein3DMix&& right ) ;
       // ======================================================================
       /// from symmetric variant 
       explicit Bernstein3DMix ( const Bernstein3DSym&  right ) ;
@@ -1240,11 +1241,6 @@ namespace Ostap
                    const double               zmin  =  0 ,
                    const double               zmax  =  1 ) ;
       // ======================================================================
-      /// copy constructor 
-      Positive3D ( const Positive3D&  right ) = default ;
-      /// move constructor 
-      Positive3D (       Positive3D&& right ) ;
-      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -1510,11 +1506,6 @@ namespace Ostap
       Positive3DSym ( const unsigned short       N     =  1 ,
                       const double               xmin  =  0 ,
                       const double               xmax  =  1 );
-      // ======================================================================
-      /// copy constructor 
-      Positive3DSym ( const Positive3DSym&  right ) = default ;
-      /// move constructor 
-      Positive3DSym (       Positive3DSym&& right ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1785,11 +1776,6 @@ namespace Ostap
                       const double               xmax  =  1 ,
                       const double               zmin  =  0 ,
                       const double               zmax  =  1 );
-      // ======================================================================
-      /// copy constructor 
-      Positive3DMix ( const Positive3DMix&  right ) = default ;
-      /// move constructor 
-      Positive3DMix (       Positive3DMix&& right ) ;
       // ======================================================================
     public:
       // ======================================================================
