@@ -3,8 +3,10 @@ services:
   - docker
 
 before_install:
-  - docker pull gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest
+  - docker pull gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
 
 
 script: 
- - docker run -v /cvmfs:/cvmfs -v ${PWD}:/ostap  --privileged=true  gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest   /bin/bash -c "cp -r ../ostap . && cd ostap && ./scripts/bootstrap"
+ - docker  create -v  osya --name ostap-build   gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+ - docker cp  .  ostap-build:/osya
+ - docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && ./scripts/bootstrap LCG_96 x86_64-centos7-gcc8-opt"
