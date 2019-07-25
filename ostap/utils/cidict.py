@@ -14,7 +14,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'cidict'   , ## case-insensitive dictionary
+    'cidict'      , ## case-insensitive dictionary
+    'select_keys' , ## select ``interesting'' keys from the dictionary 
     )
 # =============================================================================
 from sys import version_info as python_version
@@ -62,7 +63,10 @@ class cidict(MutableMapping) :
             kk = self.the_key( k )
             self.__store [ kk ] = kwargs [ k ]
 
+    # =========================================================================
+    ## transform the key 
     def the_key ( self , key ) :
+        "Transform the key"
         return self.__transform ( key )
     
     def __getitem__ ( self , key ) :
@@ -79,7 +83,43 @@ class cidict(MutableMapping) :
     def __repr__ ( self ) : return repr ( self.__store ) 
     def __str__  ( self ) : return str  ( self.__store ) 
 
-
+    
+# =============================================================================
+## select from mapping object <code>origin</code> the "interesting" keys.
+#  The keys, that result in the same <code>transform(key)</code> value 
+#  are considered as non-distiguishable
+#  @code
+#  dct = { ... }
+#  res = select_keys ( dct , ( 'a' , 'b' ) , transform = lambda s : s.lower() )
+#  @endcode 
+def select_keys ( origin , keys , transform = lambda s : s  , **kwargs ) :
+    """Select from mapping object <code>origin</code> the "interesting" keys.
+    The keys, that result in the same <code>transform(key)</code> value 
+    are considered as non-distiguishable
+    
+    >>> dct = { ... }
+    >>> res = select_keys ( dct , ( 'a' , 'b' ) , transform = lambda s : s.lower() )
+    """
+    
+    selected = cidict ( transform = transform )
+    
+    ## transformed keys
+    kt =  set ( [ selected.the_key( k ) for k in keys ] )
+    
+    from ostap.core.core import items_loop
+    
+    for k , value in items_loop ( origin ) :
+        kk = selected.the_key ( k )
+        if kk in kt :
+            selected [ kk ] = value
+            origin.pop ( k )  
+        
+    for k , value in items_loop ( kwargs ) :
+        kk = selected.the_key ( k )
+        if kk in kt : selected [ kk ] = value
+        
+    return selected 
+        
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -31,7 +31,7 @@ import ostap.fitting.roofit
 import ostap.fitting.variables
 from   builtins               import range
 from   ostap.core.core        import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
-from   ostap.math.base        import iszero 
+from   ostap.math.base        import iszero , frexp10 
 from   ostap.core.ostap_types import ( is_good_number , is_integer ,
                                        integer_types  , num_types  , list_types ) 
 from   ostap.fitting.roofit   import SETVAR, PDF_fun
@@ -1120,15 +1120,21 @@ class PDF (MakeVar) :
         ##
         fargs = tuple ( fargs )
         ##
-        largs = [ i for i in  args ] 
-        color = kwargs.pop ( 'color' , None )
-        if color  : largs.append ( ROOT.RooFit.LineColor ( color ) ) 
-        ##
-        style = kwargs.pop ( 'style' , None )
-        if style  : largs.append ( ROOT.RooFit.LineStyle ( style ) )
-        ##
-        width = kwargs.pop ( 'width' , None )        
-        if width  : largs.append ( ROOT.RooFit.LineWidth ( width ) ) 
+        largs = [ i for i in  args ]
+        ## 
+        from ostap.utils.cidict import select_keys
+        dopts = select_keys ( kwargs , ( 'line_color' , 'line_width' , 'line_style' , 
+                                         'color'      , 'width'      , 'style'      ) , 
+                              transform = lambda s : s.lower().replace('_','') )
+        for color in  ( 'color' , 'line_color' ) : 
+            if color in dopts : 
+                largs.append ( ROOT.RooFit.LineColor ( dopts.pop ( color ) ) )                 
+        for width in  ( 'width' , 'line_width' ) : 
+            if width in dopts : 
+                largs.append ( ROOT.RooFit.LineWidth ( dopts.pop ( width ) ) )
+        for style in  ( 'style' , 'line_style' ) : 
+            if style in dopts : 
+                largs.append ( ROOT.RooFit.LineStyle ( dopts.pop ( style ) ) )
         ##
         largs.append  ( ROOT.RooFit.ShiftToZero() ) 
         largs  = tuple ( largs ) 
@@ -1136,7 +1142,7 @@ class PDF (MakeVar) :
         ## create NLL 
         nll, sf = self.nll ( dataset , silent = silent , **kwargs )  
 
-        result = nll
+        result  = nll
 
         ## make profile? 
         if profile :
@@ -1148,7 +1154,17 @@ class PDF (MakeVar) :
         frame = var.frame ( *fargs )
         result.plotOn ( frame , *largs  )
 
+        import ostap.histos.graphs 
+        gr      = frame.getObject ( 0 )
+        mn , mx = gr.minmax()
+        m  , e  = frexp10 ( mx )
+        m *= 10
+        e -= 1
+        mx  = math.floor ( m ) + 1
+        mx *= 10**e 
+        
         frame.SetMinimum ( 0  )
+        frame.SetMaximum ( mx )
 
         if not kwargs.get('draw_axis_title' , False ) : 
             frame.SetXTitle  ( '' )
@@ -1165,7 +1181,7 @@ class PDF (MakeVar) :
         if not ROOT.gROOT.IsBatch() :
             with rootWarning ():
                 if draw : frame.draw ( kwargs.get('draw_options', '' ) )
-                        
+
         return result , frame
 
     # ========================================================================
@@ -1213,8 +1229,10 @@ class PDF (MakeVar) :
         
         with roo_silent ( silent ) :
             
-            nll , sf = self.nll ( dataset , silent = silent , clone = False ,
-                                  args = nargs , **kwargs ) 
+            nll , sf = self.nll ( dataset         ,
+                                  silent = silent ,
+                                  clone  = False  ,
+                                  args   = args   , **kwargs ) 
             
             ## unpack the range 
             minv , maxv = range
@@ -1443,7 +1461,8 @@ class PDF (MakeVar) :
                  max_calls = -1   ,
                  max_iter  = -1   , 
                  optconst  = True , ## optimize const 
-                 strategy  = None , *args , **kwargs  ):
+                 strategy  = None ,
+                 args      =   () , **kwargs  ):
         """Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
