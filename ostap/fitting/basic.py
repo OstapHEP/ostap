@@ -1021,7 +1021,6 @@ class PDF (MakeVar) :
     #  nll, sfactor  = model.nll ( 'dataset )
     #  @endcode
     #  @see RooAbsPdf::createNLL
-    # 
     #  @attention Due to the bug/typo in<c> RooAbsPdf.clreateNLL</c>, line 817 
     #  <c>CloneData</c> depends on <c>Optimize</c>
     #  @todo report problem to RooFit and fix it! 
@@ -1039,7 +1038,7 @@ class PDF (MakeVar) :
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
             dataset = dataset.dset 
 
-        clone   = kwargs.pop ('clone', False )
+        clone   = kwargs.pop ( 'clone' , False )
         nllopts = [ ROOT.RooFit.CloneData ( clone ) ]
 
         ## due to the bug in<c> RooAbsPdf.clreateNLL</c>,
@@ -1079,6 +1078,11 @@ class PDF (MakeVar) :
                    draw    = True  ,
                    silent  = True  , 
                    args    = ()    , **kwargs ) :
+        """Draw/prepare NLL or LL-profile for seleted variable:        
+        >>> model.fitTo ( dataset , ... )
+        >>> nll  , f1 = model.draw_nll ( 'B' ,  dataset )
+        >>> prof , f2 = model.draw_nll ( 'B' ,  dataset , profile = True )
+        """
 
         # if histogram, convert it to RooDataHist object:
         if isinstance  ( dataset , ROOT.TH1 ) :

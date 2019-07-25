@@ -760,6 +760,7 @@ class SimFit ( MakeVar ) :
                             silent   = silent  , **draw_opts )
         
         return res , frame
+
     
     # ========================================================================
     ## Draw the PDF&data for the given category
@@ -858,12 +859,10 @@ class SimFit ( MakeVar ) :
             elif isinstance ( draw_pdf , PDF2 ) :
 
                 if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
-                    print 'here2'
                     return draw_pdf.draw2 ( dataset = dataset ,
                                             nbins   = nbins   ,
                                             silent  = silent  , **kwargs )
                 elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
-                    print 'here1'
                     return draw_pdf.draw1 ( dataset = dataset ,
                                             nbins   = nbins   ,
                                             silent  = silent  , **kwargs )
@@ -877,6 +876,77 @@ class SimFit ( MakeVar ) :
                                        nbins   = nbins   ,
                                        silent  = silent  , **kwargs )
             
+    # =========================================================================
+    ## create NLL
+    #  @code
+    #  model.fitTo ( dataset , ... )
+    #  nll, sfactor  = model.nll ( 'dataset )
+    #  @endcode
+    #  @see RooAbsPdf::createNLL
+    #  @attention Due to the bug/typo in<c> RooAbsPdf.clreateNLL</c>, line 817 
+    #  <c>CloneData</c> depends on <c>Optimize</c>
+    #  @todo report problem to RooFit and fix it! 
+    def nll ( self            ,
+              dataset         ,
+              silent  = True  ,
+              args    = ()    , **kwargs ) :
+        """Get NLL object from the pdf
+        >>> model.fitTo ( dataset , ... )
+        >>> nll, sf = model.nll ( dataset )
+        - see RooAbsPdf::createNLL 
+        """
+        return self.pdf.nll ( dataset , silent = silenbt , args = args , **kwargs )
+
+    # =========================================================================
+    ## draw/prepare NLL or LL-profiles for selected variable
+    #  @code
+    #  model.fitTo ( dataset , ... )
+    #  nll  , f1 = model.draw_nll ( 'B' ,  dataset )
+    #  prof , f2 = model.draw_nll ( 'B' ,  dataset , profile = True )
+    #  @endcode    
+    def draw_nll ( self            ,
+                   var             ,
+                   dataset         ,
+                   profile = False ,
+                   draw    = True  ,
+                   silent  = True  , 
+                   args    = ()    , **kwargs ) :        
+        """Draw/prepare NLL or LL-profile for seleted variable:        
+        >>> model.fitTo ( dataset , ... )
+        >>> nll  , f1 = model.draw_nll ( 'B' ,  dataset )
+        >>> prof , f2 = model.draw_nll ( 'B' ,  dataset , profile = True )
+        """
+        return self.pdf.draw_nll ( var , dataset ,
+                                   profile = profile ,
+                                   draw    = draw    ,
+                                   silent  = silent  ,
+                                   args    = args    , **kwargs )  
+        
+    # ========================================================================
+    ## evaluate "significance" using Wilks' theorem via NLL
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data , ... )
+    #  sigmas = pdf.wilks ( 'S' , data )
+    #  @endcode
+    def wilks ( self                     ,
+                var                      ,
+                dataset                  ,
+                range    = ( 0 , None )  ,
+                silent   = True          ,
+                args     = () , **kwargs ) :
+        """Evaluate ``significance'' using Wilks' theorem via NLL
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data , ... )
+        >>> sigmas = pdf.wilks ( 'S' , data )
+        """
+        return self.pdf.wilks ( var , dataset   ,
+                                range  = range  ,
+                                silent = silent ,
+                                args   = args   , **kwargs )
+    
 # =============================================================================
 _decorated_classes_  = (
     ROOT.RooCategory , 
