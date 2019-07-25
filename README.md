@@ -36,7 +36,7 @@ At lxplus/7 you can do it with several LCG  versions  (94,95). Check on which pl
 
 After setting the enviroments clone the latest released version and build Ostap package 
 
-    git clone —branch <latest tag> git://github.com/OstapHEP/ostap.git
+    git clone —-branch <latest tag> git://github.com/OstapHEP/ostap.git
     cd ostap
     mkdir build
     cd build
