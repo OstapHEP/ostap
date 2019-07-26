@@ -2391,7 +2391,7 @@ double Ostap::Math::Tsallis::integral
   if ( 0 < m_mass ) 
   {
     // split points 
-    static const std::array<int,5> s_split = {{ 1 ,  3  , 10 , 20 , 50 }} ;
+    static const std::array<int,7> s_split = {{ 1 ,  3  , 10 , 20 , 50 , 100 , 1000 }} ;
     for( const auto p : s_split )
     {
       const double middle = m_mass * p ;

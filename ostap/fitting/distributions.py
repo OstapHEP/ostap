@@ -1232,8 +1232,8 @@ class Tsallis_pdf(PDF) :
                                 'n(%s) ' % name , n  , 0.01  , 1000 )  
         
         self.__T    = self.make_var ( T               ,
-                                'n_%s'   % name , 
-                                'n(%s) ' % name , T  , 1.e-3 , 1e+6 )
+                                'T_%s'   % name , 
+                                'T(%s) ' % name , T  , 1.e-3 , 1e+6 )
         
         self.pdf  = Ostap.Models.Tsallis (
             'tsallis_'    + name  ,
