@@ -337,6 +337,38 @@ ROOT.TTree .project = _tt_project_
 ROOT.TChain.project = _tt_project_
 
 # =============================================================================
+## check if object is in tree/chain  :
+#  @code
+#  tree = ...
+#  if obj in tree : 
+#  ...
+#  @endcode
+#  Operation is defiend:
+#  - integer value is "in tree" if it corresponds to the valid entry number
+#  - string  value is "in tree" if it corresponds to the name of branch or leaf 
+def _rt_contains_ ( tree , obj ) :
+    """Check if object is in tree/chain  :
+    >>> tree = ...
+    >>> if obj in tree : 
+    ...
+    Operation is defiend:
+    - integer value is ``in tree'' if it corresponds to the valid entry number
+    - string  value is ``in tree'' if it corresponds to the name of branch or leaf 
+    """
+    
+    if   isinstance ( obj , integer_types ) :        
+        return 0 <= obj and obj < len ( tree )
+    
+    elif isinstance ( obj , string_types  ) :
+        return ( obj in self.branches() ) or ( obj in self.leaves () )
+    
+    return False 
+
+ROOT.TTree .__contains__ = _rt_contains_
+ROOT.TChain.__contains__ = _rt_contains_
+
+# =============================================================================
+
 ## get the statistic for certain expression in Tree/Dataset
 #  @code
 #  tree  = ... 
@@ -1759,6 +1791,80 @@ ROOT.TTree.nEff = _rt_nEff_
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.TTree )
 
+
+# =============================================================================
+
+
+
+# =============================================================================
+## get all variables needed to evaluate the expressions for the given tree
+#  @code
+#  tree = 
+#  vars = tree.the_variables ( [ 'x>0&& y<13' , 'zzz*15' ] )   
+#  vars = the_variables ( tree , [ 'x>0&& y<13' , 'zzz*15' ] ) ## ditto
+#  @endcode 
+def the_variables ( tree , expression , *args ) :
+    """Get all variables needed to evaluate the expressions for the given tree
+    >>> tree = 
+    >>> vars = tree.the_variables ( tree , [ 'x>0&& y<13' , 'zzz' ]  )
+    >>> vars =      the_variables (        [ 'x>0&& y<13' , 'zzz' ]  ) ##  ditto
+    """
+    from ostap.core.core import fID
+    
+    if isinstance  ( expression, ( list , tuple ) ) :
+        exprs = list ( expression ) 
+    else :
+        exprs = [ expression ]
+        
+    for e in args :
+        if isinstance  ( e , ( list , tuple ) ) :
+            exprs = exprs + list ( e ) 
+        else :
+            exprs.append ( e )
+
+    vars = set() 
+    for e in exprs :
+            
+        tf = Ostap.Formula ( fID() , str ( e ) , tree )
+        if not tf.ok()  :
+            logger.error ('the_variables: Invalid formula %s' % e )
+            del tf 
+            return None
+        
+        i    =  0
+        leaf = tf.GetLeaf ( i )
+        while leaf :
+            lname = leaf.GetName()
+            vars.add ( lname )
+            i += 1
+            leaf = tf.GetLeaf ( i )                
+
+        del tf
+
+    vvars  = list ( vars )
+    
+    leaves   = tree.leaves   ()
+    branches = tree.branches ()
+    all      = set ( leaves + branches )
+    
+    for v in vvars :
+
+        l  = tree.GetLeaf(v)
+        b  = l   .GetBranch()
+        t  = b   .GetTitle ()
+        p1 = t. find ( '[' )
+        p2 = t.rfind ( ']' )
+        if 0 < p1 and p1 < p2 :
+            n = t [ p1 + 1 : p2 ]
+            n = n.split( ',' ) 
+            for i in n :
+                if i in all : vars.add ( i )
+                
+    return   tuple ( vars ) 
+
+
+ROOT.TTree.the_variables = the_variables
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TTree   ,
@@ -1817,7 +1923,8 @@ _new_methods_       = (
     ROOT.TTree.quartiles        ,
     ROOT.TTree.quintiles        ,
     ROOT.TTree.deciles          ,
-
+    #
+    ROOT.TTree.the_variables    ,
     )
 # =============================================================================
 if '__main__' == __name__ :

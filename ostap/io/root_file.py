@@ -440,7 +440,6 @@ def _rd_iter_ ( rdir ) :
     """
     ##
     with ROOTCWD() :
-        ##
         rdir.cd()
         for obj in _rd_itervalues_ ( rdir , recursive = True ) :
             yield obj

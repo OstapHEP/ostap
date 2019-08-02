@@ -525,7 +525,7 @@ class ImplicitMT(object) :
     """
     def __init__  ( self , enable = True ) :
 
-        if   isisnatnce ( enable , bool ) : 
+        if   isinstance ( enable , bool ) : 
             self.__enable   =        enable
             self.__nthreads =        0
         elif isinstance ( enable , int  ) and 0 <= enable : 
@@ -533,13 +533,18 @@ class ImplicitMT(object) :
             self.__nthreads =        enable 
         else :
             raise  TypeError ( "ImplicitMT: invalid ``enable'' flag :%s/%s" % ( enable , type ( enable ) ) )
-        
+
+    @property
+    def enable   ( self ) : return self.__enable
+    @property
+    def nthreads ( self ) : return self.__nthreads
+    
     ## Context manager: ENTER 
     def __enter__ ( self ) :
             
         self.__initial = ROOT.ROOT. IsImplicitMTEnabled ()
         
-        if bool ( self.enabled ) == bool ( self.enable ) : pass 
+        if bool ( self.__initial ) == bool ( self.enable ) : pass 
         elif self.enable : ROOT.ROOT.EnableImplicitMT  ( self.__nthreads )
         else             : ROOT.ROOT.DisableImplicitMT ()
 
@@ -548,7 +553,7 @@ class ImplicitMT(object) :
     ## Context manager: EXIT
     def __exit__ ( self , *_ ) :
 
-        _curr = ROOT.ROOT.IsImplicitMTEnabled()
+        _current = ROOT.ROOT.IsImplicitMTEnabled()
 
         if   _current == self.__initial : pass
         elif _current                   : ROOT.ROOT.DisableImplicitMT ()

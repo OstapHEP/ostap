@@ -37,7 +37,7 @@ DataFrame.columns  = lambda s : tuple( s.GetColumnNames() )
 DataFrame.branches = DataFrame.columns 
 
 # ==============================================================================
-## modify constuctor for RDataFrame to enable/disbale implicit multithreading
+## modify constuctor for RDataFrame to enable/disable Implicit multithreading
 #  @code
 #  f1 = DataFrame ( ... , enable = True  ) ## default
 #  f2 = DataFrame ( ... , enable = False ) ## default
@@ -47,7 +47,7 @@ DataFrame.branches = DataFrame.columns
 #  @see ROOT::IsImplicitMTEnabled
 def _fr_new_init_ ( self , *args , **kwargs ) :
     """Modify the DataFrame constuctor to allow (semi)automatic
-    manipulations wth ROOT.ROOT.EnablemplicitMT/DisableImplicitMT
+    manipulations wth ROOT.ROOT.EnableImplicitMT/DisableImplicitMT
     - see ROOT.ROOT.EnableImplicitMT 
     - see ROOT.ROOT.DisableImplicitMT
     - see ROOT.ROOT.IsImplicitMTEnabled

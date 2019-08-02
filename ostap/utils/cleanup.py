@@ -17,7 +17,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 __all__     = (
     'CleanUp'  , ## Simple (base) class to deal with temporary files and directories
-    'TempFile' , ## Simple placeholder for temproary file  
+    'TempFile' , ## Simple placeholder for temporary file  
     )
 # =============================================================================
 import os
@@ -34,9 +34,10 @@ class  CleanUp(object) :
     """Simple (base) class to get temporary files
     and directories and to remove them at exit
     """
-    _tmpfiles = set()
-    _tmpdirs  = set()
-
+    _tmpfiles  = set ()
+    _tmpdirs   = set ()
+    _protected = set ()
+    
     @property
     def tmpdir ( self ) :
         """``tmpdir'' : return the name of temporary managed directory
@@ -104,10 +105,21 @@ class  CleanUp(object) :
         return fname
 
     @staticmethod
+    def protect_file ( fname ) :
+        """Protect the temporary from removal"""        
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+            CleanUp._protected.add ( fname ) 
+            logger.debug  ( 'the file is protected: %s ' % fname )
+            
+    @staticmethod
     def remove_file ( fname ) :
         """Remove the (temporary) file
         """
-        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) and fname in CleanUp._protected :
+            logger.debug  ( 'do not remove the protected file : %s ' % fname )
+            return False
+        
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) and not protected :
             logger.verbose ( 'remove temporary file : %s' % fname )
             try    : os.remove ( fname )
             except : pass
@@ -168,6 +180,11 @@ def _cleanup_ () :
         f = tmp_dirs.pop()
         CleanUp.remove_dir ( f )
 
+    for fname in CleanUp._protected :
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+            logger.info ( "Temporary file is kept : %s" % fname )
+
+        
 # =============================================================================
 ## @class TempFile
 #  Base class-placeholder for the temporary  file 
@@ -176,6 +193,7 @@ class TempFile(object) :
     """
     
     def __init__ ( self , suffix = '' , prefix = '' , dir = None ) :
+        
         self.__filename = CleanUp.tempfile (  suffix = suffix ,
                                               prefix = prefix ,
                                               dir    = dir    )

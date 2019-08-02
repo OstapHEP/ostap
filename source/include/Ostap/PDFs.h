@@ -4632,15 +4632,14 @@ namespace Ostap
     /** @class Tsallis
      *  Useful function to describe pT-spectra of particles
      *
-     *  - C. Tsallis,
-     *  "Possible generalization of Boltzmann-Gibbs statistics,
-     *  J. Statist. Phys. 52 (1988) 479.
-     *  - C. Tsallis,
-     *  Nonextensive statistics: theoretical, experimental and computational
-     *  evidences and connections, Braz. J. Phys. 29 (1999) 1.
+     *  @see C. Tsallis, ``Possible generalization of Boltzmann-Gibbs statistics'',
+     *                   J. Statist. Phys. 52 (1988) 479.
+     *
+     *  @see C. Tsallis, ``Nonextensive statistics: theoretical, experimental and computational
+     *  evidences and connections'', Braz. J. Phys. 29 (1999) 1.
      *
      *  \f[ \frac{d\sigma}{dp_T} \propto
-     *    p_T\times \left( 1 + \frac{E_{kin}}{Tn}\right)^{-n}\f],
+     *    \frac { p_T}{\left( 1 + \frac{E_{kin}}{Tn}\right)^{n}}\f],
      *  where 
      *  - \f$E_{kin} = \sqrt{p_T^2-M^2}-M\f$ is transverse kinetic energy
      *
