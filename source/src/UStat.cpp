@@ -149,7 +149,7 @@ Ostap::StatusCode Ostap::UStat::calculate
     }
     //
     // volume of n-ball: 
-    const double val1 = volume * Ostap::Math::pow ( min_distance , dim ) ;
+    const double val1 = volume * Ostap::Math::POW ( min_distance , dim ) ;
     //
     const double value = std::exp ( -val1 * num * pdfValue ) ;
     //

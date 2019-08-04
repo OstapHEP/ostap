@@ -275,7 +275,7 @@ Ostap::Math::FourierSum::derivative_n ( const unsigned short n ) const
   const bool           odd =  ( 1 == n % 2 ) ;
   for ( unsigned short k = 1 ; 2 * k < N ; ++k  ) 
   {
-    const double factor = Ostap::Math::pow ( 1.0L * k * m_scale , n ) ;
+    const double factor = Ostap::Math::POW ( 1.0L * k * m_scale , n ) ;
     if ( odd ) 
     {
       deriv.m_pars [ 2 * k     ] = m_pars [ 2 * k - 1 ] * factor * ssin ;
@@ -932,7 +932,7 @@ Ostap::Math::CosineSum::derivative_n ( const unsigned short n ) const
   const bool         odd =  ( 1 == n % 2 ) ;
   for ( unsigned short k = 1 ;  k < N ; ++k  ) 
   {
-    const long double factor = Ostap::Math::pow ( 1.0L * k * m_scale , n ) ;
+    const long double factor = Ostap::Math::POW ( 1.0L * k * m_scale , n ) ;
     if ( odd ) 
     {
       deriv.setPar (  2 * k - 1  , m_pars [ k ] * factor * scos ) ;
