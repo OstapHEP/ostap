@@ -3,7 +3,6 @@
 # =============================================================================
 ## @file ostap/trees/funcs.py
 #  Module with helper base classes ...
-#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
@@ -13,8 +12,8 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    ## 'FuncTree'       , ## helper base class for 'TTree-function'
-    ## 'FuncData'       , ## helper base class for 'RooAbsData-function'
+    'FuncTree'       , ## helper base class for 'TTree-function'
+    'FuncData'       , ## helper base class for 'RooAbsData-function'
     'FormulaFunc'    , ## simple wrapper over TTreeFormula/Ostap::Formula  
     'RooFormulaFunc' , ## simple wrapper over RooFormulaVar  
     ) 
@@ -28,38 +27,48 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.funcs' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
-## ## @class FuncTree
-## #  Helper class to implement "TTree-function"
-## #  @see Ostap::Functions::PyFuncTree
-## class FuncTree(Ostap.Functions.PyFuncTree) :
-##     """Helper class to implement ``TTree-function''
-##     """
-##     def __init__ ( self , tree = None ) :
-##         ## initialize the base class 
-##         Ostap.Functions.PyFuncTree.__init__ ( self , data  ) 
+## @class FuncTree
+#  Helper class to implement "TTree-function"
+#  @see Ostap::Functions::PyFuncTree
+class FuncTree(Ostap.Functions.PyFuncTree) :
+    """Helper class to implement ``TTree-function'' in python 
+    """
+    def __init__ ( self , tree = None ) :
+        ## initialize the base class 
+        Ostap.Functions.PyFuncTree.__init__ ( self , self , tree )
         
-##     ## the main method 
-##     def evaluate ( self ) :
-##         tree =  self.tree
-##         assert valid_pointer ( tree ) , 'Invalid TTree object'
-##         return -1
-
-## # =============================================================================
-## ## @class FuncData
-## #  Helper class to implement "RooAbsData-function"
-## #  @see Ostap::Functions::PyFuncData
-## class FuncData(Ostap.Functions.PyFuncData) :
-##     """Helper class to implement ``TTree-function''
-##     """
-##     def __init__ ( self , data = None ) :
-##         ## initialize the base class 
-##         Ostap.Functions.PyFuncData.__init__ ( self , data  ) 
+    @property
+    def the_tree ( self ) :
+        """``the_tree'' : the actual pointer to the ROOT.TTree"""
+        return self.tree ()
+    
+    ## the main method 
+    def evaluate ( self ) :
+        tree = self.the_tree 
+        assert valid_pointer ( tree ) , 'Invalid TTree object'
+        return -1
+    
+# =============================================================================
+## @class FuncData
+#  Helper class to implement "RooAbsData-function"
+#  @see Ostap::Functions::PyFuncData
+class FuncData(Ostap.Functions.PyFuncData) :
+    """Helper class to implement ``TTree-function''
+    """
+    def __init__ ( self , data = None ) :
+        ## initialize the base class 
+        Ostap.Functions.PyFuncData.__init__ ( self , self , data  ) 
         
-##     ## the main method 
-##     def evaluate ( self ) :
-##         data =  self.data
-##         assert valid_pointer ( data ), 'Invalid RooAbsData object'
-##         return -1
+    @property
+    def the_data ( self ) :
+        """``the_data'' : the actual pointer to the ROOT.RooAbsData"""
+        return self.data ()
+    
+    ## the main method 
+    def evaluate ( self ) :
+        data = self.the_data
+        assert valid_pointer ( data ), 'Invalid RooAbsData object'
+        return -1
     
 # ==============================================================================
 ## @class FormulaFunc

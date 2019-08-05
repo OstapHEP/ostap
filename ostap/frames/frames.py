@@ -12,7 +12,8 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'DataFrame'   , ## RDataFrame object 
+    'DataFrame'   , ## RDataFrame object
+    'report_prnt' , ## print the report 
     ) 
 # =============================================================================
 import ROOT
@@ -177,7 +178,6 @@ DataFrame .nEff       = _fr_nEff_
 DataFrame .statVar    = _fr_statVar_
 DataFrame .statCov    = _fr_statCov_
 
-
 from ostap.stats.statvars import  data_decorate 
 data_decorate ( DataFrame )
 del data_decorate
@@ -185,46 +185,6 @@ del data_decorate
 from ostap.fitting.dataset import ds_draw , ds_project
 DataFrame.draw    = ds_draw
 DataFrame.project = ds_project
-
-## # =============================================================================
-## def _fproject_ ( tree , histo ,  what , cuts ) :
-
-##     assert isinstance ( what , ( str , ROOT.TCut ) ) , "Invalid ``what'':%s" % what
-##     assert isinstance ( cuts , ( str , ROOT.TCut ) ) , "Invalid ``cuts'':%s" % cuts
-    
-##     what = str ( what )
-##     cuts = str ( cuts )
-
-##     frame = DataFrame ( tree ).Filter ( cuts ) 
-
-##     if isinstance ( histo , ROOT.TProfile2D ) :
-##         histo  = ROOT.ROOT.RDF.TProfile2DModel ( histo ) 
-##         return frame.Profile2D
-
-    
-##         return _fproject_ ( tree , ROOT.ROOT.RDF.TProfile2DModel ( histo ) , what , cuts )                             
-##     elif isinstance ( histo , ROOT.TProfile   ) :
-##         return _fproject_ ( tree , ROOT.ROOT.RDF.TProfile1DModel ( histo ) , what , cuts )
-##     elif isinstance ( histo , ROOT.TH3 ) :
-##         if isinstance ( histo,  ROOT.TH3D ) :
-##             return _fproject_ ( tree , ROOT.ROOT.RDF.TH3DModel  ( histo ) , what , cuts )
-##         return _fproject_ ( tree , ROOT.TH3D ( hd ) , what , cuts )
-##     elif isinstance ( histo , ROOT.TH2 ) :
-##         if isinstance ( histo,  ROOT.TH2D ) :
-##             return _fproject_ ( tree , ROOT.ROOT.RDF.TH2DModel  ( histo ) , what , cuts )
-##         return _fproject_ ( tree , ROOT.TH2D ( hd ) , what , cuts )
-##     elif isinstance ( histo , ROOT.TH1 ) :
-##         if isinstance ( histo,  ROOT.TH1D ) :
-##             return _fproject_ ( tree , ROOT.ROOT.RDF.TH1DModel  ( histo ) , what , cuts )
-##         return _fproject_ ( tree , ROOT.TH1D ( hd ) , what , cuts )
-
-##     if not ROOT.ROOT.IsImplicitMTEnabled() :
-##         ROOT.ROOT.EnableImplicitMT() :
-
-##     frame = DataFrame ( tree )
-    
-##     h1    = frame.Filter ( cuts ).Histo1D
-    
 
 
 _decorated_classes_ = (

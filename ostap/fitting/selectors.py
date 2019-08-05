@@ -1359,35 +1359,10 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     snapshot = frame . Snapshot ( 'tree' , tf.filename , _strings ( *avars ) )
 
                 if not silent :
-                    from ostap.core.core import binomEff
-                    table  = []
-                    lmax   = 5
-                    n0     = -1 
-                    for c in report :
-                        if  n0 <= 0 : n0 = c.GetAll () 
-                        name    = c.GetName ()
-                        passed  = c.GetPass ()
-                        all     = c.GetAll  ()
-                        eff1    = binomEff ( passed , all ) * 100 
-                        eff2    = binomEff ( passed ,  n0 ) * 100 
-                        table.append (  ( name , passed , all , eff1 , eff2 )  )
-                        lmax    = max ( len ( name ) , lmax , len ( 'Filter' ) )
-                    if table :
-                        header   = '|    #input  |  #passed   |     efficiency [%]   | Cumulated efficiency [%] | ' 
-                        row      = '| %10d | %-10d | %8.3g +- %-8.3g | %8.3g +- %-8.3g     |'
-                        front    = '| %%-%ds ' % max ( lmax + 2 , len ( 'Selection' ) + 2 )
-                        prefix   = front % 'Filter'
-                        the_line = '\n# ' + '+' + ((len(prefix)-1)*'-') + '+' + (12*'-') + '+' + (12*'-') + '+' + (22*'-') + '+' + (26*'-') + '+'
-                        text     = 'Tree -> Frame -> Tree filter-transformation: ' 
-                        text    += the_line 
-                        text    += '\n# ' + prefix  + header
-                        text    += the_line 
-                        for entry in table :
-                            n, p, a , e1 , e2 = entry
-                            line = row % ( a , p , e1.value() , e1.error() , e2.value() , e2.error() ) 
-                            text += '\n# ' + ( front % n ) + line 
-                        logger.info ( text + the_line ) 
-                                            
+                    from ostap.frames.frames import report_prnt
+                    txt = report_prnt ( report , 'Tree -> Frame -> Tree filter-transformation: ' )
+                    logger.info ( txt )
+                    
                 if not silent : logger.info ( 'Write %s' % tf.filename  ) 
                 import ostap.io.root_file 
                 with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 

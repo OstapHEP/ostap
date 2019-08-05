@@ -17,6 +17,7 @@
 // local
 // ============================================================================
 #include "CallPython.h"
+#include "Exception.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes from namespace Ostap::Functions 
@@ -51,7 +52,7 @@ Ostap::Functions::PyFuncTree::PyFuncTree
   , m_tree ( tree )
   , m_self ( self ) 
 {
-  Py_INCREF( m_self ) ;
+  if ( nullptr != m_self ) { Py_INCREF( m_self ) ; }
 }
 // ============================================================================
 // destructor 
@@ -62,8 +63,17 @@ Ostap::Functions::PyFuncTree::~PyFuncTree() { Py_XDECREF ( m_self ) ; }
 // ============================================================================
 double Ostap::Functions::PyFuncTree::operator() ( const TTree* t ) const
 {
+  
   /// redefine the current  tree 
   if ( nullptr != t ) { m_tree = t ; }
+  Ostap::Assert ( m_self                   , 
+                  "self*  points to NULL"  , 
+                  "PyFuncTree::operator()" , 
+                  Ostap::StatusCode(400)   ) ;
+  Ostap::Assert ( m_tree                   , 
+                  "TTree* points to NULL"  , 
+                  "PyFuncTree::operator()" , 
+                  Ostap::StatusCode(401)   ) ;
   return call_method ( m_self , s_method ) ;
 }
 // ============================================================================
@@ -78,7 +88,7 @@ Ostap::Functions::PyFuncData::PyFuncData
   , m_data ( data )
   , m_self ( self ) 
 {
-  Py_INCREF( m_self ) ;
+  if ( 0 != m_self ) { Py_INCREF( m_self ) ;} 
 }
 // ============================================================================
 // destructor 
@@ -91,6 +101,14 @@ double Ostap::Functions::PyFuncData::operator() ( const RooAbsData* d ) const
 {
   /// redefine the current  tree 
   if ( nullptr != d ) { m_data = d ; }
+  Ostap::Assert ( m_self                   , 
+                  "self*  points to NULL"  , 
+                  "PyFuncData::operator()" , 
+                  Ostap::StatusCode(400)   ) ;
+  Ostap::Assert ( m_data                   , 
+                  "RooabsData* points to NULL" , 
+                  "PyFuncData::operator()" , 
+                  Ostap::StatusCode(401)   ) ;
   return call_method ( m_self , s_method ) ;
 }  
 // ============================================================================

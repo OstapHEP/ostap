@@ -53,8 +53,8 @@ Ostap::Models::PyPdf::PyPdf
   const char*       name      , 
   const char*       title     ,
   const RooArgList& variables )
-  : RooAbsPdf (   name , title  ) 
-  , m_self ( self )
+  : RooAbsPdf ( name , title  ) 
+  , m_self    ( self )
   , m_varlist ( "!varlist" , "All variables(list)" , this ) 
 {
   //

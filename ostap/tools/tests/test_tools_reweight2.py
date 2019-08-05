@@ -176,14 +176,10 @@ datastat = datatree.statCov('x','y')
 #
 ## prebook random MC histograms
 #
-## ix = random.randint ( 35 , 40 ) 
-## iy = random.randint ( 25 , 45 )
-## ix,iy  = 16 , 16 
 ix,iy  = 40 , 30
 hmc  = h2_axes ( [ 20.0/ix*i for i in range(ix+1)  ] ,
                  [ 15.0/iy*i for i in range(iy+1)  ] )
-## ix = random.randint ( 35 , 50 ) 
-## iy = random.randint ( 30 , 50 )     
+
 ix,iy  = 50 , 45 
 hmcx = h1_axis ( [ 20.0/ix*i for i in  range(ix+1) ] )
 hmcy = h1_axis ( [ 15.0/iy*i for i in  range(iy+1) ] )
@@ -200,92 +196,85 @@ if not os.path.exists( dbname ) :
 else :
     logger.info('Existing weights DBASE will be used') 
     
-#
+# =============================================================================
 ## make reweigthing iterations
-# 
-from   ostap.tools.reweight         import Weight, makeWeights,  WeightingPlot  
+
+from   ostap.tools.reweight         import Weight, makeWeights,  WeightingPlot, W2Data  
 from   ostap.fitting.selectors      import SelectorWithVars, Variable 
 import ostap.parallel.parallel_fill
 
-## start iterations:
+# =============================================================================
+## configuraion of  reweighting 
+weightings = (
+    ## variable          address in DB    
+    Weight.Var (  'x'      , 'x-reweight'  ) , 
+    Weight.Var (  'y'      , 'y-reweight'  ) , 
+    Weight.Var ( ('x','y') , '2D-reweight' ) , 
+    )
+
+# =============================================================================
+## variables to be used in MC-dataset 
+variables  = [
+    Variable ( 'x'      , 'x-var'  , 0  , 20 ) , 
+    Variable ( 'y'      , 'y-var'  , 0  , 15 ) ,
+    ]
+
+# =============================================================================
+## start reweighting iterations:
 for iter in range ( 0 , maxIter ) :
 
-    weightings = (
-        ## variable          address in DB    
-        #Weight.Var ( lambda s : s.x       , 'x-reweight'  ) , 
-        #Weight.Var ( lambda s : s.y       , 'y-reweight'  ) , 
-        #Weight.Var ( lambda s : (s.x,s.y) , '2D-reweight' ) , 
-        Weight.Var (  'x'      , 'x-reweight'  ) , 
-        Weight.Var (  'y'      , 'y-reweight'  ) , 
-        Weight.Var ( ('x','y') , '2D-reweight' ) , 
-        )
-    
-    weighter   = Weight( dbname , weightings )
-    ## variables to be used in MC-dataset 
-    variables  = [
-        Variable ( 'x'      , 'x-var'  , 0  , 20 ) , 
-        Variable ( 'y'      , 'y-var'  , 0  , 15 ) ,
-        Variable ( 'weight' , 'weight' , accessor = weighter )  
-        ]
-    
-    #
-    ## create new "weighted" mcdataset
-    # 
-    selector = SelectorWithVars (
-        variables ,
-        '0<x && x<20 && 0<y && y<20'
-        )
+    # =========================================================================
+    ## 0) The weighter object
+    weighter = Weight( dbname , weightings )
 
-    mctree.pprocess ( selector , chunk_size = len(mctree) // 20 )
-    
-    mcds = selector.data             ## new reweighted dataset
-
+    # =========================================================================
+    ## 1a) create new "weighted" mcdataset
+    selector = SelectorWithVars ( variables , '0<x && x<20 && 0<y && y<20' , silence = True )
+    mctree.process ( selector , silent = True )
+    mcds = selector.data             ## dataset
+    ## 1b) add  "weight" variabel to dataset 
+    mcds.add_reweighting ( weighter ,  name = 'weight' ) 
+                       
     logger.info ('MCDATA: %s' %  mcds )
     
-    #
-    ## update weights
-    #
-
+    # =========================================================================
+    ## 2) update weights
     plots = [ WeightingPlot ( 'y:x' , 'weight' , '2D-reweight' , hdata  , hmc  ) ]
-    if 3 < iter: 
+    if 2 < iter: 
         plots  = [
             WeightingPlot ( 'x'   , 'weight' , 'x-reweight'  , hxdata , hmcx       ) ,  
             WeightingPlot ( 'y'   , 'weight' , 'y-reweight'  , hydata , hmcy       ) , 
             WeightingPlot ( 'y:x' , 'weight' , '2D-reweight' , hdata  , hmc  , 0.5 ) , 
             ]
-    
-    ## more iteration?  number of ``active'' reweightings    
-    more = makeWeights ( mcds , plots , dbname , delta = 0.02 , power = 2 if 1 != len(plots) else 1 ) 
-    
-    ## make MC-histogram 
+    more = makeWeights ( mcds , plots , dbname , delta = 0.02 ,
+                         power = 2 if 1 != len(plots) else 1 ) 
+    # =========================================================================
+    ## 3) make MC-histogram 
     mcds .project  ( hmcx , 'x'   , 'weight'  )
     mcds .project  ( hmcy , 'y'   , 'weight'  )
     mcds .project  ( hmc  , 'y:x' , 'weight'  )
-    
+
+    # ==============================================================================
+    ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
     logger.info    ( 'Compare DATA and MC for iteration #%d' % iter )
-    #
-    ## compare the basic properties: mean, rms, skewness and kurtosis
-    # 
+
+    ## 4a) compare the basic properties: mean, rms, skewness and kurtosis
     hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x) vs MC(x)' )
     hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y) vs MC(y)' )
     
-    #
-    ## calculate the distances
-    #
+    ## 4b) calculate the ``distances''
     dist = hxdata.cmp_dist ( hmcx , density = True )
     logger.info ("DATA(x)-MC(x)  ``distance''        %s" % dist )
     dist = hydata.cmp_dist ( hmcy , density = True )
     logger.info ("DATA(y)-MC(y)  ``distance''        %s" % dist )
 
-    #
-    ## calculate the 'orthogonality'
-    #  
+    ## 4c) calculate the ``orthogonality''
     cost = hxdata.cmp_cos  ( hmcx , density = True )
     logger.info ("DATA(x)-MC(x)  ``orthogonality'' %s" % cost )
     cost = hydata.cmp_cos  ( hmcy , density = True )
     logger.info ("DATA(y)-MC(y)  ``orthogonality'' %s" % cost )
-    #
     
+    ## 4d) get min/max difference betwen data and MC 
     mn,mx = hxdata.cmp_minmax ( hmcx   , diff = lambda a,b : a/b , density = True )
     logger.info ("DATA*(x)/MC(x)   ``min/max-distance''[%%] (%s)/(%s) at x=%.1f/%.1f" % (
         (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
@@ -311,10 +300,13 @@ for iter in range ( 0 , maxIter ) :
         (100*mn[2]-100).toString ( '%+.1f+-%.1f' ) ,
         (100*mx[2]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mn[1] , mx[0]  , mx[1] ) )            
 
-
+    ## 4e) 2D-statistics 
     mcstat = mcds.statCov('x','y','weight')
     logger.info ('MCSTAT:\nx=%s\ny=%s\ncov2:\n%s'   %   mcstat[:3] ) 
     logger.info ('DATASTAT:\nx=%s\ny=%s\ncov2:\n%s' % datastat[:3] ) 
+
+    # =========================================================================
+    ## prepare the plot of weighted MC for the given iteration
     
     ## final density on data 
     datax_density = hxdata.density()
@@ -359,7 +351,6 @@ mcx_density  .draw ('e1 same')
 datay_density.draw ('e1 same')
 mcy_density  .draw ('e1 same')
 time.sleep(60)
-dbroot.Close() 
 
 # =============================================================================
 # The END 

@@ -32,7 +32,7 @@ namespace Ostap
        *  @param self python object
        *  @param tree pointer to the tree
        */
-      PyFuncTree ( PyObject*    self     , 
+      PyFuncTree ( PyObject*    self = 0 , 
                    const TTree* tree = 0 );
       // ======================================================================
       /// destructor 
@@ -51,12 +51,12 @@ namespace Ostap
     private:
       // ======================================================================
       /// potentially cached pointer to the tree 
-      mutable const TTree*    m_tree ;
+      mutable const TTree*    m_tree { nullptr } ;
       // ======================================================================
     private :
       // ======================================================================
       // self reference for python instance 
-      PyObject*         m_self ; // self reference for python instance 
+      PyObject*               m_self { nullptr } ; // self reference for python instance 
       // ======================================================================
     } ;
     // ========================================================================
@@ -72,7 +72,7 @@ namespace Ostap
        *  @param self python object
        *  @param data pointer to the data
        */
-      PyFuncData ( PyObject*         self     , 
+      PyFuncData ( PyObject*         self = 0 , 
                    const RooAbsData* data = 0 );
       // ======================================================================
       /// destructor 
@@ -91,12 +91,12 @@ namespace Ostap
     private:
       // ======================================================================
       /// potentially cached pointer to the tree 
-      mutable const RooAbsData* m_data ;
+      mutable const RooAbsData* m_data { nullptr } ;
       // ======================================================================
     private :
       // ======================================================================
       // self reference for python instance 
-      PyObject*           m_self ; // self-reference for python instance 
+      PyObject* m_self { nullptr } ; ; // self-reference for python instance 
       // ======================================================================
      } ;
     // ========================================================================

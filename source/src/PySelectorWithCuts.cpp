@@ -20,8 +20,9 @@
 // ============================================================================
 namespace 
 {
-  inline std::string strip ( const std::string& s                  ,
-                             const std::string& whitespace = " \t" )
+  const std::string s_whitespaces = " \t\n\r\f\v" ;
+  inline std::string strip ( const std::string& s                          ,
+                             const std::string& whitespace = s_whitespaces )
   {
     const std::string::size_type p1 = s .find_first_not_of ( whitespace );
     if ( std::string::npos == p1 ) { return ""; }

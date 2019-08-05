@@ -115,14 +115,16 @@ class  CleanUp(object) :
     def remove_file ( fname ) :
         """Remove the (temporary) file
         """
-        if os.path.exists ( fname ) and os.path.isfile ( fname ) and fname in CleanUp._protected :
-            logger.debug  ( 'do not remove the protected file : %s ' % fname )
-            return False
-        
-        if os.path.exists ( fname ) and os.path.isfile ( fname ) and not protected :
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+
+            if fname in CleanUp._protected :
+                logger.debug  ( 'do not remove the protected file : %s ' % fname )
+                return False
+
             logger.verbose ( 'remove temporary file : %s' % fname )
             try    : os.remove ( fname )
             except : pass
+            
         if os.path.exists  ( fname ) and os.path.isfile ( fname ) :
             logger.error   ( 'failed to remove file : %s' %  fname  )
             return False 

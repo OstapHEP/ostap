@@ -14,10 +14,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (  
     'Chain' , ## helper class , needed for multiprocessing 
-    'Tree'  , ## helper class , needed for multiprocessing 
+    'Tree'  , ## helper class , needed for multiprocessing
   ) 
 # =============================================================================
-import ROOT
+import ROOT, os 
 from   ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
 from   ostap.core.ostap_types import integer_types , long_type, string_types 
 from   ostap.logger.utils     import multicolumn
@@ -1381,6 +1381,8 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
     
     files = chain.files   ()
     cname = chain.GetName () 
+
+    the_function = function
     
     from ostap.utils.progress_bar import progress_bar
 
@@ -1421,11 +1423,12 @@ def add_new_branch ( tree , name , function , verbose = True ) :
     for n in names : 
         assert not n in tree.branches() ,'Branch %s already exists!' % n
 
-    if isinstance   ( function , ( string_types , ROOT.TH1 ) ) :
-        the_function = function
-    else : 
-        ftype        = type  ( function )
-        the_function = ftype ( function )
+    ## if isinstance   ( function , ( string_types , ROOT.TH1 ) ) :
+    ##     the_function = function
+    ## else : 
+    ##     ftype        = type  ( function )
+    ##     the_function = ftype ( function )
+    the_function = function  
 
     from ostap.io.root_file    import REOPEN 
 
@@ -1453,6 +1456,39 @@ def add_new_branch ( tree , name , function , verbose = True ) :
     
     
 ROOT.TTree.add_new_branch = add_new_branch 
+
+
+# =============================================================================
+## Add specific re-weighting information into <code>ROOT.TTree</code>
+#  @see ostap.tools.reweight
+#  @see ostap.tools.reweight.Weight 
+#  @see ostap.tools.reweight.W2Tree 
+#  @code
+#  w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+#  tree = ...
+#  tree.add_reweighting ( w ) 
+#  @endcode 
+def add_reweighting ( tree , weighter , name = 'weight' ) :
+    """Add specific re-weighting information into ROOT.TTree
+    
+    >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+    >>> data = ...
+    >>> data.add_reweighting ( w )
+    - see ostap.tools.reweight
+    - see ostap.tools.reweight.Weight 
+    - see ostap.tools.reweight.W2Tree 
+    """
+    
+    import ostap.tools.reweight as W
+    
+    assert isinstance ( weighter , W.Weight ), "Invalid type of ``weighting''!"
+    
+    ## create the weigthting function 
+    wfun = W.W2Tree ( weighter )
+    
+    return data.add_new_branch (  name , wfun ) 
+
+ROOT.TTree.add_reweighting = add_reweighting
 
 # =============================================================================
 from ostap.utils.cleanup import CleanUp
@@ -1792,7 +1828,6 @@ from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.TTree )
 
 
-# =============================================================================
 
 
 
@@ -1865,6 +1900,112 @@ def the_variables ( tree , expression , *args ) :
 
 ROOT.TTree.the_variables = the_variables
 
+# ===============================================================================
+## Print the report 
+def report_print ( report , prefix = '' ) :
+    """Print the report
+    """
+    from ostap.core.core import binomEff
+    
+    table  = []
+    lmax   = 5
+    n0     = -1 
+    for c in report :
+        if  n0 <= 0 : n0 = c.GetAll () 
+        name    = c.GetName ()
+        passed  = c.GetPass ()
+        all     = c.GetAll  ()
+        eff1    = binomEff ( passed , all ) * 100 
+        eff2    = binomEff ( passed ,  n0 ) * 100 
+        table.append (  ( name , passed , all , eff1 , eff2 )  )
+        lmax    = max ( len ( name ) , lmax , len ( 'Filter' ) )
+        
+    header   = '|    #input  |  #passed   |     efficiency [%]   | Cumulated efficiency [%] | ' 
+    row      = '| %10d | %-10d | %8.3g +- %-8.3g | %8.3g +- %-8.3g     |'
+    front    = '| %%-%ds ' % max ( lmax + 2 , len ( 'Selection' ) + 2 )
+    prefix   = front % 'Filter'
+    the_line = '\n# ' + '+' + ((len(prefix)-1)*'-') + '+' + (12*'-') + '+' + (12*'-') + '+' + (22*'-') + '+' + (26*'-') + '+'
+    if prefix : text = str ( prefix ) + the_line 
+    else      : text =                  the_line [1:]
+    text    += '\n# ' + prefix  + header
+    text    += the_line 
+    for entry in table :
+        n, p, a , e1 , e2 = entry
+        line = row % ( a , p , e1.value() , e1.error() , e2.value() , e2.error() ) 
+        text += '\n# ' + ( front % n ) + line
+        
+    return text + the_line
+                
+                
+# ===============================================================================
+## Reduce the tree/chain
+#  @code
+#  tree = ....
+#  reduced1 = tree.reduce  ( 'pt>1' )
+#  reduced2 = tree.reduce  ( 'pt>1' , vars = [ 'p', 'pt' ,'q' ] )
+#  reduced3 = tree.reduce  ( 'pt>1' , no_vars = [ 'Q', 'z' ,'x' ] )
+#  reduced4 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } )
+#  reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , fname = 'OUTPUT.root' )
+#  @endcode
+def _rt_reduce_  ( tree          ,
+                   cuts          ,
+                   vars     = () , 
+                   no_vars  = () ,
+                   new_vars = {} ,
+                   fname    = '' ) :
+    """ Reduce the tree/chain
+    >>> tree = ....
+    >>> reduced1 = tree.reduce  ( 'pt>1' )
+    >>> reduced2 = tree.reduce  ( 'pt>1' , vars = [ 'p', 'pt' ,'q' ] )
+    >>> reduced3 = tree.reduce  ( 'pt>1' , no_vars = [ 'Q', 'z' ,'x' ] )
+    >>> reduced4 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } )
+    >>> reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , fname = 'OUTPUT.root' )
+    """
+    
+    from ostap.core.core       import strings as strings_ 
+    import ostap.frames.frames
+    
+
+    if not fname :
+        import ostap.utils.cleanup as CU
+        fname = CU.CleanUp.tempfile ( suffix = '.root' )
+        logger.debug ( 'reduce: temporary file will be used: %s' % fname )
+
+    frame = Ostap.DataFrame ( tree , enable = True )
+    for k in new_vars :
+        v     = new_vars[k]
+        frame = frame.Define ( k , v )
+
+    if cuts :
+        frame = frame.Filter ( cuts , 'CUTS' )
+
+    variables = set() 
+    if   vars    :
+        for v in vars     : variables.add ( v )
+        for v in new_vars : variables.add ( v )
+    elif no_vars :
+        variables += set  ( self.branches () )
+        variables += set  ( new_vars.keys () )
+        variables -= set  ( np_vars          )
+
+    report = frame.Report()
+    if variables :
+        varibales = list     ( variables )  
+        variables = strings_ ( variables )
+        snapshot = frame.Snapshot ( tree.GetName() , fname , variables )
+    else : 
+        snapshot = frame.Snapshot ( tree.GetName() , fname )
+
+    logger.info ( report_print ( report , 'Reduce:' ) )
+
+    assert os.path.exists ( fname ) , 'No output file is found %s' %  fname 
+    
+    chain = ROOT.TChain ( tree.GetName () )
+    chain.Add ( fname )
+    return chain
+
+ROOT.TTree. reduce = _rt_reduce_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TTree   ,
@@ -1925,6 +2066,10 @@ _new_methods_       = (
     ROOT.TTree.deciles          ,
     #
     ROOT.TTree.the_variables    ,
+    ROOT.TTree.add_new_branch   ,
+    ROOT.TTree.add_reweighting  ,
+    ROOT.TTree.reduce           ,
+    ##
     )
 # =============================================================================
 if '__main__' == __name__ :

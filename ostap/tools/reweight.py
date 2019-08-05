@@ -13,9 +13,11 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'Weight'        ,
-    'makeWeights'   ,
-    'WeightingPlot' , 
+    'Weight'        , ## the weighting object  
+    'makeWeights'   , ## helper function for   weighting iterations 
+    'WeightingPlot' , ## helper object to define the weighting rule & target
+    'W2Tree'        , ## helper to add the calculated weight to ROOT.TTree
+    'W2Data'        , ## helper to add the clacualted weight to ROOT.RooAbsData
     ) 
 # =============================================================================
 import ROOT, operator
@@ -23,15 +25,19 @@ import ROOT, operator
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweigh' )
-else                       : logger = getLogger ( __name__              )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweight' )
+else                       : logger = getLogger ( __name__               )
 # =============================================================================
 logger.info ( 'Set of utitilities for re-weigthing')
-from   ostap.core.pyrouts    import VE, SE
-from   ostap.math.base       import iszero
-from   ostap.core.ostap_types      import string_types, list_types 
-from   ostap.math.operations import Mul as MULT  ## needed for proper abstract multiplication
-import ostap.io.zipshelve    as            DBASE ## needed to store the weights&histos
+# =============================================================================
+from   ostap.core.pyrouts     import VE, SE
+from   ostap.math.base        import iszero
+from   ostap.core.ostap_types import string_types, list_types 
+from   ostap.math.operations  import Mul as MULT  ## needed for proper abstract multiplication
+import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
+from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/RooDataSet
+import ostap.trees.trees
+import ostap.fitting.dataset
 # =============================================================================
 ## @class AttrGetter
 #  simple class to bypass <code>operator.attrgetter</code> that
@@ -443,9 +449,9 @@ class WeightingPlot(object) :
     def w  ( self )   :
         """``w''  - relative weigtht (relative importance is this variable)"""
         return self.__w 
-        
+
 # =============================================================================
-## make one re-weighting iteration 
+## The main  function: perform one re-weighting iteration 
 #  and reweight "MC"-data set to looks as "data"(reference) dataset
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
@@ -470,7 +476,6 @@ def makeWeights  ( dataset                 ,
         delta   = delta  * fudge_factor
         minmax  = minmax * fudge_factor
         
-
     save_to_db = [] 
     ## number of active plots for reweighting
     active = 0
@@ -538,7 +543,6 @@ def makeWeights  ( dataset                 ,
         ## make a comparison (if needed)
         # 
         if compare : compare ( hdata0 , hmc0 , address )
-
     
     ## for single reweighting 
     if 1 == nplots : power = 1
@@ -589,18 +593,80 @@ def makeWeights  ( dataset                 ,
         
     return active 
 
-## some simple comparsion 
-def hCompare ( data , mc , title = '' , spline = True ) :
-
+# =============================================================================
+## @class W2Tree
+#  Helper class to add the weight into <code>ROOT.TTree</code>
+#  @code
+#  w    = Weight ( ... )      ## the weighting object
+#  tree = ...                 ## The tree
+#  wf   = W2Tree ( w , tree ) ## create the weighting function
+#  tree.add_new_branch ( 'weight' , wf ) 
+#  @endcode
+class W2Tree(FuncTree) :
+    """Helper class to add the weight into ROOT.TTree
+    >>> w    = Weight ( ... )      ## the weighting object
+    >>> tree = ...                 ## The tree
+    >>> wf   = W2Tree ( w , tree ) ## create the weighting function
+    >>> tree.add_new_branch ( 'weight' , wf )
+    """
+    def __init__ ( self , weight , tree = None ) :
+        
+        assert isinstance ( weight , Weight    )                 , 'Wrong type of weight!'
+        assert tree is None or isinstance ( tree  , ROOT.TTree ) , 'Wrong type of tree!'
+        
+        FuncTree.__init__ ( self , tree )
+        self.__weight = weight
+        
+    ## evaluate the weighter for the given TTree entry 
+    def evaluate ( self ) : 
+        """Evaluate the weighter for the given TTree entry"""
+        t = self.tree ()
+        w = self.__weight ( t ) 
+        return w
     
-    if not isinstance ( data , ( ROOT.TH1D , ROOT.TH1F ) ) : return
-    if not isinstance ( mc   , ( ROOT.TH1D , ROOT.TH1F ) ) : return
+    @property
+    def weight ( self ) :
+        """``weight'' : get the weighter object"""
+        return  self.__weight
+    
+# =============================================================================
+## @class W2Data
+#  Helper class to add the weight into <code>RooDataSet</code>
+#  @code
+#  w    = Weight ( ... )      ## the weighting object
+#  ds   = ...                 ## dataset 
+#  wf   = W2Data ( w , tree ) ## create the weighting function
+#  ds.add_new_var ( 'weight' , wf ) 
+#  @endcode
+class W2Data(FuncData) :
+    """Helper class to add the weight into <code>RooDataSet</code>
+    >>> w    = Weight ( ... )      ## the weighting object
+    >>> ds   = ...                 ## dataset 
+    >>> wf   = W2Data ( w , tree ) ## create the weighting function
+    >>> ds.add_new_var ( 'weight' , wf ) 
+    """
+    
+    def __init__ ( self , weight , data = None ) :
 
-    data.cmp_prnt( mc )
-
-    hd  = data.rescale_bins ( 1 ) 
-    hm  = mc  .rescale_bins ( 1 ) 
-
+        assert isinstance ( weight , Weight    )                      , 'Wrong type of weight!'
+        assert data is None or isinstance ( data  , ROOT.RooAbsData ) , 'Wrong type of data!'
+        
+        FuncData.__init__ ( self , data )
+        self.__weight = weight
+        
+    ## evaluate the weighter for the given RooAbsData entry 
+    def evaluate ( self ) : 
+        """Evaluate the weighter for the given RooAbsData entry"""
+        
+        d = self.data ()
+        w = self.__weight ( d ) 
+        return w
+    
+    @property
+    def weight ( self ) :
+        """``weight'' : get the weighter object"""
+        return  self.__weight
+    
 # =============================================================================
 if '__main__' == __name__ :
         

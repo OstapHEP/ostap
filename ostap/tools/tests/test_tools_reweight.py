@@ -35,7 +35,7 @@ dbname     = CleanUp.tempfile ( suffix = '.db'   , prefix ='test_tools_reweight_
 
 if os.path.exists ( testdata ) : os.remove ( testdata ) 
 if os.path.exists ( dbname   ) : os.remove ( dbname   ) 
-    
+
 ## prepare data for tests 
 seed = 1234567890
 logger.info ( 'Test RANDOM data will be generated/seed=%s' % seed  )
@@ -100,82 +100,74 @@ else :
 #
 ## make reweighting iterations
 # 
-from   ostap.tools.reweight     import Weight, makeWeights, WeightingPlot
+from   ostap.tools.reweight     import Weight, makeWeights, WeightingPlot, W2Data
 from   ostap.fitting.selectors  import SelectorWithVars, Variable 
 import ostap.parallel.parallel_fill
 
+# =============================================================================
+## weighting configuration: ## variable     address in DB    
+weighting = ( Weight.Var     ( 'x'       ,  address = 'x-reweight'  ) , )
+# ============================================================================
+## variables to be used in MC-dataset 
+variables  = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
+
+# =============================================================================
 ## start iterations:
-for iter in range ( 0 , maxIter ) :
+for iter in range ( 0 , maxIter ) :    
 
-    weighting = (
-        ## variable          address in DB    
-        Weight.Var( 'x' , address = 'x-reweight'  ) , 
-        )
+    # =============================================================================
+    ## 0) The weighter object
+    weighter = Weight ( dbname , weighting )
     
-    weighter   = Weight( dbname , weighting )
-    ## variables to be used in MC-dataset 
-    variables  = [
-        ## Variable ( 'x'  , 'x-variable' , 0  , 100 , lambda s : s.x ) , 
-        Variable ( 'x'  , 'x-variable' , 0  , 100 ) , 
-        Variable ( 'weight' , 'weight' , accessor =  weighter      )  
-        ]
+    # ===============================================================================
+    ## 1a) create mcdataset
+    selector = SelectorWithVars ( variables , '0<x && x<100 ' , silence = True )
+    mctree.process ( selector , silent = True )
+    mcds     = selector.data ## dataset
+    ## 1b) add "weight" variable to the dataset
+    mcds.add_reweighting ( weighter , name = 'weight' )
     
-    #
-    ## create new "weighted" mcdataset
-    # 
-    selector = SelectorWithVars (
-        variables ,
-        '0<x && x<100 '
-        )
+    logger.info ('MCDATA: %s' %  mcds )
     
-    mctree.pprocess ( selector , chunk_size = len ( mctree ) // 20 )
-    ##mctree.process ( selector )
-    mcds = selector.data             ## new reweighted dataset
+    # ==============================================================================
+    ## 2) update weights
+    plots = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
+    more  = makeWeights ( mcds , plots , dbname , delta = 0.001 )
 
-    #
-    ## update weights
-    #    
-    plots    = [
-        WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc )  
-        ]
-    
-    more = makeWeights ( mcds , plots , dbname , delta = 0.001 )
-
-    ## make MC-histogram 
+    # ==============================================================================
+    ## 3) make MC-histogram 
     mcds .project  ( hmc , 'x' , 'weight'  )
-    
+
+    # ==============================================================================
+    ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
     logger.info    ( 'Compare DATA and MC for iteration #%d' % iter )
-    #
-    ## compare the basic properties: mean, rms, skewness and kurtosis
-    # 
+    
+    ## 4a) compare the basic properties: mean, rms, skewness and kurtosis 
     hdata.cmp_prnt ( hmc , 'DATA' , 'MC' , 'DATA vs MC' )
-    #
-    ## calculate the distances
-    #
+
+    ## 4b) calculate the ``distances''
     dist = hdata.cmp_dist ( hmc , density = True )
     logger.info ('DATA-MC "distance"      %s' % dist )
-    #
-    ## calculate the 'orthogonality'
-    #  
+    
+    ## 4c) calculate the ``orthogonalit''      
     cost = hdata.cmp_cos  ( hmc , density = True )
     logger.info ('DATA-MC "orthogonality" %s' % cost )
-    #
-    ## try to fit it DATA with MC and vice versa 
-    #
+
+    ## 4d) try to fit it DATA with MC and vice versa 
     fit1 = hdata.cmp_fit ( hmc   , density = True )
     if fit1 and 0 == fit1.Status() :
         logger.info ( 'Fit DATA with MC   Prob=%.3g[%%] ' % ( fit1.Prob() * 100 ) )
     fit2 = hmc  .cmp_fit ( hdata , density  = True )
     if fit2 and 0 == fit2.Status() :
         logger.info ( 'Fit MC   with DATA Prob=%.3g[%%] ' % ( fit2.Prob() * 100 ) )
-    #
-    ## make chi2-comparison between data and MC
-    #
+
+    ## 4e) make chi2-comparison between data and MC
     c2ndf,prob = hdata.cmp_chi2 ( hmc   , density = True )
     logger.info ( 'DATA/MC: chi2/ndf (%.4g) and Prob %.5g%% ' % ( c2ndf , prob*100 ) )
     c2ndf,prob = hmc  .cmp_chi2 ( hdata , density = True )
     logger.info ( 'MC/DATA: chi2/ndf (%.4g) and Prob %.5g%% ' % ( c2ndf , prob*100 ) )
-    
+
+    ## 4f) get min/max difference betwen data and MC 
     mn,mx = hdata.cmp_minmax ( hmc   , diff = lambda a,b : a/b , density = True )
     logger.info ("DATA*/MC   ``min/max-distance''[%%] (%s)/(%s) at x=%.1f/%.1f" % (
         (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
@@ -184,11 +176,16 @@ for iter in range ( 0 , maxIter ) :
     logger.info ("DATA/MC*   ``min/max-distance''[%%] (%s)/(%s) at x=%.1f/%.1f" % (
         (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
         (100*mx[1]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mx[0] ) )                 
-     
+
+    # =========================================================================
+    ## prepare the plot of weighted MC for th egiven iteration
+    
     ## final density on data 
     data_density = hdata.density()
+    
     ## final density on mc 
     mc_density   = hmc.density()
+    
     data_density.red  ()
     mc_density  .blue ()
     data_density.draw ('e1')
@@ -200,7 +197,7 @@ for iter in range ( 0 , maxIter ) :
         break
     
     if iter + 1 != maxIter :
-        mcds.clear() 
+        mcds.clear () 
         del mcds , selector
     else :
         del selector 
@@ -209,8 +206,6 @@ for iter in range ( 0 , maxIter ) :
 data_density.draw ('e1')
 mc_density  .draw ('e1 same')
 time.sleep(60)
-dbroot.Close()
-
 
 # =============================================================================
 # The END 
