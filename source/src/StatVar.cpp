@@ -2459,8 +2459,8 @@ double Ostap::StatVar::nEff
     .Define ( weight2  , []( double v ) { return v * v ; } , { weight } ) ;
   //
   const double zero = 0.0 ;
-  auto  sumw_  = t.Reduce ( std::plus<double>() , { weight  } , zero ) ;
-  auto  sumw2_ = t.Reduce ( std::plus<double>() , { weight2 } , zero ) ;
+  auto  sumw_  = t.Reduce ( std::plus<double>() ,  weight   , zero ) ;
+  auto  sumw2_ = t.Reduce ( std::plus<double>() ,  weight2  , zero ) ;
   //
   const double sumw  = *sumw_  ;
   const double sumw2 = *sumw2_ ;

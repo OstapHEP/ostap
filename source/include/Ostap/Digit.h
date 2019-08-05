@@ -361,14 +361,14 @@ namespace Ostap
         {
         // ====================================================================
         const TYPE ten = 10 ;
-        const TYPE aux = Ostap::Math::pow ( ten , N ) ;
+        const TYPE aux = Ostap::Math::POW ( ten , N ) ;
         return static_cast<TYPE> ( ( value/aux ) % 10 ) ;               // RETURN 
         // ====================================================================
       }
       // ======================================================================
       const unsigned long long val = value ;
       const unsigned long long ten = 10    ;
-      const unsigned long long aux = Ostap::Math::pow ( ten , N ) ;
+      const unsigned long long aux = Ostap::Math::POW ( ten , N ) ;
       return static_cast<TYPE> (  (val/aux) % 10 ) ;                  // RETURN
       // ======================================================================
     }  
@@ -414,16 +414,16 @@ namespace Ostap
       {
         // ====================================================================
         const TYPE ten = 10 ;
-        const TYPE aux1 = Ostap::Math::pow ( ten ,      N1 ) ;
-        const TYPE aux2 = Ostap::Math::pow ( ten , N2 - N1 ) ;
+        const TYPE aux1 = Ostap::Math::POW ( ten ,      N1 ) ;
+        const TYPE aux2 = Ostap::Math::POW ( ten , N2 - N1 ) ;
         return static_cast<TYPE> ( (value/aux1)%aux2 ) ;              // RETURN 
         // ====================================================================
       }
       // ======================================================================
       const unsigned long long val  = value ;
       const unsigned long long ten  = 10 ;
-      const unsigned long long aux1 = Ostap::Math::pow ( ten , N1      ) ;
-      const unsigned long long aux2 = Ostap::Math::pow ( ten , N2 - N1 ) ;
+      const unsigned long long aux1 = Ostap::Math::POW ( ten , N1      ) ;
+      const unsigned long long aux2 = Ostap::Math::POW ( ten , N2 - N1 ) ;
       return static_cast<TYPE>( (val/aux1)%aux2 ) ;                   // RETURN
       // ======================================================================
     }

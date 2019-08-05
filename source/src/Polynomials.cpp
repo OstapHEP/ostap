@@ -678,8 +678,8 @@ namespace
     return 
       k < j ? 0.0 : 
       Ostap::Math::choose ( k , j     ) * 
-      Ostap::Math::pow    ( a , j     ) *  
-      Ostap::Math::pow    ( b , k - j ) ;
+      Ostap::Math::POW    ( a , j     ) *  
+      Ostap::Math::POW    ( b , k - j ) ;
   }
   // ==========================================================================
 }
@@ -1919,7 +1919,7 @@ namespace
   {
     if ( k < j ) { return 0 ; }
     const double c = Ostap::Math::choose ( k , j ) ;
-    return c / Ostap::Math::pow ( 2 , k ) ;
+    return c / Ostap::Math::POW ( 2 , k ) ;
   }
   // ==========================================================================
   /// transformation matrix from monomial to chebyshev basis 
@@ -1931,7 +1931,7 @@ namespace
     return 
       ( 1 == ( j + k ) % 2 ) ? 0. :
       Ostap::Math::choose ( k , ( k - j ) / 2 ) * ( j == 0 ? 1. : 2. ) 
-      / Ostap::Math::pow ( 2 , k ) ;
+      / Ostap::Math::POW ( 2 , k ) ;
   }
   // ============================================================================
   /// transformation matrix from legendre basic to monomial basis 
@@ -1944,7 +1944,7 @@ namespace
       1 == ( j + k ) % 2 ? 0.0 : 
       Ostap::Math::choose       ( k         , j ) * 
       Ostap::Math::choose_half  ( j + k - 1 , k ) *
-      Ostap::Math::pow          ( 2         , k ) ;
+      Ostap::Math::POW          ( 2         , k ) ;
   }
   // ==========================================================================
 }
@@ -2165,8 +2165,8 @@ double Ostap::Math::integrate
   const long double  xmax = poly.xmax () ;
   const long double  _tau = ( xmax - xmin ) * tau / 2   ;
   const unsigned int N    = poly.degree() ;
-  const long double  t1   = Ostap::Math::pow ( std::abs (  tau ) , N + 1 ) ;
-  const long double  t2   = Ostap::Math::pow ( std::abs ( _tau ) , N + 1 ) ;
+  const long double  t1   = Ostap::Math::POW ( std::abs (  tau ) , N + 1 ) ;
+  const long double  t2   = Ostap::Math::POW ( std::abs ( _tau ) , N + 1 ) ;
   if ( s_small ( t1 ) || s_small ( t2 ) )
   {
     const long double _fac = std::exp   ( ( xmax + xmin ) * tau / 2 ) ;
@@ -2180,8 +2180,8 @@ double Ostap::Math::integrate
     { 
       const long double p = pars[i] ;
       if ( s_zero ( p ) ) { continue ; }                 // CONTINUE 
-      const long double tl = Ostap::Math::pow ( tmin , i + 1 ) ;
-      const long double th = Ostap::Math::pow ( tmax , i + 1 ) ;
+      const long double tl = Ostap::Math::POW ( tmin , i + 1 ) ;
+      const long double th = Ostap::Math::POW ( tmax , i + 1 ) ;
       result += p * _factorial_d_ ( i ) * 
         ( th * Ostap::Math::gamma_star ( i + 1 , -_tau * tmax ) -
           tl * Ostap::Math::gamma_star ( i + 1 , -_tau * tmin ) ) ;
@@ -2225,8 +2225,8 @@ double Ostap::Math::integrate
   const long double  xmax = poly.xmax () ;
   const long double  _tau = ( xmax - xmin ) * tau / 2   ;
   const unsigned int N    = poly.degree() ;
-  const long double  t1   = Ostap::Math::pow ( std::abs (  tau ) , N + 1 ) ;
-  const long double  t2   = Ostap::Math::pow ( std::abs ( _tau ) , N + 1 ) ;
+  const long double  t1   = Ostap::Math::POW ( std::abs (  tau ) , N + 1 ) ;
+  const long double  t2   = Ostap::Math::POW ( std::abs ( _tau ) , N + 1 ) ;
   if ( s_small ( t1 ) || s_small ( t2 ) )
   { 
     const Ostap::Math::Polynomial p ( poly ) ;
@@ -2268,8 +2268,8 @@ double Ostap::Math::integrate
   const long double  xmax = poly.xmax () ;
   const long double  _tau = ( xmax - xmin ) * tau / 2   ;
   const unsigned int N    = poly.degree() ;
-  const long double  t1   = Ostap::Math::pow ( std::abs (  tau ) , N + 1 ) ;
-  const long double  t2   = Ostap::Math::pow ( std::abs ( _tau ) , N + 1 ) ;
+  const long double  t1   = Ostap::Math::POW ( std::abs (  tau ) , N + 1 ) ;
+  const long double  t2   = Ostap::Math::POW ( std::abs ( _tau ) , N + 1 ) ;
   if ( s_small ( t1 ) || s_small ( t2 ) )
   { 
     const Ostap::Math::Polynomial p ( poly ) ;
