@@ -124,11 +124,6 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
-  #if  __cplusplus == 201703L
-    constexpr double s_BUKIN   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
-  #else
-    const double s_BUKIN   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
-  #endif
   // ==========================================================================
 } //                                            The end of  anonymous namespace 
 // ============================================================================
@@ -2239,7 +2234,7 @@ bool Ostap::Math::Voigt::setSigma ( const double x )
 // ============================================================================
 double Ostap::Math::Voigt::fwhm   () const 
 {
-  const double fg = 2 * m_sigma * s_BUKIN ;
+  const double fg = 2 * m_sigma * s_Bukin ;
   return 0.5346 * m_gamma + std::sqrt ( 0.2166 * m_gamma * m_gamma + fg * fg ) ;
 }
 // ============================================================================
@@ -2351,7 +2346,7 @@ namespace
 }
 // ============================================================================
 double Ostap::Math::PseudoVoigt::fwhm_gauss()  const 
-{ return 2 * m_sigma * s_BUKIN ; }
+{ return 2 * m_sigma * s_Bukin ; }
 // ============================================================================
 void Ostap::Math::PseudoVoigt::update() 
 {
