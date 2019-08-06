@@ -1261,7 +1261,7 @@ ROOT.TTree.make_dataset = make_dataset
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
 #
-def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , silent = False  , use_frame = -1 ) :
+def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , silent = False  , use_frame = 50000 ) :
     """ ``Process'' the tree/chain with proper TPySelector :
     
     >>> from ostap.fitting.selectors import Selector    
