@@ -140,6 +140,53 @@ operations with `ROOT.RDataFrame.Define`, `ROOT.RDataFrame.Filter` and `ROOT.RDa
 
 
 
+## Special cases 
 
-    
+There are few special cases, where one needs to add non-trivial variable into `RooDataSet`
 
+1. Adding result of `TMVA` or `TMVA/Chopping` decision 
+2. Adding result of `reweighting` procedure 
+
+Both cases are non-trivial and CPU expensive. 
+For them two-step procesure is suggested 
+1. Fill `RooDataSet` in regular way without thie variables (but keeping in `RooDataSet` the varibales needed to calculate `TMVA`, `TMVA/Chopping` or `reweighting` results
+2. Apply dedicated method to add new variables to `RooDataSet`
+
+###  `TMVA` or `TMVA/Chopping` 
+
+Here the dedicated method is `addTMVAResponse`
+
+```python
+dataset       = ...
+weights_files = ... ## tar-file from `TMVA`
+addTMVAReponse ( dataset , 
+                 input_variables       , ## list of input variables 
+                 weights_files         , ## input files with TMVA weights 
+                 prefix  = 'TMVA_'     , 
+                 suffix  = '_response' ,
+                 verbose = True        )
+```
+ or `addChoppingResponse` for `TMVA/Chopping`
+```python
+dataset       = ...
+weights_files = ... ## tar-file from `TMVA`
+addChoppingReponse ( dataset , 
+                     chopper = ' ... '     , ## chopper categrory/fnuction 
+                     N       = 11          , ## number of chopping categories 
+                     input_variables       , ## list of input variables 
+                     weights_files         , ## input files with TMVA weights 
+                     prefix  = 'TMVA_'     , 
+                     suffix  = '_response' ,
+                     verbose = True        )
+```
+For both methods the parallelization is applicable 
+
+
+###  `reweighting`
+
+```python
+weighter = ...
+dataset  = ...
+dataset.add_reweigthing ( weighter , name = 'weight')
+```
+ 
