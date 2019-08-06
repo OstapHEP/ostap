@@ -167,6 +167,45 @@ def _fr_print_ ( t ) :
     res        +=        "\nBranches: %s" % list( _b )
     return res
 
+# ===============================================================================
+## Print the frame report
+def report_prnt (  report , prefix = '' ) :
+    """Print a frame report
+    """
+    from ostap.core.core import binomEff
+    table  = []
+    lmax   = 5
+    n0     = -1 
+    for c in report :
+        if  n0 <= 0 : n0 = c.GetAll () 
+        name    = c.GetName ()
+        passed  = c.GetPass ()
+        all     = c.GetAll  ()
+        eff1    = binomEff  ( passed , all ) * 100 
+        eff2    = binomEff  ( passed ,  n0 ) * 100 
+        table.append (  ( name , passed , all , eff1 , eff2 )  )
+        lmax    = max ( len ( name ) , lmax , len ( 'Filter' ) )
+    header   = '|    #input  |  #passed   |     efficiency [%]   | Cumulated efficiency [%] | ' 
+    row      = '| %10d | %-10d | %8.3g +- %-8.3g | %8.3g +- %-8.3g     |'
+    front    = '| %%-%ds ' % max ( lmax + 2 , len ( 'Selection' ) + 2 )
+    prefix   = front % 'Filter'
+    the_line = '\n# ' + '+' + ((len(prefix)-1)*'-') + '+' + (12*'-') + '+' + (12*'-') + '+' + (22*'-') + '+' + (26*'-') + '+'
+    
+    if prefix : text = str ( prefix ) + the_line 
+    else      : text = the_line[1:]
+    
+    text    += '\n# ' + prefix  + header
+    text    += the_line 
+    for entry in table :
+        n, p, a , e1 , e2 = entry
+        line = row % ( a , p , e1.value() , e1.error() , e2.value() , e2.error() ) 
+        text += '\n# ' + ( front % n ) + line
+        
+    return text + the_line 
+        
+
+
+
 # ==============================================================================
 # decorate 
 # ==============================================================================
