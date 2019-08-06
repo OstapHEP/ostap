@@ -34,57 +34,8 @@
 // ============================================================================
 namespace 
 {
-  #if  __cplusplus == 201703L
-
-    // ==========================================================================
-    // Bukin & Co
-    // ==========================================================================
-    /** @var s_Bukin
-    *  useful constant for Bukin's function
-    *  \f$ \sqrt{ 2 \log 2 } \f$
-    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    *  @date 2010-04-19
-    */
-    constexpr double s_Bukin   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
-    // ==========================================================================
-    /** @var s_ln2
-    *  useful constant for Bukin's function
-    *  \f$ \log 2 \f$
-    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    *  @date 2010-04-19
-    */
-    constexpr double s_ln2 = std::log ( 2.0 ) ;
-  #else
-    // ==========================================================================
-    // Bukin & Co
-    // ==========================================================================
-    /** @var s_Bukin
-    *  useful constant for Bukin's function
-    *  \f$ \sqrt{ 2 \log 2 } \f$
-    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    *  @date 2010-04-19
-    */
-    const double s_Bukin   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
-    // ==========================================================================
-    /** @var s_ln2
-    *  useful constant for Bukin's function
-    *  \f$ \log 2 \f$
-    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    *  @date 2010-04-19
-    */
-    const double s_ln2 = std::log ( 2.0 ) ;
-    #endif
 
 
-  // ==========================================================================
-  // Novosibirsk & Co
-  // ==========================================================================
-  /** @var s_Novosibirsk
-  *  useful constant for evaliuation of ``Novosibirsk'' function
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double s_Novosibirsk = std::sqrt ( std::log ( 4.0 ) ) ;
   // ==========================================================================
   /** evaluate the helper function \f[ f = \frac{\sinh (x) }{x} \f]
   *  it allows to calculate Novosibirsk's function in efficient and regular way
