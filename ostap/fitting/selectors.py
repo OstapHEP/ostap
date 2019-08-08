@@ -1309,10 +1309,9 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
             scuts  = []
 
             for v in tvars :
-                
+                mn , mx = v.minmax
                 if v.name == v.formula :                    
-                    nvars.append ( v )
-                    mn , mx = v.minmax                    
+                    nvars.append ( v )                    
                 else :                    
                     newv  = Variable  ( v.var ,
                                         description = v.description ,
