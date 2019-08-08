@@ -49,6 +49,7 @@ To update the package to latest version use following command:
 
     git pull origin <latest tag>
 or to get the head version use:
+
     git pull origin master
 
 Docker
