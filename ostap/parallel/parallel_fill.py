@@ -47,10 +47,9 @@ class  FillTask(Task) :
         self.selection = selection 
         self.trivial   = trivial  
         self.use_frame = use_frame 
-        self.output    = ()  
+        self.__output  = ()  
 
-    def initializeLocal   ( self ) : pass
-    def initializeRemote  ( self ) : pass
+    def initialize_local   ( self ) : self.__output = () 
 
     ## the actual processing 
     def process ( self , item ) :
@@ -73,8 +72,8 @@ class  FillTask(Task) :
         
         if self.trivial and all : 
             import ostap.fitting.selectors
-            self.output = chain.make_dataset ( self.variables , self.selection , silent = True ) 
-            return
+            self.__output = chain.make_dataset ( self.variables , self.selection , silent = True ) 
+            return self.__output 
 
         from   ostap.fitting.selectors import SelectorWithVars
         
@@ -89,41 +88,42 @@ class  FillTask(Task) :
         num = chain.process ( selector , *args                 ,
                               shortcut  = all and self.trivial ,
                               use_frame = self.use_frame       )
-        self.output = selector.data, selector.stat  
         
-        if  num < 0 :
-            logger.warning ("Processing status %s"  % num )
+        self.__output = selector.data, selector.stat  
+        
+        if  num < 0 : logger.warning ("Processing status %s"  % num )
         
         ##del selector.data
         ##del      selector        
-        logger.debug ( 'Processed %s and filled %d entries ' % ( item , len( self.output ) ) )
+        logger.debug ( 'Processed %s and filled %d entries ' % ( item , len( self.__output ) ) )
 
-        del item
-
-    def finalize ( self ) : pass 
+        return self.__output 
 
     ## merge results/datasets 
-    def _mergeResults(self, result) :
+    def merge_results ( self, result ) :
         
         if result :
             ds , stat = result
-            if not self.output or not self.output[0] :
-                self.output = ds , stat  
+            if not self.__output or not self.__output[0] :
+                self.__output = ds , stat  
             else :
-                ds_ , stat_ = self.output
+                ds_ , stat_ = self.__output
                 ds_.append ( ds )
                 stat_     = list(stat_)
                 stat_[0] += stat[0] ## total 
                 stat_[1] += stat[1] ## procesed 
                 stat_[2] += stat[2] ## skipped                
-                self.output = ds_ , tuple(stat_)
+                self.__output = ds_ , tuple(stat_)
                 ds.clear () 
             del result            
-            logger.debug ( 'Merging: %d entries ' % len( self.output[0] ) )
+            logger.debug ( 'Merging: %d entries ' % len( self.__output[0] ) )
         else :
             logger.error ( "No valid results for merging" )
-
             
+    ## get the results 
+    def results ( self ) :
+        return self.__output
+    
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
 #  @code
@@ -170,7 +170,7 @@ def pprocess ( chain               ,
     wmgr.process( task , trees )
     del trees
     
-    dataset, stat = task.output 
+    dataset, stat = task.results()  
 
     selector.data = dataset
     selector.stat = stat 
@@ -210,5 +210,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+#                                                                       The END 
 # =============================================================================

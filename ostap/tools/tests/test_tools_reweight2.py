@@ -48,15 +48,15 @@ if not os.path.exists( testdata ) :
     random.seed ( seed ) 
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
-    # 1) 2D hstograms
+    # 1) 2D histograms
     ix,iy  = 20 , 15
     hdata  = h2_axes ( [ 20.0/ix*i for i in range(ix+1)  ] ,
                        [ 15.0/iy*i for i in range(iy+1)  ] )
-    # 2) non-equal binning 1D histogramm for x-component    
+    # 2) non-equal binning 1D histograms for x-component    
     hxdata = h1_axis ( [    i     for i in  range (5 ) ] +
                        [  5+i*0.2 for i in  range (50) ] +
                        [ 15+i     for i in  range (6 ) ] )
-    # 2) equal binning 1D histogramm for y-component    
+    # 2) equal binning 1D histograms for y-component    
     hydata = h1_axis ( [ i*0.5    for i in  range (31) ]   )
 
 
@@ -167,11 +167,11 @@ if not os.path.exists( testdata ) :
 dbroot = ROOT.TFile.open ( testdata , 'r' )
 logger.info ( 'Test data is fetched from DBASE "%s"' % testdata )   
 dbroot.ls()
-hdata    = dbroot[ tag_data    ]
-hxdata   = dbroot[ tag_datax   ]
-hydata   = dbroot[ tag_datay   ]
-mctree   = dbroot[ tag_mc      ]
-datatree = dbroot[ 'DATA_tree' ]
+hdata    = dbroot [ tag_data    ]
+hxdata   = dbroot [ tag_datax   ]
+hydata   = dbroot [ tag_datay   ]
+mctree   = dbroot [ tag_mc      ]
+datatree = dbroot [ 'DATA_tree' ]
 datastat = datatree.statCov('x','y')
 #
 ## prebook random MC histograms

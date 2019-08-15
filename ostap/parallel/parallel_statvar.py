@@ -40,22 +40,17 @@ class StatVarTask(Task) :
         """Constructor        
         >>> task  = StatVarTask ( 'mass' , 'pt>0') 
         """
-        self.what  = what 
-        self.cuts  = str(cuts) 
+        self.what     = what 
+        self.cuts     = str(cuts) 
+        self.__output = None
         
     ## local initialization (executed once in parent process)
-    def initializeLocal   ( self ) :
+    def initialize_local   ( self ) :
         """Local initialization (executed once in parent process)
         """
         from ostap.stats.counters import WSE
-        self.output = None 
-        
-    def _resetOutput(self):
-        self.output = None 
- 
-    ## remote initialization (executed for each sub-processs)
-    def initializeRemote  ( self ) : pass 
-    
+        self.__output = None
+            
     ## the actual processing
     #   ``params'' is assumed to be a tuple/list :
     #  - the file name
@@ -87,27 +82,27 @@ class StatVarTask(Task) :
         last    = n_large
         
         from ostap.trees.trees  import _stat_vars_
-        self.output = _stat_vars_ ( chain , self.what , self.cuts , first , last )
-        
-    ## finalization (executed at the end at parent process)
-    def finalize ( self ) : pass 
+        self.__output = _stat_vars_ ( chain , self.what , self.cuts , first , last )
 
+        return self.__output 
+        
     ## merge results 
-    def _mergeResults ( self , result ) :
+    def merge_results ( self , result ) :
         
         from ostap.stats.counters import WSE
 
-        if not self.output : self.output = result
+        if not self.__output : self.__output = result
         else               :
-            assert type( self.output ) == type ( result ) , 'Invalid types for merging!'
-            if isinstance ( self.output , dict ) : 
+            assert type( self.__output ) == type ( result ) , 'Invalid types for merging!'
+            if isinstance ( self.__output , dict ) : 
                 for key in result : 
-                    if self.output.has_key ( key ) : self.output[key] += result[key]
-                    else                           : self.output[key]  = result[key] 
+                    if self.output.has_key ( key ) : self.__output[key] += result[key]
+                    else                           : self.__output[key]  = result[key] 
             else :
-                self.output += result
-                    
+                self.__output += result
 
+    ## get the results 
+    def results ( self ) : return self.__output 
 
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
@@ -149,11 +144,12 @@ def pStatVar ( chain        , what , cuts = ''    ,
     del trees
     del ch    
 
-    return task.output 
+    results = task.results()
+    
+    return results 
 
 ROOT.TChain.pstatVar = pStatVar 
 ROOT.TTree .pstatVar = pStatVar
-
 
 # =============================================================================
 _decorated_classes_ = (
@@ -176,5 +172,5 @@ if '__main__' == __name__ :
         logger.error ( "Invalid setting of ``n_large''(%d) parameter (>%d)" % ( n_large , ROOT.TVirtualTreePlayer.kMaxEntries ) )
         
 # =============================================================================
-# The END 
+#                                                                       The END 
 # =============================================================================

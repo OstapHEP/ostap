@@ -35,11 +35,11 @@ class AddChopping(Task) :
     """Add TMVA/Chopping response to looong TChain 
     """
     def __init__          ( self , *args , **kwargs ) :
-        self.  args =   args
-        self.kwargs = kwargs
-        self.output = ()
+        self.  args   =   args
+        self.kwargs   = kwargs
+        self.__output = ()
         
-    def initializeLocal   ( self ) : self.output = () 
+    def initialize_local  ( self ) : self.__output = () 
     def process           ( self , trees ) :
 
         import ostap.trees.trees
@@ -54,26 +54,30 @@ class AddChopping(Task) :
             for f in tree.files : files.add ( f )
             
         ## list of processed  files 
-        self.output = list ( files )
+        self.__output = list ( files )
+
+        return self.__output 
 
     ## merge results/datasets 
-    def _mergeResults( self , result) :
-        if not  self.output : self.output = result
+    def merge_results ( self , result ) :
+        if not  self.__output : self.__output = result
         else :
             s = set()
-            for r in self.output : s.add ( r )
-            for r in      result : s.add ( r )
+            for r in self.__output : s.add ( r )
+            for r in      result   : s.add ( r )
             s = list ( s )
             s.sort()
-            self.output = tuple( s )
-
+            self.__output = tuple( s )
+            
+    ## get the results 
+    def results  ( self ) : return self.__output 
 # ===================================================================================
 ## @class ChopperTraining
 #  parallel procession for TMVA chopping
 #  @see ostap/tools/chopping.py
 class ChopperTraining(Task) :
-    def __init__          ( self ) : self.output = ()
-    def initializeLocal   ( self ) : self.output = () 
+    def __init__          ( self ) : self.__output = ()
+    def initialize_local  ( self ) : self.__output = () 
     def process           ( self , params ) :
         
         import ROOT, ostap.tools.tmva        
@@ -84,7 +88,7 @@ class ChopperTraining(Task) :
         with batch ( in_batch ) : 
             trainer  = chopper.create_trainer ( category , False )
             trainer.train ()
-        self.output = (
+        self.__output = (
             [ ( category , trainer.weights_files ) ] ,
             [ ( category , trainer.  class_files ) ] ,
             [ ( category , trainer. output_file  ) ] ,
@@ -92,24 +96,28 @@ class ChopperTraining(Task) :
             [ ( category , trainer.     dirname  ) ] ,
             [ ( category , trainer.    log_file  ) ] ,
             )
-        
+
+        return self.__output
+    
     ## merge results/datasets 
-    def _mergeResults( self , result) :
-        if not  self.output : self.output =  result
+    def merge_results ( self , result) :
+        if not  self.__output : self.__output =  result
         else :
-            weights  = list ( self.output[0] ) + list ( result[0] ) 
-            classes  = list ( self.output[1] ) + list ( result[1] ) 
-            outputs  = list ( self.output[2] ) + list ( result[2] ) 
-            tarfiles = list ( self.output[3] ) + list ( result[3] ) 
-            dirnames = list ( self.output[4] ) + list ( result[4] ) 
-            logfiles = list ( self.output[5] ) + list ( result[5] ) 
+            weights  = list ( self.__output[0] ) + list ( result[0] ) 
+            classes  = list ( self.__output[1] ) + list ( result[1] ) 
+            outputs  = list ( self.__output[2] ) + list ( result[2] ) 
+            tarfiles = list ( self.__output[3] ) + list ( result[3] ) 
+            dirnames = list ( self.__output[4] ) + list ( result[4] ) 
+            logfiles = list ( self.__output[5] ) + list ( result[5] ) 
             weights  . sort ()
             classes  . sort ()
             outputs  . sort ()
             tarfiles . sort ()
             logfiles . sort ()
-            self.output = weights , classes , outputs , tarfiles, dirnames , logfiles  
+            self.__output = weights , classes , outputs , tarfiles, dirnames , logfiles  
 
+    ## get the results 
+    def results  ( self ) : return self.__output 
 
 # =============================================================================
 ## Helper function to add TMVA/chopping response into loong TChain
@@ -206,12 +214,12 @@ def chopping_training ( chopper ) :
     sys.stdout.flush()
     sys.stderr.flush()
     
-    wmgr.process ( task, params )
+    wmgr.process ( task , params )
     
     sys.stdout.flush()
     sys.stderr.flush()
     
-    return task.output 
+    return task.results() 
     
 # =============================================================================
 if '__main__' == __name__ :

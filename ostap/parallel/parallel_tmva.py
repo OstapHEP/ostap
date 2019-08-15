@@ -35,11 +35,11 @@ class AddTMVA(Task) :
     """Add TMVA response to looong TChain 
     """
     def __init__          ( self , *args , **kwargs ) :
-        self.  args =   args
-        self.kwargs = kwargs
-        self.output = ()
+        self.  args   =   args
+        self.kwargs   = kwargs
+        self.__output = ()
         
-    def initializeLocal   ( self ) : self.output = () 
+    def initialize_local  ( self )         : self.__output = () 
     def process           ( self , trees ) :
         
         import ostap.trees.trees
@@ -54,19 +54,24 @@ class AddTMVA(Task) :
             for f in tree.files : files.add ( f )
             
         ## list of processed  files 
-        self.output = list ( files )
+        self.__output = list ( files )
+        
+        return self.__output 
         
     ## merge results/datasets 
-    def _mergeResults( self , result) :
-        if not  self.output : self.output = result
+    def merge_results ( self , result) :
+        if not  self.__output : self.__output = result
         else :
             s = set()
-            for r in self.output : s.add ( r )
-            for r in      result : s.add ( r )
+            for r in self.__output : s.add ( r )
+            for r in      result   : s.add ( r )
             s = list ( s )
             s.sort()
-            self.output = tuple( s ) 
+            self.__output = tuple( s ) 
 
+    ## get the results 
+    def  results ( self ) :  return self.__output
+    
 # =============================================================================
 ## Helper function to add TMVA response to loooong TChain 
 #  @code

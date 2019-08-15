@@ -68,6 +68,8 @@ __all__     = (
     'cmd_exists'         , ## check the existence of the certain command/executable
     ##
     'which'              , ## which command (from shutil)
+    ##
+    'gen_password'       , ## generate password/secret 
    )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
@@ -719,6 +721,29 @@ def vrange ( x_min , x_max , n = 100 ) :
         f2 = i * fn
         f1 = 1 - f2
         yield  x_min * f1 + f2 * x_max 
+
+
+# =============================================================================
+## Generate the random string, that can be used as password or secret word
+#  @code
+#  password = gen_password () 
+#  @endcode 
+def gen_password ( len = 12 ) :
+    """Generate the random string, that can be used as password or secret word
+    >>> password = gen_password () 
+    """
+    import random , string
+    symbols = string.letters + string.digits
+    ## save random state 
+    state = random.getstate ()
+    ## reset the random seed
+    random.seed ()
+    ## generate the password 
+    result = ''.join ( random.choice ( symbols ) for i in range ( len ) )
+    ## restore the random state 
+    random.setstate ( state )
+    ## 
+    return result
 
 # =============================================================================
 if '__main__' == __name__ :

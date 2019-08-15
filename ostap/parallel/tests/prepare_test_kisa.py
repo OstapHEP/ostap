@@ -88,10 +88,10 @@ def prepare_data ( tmpdir , nfiles =  100 ,  nentries = 100 , ppservers = () , s
     
     files = [ CleanUp.tempfile ( prefix = 'test_kisa_' , suffix = '.root' , dir = tmpdir ) for i in range(nfiles) ]
     
-    wmgr.process (  task , [ (f,nentries) for f in files  ] )
+    wmgr.process (  task , [  ( f , nentries ) for f in files  ] )
     
     the_files = set() 
-    for f in task.output :
+    for f in task.results () :
         if os.path.exists ( f ) :
             the_files.add ( f )
     

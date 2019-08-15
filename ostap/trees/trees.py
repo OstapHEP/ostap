@@ -1503,12 +1503,21 @@ class Chain(CleanUp) :
         return { 'name'     : self.__name     ,
                  'files'    : self.__files    ,
                  'first'    : self.__first    ,            
-                 'nevents'  : self.__nevents  }
+                 'nevents'  : self.__nevents  ,
+                 'host'     : self.__host     }
+    
     def __setstate__  ( self , state ) :        
         self.__name    = state [ 'name'    ]
         self.__files   = state [ 'files'   ]
         self.__first   = state [ 'first'   ]
         self.__nevents = state [ 'nevents' ]
+        original_host  = state [ 'host'    ]
+        
+        import socket 
+        self.__host    = socket.getfqdn ().lower()
+        
+        ## more   checks here are needed 
+        
         ## reconstruct the chain 
         self.__chain   = ROOT.TChain ( self.__name  )
         for f in self.__files  : self.__chain.Add ( f )
@@ -1525,6 +1534,9 @@ class Chain(CleanUp) :
         self.__first   = int ( first )  
         self.__nevents = nevents if 0 <= nevents < ROOT.TChain.kMaxEntries else -1 
         self.__chain   = None
+
+        import socket 
+        self.__host    = socket.getfqdn ().lower()
         
         if files and isinstance ( files , str ) : files = files,
 
@@ -1584,7 +1596,7 @@ class Chain(CleanUp) :
         ## if 0 < self.__nevents :
         ##    ll = len ( self )  
         ##    self.__nevents = min ( self.__nevents , ll - self.__first )
-
+            
     ## split the chain for several chains  with at most chunk_size entries
     def slow_split ( self , chunk_size = 200000 ) :
         """Split the tree for several trees with chunk_size entries
@@ -1714,9 +1726,9 @@ class Chain(CleanUp) :
         from ostap.frames.frames import DataFrame
         from ostap.core.core     import strings 
         fnames = strings  ( *self.files )
-        vnames = strings  ( *vars  )
-        return DataFrame ( self.name , fnames , vnames ) 
-        
+        vnames = strings  ( *vars       )
+        return DataFrame  ( self.name , fnames , vnames ) 
+    
     def __str__ ( self ) :
         r = "Chain('%s',%s" % ( self.name , self.__files )
         if 0 != self.first or 0 <= self.__nevents : r += ",%s,%s" % ( self.first , self.__nevents )            

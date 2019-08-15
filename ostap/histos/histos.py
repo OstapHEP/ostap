@@ -6528,9 +6528,17 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
 
 # =============================================================================
 ## the actual function for text dump of the histogram
+#  @code 
+#  histo = ...
+#  print dumpHisto  ( histo )
+#  print histo.dump ()
+#  print histo.dump ( 20 , 20 )
+#  print histo.dump ( 20 , 20 , True )
+#  @endcode
+#  @see Ostap::Utils::Histo::.histoDump 
 def dumpHisto ( histo , *args ) :
     """Dump the histogram/profile in text format (a'la HBOOK)
-    >>> histo
+    >>> histo = ...
     >>> print dumpHisto ( histo )
     
     >>> print histo.dump ()
@@ -6538,9 +6546,19 @@ def dumpHisto ( histo , *args ) :
     >>> print histo.dump ( 20 , 20 , True )
     
     Uses:
+    - see Ostap.Utils.Histos.histoDump 
     
     """
+    if not args :
+        from ostap.utils.basic import terminal_size 
+        h , w = terminal_size()
+        if 0 < h and 0 < w :
+            w = max ( 20 ,       w - 25     ) 
+            h = max ( 20 , int ( h * 0.55 ) )
+            return Ostap.Utils.Histos.histoDump ( histo , w , h )
+                        
     return Ostap.Utils.Histos.histoDump ( histo , *args )
+
 
 dumpHisto .__doc__ = '\n'  + Ostap.Utils.Histos.histoDump . __doc__
 for t in  ( ROOT.TH1D             ,
