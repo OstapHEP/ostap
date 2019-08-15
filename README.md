@@ -45,6 +45,12 @@ After setting the enviroments clone the latest released version and build Ostap 
     make install
     source <INSTALL_DIRECTORY>/thisostap.sh 
 For the latest tag check the page https://github.com/OstapHEP/ostap/releases
+To update the package to latest version use following command:
+
+    git pull origin <latest tag>
+or to get the head version use:
+
+    git pull origin master
 
 Docker
 -----

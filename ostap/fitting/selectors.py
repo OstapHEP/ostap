@@ -1309,10 +1309,9 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
             scuts  = []
 
             for v in tvars :
-                
+                mn , mx = v.minmax
                 if v.name == v.formula :                    
-                    nvars.append ( v )
-                    mn , mx = v.minmax                    
+                    nvars.append ( v )                    
                 else :                    
                     newv  = Variable  ( v.var ,
                                         description = v.description ,
@@ -1365,6 +1364,7 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     
                 if not silent : logger.info ( 'Write %s' % tf.filename  ) 
                 import ostap.io.root_file 
+                assert frame.Count().GetValue()>0 , 'Selection result is empty'
                 with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 
                     tree         = tt.tree
                     new_selector = SelectorWithVars ( nvars + vars_ ,
