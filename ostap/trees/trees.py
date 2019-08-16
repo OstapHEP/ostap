@@ -36,7 +36,8 @@ import ostap.trees.cuts
 # =============================================================================
 _large = ROOT.TVirtualTreePlayer.kMaxEntries
 # =============================================================================
-from ostap.core.core import valid_pointer
+from ostap.core.core      import valid_pointer
+from ostap.utils.scp_copy import scp_copy 
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -1702,7 +1703,6 @@ def file_info ( fname ) :
     return 'Invalid'
 # =============================================================================
 from ostap.utils.cleanup  import CleanUp
-from ostap.utils.scp_copy import scp_copy 
 # =============================================================================
 ## @class Chain
 #  simple class to keep pickable definitinon of tree/chain
@@ -1749,6 +1749,7 @@ class Chain(CleanUp) :
                     ## hosts are different but the files are the same (shared file system?)
                     files_.append ( fname )
                 else :
+                    # =========================================================
                     ## the file need to be copied locally
                     full_name  = '%s:%s' % ( origin , fname ) 
                     copied , t = scp_copy   ( full_name )

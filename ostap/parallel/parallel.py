@@ -35,6 +35,7 @@ workers = 'PATHOS' , 'GAUDIMP'
 worker  = '' 
 
 if 'OSTAP_PARALLEL' in os.environ :
+    
     worker  = os.environ['OSTAP_PARALLEL'].upper()
     if not  worker in workers : worker = ''
 

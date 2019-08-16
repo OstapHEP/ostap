@@ -42,11 +42,15 @@
 #  [Fit Draw]
 #  Data_options = ROOT.RooFit.MarkerStyle ( 20   ) ,
 #                 ROOT.RooFit.DrawOption  ( "zp" ) 
-#  Signal_style = Style ( linecolor = ROOT.kRed ,
+#  signal_style = Style ( linecolor = ROOT.kRed ,
 #                         linewidth = 2         ,
 #                         fillcolor = ROOT.kRed ,
 #                         fillstyle = 1001      )
-#  ''
+#  default_background_style = Line ( linecolor = ROOT.kBlue      , linestyle =  7 ) ,
+#                             Line ( linecolor = ROOT.kBlue -  9 , linestyle = 11 ) ,
+#                             Line ( linecolor = ROOT.kBlue +  3 , linestyle = 12 ) ,
+#                             Line ( linecolor = ROOT.kBlue -  2 , linestyle = 13 ) ,
+#                             Line ( linecolor = ROOT.kBlue - 10 , linestyle = 14 ) ,
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
@@ -694,7 +698,7 @@ default_background2D_style = default_background_style
 
 
 # =============================================================================
-## get the optios from configurtaion parser 
+## get the options/styles from configurtaion parser 
 # =============================================================================
 def  get_style ( config , style , default ) :
     

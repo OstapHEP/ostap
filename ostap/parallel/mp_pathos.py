@@ -130,9 +130,9 @@ class WorkManager ( object ) :
                 assert os.path.exists ( script ) and os.path.isfile ( script ) ,\
                        'WorkManager: no script %s is found' % script
                 
-            if not secret :
-                from ostap.utils.utils import gen_password 
-                secret = gen_password ( 16 )
+            ##if not secret :
+            ##    from ostap.utils.utils import gen_password 
+            ##    secret = gen_password ( 16 )
                 
             self.__ppservers = [
                 ppServer ( remote                    ,
@@ -148,14 +148,14 @@ class WorkManager ( object ) :
 
             ## some trick to setup the password.
             ## unfortnuately  ParallelPool interface does not allow it :-( 
-            import pathos.parallel as PP
-            _ds = PP.pp.Server.default_secret 
-            PP.pp.Server.default_secret = secret 
+            ## import pathos.parallel as PP
+            ## _ds = PP.pp.Server.default_secret 
+            ## PP.pp.Server.default_secret = secret 
             
             from pathos.pools import ParallelPool 
             self.__pool      = ParallelPool ( ncpus = self.ncpus , servers = self.locals  )
 
-            PP.pp.Server.default_secret = _ds 
+            ## PP.pp.Server.default_secret = _ds 
                                     
         else :
             
@@ -497,7 +497,7 @@ class ppServer(object) :
         self.__environment = None
         if  environment :
             import ostap.utils.cleanup as CU
-            tmpfile = CU.CleanUp.tempfile ( prefix = 'env_' , suffix = '.sh' )
+            tmpfile = CU.CleanUp.tempfile ( prefix = 'env-' , suffix = '.sh' )
             with open ( tmpfile , 'w' ) as tf :
                 tf.write( environment )
                 tf.write('\n')

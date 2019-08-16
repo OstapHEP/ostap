@@ -733,7 +733,7 @@ def gen_password ( len = 12 ) :
     >>> password = gen_password () 
     """
     import random , string
-    symbols = string.letters + string.digits
+    symbols = string.ascii_letters + string.digits
     ## save random state 
     state = random.getstate ()
     ## reset the random seed

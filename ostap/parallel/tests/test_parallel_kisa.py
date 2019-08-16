@@ -147,12 +147,16 @@ def test_kisa2 () :
        
     from ostap.fitting.selectors import SelectorWithVars, Variable  
     variables = [
-        Variable   ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) , 
         Variable   ( 'mass'  , 'mass(mu+mu-)' ,  3.09 , 3.11 ) , 
         Variable   ( 'c2dtf' , 'chi2(dtf)'    , -1    , 10   ) , 
         Variable   ( 'mass2' , 'mass(mu+mu-)' , 1 , 5 , MASS()  ) , 
         Variable   ( 'mass3' , 'mass(mu+mu-)' , 1 , 5 , 'mass'  ) 
         ]
+    
+    from sys import version_info  as python_version
+    if  python_version.major < 3 :
+        variables.append ( Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) )
+
     
     ppservers = () ## 'lxplus051' , )
     ## ppservers = 'auto'

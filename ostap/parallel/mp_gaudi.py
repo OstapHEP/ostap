@@ -17,7 +17,7 @@ import multiprocessing
 
 from ostap.utils.progress_bar import ProgressBar
 from ostap.logger.logger      import getLogger
-from ostap.parallel.task      import Task, Statistics 
+from ostap.parallel.task      import Task, Statistics ,  StatMerger 
 logger  = getLogger('ostap.parallel.mp_gaudi')
 
 def _prefunction( f, task, item) :
@@ -25,21 +25,11 @@ def _prefunction( f, task, item) :
 def _ppfunction( args ) :
     #--- Unpack arguments
     task, item = args
-    stat = Statistics()
-    #--- Initialize the remote side (at least once)
-    if not task.__class__._initialized :
-        for k,v in task.environ.items() :
-            if k not in excluded_varnames : os.environ[k] = v
+    with Statistics() as stat : 
         task.initialize_remote()
-        task.__class__._initialized = True
-    #--- Reset the task output
-    task.reset_output()
-    #--- Call processing
-    task.process(item)
-    #--- Collect statistics
-    stat.stop()
-    return (copy.deepcopy(task.output), stat)
-
+        result = task.process(item)
+        stat.stop()
+        return result , stat
 
 class WorkManager(object) :
     """ Class to in charge of managing the tasks and distributing them to
@@ -52,8 +42,7 @@ class WorkManager(object) :
         else :                     self.ncpus = ncpus
         
         self.pool  = multiprocessing.Pool(self.ncpus)
-        self.mode  = 'multicore'
-        self.stats = {}
+        self.stats = StatMerger()
         
         self.silent = True if silent  else False 
 
@@ -66,35 +55,25 @@ class WorkManager(object) :
         # --- Call the Local initialialization
         task.initialize_local ()
         # --- Schedule all the jobs ....
-        if self.mode == 'multicore' :
-            start = time.time()
-            jobs  = self.pool.map_async(_ppfunction, zip([task for i in items] , items ))
             
-            with ProgressBar ( max_value = len ( items ) , description = "# Job execution:" ,  silent = self.silent ) as bar :              
-                for result, stat in  jobs.get(timeout) :
-                    task.merge_results    ( result )
-                    self.merge_statistics ( stat   )
-                    bar += 1
+        start = time.time()
+        jobs  = self.pool.map_async(_ppfunction, zip([task for i in items] , items ))
+            
+        with ProgressBar ( max_value = len ( items ) , description = "# Job execution:" ,  silent = self.silent ) as bar :              
+            for result, stat in  jobs.get(timeout) :
+                task.merge_results    ( result )
+                self.stats += stat   
+                bar += 1
                     
-            end = time.time()
-            if not self.silent : 
-                self.print_statistics()
-                logger.info ( 'Time elapsed since server creation %f' % ( end - start ) ) 
+        end = time.time()
+        if not self.silent : 
+            self.print_statistics()
+            logger.info ( 'Time elapsed since server creation %f' % ( end - start ) ) 
         # --- Call the Local Finalize
         task.finalize()
+        return task.results()
+    
     def print_statistics(self):
-        njobs = 0
-        for stat in self.stats.values():
-            njobs += stat.njob
-        logger.info ( 'Job execution statistics:' ) 
-        logger.info ( 'job count | % of all jobs | job time sum | time per job | job server' ) 
-        for name, stat  in self.stats.items():
-            logger.info ( '   %6d |        %6.2f |   %10.3f |   %10.3f | %s' % (stat.njob, 100.*stat.njob/njobs, stat.time, stat.time/stat.njob, name) ) 
-
-    def merge_statistics(self, stat):
-        if stat.name not in self.stats : self.stats[stat.name] = Statistics()
-        s = self.stats[stat.name]
-        s.time += stat.time
-        s.njob += 1
+        self.stats.print_stats ()
 
 # == EOF ====================================================================================
