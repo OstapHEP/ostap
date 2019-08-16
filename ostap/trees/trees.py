@@ -17,7 +17,7 @@ __all__     = (
     'Tree'  , ## helper class , needed for multiprocessing
   ) 
 # =============================================================================
-import ROOT, os 
+import ROOT, os
 from   ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
 from   ostap.core.ostap_types import integer_types , long_type, string_types 
 from   ostap.logger.utils     import multicolumn
@@ -34,7 +34,7 @@ logger.debug ( 'Some useful decorations for Tree/Chain objects')
 # =============================================================================
 import ostap.trees.cuts
 # =============================================================================
-_large = 2**64
+_large = ROOT.TVirtualTreePlayer.kMaxEntries
 # =============================================================================
 from ostap.core.core import valid_pointer
 # =============================================================================
@@ -1489,336 +1489,7 @@ def add_reweighting ( tree , weighter , name = 'weight' ) :
     return data.add_new_branch (  name , wfun ) 
 
 ROOT.TTree.add_reweighting = add_reweighting
-
-# =============================================================================
-from ostap.utils.cleanup import CleanUp
-# =============================================================================
-## @class Chain
-#  simple class to keep pickable definitinon of tree/chain
-#  it is needed for multiprcessing 
-class Chain(CleanUp) :
-    """Simple class to keep definition of tree/chain
-    """
-    def __getstate__  ( self ) :
-        return { 'name'     : self.__name     ,
-                 'files'    : self.__files    ,
-                 'first'    : self.__first    ,            
-                 'nevents'  : self.__nevents  ,
-                 'host'     : self.__host     }
     
-    def __setstate__  ( self , state ) :        
-        self.__name    = state [ 'name'    ]
-        self.__files   = state [ 'files'   ]
-        self.__first   = state [ 'first'   ]
-        self.__nevents = state [ 'nevents' ]
-        original_host  = state [ 'host'    ]
-        
-        import socket 
-        self.__host    = socket.getfqdn ().lower()
-        
-        ## more   checks here are needed 
-        
-        ## reconstruct the chain 
-        self.__chain   = ROOT.TChain ( self.__name  )
-        for f in self.__files  : self.__chain.Add ( f )
-                    
-    def __init__ ( self , tree = None ,  name = None , files = [] , first = 0 , nevents = -1  ) :
-
-        assert ( name and files                  ) or \
-               ( name and files and tree is True ) or \
-               ( isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree  ) ) ,  \
-               "Invalid tree/name/files combination: %s/%s%s" % ( tree , name , files    )
-        assert isinstance ( first , int ) and  0 <= first     , \
-               "Invalid ``first'' %s/%s"                      % ( first , type ( first ) ) 
-
-        self.__first   = int ( first )  
-        self.__nevents = nevents if 0 <= nevents < ROOT.TChain.kMaxEntries else -1 
-        self.__chain   = None
-
-        import socket 
-        self.__host    = socket.getfqdn ().lower()
-        
-        if files and isinstance ( files , str ) : files = files,
-
-        if name and files :
-
-            self.__name  = name
-            self.__files = files
-
-            if not tree is True : 
-                chain = self.__create_chain() 
-                assert valid_pointer ( chain ), 'Invalid TChain!'
-                assert len ( files ) == len( chain.files() ) , 'Invalid length of files'
-                self.__chain = chain 
-            
-        elif valid_pointer ( tree ) :
-            
-            self.__name = tree.GetName()
-            
-            if   isinstance ( tree ,  ROOT.TChain ) :
-                
-                self.__files = tuple ( tree.files() ) 
-                self.__chain = tree
-                
-            elif isinstance ( tree ,  ROOT.TTree ) :
-                
-                topdir = tree.topdir
-                
-                if isinstance ( topdir , ROOT.TFile ) : self.__files = topdir.GetName() ,
-                else :
-                    
-                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree_' )
-                    from ostap.core.core import ROOTCWD
-                    with ROOTCWD() : 
-                        import ostap.io.root_file
-                        with ROOT.TFile ( fname , 'NEW') as rfile :
-                            rfile.cd()
-                            tname = tree.GetName() 
-                            rfile[ tname ] = tree 
-                            rfile.ls()
-                    self.__files   =   fname ,
-                    self.tmpfiles += [ fname ]
-                    
-                chain = ROOT.TChain( tree.GetName() )
-                chain.Add ( self.__files[0] )
-                tmp = chain
-                assert len ( chain ) == len ( tree ) , 'Something wrong happens here :-( '
-                self.__chain = chain
-
-        ## ##  last adjustment
-        ## ll = len ( self )  
-        ## if  ll < self.__first :
-        ##     logger.warning ( 'Tree/Chain will be empty %s/%s' %   ( self.__first , ll ) )
-        ##     self.__first   = ll
-        ##     self.__nevents = 0
-                        
-        ## if number of events is specified: 
-        ## if 0 < self.__nevents :
-        ##    ll = len ( self )  
-        ##    self.__nevents = min ( self.__nevents , ll - self.__first )
-            
-    ## split the chain for several chains  with at most chunk_size entries
-    def slow_split ( self , chunk_size = 200000 ) :
-        """Split the tree for several trees with chunk_size entries
-        >>> tree = ....
-        >>> trees = tree.split ( chunk_size = 1000000 ) 
-        """
-
-        if chunk_size <= 0 : chunk_size = ROOT.TChain.kMaxEntrie
-        
-        trees = []
-
-        ievt = 0
-        nevt = 0
-        
-        for f in self.__files :
-            
-            if 0 <= self.__nevents and self.__nevents <= nevt : break  ## BREAK
-
-            ## get the length of the current tree 
-            tt = Tree ( name  = self.name , file = f )
-            ll = len  ( tt )
-            if ievt + ll < self.__first : continue                     ## CONTINUE 
-            
-            ##  
-            first   = self.__first - ievt if ievt <= self.__first else 0
-            nevents = -1 
-            if 0 <= self.__nevents and self.__nevents  < nevt + ll : 
-                nevents  = self.__nevents - nevt
-            t = Tree ( tt.chain , name = self.name  , file = f , first = first , nevents = nevents )
-            trees += list ( t.split  ( chunk_size ) ) 
-            
-            ievt += ll
-            nevt += nevents if 0 <= nevents else ll 
-
-        return tuple ( trees ) 
-
-    ## simple generator split lst into chunks 
-    def get_slices ( self , first , last , chunk_size ) :
-        """Split ``lst'' into  chunks
-        """
-        for i in range ( 0 , last - first , chunk_size ) :
-            ## yield lst [ i : min ( i + chunk_size , list_size ) ] 
-            yield slice ( first + i , first + min ( i + chunk_size , last -first  ) ) 
-                       
-    ## split the chain for several chains with at most chunk_size entries
-    def split ( self , chunk_size = -1 , max_files = 10 ) :
-        """Split the tree for several trees with chunk_size entries
-        >>> tree = ....
-        >>> trees = tree.split ( chunk_size = 1000000 ) 
-        """
-        if chunk_size <= 0 : chunk_size = ROOT.TChain.kMaxEntries
-        if max_files  <= 0 : max_files  = 1 
-        
-        if 0 != self.first or 0 < self.__nevents :
-            return self.slow_split ( chunk_size )
-        
-        ## first split on per-file basis
-        fs     = self.files
-        chains = [ Chain ( tree = True , name = self.name , files = fs[c] ) for c in self.get_slices ( 0 , len(fs) , max_files ) ]
-        ## chains = [ Chain ( self.chain[c] ) for c in self.get_slices ( 0 , len(fs) , max_files ) ]
-
-        if chunk_size < 0 : return tuple ( chains )
-        
-        result = []  
-        for ch in chains :
-
-            size = len ( ch ) 
-            if   size > chunk_size and 1 == ch.nFiles : 
-                tree    = Tree ( ch.chain , name = ch.name , file = ch.files[0] , first = ch.first , nevents = ch.nevents ) 
-                result += tree.split ( chunk_size )
-            elif size > chunk_size : result += ch.slow_split ( chunk_size )                     
-            else                   : result.append ( ch ) 
-
-        return  tuple ( result ) 
-
-
-    ##  number of entries in the Tree/Chain
-    def __len__ ( self ) :
-        if self.__chain is None : self.__chain = self.__create_chain () 
-        return len ( self.__chain )
-    
-    def __create_chain ( self ) :
-        """``chain'' : get the underlying tree/chain"""
-        c = ROOT.TChain ( self.__name )
-        for f in self.__files  : c.Add ( f )
-        return c
-
-    @property
-    def chain ( self ) :
-        """``chain'' : get the underlying tree/chain"""
-        if self.__chain is None : self.__chain = self.__create_chain () 
-        return self.__chain
-
-    @property
-    def name    ( self ) :
-        """``name''   : TTree/TChain name"""
-        return self.__name
-    @property
-    def files   ( self ) :
-        """``files''   : the files"""
-        return self.__files
-    @property
-    def nFiles   ( self ) :
-        """``nFiles''   : the numer of files"""
-        return len(self.__files)
-    @property
-    def first   ( self ) :
-        """``first'' : the first event to process"""
-        return self.__first
-    @property
-    def last    ( self ) :
-        """``last'' : the last event (not-inclusive)"""
-        ll = len ( self ) 
-        return self.__first + min ( ll , self.nevents )  
-    @property
-    def nevents ( self ) :
-        """``nevents'' : number of events to process"""
-        return self.__nevents
-
-    ## get DataFrame 
-    def  frame ( self , *vars ) :
-        """``frame'' : get ROOT.RDataFrame for the given chain/tree
-        >>> tree = ....
-        >>> f  =  tree.frame () ## get
-        >>> f1 =  tree.frame ('px', 'py' , 'pz') ## get frame with default branches
-        """
-        from ostap.frames.frames import DataFrame
-        from ostap.core.core     import strings 
-        fnames = strings  ( *self.files )
-        vnames = strings  ( *vars       )
-        return DataFrame  ( self.name , fnames , vnames ) 
-    
-    def __str__ ( self ) :
-        r = "Chain('%s',%s" % ( self.name , self.__files )
-        if 0 != self.first or 0 <= self.__nevents : r += ",%s,%s" % ( self.first , self.__nevents )            
-        return r + ")"
-    __repr__ = __str__
-    
-# =============================================================================
-## @class Tree
-#  simple class to keep 'persistent' definition of the tree
-#  it is needed for multiprocessing  
-class Tree(Chain) :
-    """Simple class to keep definition of tree/chain
-    """
-    def __getstate__  ( self )         : return Chain.__getstate__  ( self )   
-    def __setstate__  ( self , state ) :        Chain.__setstate__  ( self , state ) 
-
-    def __init__ ( self , tree = None ,  name = None , file = '' , first = 0 , nevents = -1 ) :
-
-        if name and file :
-            
-            assert isinstance ( file , str ), '"File should be single file name!"'
-            
-        elif valid_pointer  ( tree )  :
-            
-            if isinstance ( tree , ROOT.TChain ) :
-                assert 1 == len (  tree.files() ) , 'Tree is for ROOT.TTree only!'
-                
-        Chain.__init__ ( self , tree , name  , files = [ file ] , first = first , nevents = nevents )
-        
-        assert 1 == self.nFiles , 'Invalid number of files!'
-
-    ## split the tree for several trees with max=chunk_size entries
-    def split ( self , chunk_size = 200000  ) :
-        """Split the tree for several trees with max=chunk_size entries
-        >>> tree = ....
-        >>> trees = tree.split ( chunk_size = 1000000 ) 
-        """
-        
-        if 0 == self.nevents : return ()
-        
-        assert isinstance  ( chunk_size , int ) , "Illegal type of ``chunk_size'' %s" % chunk_size
-        
-        ## no splitting ?
-        if 0 >= chunk_size : return  self,
-        
-        ll   = len ( self )
-        last = min ( ll , self.first + self.nevents if 0 <= self.nevents else ROOT.TChain.kMaxEntries ) 
-
-        result = [] 
-        for s in self.get_slices ( self.first , last , chunk_size ) :
-            start , stop , stride = s.indices ( ll )
-            if start < stop : 
-                t = Tree ( tree = self.chain , name = self.name , file = self.file , first = start , nevents = stop - start ) 
-                result.append ( t ) 
-                
-        return tuple ( result ) 
-
-    ## get a slice for the tree 
-    def __getslice__ ( self , start , stop ) :
-        """ Get a slice for the given tree 
-        >>> tree  = ...
-        >>> tree1 = tree[:1000]  ## the first 1000 events 
-        """
-        s  = slice ( start , stop )
-        ll = len   ( self  )
-        
-        if self.first < ll : start , stop = 0 , 0
-
-        last = self.first + self.nevents if 0 < self.nevents else ll
-        last = min ( last , ll )
-        
-        start, stop , stride = s.indices ( last - self.first )
-        
-        start += self.first
-        stop  += self.first
-        
-        return Tree ( name = self.name , file = self.file , first = start , nevents = stop )
-        
-    @property
-    def file ( self ) :
-        """``file''   : the file name """
-        fs = self.files 
-        assert 1 == len  ( fs ) , 'Invalid number of files %s' % len ( fs ) 
-        return fs [0] 
-
-    def __str__ ( self ) :
-        r = "Tree('%s','%s'" % ( self.name , self.file )
-        if 0 != self.first or 0 <= self.nevents : r += ",%s,%s" % ( self.first , self.nevents )     
-        return r + ")"
-    __repr__ = __str__
 
 # =============================================================================
 ## Get the effective entries in data frame
@@ -1838,8 +1509,6 @@ ROOT.TTree.nEff = _rt_nEff_
 
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.TTree )
-
-
 
 
 
@@ -2017,6 +1686,488 @@ def _rt_reduce_  ( tree          ,
     return chain
 
 ROOT.TTree. reduce = _rt_reduce_
+
+# =============================================================================
+## files and utilisties for TTree/TChain "serialization"
+# =============================================================================
+## get some file info for the given path 
+def file_info ( fname ) :
+    """Get some file info for the given path
+    """
+    p , s , f = fname.partition ( '://' )
+    if p and s : return 'Protocol'
+    if os.path.exists ( fname ) and os.path.isfile ( fname ) and os.access ( fname , os.R_OK ) :
+        s = os.stat ( fname )
+        return s.st_mode , s.st_size , s.st_uid, s.st_gid, s.st_atime , s.st_mtime , s.st_ctime
+    return 'Invalid'
+# =============================================================================
+from ostap.utils.cleanup  import CleanUp
+from ostap.utils.scp_copy import scp_copy 
+# =============================================================================
+## @class Chain
+#  simple class to keep pickable definitinon of tree/chain
+#  it is needed for multiprcessing 
+class Chain(CleanUp) :
+    """Simple class to keep definition of tree/chain ``pickable''
+    """
+    def __getstate__  ( self ) :
+
+        def fullfn ( f ) :
+            if os.path.exists ( f ) and os.path.isfile ( f ) :
+                ff = os.path.abspath ( f )
+                if os.path.samefile ( ff , f ) : return ff
+            return f
+        
+        file_infos = tuple ( ( fullfn ( f ) , file_info ( f ) ) for f in self.__files ) 
+        
+        return { 'name'     : self.__name    ,
+                 'first'    : self.__first   ,            
+                 'nevents'  : self.__nevents ,
+                 'files'    : file_infos     ,
+                 'host'     : self.__host    }
+    
+    def __setstate__  ( self , state ) :
+        
+        self.__name    = state [ 'name'    ]
+        self.__first   = state [ 'first'   ]
+        self.__nevents = state [ 'nevents' ]
+        #
+        origin         = state [ 'host'    ]
+        file_infos     = state [ 'files'   ]
+        ##
+        import socket 
+        self.__host    = socket.getfqdn ().lower()
+        ##
+        same_host      = origin == self.__host
+        files_         = []
+
+        for fname , finfo in file_infos :
+            if   same_host : files_.append ( fname )
+            else :
+                fnew = file_info ( fname )
+                if fnew == finfo :
+                    ## hosts are different but the files are the same (shared file system?)
+                    files_.append ( fname )
+                else :
+                    ## the file need to be copied locally
+                    full_name  = '%s:%s' % ( origin , fname ) 
+                    copied , t = scp_copy   ( full_name )
+                    if copied :
+                        cinfo = file_info ( copied )
+                        c = '%s -> %s' % ( full_name , "%s:%s" % ( self.__host , copied ) )
+                        if cinfo[:4] == finfo [:4] :
+                            files_.append ( copied )
+                            size = cinfo[1]
+                            s =  cinfo [ 1 ] / float ( 1024 ) / 1025 ##  MB 
+                            v = s / t                  ## MB/s 
+                            logger.debug ( 'File copied %s :  %.3f[MB] %.2f[s] %.3f[MB/s]' % ( c , s , t , v ) )
+                        else :
+                            logger.error ( 'Something wrong with the copy %s : %s vs %s ' % ( c , cinfo[:4] , finfo[:4] ) )
+                    else : logger.error ("Cannot copy the file %s"  % full_name )
+                        
+        self.__files = tuple ( files_ )
+        
+        ## reconstruct the chain 
+        self.__chain   = ROOT.TChain ( self.__name  )
+        for f in self.__files  : self.__chain.Add ( f )
+
+    # ======================================================================================
+    ## create Chain object:
+    #  - either from the real TTree/TChain:
+    #  @code
+    #  chain = ...  ## ROOT.TChain
+    #  ch = Chain ( chain ) 
+    #  @endcode
+    #  - or from description:
+    #  @code
+    #  ch = Chain ( name = 'n', files = [ ... ] )
+    #  @endcode 
+    def __init__ ( self , tree = None , name = None , files = [] , first = 0 , nevents = -1  ) :
+        """ Create Chain object 
+        
+        - either from the real TTree/TChain:
+        
+        >>> chain = ...  ## ROOT.TChain
+        >>> ch = Chain ( chain )
+        
+        - or from description:
+        
+        >>> ch = Chain ( name = 'n', files = [ ... ] )
+        """
+        assert ( name and files                  ) or \
+               ( name and files and tree is True ) or \
+               ( isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree  ) ) ,  \
+               "Invalid tree/name/files combination: %s/%s%s" % ( tree , name , files    )
+        assert isinstance ( first , int ) and  0 <= first     , \
+               "Invalid ``first'' %s/%s"                      % ( first , type ( first ) ) 
+
+        self.__first   = int ( first )  
+        self.__nevents = nevents if 0 <= nevents < ROOT.TChain.kMaxEntries else -1 
+        self.__chain   = None
+
+        import socket 
+        self.__host    = socket.getfqdn ().lower()
+        
+        if files and isinstance ( files , str ) : files = files,
+
+        if name and files :
+
+            self.__name  = name
+            self.__files = files
+
+            if not tree is True : 
+                chain = self.__create_chain() 
+                assert valid_pointer ( chain ), 'Invalid TChain!'
+                assert len ( files ) == len ( chain.files() ) , 'Invalid length of files'
+                self.__chain = chain 
+            
+        elif valid_pointer ( tree ) :
+            
+            self.__name = tree.GetName()
+            
+            if   isinstance ( tree ,  ROOT.TChain ) :
+                
+                self.__files = tuple ( tree.files() ) 
+                self.__chain = tree
+                
+            elif isinstance ( tree ,  ROOT.TTree ) :
+                
+                topdir = tree.topdir
+                
+                if isinstance ( topdir , ROOT.TFile ) : self.__files = topdir.GetName() ,
+                else :
+                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree-' )
+                    from ostap.core.core import ROOTCWD
+                    with ROOTCWD() : 
+                        import ostap.io.root_file
+                        with ROOT.TFile ( fname , 'NEW') as rfile :
+                            rfile.cd()
+                            tname = tree.GetName() 
+                            rfile[ tname ] = tree 
+                            rfile.ls()
+                    self.__files   =   fname ,
+                    self.tmpfiles += [ fname ]
+                    
+                chain = ROOT.TChain( tree.GetName() )
+                chain.Add ( self.__files[0] )
+                tmp = chain
+                assert chain.GetEntries() == tree.GetEntries () , 'Something wrong happens here :-( '
+                self.__chain = chain
+
+        # =====================================================================
+        ## The final adjustment
+        self.__lens = () 
+        if 0 < self.__first or 0 < nevents < _large :
+            
+            _first = self.__first
+            _files = []
+            total  = 0 
+            for f in self.__files :
+                
+                t = ROOT.TChain ( self.name )
+                t.Add ( f )
+                clen = t.GetEntries() 
+
+                if _first < clen :
+                    
+                    _files.append (  ( f , clen ) )
+                    total += clen
+                    
+                else             :                    
+                    _first -= clen
+                    continue 
+
+                if 0 < nevents and _first + nevents < total :
+                    break 
+                
+            ## redefine quantities:
+            self.__files = tuple ( ( f [0] for f in _files ) )
+            self.__lens  = tuple ( ( f [1] for f in _files ) )
+            self.__first = _first
+            
+            if 0 < nevents and _first + nevents < total : pass
+            else                                        : nevents = -1 
+            
+            self.__nevents = nevents 
+
+    # =========================================================================
+    ## get/calculate the lengths of the individual trees 
+    def calc_lens ( self ) :
+        """Get/calculate the lengths of the individual trees
+        """
+        if self.__lens : return self.__lens
+
+        lens = []
+        for f in self.__files :
+            t = ROOT.TChain ( self.name )
+            t.Add ( f )
+            lens.append ( t.GetEntries () )
+            
+        self.__lens = tuple ( lens )
+        return self.__lens
+        
+    ## split the chain for several chains  with at most chunk_size entries
+    def slow_split ( self , chunk_size = 200000 ) :
+        """Split the tree for several trees with chunk_size entries
+        >>> tree = ....
+        >>> trees = tree.split ( chunk_size = 1000000 ) 
+        """
+
+        if chunk_size <= 0 : chunk_size = ROOT.TChain.kMaxEntrie
+        
+        trees = []
+
+        ievt = 0
+        nevt = 0
+        
+        for f in self.__files :
+            
+            if 0 <= self.__nevents and self.__nevents <= nevt : break  ## BREAK
+
+            ## get the length of the current tree 
+            tt = Tree ( name  = self.name , file = f )
+            ll = len  ( tt )
+            if ievt + ll < self.__first : continue                     ## CONTINUE 
+            
+            ##  
+            first   = self.__first - ievt if ievt <= self.__first else 0
+            nevents = -1 
+            if 0 <= self.__nevents and self.__nevents  < nevt + ll : 
+                nevents  = self.__nevents - nevt
+            t = Tree ( tt.chain , name = self.name  , file = f , first = first , nevents = nevents )
+            trees += list ( t.split  ( chunk_size ) ) 
+            
+            ievt += ll
+            nevt += nevents if 0 <= nevents else ll 
+
+        return tuple ( trees ) 
+
+    ## simple generator split lst into chunks 
+    def get_slices ( self , first , last , chunk_size ) :
+        """Split ``lst'' into  chunks
+        """
+        for i in range ( 0 , last - first , chunk_size ) :
+            ## yield lst [ i : min ( i + chunk_size , list_size ) ] 
+            yield slice ( first + i , first + min ( i + chunk_size , last -first  ) ) 
+                       
+    ## split the chain for several chains with at most chunk_size entries
+    def split ( self , chunk_size = -1 , max_files = 10 ) :
+        """Split the tree for several trees with chunk_size entries
+        >>> tree = ....
+        >>> trees = tree.split ( chunk_size = 1000000 ) 
+        """
+        if chunk_size <= 0 : chunk_size = ROOT.TChain.kMaxEntries
+        if max_files  <= 0 : max_files  = 1 
+        
+        if 0 != self.first or 0 < self.__nevents :
+            return self.slow_split ( chunk_size )
+        
+        ## first split on per-file basis
+        fs     = self.files
+        chains = [ Chain ( tree = True , name = self.name , files = fs[c] ) for c in self.get_slices ( 0 , len ( fs ) , max_files ) ]
+        ## chains = [ Chain ( self.chain[c] ) for c in self.get_slices ( 0 , len(fs) , max_files ) ]
+
+        if chunk_size < 0 : return tuple ( chains )
+        
+        result = []  
+        for ch in chains :
+
+            size = len ( ch ) 
+            if   size > chunk_size and 1 == ch.nFiles : 
+                tree    = Tree ( ch.chain , name = ch.name , file = ch.files[0] , first = ch.first , nevents = ch.nevents ) 
+                result += tree.split ( chunk_size )
+            elif size > chunk_size : result += ch.slow_split ( chunk_size )                     
+            else                   : result.append ( ch ) 
+
+        return  tuple ( result ) 
+
+    ##  number of entries in the Tree/Chain
+    def __len__ ( self ) :
+
+        if not self.__lens : self.calc_lens()
+            
+        if self.__lens  :
+            total  = sum ( self.__lens )
+            len1   = total - self.__first 
+            return len1 if self.__nevents < 0 else min ( len1 , self.__nevents )
+        
+        if self.__chain is None : self.__chain = self.__create_chain () 
+        return len ( self.__chain )
+
+
+
+    
+    def __create_chain ( self ) :
+        """``chain'' : get the underlying tree/chain"""
+        c = ROOT.TChain ( self.__name )
+        for f in self.__files  : c.Add ( f )
+        return c
+
+    @property
+    def chain ( self ) :
+        """``chain'' : get the underlying tree/chain"""
+        if self.__chain is None : self.__chain = self.__create_chain () 
+        return self.__chain
+
+    @property
+    def name    ( self ) :
+        """``name''   : TTree/TChain name"""
+        return self.__name
+    @property
+    def files   ( self ) :
+        """``files''   : the files"""
+        return self.__files
+    @property
+    def nFiles   ( self ) :
+        """``nFiles''   : the numer of files"""
+        return len(self.__files)
+    @property
+    def first   ( self ) :
+        """``first'' : the first event to process"""
+        return self.__first
+    @property
+    def last    ( self ) :
+        """``last'' : the last event (not-inclusive)"""
+        ll = len ( self ) 
+        return self.__first + min ( ll , self.nevents )  
+    @property
+    def nevents ( self ) :
+        """``nevents'' : number of events to process"""
+        return self.__nevents
+
+    # ============================================================================
+    ## get DataFrame
+    #  @code
+    #  tree = ....
+    #  f  =  tree.frame () ## get
+    #  f1 =  tree.frame ('px', 'py' , 'pz') ## get frame with default branches
+    #  f2 =  tree.frame ( tx = 'px/pz' , ty = 'py/pz') ## define new variables
+    #  @endcode 
+    def  frame ( self , *vars , **newvars ) :
+        """``frame'' : get ROOT.RDataFrame for the given chain/tree
+        >>> tree = ....
+        >>> f  = tree.frame () ## get
+        >>> f1 = tree.frame ('px', 'py' , 'pz') ## get frame with default branches
+        >>> f2 = tree.frame ( tx = 'px/pz' , ty = 'py/pz') ## define new variables 
+        """
+        from ostap.frames.frames import DataFrame
+        from ostap.core.core     import strings 
+        fnames = strings  ( *self.files )
+        vnames = strings  ( *vars       )
+        df = DataFrame  ( self.name , fnames , vnames )
+        for k in new_vars : df =  df.Define ( k , new_vars [k] )
+        return  df                              
+    
+    def __str__ ( self ) :
+        r = "Chain('%s',%s" % ( self.name , self.__files )
+        if 0 != self.first or 0 <= self.__nevents :
+            r += ",%s,%s" % ( self.first , self.__nevents )            
+        return r + ")"
+    __repr__ = __str__
+
+    # =========================================================================
+    ## delegate all other attributes to the underlying chain object 
+    def __getattr__  ( self , attr ) :
+        """Delegate all other attributes to the underlying chain object"""
+        return getattr  ( self.chain , attr )
+
+
+# =============================================================================
+## @class Tree
+#  simple class to keep 'persistent' definition of the tree
+#  it is needed for multiprocessing  
+class Tree(Chain) :
+    """Simple class to keep definition of tree/chain
+    """
+    def __getstate__  ( self )         : return Chain.__getstate__  ( self )   
+    def __setstate__  ( self , state ) :        Chain.__setstate__  ( self , state ) 
+
+    def __init__ ( self , tree = None ,  name = None , file = '' , first = 0 , nevents = -1 ) :
+
+        if name and file :
+            
+            assert isinstance ( file , str ), '"File should be single file name!"'
+            
+        elif valid_pointer  ( tree )  :
+            
+            if isinstance ( tree , ROOT.TChain ) :
+                assert 1 == len (  tree.files() ) , 'Tree is for ROOT.TTree only!'
+                
+        Chain.__init__ ( self , tree , name  , files = [ file ] , first = first , nevents = nevents )
+        
+        assert 1 == self.nFiles , 'Invalid number of files!'
+
+    ## split the tree for several trees with max=chunk_size entries
+    def split ( self , chunk_size = 200000  ) :
+        """Split the tree for several trees with max=chunk_size entries
+        >>> tree = ....
+        >>> trees = tree.split ( chunk_size = 1000000 ) 
+        """
+        
+        if 0 == self.nevents : return ()
+        
+        assert isinstance  ( chunk_size , int ) , "Illegal type of ``chunk_size'' %s" % chunk_size
+        
+        ## no splitting ?
+        if 0 >= chunk_size : return  self,
+        
+        ll   = len ( self )
+        last = min ( ll , self.first + self.nevents if 0 <= self.nevents else ROOT.TChain.kMaxEntries ) 
+
+        result = [] 
+        for s in self.get_slices ( self.first , last , chunk_size ) :
+            start , stop , stride = s.indices ( ll )
+            if start < stop : 
+                t = Tree ( tree = self.chain , name = self.name , file = self.file , first = start , nevents = stop - start ) 
+                result.append ( t ) 
+                
+        return tuple ( result ) 
+
+    ## get a slice for the tree 
+    def __getslice__ ( self , start , stop ) :
+        """ Get a slice for the given tree 
+        >>> tree  = ...
+        >>> tree1 = tree[:1000]  ## the first 1000 events 
+        """
+        s  = slice ( start , stop )
+        ll = len   ( self  )
+        
+        if self.first < ll : start , stop = 0 , 0
+
+        last = self.first + self.nevents if 0 < self.nevents else ll
+        last = min ( last , ll )
+        
+        start, stop , stride = s.indices ( last - self.first )
+        
+        start += self.first
+        stop  += self.first
+        
+        return Tree ( name = self.name , file = self.file , first = start , nevents = stop )
+        
+    @property
+    def file ( self ) :
+        """``file''   : the file name """
+        fs = self.files 
+        assert 1 == len  ( fs ) , 'Invalid number of files %s' % len ( fs ) 
+        return fs [0] 
+
+    def __str__ ( self ) :
+        r = "Tree('%s','%s'" % ( self.name , self.file )
+        if 0 != self.first or 0 <= self.nevents : r += ",%s,%s" % ( self.first , self.nevents )     
+        return r + ")"
+    __repr__ = __str__
+
+
+    # =========================================================================
+    ## delegate all other attributes to the underlying chain object 
+    def __getattr__  ( self , attr ) :
+        """Delegate all other attributes to the underlying chain object"""
+        return getattr  ( self.chain , attr )
+    
+    @property
+    def tree ( self ) :
+        """``tree'' : get the underlying tree/chain"""
+        return self.chain
 
 # =============================================================================
 _decorated_classes_ = (

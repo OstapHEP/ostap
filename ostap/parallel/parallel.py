@@ -56,15 +56,15 @@ if  'GAUDIMP' != worker :
     
     try :
         from ostap.parallel.mp_pathos import WorkManager 
-        logger.info  ('Use Task and TaskManager from ostap.parallel.pathos')
+        logger.debug ('Use TaskManager from ostap.parallel.pathos')
     except ImportError :
         from ostap.parallel.mp_gaudi  import WorkManager 
-        logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'     )
+        logger.info  ('Use TaskManager from GaudiMP.Parallel'     )
 
 else :
     
     from ostap.parallel.mp_gaudi  import WorkManager 
-    logger.info  ('Use Task and TaskManager from GaudiMP.Parallel'         )
+    logger.debug ('Use TaskManager from GaudiMP.Parallel'         )
 
     
     

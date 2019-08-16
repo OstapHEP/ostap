@@ -35,6 +35,7 @@ list(SORT               allfiles)
 list(REMOVE_DUPLICATES  allfiles)
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/__init__\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/tests/.*\\.py$")
+list(FILTER             allfiles EXCLUDE REGEX ".*\\/mp_pathos\\.py$")
 
 foreach(filename ${allfiles})
 

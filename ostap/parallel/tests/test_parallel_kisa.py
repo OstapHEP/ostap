@@ -112,7 +112,8 @@ with timing('Prepare data') :
     ## data = prepare_data ( tmpdir , nfiles = 250 , nentries = 200000 , silent = False ) 
     ## data = prepare_data ( tmpdir , nfiles = 100 , nentries = 50000  , silent = False ) 
     ## data = prepare_data ( tmpdir , nfiles = 500  , nentries = 1000    , silent = False )
-    data = prepare_data ( tmpdir , nfiles = 50  , nentries = 1000    , silent = False ) 
+    ## data = prepare_data ( tmpdir , nfiles = 50  , nentries = 50000  , silent = False ) 
+    data = prepare_data ( tmpdir , nfiles = 20  , nentries = 2000  , silent = False ) 
     
     logger.info    ( 'DATA %s' % data  )
 
@@ -223,10 +224,9 @@ def test_kisa2 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    pass
-
-    # test_kisa  ()
-    # test_kisa2 ()
+    
+    test_kisa  ()
+    test_kisa2 ()
 
 
     #test_kisa3 ()

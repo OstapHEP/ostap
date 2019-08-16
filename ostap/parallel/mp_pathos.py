@@ -485,7 +485,7 @@ class ppServer(object) :
         ## temporary directory on remote host 
         self.__tmpdir = None 
         if environment or script or profile : 
-            self.session  ( command =  'mktemp -d -t pathos-XXXXXXXXXX' )
+            self.session  ( command =  'mktemp -d -t pathos-$(date +%Y-%b-%d)-XXXXXXXXX' )
             self.session.launch()
             r = self.session.response()
             if r and 1 < len ( r ) : 

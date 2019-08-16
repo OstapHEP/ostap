@@ -167,14 +167,23 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
     """Efficient selector that runs only for ``good''-events  
     """
     ## constructor 
-    def __init__ ( self , selection ) :
+    def __init__ ( self , selection , silence = False ) :
         """ Standart constructor
         """
+        self.__silence = silence
+
         ## initialize the base
         self.__selection = str ( selection ).strip()  
         Ostap.SelectorWithCuts.__init__ ( self , self.selection , None , self )
-        if self.cuts() : logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
+        
+        if self.cuts () and not self.silence :
+            logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
             
+    @property
+    def silence ( self ) :
+        """``silence''  : silent processing?"""
+        return self.__silence 
+    
     @property
     def selection ( self ) :
         """``selection'' -  selection to be used to preprocess TTree/TChain"""
@@ -185,13 +194,12 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
     def SlaveTerminate ( self               ) : pass 
     def Begin          ( self , tree = None ) : pass
     def SlaveBegin     ( self , tree        ) :
-        if not self.ok() or not self.formula() :
-            raise RuntimeError ("SlaveBegin:Invalid Formula %s " % self.cuts() )        
+        if not self.ok () :
+            raise RuntimeError ( "SlaveBegin:Invalid Formula %s " % self.cuts () )        
     def Init           ( self , tree        ) :
-        if not self.ok() or not self.formula() :
-            raise RuntimeError ("Init:      Invalid Formula %s " % self.cuts() )
+        if not self.ok () :
+            raise RuntimeError ( "Init:      Invalid Formula %s " % self.cuts () )
         
-
     ## the major method
     def Process        ( self , entry       ) :
         """The major method 
@@ -204,7 +212,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         #
         
         return 1
-    
+
 # =============================================================================
 _maxv =  0.95 * sys.float_info.max
 _minv = -0.95 * sys.float_info.max
@@ -511,14 +519,11 @@ class SelectorWithVars(SelectorWithCuts) :
         from ostap.logger.logger  import getLogger
         self.__logger = logger ## getLogger ( fullname ) 
         #
-        self.__silence  = silence
-
-        ##
         assert 0 < len(variables) , "Empty list of variables"
         #
         ## instantiate the base class
         # 
-        SelectorWithCuts.__init__ ( self , selection ) ## initialize the base
+        SelectorWithCuts.__init__ ( self , selection , silence ) ## initialize the base
 
         self.__cuts      = cuts
         self.__variables = [] 
@@ -554,13 +559,13 @@ class SelectorWithVars(SelectorWithCuts) :
         triv_cuts        = not cuts
         
         self.__trivial = self.__triv_vars and self.__triv_sel and triv_cuts
-        if not silence :
+        if not self.silence :
             tv = allright ( 'True' ) if self.__triv_vars else attention ( 'False' )
             ts = allright ( 'True' ) if self.__triv_sel  else attention ( 'False' )
             tc = allright ( 'True' ) if triv_cuts        else attention ( 'False' )
             self.__logger.info ( "Suitable for fast processing: variables:%s, selection:%s, py-cuts:%s" % ( tv , ts , tc ) )
             
-        if not self.__silence: 
+        if not self.silence: 
             nl = 0
             dl = 0 
             for v in self.__variables :
@@ -696,10 +701,6 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__stat[1] = value[1]
         self.__stat[2] = value[2]
 
-    ## silent processing ?
-    @property
-    def silence (  self ) : return self.__silence
-    
     ## get the dataset 
     def dataset   ( self  ) :
         """ Get the data-set """ 
@@ -716,15 +717,15 @@ class SelectorWithVars(SelectorWithCuts) :
         if self.GetEntry ( entry ) <=  0 : return 0             ## RETURN 
         #
         
-        if not self.__progress and not self.__silence :
+        if not self.__progress and not self.silence :
             self.__stat[0] =  self.fChain.GetEntries()
             self.__logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , self.fChain.GetName() , self.total ) )
             ## decoration:
             from ostap.utils.progress_bar import ProgressBar
-            self.__progress = ProgressBar ( max_value = self.total     ,
-                                            silent    = self.__silence )
+            self.__progress = ProgressBar ( max_value = self.total   ,
+                                            silent    = self.silence )
             
-        if not self.__silence :
+        if not self.silence :
             if 0 == self.processed % 1000 or 0 == entry % 1000 or 0 == self.event() % 1000 : 
                 self.__progress.update_amount ( self.event () )
                 
@@ -798,7 +799,7 @@ class SelectorWithVars(SelectorWithCuts) :
         ##get total number of input events from base class 
         self.__stat[0] = self.event()
         
-        if not self.__silence :
+        if not self.silence :
             skipped = 'Skipped:%d' % self.skipped
             skipped = '/' + attention ( skipped ) if self.skipped else ''
             cuts    = allright ( '"%s"' % self.cuts () ) if self.trivial_sel else attention ( '"%s"'  % self.cuts() ) 
@@ -811,7 +812,7 @@ class SelectorWithVars(SelectorWithCuts) :
                 cuts           ) )            
             self.__logger.info ( 'Selector(%s): dataset created:%s' %  ( self.__name ,  self.__data ) )
             
-        if self.__data and not self.__silence :
+        if self.__data and not self.silence :
             vars = []
             for v in self.__variables :
                 s    = self.__data.statVar( v.name )
@@ -906,7 +907,7 @@ class SelectorWithVars(SelectorWithCuts) :
         # 
         result = SelectorWithCuts.Init ( self , chain ) 
 
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
         #
         return result 
@@ -915,7 +916,7 @@ class SelectorWithVars(SelectorWithCuts) :
         ## 
         result = SelectorWithCuts.Begin ( self , tree )
 
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
 
         return result
@@ -924,7 +925,7 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         result = SelectorWithCuts.SlaveBegin ( self , tree )
         #
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
         #
         self.__stat[0] =  tree.GetEntries()
@@ -943,7 +944,7 @@ class SelectorWithVars(SelectorWithCuts) :
     def Notify         ( self ) :
         #
         result = SelectorWithCuts.Notify ( self )
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
 
         return result 
@@ -952,7 +953,7 @@ class SelectorWithVars(SelectorWithCuts) :
         # 
         result = SelectorWithCuts.SlaveTerminate ( self )
 
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
 
         if self.__notifier :
@@ -1340,8 +1341,8 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                 logger.debug  ( 'PROCESS: add cut %s ' % acut )
                 
             from ostap.utils.cleanup import TempFile
-            with TempFile ( suffix = '.root' , prefix = 'frame_' ) as tf :
-                if not silent : logger.info ( 'Prepare snapshot/loop over the tree   %s' % tf.filename )
+            with TempFile ( suffix = '.root' , prefix = 'frame-' ) as tf :
+                if not silent : logger.info ( 'Prepare snapshot/loop over the tree %s' % tf.filename )
                 report   = frame . Report ()
 
                 if vars_  :

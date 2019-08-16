@@ -20,6 +20,7 @@
 // ============================================================================
 namespace 
 {
+  // ==========================================================================
   const std::string s_whitespaces = " \t\n\r\f\v" ;
   inline std::string strip ( const std::string& s                          ,
                              const std::string& whitespace = s_whitespaces )
@@ -33,6 +34,7 @@ namespace
     
     return s .substr ( p1 , range );
   }
+  // ==========================================================================
 }
 // ============================================================================
 ClassImp(Ostap::SelectorWithCuts) ;

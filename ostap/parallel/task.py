@@ -245,12 +245,11 @@ class StatMerger(object) :
             return self 
         
         if not stat.host in self.__merged :
-            s       = Statistics()
-            self.__merged  [ stat.host ] = s  
+            self.__merged  [ stat.host ] = Statistics()
             
-        e  = self.__merged [ stat.host ]
-        e.time  += stat.time
-        e.njobs += stat.njobs 
+        se  = self.__merged [ stat.host ]
+        se.time  += stat.time
+        se.njobs += stat.njobs 
         
         return self
 

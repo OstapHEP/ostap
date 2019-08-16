@@ -155,10 +155,13 @@ def  cproject ( chain                ,
     
     task  = ProjectTask            ( histo , what , cuts )
     wmgr  = WorkManager   ( silent = silent )
-    wmgr.process ( task, ch.split  ( chunk_size  = chunk_size , max_files = max_files ) )
-    
-    filtered   = task.output[0] 
-    histo     += task.output[1]
+    wmgr.process ( task  , ch.split  ( chunk_size  = chunk_size , max_files = max_files ) )
+
+    ## unpack results 
+    _f , _h = task.results ()
+    filtered   = _f
+    histo     += _h
+    del _h 
     
     return filtered , histo 
 
@@ -219,8 +222,11 @@ def  tproject ( tree                 ,   ## the tree
     wmgr  = WorkManager            ( silent     = silent       )
     wmgr.process ( task, ch.split  ( chunk_size = chunk_size ) )
     
-    filtered   = task.output[0] 
-    histo     += task.output[1]
+    ## unpack results 
+    _f , _h = task.results ()
+    filtered   = _f
+    histo     += _h
+    del _h 
     
     return filtered , histo 
 

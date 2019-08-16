@@ -21,7 +21,7 @@ __all__     = (
     'TempFile' , ## Simple placeholder for temporary file  
     )
 # =============================================================================
-import os, tempfile 
+import os, tempfile, datetime  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.cleanup' )
@@ -104,23 +104,29 @@ class  CleanUp(object) :
                 logger.debug ( 'temporary file          added %s' % o )
 
     @staticmethod
-    def tempdir ( suffix = '' , prefix = 'tmp_' ) :
+    def tempdir ( suffix = '' , prefix = 'tmp-' , date = True ) :
         """Get the name of the temporary directory.
         The directory will be cleaned-up and deleted at-exit.
         >>> dirname = CleanUp.tempdir() 
         """
-        with UseTmpDir ( _TmpDir ) : 
+        with UseTmpDir ( _TmpDir ) :
+            if date :
+                now = datetime.datetime.now()
+                prefix = "%s%s-"   %  ( prefix , now.strftime ( "%Y-%b-%d" ) )
             tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
             CleanUp._tmpdirs.add ( tmp )
             logger.debug ( 'temporary directory requested %s' % tmp   )
             return tmp        
     
     @staticmethod
-    def tempfile ( suffix = '' , prefix = 'tmp_' , dir = None ) :
+    def tempfile ( suffix = '' , prefix = 'tmp-' , dir = None , date = True ) :
         """Get the name of the temporary file. The file will be deleted at-exit
         >>> fname = CleanUp.tempfile() 
         """
-        with UseTmpDir ( _TmpDir ) : 
+        with UseTmpDir ( _TmpDir ) :
+            if date :
+                now = datetime.datetime.now()
+                prefix = "%s%s-"   %  ( prefix , now.strftime ( "%Y-%b-%d" ) )            
             _file = tempfile.NamedTemporaryFile ( suffix = suffix ,
                                                   prefix = prefix ,
                                                   dir    = dir    , 
