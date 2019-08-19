@@ -1154,12 +1154,15 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
     stat = total, processed , processed - skipped
 
     from ostap.logger.utils import rooSilent, rootError
+    from ostap.utils.timing import timing
+    
+    
     if not silent : logger.info ( "Start to fill the dataset") 
     with rooSilent ( ROOT.RooFit.ERROR  , True ) :
         with rootError( ROOT.kWarning ) :
             ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
             varsete = ds.get()
-            
+                
     ## add complex expressions 
     if formulas :
         # a
@@ -1349,7 +1352,7 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     ## is some variables are non-trivial: dump the whole tree 
                     snapshot = frame . Snapshot ( 'tree' , tf.filename )
                 else      :
-                    ## otherwise sump only needed variables 
+                    ## otherwise dump only needed variables 
                     bvars = self.the_variables( [ v.formula for v in tvars ] )
                     avars = set ( [ v.name for v in nvars ] )
                     for b in bvars : avars.add ( b )

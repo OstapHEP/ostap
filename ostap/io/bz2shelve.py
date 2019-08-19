@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file zipshelve.py
+# @file bz2shelve.py
 # 
-# This is zip-version of shelve database.
+# This is ``bzip2''-version of shelve database.
 # 
 # Keeping the same interface and functionlity as shelve data base,
 # ZipShelf allows much more compact file size through the on-flight
@@ -23,48 +23,53 @@
 # Create new DB:
 #
 # @code
-# >>> import zipshelve  
-# >>> db = zipshelve.open ('a_db', 'n')    ## create new DB
+#
+# >>> import bz2shelve  
+# >>> db = bz2shelve.open ('a_db', 'n')    ## create new DB
 # ...
 # >>> abcde = ...
 # >>> db['some_key'] =  abcde              ## add information to DB
 # ...
 # >>> db.close()
+#
 # @endcode 
 #
 # Access to DB in read-only mode :
 #
 # @code
-# >>> import zipshelve  
-# >>> db = zipshelve.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
+#
+# >>> import bz2shelve  
+# >>> db = bz2shelve.open ('a_db' , 'r' ) ## access existing dbase in read-only mode
 # ...
 # >>> for key in db : print(key)
 # ...
 # >>> abcd = db['some_key']
+#
 # @endcode 
 #
 # Access existing DB in update mode :
 #
 # @code
-# >>> import ziphelve  
-# >>> db = zipshelve.open ('a_db' )    ## access existing dbase in update mode
+#
+# >>> import bz2helve 
+# >>> db = bz2shelve.open ('a_db' )    ## access existing dbase in update mode
 # ...
 # >>> for key in db : print key
 # ...
 # >>> abcd = db['some_key']
+#
 # @endcode 
 #
-# @attention: In case DB-name has extension ``.gz'', the whole data base
-#             will be ``gzip''-ed. 
+# @attention: In case DB-name has extension ``.bz2'', the whole data base
+#             will be ``bzip2''-ed ". 
 #
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2010-04-30
-# 
 # =============================================================================
-"""This is zip-version of shelve database.
+"""This is ``bzip2''-version of shelve database.
 
 Keeping the same interface and functionlity as shelve data base,
-ZipShelf allows much more compact file size through the on-flight
+Bz2Shelf allows much more compact file size through the on-flight
 compression of the content
 
 The actual code has been inspired by zipshelve ( see Google...)
@@ -80,18 +85,18 @@ The module has been developed and used with great success in
 
  Create new DB:
 
- >>> import zipshelve as DBASE  
- >>> db = DBASE.open ('a_db', 'n')      ## create new DB
+ >>> import bz2shelve as DBASE  
+ >>> db = DBASE.open ('a_db', 'n')    ## create new DB
  ...
  >>> abcde = ...
- >>> db['some_key'] =  abcde            ## add information to DB
+ >>> db['some_key'] =  abcde          ## add information to DB
  ...
  >>> db.close()
 
  Access to DB in read-only mode :
 
- >>> import zipshelve as DBASE  
- >>> db = DBASE.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
+ >>> import bz2shelve as DBASE  
+ >>> db = DBASE.open ('a_db' , 'r' ) ## access existing dbase in read-only mode
  ...
  >>> for key in db : print(key)
  ...
@@ -99,14 +104,14 @@ The module has been developed and used with great success in
 
  Access existing DB in update mode :
 
- >>> import zipshelve as DBASE 
- >>> db = DBASE.open ('a_db' )          ## access existing dbase in update mode
+ >>> import bz2shelve as DBASE
+ >>> db = DBASE.open ('a_db' )    ## access existing dbase in update mode
  ...
  >>> for key in db : print(key)
  ...
  >>> abcd = db['some_key']
  
- In case DB-name has extension ``.gz'', the whole data base will be ``gzip''-ed
+ In case DB-name has extension ``.bz2'', the whole data base will be ``bzip2''-ed
 
 """
 # =============================================================================
@@ -115,23 +120,23 @@ __date__    = "2010-04-30"
 __version__ = "$Revision$" 
 # =============================================================================
 __all__ = (
-    'ZipShelf' ,   ## The DB-itself
+    'Bz2Shelf' ,   ## The DB-itself
     'open'     ,   ## helper function to hide the actual DB
     'tmpdb'    ,   ## create TEMPORARY data base 
     )
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.zipshelve' )
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.bz2shelve' )
 else                      : logger = getLogger ( __name__             )
 # =============================================================================
-logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
+logger.debug ( "Simple generic (c)Pickle-based ``bzip2''-database"    )
 # =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
 try:
     from cPickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
 except ImportError:
-    from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
+    from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL 
 # =============================================================================
 ## to be compatible between  Python2 and Python3 
 PROTOCOL = 2
@@ -146,13 +151,13 @@ else :
         from  StringIO import StringIO as BytesIO    
 # ==============================================================================
 import os, sys
-import zlib        ## use zlib to compress DB-content 
+import bz2         ## use bz2 to compress DB-content 
 import shelve      ## 
 import shutil
 from ostap.io.compress_shelve import CompressShelf
 # =============================================================================
-## @class ZipShelf
-#  Zipped-version of ``shelve''-database
+## @class Bz2Shelf
+#  ``Bzip2''-version of ``shelve''-database
 #    Modes: 
 #    - 'r' Open existing database for reading only
 #    - 'w' Open existing database for reading and writing
@@ -160,7 +165,7 @@ from ostap.io.compress_shelve import CompressShelf
 #    - 'n' Always create a new, empty database, open for reading and writing
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-class ZipShelf(CompressShelf):
+class Bz2Shelf(CompressShelf):
     """Zipped-version of ``shelve''-database
     Modes: 
     - 'r'  Open existing database for reading only
@@ -169,18 +174,17 @@ class ZipShelf(CompressShelf):
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
     ## the known "standard" extensions: 
-    extensions = '.gz' , 
+    extensions = '.bz2' , 
     ## 
     def __init__(
         self                                   ,
         filename                               ,
         mode        = 'c'                      , 
         protocol    = PROTOCOL                 , 
-        compress    = zlib.Z_BEST_COMPRESSION  ,
+        compress    = 9                        ,
         writeback   = False                    ,
         silent      = False                    ,
         keyencoding = 'utf-8'                  ) :
-
 
         ## save arguments for pickling....
         self.__init_args = ( filename  ,
@@ -223,60 +227,60 @@ class ZipShelf(CompressShelf):
         return self.__compresslevel 
 
     # =========================================================================
-    ## compress (gzip) the file into temporary location, keep original
+    ## compress (bz2) the file into temporary location, keep original
     def compress_file   ( self , filein ) :
-        """Compress (gzip) the file into temporary location, keep original
+        """Compress (bz2) the file into temporary location, keep original
         """
-        import tempfile , gzip , io 
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db.gz' )
+        import tempfile , io 
+        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db.bz2' )
         with io.open ( filein , 'rb' ) as fin :
-            with gzip.open ( fileout , 'wb') as fout : 
-                shutil.copyfileobj ( fin , fout )                
-                return fileout 
-
-    # =========================================================================
-    ## uncompress (gunzip) the file into temporary location, keep original
-    def uncompress_file ( self , filein ) :
-        """Uncompress (gunzip) the file into temporary location, keep original
-        """
-        import tempfile, gzip , io   
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
-        with gzip.open ( filein  , 'rb' ) as fin : 
-            with io.open ( fileout , 'wb' ) as fout : 
+            with bz2.open ( fileout , 'wb') as fout : 
                 shutil.copyfileobj ( fin , fout )            
+                return fileout 
+    
+    # =========================================================================
+    ## uncompress (bz2) the file into temporary location, keep original
+    def uncompress_file ( self , filein ) :
+        """Uncompress (bz2) the file into temporary location, keep original
+        """
+        import tempfile , io   
+        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
+        with bz2.open ( filein  , 'rb' ) as fin : 
+            with io.open ( fileout , 'wb' ) as fout : 
+                shutil.copyfileobj ( fin , fout )                
                 return fileout
     
     # ==========================================================================
-    ## compress (zip)  the item  using <code>zlib.compress</code>
+    ## compress (bzip2)  the item  using <code>bz2.compress</code>
     def compress_item ( self , value ) :
-        """Compress (zip) the item using ``zlib.compress''
-        - see zlib.compress
+        """Compress (zip) the item using ``bz2.compress''
+        - see bz2.compress
         """
         f = BytesIO ()
         p = Pickler ( f , self.protocol )
         p.dump ( value )
-        return zlib.compress ( f.getvalue() , self.compresslevel )
+        return bz2.compress ( f.getvalue() , self.compresslevel )
 
     # =========================================================================
-    ## uncompres (unzip) the item using <code>zlib.decompress</code>
+    ## uncompres (bzip2) the item using <code>bz2.decompress</code>
     def uncompress_item ( self , value ) :
-        """Uncompress (nuzip) the item using ``zlib.decompress''
-        -  see zlib.decompress
+        """Uncompress (bzip2) the item using ``bz2.decompress''
+        -  see bz2.decompress
         """        
-        f = BytesIO ( zlib.decompress ( value ) )
+        f = BytesIO ( bz2.decompress ( value ) )
         return Unpickler ( f ) . load ( )
 
 # =============================================================================
-## helper finction to access ZipShelve data base
+## helper finction to access Bz2Shelve data base
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def open ( filename                                 ,
-           mode          = 'c'                      ,
-           protocol      = PROTOCOL                 ,
-           compresslevel = zlib.Z_BEST_COMPRESSION  , 
-           writeback     = False                    ,
-           silent        = True                     ,
-           keyencoding   = ENCODING                 ) :
+def open ( filename                  ,
+           mode          = 'c'       ,
+           protocol      = PROTOCOL  ,
+           compresslevel = 9         , 
+           writeback     = False     ,
+           silent        = True      ,
+           keyencoding   = ENCODING  ) :
     
     """Open a persistent dictionary for reading and writing.
     
@@ -290,7 +294,7 @@ def open ( filename                                 ,
     See the module's __doc__ string for an overview of the interface.
     """
     
-    return ZipShelf ( filename      ,
+    return Bz2Shelf ( filename      ,
                       mode          ,
                       protocol      ,
                       compresslevel ,
@@ -299,25 +303,26 @@ def open ( filename                                 ,
                       keyencoding   )
 
 # =============================================================================
-## @class TmpZipShelf
-#  TEMPORARY Zipped-version of ``shelve''-database
+## @class TmpBz2Shelf
+#  TEMPORARY bzip2-version of ``shelve''-database
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
-class TmpZipShelf(ZipShelf):
-    """TEMPORARY Zipped-version of ``shelve''-database     
+class TmpBz2Shelf(Bz2Shelf):
+    """
+    TEMPORARY ``bzip2''-version of ``shelve''-database     
     """    
     def __init__(
-        self                                   ,
-        protocol    = HIGHEST_PROTOCOL         , 
-        compress    = zlib.Z_BEST_COMPRESSION  ,
-        silent      = False                    ,
-        keyencoding = ENCODING                 ) :
+        self                           ,
+        protocol    = HIGHEST_PROTOCOL , 
+        compress    = 9                ,
+        silent      = False            ,
+        keyencoding = ENCODING         ) :
 
         ## create temporary file name 
         import tempfile
-        filename = tempfile.mktemp  ( prefix = 'tmpdb-' , suffix = '.zdb' )
+        filename = tempfile.mktemp  ( prefix = 'tmpdb-' , suffix = '.bz2db' )
         
-        ZipShelf.__init__ ( self        ,  
+        Bz2Shelf.__init__ ( self        ,  
                             filename    ,
                             'c'         ,
                             protocol    ,
@@ -330,7 +335,7 @@ class TmpZipShelf(ZipShelf):
     def close ( self )  :
         ## close the shelve file
         fname = self.filename 
-        ZipShelf.close ( self )
+        Bz2Shelf.close ( self )
         ## delete the file 
         if os.path.exists ( fname ) :
             try :
@@ -342,10 +347,10 @@ class TmpZipShelf(ZipShelf):
 ## helper function to open TEMPORARY ZipShelve data base#
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def tmpdb ( protocol      = HIGHEST_PROTOCOL        ,
-            compresslevel = zlib.Z_BEST_COMPRESSION , 
-            silent        = True                    ,
-            keyencoding   = ENCODING                ) :
+def tmpdb ( protocol      = HIGHEST_PROTOCOL ,
+            compresslevel = 9                , 
+            silent        = True             ,
+            keyencoding   = ENCODING         ) :
     """Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
@@ -353,10 +358,11 @@ def tmpdb ( protocol      = HIGHEST_PROTOCOL        ,
     
     See the module's __doc__ string for an overview of the interface.
     """
-    return TmpZipShelf ( protocol      ,
+    return TmpBz2Shelf ( protocol      ,
                          compresslevel ,
                          silent        ,
                          keyencoding   ) 
+    
     
 # =============================================================================
 if '__main__' == __name__ :

@@ -64,30 +64,30 @@ def docme( module , symbols = {} , logger = None ) :
     ## own documentation 
     _doc_ = module.__doc__ if hasattr ( module , '__doc__' ) else None
     if _doc_ :
-        logger.info ( _doc_ ) 
+        logger.info ( str ( _doc_ ) ) 
         logger.info ( 80*'*' )
 
     ## Author 
     _author_  = module.__author__  if hasattr ( module , '__author__' ) else None
     if _author_ :
-        logger.info ( "Author  : %s" % _author_ ) 
+        logger.info ( "Author  : %s" % str ( _author_ ) ) 
 
     ## Version
     _version_ = module.__version__ if hasattr ( module , '__version__' ) else None
     if _version_ :
-        logger.info ( "Version : %s" % _version_ ) 
+        logger.info ( "Version : %s" % str ( _version_ ) ) 
 
     ## Date 
     _date_    = module.__date__    if hasattr ( module , '__date__' ) else None
     if _version_ :
-        logger.info ( "Date    : %s" % _date_ ) 
+        logger.info ( "Date    : %s" % str ( _date_ ) ) 
 
     _done_ = set ()
     
     ## Public symbols 
     _all_     = module.__all__    if hasattr ( module , '__all__' ) else None
     if _all_ :
-        logger.info ( "Symbols : %s" % list(_all_) ) 
+        logger.info ( "Symbols : %s" % str ( list ( _all_ ) ) ) 
         for key in _all_ :
             sym = getattr ( module , key )            
             if isinstance ( sym , primitive ) : continue
@@ -107,7 +107,7 @@ def docme( module , symbols = {} , logger = None ) :
         logger.info ( "Decorated classes : %s" % [ getattr ( k ,'__name__' , k ) for k in _klasses_ ] )
         for sym in _klasses_ :
             if hasattr ( sym , '__doc__' ) and sym.__doc__ :
-                d = sym.__doc__.replace( '\n' , '\n#' )
+                d = str ( sym.__doc__ ) .replace( '\n' , '\n#' )
                 logger.info ( "Decorated class ``%s''\n# - %s" % ( getattr ( sym , '__name__' , sym ) , d ) )
         
         logger.info ( 80*'*' )
@@ -117,7 +117,7 @@ def docme( module , symbols = {} , logger = None ) :
     if _methods_ :
         for sym in _methods_ :
             if hasattr ( sym , '__doc__' ) and sym.__doc__ :
-                d = sym.__doc__.replace( '\n' , '\n#' )
+                d = str ( sym.__doc__ ) .replace( '\n' , '\n#' )
                 logger.info ( "New method\n# - %s" % d )        
         logger.info ( 80*'*' )
         
@@ -129,7 +129,7 @@ def docme( module , symbols = {} , logger = None ) :
             if sym in _done_            : continue 
             if inspect.ismodule ( sym ) : continue 
             if hasattr ( sym , '__doc__' ) and sym.__doc__ and not isinstance ( sym , primitive ) : 
-                d = sym.__doc__.replace( '\n' , '\n#' )
+                d = str ( sym.__doc__ ) .replace( '\n' , '\n#' )
                 logger.info ( "Symbol ``%s''\n# - %s" % ( key , d ) )
             else : 
                 logger.info ( "``%s''" %        key ) 
@@ -142,7 +142,7 @@ def docme( module , symbols = {} , logger = None ) :
             if sym in _done_ : continue
             if inspect.ismodule ( sym ) : continue 
             if hasattr ( sym , '__doc__' ) and sym.__doc__ and not isinstance ( sym , primitive ) : 
-                d = sym.__doc__.replace( '\n' , '\n#' )
+                d = str ( sym.__doc__ ) .replace( '\n' , '\n#' )
                 logger.info ( "Symbol ``%s''\n# - %s" % ( key , d ) )
             else : 
                 logger.info ( "``%s''" %        key ) 
