@@ -102,7 +102,7 @@ _modes_ = {
 #  - <code>uncompress_file</code>
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-class CompressShelf(shelve.Shelf):
+class CompressShelf(shelve.Shelf,object):
     """ ``Compressed''-version of ``shelve''-database
     It has four abstract methods:
     - compress_item
