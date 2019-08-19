@@ -569,7 +569,7 @@ namespace Ostap
     } 
     // ========================================================================
     /** calculate the integral for Legendre polynomial
-     *  \f$ \int_{x_{low}}^{x_{high}}P_N(x)\deriv x \f$ 
+     *  \f$ \int_{x_{low}}^{x_{high}}P_N(x){\mathrm{d}} x \f$ 
      *  @param N the order/degree of Legendre polynomial
      *  @param xlow  the low  edge 
      *  @param xhigh the high edge 
@@ -932,7 +932,7 @@ namespace Ostap
       // =====================================================================
       /** evaluate the normalized associated legendre polynomials/function 
        *  \$ P^{m}_{l}(z)\$ with normalization suitbale for spherical harmonics :
-       *  \f$ \int_{-1}{+1}P^m_l(x)P^m_{l}(x)\deriv x = \frac{1}{2\pi}\f$
+       *  \f$ \int_{-1}{+1}P^m_l(x)P^m_{l}(x){\mathrm{d}} x = \frac{1}{2\pi}\f$
        */
       inline long double plegendre_eval_ 
       ( const unsigned int L , 
@@ -999,7 +999,7 @@ namespace Ostap
      *  The normalized associated Legendre polynomials/functions 
      *  Normalization is suitable for usage of them for the spherical harmonics.
      *  @see https://arxiv.org/abs/1410.1748
-     *  \f$ \int _{-1}^{1} P_l^m(x)P_l^{m}(x) \deriv x = \frac{1}{2\pi}\f$  
+     *  \f$ \int _{-1}^{1} P_l^m(x)P_l^{m}(x) {\mathrm{d}} x = \frac{1}{2\pi}\f$  
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-06-27
      */
@@ -1009,7 +1009,7 @@ namespace Ostap
     // =====================================================================
     /** evaluate the normalized associated legendre polynomials/function 
      *  \$ P^{m}_{l}(z)\$ with normalization suitbale for spherical harmonics :
-     *  \f$ \int_{-1}{+1}P^m_l(x)P^m_{l}(x)\deriv x = \frac{1}{2\pi}\f$
+     *  \f$ \int_{-1}{+1}P^m_l(x)P^m_{l}(x){\mathrm{d}} x = \frac{1}{2\pi}\f$
      */
     inline double plegendre_value
     ( const unsigned int L , 
@@ -1193,7 +1193,7 @@ namespace Ostap
      *  evaluate the associative Legendre polynomials/functions 
      *  \f$P^{m}_{l}(x)\f$
      *  Normalization is sutable for spherical harmonics 
-     *  \f$ \int_{-1}^{+1} P^{m}_{l}(x)P^{m}_{l}(x) \deriv x = \frac{1}{2\pi} \f$
+     *  \f$ \int_{-1}^{+1} P^{m}_{l}(x)P^{m}_{l}(x) {\mathrm{d}} x = \frac{1}{2\pi} \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */

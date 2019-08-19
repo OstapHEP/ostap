@@ -193,7 +193,7 @@ bool Ostap::Math::LegendreSum2::fill
 // Integrals and projections 
 // ============================================================================
 /*  get the integral 
- *  \f$ \int_{x_{low}}^{x_{high}}\int_{y_{low}}^{y_{high}} f(x,y)\deriv x \deriv y \f$
+ *  \f$ \int_{x_{low}}^{x_{high}}\int_{y_{low}}^{y_{high}} f(x,y){\mathrm{d}} x {\mathrm{d}} y \f$
  */
 // ============================================================================
 double Ostap::Math::LegendreSum2::integral
@@ -233,14 +233,14 @@ double Ostap::Math::LegendreSum2::integral
 }
 // ============================================================================
 /*  get the integral 
- *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f(x,y)\deriv x \deriv y \f$
+ *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f(x,y){\mathrm{d}} x {\mathrm{d}} y \f$
  */
 // ============================================================================
 double Ostap::Math::LegendreSum2::integral   () const 
 { return m_pars[0] * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * 4 ; }
 // ============================================================================
 /*  integrate over x dimension 
- *  \f$ f(y) =  \int_{x_{min}}^{x_{max}} F(x,y) \deriv x \f$
+ *  \f$ f(y) =  \int_{x_{min}}^{x_{max}} F(x,y) {\mathrm{d}} x \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum 
@@ -259,7 +259,7 @@ Ostap::Math::LegendreSum2::integralX  () const
 }
 // ============================================================================
 /*  integrate over y dimension 
- *  \f$ f(x) =  \int_{y_{min}}^{y_{max}} F(x,y) \deriv y \f$
+ *  \f$ f(x) =  \int_{y_{min}}^{y_{max}} F(x,y) {\mathrm{d}} y \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum 
@@ -278,7 +278,7 @@ Ostap::Math::LegendreSum2::integralY  () const
 }
 // ============================================================================
 /* integrate over x dimension 
- *  \f$ f_x(y) =  \int_{x_{low}}^{x_{high}} f(x,y) \deriv x \f$
+ *  \f$ f_x(y) =  \int_{x_{low}}^{x_{high}} f(x,y) {\mathrm{d}} x \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum 
@@ -312,7 +312,7 @@ Ostap::Math::LegendreSum2::integralX
 }
 // ============================================================================
 /* integrate over y dimension 
- *  \f$ f(x) =  \int_{y_{low}}^{y_{high}} f(x,y) \deriv y \f$
+ *  \f$ f(x) =  \int_{y_{low}}^{y_{high}} f(x,y) {\mathrm{d}} y \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum 
@@ -557,7 +557,7 @@ bool Ostap::Math::LegendreSum3::fill
 }
 // ============================================================================
 /*  integrate over x dimension 
- *  \f$ f_x(y,z) =  \int_{x_{min}}^{x_{max}} f(x,y,z) \deriv x \f$
+ *  \f$ f_x(y,z) =  \int_{x_{min}}^{x_{max}} f(x,y,z) {\mathrm{d}} x \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum2 
@@ -606,7 +606,7 @@ Ostap::Math::LegendreSum3::integralZ () const
 }
 // ============================================================================
 /*  integrate over x dimension 
- *  \f$ f(y,z) =  \int_{x_{low}}^{x_{high}} F(x,y,z) \deriv x \f$
+ *  \f$ f(y,z) =  \int_{x_{low}}^{x_{high}} F(x,y,z) {\mathrm{d}} x \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum2 
@@ -649,7 +649,7 @@ Ostap::Math::LegendreSum3::integralX
 }
 // ============================================================================
 /*  integrate over y dimension 
- *  \f$ f(x,z) =  \int_{y_{low}}^{y_{high}} F(x,y,z) \deriv y \f$
+ *  \f$ f(x,z) =  \int_{y_{low}}^{y_{high}} F(x,y,z) {\mathrm{d}} y \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum2 
@@ -692,7 +692,7 @@ Ostap::Math::LegendreSum3::integralY
 }
 // ============================================================================
 /*  integrate over z dimension 
- *  \f$ f(x,y) =  \int_{z_{low}}^{z_{high}} f(x,y,z) \deriv z \f$
+ *  \f$ f(x,y) =  \int_{z_{low}}^{z_{high}} f(x,y,z) {\mathrm{d}} z \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum2 
@@ -736,7 +736,7 @@ Ostap::Math::LegendreSum3::integralZ
 // ============================================================================
 /*  integral 
  *  \f$ \int_{x_{low}}^{x_{high}}\int_{y_{low}}^{y_{high}}
- *    \int_{z_{low}}^{z_{high}} f(x,y,z) \deriv x \deriv y \deriv z \f$ 
+ *    \int_{z_{low}}^{z_{high}} f(x,y,z) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z \f$ 
  */
 // ============================================================================
 double Ostap::Math::LegendreSum3::integral 
@@ -786,7 +786,7 @@ double Ostap::Math::LegendreSum3::integral
 // ============================================================================
 /*  integral 
  *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}
- *    \int_{z_{min}}^{z_{max}} f(x,y,z) \deriv x \deriv y \deriv z \f$ 
+ *    \int_{z_{min}}^{z_{max}} f(x,y,z) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z \f$ 
  */
 // ============================================================================
 double Ostap::Math::LegendreSum3::integral () const 
@@ -911,7 +911,7 @@ bool Ostap::Math::LegendreSum4::fill
 }
 // ============================================================================
 /*  integrate over x dimension 
- *  \f$ f_x(y,z,u) =  \int_{x_{min}}^{x_{max}} f(x,y,z,u) \deriv x \f$
+ *  \f$ f_x(y,z,u) =  \int_{x_{min}}^{x_{max}} f(x,y,z,u) {\mathrm{d}} x \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum3  
@@ -934,7 +934,7 @@ Ostap::Math::LegendreSum4::integralX  () const
 }
 // ============================================================================
 /*  integrate over y dimension 
- *  \f$ f_x(x,z,u) =  \int_{y_{min}}^{y_{max}} f(x,y,z,u) \deriv y \f$
+ *  \f$ f_x(x,z,u) =  \int_{y_{min}}^{y_{max}} f(x,y,z,u) {\mathrm{d}} y \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum3  
@@ -957,7 +957,7 @@ Ostap::Math::LegendreSum4::integralY  () const
 }
 // ============================================================================
 /*  integrate over z dimension 
- *  \f$ f_x(x,y,u) =  \int_{z_{min}}^{z_{max}} f(x,y,z,u) \deriv z \f$
+ *  \f$ f_x(x,y,u) =  \int_{z_{min}}^{z_{max}} f(x,y,z,u) {\mathrm{d}} z \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum3  
@@ -980,7 +980,7 @@ Ostap::Math::LegendreSum4::integralZ  () const
 }
 // ============================================================================
 /*  integrate over u dimension 
- *  \f$ f_x(x,y,z) =  \int_{u_{min}}^{u_{max}} f(x,y,z,u) \deriv u \f$
+ *  \f$ f_x(x,y,z) =  \int_{u_{min}}^{u_{max}} f(x,y,z,u) {\mathrm{d}} u \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum3  
@@ -1003,7 +1003,7 @@ Ostap::Math::LegendreSum4::integralU  () const
 }
 // ============================================================================
 /*  integrate over x dimension 
- *  \f$ f(y,z,u) =  \int_{x_{min}}^{x_{max}} F(x,y,z,u) \deriv x \f$
+ *  \f$ f(y,z,u) =  \int_{x_{min}}^{x_{max}} F(x,y,z,u) {\mathrm{d}} x \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum3 
@@ -1047,8 +1047,8 @@ Ostap::Math::LegendreSum4::integralX
   return r ;
 }
 // ============================================================================
-/** integrate over y dimension 
- *  \f$ f(x,z,u) =  \int_{y_{low}}^{y_{high}} F(x,y,z,u) \deriv y \f$
+/*  integrate over y dimension 
+ *  \f$ f(x,z,u) =  \int_{y_{low}}^{y_{high}} F(x,y,z,u) {\mathrm{d}} y \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum3 
@@ -1092,8 +1092,8 @@ Ostap::Math::LegendreSum4::integralY
   return r ;
 }
 // ============================================================================
-/** integrate over z dimension 
- *  \f$ f(x,y,u) =  \int_{z_{low}}^{z_{high}} F(x,y,z,u) \deriv z \f$
+/*  integrate over z dimension 
+ *  \f$ f(x,y,u) =  \int_{z_{low}}^{z_{high}} F(x,y,z,u) {\mathrm{d}} z \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum3 
@@ -1138,7 +1138,7 @@ Ostap::Math::LegendreSum4::integralZ
 }
 // ============================================================================
 /*  integrate over u dimension 
- *  \f$ f(x,y,z) =  \int_{u_{low}}^{u_{high}} F(x,y,z,u) \deriv u \f$
+ *  \f$ f(x,y,z) =  \int_{u_{low}}^{u_{high}} F(x,y,z,u) {\mathrm{d}} u \f$
  */
 // ============================================================================
 Ostap::Math::LegendreSum3 

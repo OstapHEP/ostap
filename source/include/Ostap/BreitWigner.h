@@ -147,8 +147,8 @@ namespace Ostap
       // ======================================================================
       /** get the mass-dependent complex width 
        *  \f[ \Gamma(m) \equiv \Gamma_0 
-       *     \left( \frac{q(m)}{q(m_0)} \right)^2L+1}
-       *     \left( \frac{f(m,m_0,m_1,m_2)}{f(m_0,m_0,m_1,m_2)}\right)}
+       *     \left( \frac{q(m)}{q(m_0)} \right)^{2L+1}
+       *     \left( \frac{f(m,m_0,m_1,m_2)}{f(m_0,m_0,m_1,m_2)} \right)
        *   \f]
        *  where 
        *   - \f$ q(m) \f$ is momentum of daughter particle in the rest frame of mother particle
