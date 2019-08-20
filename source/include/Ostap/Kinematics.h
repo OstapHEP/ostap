@@ -84,10 +84,8 @@ namespace Ostap
      *  the covarinace matrix
      *
      *  @code
-     *
-     *   const LHCb::Particle* p = ... ;
-     *   double s2m = sigma2mass ( p -> momentum() , p -> momCovMatrix() ) ; 
-     *
+     *  const LHCb::Particle* p = ... ;
+     *  double s2m = sigma2mass ( p -> momentum() , p -> momCovMatrix() ) ; 
      *  @endcode
      *  
      *  @attention the correct result is returned only for time-like vectors! 
@@ -128,10 +126,8 @@ namespace Ostap
      *  the covarinace matrix
      *
      *  @code
-     *
-     *   const LHCb::Particle* p = ... ;
-     *   double sigma = sigmamass ( p -> momentum() , p -> momCovMatrix() ) ; 
-     *
+     *  const LHCb::Particle* p = ... ;
+     *  double sigma = sigmamass ( p -> momentum() , p -> momCovMatrix() ) ; 
      *  @endcode
      *  
      *  @attention the correct result is returned only for time-like vectors!
@@ -165,14 +161,11 @@ namespace Ostap
     /** evaluate the chi2 of the mass 
      *
      *  @code
-     *
      *   const LHCb::Particle* B = ... ;
-     *
      *   const double chi2 = 
      *       chi2mass ( 5.279 * GeV , 
      *                  B -> momentum()           , 
      *                  B -> momCovMatrix()       ) ; 
-     *
      *  @endcode
      *  
      *  @param mass       (in) nominal mass
@@ -211,13 +204,11 @@ namespace Ostap
     }
     // ========================================================================
     /** evaluate the dispersion of p from the particle 4-vector and 
-  *  the covarinace matrix
+     *  the covarinace matrix
      *
      *  @code
-     *
      *   const LHCb::Particle* p = ... ;
      *   double s2p = sigma2p ( p -> momentum() , p -> momCovMatrix() ) ; 
-     *
      *  @endcode
      *  
      *  @param momentum   (in) the particle momentum
@@ -386,10 +377,8 @@ namespace Ostap
      *  the covariance matrix
      *
      *  @code
-     *
-     *   const LHCb::Particle* p = ... ;
-     *   double s2y = sigma2y ( p -> momentum() , p -> momCovMatrix() ) ; 
-     *
+     *  const LHCb::Particle* p = ... ;
+     *  double s2y = sigma2y ( p -> momentum() , p -> momCovMatrix() ) ; 
      *  @endcode
      *  
      *  @param momentum   (in) the particle momentum
@@ -528,13 +517,13 @@ namespace Ostap
     // ========================================================================
     /** @class Gram
      *  Calculate a few simplest Gram determinants:
-     *  \f$ G\left( \begin{array}{lcr} p_1, & ... & p_n \\ 
+     *  \f[ G\left( \begin{array}{lcr} p_1, & ... & p_n \\ 
      *                                 q_1, & ... & q_n \end{array} \right) 
      *  \equiv 
      *  \left| \begin{array}{lcl}
      *    p_1q_1   & ... &   p_1q_n \\
      *    ...      & ... &   ...    \\
-     *    p_nq_1   & ... &   p_nq_n  \end{array} \right|\f$          
+     *    p_nq_1   & ... &   p_nq_n  \end{array} \right| \f]          
      *
      *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
      *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)

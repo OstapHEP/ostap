@@ -390,8 +390,8 @@ Ostap::Math::LegendreSum3::LegendreSum3
   , m_cache_z ( NZ + 1 , 0.0 )
 {}
 // ============================================================================
-/** constructor orm the product of two Legendre sums
- *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \timex S_z(z) \f$ 
+/*  constructor orm the product of two Legendre sums
+ *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 
  *  @param sx (INPUT) the first  Legendre sum 
  *  @param sy (INPUT) the second Legendre sum 
  *  @param sz (INPUT) the third Legendre sum 
@@ -427,7 +427,7 @@ Ostap::Math::LegendreSum3::LegendreSum3
 }
 // ============================================================================
 /*  constructor form the product of two Legendre sums
- *  \f$ S(x,y,z) = S_{xy}(x,y) \timex S_z(z) \f$ 
+ *  \f$ S(x,y,z) = S_{xy}(x,y) \times S_z(z) \f$ 
  *  @param sxy (INPUT) the first  Legendre sum 
  *  @param sz  (INPUT) the second Legendre sum 
  */

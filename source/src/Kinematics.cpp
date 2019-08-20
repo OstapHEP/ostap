@@ -112,7 +112,7 @@ double Ostap::Kinematics::Gram::Delta
   return p1.M2() * 1.0L * p2.M2() - p1p2 * p1p2 ;
 }
 // ============================================================================
-/** symmetric Gram determinant
+/* symmetric Gram determinant
  *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
  *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
  *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
@@ -169,12 +169,12 @@ double Ostap::Kinematics::Gram::Delta
   return det ;
 }
 // ============================================================================
-/** non-symmetric Gram determinant
- *  \f$ G \left(\begin{array}{ll} p_1 , & p_2 \\
+/*  non-symmetric Gram determinant
+ *  \f[ G \left(\begin{array}{ll} p_1 , & p_2 \\
  *                                q_1 , & q_2 \end{array}\right) 
  *  = \left| \begin{array}{ll}
  *  p_1q_1 & p_1q_2 \\
- *  p_2q_1 & p_2q_2 \end{array} \right| f\$
+ *  p_2q_1 & p_2q_2 \end{array} \right| \f]
  */
 // =============================================================================
 double Ostap::Kinematics::Gram::G 
@@ -192,12 +192,12 @@ double Ostap::Kinematics::Gram::G
 }
 // ============================================================================
 /*  non-symmetric Gram determinant
- *  \f$ G \left(\begin{array}{lll} p_1 , & p_2, & p_3 \\
+ *  \f[ G \left(\begin{array}{lll} p_1 , & p_2, & p_3 \\
  *                                 q_1 , & q_2, & q_3 \end{array}\right) 
  *  = \left| \begin{array}{lll}
  *  p_1q_1 & p_1q_2 & p_1q_3 \\
  *  p_2q_1 & p_2q_2 & p_2q_3 \\
- *  p_3q_1 & p_3q_2 & p_3q_3 \end{array} \right| f\$
+ *  p_3q_1 & p_3q_2 & p_3q_3 \end{array} \right| \f]
  */
 // ============================================================================
 double Ostap::Kinematics::Gram::G 
@@ -229,13 +229,13 @@ double Ostap::Kinematics::Gram::G
 }
 // ============================================================================
 /*  non-symmetric Gram determinant
- *  \f$ G \left(\begin{array}{llll} p_1 , & p_2,& p_3, &p_4 \\
+ *  \f[ G \left(\begin{array}{llll} p_1 , & p_2,& p_3, &p_4 \\
  *                                 q_1 , & q_2, & q_3, &q_4 \end{array}\right) 
  *  = \left| \begin{array}{llll}
  *  p_1q_1 & p_1q_2 & p_1q_3 & p_1q_4\\
  *  p_2q_1 & p_2q_2 & p_2q_3 & p_2q_4\\
  *  p_3q_1 & p_3q_2 & p_3q_3 & p_3q_4\\ 
- *  p_4q_1 & p_4q_2 & p_4q_3 & p_4q_4\end{array} \right| f\$
+ *  p_4q_1 & p_4q_2 & p_4q_3 & p_4q_4\end{array} \right| \f]
  */
 // ============================================================================
 double Ostap::Kinematics::Gram::G 
@@ -788,7 +788,7 @@ double Ostap::Kinematics::armenterosPodolanskiX
   const Ostap::Vector3D& d2 )
 { return ( d1.Mag2() - d2.Mag2() ) / ( d1 + d2 ).Mag2(); }
 // ============================================================================
-/** trivial functon to get the component of "a", transverse to "b"
+/*  trivial functon to get the component of "a", transverse to "b"
  *  @param a (INPUT)  three vector
  *  @param b (INPUT)  reference direction
  *  @return component of "a", transverse to "b"

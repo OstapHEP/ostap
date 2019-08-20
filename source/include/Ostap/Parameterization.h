@@ -270,10 +270,10 @@ namespace Ostap
     // ========================================================================
     /** @class  LegendreSum3  Ostap/Parameterization.h
      *  3D-parameterization  as sum of Legendre polynomials 
-     *  \f$ S(x,y,z) = \sum_{i0}^{n_x}\sum_{j=0}^{n_y}\sum_{k=0}^{n_z}c_{i,j}
+     *  \f[ S(x,y,z) = \sum_{i0}^{n_x}\sum_{j=0}^{n_y}\sum_{k=0}^{n_z}c_{i,j}
      *      P_i(x^\prime)
-     *      P_j(y^\prime)\f$,
-     *      P_k(z^\prime)\f$,
+     *      P_j(y^\prime)
+     *      P_k(z^\prime)\f],
      * where:
      *  - \f$ x^{\prime} = \frac{2x-x_{min}-x_{max}}{x_{max}-x_{min}}\f$,
      *  - \f$ y^{\prime} = \frac{2y-y_{min}-y_{max}}{y_{max}-y_{min}}\f$. 
@@ -286,10 +286,10 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor 
-       *  \f$ S(x,y,z) = \sum_{i0}^{n_x}\sum_{j=0}^{n_y}\sum_{k=0}^{n_z}c_{i,j}
+       *  \f[ S(x,y,z) = \sum_{i0}^{n_x}\sum_{j=0}^{n_y}\sum_{k=0}^{n_z}c_{i,j}
        *      P_i(x^\prime)
-       *      P_j(y^\prime)\f$,
-       *      P_k(z^\prime)\f$,
+       *      P_j(y^\prime)
+       *      P_k(z^\prime)\f],
        * where:
        *  - \f$ x^{\prime} = \frac{2x-x_{min}-x_{max}}{x_{max}-x_{min}}\f$,
        *  - \f$ y^{\prime} = \frac{2y-y_{min}-y_{max}}{y_{max}-y_{min}}\f$. 
@@ -307,7 +307,7 @@ namespace Ostap
         const double   zmax     =  1 ) ;
       // ======================================================================
       /** constructor orm the product of two Legendre sums
-       *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \timex S_z(z) \f$ 
+       *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 
        *  @param sx (INPUT) the first  Legendre sum 
        *  @param sy (INPUT) the second Legendre sum 
        *  @param sz (INPUT) the third Legendre sum 
@@ -317,7 +317,7 @@ namespace Ostap
                      const LegendreSum&  sz ) ;
       // ======================================================================
       /** constructor form the product of two Legendre sums
-       *  \f$ S(x,y,z) = S_{xy}(x,y) \timex S_z(z) \f$ 
+       *  \f$ S(x,y,z) = S_{xy}(x,y) \times S_z(z) \f$ 
        *  @param sxy (INPUT) the first  Legendre sum 
        *  @param sz  (INPUT) the second Legendre sum 
        */
