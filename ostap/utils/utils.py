@@ -30,7 +30,6 @@ __all__     = (
     #
     'virtualMemory'      , ## context manager to count virtual memory increase 
     'memory'             , ## ditto
-    'clocks'             , ## context manager to count clocks 
     'timing'             , ## context manager to count time 
     'timer'              , ## ditto
     'profiler'           , ## context manager to perform profiling
@@ -82,7 +81,7 @@ del getLogger
 # =============================================================================
 from sys                import version_info  as python_version 
 ## timing stuff
-from ostap.utils.timing import clocks, timing, timer
+from ostap.utils.timing import timing, timer
 ## other useful stuff 
 from ostap.utils.basic  import isatty, with_ipython
 ## ... and more useful stuff 

@@ -13,8 +13,10 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (  
-    'Chain' , ## helper class , needed for multiprocessing 
-    'Tree'  , ## helper class , needed for multiprocessing
+    'Chain'           , ## helper class , needed for multiprocessing 
+    'Tree'            , ## helper class , needed for multiprocessing
+    'ActiveBranches'  , ## context manager to activate certain branches 
+    'active_branches' , ## context manager to activate certain branches 
   ) 
 # =============================================================================
 import ROOT, os
@@ -61,16 +63,34 @@ ROOT.TChain.__bool__    = _tt_nonzero_
 #              no need in second call
 #  @see Analysis::PyIterator
 #  @see Ostap::Formula
+#  If only (small) fraction of branches is used in <code>cuts</code> and/or
+#  only small fraction of branches wil lbe used in the loop,
+#  the processing can be speed up siginificantly
+#  by specification of "active" branches:
+#  @code
+#  tree = ...
+#  sum_y = 0 
+#  for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False ) :
+def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False , active = () ) :
     """Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
     >>> for i in tree.withCuts ( 'pt>5' ) : print i.y
     
     Attention: TTree::GetEntry is already invoked for accepted events,
-    no need in second call 
+    no need in second call
+
+    - If only (small) fraction of branches is used in 'cuts' and/or
+    only small fraction of branches wil lbe used in the loop,
+    the processing can be speed up siginificantly
+    by specification of ``active'' branches:
+
+    >>> tree = ...
+    >>> sum_y = 0 
+    >>> for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
     """
     #
     last = min ( last , len ( self )  )
@@ -78,10 +98,21 @@ def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False ) :
     pit = Ostap.PyIterator ( self , cuts , first , last )
     if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
     #
+
+    if active :
+        abrs = set ( active )
+        cvar = self.the_variables ( cuts )
+        for v in  cvar : abrs.add ( v    )
+        abrs = tuple ( abrs ) 
+        context = ActiveBranches ( self , *abrs )
+    else :
+        from ostap.utils.utils import NoContext 
+        context = NoContext () 
+    
     from ostap.utils.progress_bar import ProgressBar 
     with ProgressBar ( min_value = first        ,
                        max_value = last         ,
-                       silent    = not progress ) as bar :
+                       silent    = not progress ) as bar , context as cntx :
         
         step = 13.0 * max ( bar.width , 101 ) / ( last - first ) 
         
@@ -1511,8 +1542,6 @@ ROOT.TTree.nEff = _rt_nEff_
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.TTree )
 
-
-
 # =============================================================================
 ## get all variables needed to evaluate the expressions for the given tree
 #  @code
@@ -1544,7 +1573,7 @@ def the_variables ( tree , expression , *args ) :
             
         tf = Ostap.Formula ( fID() , str ( e ) , tree )
         if not tf.ok()  :
-            logger.error ('the_variables: Invalid formula %s' % e )
+            logger.error ('the_variables: Invalid formula "%s"' % e )
             del tf 
             return None
         
@@ -1563,25 +1592,101 @@ def the_variables ( tree , expression , *args ) :
     leaves   = tree.leaves   ()
     branches = tree.branches ()
     all      = set ( leaves + branches )
+
+    ## If variable-sized vectors, add the lengths...
     
     for v in vvars :
 
-        l  = tree.GetLeaf(v)
-        b  = l   .GetBranch()
-        t  = b   .GetTitle ()
+        l  = tree.GetLeaf ( v )
+        t  = l.GetTitle ()
         p1 = t. find ( '[' )
         p2 = t.rfind ( ']' )
-        if 0 < p1 and p1 < p2 :
+        if 0 < p1 < p2 :
             n = t [ p1 + 1 : p2 ]
-            n = n.split( ',' ) 
+            n = n.replace ( '][' , ',' )
+            n = n.split   ( ',' ) 
             for i in n :
                 if i in all : vars.add ( i )
-                
+            
+        b  = l   .GetBranch ( )
+        t  = b   .GetTitle  ( )
+        p1 = t. find ( '[' )
+        p2 = t.rfind ( ']' )
+        if 0 < p1 < p2 :
+            n = t [ p1 + 1 : p2 ]
+            n = n.replace ( '][' , ',' )
+            n = n.split   ( ',' ) 
+            for i in n :
+                if i in all : vars.add ( i )
+
     return   tuple ( vars ) 
 
 
 ROOT.TTree.the_variables = the_variables
 
+# ===============================================================================
+## @class ActiveBranches
+#  Context manager to activate only certain branches in the tree.
+#  It drastically speeds up the iteration over the tree.
+#  @code
+#  tree = ...
+#  with ActiveBraches( tree , '*_Lb' , 'eta_Lc') :
+#    for i in range(1000000) :
+#        tree.GetEntry ( i )
+#        print tree.pt_Lb, tree.eta_Lc 
+#  @endcode
+class ActiveBranches(object) :
+    """Context manager to activate only certain branches in the tree.
+    - It drastically speeds up the iteration over the tree.
+    >>> tree = ...
+    >>> with ActiveBraches( tree , '*_Lb', 'eta_Lc') :
+    ...    for i in range(1000000) :
+    ...    tree.GetEntry ( i )
+    ...    print tree.pt_Lb, tree.eta_Lc
+    """
+    def __init__ ( self , tree , *vars ) :
+        
+        assert tree and vars , 'ActiveBrnaches: both tree and vars must be valid!'
+        
+        self.__tree = tree
+        self.__vars = vars 
+        
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
+        ## deactivate the all branches 
+        self.__tree.SetBranchStatus ( '*' , 0 )     ## deactivate *ALL* branches
+        for var in self.__vars :
+            ##  activate certain branches 
+            self.__tree.SetBranchStatus( var , 1 )  ## activate only certain branches
+            
+        return self.__tree 
+    
+    ## context manager: EXIT 
+    def __exit__ ( self , *_ ) :
+        ## reactivate all branches again 
+        self.__tree.SetBranchStatus ( '*' , 1 )     ## reactivate *ALL* branches
+        
+# ===============================================================================
+## Context manager to activate only certain branches in the tree.
+#  It drastically speeds up the iteration over the tree.
+#  @code
+#  tree = ...
+#  with active_braches ( tree , '*_Lb' , 'eta_Lc') :
+#    for i in range(1000000) :
+#        tree.GetEntry ( i )
+#        print tree.pt_Lb, tree.eta_Lc 
+#  @endcode
+def active_branches ( tree , *vars ) :
+    """Context manager to activate only certain branches in the tree.
+    - It drastically speeds up the iteration over the tree.
+    >>> tree = ...
+    >>> with active__braches ( tree , '*_Lb', 'eta_Lc') :
+    ...    for i in range(1000000) :
+    ...    tree.GetEntry ( i )
+    ...    print tree.pt_Lb, tree.eta_Lc
+    """
+    return ActiveBranches ( tree , *vars ) 
+    
 # ===============================================================================
 ## Print the report 
 def report_print ( report , prefix = '' ) :
