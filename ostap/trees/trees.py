@@ -1196,6 +1196,30 @@ def _rc_getslice_ ( self , start , stop , *step ) :
 
 ROOT.TChain.__getslice__ = _rc_getslice_
 
+
+# =============================================================================
+## iterator over individual trees in the echain
+#  @code
+#  chain = ...
+#  for tree in  chain.trees ()  :
+#       print len(tree)
+#  @endcode 
+def _rc_itrees_   ( self ) :
+    """Iterator over individual trees in the echain
+    >>> chain = ...
+    >>> for tree in  chain.trees ()  :
+    ...     print len(tree)
+    """
+
+    _files = self.files()
+    for _f in _files :
+
+        c = ROOT.TChain ( self.GetName() )
+        c.Add ( _f )
+        yield c
+        
+    
+    
 # =============================================================================
 ## Get the chain corresponding to the subset of files
 #  @code
@@ -1752,7 +1776,6 @@ def _rt_reduce_  ( tree          ,
     from ostap.core.core       import strings as strings_ 
     import ostap.frames.frames
     
-
     if not fname :
         import ostap.utils.cleanup as CU
         fname = CU.CleanUp.tempfile ( suffix = '.root' )
@@ -1777,7 +1800,7 @@ def _rt_reduce_  ( tree          ,
 
     report = frame.Report()
     if variables :
-        varibales = list     ( variables )  
+        variables = list     ( variables )  
         variables = strings_ ( variables )
         snapshot = frame.Snapshot ( tree.GetName() , fname , variables )
     else : 
@@ -2014,7 +2037,7 @@ class Chain(CleanUp) :
         
     ## split the chain for several chains  with at most chunk_size entries
     def slow_split ( self , chunk_size = 200000 ) :
-        """Split the tree for several trees with chunk_size entries
+        """ Split the chain/tree for several chains/trees with at most chunk_size entries
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
@@ -2055,7 +2078,8 @@ class Chain(CleanUp) :
         for i in range ( 0 , last - first , chunk_size ) :
             ## yield lst [ i : min ( i + chunk_size , list_size ) ] 
             yield slice ( first + i , first + min ( i + chunk_size , last -first  ) ) 
-                       
+
+
     ## split the chain for several chains with at most chunk_size entries
     def split ( self , chunk_size = -1 , max_files = 10 ) :
         """Split the tree for several trees with chunk_size entries
@@ -2099,9 +2123,6 @@ class Chain(CleanUp) :
         
         if self.__chain is None : self.__chain = self.__create_chain () 
         return len ( self.__chain )
-
-
-
     
     def __create_chain ( self ) :
         """``chain'' : get the underlying tree/chain"""

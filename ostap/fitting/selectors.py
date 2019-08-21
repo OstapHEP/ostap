@@ -1304,14 +1304,14 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
             
             frame  = Ostap.DataFrame ( self , enable = True )
             
-            frame  = frame.Filter ( selector.selection , 'SELECTION' )
-            
             vars   = list ( selector.variables )
             tvars  = [ v for v in vars if     v.trivial ] ## trivial vars 
             vars_  = [ v for v in vars if not v.trivial ] ## non-trivial vars
             nvars  = []
             scuts  = []
 
+            ranges = []
+            
             for v in tvars :
                 mn , mx = v.minmax
                 if v.name == v.formula :                    
@@ -1328,21 +1328,25 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     
                 if _minv < mn :
                     lcut = "(%.16g <= %s)" % ( mn     , v.name )
-                    if silent : scuts.append ( lcut )
-                    else      : frame = frame.Filter ( lcut , 'RANGE(%s,low)'  % v.name )
-                    logger.debug  ( 'PROCESS: add cut %s ' % lcut )
-                    
+                    if silent : scuts.append  (   lcut )
+                    else      : ranges.append ( ( lcut , 'RANGE(%s,low)'  % v.name ) )
+                        
                 if _maxv > mx :
                     hcut = "(%s <= %.16g)" % ( v.name , mx     )
                     if silent : scuts.append ( hcut )
-                    else      : frame = frame.Filter ( hcut , 'RANGE(%s,high)' % v.name )
-                    logger.debug  ( 'PROCESS: add cut %s ' % hcut )
+                    else      : ranges.append ( ( hcut , 'RANGE(%s,high)' % v.name ) )
+
+            frame  = frame.Filter ( selector.selection , 'SELECTION' )            
+
+            for  c , f in ranges : 
+                frame = frame.Filter ( c  , f )
+                logger.debug  ( 'PROCESS: add cut %s ' % c )
 
             if scuts :
                 acut = ' && '.join ( ( "(%s)" % c for c in scuts ) )
                 frame = frame.Filter ( acut , 'RANGES' )
                 logger.debug  ( 'PROCESS: add cut %s ' % acut )
-                
+
             from ostap.utils.cleanup import TempFile
             with TempFile ( suffix = '.root' , prefix = 'frame-' ) as tf :
                 if not silent : logger.info ( 'Prepare snapshot/loop over the tree %s' % tf.filename )
@@ -1354,9 +1358,7 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                 else      :
                     ## otherwise dump only needed variables 
                     bvars = self.the_variables( [ v.formula for v in tvars ] )
-                    avars = set ( [ v.name for v in nvars ] )
-                    for b in bvars : avars.add ( b )
-                    avars = tuple ( avars ) 
+                    avars = list ( bvars ) + [ v.name for v in nvars ] 
                     from ostap.core.core import strings as _strings 
                     logger.debug  ('PROCESS: dump only %s' % list ( avars ) )
                     snapshot = frame . Snapshot ( 'tree' , tf.filename , _strings ( *avars ) )
