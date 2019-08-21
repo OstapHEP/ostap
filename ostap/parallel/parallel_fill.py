@@ -109,11 +109,10 @@ class  FillTask(Task) :
             else :
                 ds_ , stat_ = self.__output
                 ds_.append ( ds )
-                stat_     = list(stat_)
-                stat_[0] += stat[0] ## total 
-                stat_[1] += stat[1] ## procesed 
-                stat_[2] += stat[2] ## skipped                
-                self.__output = ds_ , tuple(stat_)
+                stat_.total      += stat.total     ## total 
+                stat_.processed  += stat.processed ## procesed 
+                stat_.skipped    += stat.skipped   ## skipped                
+                self.__output = ds_ , stat_
                 ds.clear () 
             del result            
             logger.debug ( 'Merging: %d entries ' % len( self.__output[0] ) )
@@ -176,13 +175,13 @@ def pprocess ( chain               ,
     selector.stat = stat 
 
     from ostap.logger.logger import attention 
-    skipped = 'Skipped:%d' % stat[2]
-    skipped = '/' + attention ( skipped ) if stat[2] else ''
+    skipped = 'Skipped:%d' % stat.skipped
+    skipped = '/' + attention ( skipped ) if stat.skipped else ''
     logger.info (
         'Selector(%s): Events Processed:%d/Total:%d%s CUTS: "%s"\n# %s' % (
         selector.name    ,
-        stat[1]          ,
-        stat[0]          ,
+        stat.processed   ,
+        stat.total       ,
         skipped          ,
         selector.cuts()  , dataset ) )            
     

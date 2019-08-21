@@ -112,7 +112,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
 from   ostap.core.core        import cpp, Ostap, items_loop 
-from   ostap.core.ostap_types import num_types, string_types 
+from   ostap.core.ostap_types import num_types, string_types, integer_types  
 import ostap.fitting.roofit 
 # =============================================================================
 ## C++ Selector 
@@ -386,6 +386,48 @@ def valid_formula ( expression , varset ) :
     return fok
             
 # ==============================================================================
+## @class SelStat
+#  Helper class to keep the statististics for SelectorWithVars 
+class SelStat(object) :
+    """Helper class to keep the statististics for SelectorWithVars
+    """
+    def __init__ ( self ,  total = 0 , processed = 0 , skipped = 0 ) :
+        self.__total     = total
+        self.__processed = processed 
+        self.__skipped   = skipped  
+
+    @property
+    def total ( self ) :
+        """``total''   : total number of events"""
+        return self.__total
+    @total.setter
+    def total ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value ,\
+               "Invalid value for ``total''"
+        self.__total = value
+            
+    @property
+    def processed ( self ) :
+        """``processed''   : number of processed events"""
+        return self.__processed
+    @processed.setter
+    def processed ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value ,\
+               "Invalid value for ``processed''"
+        self.__processed = value
+        
+    @property
+    def skipped ( self ) :
+        """``skipped''   : number of skipped events (e.g. due to variabel ranges)"""
+        return self.__skipped
+    @skipped.setter
+    def skipped ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value ,\
+               "Invalid value for ``skipped''"
+        self.__skipped = value
+
+
+# ==============================================================================
 ## Define generic selector to fill RooDataSet from TChain
 #
 #  @code
@@ -610,7 +652,7 @@ class SelectorWithVars(SelectorWithCuts) :
         from collections import defaultdict
         self.__skip     = defaultdict(int)
         self.__notifier = None
-        self.__stat    = [ 0 , 0 , 0 ] 
+        self.__stat     = SelStat() 
 
     @property 
     def name ( self ) :
@@ -677,29 +719,27 @@ class SelectorWithVars(SelectorWithCuts) :
     
     @property
     def skipped ( self ) :
-        """``skipped'' : total number of skept entries"""
-        return self.__stat[2]
+        """``skipped'' : total number of skipped entries"""
+        return self.stat.skipped
     
     @property
     def processed  ( self ) :
         """``processed'' : number of processeed events (after cuts)"""
-        return self.__stat[1]
+        return self.stat.processed 
     
     @property
     def total  ( self ) :
         """``total'' : total number of processeed events (before cuts)"""
-        return self.__stat[0]
+        return self.stat.total
 
     @property
     def stat ( self ) :
         """``stat'' : Total/processed/skipped events"""
-        return tuple(self.__stat)
+        return self.__stat    
     @stat.setter
     def stat ( self , value  ) :
-        assert 2<= len(value), 'Invalid "value":%s' % str ( value )
-        self.__stat[0] = value[0]
-        self.__stat[1] = value[1]
-        self.__stat[2] = value[2]
+        assert isinstance ( value , SelStat ) , 'Invalid "value":%s' % str ( value )
+        self.__stat = value 
 
     ## get the dataset 
     def dataset   ( self  ) :
@@ -718,7 +758,7 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         
         if not self.__progress and not self.silence :
-            self.__stat[0] =  self.fChain.GetEntries()
+            self.stat.total =  self.fChain.GetEntries()
             self.__logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , self.fChain.GetName() , self.total ) )
             ## decoration:
             from ostap.utils.progress_bar import ProgressBar
@@ -729,7 +769,7 @@ class SelectorWithVars(SelectorWithCuts) :
             if 0 == self.processed % 1000 or 0 == entry % 1000 or 0 == self.event() % 1000 : 
                 self.__progress.update_amount ( self.event () )
                 
-        self.__stat[1] += 1
+        self.stat.processed += 1
         
         #
         ## == for more convenience
@@ -761,7 +801,7 @@ class SelectorWithVars(SelectorWithCuts) :
             value     = vfun ( bamboo )
             if not vmin <= value <= vmax :   ## MUST BE IN RANGE!
                 self.__skip[v.name] += 1     ## SKIP EVENT
-                self.__stat[2]      += 1     ## SKIP EVENT 
+                self.stat.skipped   += 1     ## SKIP EVENT 
                 return 0                     ## RETURN 
 
             var.setVal ( value ) 
@@ -777,6 +817,28 @@ class SelectorWithVars(SelectorWithCuts) :
         """``callable'' interface to Selector
         """
         return self.fill ( entry ) 
+
+    # =========================================================================
+    ## clone this selector
+    #  @code
+    #  sel = ...
+    #  new_sel = sel.clone ( name = 'QUQU' , fullname = 'FullName  ) 
+    #  @endcode
+    def clone ( self , **kwargs ) :
+        """Clone the selector
+        >>> sel = ...
+        >>> new_sel = sel.clone ( name = 'QUQU' , fullname = 'FullName  ) 
+        """
+        
+        kw = {}
+        kw [ 'variables' ] = self.variables
+        kw [ 'selection' ] = self.selection 
+        kw [ 'cuts'      ] = self.morecuts
+        kw [ 'silence'   ] = self.silence
+
+        kw.update ( kwargs )
+        return SelectorWithVars ( **kw ) 
+
 
     ## termination 
     def Terminate ( self  ) :
@@ -797,7 +859,7 @@ class SelectorWithVars(SelectorWithCuts) :
             return  ## RETURN
 
         ##get total number of input events from base class 
-        self.__stat[0] = self.event()
+        self.stat.total = self.event()
         
         if not self.silence :
             skipped = 'Skipped:%d' % self.skipped
@@ -928,7 +990,7 @@ class SelectorWithVars(SelectorWithCuts) :
         if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
         #
-        self.__stat[0] =  tree.GetEntries()
+        self.stat.total =  tree.GetEntries()
         #
         if self.__notifier :
             self.__notifier.exit()
@@ -962,12 +1024,12 @@ class SelectorWithVars(SelectorWithCuts) :
             
         return result 
 
-
 # =============================================================================
 import os
 from   ostap.core.workdir import workdir
 from   ostap.io.zipshelve import ZipShelf 
 # =============================================================================
+
 
 # ==============================================================================
 ## Generic selector which loads already loaded datasets from cache
@@ -1151,7 +1213,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
     processed = tree.statVar ( '1' , selection    ).nEntries()
     skipped   = tree.statVar ( '1' , str ( cuts ) ).nEntries() 
 
-    stat = total, processed , processed - skipped
+    stat = SelStat ( total , processed , processed - skipped )
 
     from ostap.logger.utils import rooSilent, rootError
     from ostap.utils.timing import timing
@@ -1209,12 +1271,12 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         ds = ds1
         
     if not silent : 
-        skipped = 'Skipped:%d' % stat[2]
-        skipped = '/' + attention ( skipped ) if stat[2] else '' 
+        skipped = 'Skipped:%d' % stat.skipped 
+        skipped = '/' + attention ( skipped ) if stat.skipped else '' 
         logger.info (
             'make_dataset: Events Total:%d/Processed:%s%s CUTS: "%s"\n# %s' % (
-            stat[0] ,
-            stat[1] ,
+            stat.total     ,
+            stat.processed ,
             skipped ,
             selection  , ds ) )            
         
@@ -1367,10 +1429,17 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     from ostap.frames.frames import report_prnt
                     txt = report_prnt ( report , 'Tree -> Frame -> Tree filter-transformation: ' )
                     logger.info ( txt )
-                    
+
+                total_0 = -1
+                for c in report :
+                    if  total_0 < 0 : total_0 = c.GetAll()
+                    else            : break
+                        
                 if not silent : logger.info ( 'Write %s' % tf.filename  ) 
-                import ostap.io.root_file 
+                import ostap.io.root_file
+
                 assert frame.Count().GetValue()>0 , 'Selection result is empty'
+                
                 with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 
                     tree         = tt.tree
                     new_selector = SelectorWithVars ( nvars + vars_ ,
@@ -1388,9 +1457,12 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                                                shortcut  = True    ,
                                                silent    = silent  ,
                                                use_frame = -1      )
-                    
+
                     selector.data = new_selector.data
-                    selector.stat = new_selector.stat
+
+                    selector.stat.total     = total_0
+                    selector.stat.processes = new_selector.stat.processed 
+                    selector.stat.skiped    = new_selector.stat.skipped 
                     del new_selector
                     
                     return result
