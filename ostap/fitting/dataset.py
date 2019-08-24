@@ -418,9 +418,8 @@ _new_methods_ += [
 
 
 
-
 # =============================================================================
-## Helper project method for RooDataSet
+## Helper project method for RooDataSet/DataFrame/... and similar objects 
 #
 #  @code 
 #    
@@ -436,7 +435,7 @@ _new_methods_ += [
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
 def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
-    """Helper project method for RooDataSet
+    """Helper project method for RooDataSet/DataFrame/... and similar objects 
     
     >>> h1   = ROOT.TH1D(... )
     >>> dataset.project ( h1.GetName() , 'm', 'chi2<10' ) ## project variable into histo
@@ -483,6 +482,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             else                      : vars.append ( w ) 
         ##return ds_project ( dataset , histo , vars , cuts , *args ) 
 
+    ## what is it ? 
     if isinstance ( what , ROOT.RooArgList ) :
         vars  = [ w for w in what ]
         cuts0 = cuts 
@@ -506,24 +506,28 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         if instance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
 
-    if  1 <= len(what) and isinstance ( what[0] , ROOT.RooAbsReal ) and isinstance ( cuts , str ) : 
-        if '' == cuts : cuts0 = 0 
+    ## what it is ????
+    if  1 <= len ( what ) \
+           and isinstance ( what[0] , ROOT.RooAbsReal ) \
+           and isinstance ( cuts , str ) :
+        
+        if   '' == cuts : cuts0 = 0 
         elif isinstance ( cuts , str ) :
             cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
-    if   isinstance ( histo , ROOT.TH3 ) and 3 == len(what)  :
+    if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
         return Ostap.HistoProject.project3 ( dataset ,
                                              histo   , 
                                              what[2] ,
                                              what[1] ,
                                              what[0] , cuts , *args) 
-    elif isinstance ( histo , ROOT.TH2 ) and 2 == len(what)  :
+    elif isinstance ( histo , ROOT.TH2 ) and 2 == len ( what )  :
         return Ostap.HistoProject.project2 ( dataset ,
                                              histo   , 
                                              what[1] ,
                                              what[0] , cuts , *args )
-    elif isinstance ( histo , ROOT.TH1 ) and 1 == len(what)  :
+    elif isinstance ( histo , ROOT.TH1 ) and 1 == len ( what )  :
         return Ostap.HistoProject.project  ( dataset ,
                                              histo   , 
                                              what[0] , cuts , *args )

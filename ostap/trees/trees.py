@@ -839,11 +839,13 @@ def _rt_print_ ( t ) :
     >>> print tree
     """
     ##
-    res = "Name: %s Enries/#%d" %  ( t.GetName() , t.GetEntries() ) 
+    res = "Name: %s Entries/#%d" %  ( t.GetName() , t.GetEntries() ) 
     if hasattr ( t , 'GetNtrees' ) : res += " Chain/#%d " %       t.GetNtrees()
     ##
-    _l          = t.leaves   ()
-    res        += "\nLeaves:\n%s"    % multicolumn ( list( _l ) , indent = 2 , pad = 1 )
+    _l          = list ( set ( t.leaves () ) ) 
+    _l . sort ()
+    _lt = [ "%s:%s" % ( l , t.leaf(l).get_type_short().replace (' [','[' ) ) for l in _l ]
+    res        += "\nLeaves:\n%s"    % multicolumn ( _lt , indent = 2 , pad = 1 )
 
     ## collect non-trivial branches 
     _b          = t.branches ()
@@ -851,7 +853,7 @@ def _rt_print_ ( t ) :
     _bs = set  ( _b )
     _ls = set  ( _l )
     _b  = list ( _bs - _ls ) 
-    _b . sort() 
+    _b . sort () 
     if _b : res += "\nNon-trivial branches:\n%s" % multicolumn ( _b , indent = 2 ,  pad = 1 )
 
     return res.replace ('\n','\n# ') 
@@ -859,7 +861,6 @@ def _rt_print_ ( t ) :
 ROOT.TTree.__repr__ = _rt_print_
 ROOT.TTree.__str__  = _rt_print_
 ROOT.TTree.pprint   = _rt_print_
-
 
 # =============================================================================
 
@@ -887,10 +888,11 @@ __types    = tuple ( tmp )
 del tmp 
 
 
-def __in_types ( t ) :
+def _in_types ( t ) :
     while 0 <= t.find ( 2 * ' ' ) : t = t.replace ( 2 * ' ' , ' ' )
     return t in __types 
-    
+
+
 # ==============================================================================
 ## print tree as table 
 def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
@@ -931,7 +933,7 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
         typename = tn
 
         selvars += 1 
-        if not __in_types ( tn ) : continue
+        if not _in_types ( tn ) : continue
         
         bbs.append ( b ) 
 
@@ -950,7 +952,6 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
     if isinstance ( bbstats , WSE )  : bbstats = { bbs[0] : bbstats } 
     
     for b in brs :
-
         
         l = tree.leaf ( b )
 
@@ -958,23 +959,25 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
             logger.warning ("table: can't get the leaf  \"%s\"" % b )
             continue
         
-        tn       = l.GetTypeName ()
-        typename = tn
+        ## tn       = l.GetTypeName ()
+        ## typename = tn
         
-        br = l.GetBranch()
-        if br :  
-            n = br.GetTitle()
-            typename = '%s %s '
-            p = n.find('[')
-            if  0 <= p :
-                p2 = n.find( '/' , p + 1 )
-                if p < p2 : typename = '%s %s' % ( tn , n[p:p2] )
-                else      : typename = '%s %s' % ( tn , n[p:  ] )            
-            else          : typename = '%s'    %   tn  
+        ## br = l.GetBranch()
+        ## if br :  
+        ##     n = br.GetTitle()
+        ##     typename = '%s %s '
+        ##     p = n.find('[')
+        ##     if  0 <= p :
+        ##         p2 = n.find( '/' , p + 1 )
+        ##         if p < p2 : typename = '%s %s' % ( tn , n[p:p2] )
+        ##         else      : typename = '%s %s' % ( tn , n[p:  ] )            
+        ##     else          : typename = '%s'    %   tn  
 
-        typename = typename.replace ( 'Float_t'  , 'float'  ) 
-        typename = typename.replace ( 'Double_t' , 'double' ) 
-        typename = typename.replace ( 'Bool_t'   , 'bool'   )
+        ## typename = typename.replace ( 'Float_t'  , 'float'  ) 
+        ## typename = typename.replace ( 'Double_t' , 'double' ) 
+        ## typename = typename.replace ( 'Bool_t'   , 'bool'   )
+        
+        typename = l.get_type()
         
         rr = [ b , typename ]
         
@@ -1062,6 +1065,84 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
 
 
 # ==============================================================================
+## get a type of TLeaf object
+#  @code
+#  tree = ...
+#  leaf = t.leaf ( 'QQQ' )
+#  print leaf.get_type ( )
+#  @endcode 
+def _tl_type_ ( leaf ) :
+    """Get a type for TLeaf object
+    >>> tree = ...
+    >>> leaf = t.leaf ( 'QQQ' )
+    >>> print leaf.get_type ( )
+    """
+    
+    if not leaf : return 'NULL'
+    
+    branch   = leaf.GetBranch   ()
+    typename = leaf.GetTypeName () 
+    
+    name     = branch.GetTitle() 
+    p1       = name. find ( '[' ) 
+    p2       = name.rfind ( ']' )
+    if   0 < p1 < p2 :
+        typename = '%s [%s]' % ( typename , name [ p1 + 1 : p2 ] )
+    elif 0 < p1 :
+        typename = '%s [%s]' % ( typename , name [ p1 : ] )
+
+    typename = typename.replace ( 'Float_t'  , 'float'  ) 
+    typename = typename.replace ( 'Double_t' , 'double' ) 
+    typename = typename.replace ( 'Bool_t'   , 'bool'   )
+    
+    return typename 
+
+
+# =============================================================================
+_short_types_ = {
+    'Char_t'     : 'B' ,
+    'UChar_t'    : 'b' ,
+    'Short_t'    : 'S' ,
+    'UShort_t'   : 's' ,
+    'Int_t'      : 'I' , 
+    'UInt_t'     : 'i' ,
+    'Float_t'    : 'F' ,
+    'Float16_t'  : 'f' ,
+    'Double_t'   : 'D' ,
+    'Double32_t' : 'd' ,
+    'Long64_t'   : 'L' ,
+    'ULong64_t'  : 'l' ,
+    'Bool_t'     : 'O' ,
+    ##
+    'double'     : 'D' ,
+    'float'      : 'F' , 
+    'bool'       : 'O' ,
+    }
+# ==============================================================================
+## get a type of TLeaf object
+#  @code
+#  tree = ...
+#  leaf = t.leaf ( 'QQQ' )
+#  print leaf.get_short_type ( )
+#  @endcode 
+def _tl_type_short_ ( leaf ) :
+    """Get a type for TLeaf object
+    >>> tree = ...
+    >>> leaf = t.leaf ( 'QQQ' )
+    >>> print leaf.get_type ( )
+    """
+
+    ts = leaf.get_type ()
+    for k in reversed ( sorted ( _short_types_ ) ) :
+        ts = ts.replace ( k , _short_types_[k] )
+    return ts 
+
+# ==============================================================================
+ROOT.TLeaf . get_type       = _tl_type_
+ROOT.TLeaf . get_type_short = _tl_type_short_
+ROOT.TLeaf . get_short_type = _tl_type_short_
+
+# ==============================================================================
 ## print rot-tree in a form of the table
 #  @code
 #  data = ...
@@ -1076,48 +1157,12 @@ def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , *args ) :
 
 
 # =============================================================================
-## simplified printout for TTree/TChain
-#  @see TTree
-#  @code
-#
-#  >>> tree = ...
-#  >>> print tree.pprint()
-#
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-02-04
-def _rt_print_ ( t ) :
-    """Simplified print out for tree/chain
-
-    >>> tree = ...
-    >>> print tree.pprint() 
-    """
-    ##
-    res = "Name: %s Enries/#%d" %  ( t.GetName() , t.GetEntries() ) 
-    if hasattr ( t , 'GetNtrees' ) : res += " Chain/#%d " %       t.GetNtrees()
-    ##
-    _l          = t.leaves   ()
-    res        += "\nLeaves:\n%s"    % multicolumn ( list( _l ) , indent = 2 , pad = 1 )
-
-    ## collect non-trivial branches 
-    _b          = t.branches ()
-    
-    _bs = set  ( _b )
-    _ls = set  ( _l )
-    _b  = list ( _bs - _ls ) 
-    _b . sort() 
-    if _b : res += "\nNon-trivial branches:\n%s" % multicolumn ( _b , indent = 2 ,  pad = 1 )
-
-    return res.replace ('\n','\n# ') 
-
-
-# =============================================================================
 ##  print DataSet
 def _rt_print2_ ( data  ) :
     """Print TTree/TChain"""
-
-    br = len ( data.branches() ) 
-    l  = len ( data            )
+    
+    br = len ( data.branches () ) + len ( data.leaves() )  
+    l  = len ( data             )
     if 10000000 < br * l : return _rt_print_ ( data )
     
     if not isatty() : return _rt_table_ ( data )
@@ -2298,8 +2343,9 @@ class Tree(Chain) :
 
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.TTree   ,
-    ROOT.TChain     
+    ROOT.TTree  ,
+    ROOT.TChain ,   
+    ROOT.TLeaf      
     )
 _new_methods_       = (
     #
@@ -2360,6 +2406,9 @@ _new_methods_       = (
     ROOT.TTree.add_reweighting  ,
     ROOT.TTree.reduce           ,
     ##
+    ROOT.TLeaf.get_type         ,
+    ROOT.TLeaf.get_type_short   ,
+    ROOT.TLeaf.get_short_type   ,
     )
 # =============================================================================
 if '__main__' == __name__ :

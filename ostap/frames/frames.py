@@ -17,7 +17,6 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT
-from ostap.core.core import cpp, Ostap 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -27,18 +26,21 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for ROOT::RDataFrame objects')
 # =============================================================================
+from   ostap.core.core    import cpp, Ostap 
+from   ostap.logger.utils import multicolumn
+# =============================================================================
 try : 
     DataFrame = ROOT.ROOT.RDataFrame
 except AttributeError :
     DataFrame = ROOT.ROOT.Experimental.TDataFrame 
-
+# =============================================================================
 Ostap.DataFrame    = DataFrame 
 
-DataFrame.columns  = lambda s : tuple( s.GetColumnNames() ) 
+DataFrame.columns  = lambda s : tuple ( s.GetColumnNames() ) 
 DataFrame.branches = DataFrame.columns 
 
 # ==============================================================================
-## modify constuctor for RDataFrame to enable/disable Implicit multithreading
+## modify constructor for RDataFrame to enable/disable Implicit multithreading
 #  @code
 #  f1 = DataFrame ( ... , enable = True  ) ## default
 #  f2 = DataFrame ( ... , enable = False ) ## default
@@ -147,7 +149,6 @@ def _fr_statCov_ ( frame       ,
         
     return stat1 , stat2 , cov2 , length
 
-
 # =============================================================================
 ## Simplified print out for the  frame 
 #  @code 
@@ -161,15 +162,16 @@ def _fr_print_ ( t ) :
     >>> print frame
     """
     ##
-    res = "Frame Enries/#%d" %  len ( t )  
+    res = "DataFrame Enries/#%d" %  len ( t )  
     ##
-    _b          = t.columns ()
-    res        +=        "\nBranches: %s" % list( _b )
+    _c          = list ( t.columns () )
+    _c.sort ()  
+    res        += "\nColumns:\n%s" % multicolumn ( _c , indent = 2 , pad = 1 )
     return res
 
 # ===============================================================================
 ## Print the frame report
-def report_prnt (  report , prefix = '' ) :
+def report_prnt ( report , prefix = '' ) :
     """Print a frame report
     """
     from ostap.core.core import binomEff
@@ -203,8 +205,6 @@ def report_prnt (  report , prefix = '' ) :
         
     return text + the_line 
         
-
-
 
 # ==============================================================================
 # decorate 
