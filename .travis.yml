@@ -6,13 +6,12 @@ before_install:
   - docker pull gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
 
 
-install: 
+script: 
  - docker  create -v  /osya --name ostap-build   gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
  - docker cp  .  ostap-build:/osya
  - docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && ./scripts/bootstrap LCG_96 x86_64-centos7-gcc8-opt"
  - docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && pip install coverage coveralls"
-
-script: - docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && nosetests --with-coverage --cover-package=ostap"
+ - docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && nosetests --with-coverage --cover-package=ostap"
 
 after_success:
   - time coveralls
