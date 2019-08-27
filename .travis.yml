@@ -1,10 +1,6 @@
 language: python
 
-matrix:
-  include:
-    - env: PYTHON=2.7
-    - env: PYTHON=3.6
-    - env: PYTHON=3.7
+
 
 install:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -14,7 +10,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels conda-forge
-  - conda create -q -n testenv python=${PYTHON} ostaphep nose
+  - conda create -q -n testenv  ostaphep nose
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
   - pip install coverage coveralls
