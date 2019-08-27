@@ -1,16 +1,25 @@
-sudo: required
-services:
-  - docker
+language: python
 
-before_install:
-  - docker pull gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+matrix:
+  include:
+    - env: PYTHON=2.7
+    - env: PYTHON=3.6
+    - env: PYTHON=3.7
 
+install:
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    -O miniconda.sh; fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda config --add channels conda-forge
+  - conda create -q -n testenv python=${PYTHON} ostap nose
+  - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
+  - source activate testenv
+  - pip install coverage coveralls
 
-script: 
- - docker  create -v  /osya --name ostap-build   gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
- - docker cp  .  ostap-build:/osya
- - docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && ./scripts/bootstrap LCG_96 x86_64-centos7-gcc8-opt"
- - docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && pip install coverage coveralls && pip install nose && source /cvmfs/sft.cern.ch/lcg/views/LCG_96/x86_64-centos7-gcc8-opt/setup.sh && source build/INSTALL/thisostap.sh && nosetests --with-coverage --cover-package=ostap"
+script: nosetests --with-coverage --cover-package=ostap
 
 after_success:
   - time coveralls
