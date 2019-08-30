@@ -47,7 +47,7 @@ class AddBranch(Task) :
             ftype    = type ( function )
             function = ftype ( function )
 
-        files = set() 
+        files = set () 
         tree.chain.add_new_branch ( self.branch_name , function , verbose = False ) 
         for f in tree.files : files.add ( f )
 

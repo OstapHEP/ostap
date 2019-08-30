@@ -62,12 +62,18 @@ Ostap::Functions::FuncFormula::FuncFormula
   : Ostap::IFuncTree( right )
   , TObject         ( right ) 
   , m_tree          ( nullptr            )  // ATTENTION! 
-  , m_formula       ( nullptr            )    
+  , m_formula       ( nullptr            )  // ATTENTION  
   , m_expression    ( right.m_expression )  
   , m_name          ( right.m_name       )  
 {}
 // ============================================================================
-
+Ostap::Functions::FuncFormula*
+Ostap::Functions::FuncFormula::clone () const 
+{ return new FuncFormula ( *this ) ;}
+// ============================================================================
+Ostap::Functions::FuncFormula*
+Ostap::Functions::FuncFormula::Clone ( const char* /* newname */ ) const 
+{ return clone () ; }
 // ============================================================================
 // destructor
 // ============================================================================
@@ -139,6 +145,21 @@ Ostap::Functions::FuncRooFormula::FuncRooFormula
                              "Ostap::Function::FuncRooFormula"        , 
                              Ostap::StatusCode(706)                   ) ; }
 }
+// ============================================================================
+// copy
+// ============================================================================
+Ostap::Functions::FuncRooFormula::FuncRooFormula
+( const Ostap::Functions::FuncRooFormula& right )  
+  : Ostap::IFuncData ( right )
+  , m_data       ( nullptr            ) // ATTENTION! 
+  , m_formula    ( nullptr            ) // ATTENTION!
+  , m_expression ( right.m_expression ) 
+  , m_name       ( right.m_name       )
+{}
+// ============================================================================
+Ostap::Functions::FuncRooFormula*
+Ostap::Functions::FuncRooFormula::clone () const 
+{ return new FuncRooFormula ( *this ) ;}
 // ============================================================================
 // destructor
 // ============================================================================
@@ -287,6 +308,28 @@ Ostap::Functions::FuncTH1::FuncTH1
   m_h1.SetDirectory ( nullptr ) ;
   ///
 }
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::FuncTH1::FuncTH1
+( const Ostap::Functions::FuncTH1&  right ) 
+  : FuncTH     ( right            ) 
+  , m_xvar     ( nullptr          ) // formula it not copied! 
+  , m_xvar_exp ( right.m_xvar_exp ) 
+  , m_tx       ( right.m_tx       ) 
+  , m_h1       ( right.m_h1       ) 
+{}
+// ===========================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::FuncTH1* 
+Ostap::Functions::FuncTH1::clone () const { return new FuncTH1 ( *this ) ; }
+// ============================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::FuncTH1* 
+Ostap::Functions::FuncTH1::Clone ( const char* /* newname */ ) const
+{ return clone () ; }
 // ===========================================================================
 /*  constructor from the formula expression 
  *  @param histo         (INPUT) the historgam 
@@ -313,17 +356,6 @@ Ostap::Functions::FuncTH1::FuncTH1
   m_h1.SetDirectory ( nullptr ) ;
   ///
 }
-// ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::Functions::FuncTH1::FuncTH1
-( const Ostap::Functions::FuncTH1&  right ) 
-  : FuncTH     ( right            ) 
-  , m_xvar     ( nullptr          ) 
-  , m_xvar_exp ( right.m_xvar_exp ) 
-  , m_tx       ( right.m_tx       ) 
-  , m_h1       ( right.m_h1       ) 
-{}
 // ============================================================================
 // destructor
 // ============================================================================
@@ -488,7 +520,18 @@ Ostap::Functions::FuncTH2::FuncTH2
   , m_ty       ( right.m_ty )
   , m_h2       ( right.m_h2 )
 {}
+// ===========================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::FuncTH2* 
+Ostap::Functions::FuncTH2::clone () const { return new FuncTH2 ( *this ) ; }
 // ============================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::FuncTH2* 
+Ostap::Functions::FuncTH2::Clone ( const char* /* newname */ ) const
+{ return clone () ; }
+// ===========================================================================
 //  destructor 
 // ============================================================================
 Ostap::Functions::FuncTH2::~FuncTH2(){}
@@ -683,6 +726,17 @@ Ostap::Functions::FuncTH3::FuncTH3
   , m_tz       ( right.m_tz )
   , m_h3       ( right.m_h3 )
 {}
+// ===========================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::FuncTH3* 
+Ostap::Functions::FuncTH3::clone () const { return new FuncTH3 ( *this ) ; }
+// ============================================================================
+// clone :
+// ============================================================================
+Ostap::Functions::FuncTH3* 
+Ostap::Functions::FuncTH3::Clone ( const char* /* newname */ ) const
+{ return clone () ; }
 // ============================================================================
 //  destructor 
 // ============================================================================

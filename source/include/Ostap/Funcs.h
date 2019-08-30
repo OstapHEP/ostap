@@ -58,6 +58,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      FuncFormula* clone ()                           const override ;
+      FuncFormula* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
       ///  evaluate the formula for  TTree
       double operator() ( const TTree* tree ) const override ;
       // ======================================================================
@@ -98,11 +103,19 @@ namespace Ostap
       FuncRooFormula ( const std::string& expression            , 
                        const RooAbsData*  data       =  nullptr ,
                        const std::string& name       = ""       ) ;
+      // ======================================================================
+      /// copy contructor
+      FuncRooFormula ( const FuncRooFormula&  right ) ;
+      // ======================================================================
       /// default constructor, needed for serialization 
       FuncRooFormula () = default ;
       // ======================================================================
       /// destructor 
       virtual ~FuncRooFormula() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      FuncRooFormula* clone () const override ;
       // ======================================================================
     public:
       // ======================================================================

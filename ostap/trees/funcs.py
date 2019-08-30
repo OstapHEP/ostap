@@ -94,25 +94,28 @@ class RooFormulaFunc(Ostap.Functions.FuncFormula) :
 ## @class H1DFunc
 #  Simple  class to use 1D-histogram  as tree-function
 #  @see Ostap::Functions::FuncTH1
-class H1DFunc (Ostap.Functions.FuncTH1) :
-    """Simple  class to use 1D-histogram  as tree-function
-    """
-    def __init__ ( self        ,
-                   histo       ,
-                   xvar        , ## x-axis
-                   tx          = Ostap.Math.HistoInterpolation.Cubic ,
-                   edges       = True  ,
-                   extrapolate = False ,
-                   density     = False ,                                         
-                   tree        = None  ) :        
-        Ostap.Functions.FuncTH1.__init__ ( self        ,
-                                           histo       ,
-                                           xvar        ,
-                                           tree        ,
-                                           tx          ,
-                                           edges       ,
-                                           extrapolate ,
-                                           density     )         
+H1DFunc = Ostap.Functions.FuncTH1
+
+## class H1DFunc (Ostap.Functions.FuncTH1) :
+##     """Simple  class to use 1D-histogram  as tree-function
+##     """
+##     def __init__ ( self        ,
+##                    histo       ,
+##                    xvar        , ## x-axis
+##                    tx          = Ostap.Math.HistoInterpolation.Cubic ,
+##                    edges       = True  ,
+##                    extrapolate = False ,
+##                    density     = False ,                                         
+##                    tree        = None  ) :        
+##         Ostap.Functions.FuncTH1.__init__ ( self        ,
+##                                            histo       ,
+##                                            xvar        ,
+##                                            tree        ,
+##                                            tx          ,
+##                                            edges       ,
+##                                            extrapolate ,
+##                                            density     )
+
 # ==================================================================================
 ## @class H2DFunc
 #  Simple  class to use 2D-histogram  as tree-function

@@ -771,7 +771,7 @@ class REOPEN(object) :
         
         self.tfile = top_dir ( rfile ) 
         assert rfile and self.tfile and isinstance ( self.tfile , ROOT.TFile ),\
-               'Invalid file directory %s' %   ( rfile.GetName() if rfile else 'INVALID' )
+               'Invalid file directory %s' % ( rfile.GetName() if rfile else 'INVALID' )
 
     ##  enter the context: try to ReOpen fiel with <code>ReOpen('UPDATE')</code>
     def __enter__ ( self ) :
@@ -790,7 +790,6 @@ class REOPEN(object) :
     def __exit__ (  self , *_ ) :
         """Exit the context: return mode to READ if needed 
         """
-
         if self.read :
             with ROOTCWD() : 
                 r = self.tfile.ReOpen ('READ' ) 

@@ -125,6 +125,11 @@ namespace Ostap
       /// destructor 
       virtual ~FuncTH1 () ;
       // ======================================================================
+    public:
+      // ======================================================================
+      FuncTH1* clone ()                           const override ;
+      FuncTH1* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
     protected : // private constructor without histogram 
       // ======================================================================
       /** constructor without histogram 
@@ -146,7 +151,7 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  TTree
-      double operator() ( const TTree* tree ) const override ;
+      double operator () ( const TTree* tree ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -244,6 +249,11 @@ namespace Ostap
       FuncTH2 () = default ;
       /// destructor 
       virtual ~FuncTH2 () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      FuncTH2* clone ()                           const override ;
+      FuncTH2* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     protected : // private constructor without histogram 
       // ======================================================================
@@ -389,6 +399,11 @@ namespace Ostap
       FuncTH3 () = default ;
       /// destructor 
       virtual ~FuncTH3 () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      FuncTH3* clone ()                           const override ;
+      FuncTH3* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     protected : // private constructor without histogram 
       // ======================================================================

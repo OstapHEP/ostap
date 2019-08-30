@@ -24,7 +24,7 @@ namespace Ostap
      *  Helper class to implemet "TTree-functions" in python
      *  @see Ostap::IFuncTree
      */
-     class PyFuncTree :  public Ostap::IFuncTree 
+    class PyFuncTree : public Ostap::IFuncTree 
     {
     public :
       // ======================================================================
@@ -37,6 +37,9 @@ namespace Ostap
       // ======================================================================
       /// destructor 
       virtual ~PyFuncTree() ;
+      // ======================================================================
+      /// ATTENTION! no clone here! 
+      PyFuncTree* clone () const override { return nullptr ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -77,6 +80,9 @@ namespace Ostap
       // ======================================================================
       /// destructor 
       virtual ~PyFuncData () ;
+      // ======================================================================
+      /// ATTENTION! no clone here! 
+      PyFuncData* clone () const override { return nullptr ; }
       // ======================================================================
     public:
       // ======================================================================

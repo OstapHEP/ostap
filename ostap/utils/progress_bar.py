@@ -103,7 +103,7 @@ __all__      = (
     "running_bar"     ## helper function for RunningBar 
     )
 # =============================================================================
-import sys , os
+import sys , os, time 
 from   builtins import range
 # =============================================================================
 ## get number of columns for xterm
@@ -120,7 +120,8 @@ def columns () :
 
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
-from ostap.utils.basic import isatty 
+from ostap.utils.basic   import isatty 
+from ostap.logger.logger import allright, infostr 
 
 # =============================================================================
 ## @class ProgressBar
@@ -211,7 +212,7 @@ class ProgressBar(object):
         self.bar      = ''
         self.min      = min_value
         self.max      = max_value
-        self.span     = max(max_value - min_value,1) 
+        self.span     = max ( max_value - min_value , 1 ) 
         ##
 
         ncols         = columns () - 12
@@ -224,11 +225,11 @@ class ProgressBar(object):
 
         self._hashes  = -1 
         self._percent = -1 
-
         
         self.update_amount( self.min )
         self.build_bar ()
         self.show      ()
+        self.__start  = time.time ()
         
     def increment_amount(self, add_amount = 1):
         return self if self.silent else self.update_amount ( self.amount + add_amount )
@@ -251,30 +252,51 @@ class ProgressBar(object):
         ##
         return self
 
-    def build_bar(self):
+    def build_bar ( self ) :
         """Figure new percent complete, and rebuild the bar string base on self.amount.
         """
         diff         = float ( self.amount - self.min )
-        percent_done = int   ( round ( ( diff / float ( self.span ) ) * 100.0 ) )
+        done         =  ( diff / float ( self.span ) ) * 100.0 
+        percent_done = int ( round ( done ) )
  
         # figure the proper number of 'character' make up the bar 
         all_full     = self.width - 2
-        num_hashes   = int(round((percent_done * all_full) / 100))
+        num_hashes   = int ( round ( ( percent_done * all_full ) / 100 ) )
 
         if percent_done == self._percent and num_hashes == self._hashes : return False 
-        
+
+        eta  = ''
+        leta = len(eta)
+        if 6 < num_hashes and 1 < done :
+            now   = time.time ()
+            feta  = int ( ( 100 - done ) *  ( now -  self.__start ) / done )
+            h , _ = divmod ( feta            , 3600 )
+            m , s = divmod ( feta - h * 3600 ,   60 )
+            if   h     : eta = 'ETA %02d:%02d:%02d ' % ( h , m , s )
+            elif m     : eta = 'ETA %02d:%02d '      % (     m , s )
+            elif s > 5 : eta = 'ETA %02d '           %           s 
+            leta = len ( eta )
+
         if self.mode == 'dynamic':
             # build a progress bar with self.char (to create a dynamic bar
             # where the percent string moves along with the bar progress.
-            self.bar = self.char * num_hashes
+            
+            if eta and leta < num_hashes : 
+                self.bar = allright (  eta + self.char * ( num_hashes - leta ) )
+            else :
+                self.bar = allright ( self.char * num_hashes ) 
         else:
             # build a progress bar with self.char and spaces (to create a 
             # fixe bar (the percent string doesn't move)
-            self.bar = self.char * num_hashes + ' ' * (all_full-num_hashes)
+            if eta and leta + 1 < num_hashes :
+                self.bar = allright ( eta + self.char * ( num_hashes - leta ) ) + ' ' * ( all_full - num_hashes )
+            else : 
+                self.bar = allright ( self.char * num_hashes ) + ' ' * ( all_full - num_hashes )
  
-        percent_str = str(percent_done) + "%"
-        self.bar     = '[ ' + self.bar + ' ] ' + percent_str
-
+        percent_str  = str(percent_done) + "%"
+        
+        self.bar     = '[ ' + self.bar + ' ] ' + infostr ( percent_str ) 
+        
         self._hashes  = num_hashes
         self._percent = percent_done 
 
@@ -308,12 +330,12 @@ class ProgressBar(object):
     def __del__   ( self      ) : self.end ()
 
 # =============================================================================
-_bar_  =  ( 'Running ... |\r'       , 
-            'Running ... /\r'       , 
-            'Running ... -\r'       ,
-            'Running ... \\\r'      )
-_lbar  = len(_bar_)
-_done_ =    'Done        %-12d    \n' 
+_bar_  =  ( allright ( 'Running ... | '  ) + '\r' , 
+            allright ( 'Running ... / '  ) + '\r' , 
+            allright ( 'Running ... - '  ) + '\r' , 
+            allright ( 'Running ... \\ ' ) + '\r' ) 
+_lbar  = len( _bar_ )
+_done_ =    infostr  ( 'Done            %-d' ) + '\n' 
 # =============================================================================
 ## @class RunningBar 
 #  - RunningBar
@@ -379,7 +401,7 @@ class RunningBar(object):
                 ib      = self.amount % _lbar
                 #
                 if self.prefix : sys.stdout.write (  self.prefix ) 
-                sys.stdout.write ( _bar_ [ ib ][:-1] + ' ' + str(self.amount) + '\r' ) 
+                sys.stdout.write ( _bar_ [ ib ][:-1] + infostr ( str ( self.amount ) ) + '\r' ) 
                 sys.stdout.flush ()
                 return
             

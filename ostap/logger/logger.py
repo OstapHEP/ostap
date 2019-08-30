@@ -30,6 +30,7 @@ __all__ = (
     'colored_string' , ## make a colored string
     'attention'      , ## make "attention" string
     'allright'       , ## make "allright" string
+    'infostr'        , ## just for information
     ##
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL' ,
     )
@@ -330,6 +331,17 @@ def allright ( what ) :
                             blink      = False  ,
                             underline  = False  )
 
+# ==============================================================================
+## jsut for information 
+def infostr ( what ) :
+    """Just for information"""
+    return colored_string ( what                ,
+                            foreground = WHITE  ,
+                            background = BLUE   ,
+                            bold       = False  ,
+                            blink      = False  ,
+                            underline  = False  )
+    
 # =============================================================================
 ## make colors 
 def make_colors () :

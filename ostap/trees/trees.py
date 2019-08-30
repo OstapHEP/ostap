@@ -1177,7 +1177,6 @@ ROOT.TTree.__repr__ = _rt_print2_
 ROOT.TTree.__str__  = _rt_print2_
 ROOT.TTree.table    = _rt_table_ 
 
-
 # =============================================================================
 ## get list of files used for the given chain
 #  @code
@@ -1482,20 +1481,33 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
     
     files = chain.files   ()
     cname = chain.GetName () 
-
-    the_function = function
-    
+        
     from ostap.utils.progress_bar import progress_bar
 
     verbose = verbose and 1 < len ( files )
     
+    import ostap.io.root_file
     for fname in progress_bar ( files , len ( files ) , silent = not verbose ) :
+        
+        logger.debug ('Add_new_branch: processing file %s' % fname ) 
 
-        with ROOT.TFile.Open ( fname , 'UPDATE' , exception = True )  as  rfile :
+        if   isinstance ( function , ( string_types , ROOT.TH1 ) ) :
+            the_function = function
+        elif hasattr  (  function , 'clone' ) :
+            cloned = function.clone () 
+            the_function = cloned if cloned else function
+        elif hasattr  (  function , 'Clone' ) :
+            cloned = function.Clone () 
+            the_function = cloned if cloned else function        
+        else : 
+            ftype        = type  ( function )
+            the_function = ftype ( function )
+            
+        with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
             ## get the tree 
-            tt = rfile.Get ( cname )
+            ttree = rfile.Get ( cname )
             ## treat the tree 
-            add_new_branch ( tt , name , function ) 
+            add_new_branch    ( ttree , name , the_function ) 
             
     ## recollect the chain 
     newc = ROOT.TChain ( cname )
@@ -1512,7 +1524,7 @@ def add_new_branch ( tree , name , function , verbose = True ) :
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
     """
-    if isinstance (  tree  , ROOT.TChain ) :
+    if isinstance ( tree  , ROOT.TChain ) :
         return _chain_add_new_branch ( tree , name , function , verbose )
 
     if not tree :
@@ -1520,44 +1532,47 @@ def add_new_branch ( tree , name , function , verbose = True ) :
         return
 
     names = name 
-    if isinstance ( names , string_types ) : names = [ names ]    
+    if isinstance ( names , string_types ) : names = [ names ]
+    
     for n in names : 
         assert not n in tree.branches() ,'Branch %s already exists!' % n
 
-    ## if isinstance   ( function , ( string_types , ROOT.TH1 ) ) :
-    ##     the_function = function
-    ## else : 
-    ##     ftype        = type  ( function )
-    ##     the_function = ftype ( function )
-    the_function = function  
+    if   isinstance ( function , ( string_types , ROOT.TH1 ) ) :
+        the_function = function
+    elif hasattr  (  function , 'clone' ) :
+        cloned = function.clone() 
+        the_function = cloned if cloned else function
+    elif hasattr  (  function , 'Clone' ) :
+        cloned = function.Clone() 
+        the_function = cloned if cloned else function        
+    else : 
+        ftype        = type  ( function )
+        the_function = ftype ( function )
 
-    from ostap.io.root_file    import REOPEN 
+    the_function = function
+    
+    args  = [ n for n in names ] + [ the_function ]
+    args  = tuple ( args )
 
     tname = tree.GetName      ()
     tdir  = tree.GetDirectory ()
+    tpath = tree.path
 
-    args  = [ n for n in names ] + [ function ]
-    args  = tuple ( args )
-    
+    from ostap.io.root_file import REOPEN 
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
         
-        tdir.cd()
-        
-        branch = Ostap.Trees.add_branch ( tree , *args )
-        if not branch : logger.error("Branch is null!")
-        
-        if tfile.IsWritable() :
-            
+        tfile.cd() 
+        ttree = tfile.Get ( tpath )
+        sc    = Ostap.Trees.add_branch ( ttree , *args )
+        if   sc.isFailure () :
+            logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
+        elif tfile.IsWritable() :
             tfile.Write( "" , ROOT.TObject.kOverwrite )
-            return tdir.Get ( tname )                           ## RETURN 
-        
-        else : logger.error ( "Can't write TTree back to the file" )
-                
-        return tree                                             ## RETURN 
-    
-    
-ROOT.TTree.add_new_branch = add_new_branch 
+            logger.debug ('Write back TTree %s to %s' % ( tpath , tfile ) )            
+        else :
+            logger.error ("Can't write TTree %s back to the file %s" % ( tpath , tfile ) )
 
+ROOT.TTree.add_new_branch = add_new_branch 
 
 # =============================================================================
 ## Add specific re-weighting information into <code>ROOT.TTree</code>
