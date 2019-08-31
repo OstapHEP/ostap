@@ -13,5 +13,5 @@ script:
  - docker cp  .  ostap-build:/osya
  - docker run --rm   -v /cvmfs:/cvmfs --volumes-from ostap-build -u:0 gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && ./scripts/bootstrap LCG_96 x86_64-centos7-gcc8-opt && pip install coverage  nose && source /cvmfs/sft.cern.ch/lcg/views/LCG_96/x86_64-centos7-gcc8-opt/setup.sh && source build/INSTALL/thisostap.sh && nosetests --with-coverage --cover-package=ostap"
 after_success:
- - docker cp   ostap-build:/osya/.coverage
+ - docker cp   ostap-build:/osya/.coverage ./
  - time coveralls
