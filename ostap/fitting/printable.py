@@ -18,11 +18,11 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, random
-from   ostap.core.core import Ostap, valid_pointer  
+from   ostap.core.core        import Ostap, valid_pointer  
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger , allright,  attention
+from ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.printable' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================

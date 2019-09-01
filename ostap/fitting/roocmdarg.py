@@ -19,7 +19,7 @@ import ROOT
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger , allright,  attention
+from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.roocmdarg' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================

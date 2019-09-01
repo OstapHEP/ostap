@@ -26,9 +26,9 @@ import ROOT, random
 from   ostap.core.core         import Ostap
 import ostap.fitting.variables
 # =============================================================================
-# logging \
+# logging 
 # =============================================================================
-from ostap.logger.logger import getLogger , allright,  attention
+from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.roocollections' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================

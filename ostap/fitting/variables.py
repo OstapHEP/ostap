@@ -38,7 +38,7 @@ from   ostap.core.ostap_types import num_types
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger , allright,  attention
+from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.variables' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================

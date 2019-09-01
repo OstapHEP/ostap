@@ -160,7 +160,7 @@ class Files(object):
     ## set files 
     def set_files ( self , files ) :
         """Set files"""
-        assert isinstance ( files , ( list , typle , set ) ),\
+        assert isinstance ( files , ( list , tuple , set ) ),\
                'Invalid list of files %s' % files
         self.__files = list ( set ( files ) ) 
         self.__files.sort()
@@ -169,7 +169,7 @@ class Files(object):
     ## set patterns
     def set_patterns ( self , patterns ) :
         """Set files"""
-        assert isinstance ( patterns , ( list , typle , set ) ),\
+        assert isinstance ( patterns , ( list , tuple , set ) ),\
                'Invalid list of patterns %s' % patterns
         self.__patterns = list ( set ( patterns ) ) 
         self.__patterns.sort()
@@ -719,7 +719,7 @@ class Data2(Data):
     ## set files 
     def set_files2 ( self , files ) :
         """Set files2"""
-        assert isinstance ( files , ( list , typle , set ) ),\
+        assert isinstance ( files , ( list , tuple , set ) ),\
                'Invalid list of files %s' % files
         self.__files2 = list ( set ( files ) ) 
         self.__files2.sort()

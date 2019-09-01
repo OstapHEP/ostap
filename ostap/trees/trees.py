@@ -28,7 +28,7 @@ import ostap.trees.param
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger, allright,  attention 
+from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.trees' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
@@ -937,14 +937,6 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
         
         bbs.append ( b ) 
 
-    report  = '# %s("%s","%s"' % ( tree.__class__.__name__ , tree.GetName  () , tree.GetTitle () )
-    if tree.GetDirectory() :  report += ',%s' % tree.GetDirectory().GetName()
-    report += ')'
-    if tree.topdir :  report += '\n# top-dir:%s' % tree.topdir.GetName()
-    report += '\n# ' + allright ( '%d entries; %d/%d variables (selected/total)' % ( len ( tree  ) ,
-                                                                                     selvars       ,
-                                                                                     len ( tree.branches() ) ) )
-
     if hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
     else                             : bbstats = tree. statVar ( bbs , cuts , *args )
 
@@ -1031,38 +1023,47 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
         
     _vars = __vars 
 
-    sep      = '# +%s+%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
-                                        ( type_l       + 2 ) * '-' ,
-                                        ( mean_l+rms_l + 5 ) * '-' ,
-                                        ( min_l +max_l + 5 ) * '-' ,
-                                        ( num_l        + 2 ) * '-' )
-    fmt = '# | %%-%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds | %%%ds |'  % (
-        name_l ,
-        type_l ,
-        mean_l ,
-        rms_l  ,
-        min_l  ,
-        max_l  ,
-        num_l  )
-    
-    header  = fmt % ( 'Variable' ,
-                      'type'     , 
-                      'mean'     ,
-                      'rms'      ,
-                      'min'      ,
-                      'max'      ,
-                      '#'        )
-    
-    report += '\n' + sep
-    report += '\n' + header
-    report += '\n' + sep            
-    for v in _vars :
-        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , v[6] )
-        report += '\n' + line  
-    report += '\n' + sep
-    
-    return report, len ( sep )  
+    fmt_name = '%%-%ds' % name_l 
+    fmt_type = '%%-%ds' % type_l
+    fmt_mean = '%%%ds'  % mean_l
+    fmt_rms  = '%%-%ds' % rms_l
+    fmt_min  = '%%%ds'  % mean_l
+    fmt_max  = '%%-%ds' % rms_l
+    fmt_num  = '%%%ds'  % num_l
 
+    header = ( ( '{:^%d}' % name_l ).format ( 'Variable' ) ,
+               ( '{:^%d}' % type_l ).format ( 'type'     ) ,
+               ( '{:^%d}' % mean_l ).format ( 'mean'     ) ,
+               ( '{:^%d}' % rms_l  ).format ( 'rms'      ) ,
+               ( '{:^%d}' % min_l  ).format ( 'min'      ) ,
+               ( '{:^%d}' % max_l  ).format ( 'max'      ) ,
+               ( '{:^%d}' % num_l  ).format ( '#'        ) ) 
+               
+    table_data = [ header ] 
+    for v in _vars :
+        table_data.append ( ( fmt_name % v [ 0 ] ,
+                              fmt_type % v [ 1 ] ,
+                              fmt_mean % v [ 2 ] ,
+                              fmt_rms  % v [ 3 ] ,
+                              fmt_min  % v [ 4 ] ,
+                              fmt_max  % v [ 5 ] ,
+                              fmt_num  % v [ 6 ] ) )
+
+    tt = tree.GetTitle()
+    if tt and tt != tree.GetName() : 
+        title  = '%s("%s","%s") %d entries' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
+    else :
+        title  = '%s("%s") %d entries'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
+        
+    if isinstance ( tree , ROOT.TChain ) :
+        nfiles = len ( tree.files() )
+        if 1 < nfiles : title += '/%d files ' % nfiles 
+        
+    import ostap.logger.table as T
+    t  = T.table (  table_data , title )
+    w  = T.table_width ( t )
+    return t , w 
+    
 
 # ==============================================================================
 ## get a type of TLeaf object

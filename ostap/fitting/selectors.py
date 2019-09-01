@@ -107,7 +107,8 @@ import ROOT, cppyy, math, sys
 # =============================================================================
 # logging 
 # =============================================================================
-from   ostap.logger.logger import getLogger, attention, allright
+from   ostap.logger.logger    import getLogger
+from   ostap.logger.colorized import attention, allright
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================

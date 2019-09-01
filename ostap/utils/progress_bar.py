@@ -120,8 +120,8 @@ def columns () :
 
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
-from ostap.utils.basic   import isatty 
-from ostap.logger.logger import allright, infostr 
+from ostap.utils.basic      import isatty 
+from ostap.logger.colorized import allright, infostr 
 
 # =============================================================================
 ## @class ProgressBar

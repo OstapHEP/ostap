@@ -217,7 +217,7 @@ def _sc_print_ ( sc ) :
     """
     BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list ( range ( 8 ) )
     ##
-    from ostap.logger.logger   import colored_string
+    from ostap.logger.colorized import colored_string
     if   sc.isSuccess     () : return colored_string( 'SUCCESS'     , WHITE , GREEN  , True ) 
     elif sc.isRecoverable () : return colored_string( 'RECOVERABLE' , RED   , YELLOW , True ) 
     elif _FAILURE != sc.getCode  () :

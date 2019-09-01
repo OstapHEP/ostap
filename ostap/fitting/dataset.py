@@ -33,12 +33,13 @@ import ostap.fitting.printable
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger , allright,  attention
+from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.dataset' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug( 'Some useful decorations for RooAbsData object')
 # =============================================================================
+from ostap.logger.colorized import allright,  attention
 _new_methods_ = []
 
 # =============================================================================
@@ -1266,11 +1267,13 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
         
     _vars.sort()
 
-    report  = '# %s("%s","%s"):' % ( dataset.__class__.__name__ ,
-                                     dataset.GetName  () ,
-                                     dataset.GetTitle () )
-    report += allright ( '%d entries, %d variables' %  ( len ( dataset )   ,
-                                                         len ( varset  ) ) )
+    tt = dataset.GetTitle()
+    if tt and tt != dataset.GetName() : 
+        title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
+    else :
+        title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () ) 
+        
+    title +=  '%d entries, %d variables' %  ( len ( dataset ) , len ( varset ) )
 
     if not _vars :
         return report , 120 
@@ -1278,12 +1281,12 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
 
     weight = None
     if   isinstance ( dataset , ROOT.RooDataHist ) :
-        if dataset.isNonPoissonWeighted() : report += attention ( ' Binned/Weighted' )
-        else                              : report += allright  ( ' Binned' )
+        if dataset.isNonPoissonWeighted() : title += ' Binned/Weighted' 
+        else                              : title += ' Binned'
     elif dataset.isWeighted () :
         
-        if dataset.isNonPoissonWeighted() : report += attention ( ' Weighted' )
-        else : report += attention ( ' Weighted(Poisson)' )
+        if dataset.isNonPoissonWeighted() : title += ' Weighted' 
+        else :                              title += ' Weighted/Poisson'
 
         dstmp = None 
         wvar  = None
@@ -1309,8 +1312,8 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
             if 1 == len ( wvars ):
                 wvar = wvars.pop()
                 
-        if not wvar : wvar = Ostap.Utils.getWeight ( dataset )
-        if     wvar : report += attention ( ' with "%s"' % wvar )
+        if not wvar : wvar   = Ostap.Utils.getWeight ( dataset )
+        if     wvar : title += ' with "%s"' % wvar
                 
         store = None 
         if dstmp :            
@@ -1345,7 +1348,7 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
                     mean = s.mean   ()
                     rms  = s.rms    ()
                     weight = '*%s*' % wvar
-                    r    = (  weight                           ,   ## 0 
+                    r    = (  weight                            ,   ## 0 
                               'Weight variable'                 ,   ## 1 
                               ('%+.5g' % mean.value() ).strip() ,   ## 2
                               ('%.5g'  % rms          ).strip() ,   ## 3 
@@ -1377,48 +1380,47 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
         rms_l  = max ( rms_l  , len ( v[3] ) )
         min_l  = max ( min_l  , len ( v[4] ) )
         max_l  = max ( max_l  , len ( v[5] ) )
-        
-    sep      = '# +%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
-                                     ( desc_l       + 2 ) * '-' ,
-                                     ( mean_l+rms_l + 5 ) * '-' ,
-                                     ( min_l +max_l + 5 ) * '-' )
-    fmt = '# | %%-%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds |'  % (
-        name_l ,
-        desc_l ,
-        mean_l ,
-        rms_l  ,
-        min_l  ,
-        max_l  )
+            
+    fmt_name = '%%-%ds' % name_l 
+    fmt_desc = '%%-%ds' % desc_l
+    fmt_mean = '%%%ds'  % mean_l
+    fmt_rms  = '%%-%ds' % rms_l
+    fmt_min  = '%%%ds'  % min_l
+    fmt_max  = '%%-%ds' % max_l
     
+    header = [ ( '{:^%d}' % name_l ).format ( 'Variable'    ) ,
+               ( '{:^%d}' % desc_l ).format ( 'Description' ) ,
+               ( '{:^%d}' % mean_l ).format ( 'mean'        ) ,
+               ( '{:^%d}' % rms_l  ).format ( 'rms'         ) ,
+               ( '{:^%d}' % min_l  ).format ( 'min'         ) ,
+               ( '{:^%d}' % max_l  ).format ( 'max'         ) ]
+
+    if weight : header.append ( 'W' )
+        
+    table_data = [ tuple  ( header ) ]
+
+    vlst = vars
+
+    for i , v in enumerate ( _vars ) :
                 
-    header  = fmt % ( 'Variable'    ,
-                      'Description' ,
-                      'mean'        ,
-                      'rms'         ,
-                      'min'         ,
-                      'max'         )
-    
-    report += '\n' + sep
-    report += '\n' + header
-    report += '\n' + sep
-
-    vlst   = _vars
-    
-    if weight : vlst = _vars[:-1]
-    
-    for v in vlst :
-        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5]  )
-        report += '\n' + line  
-    report += '\n' + sep
-    
-    if weight :
-        v = _vars[-1]
-        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5]  )
-        report += '\n' + line.replace ( weight , attention ( weight ) ) 
-        report += '\n' + sep
+        cols = [ ( fmt_name %  v [ 0 ] ) ,
+                 ( fmt_desc %  v [ 1 ] ) ,
+                 ( fmt_mean %  v [ 2 ] ) ,
+                 ( fmt_rms  %  v [ 3 ] ) ,
+                 ( fmt_min  %  v [ 4 ] ) ,
+                 ( fmt_max  %  v [ 5 ] ) ]
         
-    return report , len ( sep ) 
+        if   weight and i + 1 == len ( _vars ) :
+            cols.append ( 'W' )
+            cols = [ allright (  c ) for c in cols ] 
+        elif weight                            : cols.append ( ' ' )
+        
+        table_data.append ( tuple ( cols ) ) 
 
+    import ostap.logger.table as T
+    t  = T.table ( table_data , title )
+    w  = T.table_width ( t ) 
+    return t , w 
 
 # ==============================================================================
 ## print dataset in  a form of the table
@@ -1440,12 +1442,12 @@ def _ds_print2_ ( dataset ) :
     if dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) :
         store = dataset.store()
         if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) : pass
-        else : return _ds_print_ ( dataset )        
+        else : return _ds_print_ ( dataset )         
     from ostap.utils.basic import terminal_size, isatty 
     if not isatty() : return _ds_table_ ( dataset )
     th  , tw  = terminal_size()
     rep , wid = _ds_table_0_ ( dataset ) 
-    if wid < tw     : return rep
+    if wid < tw  : return rep
     return _ds_print_ ( dataset )
 
 

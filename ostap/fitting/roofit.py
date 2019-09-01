@@ -31,7 +31,7 @@ from   ostap.fitting.dataset        import setStorage, useStorage
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger , allright,  attention
+from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.rootfit' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
