@@ -22,17 +22,17 @@ Key features include:
 
 Dependencies
 ------------
-- [`ROOT/PyROOT`](https://root.cern.ch)  (mandatory)
-- [`numpy`](htpps://numpy.org) (highly desirable)
+- _mandatory_: [`ROOT/PyROOT`](https://root.cern.ch)
+- _highly desirable_: [`numpy`](htpps://numpy.org)
    - mandatory for Fast Fourier Transform, used in histogram/function parameterization;
    - optional for some other issues, in particulat for prime number treatment;  
-- [`scipy`](https://www.scipy.org) (optional)
+- _optional_: [`scipy`](https://www.scipy.org)
    - numerical integration (quadratures, cubatures), root finding, minimization; 
    - `ostap` offers home-made replacements, but the native methods from `scipy` are more efficient;
-- [`pathos`](https://github.com/uqfoundation/pathos), [`dill`](https://github.com/uqfoundation/dill), [`multiprocess`](https://github.com/uqfoundation/multiprocess) and [`ppt`](https://github.com/uqfoundation/ppft) (optional)
+- _optional_: [`pathos`](https://github.com/uqfoundation/pathos), [`dill`](https://github.com/uqfoundation/dill), [`multiprocess`](https://github.com/uqfoundation/multiprocess) and [`ppt`](https://github.com/uqfoundation/ppft) (optional)
    - needed for parallel processing; 
    - `ostap` offers [`multiprocessing`](https://docs.python.org/2/library/multiprocessing.html)-based replacement with reduced functionality; 
-- [`terminaltables`](https://pypi.org/project/terminaltables) (optional)
+- _optional_: [`terminaltables`](https://pypi.org/project/terminaltables) (optional)
    - nice format of tables (in particular for nice printout for `ROOT.TTree`, `ROOT.TChain`, `ROOT.RooDataSet`, ...);
    - `ostap` offers home-made replacemt with a bit reduced functionalty.  
 
