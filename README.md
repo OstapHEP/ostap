@@ -29,10 +29,10 @@ Dependencies
 - _optional_: [`scipy`](https://www.scipy.org)
    - numerical integration (quadratures, cubatures), root finding, minimization; 
    - `ostap` offers home-made replacements, but the native methods from `scipy` are more efficient;
-- _optional_: [`pathos`](https://github.com/uqfoundation/pathos), [`dill`](https://github.com/uqfoundation/dill), [`multiprocess`](https://github.com/uqfoundation/multiprocess) and [`ppt`](https://github.com/uqfoundation/ppft) (optional)
+- _optional_: [`pathos`](https://github.com/uqfoundation/pathos), [`dill`](https://github.com/uqfoundation/dill), [`multiprocess`](https://github.com/uqfoundation/multiprocess) and [`ppt`](https://github.com/uqfoundation/ppft)
    - needed for parallel processing; 
    - `ostap` offers [`multiprocessing`](https://docs.python.org/2/library/multiprocessing.html)-based replacement with reduced functionality; 
-- _optional_: [`terminaltables`](https://pypi.org/project/terminaltables) (optional)
+- _optional_: [`terminaltables`](https://pypi.org/project/terminaltables) 
    - nice format of tables (in particular for nice printout for `ROOT.TTree`, `ROOT.TChain`, `ROOT.RooDataSet`, ...);
    - `ostap` offers home-made replacemt with a bit reduced functionalty.  
 
