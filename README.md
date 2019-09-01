@@ -34,7 +34,7 @@ Dependencies
    - `ostap` offers [`multiprocessing`](https://docs.python.org/2/library/multiprocessing.html)-based replacement with reduced functionality; 
 - _optional_: [`terminaltables`](https://pypi.org/project/terminaltables) 
    - nice format of tables (in particular for nice printout for `ROOT.TTree`, `ROOT.TChain`, `ROOT.RooDataSet`, ...);
-   - `ostap` offers home-made replacemt with a bit reduced functionalty.  
+   - `ostap` offers home-made replacement with a bit reduced functionalty.  
 
 Setup
 -----
