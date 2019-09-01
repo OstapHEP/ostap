@@ -23,7 +23,7 @@ Key features include:
 Dependencies
 ------------
 - _mandatory_: [`ROOT/PyROOT`](https://root.cern.ch)
-- _highly desirable_: [`numpy`](htpps://numpy.org)
+- _highly desirable_: [`numpy`](https://numpy.org)
    - mandatory for Fast Fourier Transform, used in histogram/function parameterization;
    - optional for some other issues, in particulat for prime number treatment;  
 - _optional_: [`scipy`](https://www.scipy.org)
