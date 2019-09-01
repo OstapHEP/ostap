@@ -19,6 +19,23 @@ Key features include:
 -   Powerful, pickle-based persistency for object
 -   Interactive `ostap` analysis environment
 
+
+Dependencies
+------------
+- [`ROOT/PyROOT`](https://root.cern.ch)  (mandatory)
+- [`numpy`](htpps://numpy.org) (highly desirable)
+   - mandatory for Fast Fourier Transform, used in histogram/function parameterization
+   - optional for some other issues, in particulat for prime number treatment  
+- [`scipy`](https://www.scipy.org) (optional)
+   - numerical integration (quadratures, cubatures), root finding, minimization 
+   - ostap offers home-made replacements, but the native methods from `scipy` are more efficient
+- [`pathos`](https://github.com/uqfoundation/pathos), [`dill`](https://github.com/uqfoundation/dill), [`multiprocess`](https://github.com/uqfoundation/multiprocess) and [`ppt`])(https://github.com/uqfoundation/ppft) (optional)
+   - needed for parallel processing 
+   - `ostap` offers [`multiprocessing`](https://docs.python.org/2/library/multiprocessing.html)-based replacement with limited functionalty 
+- [`terminaltables`](https://pypi.org/project/terminaltables) (optional)
+   - nice format of tables 
+   - `ostap` offers home-made replacement with limited functionalty 
+
 Setup
 -----
 
