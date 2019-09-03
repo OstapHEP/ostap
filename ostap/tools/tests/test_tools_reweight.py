@@ -127,7 +127,7 @@ for iter in range ( 0 , maxIter ) :
     ## 1b) add "weight" variable to the dataset
     mcds.add_reweighting ( weighter , name = 'weight' )
     
-    logger.info ('MCDATA: %s' %  mcds )
+    logger.info ('MCDATA:\n%s' %  mcds )
     
     # ==============================================================================
     ## 2) update weights

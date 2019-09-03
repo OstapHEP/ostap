@@ -223,6 +223,8 @@ variables  = [
 ## start reweighting iterations:
 for iter in range ( 0 , maxIter ) :
 
+    logger.info ( 'Reweighting iteration %d ' % iter )
+    
     # =========================================================================
     ## 0) The weighter object
     weighter = Weight( dbname , weightings )
@@ -235,16 +237,16 @@ for iter in range ( 0 , maxIter ) :
     ## 1b) add  "weight" variabel to dataset 
     mcds.add_reweighting ( weighter ,  name = 'weight' ) 
                        
-    logger.info ('MCDATA: %s' %  mcds )
+    logger.info ('MCDATA:\n%s' %  mcds )
     
     # =========================================================================
     ## 2) update weights
     plots = [ WeightingPlot ( 'y:x' , 'weight' , '2D-reweight' , hdata  , hmc  ) ]
     if 2 < iter: 
         plots  = [
-            WeightingPlot ( 'x'   , 'weight' , 'x-reweight'  , hxdata , hmcx       ) ,  
-            WeightingPlot ( 'y'   , 'weight' , 'y-reweight'  , hydata , hmcy       ) , 
-            WeightingPlot ( 'y:x' , 'weight' , '2D-reweight' , hdata  , hmc  , 0.5 ) , 
+            WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hxdata , hmcx       ) ,  
+            WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy       ) , 
+            WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  , 0.5 ) , 
             ]
     more = makeWeights ( mcds , plots , dbname , delta = 0.02 ,
                          power = 2 if 1 != len(plots) else 1 ) 

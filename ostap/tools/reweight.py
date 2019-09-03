@@ -24,7 +24,7 @@ import ROOT, operator
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
+from ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweight' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
@@ -467,6 +467,9 @@ def makeWeights  ( dataset                 ,
     assert 0 < delta  , "Reweighting: Invalid value for ``delta''  %s" % delta 
     assert 0 < minmax , "Reweighting: Invalid value for ``minmax'' %s" % minmax 
 
+    from ostap.logger.colorized   import allright , attention , infostr 
+    from ostap.utils.basic        import isatty
+
     power   = power if power >= 1 else len ( plots ) 
 
     nplots  = len ( plots )
@@ -478,8 +481,6 @@ def makeWeights  ( dataset                 ,
         
     save_to_db = [] 
     ## number of active plots for reweighting
-    active = 0
-    ## loop over plots 
     for wplot in plots  :
         
         what    = wplot.what       ## variable/function to plot/compare 
@@ -514,7 +515,7 @@ def makeWeights  ( dataset                 ,
         # 
         #  this is the only important line
         #
-        #  try to exploit finer binning if possible
+        #  try to exploit finer binning if/when possible
 
         if len ( hmc ) >= len( hdata )  : w =  ( 1.0 / hmc ) * hdata ## NB!      
         else                            : w =  hdata / hmc           ## NB!
@@ -523,22 +524,32 @@ def makeWeights  ( dataset                 ,
         w   /= w.stat().mean().value()
         cnt  = w.stat()
         #
-        wvar = cnt.rms()/cnt.mean()
-        logger.info ( 'Reweighting: %24s: mean/(min,max):%20s/(%.3f,%.3f) RMS:%s[%%]' %
-                      ( "``" + address + "''"  ,
-                        cnt.mean().toString('(%.2f+-%.2f)') ,
-                        cnt.minmax()[0] ,
-                        cnt.minmax()[1] , (wvar * 100).toString('(%.2f+-%.2f)') ) ) 
+        mnw , mxw = cnt.minmax()
+        wvar  = cnt.rms()/cnt.mean()
+        good1 = wvar.value() <= delta
+        good2 = abs ( mxw - mnw ) <= minmax 
+        good  = good1  and good2  ## small variance? 
+        
+        #
+        afunc1 = allright if good1 else attention 
+        afunc2 = allright if good2 else attention
+        #
+        message  = "Reweighting: %24s:" % address 
+        message += ' ' + 'mean=%12s' % cnt.mean().toString('(%4.2f+-%4.2f)') 
+        message += ' ' + afunc1 ( 'min/max=%-5.3f/%5.3f' % ( cnt.minmax()[0] , cnt.minmax()[1] ) ) 
+        message += ' ' + afunc2 ( 'rms:%s[%%]' % (wvar * 100).toString('(%4.2f+-%4.2f)') ) 
+        logger.info  ( message ) 
         #
         ## make decision based on the variance of weights 
         #
         mnw , mxw = cnt.minmax()
-        if wvar.value() <= delta and abs ( mxw - mnw ) <= minmax : ## small variance? 
-            logger.info("Reweighting: No more reweights for ``%s'' [%.2f%%]/[(%+.1f,%+.1f)%%]" % \
-                        ( address , wvar * 100 , ( mnw - 1 ) * 100 ,  ( mxw - 1 ) * 100 ) )
+        if good : ## small variance?
+            message  = "Reweighting: No more reweights for %s" % address
+            message += ' ' + allright (  "min/max/rms=%+3.1f/%+3.1f/%3.1f[%%]" % ( ( mnw - 1 ) * 100 ,  ( mxw - 1 ) * 100 , 100 * wvar ) )
+            logger.info ( message ) 
             del w , hdata , hmc 
         else :
-            save_to_db.append ( ( address , ww , hdata0 , hmc0 , hdata , hmc , w ) ) 
+            save_to_db.append ( ( address , ww , hdata0 , hmc0 , hdata , hmc , w ) )
         #
         ## make a comparison (if needed)
         # 
@@ -550,11 +561,20 @@ def makeWeights  ( dataset                 ,
     if power != nplots :
         logger.info ( "Reweighting: ``power'' is %g/#%d"  % ( power , nplots  ) )
 
-    active = len ( save_to_db )
-    if active !=  nplots :
-        logger.info ( "Reweighting: number of ``active'' reweights %s/#%d"  % ( active , nplots ) )
+    active = [ p[0] for p in save_to_db ]    
+    all    = [ p.address for p in plots ]
+    for i , a in enumerate ( all ) :
+        if a in active :
+            if isatty () : all[i] = attention ( a )
+            else         : all[i] = '*' + a + '*'
+        else :
+            if isatty () : all[i] = allright  ( a )
+            
+    logger.info ( "Reweighting: reweights are: %s" % ( ( ','.join ( all ) ) ) ) 
+    
+    if len ( active ) != nplots :
         if database and save_to_db : 
-            power += ( nplots - active )
+            power += ( nplots - len ( active ) ) 
             logger.info  ("Reweighting: ``power'' is changed to %g" %  power ) 
     
     while database and save_to_db :

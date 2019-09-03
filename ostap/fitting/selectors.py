@@ -1226,8 +1226,9 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
                 
     if not name :
         from ostap.core.core import dsID 
-        name = '%s_%s' % ( dsID() , tree.GetName() )
-    if not title : title = '%s/%s' % ( name , tree.GetTitle() )
+        name = dsID () 
+    if not title and tree.GetName() != tree.GetTitle  :
+        title = tree.GetTitle ()
 
     total     = len ( tree )
     processed = tree.statVar ( '1' , selection    ).nEntries()
@@ -1237,8 +1238,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
 
     from ostap.logger.utils import rooSilent, rootError
     from ostap.utils.timing import timing
-    
-    
+        
     if not silent : logger.info ( "Start to fill the dataset") 
     with rooSilent ( ROOT.RooFit.ERROR  , True ) :
         with rootError( ROOT.kWarning ) :
