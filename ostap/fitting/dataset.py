@@ -23,7 +23,7 @@ __all__     = (
     'ds_project' , ## project variables from RooDataSet to histogram 
     )
 # =============================================================================
-import ROOT, random
+import ROOT, random, math
 from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
@@ -1380,20 +1380,23 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
         rms_l  = max ( rms_l  , len ( v[3] ) )
         min_l  = max ( min_l  , len ( v[4] ) )
         max_l  = max ( max_l  , len ( v[5] ) )
-            
-    fmt_name = '%%-%ds' % name_l 
+        
+    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
+    
+    fmt_name = '%%%ds. %%-%ds' % ( index_l , name_l )
     fmt_desc = '%%-%ds' % desc_l
     fmt_mean = '%%%ds'  % mean_l
     fmt_rms  = '%%-%ds' % rms_l
     fmt_min  = '%%%ds'  % min_l
     fmt_max  = '%%-%ds' % max_l
-    
-    header = [ ( '{:^%d}' % name_l ).format ( 'Variable'    ) ,
-               ( '{:^%d}' % desc_l ).format ( 'Description' ) ,
-               ( '{:^%d}' % mean_l ).format ( 'mean'        ) ,
-               ( '{:^%d}' % rms_l  ).format ( 'rms'         ) ,
-               ( '{:^%d}' % min_l  ).format ( 'min'         ) ,
-               ( '{:^%d}' % max_l  ).format ( 'max'         ) ]
+
+    title_l = index_l + 2 + name_l  
+    header = [ ( '{:^%d}' % title_l ).format ( 'Variable'    ) ,
+               ( '{:^%d}' % desc_l  ).format ( 'Description' ) ,
+               ( '{:^%d}' % mean_l  ).format ( 'mean'        ) ,
+               ( '{:^%d}' % rms_l   ).format ( 'rms'         ) ,
+               ( '{:^%d}' % min_l   ).format ( 'min'         ) ,
+               ( '{:^%d}' % max_l   ).format ( 'max'         ) ]
 
     if weight : header.append ( 'W' )
         
@@ -1403,12 +1406,12 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
 
     for i , v in enumerate ( _vars ) :
                 
-        cols = [ ( fmt_name %  v [ 0 ] ) ,
-                 ( fmt_desc %  v [ 1 ] ) ,
-                 ( fmt_mean %  v [ 2 ] ) ,
-                 ( fmt_rms  %  v [ 3 ] ) ,
-                 ( fmt_min  %  v [ 4 ] ) ,
-                 ( fmt_max  %  v [ 5 ] ) ]
+        cols = [ fmt_name %  ( i + 1 , v [ 0 ] ) ,
+                 fmt_desc %            v [ 1 ] ,
+                 fmt_mean %            v [ 2 ] ,
+                 fmt_rms  %            v [ 3 ] ,
+                 fmt_min  %            v [ 4 ] ,
+                 fmt_max  %            v [ 5 ] ]
         
         if   weight and i + 1 == len ( _vars ) :
             cols.append ( 'W' )

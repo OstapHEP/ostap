@@ -19,7 +19,7 @@ __all__     = (
     'active_branches' , ## context manager to activate certain branches 
   ) 
 # =============================================================================
-import ROOT, os
+import ROOT, os, math
 from   ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
 from   ostap.core.ostap_types import integer_types , long_type, string_types 
 from   ostap.logger.utils     import multicolumn
@@ -951,24 +951,6 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
             logger.warning ("table: can't get the leaf  \"%s\"" % b )
             continue
         
-        ## tn       = l.GetTypeName ()
-        ## typename = tn
-        
-        ## br = l.GetBranch()
-        ## if br :  
-        ##     n = br.GetTitle()
-        ##     typename = '%s %s '
-        ##     p = n.find('[')
-        ##     if  0 <= p :
-        ##         p2 = n.find( '/' , p + 1 )
-        ##         if p < p2 : typename = '%s %s' % ( tn , n[p:p2] )
-        ##         else      : typename = '%s %s' % ( tn , n[p:  ] )            
-        ##     else          : typename = '%s'    %   tn  
-
-        ## typename = typename.replace ( 'Float_t'  , 'float'  ) 
-        ## typename = typename.replace ( 'Double_t' , 'double' ) 
-        ## typename = typename.replace ( 'Bool_t'   , 'bool'   )
-        
         typename = l.get_type()
         
         rr = [ b , typename ]
@@ -985,7 +967,6 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
                     ( '%+.5g' % mnmx[1]      ).strip()                  , ## 5
                     '' if  n == n0 else '%.3g' % ( float ( n ) / n0 ) ]   ## 6            
         else :
-            ## logger.warning ("table: can't get info for the leaf \"%s\"" % b )
             rr +=  [ '-' , '-' , '-' , '-' , '' ]
             
         _vars.append ( tuple  ( rr ) )
@@ -1023,37 +1004,46 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
         
     _vars = __vars 
 
-    fmt_name = '%%-%ds' % name_l 
-    fmt_type = '%%-%ds' % type_l
-    fmt_mean = '%%%ds'  % mean_l
-    fmt_rms  = '%%-%ds' % rms_l
-    fmt_min  = '%%%ds'  % mean_l
-    fmt_max  = '%%-%ds' % rms_l
-    fmt_num  = '%%%ds'  % num_l
+    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
+        
+    fmt_name  = '%%%ds. %%-%ds' % ( index_l , name_l )
+    fmt_type  = '%%-%ds'        % type_l
+    fmt_mean  = '%%%ds'         % mean_l
+    fmt_rms   = '%%-%ds'        % rms_l
+    fmt_min   = '%%%ds'         % mean_l
+    fmt_max   = '%%-%ds'        % rms_l
+    fmt_num   = '%%%ds'         % num_l
 
-    header = ( ( '{:^%d}' % name_l ).format ( 'Variable' ) ,
-               ( '{:^%d}' % type_l ).format ( 'type'     ) ,
-               ( '{:^%d}' % mean_l ).format ( 'mean'     ) ,
-               ( '{:^%d}' % rms_l  ).format ( 'rms'      ) ,
-               ( '{:^%d}' % min_l  ).format ( 'min'      ) ,
-               ( '{:^%d}' % max_l  ).format ( 'max'      ) ,
-               ( '{:^%d}' % num_l  ).format ( '#'        ) ) 
+    title_l = index_l + 2 + name_l 
+    header = (
+        ( '{:^%d}' % title_l ).format ( 'Variable' ) ,
+        ( '{:^%d}' % type_l  ).format ( 'type'     ) ,
+        ( '{:^%d}' % mean_l  ).format ( 'mean'     ) ,
+        ( '{:^%d}' % rms_l   ).format ( 'rms'      ) ,
+        ( '{:^%d}' % min_l   ).format ( 'min'      ) ,
+        ( '{:^%d}' % max_l   ).format ( 'max'      ) ,
+        ( '{:^%d}' % num_l   ).format ( '#'        ) )    
                
     table_data = [ header ] 
-    for v in _vars :
-        table_data.append ( ( fmt_name % v [ 0 ] ,
-                              fmt_type % v [ 1 ] ,
-                              fmt_mean % v [ 2 ] ,
-                              fmt_rms  % v [ 3 ] ,
-                              fmt_min  % v [ 4 ] ,
-                              fmt_max  % v [ 5 ] ,
-                              fmt_num  % v [ 6 ] ) )
+    for i , v in enumerate ( _vars ) :
+        table_data.append ( ( fmt_name  % ( i + 1 , v [ 0 ] ) ,
+                              fmt_type  %           v [ 1 ] ,
+                              fmt_mean  %           v [ 2 ] ,
+                              fmt_rms   %           v [ 3 ] ,
+                              fmt_min   %           v [ 4 ] ,
+                              fmt_max   %           v [ 5 ] ,
+                              fmt_num   %           v [ 6 ] ) )
 
     tt = tree.GetTitle()
     if tt and tt != tree.GetName() : 
-        title  = '%s("%s","%s") %d entries' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
+        title  = '%s("%s","%s") %d entries,' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
     else :
-        title  = '%s("%s") %d entries'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
+        title  = '%s("%s") %d entries,'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
+
+    nb = len ( tree.branches () )
+    title += '%d branches' % nb 
+    nl = len ( tree.leaves   () )
+    if nl != nb : title += '%d leaves' % nl
         
     if isinstance ( tree , ROOT.TChain ) :
         nfiles = len ( tree.files() )
@@ -1154,7 +1144,7 @@ def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , *args ) :
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _rt_table_0_ ( dataset ,  variables , cuts , *args )[0]
+    return _rt_table_0_ ( dataset , variables , cuts , *args )[0]
 
 
 # =============================================================================
@@ -1679,7 +1669,8 @@ def the_variables ( tree , expression , *args ) :
     all      = set ( leaves + branches )
 
     ## If variable-sized vectors, add the lengths...
-    
+
+    sizes = set()  
     for v in vvars :
 
         l  = tree.GetLeaf ( v )
@@ -1691,7 +1682,7 @@ def the_variables ( tree , expression , *args ) :
             n = n.replace ( '][' , ',' )
             n = n.split   ( ',' ) 
             for i in n :
-                if i in all : vars.add ( i )
+                if i in all : sizes.add ( i )
             
         b  = l   .GetBranch ( )
         t  = b   .GetTitle  ( )
@@ -1702,9 +1693,15 @@ def the_variables ( tree , expression , *args ) :
             n = n.replace ( '][' , ',' )
             n = n.split   ( ',' ) 
             for i in n :
-                if i in all : vars.add ( i )
-
-    return   tuple ( vars ) 
+                if i in all : sizes.add ( i )
+                
+    vars  = [ v for v in vars if not v in sizes ]
+    vars.sort ()
+    
+    sizes = list ( sizes )
+    sizes.sort ()
+    
+    return  tuple ( sizes ) + tuple ( vars ) 
 
 
 ROOT.TTree.the_variables = the_variables
@@ -1773,43 +1770,6 @@ def active_branches ( tree , *vars ) :
     return ActiveBranches ( tree , *vars ) 
     
 # ===============================================================================
-## Print the report 
-def report_print ( report , prefix = '' ) :
-    """Print the report
-    """
-    from ostap.core.core import binomEff
-    
-    table  = []
-    lmax   = 5
-    n0     = -1 
-    for c in report :
-        if  n0 <= 0 : n0 = c.GetAll () 
-        name    = c.GetName ()
-        passed  = c.GetPass ()
-        all     = c.GetAll  ()
-        eff1    = binomEff ( passed , all ) * 100 
-        eff2    = binomEff ( passed ,  n0 ) * 100 
-        table.append (  ( name , passed , all , eff1 , eff2 )  )
-        lmax    = max ( len ( name ) , lmax , len ( 'Filter' ) )
-        
-    header   = '|    #input  |  #passed   |     efficiency [%]   | Cumulated efficiency [%] | ' 
-    row      = '| %10d | %-10d | %8.3g +- %-8.3g | %8.3g +- %-8.3g     |'
-    front    = '| %%-%ds ' % max ( lmax + 2 , len ( 'Selection' ) + 2 )
-    prefix   = front % 'Filter'
-    the_line = '\n# ' + '+' + ((len(prefix)-1)*'-') + '+' + (12*'-') + '+' + (12*'-') + '+' + (22*'-') + '+' + (26*'-') + '+'
-    if prefix : text = str ( prefix ) + the_line 
-    else      : text =                  the_line [1:]
-    text    += '\n# ' + prefix  + header
-    text    += the_line 
-    for entry in table :
-        n, p, a , e1 , e2 = entry
-        line = row % ( a , p , e1.value() , e1.error() , e2.value() , e2.error() ) 
-        text += '\n# ' + ( front % n ) + line
-        
-    return text + the_line
-                
-                
-# ===============================================================================
 ## Reduce the tree/chain
 #  @code
 #  tree = ....
@@ -1867,7 +1827,9 @@ def _rt_reduce_  ( tree          ,
     else : 
         snapshot = frame.Snapshot ( tree.GetName() , fname )
 
-    logger.info ( report_print ( report , 'Reduce:' ) )
+    from ostap.frames.frames import report_prnt
+    title =  'Tree/Frame reduce '
+    logger.info ( title + '\n%s' % report_prnt ( report , title , '# ') )
 
     assert os.path.exists ( fname ) , 'No output file is found %s' %  fname 
     

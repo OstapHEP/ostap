@@ -118,7 +118,9 @@ def attention ( what ) :
                             background = RED    ,
                             bold       = True   ,
                             blink      = True   ,
-                            underline  = True   )
+                            underline  = True   ,
+                            fg_bright  = True   ,
+                            bg_bright  = True   )
 
 # =============================================================================
 ## allright 
@@ -129,7 +131,9 @@ def allright ( what ) :
                             background = GREEN  ,
                             bold       = True   ,
                             blink      = False  ,
-                            underline  = False  )
+                            underline  = False  ,
+                            fg_bright  = True   ,
+                            bg_bright  = False  )
 
 # ==============================================================================
 ## jsut for information 
@@ -138,9 +142,11 @@ def infostr ( what ) :
     return colored_string ( what                ,
                             foreground = WHITE  ,
                             background = BLUE   ,
-                            bold       = False  ,
+                            bold       = True   ,
                             blink      = False  ,
-                            underline  = False  )
+                            underline  = False  ,
+                            bg_bright  = True   )
+
 # =============================================================================
 if __name__ == '__main__' :
 
@@ -151,7 +157,25 @@ if __name__ == '__main__' :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+    fmt = 'colored_string(fg=%d,bg=%d,bold=%s,blink=%s,underline=%s,fg_bright=%s,bg_bright=%s)'
+    
+    for bg in range ( 8 ) :
+        for fg in range ( 8 ) :
+            for fg_bright  in ( True , False ) :
+                for bg_bright  in ( True , False ) :
+                    if  ( fg , fg_bright ) == ( bg , bg_bright ) : continue                    
+                    for bold in ( True , False ) :
+                        for blink in ( True , False ) :
+                            for underline  in ( True , False ) :
+                                pars = ( fg        ,
+                                         bg        ,
+                                         bold      ,
+                                         blink     ,
+                                         underline ,
+                                         fg_bright ,
+                                         bg_bright )
+                                logger.info ( colored_string ( fmt % pars , *pars ) )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

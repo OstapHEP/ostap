@@ -202,9 +202,10 @@ class Files(object):
         ## eliminate duplicates and sort 
         files = list  ( set ( files ) )
         files.sort ()
-        
+        nf    = len ( files )
+        max_value = nf if 0 >= self.maxfiles else min ( nf , self.maxfiles )
         from ostap.utils.progress_bar import ProgressBar 
-        with ProgressBar ( max_value = len ( files ) , silent = self.silent ) as bar :
+        with ProgressBar ( max_value = max_value , silent = self.silent ) as bar :
             self.progress = bar 
             for f in files :
                 if   0 >= self.maxfiles                 : self.treatFile ( f ) 

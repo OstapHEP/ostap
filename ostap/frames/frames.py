@@ -171,7 +171,7 @@ def _fr_print_ ( t ) :
 
 # ===============================================================================
 ## Print the frame report
-def report_prnt ( report , prefix = '' ) :
+def report_prnt ( report , title  = '' , prefix = '' ) :
     """Print a frame report
     """
     from ostap.core.core import binomEff
@@ -187,24 +187,32 @@ def report_prnt ( report , prefix = '' ) :
         eff2    = binomEff  ( passed ,  n0 ) * 100 
         table.append (  ( name , passed , all , eff1 , eff2 )  )
         lmax    = max ( len ( name ) , lmax , len ( 'Filter' ) )
-    header   = '|    #input  |  #passed   |     efficiency [%]   | Cumulated efficiency [%] | ' 
-    row      = '| %10d | %-10d | %8.3g +- %-8.3g | %8.3g +- %-8.3g     |'
-    front    = '| %%-%ds ' % max ( lmax + 2 , len ( 'Selection' ) + 2 )
-    prefix   = front % 'Filter'
-    the_line = '\n# ' + '+' + ((len(prefix)-1)*'-') + '+' + (12*'-') + '+' + (12*'-') + '+' + (22*'-') + '+' + (26*'-') + '+'
+
+    lmax          =  max ( lmax + 2 , len ( 'Selection' ) + 2 )
+    fmt_name      =  '%%-%ds ' % lmax 
+    fmt_input     =  '%10d'
+    fmt_passed    =  '%-10d'
+    fmt_eff       =  '%8.3g +- %-8.3g'
+    fmt_cumulated =  '%8.3g +- %-8.3g'
     
-    if prefix : text = str ( prefix ) + the_line 
-    else      : text = the_line[1:]
     
-    text    += '\n# ' + prefix  + header
-    text    += the_line 
+    header = ( ( '{:^%d}' % lmax ).format ( 'Filter'   ) ,               
+               ( '{:>10}'        ).format ( '#input '  ) ,
+               ( '{:<10}'        ).format ( ' #passed' ) ,
+               ( '{:^20}'        ).format ( 'efficiency [%]' ) ,
+               ( '{:^20}'        ).format ( 'cumulated efficiency [%]' ) )
+
+    table_data = [ header ]
     for entry in table :
         n, p, a , e1 , e2 = entry
-        line = row % ( a , p , e1.value() , e1.error() , e2.value() , e2.error() ) 
-        text += '\n# ' + ( front % n ) + line
+        table_data.append ( ( fmt_name      % n ,
+                              fmt_input     % a ,
+                              fmt_passed    % p  ,
+                              fmt_eff       % ( e1.value () , e1.error () ) ,
+                              fmt_cumulated % ( e2.value () , e2.error () ) ) )
         
-    return text + the_line 
-        
+    import ostap.logger.table as T
+    return T.table ( table_data , title , prefix )
 
 # ==============================================================================
 # decorate 

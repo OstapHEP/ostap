@@ -427,14 +427,11 @@ class SelStat(object) :
                "Invalid value for ``skipped''"
         self.__skipped = value
 
-
 # ==============================================================================
 ## Define generic selector to fill RooDataSet from TChain
 #
 #  @code
-# 
 #  variables = [ ... ]
-#
 #  ## add a variable 'my_name1' from the tree/chain 
 #  variables += [ 
 #   #  name       descriptor           min-value , max-value  
@@ -461,18 +458,14 @@ class SelStat(object) :
 #   Variable ( 'my_name4' , 'my_description4' , low       , high      , myvar ) 
 #  ]
 #
-#
 #  ## add already booked variables: 
 #  v5 = ROOT.RooRealVal( 'my_name5' )
 #  variables += [  Variable ( v5 , accessor = lambda s : s.var5 ) ]
 #
-#  
 #  ## add already booked variables: 
 #  v6 = ROOT.RooRealVal( 'my_name6' )
 #  variables += [  Variable ( v6                     ) ] ## get variable "my_name6"
 #
-#
-#  #
 #  ## finally create selector
 #  # 
 #  selector = SelectorWithVars (
@@ -482,7 +475,6 @@ class SelStat(object) :
 #  chain = ...
 #  chain.process ( selector )
 #  dataset = selector.dataset
-# 
 #  @endcode
 #  @date   2014-03-02
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -616,25 +608,37 @@ class SelectorWithVars(SelectorWithCuts) :
                 dl = max ( dl , len( v.description ) )                 
             dl = max ( dl , len ( 'Description' ) + 2 ) 
             nl = max ( nl , len ( 'Variable'    ) + 2 ) 
-        
-            line1    = '\n# | %%%ds | %%-%ds |         min / max         | Trivial? | ' % ( nl , dl ) 
-            line2    = '\n# | %%%ds | %%-%ds | %%+11.3g / %%-+11.3g | %%s | ' % ( nl , dl )         
-            the_line = 'Booked %d  variables:' % len ( self.variables ) 
-            sep      = '\n# +%s+%s+%s+%s+' % ( (nl+2)*'-' , (dl+2)*'-' , 27*'-', 10*'-' )
-            the_line += sep 
-            the_line += line1 % ( 'Variable' , 'Description' )
-            the_line += sep
-            for v in self.__variables :
-                trivial = allright ('True') + 4* ' ' if v.trivial else attention ( 'False' ) + 3 * ' '
-                    
-                fmt = line2 % ( v.name        , 
-                                v.description ,
-                                v.minmax[0]   ,
-                                v.minmax[1]   ,
-                                trivial       )
-                the_line += fmt
-            the_line += sep 
-            self.__logger.info ( the_line )
+
+            fmt_name = '%%%ds' % nl
+            fmt_desc = '%%%ds' % dl
+            fmt_min  = '%+11.3g'
+            fmt_max  = '%-+11.3g'
+            fmt_triv = '%4s' 
+            
+            header = ( ( '{:^%d}' % nl ).format ( 'Variable'    ) ,
+                       ( '{:^%d}' % dl ).format ( 'Description' ) ,
+                       ( '{:>11}'      ).format ( 'min '        ) ,
+                       ( '{:<11}'      ).format ( ' max'        ) ,
+                       ( '{:^8}'       ).format ( 'Trivial?'    ) )
+            
+            table_data =  [ header ]
+            for v in  self.__variables :
+                triv = allright ( '    {:<4}'.format('yes') ) if v.really_trivial else attention ( '    {:<4}'.format ( 'no' ) )            
+                triv = allright ( 'Yes' ) if v.really_trivial else attention ( 'No' )            
+                table_data.append ( ( fmt_name % v.name        ,
+                                      fmt_desc % v.description ,
+                                      fmt_min  % v.minmax [0]  ,
+                                      fmt_max  % v.minmax [1]  , triv ) )
+                
+            if fullname != self.name : 
+                title = '%s("%s","%s") %d variables' % ( 'RooDataSet', self.name , fullname , len ( self.__varset ) )
+            else :
+                title = '%s("%s") %d variables'      % ( 'RooDataSet', self.name ,            len ( self.__varset ) )
+                        
+            import ostap.logger.table as T
+            t  = T.table (  table_data , title , '# ' )
+            self.__logger.info ( "Booked dataset: %s\n%s" % ( title , t ) ) 
+
             
         ## Book dataset
         self.__data = ROOT.RooDataSet (
@@ -873,7 +877,6 @@ class SelectorWithVars(SelectorWithCuts) :
                 self.processed ,
                 skipped        , 
                 cuts           ) )            
-            self.__logger.info ( 'Selector(%s): dataset created:%s' %  ( self.__name ,  self.__data ) )
             
         if self.__data and not self.silence :
             vars = []
@@ -904,13 +907,13 @@ class SelectorWithVars(SelectorWithCuts) :
             max_l   = len ( 'max'  ) + 2 
             skip_l  = len ( 'Skip' ) 
             for v in vars :
-                name_l = max ( name_l , len ( v[0] ) )
-                desc_l = max ( desc_l , len ( v[1] ) )
-                mean_l = max ( mean_l , len ( v[2] ) )
-                rms_l  = max ( rms_l  , len ( v[3] ) )
-                min_l  = max ( min_l  , len ( v[4] ) )
-                max_l  = max ( max_l  , len ( v[5] ) )
-                skip_l = max ( skip_l , len ( v[6] ) )
+                name_l = max ( name_l , len ( v [ 0 ] ) )
+                desc_l = max ( desc_l , len ( v [ 1 ] ) )
+                mean_l = max ( mean_l , len ( v [ 2 ] ) )
+                rms_l  = max ( rms_l  , len ( v [ 3 ] ) )
+                min_l  = max ( min_l  , len ( v [ 4 ] ) )
+                max_l  = max ( max_l  , len ( v [ 5 ] ) )
+                skip_l = max ( skip_l , len ( v [ 6 ] ) )
 
             sep      = '# -%s+%s+%s+%s+%s-' % ( ( name_l       + 2 ) * '-' ,
                                                 ( desc_l       + 2 ) * '-' ,
@@ -935,24 +938,41 @@ class SelectorWithVars(SelectorWithCuts) :
             else                 : report += ' Cuts:' + attention ('non-trivial'   ) + ';'
             if not self.__cuts   : report += ' '      + allright  ( 'no py-cuts'   )  
             else                 : report += ' '      + attention ( 'with py-cuts' )
-                                                            
-            header  = fmt % ( 'Variable'    ,
-                              'Description' ,
-                              'mean' ,
-                              'rms'  ,
-                              'min'  ,
-                              'max'  ,
-                              'skip' )
-            report += '\n' + sep
-            report += '\n' + header
-            report += '\n' + sep            
+
+            
+            fmt_name = '%%-%ds' % name_l 
+            fmt_desc = '%%-%ds' % desc_l
+            fmt_mean = '%%%ds'  % mean_l
+            fmt_rms  = '%%-%ds' % rms_l
+            fmt_min  = '%%%ds'  % min_l
+            fmt_max  = '%%-%ds' % max_l
+            fmt_skip = '%%-%ds' % skip_l
+            
+            header = ( ( '{:^%d}' % name_l ).format ( 'Variable'    ) ,
+                       ( '{:^%d}' % desc_l ).format ( 'Description' ) ,
+                       ( '{:^%d}' % mean_l ).format ( 'mean'        ) ,
+                       ( '{:^%d}' % rms_l  ).format ( 'rms'         ) ,
+                       ( '{:^%d}' % min_l  ).format ( 'min'         ) ,
+                       ( '{:^%d}' % max_l  ).format ( 'max'         ) ,
+                       ( '{:^%d}' % skip_l ).format ( 'skip'        ) )
+            
+            table_data = [  header ]
             for v in vars :
-                line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , attention ( v[6] ) )
-                report += '\n' + line  
-            report += '\n' + sep
-            self.__logger.info ( report ) 
-        
-        if not len ( self.__data ) :
+                table_data.append ( ( fmt_name % v [ 0 ] ,
+                                      fmt_desc % v [ 1 ] ,
+                                      fmt_mean % v [ 2 ] ,
+                                      fmt_rms  % v [ 3 ] ,
+                                      fmt_min  % v [ 4 ] ,
+                                      fmt_max  % v [ 5 ] ,
+                                      attention ( fmt_skip % v [ 6 ] ) if v[6]  else v[6] ) ) 
+            
+            import ostap.logger.table as T
+            title = report 
+            t  = T.table ( table_data , title , '# ')
+            self.__logger.info ( title + '\n' + t )
+            
+            
+        if not self.__data or not len ( self.__data ) :
             skip = 0
             for k,v in items_loop ( self.__skip ) : skip += v 
             self.__logger.warning("Selector(%s): empty dataset! Total:%s/Processed:%s/Skipped:%d"
@@ -1031,10 +1051,9 @@ from   ostap.core.workdir import workdir
 from   ostap.io.zipshelve import ZipShelf 
 # =============================================================================
 
-
 # ==============================================================================
-## Generic selector which loads already loaded datasets from cache
-#
+## @class    SelectorWithVarsCached
+#  Generic selector which loads already loaded datasets from cache
 #  @date   2014-07-02
 #  @author Sasha Baranov a.baranov@cern.ch
 class SelectorWithVarsCached(SelectorWithVars) :
@@ -1273,13 +1292,15 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         
     if not silent : 
         skipped = 'Skipped:%d' % stat.skipped 
-        skipped = '/' + attention ( skipped ) if stat.skipped else '' 
-        logger.info (
-            'make_dataset: Events Total:%d/Processed:%s%s CUTS: "%s"\n# %s' % (
+        skipped = '/' + attention ( skipped ) if stat.skipped else ''
+        table   = ds.table () 
+        report = 'make_dataset: Events Total:%d/Processed:%s%s CUTS:"%s" dataset\n%s' % (
             stat.total     ,
             stat.processed ,
-            skipped ,
-            selection  , ds ) )            
+            skipped        ,
+            selection      ,
+            ds             )
+        logger.info (  report.replace ( '\n','\n# ' ) )
         
     return ds , stat 
 
@@ -1356,9 +1377,11 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     #  @see ROOT.RDataFrame.Filter
     #  @see ROOT.RDataFrame.Snapshot
     #  It can be very efficient is selection/filtering cuts are harsh enough.    
-    if all and 0 < use_frame and isinstance ( self , ROOT.TTree ) and use_frame <= len ( self ) :    
+    if all and 0 < use_frame and isinstance ( self , ROOT.TTree ) and use_frame <= len ( self ) :
+        
         if isinstance ( selector , SelectorWithVars ) and selector.selection :
-            if not silent : logger.info ( "Make try to use intermediate FRAME!" )
+            
+            if not silent : logger.info ( "Make try to use the intermediate TFrame!" )
             
             from ostap.utils.utils   import ImplicitMT 
             import ostap.frames.frames
@@ -1374,20 +1397,22 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
             scuts  = []
 
             ranges = []
-            
+
+            ## loop over trivial vars :
             for v in tvars :
+                
                 mn , mx = v.minmax
-                if v.name == v.formula :                    
-                    nvars.append ( v )                    
-                else :                    
-                    newv  = Variable  ( v.var ,
+                if v.name == v.formula :  ## really trivial variable 
+                    nvars.append ( v ) 
+                else :                    ## almost trivial: formula exists  
+                    newv  = Variable  ( v.var                       ,
                                         description = v.description ,
                                         vmin        = v.vmin        ,
                                         vmax        = v.vmax        ,
                                         accessor    = v.name        ) ## make it trivial!
                     nvars.append ( newv )
-                    logger.debug  ( 'PROCESS: define %s as %s ' % ( v.name , v.formula ) )
-                    frame = frame.Define ( v.name , v.formula )
+                    logger.debug  ( 'PROCESS: define %s as %s ' % ( v.name , v.formula ) )                    
+                    frame = frame.Define ( v.name , v.formula )  ## define new variable  for the frame
                     
                 if _minv < mn :
                     lcut = "(%.16g <= %s)" % ( mn     , v.name )
@@ -1421,16 +1446,16 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                 else      :
                     ## otherwise dump only needed variables 
                     bvars = self.the_variables( [ v.formula for v in tvars ] )
-                    avars = list ( bvars ) + [ v.name for v in nvars ] 
+                    avars = list ( bvars ) + [ v.name for v in nvars if not v in bvars ] 
                     from ostap.core.core import strings as _strings 
-                    logger.debug  ('PROCESS: dump only %s' % list ( avars ) )
+                    logger.debug ('PROCESS: dump only %s' % list ( avars ) )
                     snapshot = frame . Snapshot ( 'tree' , tf.filename , _strings ( *avars ) )
 
                 if not silent :
                     from ostap.frames.frames import report_prnt
-                    txt = report_prnt ( report , 'Tree -> Frame -> Tree filter-transformation: ' )
-                    logger.info ( txt )
-
+                    title =  'Tree -> Frame -> Tree filter/transformation '
+                    logger.info ( title + '\n%s' % report_prnt ( report , title , '# ') )
+                    
                 total_0 = -1
                 for c in report :
                     if  total_0 < 0 : total_0 = c.GetAll()
@@ -1443,6 +1468,12 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                 
                 with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 
                     tree         = tt.tree
+                    if not silent :
+                        import ostap.logger.table as  T
+                        t = str ( tree )
+                        t = T.add_prefix ( t , '# ')
+                        logger.info ( 'Filtered frame/tree for the futher processing:\n%s' % t )
+                        
                     new_selector = SelectorWithVars ( nvars + vars_ ,
                                                       ''            , ## no cuts here! 
                                                       cuts     = selector.morecuts ,

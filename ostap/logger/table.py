@@ -24,7 +24,8 @@ __date__    = "2019-08-31"
 __all__     = (
     'table'       , ## format the list of rows as a  table.
     'the_table'   , ## format the list of rows as a  table (local version)
-    'table_width' , ## true  width of the table  
+    'table_width' , ## true  width of the table
+    'add_prefix'  , ## add the prefix to each row of the table 
     )
 # =============================================================================
 from ostap.logger.colorized import infostr, allright, decolorize        
@@ -46,7 +47,7 @@ except ImportError :
 #  t = the_table ( table_data , 'Title' )
 #  print (t)
 #  @endcode
-def the_table ( rows , title = '' ) :
+def the_table ( rows , title = '' , prefix = '' ) :
     """Format the list of rows as a  table (home-made primitive) 
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -109,10 +110,9 @@ def the_table ( rows , title = '' ) :
         else :
             table.append ( '|'  +  '|' .join ( [           f.format ( decolorize ( i ) )    for ( f , i ) in zip ( rformats , cols ) ] ) +  '|' ) 
 
-
     table.append ( sepline )
-
-    return '\n'.join ( table )
+    
+    return prefix + ( '\n' + prefix ) .join ( table ) if prefix else '\n'.join ( table ) 
 
 # =============================================================================
 ## Format the list of rows as a  table.
@@ -133,7 +133,7 @@ def the_table ( rows , title = '' ) :
 #  t = table ( table_data , 'Title' )
 #  print (t)
 #  @endcode
-def table ( rows , title = '' ) :
+def table ( rows , title = '' , prefix = '' ) :
     """Format the list of rows as a  table.
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -167,19 +167,20 @@ def table ( rows , title = '' ) :
         table_instance = terminaltables.SingleTable ( rows , title)
         table_instance.justify_columns[ 0] = 'left'
         table_instance.justify_columns[ 2] = 'right'
-        return table_instance.table
+        return add_prefix (  table_instance.table , prefix ) 
     
     elif terminaltables :
         
-         title = allright ( title ) 
-         table_instance = terminaltables.AsciiTable ( rows , title)
-         table_instance.justify_columns[ 0] = 'left'
-         table_instance.justify_columns[ 2] = 'right'
-         return table_instance.table
+        title = allright ( title ) 
+        table_instance = terminaltables.AsciiTable ( rows , title)
+        table_instance.justify_columns[ 0] = 'left'
+        table_instance.justify_columns[ 2] = 'right'
+        t = table_instance.table 
+        return add_prefix ( table_instance.table , prefix ) 
 
-     ## use the local replacement 
-    return the_table ( rows , title ) 
-
+    ## use the local replacement 
+    return the_table ( rows , title , prefix )
+    
 # =============================================================================
 ## get the true  table width 
 def table_width  ( table ) :
@@ -189,6 +190,20 @@ def table_width  ( table ) :
     for row in table.split('\n') :
         width = max ( width , len ( decolorize ( row ) ) )
     return width 
+
+# =============================================================================
+## Add certain prefix to  each line of the table
+#  @code
+#  table = ...
+#  table =  add_prefix ( table , '# ') 
+#  @endcode
+def add_prefix ( table , prefix = '' ) :
+    """Add certain prefix to  each line of the table
+    >>> table = ...
+    >>> table =  add_prefix ( table , '# ') 
+    """    
+    return prefix + table.replace ( '\n' , '\n' + prefix ) if prefix else table 
+
 
 # =============================================================================
 if __name__ == '__main__' :
@@ -209,8 +224,13 @@ if __name__ == '__main__' :
         ( 'Alice' , '?'          , '---'  ) ,
         ( 'Bob'   , 'unemployed' , ''     ) ]
     
-    logger.info ( 'The table is \n' + table ( table_data , 'Title' ) ) 
-
+    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' ) ) 
+    logger.info ( 'The table is \n%s' % the_table ( table_data , 'Title' ) ) 
+    logger.info ( 'The table woth prefix is \n%s' %
+                  table     ( table_data , 'Title' , prefix = '# ' ) ) 
+    logger.info ( 'The table with prefix is \n%s' %
+                  the_table ( table_data , 'Title' , prefix = '# ' ) ) 
+    
     
     
 # =============================================================================
