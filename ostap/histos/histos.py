@@ -950,10 +950,10 @@ def _h2_mean_ ( h2 ) :
     >>> histo = ...
     >>> x,y   = histo.mean () 
     """
-    x  = h2.GetMean      (1)
-    ex = h2.GetMeanError (1)
-    y  = h2.GetMean      (2)
-    ey = h2.GetMeanError (2)
+    x  = h2.GetMean      ( 1 )
+    ex = h2.GetMeanError ( 1 )
+    y  = h2.GetMean      ( 2 )
+    ey = h2.GetMeanError ( 2 )
     #
     return VE ( x , ex * ex ), VE ( y , ey * ey ) 
 
@@ -5022,6 +5022,28 @@ _h1_central_moment_ .__doc__ += '\n' + HStats.centralMoment    .__doc__
 _h1_central_moment_ .__doc__ += '\n' + HStats.centralMomentErr .__doc__
 
 # =============================================================================
+## calculate bin-by-bin ``standardized moment''
+#  @see https://en.wikipedia.org/wiki/Standardized_moment
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2019-09-04
+def _h1_std_moment_ ( h1 , order ) :
+    """Get ``bin-by-bin'' ``standardized moment''
+    >>> histo = ...
+    >>> cmom  = histo.stdMoment ( 4 ) 
+     - see https://en.wikipedia.org/wiki/Standardized_moment
+    """
+    #
+    if   1 == order : return VE ( 0 , 0 ) 
+    elif 2 == order : return VE ( 1 , 1 )
+    #
+    mom   = h1.centralMoment ( order )
+    
+    sigma = math.sqrt ( h1.rms().value() )
+    
+    return mom / ( sigma ** order ) 
+
+
+# =============================================================================
 ## get skewness
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -5099,9 +5121,11 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
     h.kurtosis       = _h1_kurtosis_
     h.moment         = _h1_moment_
     h.centralMoment  = _h1_central_moment_
+    h.central_moment = _h1_central_moment_
+    h.stdMoment      = _h1_std_moment_
+    h.std_moment     = _h1_std_moment_
     #
     h.nEff           = h.GetEffectiveEntries 
-
 
 # =============================================================================
 ## get some statistic information on the histogram content

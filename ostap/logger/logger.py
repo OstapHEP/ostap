@@ -96,7 +96,7 @@ logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
 #  logger2 = getLogger ( 'LOGGER2' , level = logging.INFO )
 #  @endcode 
 def getLogger ( name                                                 ,
-                fmt    = '# %(name)-25s %(levelname)-7s %(message)s' ,
+                fmt    = '# %(name)-29s %(levelname)-7s %(message)s' ,
                 level  = logging.VERBOSE - 2                         ,
                 stream = None                                        ) :  
     """Get the proper logger

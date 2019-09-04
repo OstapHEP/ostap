@@ -501,7 +501,8 @@ def _h1_cmp_prnt_ ( h1              ,
                     head1   = ''    ,
                     head2   = ''    ,
                     title   = ''    ,
-                    density = False ) : 
+                    density = False ,
+                    prefix  = ''    ) : 
     """ Calculate and print some statistic information for two histos
     >>> h1 , h2 = ...
     >>> h1.cmp_prnt ( h2 ) 
@@ -516,48 +517,73 @@ def _h1_cmp_prnt_ ( h1              ,
 
     if not head1 : head1 = h1.GetName() 
     if not head2 : head2 = h1.GetName()
+
+    fmt    = '%+11.4g +- %-10.4g'
+    wid0   = 25
+    values = ( 'Mean'      ,
+               'Rms'       ,
+               'Skewness'  ,
+               'Kurtosis'  ,
+               'StdMom/5'  ,
+               'StdMom/6'  ,
+               'StdMom/7'  ,
+               'StdMom/8'  ,
+               'StdMom/9'  ,
+               )
+    functions  =  ( lambda h : h.mean      (   ) ,
+                    lambda h : h.rms       (   ) ,
+                    lambda h : h.skewness  (   ) , 
+                    lambda h : h.kurtosis  (   ) , 
+                    lambda h : h.stdMoment ( 5 ) ,
+                    lambda h : h.stdMoment ( 6 ) , 
+                    lambda h : h.stdMoment ( 7 ) ,
+                    lambda h : h.stdMoment ( 8 ) , 
+                    lambda h : h.stdMoment ( 9 ) ,
+                    )
     
-    logger.info ( ' %-15s |            | %-20s | %-20s | ' % ( title , head1 , head2 ) )
+    wid1 = max ( len(v)  for v in values    )
+    wid1 = max ( wid1  , len ( 'Quantity' ) )
+    wid2 = max ( wid0  , len ( head1   ) )
+    wid3 = max ( wid0  , len ( head2   ) )
+    wid4 = max ( wid0  , len ( 'Delta' ) )
     
-    logger.info ( ' %-15s | -MEAN-     | %20s | %20s | ' %
-                  ( title    ,
-                    h1  .mean     ().toString ('%+8.4g+-%-8.4g ') ,
-                    h2  .mean     ().toString ('%+8.4g+-%-8.4g ') ) ) 
-    logger.info ( ' %-15s | -RMS-      | %20s | %20s | ' %
-                  ( title    ,
-                    h1  .rms      ().toString ('%+8.4g+-%-8.4g ') ,
-                    h2  .rms      ().toString ('%+8.4g+-%-8.4g ') ) )
-    logger.info ( ' %-15s | -SKEWNESS- | %20s | %20s | ' %
-                  ( title    ,
-                    h1  .skewness ().toString ('%+8.4g+-%-8.4g ') ,
-                    h2  .skewness ().toString ('%+8.4g+-%-8.4g ') ) )
-    logger.info ( ' %-15s | -KURTOSIS- | %20s | %20s | ' %
-                  ( title    ,
-                    h1  .kurtosis ().toString ('%+8.4g+-%-8.4g ') ,
-                    h2  .kurtosis ().toString ('%+8.4g+-%-8.4g ') ) )
+    header = (  ( '{:^%d}' % wid1 ).format ( 'Quantity' ) ,
+                ( '{:^%d}' % wid2 ).format ( head1      ) ,
+                ( '{:^%d}' % wid3 ).format ( head2      ) ,
+                ( '{:^%d}' % wid4 ).format ( 'Delta'    ) )
     
+    table_data = [ header ]
+
+    for v , f in zip ( values , functions ) :
+        v1 = f ( h1 )
+        v2 = f ( h2 )
+        dv = v1 - v2 
+        row = v , v1.toString ( fmt ) , v2.toString( fmt ) , dv.toString ( fmt )         
+        table_data.append ( row ) 
+
+    title = title if title else '%s vs %s' % ( head1 , head2 ) 
+    import ostap.logger.table as T
+    return T.table (  table_data , title , prefix )
+
     
 ROOT.TH1D.cmp_prnt = _h1_cmp_prnt_
 ROOT.TH1F.cmp_prnt = _h1_cmp_prnt_ 
 
-
 # =============================================================================
-## compare two historgams and find the largest difference
+## compare two histograms and find the largest difference
 #  @code
 #  h1 = ...
 #  h2 = ...
-#  (x1_min,dy1_min),(x1_max,dy1_max) = h1.cmp_minmax ( h2 )
-#  (x2_min,dy2_min),(x2_max,dy2_max) = h2.cmp_minmax ( h1 )
+#  ( x1_min , dy1_min) , ( x1_max , dy1_max ) = h1.cmp_minmax ( h2 )
 #  @endcode 
 def _h1_cmp_minmax_ ( h1                         ,
                       h2                         ,                      
                       density = False            ,
                       diff    = lambda a,b : b-a , **kwargs ) :
-    """Compare two historgams and find the largest difference
+    """Compare two histograms and find the largest difference
     >>> h1 = ...
     >>> h2 = ...
-    >>> (x1_min,dy1_min),(x1_max,dy1_max) = h1.cmp_minmax ( h2 )
-    >>> (x2_min,dy2_min),(x2_max,dy2_max) = h2.cmp_minmax ( h1 )
+    >>>  ( x1_min , dy1_min ) , ( x1_max , dy1_max ) = h1.cmp_minmax ( h2 )
     """
     
     if density :
@@ -572,17 +598,29 @@ def _h1_cmp_minmax_ ( h1                         ,
     mx_x   = None 
     mn_val = None
     mx_val = None
-    
+
+    ## loop over  bnis in the first histo 
     for i , x , y in h1.items() :
         
-        dy = diff ( y , h2 ( x , **kwargs ) )
+        dy = diff ( y , h2 ( x , **kwargs ) ) ## NOTE  THE ARGUMENTS! 
         if mn_val is None or dy.value() < mn_val.value() :
             mn_val = dy
             mn_x   = x.value()
         if mx_val is None or dy.value() > mx_val.value() :
             mx_val = dy
             mx_x   = x.value() 
-            
+
+    ## loop over  bnis in the second histo 
+    for i , x , y in h2.items() :
+        
+        dy = diff ( h1 ( x , **kwargs ) , y ) ## NOTE  THE ARGUMENTS! 
+        if mn_val is None or dy.value() < mn_val.value() :
+            mn_val = dy
+            mn_x   = x.value()
+        if mx_val is None or dy.value() > mx_val.value() :
+            mx_val = dy
+            mx_x   = x.value() 
+
     return ( mn_x , mn_val) , ( mx_x , mx_val )
                 
 ROOT.TH1D.cmp_minmax = _h1_cmp_minmax_
@@ -594,7 +632,6 @@ ROOT.TH1F.cmp_minmax = _h1_cmp_minmax_
 #  h1 = ...
 #  h2 = ...
 #  (x1_min,y1_min,dz1_min),(x1_max,y1_min,dz1_max) = h1.cmp_minmax ( h2 )
-#  (x2_min,y2_min,dz2_min),(x2_max,y2_min,dz2_max) = h2.cmp_minmax ( h1 )
 #  @endcode 
 def _h2_cmp_minmax_ ( h1                         ,
                       h2                         ,
@@ -622,9 +659,10 @@ def _h2_cmp_minmax_ ( h1                         ,
     mn_val = None
     mx_val = None
     
+    ## loop over the 1st histo bins 
     for ix , iy , x , y , z in h1.items() :
         
-        dz = diff ( z , h2 ( x , y , **kwargs ) )
+        dz = diff ( z , h2 ( x , y , **kwargs ) ) ## NOTE ORDER OF ARGUMENTS 
         if mn_val is None or dz.value() < mn_val.value() :
             mn_val = dz
             mn_x   = x.value() 
@@ -633,6 +671,20 @@ def _h2_cmp_minmax_ ( h1                         ,
             mx_val = dz
             mx_x   = x.value()
             mx_y   = y.value() 
+
+    ## loop over the 2nd histo bins 
+    for ix , iy , x , y , z in h2.items() :
+        
+        dz = diff ( h1 ( x , y , **kwargs ) , z  ) ## NOTE ORDER OF ARGUMENTS 
+        if mn_val is None or dz.value() < mn_val.value() :
+            mn_val = dz
+            mn_x   = x.value() 
+            mn_y   = y.value() 
+        if mx_val is None or dz.value() > mx_val.value() :
+            mx_val = dz
+            mx_x   = x.value()
+            mx_y   = y.value() 
+
 
     return ( mn_x , mn_y , mn_val) , ( mx_x , mx_y , mx_val )
                 
