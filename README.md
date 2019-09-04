@@ -3,6 +3,7 @@ Ostap Project
 [![Build Status](https://travis-ci.org/OstapHEP/ostap.svg?branch=master)](https://travis-ci.org/OstapHEP/ostap)
 [![Coverage Status](https://coveralls.io/repos/github/OstapHEP/ostap/badge.svg?branch=master)](https://coveralls.io/github/OstapHEP/ostap?branch=master)
 [![Build Status](https://dev.azure.com/OstapHep/OstapHep/_apis/build/status/OstapHEP.ostap?branchName=master)](https://dev.azure.com/OstapHep/OstapHep/_build/latest?definitionId=5&branchName=master)
+[![pipeline status](https://gitlab.cern.ch/ostapHep/ostaphep/badges/master/pipeline.svg)](https://gitlab.cern.ch/ostapHep/ostaphep/commits/master)
 [![Join the chat at https://gitter.im/OstapHEP/ostap](https://badges.gitter.im/OstapHEP/ostap.svg)](https://gitter.im/OstapHEP/ostap?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/81464356.svg)](https://zenodo.org/badge/latestdoi/81464356)
 
