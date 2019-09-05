@@ -145,8 +145,8 @@ def infostr ( what ) :
                             bold       = True   ,
                             blink      = False  ,
                             underline  = False  ,
-                            bg_bright  = True   )
-
+                            bg_bright  = False  )
+ 
 # =============================================================================
 if __name__ == '__main__' :
 

@@ -127,7 +127,6 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      FuncTH1* clone ()                           const override ;
       FuncTH1* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     protected : // private constructor without histogram 
@@ -252,7 +251,6 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      FuncTH2* clone ()                           const override ;
       FuncTH2* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     protected : // private constructor without histogram 
@@ -402,7 +400,6 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      FuncTH3* clone ()                           const override ;
       FuncTH3* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     protected : // private constructor without histogram 

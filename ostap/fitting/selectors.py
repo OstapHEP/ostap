@@ -298,7 +298,7 @@ class Variable(object) :
         if isinstance  ( accessor , str ) :
             accessor = accessor.strip() 
             if accessor  : 
-                from ostap.trees.funcs import FormulaFunc as FuncVar
+                from ostap.trees.funcs import FuncFormula as FuncVar
                 self.__formula  = accessor 
                 accessor = FuncVar ( accessor ) 
 

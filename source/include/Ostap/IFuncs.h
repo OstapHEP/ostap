@@ -23,8 +23,6 @@ namespace Ostap
     virtual double     operator () ( const TTree* tree ) const = 0 ;
     /// virtual destructor 
     virtual ~IFuncTree  () ;
-    /// clone 
-    virtual IFuncTree* clone () const = 0 ;
     // ========================================================================
   };
   // ==========================================================================
@@ -39,8 +37,6 @@ namespace Ostap
     virtual double operator ()  ( const RooAbsData* tree ) const = 0 ;
     /// virtual destructor 
     virtual ~IFuncData () ;
-    /// clone 
-    virtual IFuncData* clone () const = 0 ;
     // ========================================================================
   };
   // ==========================================================================

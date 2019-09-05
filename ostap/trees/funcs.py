@@ -12,10 +12,17 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'FuncTree'       , ## helper base class for 'TTree-function'
-    'FuncData'       , ## helper base class for 'RooAbsData-function'
-    'FormulaFunc'    , ## simple wrapper over TTreeFormula/Ostap::Formula  
-    'RooFormulaFunc' , ## simple wrapper over RooFormulaVar  
+    'FuncTree'          , ## helper base class for 'TTree-function'
+    'FuncData'          , ## helper base class for 'RooAbsData-function'
+    'PyTreeFunction'    , ## 'TTree-function' that uses python function/callable 
+    "pyfun_tree"        , ## ditto, but as fnuction 
+    'PyDataFunction'    , ## 'Data-function' that uses python function/callable
+    "pyfun_data"        , ## ditto, but as fnuction 
+    'FuncFormula'       , ## simple wrapper over TTreeFormula/Ostap::Formula  
+    'FuncRooFormula'    , ## simple wrapper over RooFormulaVar  
+    'FuncTH1'           , ## TH1-based Tree-function 
+    'FuncTH2'           , ## TH2-based Tree-function 
+    'FuncTH3'           , ## TH3-based Tree-function 
     ) 
 # =============================================================================
 import ROOT
@@ -42,12 +49,12 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
         """``the_tree'' : the actual pointer to the ROOT.TTree"""
         return self.tree ()
     
-    ## the main method 
+    ## the main method, abstract one 
     def evaluate ( self ) :
         tree = self.the_tree 
         assert valid_pointer ( tree ) , 'Invalid TTree object'
         return -1
-    
+
 # =============================================================================
 ## @class FuncData
 #  Helper class to implement "RooAbsData-function"
@@ -69,114 +76,122 @@ class FuncData(Ostap.Functions.PyFuncData) :
         data = self.the_data
         assert valid_pointer ( data ), 'Invalid RooAbsData object'
         return -1
+
+# =============================================================================
+## @class PyTreeFunction
+#  The concrete implementation on of <code>PyFunTree</code>, <code>FuncTree</code>
+#  that delegates the evaluation to provided function/callable object
+#  @see ostap.trees.funcs.FunTree
+#  @see Ostap.Functions.PyFuncTree
+#  @see Ostap.IFuncTree 
+class PyTreeFunction(FuncTree) :
+    """The concrete implementation on of PyFunTree, FuncTree,
+    that delegates the evaluation to provided function/callable object
+    - see ostap.trees.funcs.FunTree
+    - see Ostap.Functions.PyFuncTree
+    - see Ostap.IFuncTree 
+    """
+    def __init__ ( self , the_function , tree = None ) :
+        """Constructor from the function/callable and (optional) tree"""
+        FuncTree.__init__ ( self , tree  )
+        assert callable   ( the_function ), \
+               'PyTreeFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
+        self.__function = the_function
+        
+    @property
+    def the_function ( self ) :
+        """``the_function'' : the actual function/callable object"""
+        return self.__function
     
-# ==============================================================================
-## @class FormulaFunc
-#  simple  class that uses Ostap::Formula/TTreeFormula to get ``TTree-function''
-#  @see Ostap::Formula
-#  @see TTreeFormula
-#  @see Ostap::Functions::FuncFormula 
-class FormulaFunc(Ostap.Functions.FuncFormula) :
-    def __init__ (  self,  expression , tree = None  , name = '' ) :
-        Ostap.Functions.FuncFormula.__init__ ( self , expression , tree , name ) 
-
-# ==============================================================================
-## @class RooFormulaFunc
-#  simple  class that uses RooFormulaVar to get ``RooAbsData-function''
-#  @see RooFormulaVar
-#  @see Ostap::Functions::FuncRooFormula 
-class RooFormulaFunc(Ostap.Functions.FuncFormula) :
-    def __init__ (  self,  expression , tree = None  , name = '' ) :
-        Ostap.Functions.FuncRooFormula.__init__ ( self , expression , tree , name ) 
-
-
-# ==================================================================================
-## @class H1DFunc
-#  Simple  class to use 1D-histogram  as tree-function
-#  @see Ostap::Functions::FuncTH1
-H1DFunc = Ostap.Functions.FuncTH1
-
-## class H1DFunc (Ostap.Functions.FuncTH1) :
-##     """Simple  class to use 1D-histogram  as tree-function
-##     """
-##     def __init__ ( self        ,
-##                    histo       ,
-##                    xvar        , ## x-axis
-##                    tx          = Ostap.Math.HistoInterpolation.Cubic ,
-##                    edges       = True  ,
-##                    extrapolate = False ,
-##                    density     = False ,                                         
-##                    tree        = None  ) :        
-##         Ostap.Functions.FuncTH1.__init__ ( self        ,
-##                                            histo       ,
-##                                            xvar        ,
-##                                            tree        ,
-##                                            tx          ,
-##                                            edges       ,
-##                                            extrapolate ,
-##                                            density     )
-
-# ==================================================================================
-## @class H2DFunc
-#  Simple  class to use 2D-histogram  as tree-function
-#  @see Ostap::Functions::FuncTH2
-class H2DFunc(Ostap.Functions.FuncTH2) :
-    """Simple  class to use 2D-histogram  as tree-function
+    ## the only one method, delegate to the function  
+    def evaluate  ( self ) :
+        tree = self.the_tree
+        return self.__function ( tree )
+    
+# =============================================================================
+## @class PyDataFunction
+#  The concrete implementation on of <code>PyFuncData</code>, <code>FuncData</code>
+#  that delegates the evaluation to provided function/callable object
+#  @see ostap.trees.funcs.FuncData
+#  @see Ostap.Functions.PyFuncData
+#  @see Ostap.IFuncData 
+class PyDataFunction(FuncData) :
+    """The concrete implementation on of PyFunData, FuncData,
+    that delegates the evaluation to provided function/callable object
+    - see ostap.trees.funcs.FuncData
+    - see Ostap.Functions.PyFuncData
+    - see Ostap.IFuncData 
     """
-    def __init__ (  self        ,
-                    histo       ,
-                    xvar        , ## x-axis
-                    yvar        , ## y-axis
-                    tx = Ostap.Math.HistoInterpolation.Cubic ,
-                    ty = Ostap.Math.HistoInterpolation.Cubic ,
-                    edges         =  True  ,
-                    extrapolate   =  False ,
-                    density       =  False ,                                         
-                    tree          =  None  ) :        
-        Ostap.Functions.FuncTH2.__init__ ( self        ,
-                                           histo       ,
-                                           xvar        ,
-                                           yvar        ,
-                                           tree        ,
-                                           tx          ,
-                                           ty          ,
-                                           edges       ,
-                                           extrapolate ,
-                                           density     )         
+    def __init__ ( self , the_function , data = None ) :        
+        FuncData.__init__ ( self , data  )
+        assert callable   ( the_function ), \
+               'PyDataFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
+        self.__function = the_function
         
-# ==================================================================================
-## @class H3DFunc
-#  Simple  class to use 3D-histogram  as tree-function
-#  @see Ostap::Functions::FuncTH3
-class H3DFunc (Ostap.Functions.FuncTH3) :
-    """Simple  class to use 3D-histogram  as tree-function
+    @property
+    def the_function ( self ) :
+        """``the_function'' : the actual function/callable object"""
+        return self.__function
+    
+    ## the only one method, delegate to the function  
+    def evaluate  ( self ) :
+        data = self.the_data
+        return self.__function ( tree )
+
+# =================================================================================
+## create the Ostap.ITreeFunc obejct from python function/callable
+#  @code
+#  def ququ ( tree ) : return tree.pz/tree.pt
+#  fun = pyfun_tree ( ququ ) 
+#  @endcode
+#  @see Ostap::IFuncTree
+#  @see Ostap::Functions::PyFuncTree 
+#  @see ostap.funcs.FuncTree 
+#  @see ostap.funcs.PyTreeFuction
+def pyfun_tree ( function , tree = None ) :
+    """Create the Ostap.ITreeFunc obejct from python function/callable
+    >>> def ququ ( tree ) : return tree.pz/tree.pt
+    >>> fun = pyfun_tree ( ququ )
+    - see Ostap::IFuncTree
+    - see Ostap::Functions::PyFuncTree 
+    - see ostap.trees.funcs.FuncTree 
+    - see ostap.trees.funcs.PyTreeFuction    
     """
-    def __init__ (  self        ,
-                    histo       ,
-                    xvar        , ## x-axis
-                    yvar        , ## y-axis
-                    zvar        , ## y-axis
-                    tx = Ostap.Math.HistoInterpolation.Cubic ,
-                    ty = Ostap.Math.HistoInterpolation.Cubic ,
-                    tz = Ostap.Math.HistoInterpolation.Cubic ,
-                    edges         =  True  ,
-                    extrapolate   =  False ,
-                    density       =  False ,                                         
-                    tree          =  None  ) :        
-        Ostap.Functions.FuncTH3.__init__ ( self        ,
-                                           histo       ,
-                                           xvar        ,
-                                           yvar        ,
-                                           zvar        ,
-                                           tree        ,
-                                           tx          ,
-                                           ty          ,
-                                           tz          ,
-                                           edges       ,
-                                           extrapolate ,
-                                           density     )         
-        
-                
+    return PyTreeFunction ( function , tree ) 
+    
+# =================================================================================
+## create the Ostap.IDataFunc obejct from python function/callable
+#  @code
+#  def ququ ( data ) : return data.pz/data.pt
+#  fun = pyfun_data ( ququ ) 
+#  @endcode
+#  @see Ostap::IFuncData
+#  @see Ostap::Functions::PyFuncData
+#  @see ostap.funcs.FuncData 
+#  @see ostap.funcs.PyDataFuction
+def pyfun_data ( function , data = None ) :
+    """Create the Ostap.IDataFunc obejct from python function/callable
+    >>> def ququ ( data ) : return data.pz/data.pt
+    >>> fun = pyfun_data ( ququ )
+    - see Ostap::IFuncData
+    - see Ostap::Functions::PyFuncData 
+    - see ostap.trees.funcs.FuncData
+    - see ostap.trees.funcs.PyDataFuction    
+    """
+    return PyDataFunction ( function , tree ) 
+    
+
+# =================================================================================
+## the ITreeFunc based on TTree formula expression 
+FuncFormula    = Ostap.Functions.FuncFormula
+
+## the IDataFunc based on RooFormula machinery 
+FuncRooFormula = Ostap.Functions.FuncRooFormula
+
+FuncTH1        = Ostap.Functions.FuncTH1
+FuncTH2        = Ostap.Functions.FuncTH2
+FuncTH3        = Ostap.Functions.FuncTH3
+         
 # =============================================================================
 if '__main__' == __name__ :
     

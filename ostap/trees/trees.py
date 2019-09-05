@@ -1472,7 +1472,15 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
     
     files = chain.files   ()
     cname = chain.GetName () 
-        
+    
+    the_function = function
+    if   isinstance ( function , string_types    ) : pass 
+    elif isinstance ( function , Ostap.IFuncTree ) : pass
+    elif isinstance ( function , ROOT.TH1        ) : pass 
+    elif callable   ( function ) :
+        from ostap.trees.funcs import PyTreeFunction as PTF
+        the_function = PTF ( function )
+
     from ostap.utils.progress_bar import progress_bar
 
     verbose = verbose and 1 < len ( files )
@@ -1480,20 +1488,8 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
     import ostap.io.root_file
     for fname in progress_bar ( files , len ( files ) , silent = not verbose ) :
         
-        logger.debug ('Add_new_branch: processing file %s' % fname ) 
-
-        if   isinstance ( function , ( string_types , ROOT.TH1 ) ) :
-            the_function = function
-        elif hasattr  (  function , 'clone' ) :
-            cloned = function.clone () 
-            the_function = cloned if cloned else function
-        elif hasattr  (  function , 'Clone' ) :
-            cloned = function.Clone () 
-            the_function = cloned if cloned else function        
-        else : 
-            ftype        = type  ( function )
-            the_function = ftype ( function )
-            
+        logger.debug ('Add_new_branch: processing file %s' % fname )
+          
         with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
             ## get the tree 
             ttree = rfile.Get ( cname )
@@ -1528,20 +1524,14 @@ def add_new_branch ( tree , name , function , verbose = True ) :
     for n in names : 
         assert not n in tree.branches() ,'Branch %s already exists!' % n
 
-    if   isinstance ( function , ( string_types , ROOT.TH1 ) ) :
-        the_function = function
-    elif hasattr  (  function , 'clone' ) :
-        cloned = function.clone() 
-        the_function = cloned if cloned else function
-    elif hasattr  (  function , 'Clone' ) :
-        cloned = function.Clone() 
-        the_function = cloned if cloned else function        
-    else : 
-        ftype        = type  ( function )
-        the_function = ftype ( function )
-
     the_function = function
-    
+    if   isinstance ( function , string_types    ) : pass 
+    elif isinstance ( function , Ostap.IFuncTree ) : pass
+    elif isinstance ( function , ROOT.TH1        ) : pass 
+    elif callable   ( function ) :
+        from ostap.trees.funcs import PyTreeFunction as PTF
+        the_function = PTF ( function )
+
     args  = [ n for n in names ] + [ the_function ]
     args  = tuple ( args )
 

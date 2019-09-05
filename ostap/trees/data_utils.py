@@ -473,7 +473,33 @@ class Data(Files):
         self.e_list1     = state.get('e_list1'    , set() )
         self.chain       = ROOT.TChain( state['chain'] )
         for f in  self.files :   self.chain.Add ( f ) 
-        
+
+    ## check the content of the two trees 
+    def check_trees ( self , tree1 , tree2 , the_file = '' ) :
+
+        if tree1 and tree2 :
+            
+            branches1 = set ( tree1.branches () )                
+            leaves1   = set ( tree1.leaves   () )
+            
+            branches2 = set ( tree2.branches () )                
+            leaves2   = set ( tree2.leaves   () )
+
+            if branches1 != branches2 :
+                missing = list ( branches1 - branches2 )
+                missing . sort ()
+                extra   = list ( branches2 - branches1 )
+                extra   . sort ()                    
+                logger.warning ( "Tree('%s'): missing/extra branches %s/%s in %s" %  ( tree1.GetName() , missing , extra , the_file ) )
+                
+            if ( ( branches1 != leaves1 ) or ( branches2 != leaves2 ) ) and leaves1 != leaves2 :
+                missing = list ( leaves1 - leaves2 )
+                missing . sort ()
+                extra   = list ( leaves2 - leaves1 )
+                extra   . sort ()                    
+                logger.warning ( "Tree('%s'): missing/extra leaves   %s/%s in %s" %  ( tree1.GetName() , missing , extra , the_file ) )
+
+                
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         """Add the file to TChain
@@ -485,7 +511,8 @@ class Data(Files):
             tmp1 = ROOT.TChain ( self.chain .GetName() )
             tmp1.Add ( the_file )
             
-            if  tmp1 :
+            if  tmp1 :                
+                self.check_trees ( tmp1 , self.chain , the_file )                
                 Files.treatFile ( self     , the_file ) 
                 self.chain .Add ( the_file )
             else : 
@@ -505,8 +532,7 @@ class Data(Files):
                "<#files: {}; Entries: {}; No/empty: {}>".format ( nf , nc  ,  ne ) 
 
 
-
-      ## conversion to boolean
+    ## conversion to boolean
     def __nonzero__ ( self )  :
         return bool(self.files) and bool(self.chain)
 
@@ -762,6 +788,9 @@ class Data2(Data):
             tmp2 = ROOT.TChain ( self.chain2.GetName() )
             tmp2.Add ( the_file )
 
+            if tmp1 : self.check_trees ( tmp1 , self.chain  , the_file )
+            if tmp2 : self.check_trees ( tmp2 , self.chain2 , the_file )
+  
             if  tmp1 and tmp2      : 
                 Files.treatFile ( self     , the_file ) 
                 self.chain .Add      ( the_file )

@@ -68,12 +68,8 @@ Ostap::Functions::FuncFormula::FuncFormula
 {}
 // ============================================================================
 Ostap::Functions::FuncFormula*
-Ostap::Functions::FuncFormula::clone () const 
-{ return new FuncFormula ( *this ) ;}
-// ============================================================================
-Ostap::Functions::FuncFormula*
 Ostap::Functions::FuncFormula::Clone ( const char* /* newname */ ) const 
-{ return clone () ; }
+{ return new FuncFormula ( *this ) ;}
 // ============================================================================
 // destructor
 // ============================================================================
@@ -156,10 +152,6 @@ Ostap::Functions::FuncRooFormula::FuncRooFormula
   , m_expression ( right.m_expression ) 
   , m_name       ( right.m_name       )
 {}
-// ============================================================================
-Ostap::Functions::FuncRooFormula*
-Ostap::Functions::FuncRooFormula::clone () const 
-{ return new FuncRooFormula ( *this ) ;}
 // ============================================================================
 // destructor
 // ============================================================================
@@ -257,7 +249,7 @@ Ostap::Functions::FuncTH::FuncTH
 // ======================================================================
 Ostap::Functions::FuncTH::~FuncTH(){}
 // ======================================================================
-/*  (protected) constructor without the historgam
+/*  (protected) constructor without the histogram
  *  @param xvar          (INPUT) the expression/variable 
  *  @param tree          (INPUT) the tree 
  *  @param interpolation (INPUT) interpolation type 
@@ -281,10 +273,11 @@ Ostap::Functions::FuncTH1::FuncTH1
   Ostap::Assert ( nullptr == m_tree || make_xvar () ,
                   "Invalid Formula '" + m_xvar_exp + "'" , 
                   "Ostap::Function::FuncTH1"             ) ;
+  m_h1.SetDirectory ( nullptr ) ;
 }
 // ======================================================================
 /*  constructor from the histogram 
- *  @param histo         (INPUT) the historgam 
+ *  @param histo         (INPUT) the histogram 
  *  @param xvar          (INPUT) the expression/variable 
  *  @param tree          (INPUT) the tree 
  *  @param interpolation (INPUT) interpolation type 
@@ -318,25 +311,22 @@ Ostap::Functions::FuncTH1::FuncTH1
   , m_xvar_exp ( right.m_xvar_exp ) 
   , m_tx       ( right.m_tx       ) 
   , m_h1       ( right.m_h1       ) 
-{}
+{
+  m_h1.SetDirectory ( nullptr ) ;
+}
 // ===========================================================================
-// clone :
-// ===========================================================================
-Ostap::Functions::FuncTH1* 
-Ostap::Functions::FuncTH1::clone () const { return new FuncTH1 ( *this ) ; }
-// ============================================================================
 // clone :
 // ===========================================================================
 Ostap::Functions::FuncTH1* 
 Ostap::Functions::FuncTH1::Clone ( const char* /* newname */ ) const
-{ return clone () ; }
+{ return new FuncTH1 ( *this ) ; }
 // ===========================================================================
 /*  constructor from the formula expression 
  *  @param histo         (INPUT) the historgam 
  *  @param xvar          (INPUT) the expression/variable 
  *  @param tree          (INPUT) the tree 
  *  @param interpolation (INPUT) interpolation type 
- *  @param edges         (INPUT) special tretament of edges?
+ *  @param edges         (INPUT) special treatment of edges?
  *  @param extrapolate   (INPUT) use extrapolation?
  *  @param density       (INPUT) use  density?
  */
@@ -449,6 +439,7 @@ Ostap::Functions::FuncTH2::FuncTH2
   Ostap::Assert ( nullptr == m_tree || make_yvar () , 
                   "Invalid Formula '" + m_yvar_exp + "'" ,
                   "Ostap::Function::FuncTH2"             ) ;
+  m_h2.SetDirectory ( nullptr ) ;
 } 
 // ======================================================================
 /*  constructor from the histogram 
@@ -519,18 +510,15 @@ Ostap::Functions::FuncTH2::FuncTH2
   , m_tx       ( right.m_tx ) 
   , m_ty       ( right.m_ty )
   , m_h2       ( right.m_h2 )
-{}
+{
+  m_h2.SetDirectory ( nullptr ) ;
+}
 // ===========================================================================
-// clone :
-// ===========================================================================
-Ostap::Functions::FuncTH2* 
-Ostap::Functions::FuncTH2::clone () const { return new FuncTH2 ( *this ) ; }
-// ============================================================================
 // clone :
 // ===========================================================================
 Ostap::Functions::FuncTH2* 
 Ostap::Functions::FuncTH2::Clone ( const char* /* newname */ ) const
-{ return clone () ; }
+{ return new FuncTH2 ( *this ) ; }
 // ===========================================================================
 //  destructor 
 // ============================================================================
@@ -644,6 +632,7 @@ Ostap::Functions::FuncTH3::FuncTH3
   Ostap::Assert ( nullptr == m_tree || make_zvar () , 
                   "Invalid Formula '" + m_zvar_exp + "'" ,
                   "Ostap::Function::FuncTH3"             ) ;
+  m_h3.SetDirectory ( nullptr ) ;
 } 
 // ======================================================================
 /*  constructor from the histogram 
@@ -725,18 +714,15 @@ Ostap::Functions::FuncTH3::FuncTH3
   , m_ty       ( right.m_ty )
   , m_tz       ( right.m_tz )
   , m_h3       ( right.m_h3 )
-{}
+{
+  m_h3.SetDirectory ( nullptr ) ;
+}
 // ===========================================================================
-// clone :
-// ===========================================================================
-Ostap::Functions::FuncTH3* 
-Ostap::Functions::FuncTH3::clone () const { return new FuncTH3 ( *this ) ; }
-// ============================================================================
 // clone :
 // ============================================================================
 Ostap::Functions::FuncTH3* 
 Ostap::Functions::FuncTH3::Clone ( const char* /* newname */ ) const
-{ return clone () ; }
+{ return new FuncTH3 ( *this ) ; }
 // ============================================================================
 //  destructor 
 // ============================================================================
