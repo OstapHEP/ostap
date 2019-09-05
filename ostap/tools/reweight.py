@@ -558,10 +558,10 @@ def makeWeights  ( dataset                  ,
         if compare : compare ( hdata0 , hmc0 , address )
     
     ## for single reweighting 
-    if 1 == nplots : power = 1
+    ## if 1 == nplots : power = 1
     
-    if power != nplots :
-        logger.info ( "%s: ``power'' is %g/#%d"  % ( tag , power , nplots  ) )
+    ## if power != nplots :
+    #    logger.info ( "%s: ``power'' is %g/#%d"  % ( tag , power , nplots  ) )
 
     active = [ p[0] for p in save_to_db ]    
     all    = [ p.address for p in plots ]
@@ -574,10 +574,10 @@ def makeWeights  ( dataset                  ,
             
     logger.info ( "%s: reweights are: %s" % ( tag ,  ( ', '.join ( all ) ) ) ) 
     
-    if len ( active ) != nplots :
-        if database and save_to_db : 
-            power += ( nplots - len ( active ) ) 
-            logger.info  ("%s: ``power'' is changed to %g" %  ( tag , power ) )
+    ## if len ( active ) != nplots :
+    ##    if database and save_to_db : 
+    ##        power += ( nplots - len ( active ) ) 
+    ##        logger.info  ("%s: ``power'' is changed to %g" %  ( tag , power ) )
             
     nactive = len ( active )  
     while database and save_to_db :
@@ -586,9 +586,8 @@ def makeWeights  ( dataset                  ,
         
         address, ww , hd0, hm0, hd , hm , weight = entry  
 
-        eff_exp = 1.0  / power
-        
-        eff_exp = 0.95 / ( 1.0 * nactive ) ** 0.5
+        ## eff_exp = 1.0  / power
+        ## eff_exp = 0.95 / ( 1.0 * nactive ) ** 0.5
         
         eff_exp = 0.5  if 1 < nactive else 1 
         

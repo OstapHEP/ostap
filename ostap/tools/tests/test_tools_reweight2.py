@@ -19,7 +19,7 @@ from   builtins               import range
 from   ostap.core.pyrouts     import *
 import ostap.io.zipshelve     as     DBASE
 from   ostap.utils.timing     import timing
-from   ostap.logger.colorized import attention 
+from   ostap.logger.colorized import attention, allright  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -204,7 +204,7 @@ hmcx = h1_axis ( [ 20.0/ix*i for i in range ( ix + 1 ) ] )
 hmcy = h1_axis ( [ 15.0/iy*i for i in range ( iy + 1 ) ] )
 
 ## prepare re-weighting machinery 
-maxIter = 20
+maxIter = 25
 
 ## check database 
 import os
@@ -242,7 +242,7 @@ variables  = [
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
 
-    logger.info ( attention ( 'Reweighting iteration %d ' % iter ) ) 
+    logger.info ( allright ( 'Reweighting iteration %d ' % iter ) ) 
 
     with timing ( 'Prepare MC-dataset:' , logger = logger ) : 
         # =========================================================================
@@ -293,39 +293,39 @@ for iter in range ( 1 , maxIter + 1 ) :
         # ==============================================================================
         ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
         logger.info    ( 'Compare DATA and MC for iteration #%d' % iter )
-        
+
+        hh = 'Iteration#%d: ' % iter 
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis&moments
-        logger.info ( 'DATA(x)  %% MC(x) comparison:\n%s' %
-                      hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x) vs MC(x)' , prefix = '# ') )
-        logger.info ( 'DATA(y)  %% MC(y) comparison:\n%s' %
-                      hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y) vs MC(y)' , prefix = '# ') ) 
+        logger.info ( hh + 'DATA(x)  %% MC(x)  comparison:\n%s' % hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ') ) 
+        logger.info ( hh + 'DATA(y)  %% MC(y)  comparison:\n%s' % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ') ) 
+        logger.info ( hh + 'DATA(xy) %% MC(xy) comparison:\n%s' % hdata .cmp_prnt ( hmc  , 'DATA' , 'MC' , 'DATA(xy) vs MC(xy)' , prefix = '# ') ) 
         
         ## 4b) calculate the ``distances''
-        logger.info ( "DATA(x)  - MC(x)  ``distance''        %s" % hxdata.cmp_dist ( hmcx , density = True ) )
-        logger.info ( "DATA(y)  - MC(y)  ``distance''        %s" % hydata.cmp_dist ( hmcy , density = True ) )
+        logger.info ( hh + "DATA(x)  - MC(x)  ``distance''         %s" % hxdata.cmp_dist ( hmcx , density = True ) )
+        logger.info ( hh + "DATA(y)  - MC(y)  ``distance''         %s" % hydata.cmp_dist ( hmcy , density = True ) )
         
         ## 4c) calculate the ``orthogonality''
-        logger.info ( "DATA(x)  - MC(x)  ``orthogonality''   %s" % hxdata.cmp_cos  ( hmcx , density = True ) )
-        logger.info ( "DATA(y)  - MC(y)  ``orthogonality''   %s" % hydata.cmp_cos  ( hmcy , density = True ) )
+        logger.info ( hh + "DATA(x)  - MC(x)  ``orthogonality''    %s" % hxdata.cmp_cos  ( hmcx , density = True ) )
+        logger.info ( hh + "DATA(y)  - MC(y)  ``orthogonality''    %s" % hydata.cmp_cos  ( hmcy , density = True ) )
         
         ## 4d) get min/max difference between data and MC 
-        mn,mx = hxdata.cmp_minmax ( hmcx   , diff = lambda a,b : a/b , density = True )
-        logger.info ( "DATA(x)  / MC(x)  ``min/max-distance'' (%s)/(%s)[%%] at xmin/xmax=%.1f/%.1f" % (
+        mn , mx = hxdata.cmp_minmax ( hmcx   , diff = lambda a,b : a/b , density = True )
+        logger.info ( hh + "DATA(x)  / MC(x)  ``min/max-distance'' (%s)/(%s)[%%] at xmin/xmax=%.1f/%.1f" % (
             (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
             (100*mx[1]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mx[0] ) )
-        mn,mx = hydata.cmp_minmax ( hmcy   , diff = lambda a,b : a/b , density = True )
-        logger.info ( "DATA(y)  / MC(y)  ``min/max-distance'' (%s)/(%s)[%%] at ymin/ymax=%.1f/%.1f" % (
+        mn , mx = hydata.cmp_minmax ( hmcy   , diff = lambda a,b : a/b , density = True )
+        logger.info ( hh + "DATA(y)  / MC(y)  ``min/max-distance'' (%s)/(%s)[%%] at ymin/ymax=%.1f/%.1f" % (
             (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
             (100*mx[1]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mx[0] ) ) 
-        mn,mx = hdata .cmp_minmax ( hmc   , diff = lambda a,b : a/b  , density = True )
-        logger.info ( "DATA(xy) / MC(xy) ``min/max-distance'' (%s)/(%s)[%%] at (x,y)min/max=(%.1f,%.1f)/(%.1f,%.1f)" % (
+        mn , mx = hdata .cmp_minmax ( hmc   , diff = lambda a,b : a/b  , density = True )
+        logger.info ( hh + "DATA(xy) / MC(xy) ``min/max-distance'' (%s)/(%s)[%%] at (x,y)min/max=(%.1f,%.1f)/(%.1f,%.1f)" % (
             (100*mn[2]-100).toString ( '%+.1f+-%.1f' ) ,
             (100*mx[2]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mn[1] , mx[0]  , mx[1] ) )
         
         ## 4e) 2D-statistics 
         mcstat = mcds.statCov('x','y','weight')
-        logger.info  ( 'x/y covariance DATA:\n# %s' % ( str( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
-        logger.info  ( 'x/y covariance MC  :\n# %s' % ( str(   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
+        logger.info  ( hh + 'x/y covariance DATA (unbinned):\n# %s' % ( str( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
+        logger.info  ( hh + 'x/y covariance MC   (unbinned):\n# %s' % ( str(   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
         
     # =========================================================================
     ## prepare the plot of weighted MC for the given iteration
@@ -355,16 +355,19 @@ for iter in range ( 1 , maxIter + 1 ) :
     time.sleep ( 5 )
 
     if not more and iter > 6 : 
-        logger.info    ( 'No more iterations are needed #%d' % iter )
+        logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         break
     
-    if iter + 1 != maxIter :
-        mcds.clear() 
-        del mcds , selector
-    else :
-        del selector 
+    mcds.clear()
+    del mcds
+    del selector
 
+else :
 
+    logger.error ( "No convergency!" )
+
+    
+    
 logger.info ('MCSTAT:\nx=%s\ny=%s\ncov2:\n%s'   %mcstat  [:3] ) 
 logger.info ('DATASTAT:\nx=%s\ny=%s\ncov2:\n%s' %datastat[:3] ) 
 
@@ -372,7 +375,7 @@ datax_density.draw ('e1')
 mcx_density  .draw ('e1 same')
 datay_density.draw ('e1 same')
 mcy_density  .draw ('e1 same')
-time.sleep(60)
+time.sleep(10)
 
 # =============================================================================
 # The END 

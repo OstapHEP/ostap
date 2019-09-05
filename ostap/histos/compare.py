@@ -25,10 +25,11 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some specific comparison of histo-objects')
 # =============================================================================
-from   ostap.core.core      import hID,VE 
+from   ostap.core.core       import hID,VE 
 import ostap.histos.histos 
 import ostap.histos.param
 import ostap.fitting.param 
+from   ostap.logger.colorized import allright  
 # =============================================================================
 ## Can 1D-histogram can be considered as ``constant'' ?
 #  @code
@@ -439,8 +440,6 @@ ROOT.TH3F.cmp_dist = _h3_cmp_dist_
 
 
 # =============================================================================
-
-
 ## calculate the norm of difference of scaled histograms/functions 
 #  \f$ d = \left| (f_1^{*}-f_2^{*})^2/(f_1^{*}f_2^*(x))\right| \f$,
 #  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
@@ -555,10 +554,10 @@ def _h1_cmp_prnt_ ( h1              ,
     table_data = [ header ]
 
     for v , f in zip ( values , functions ) :
-        v1 = f ( h1 )
-        v2 = f ( h2 )
-        dv = v1 - v2 
-        row = v , v1.toString ( fmt ) , v2.toString( fmt ) , dv.toString ( fmt )         
+        v1  = f ( h1 )
+        v2  = f ( h2 )
+        dv  = v1 - v2 
+        row = allright ( v ) , v1.toString ( fmt ) , v2.toString( fmt ) , dv.toString ( fmt )         
         table_data.append ( row ) 
 
     title = title if title else '%s vs %s' % ( head1 , head2 ) 
@@ -643,7 +642,7 @@ def _h2_cmp_minmax_ ( h1                         ,
     (x1_min,y1_min,dz1_min),(x1_max,y1_min,dz1_max) = h1.cmp_minmax ( h2 )
     (x2_min,y2_min,dz2_min),(x2_max,y2_min,dz2_max) = h2.cmp_minmax ( h1 )
     """
-    
+
     if density : 
         _h1 =  h1.density () 
         _h2 =  h2.density ()
@@ -692,25 +691,167 @@ ROOT.TH2D.cmp_minmax = _h2_cmp_minmax_
 ROOT.TH2F.cmp_minmax = _h2_cmp_minmax_ 
         
 
+# =============================================================================
+## calculate and print some statistic for comparison
+#  @code
+#  h1 , h2 = ...
+#  h1.cmp_prnt ( h2 )
+#  @endcode 
+def _h2_cmp_prnt_ ( h1              ,
+                    h2              ,
+                    head1   = ''    ,
+                    head2   = ''    ,
+                    title   = ''    ,
+                    density = False ,
+                    prefix  = ''    ) : 
+    """ Calculate and print some statistic information for two histos
+    >>> h1 , h2 = ...
+    >>> h1.cmp_prnt ( h2 ) 
+    """
+    if density : 
+        h1_ = h1.density() 
+        h2_ = h2.density() 
+        cmp = _h2_cmp_prnt_ ( h1_ , h2_ , head1 = head1 , head2 = head2 , title = title , density = False )
+        del h1_
+        del h2_
+        return cmp
 
+    if not head1 : head1 = h1.GetName() 
+    if not head2 : head2 = h1.GetName()
+
+    fmt1   = '%+11.4g +- %-10.4g'
+    fmt    = '%+12.5g'
+    wid0   = 25
+    
+    values = ( 'x-mean'      ,
+               'y-mean'      ,
+               'x-rms'       ,
+               'y-rms'       ,
+               'xy-corr'     ,
+               ##
+               'StdMom[0,3]' ,
+               'StdMom[1,2]' ,
+               'StdMom[2,1]' ,
+               'StdMom[3,0]' ,
+               ##
+               'StdMom[0,4]' ,
+               'StdMom[1,3]' ,
+               'StdMom[2,2]' ,
+               'StdMom[3,1]' ,
+               'StdMom[4,0]' ,
+               ##
+               'StdMom[0,5]' ,
+               'StdMom[1,4]' ,
+               'StdMom[2,3]' ,
+               'StdMom[3,2]' ,
+               'StdMom[4,1]' ,
+               'StdMom[5,0]' )
+    
+    functions  =  (
+        lambda h : h.xmean      (       ) ,
+        lambda h : h.ymean      (       ) ,
+        lambda h : h.xrms       (       ) ,
+        lambda h : h.yrms       (       ) ,
+        lambda h : h.xycorr     (       ) ,
+        lambda h : h.std_moment ( 0 , 3 ) , 
+        lambda h : h.std_moment ( 1 , 2 ) , 
+        lambda h : h.std_moment ( 2 , 1 ) , 
+        lambda h : h.std_moment ( 3 , 0 ) ,
+        lambda h : h.std_moment ( 0 , 4 ) , 
+        lambda h : h.std_moment ( 1 , 3 ) , 
+        lambda h : h.std_moment ( 2 , 2 ) , 
+        lambda h : h.std_moment ( 3 , 1 ) ,
+        lambda h : h.std_moment ( 4 , 0 ) ,       
+        lambda h : h.std_moment ( 0 , 5 ) , 
+        lambda h : h.std_moment ( 1 , 4 ) , 
+        lambda h : h.std_moment ( 2 , 3 ) , 
+        lambda h : h.std_moment ( 3 , 2 ) ,
+        lambda h : h.std_moment ( 4 , 1 ) ,       
+        lambda h : h.std_moment ( 5 , 0 ) ,       
+        )
+    
+    wid1 = max ( len(v)  for v in values    )
+    wid1 = max ( wid1  , len ( 'Quantity' ) )
+    wid2 = max ( wid0  , len ( head1   ) )
+    wid3 = max ( wid0  , len ( head2   ) )
+    wid4 = max ( wid0  , len ( 'Delta' ) )
+    
+    header = (  ( '{:^%d}' % wid1 ).format ( 'Quantity' ) ,
+                ( '{:^%d}' % wid2 ).format ( head1      ) ,
+                ( '{:^%d}' % wid3 ).format ( head2      ) ,
+                ( '{:^%d}' % wid4 ).format ( 'Delta'    ) )
+    
+    table_data = [ header ]
+
+
+    fmt2 = '{:^%d}' % wid2
+    fmt3 = '{:^%d}' % wid3
+    fmt4 = '{:^%d}' % wid4
+    
+    import itertools 
+    for i , v , f in zip ( itertools.count() , values , functions ) :
+        v1 = f ( h1 )
+        v2 = f ( h2 )
+        dv = v1 - v2
+        if i <= 3 :
+            row = allright ( v ) , v1.toString( fmt1 ) , v2.toString( fmt1 ) , dv.toString  ( fmt1 )
+        else :
+            row = allright ( v ) , fmt2. format ( fmt % v1 ) , fmt3. format ( fmt % v2 ) , fmt4. format ( fmt % dv  ) 
+            
+        table_data.append ( row ) 
+
+    title = title if title else '%s vs %s' % ( head1 , head2 ) 
+    import ostap.logger.table as T
+    return T.table (  table_data , title , prefix )
+
+
+ROOT.TH2D.cmp_prnt = _h2_cmp_prnt_
+ROOT.TH2F.cmp_prnt = _h2_cmp_prnt_ 
 
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1  , 
     ROOT.TH1F , 
     ROOT.TH1D ,
+    ROOT.TH2F , 
+    ROOT.TH2D ,
+    ROOT.TH3F , 
+    ROOT.TH3D ,
     )
 _new_methods_       = (
-    _h1_constant_     ,
-    _h1_cmp_fit_      ,
-    _h1_cmp_chi2_     ,
-    _h1_chi2_cmp_     ,
-    _h1_cmp_costheta_ ,
-    _h1_cmp_dist_     ,
-    _h1_cmp_dist2_    ,
-    _h1_cmp_prnt_     ,
-    _h1_cmp_minmax_   ,
-    _h2_cmp_minmax_   ,
+    ROOT.TH1D.is_constant ,
+    ROOT.TH1F.is_constant , 
+    ROOT.TH1D.cmp_fit     , 
+    ROOT.TH1F.cmp_fit     , 
+    ROOT.TH1D.cmp_pdf     , 
+    ROOT.TH1F.cmp_pdf     , 
+    ROOT.TH1D.cmp_chi2    , 
+    ROOT.TH1F.cmp_chi2    , 
+    ROOT.TH1D.chi2_cmp    , 
+    ROOT.TH1F.chi2_cmp    , 
+    ROOT.TH1D.cmp_cos     , 
+    ROOT.TH1F.cmp_cos     ,
+    #
+    ROOT.TH1D.cmp_dist2   , 
+    ROOT.TH1F.cmp_dist2   ,
+    #
+    ROOT.TH1D.cmp_dist    , 
+    ROOT.TH1F.cmp_dist    ,
+    ROOT.TH2D.cmp_dist    , 
+    ROOT.TH2F.cmp_dist    , 
+    ROOT.TH3D.cmp_dist    , 
+    ROOT.TH3F.cmp_dist    , 
+    #
+    ROOT.TH1D.cmp_prnt   , 
+    ROOT.TH1F.cmp_prnt   ,
+    ROOT.TH2D.cmp_prnt   , 
+    ROOT.TH2F.cmp_prnt   ,
+    ##
+    ROOT.TH1D.cmp_minmax ,
+    ROOT.TH1F.cmp_minmax ,
+    ROOT.TH2D.cmp_minmax ,
+    ROOT.TH2F.cmp_minmax ,
+    ##
     )
 # =============================================================================
 if '__main__' == __name__ :

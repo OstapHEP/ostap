@@ -941,7 +941,7 @@ ROOT.TH3D . findBin  = _h3_find_
 ## get mean for 2D-histogram 
 #  @code 
 #  >>> histo = ...
-#  >>> x,y   = histo.mean ()
+#  >>> x , y = histo.mean ()
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-20
@@ -957,8 +957,272 @@ def _h2_mean_ ( h2 ) :
     #
     return VE ( x , ex * ex ), VE ( y , ey * ey ) 
 
-ROOT.TH2F . mean = _h2_mean_
-ROOT.TH2D . mean = _h2_mean_
+# ============================================================================
+## Get x-mean for 2D-histogram
+#  @code
+#  h2 = ...
+#  xm = h2.xmean() 
+#  @endcode
+def _h2_xmean_ ( h2 ) :
+    """Get x-mean for 2D-histogram
+    >>> h2 = ...
+    >>> xm = h2.xmean() 
+    """
+    x  = h2.GetMean      ( 1 )
+    ex = h2.GetMeanError ( 1 )
+    #
+    return VE ( x , ex * ex )
+
+# ============================================================================
+## Get y-mean for 2D-histogram
+#  @code
+#  h2 = ...
+#  xm = h2.ymean() 
+#  @endcode
+def _h2_ymean_ ( h2 ) :
+    """Get y-mean for 2D-histogram
+    >>> h2 = ...
+    >>> xm = h2.ymean() 
+    """
+    y  = h2.GetMean      ( 2 )
+    ey = h2.GetMeanError ( 2 )
+    #
+    return VE ( y , ey * ey )
+
+# ============================================================================
+## Get x-rms for 2D-histogram
+#  @code
+#  h2 = ...
+#  xm = h2.xrms() 
+#  @endcode
+def _h2_xrms_ ( h2 ) :
+    """Get x-rms for 2D-histogram
+    >>> h2 = ...
+    >>> xm = h2.xrms() 
+    """
+
+    order = 2
+    
+    mu2    = h2.central_moment ( 2 , 0 )
+    mu4    = h2.central_moment ( 4 , 0 )
+    ##
+    cov2   = mu4
+    cov2  -= mu2 * mu2 
+    cov2  /= h2.nEff()
+    ##
+    cov2   = max ( cov2 , 0.0 )
+    ##
+    return VE ( mu2 , cov2 ) ** 0.5 
+
+# ============================================================================
+## Get y-rms for 2D-histogram
+#  @code
+#  h2 = ...
+#  xm = h2.yrms() 
+#  @endcode
+def _h2_yrms_ ( h2 ) :
+    """Get y-rms for 2D-histogram
+    >>> h2 = ...
+    >>> xm = h2.yrms() 
+    """
+    order = 2
+    
+    mu2    = h2.central_moment ( 0 , 2 )
+    mu4    = h2.central_moment ( 0 , 4 )
+    ##
+    cov2   = mu4
+    cov2  -= mu2 * mu2 
+    cov2  /= h2.nEff()
+    ##
+    cov2   = max ( cov2 , 0.0 )
+    ##
+    return VE ( mu2 , cov2 ) ** 0.5 
+
+
+# ===============================================================================
+## get correlation coefficient between x and y
+#  @code
+#  h2 = ...
+#  xy = h2.xycorr()
+#  @endcode 
+def _h2_xycorr_  ( h2 ) :
+    """Get correlation coefficient between x and y
+    >>> h2 = ...
+    >>> xy = h2.xycorr()
+    """
+    c2 = h2.central_moment ( 1 , 1 )
+    x2 = h2.central_moment ( 2 , 0 )
+    y2 = h2.central_moment ( 0 , 2 )
+    
+    return c2 / ( x2 * y2 )**0.5
+
+
+for h in ( ROOT.TH2F , ROOT.TH2D ) :
+    h. mean  =  _h2_mean_
+    h.xmean  =  _h2_xmean_
+    h.ymean  =  _h2_ymean_
+    h.xrms   =  _h2_xrms_
+    h.yrms   =  _h2_yrms_
+    h.xycorr =  _h2_xycorr_
+    h.xycor  =  _h2_xycorr_
+
+
+
+
+# =============================================================================
+## get mean for 3D-histogram 
+#  @code 
+#  >>> histo = ...
+#  >>> x , y , z = histo.mean ()
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-03-20
+def _h3_mean_ ( h3 ) :
+    """Get the mean
+    >>> histo = ...
+    >>> x , y , z = histo.mean () 
+    """
+    x  = h3.GetMean      ( 1 )
+    ex = h3.GetMeanError ( 1 )
+    y  = h3.GetMean      ( 2 )
+    ey = h3.GetMeanError ( 2 )
+    z  = h3.GetMean      ( 3 )
+    ez = h3.GetMeanError ( 4 )
+    #
+    return VE ( x , ex * ex ), VE ( y , ey * ey ) , VE ( z , ez * ez )
+
+# ============================================================================
+## Get x-mean for 3D-histogram
+#  @code
+#  h3 = ...
+#  xm = h3.xmean() 
+#  @endcode
+def _h3_xmean_ ( h3 ) :
+    """Get x-mean for 2D-histogram
+    >>> h2 = ...
+    >>> xm = h2.xmean() 
+    """
+    x  = h3.GetMean      ( 1 )
+    ex = h3.GetMeanError ( 1 )
+    #
+    return VE ( x , ex * ex )
+
+# ============================================================================
+## Get y-mean for 3D-histogram
+#  @code
+#  h3 = ...
+#  ym = h3.ymean() 
+#  @endcode
+def _h3_ymean_ ( h3 ) :
+    """Get y-mean for 3D-histogram
+    >>> h3 = ...
+    >>> xm = h3.ymean() 
+    """
+    y  = h3.GetMean      ( 2 )
+    ey = h3.GetMeanError ( 2 )
+    #
+    return VE ( y , ey * ey )
+
+
+# ============================================================================
+## Get z-mean for 3D-histogram
+#  @code
+#  h3 = ...
+#  zm = h3.zmean() 
+#  @endcode
+def _h3_zmean_ ( h3 ) :
+    """Get z-mean for 3D-histogram
+    >>> h3 = ...
+    >>> zm = h3.zmean() 
+    """
+    z  = h3.GetMean      ( 3 )
+    ez = h3.GetMeanError ( 3 )
+    #
+    return VE ( z , ez * ez )
+
+# ============================================================================
+## Get x-rms for 3D-histogram
+#  @code
+#  h3 = ...
+#  xm = h3.xrms() 
+#  @endcode
+def _h3_xrms_ ( h2 ) :
+    """Get x-rms for 3D-histogram
+    >>> h3 = ...
+    >>> xm = h3.xrms() 
+    """
+
+    order = 2
+    
+    mu2    = h2.central_moment ( 2 , 0 , 0 )
+    mu4    = h2.central_moment ( 4 , 0 , 0)
+    ##
+    cov2   = mu4
+    cov2  -= mu2 * mu2 
+    cov2  /= h2.nEff()
+    ##
+    cov2   = max ( cov2 , 0.0 )
+    ##
+    return VE ( mu2 , cov2 ) ** 0.5 
+
+# ============================================================================
+## Get y-rms for 3D-histogram
+#  @code
+#  h3 = ...
+#  ym = h3.yrms() 
+#  @endcode
+def _h3_yrms_ ( h2 ) :
+    """Get y-rms for 3D-histogram
+    >>> h3 = ...
+    >>> ym = h3.yrms() 
+    """
+    order = 2
+    
+    mu2    = h2.central_moment ( 0 , 2 , 0 )
+    mu4    = h2.central_moment ( 0 , 4 , 0 )
+    ##
+    cov2   = mu4
+    cov2  -= mu2 * mu2 
+    cov2  /= h2.nEff()
+    ##
+    cov2   = max ( cov2 , 0.0 )
+    ##
+    return VE ( mu2 , cov2 ) ** 0.5 
+
+
+# ============================================================================
+## Get z-rms for 3D-histogram
+#  @code
+#  h3 = ...
+#  zm = h3.zrms() 
+#  @endcode
+def _h3_zrms_ ( h2 ) :
+    """Get z-rms for 3D-histogram
+    >>> h3 = ...
+    >>> zm = h3.zrms() 
+    """
+    order = 2
+    
+    mu2    = h2.central_moment ( 0 , 0 , 2 )
+    mu4    = h2.central_moment ( 0 , 0 , 4 )
+    ##
+    cov2   = mu4
+    cov2  -= mu2 * mu2 
+    cov2  /= h2.nEff()
+    ##
+    cov2   = max ( cov2 , 0.0 )
+    ##
+    return VE ( mu2 , cov2 ) ** 0.5 
+
+
+for h in ( ROOT.TH3F , ROOT.TH3D ) :
+    h. mean =  _h3_mean_
+    h.xmean =  _h3_xmean_
+    h.ymean =  _h3_ymean_
+    h.zmean =  _h3_zmean_
+    h.xrms  =  _h3_xrms_
+    h.yrms  =  _h3_yrms_
+    h.zrms  =  _h3_zrms_
 
 
 # ============================================================================
@@ -2310,7 +2574,7 @@ def _h1_chi2_ ( h1 , h2 ) :
 ##  ``Average'' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_mean_ ( h1 , h2 ) :
+def _h1_average_ ( h1 , h2 ) :
     """``Mean'' the histograms    
     >>> h1     = ...
     >>> h2     = ...
@@ -2524,7 +2788,7 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t .  asym        = _h1_asym_
     t .  diff        = _h1_diff_
     t .  chi2        = _h1_chi2_
-    t .  average     = _h1_mean_
+    t .  average     = _h1_average_
 
 # =============================================================================
 ## find the first X-value for the given Y-value 
@@ -2791,7 +3055,6 @@ ROOT.TH1F.random = lambda s : s.GetRandom()
 ROOT.TH1D.random = lambda s : s.GetRandom()
 
 
-
 # =============================================================================
 ## operation with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3000,7 +3263,7 @@ def _h2_chi2_ ( h1 , h2 ) :
 ##  ``Average'' the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h2_mean_ ( h1 , h2 ) :
+def _h2_average_ ( h1 , h2 ) :
     """``Average'' for the histograms    
     >>> h1     = ...
     >>> h2     = ...
@@ -3143,7 +3406,7 @@ for t in ( ROOT.TH2F , ROOT.TH2D ) :
     t .  asym    = _h2_asym_
     t .  diff    = _h2_diff_
     t .  chi2    = _h2_chi2_
-    t .  average = _h2_mean_
+    t .  average = _h2_average_
 
     t .  box     = _h2_box_
     t .  lego    = _h2_lego_
@@ -3298,7 +3561,7 @@ def _h3_chi2_ ( h1 , h2 ) :
 ##  ``Average'' the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h3_mean_ ( h1 , h2 ) :
+def _h3_average_ ( h1 , h2 ) :
     """``Average'' for the histograms
     >>> h1 = ...
     >>> h2 = ...
@@ -3486,7 +3749,7 @@ ROOT.TH3.__pow__   = _h3_pow_
 ROOT.TH3.  frac    = _h3_frac_
 ROOT.TH3.  asym    = _h3_asym_
 ROOT.TH3.  chi2    = _h3_chi2_
-ROOT.TH3.  average = _h3_mean_
+ROOT.TH3.  average = _h3_average_
 
 
 # =============================================================================
@@ -5095,7 +5358,6 @@ _h1_mean_ .__doc__ += '\n' + HStats.mean    .__doc__
 _h1_mean_ .__doc__ += '\n' + HStats.meanErr .__doc__
 
 
-
 # =============================================================================
 ## get RMS
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -5125,7 +5387,154 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
     h.stdMoment      = _h1_std_moment_
     h.std_moment     = _h1_std_moment_
     #
-    h.nEff           = h.GetEffectiveEntries 
+
+ROOT.TH1.nEff = ROOT.TH1.GetEffectiveEntries 
+
+
+# =============================================================================
+## calculate bin-by-bin moments
+#  \f$ m(k_x,k_y; x , y  ) \equiv 
+#   \frac{ \sum_i (x_i - x)^{n_x} (y_i - y)^{n_y} N_i }
+#        { \sum_j N_j } \f$ 
+#  @code
+#  h2 = ...
+#  m  = h2.moment ( 2  , 3 , 0.0 , 0.0 )
+#  @endcode
+#  @see Ostap::Utils::HistoStat::moment2 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _h2_moment_ ( h2 , orderx , ordery  , x0 = 0.0 , y0 = 0.0 ) :
+    """Get ``bin-by-bin''-moment around the specified value    
+    >>> h2   = ...
+    >>> mom  = histo.moment  ( 2 , 3 , 0.0 , 0.0 ) 
+    """
+    return HStats.moment2 ( h2 , orderx , ordery , x0 , y0 )
+
+_h2_moment_ . __doc__ +=  '\n' + HStats.moment2.__doc__  
+
+# =============================================================================
+## calculate bin-by-bin central moments
+#  \f$ m(k_x,k_y; x , y  ) \equiv 
+#   \frac{ \sum_i (x_i - \mu_x)^{k_x} (y_i - \mu_y)^{k_y} N_i }
+#        { \sum_j N_j } \f$ 
+#  @code
+#  h2 = ...
+#  m  = h2.central_moment ( 2  , 3 )
+#  @endcode
+#  @see Ostap::Utils::HistoStat::cental_moment2 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _h2_cmoment_ ( h2 , orderx , ordery ) :
+    """Get ``bin-by-bin''-central moment 
+    >>> h2   = ...
+    >>> mom  = histo.central_moment  ( 2 , 3 ) 
+    """
+    return HStats.central_moment2 ( h2 , orderx , ordery )
+
+_h2_cmoment_ . __doc__ +=  '\n' + HStats.central_moment2.__doc__  
+
+# =============================================================================
+## calculate bin-by-bin standartized moment
+#  \f$ m(k_x,k_y; x , y  ) \equiv
+#   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}}
+#   \frac{ \sum_i (x_i - \mu_x)^{k_x} (y_i - \mu_y)^{k_y} N_i }
+#        { \sum_j N_j } \f$ 
+#  @code
+#  h2 = ...
+#  m  = h2.central_moment ( 2  , 3 )
+#  @endcode
+#  @see Ostap::Utils::HistoStat::cental_moment2 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _h2_smoment_ ( h2 , orderx , ordery ) :
+    """Get ``bin-by-bin''-standartized moment 
+    >>> h2   = ...
+    >>> mom  = histo.std_moment  ( 2 , 3 ) 
+    """
+    return HStats.std_moment2 ( h2 , orderx , ordery )
+
+_h2_smoment_ . __doc__ +=  '\n' + HStats.std_moment2.__doc__  
+
+
+for h in ( ROOT.TH2F , ROOT.TH2D ) :
+    h.moment         = _h2_moment_
+    h.central_moment = _h2_cmoment_
+    h.std_moment     = _h2_smoment_
+
+# =============================================================================
+## calculate bin-by-bin moment
+#  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
+#   \frac{ \sum_i (x_i - x)^{k_x} (y_i - y)^{k_y} (z_i - z )^{k_z} N_i 
+#        { \sum_j N_j } \f$ 
+#  @code
+#  h3 = ...
+#  m  = h3.moment ( 2  , 3 , 4 , 0.0 , 0.0 , 0.0 )
+#  @endcode#  @see Ostap::Utils::HistoStat::moment3 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _h3_moment_ ( h3 , orderx , ordery , orderz  , x0 = 0.0 , y0 = 0.0 , z0 = 0.0 ) :
+    """Get ``bin-by-bin''-moment around the specified value    
+    >>> h3   = ...
+    >>> mom  = histo.moment  ( 2 , 3 , 4 , 0.0 , 0.0 , 0.0 ) 
+    """
+    return HStats.moment3 ( h3 , orderx , ordery , orderz ,  x0 , y0 , z0 )
+
+_h3_moment_ . __doc__ +=  '\n' + HStats.moment3.__doc__ 
+
+
+# =============================================================================
+## calculate bin-by-bin central moment
+#  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
+#   \frac{ \sum_i (x_i - \mu_x)^{k_x}
+#                 (y_i - \mu_y)^{k_y}
+#                 (z_i - \muz )^{k_z} N_i 
+#        { \sum_j N_j } \f$ 
+#  @code
+#  h3 = ...
+#  m  = h3.moment ( 2  , 3 , 4 , 0.0 , 0.0 , 0.0 )
+#  @endcode
+#  @see Ostap::Utils::HistoStat::moment3 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _h3_cmoment_ ( h3 , orderx , ordery , orderz  ) :
+    """Get ``bin-by-bin''-central moment around the specified value    
+    >>> h3   = ...
+    >>> mom  = histo.central_moment  ( 2 , 3 , 4 ) 
+    """
+    return HStats.central_moment3 ( h3 , orderx , ordery , orderz  )
+
+_h3_cmoment_ . __doc__ +=  '\n' + HStats.central_moment3.__doc__ 
+
+# =============================================================================
+## calculate bin-by-bin standartized  moment
+#  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
+#   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}\sigma_z^{k_z}}
+#   \frac{ \sum_i (x_i - \mu_x)^{k_x}
+#                 (y_i - \mu_y)^{k_y}
+#                 (z_i - \muz )^{k_z} N_i 
+#        { \sum_j N_j } \f$ 
+#  @code
+#  h3 = ...
+#  m  = h3.moment ( 2 , 3 , 4 , 0.0 , 0.0 , 0.0 )
+#  @endcode
+#  @see Ostap::Utils::HistoStat::std_moment3 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _h3_smoment_ ( h3 , orderx , ordery , orderz  ) :
+    """Get ``bin-by-bin''-standartized moment
+    >>> h3   = ...
+    >>> mom  = histo.std_moment  ( 2 , 3 , 4 ) 
+    """
+    return HStats.std_moment3 ( h3 , orderx , ordery , orderz  )
+
+
+_h3_smoment_ . __doc__ +=  '\n' + HStats.std_moment3.__doc__ 
+
+for h in ( ROOT.TH3F , ROOT.TH3D ) :
+    h.moment         = _h3_moment_
+    h.central_moment = _h3_cmoment_
+    h.std_moment     = _h3_smoment_
+
 
 # =============================================================================
 ## get some statistic information on the histogram content
