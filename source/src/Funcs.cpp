@@ -78,7 +78,10 @@ Ostap::Functions::FuncFormula::~FuncFormula(){}
 // notify 
 // ============================================================================
 Bool_t Ostap::Functions::FuncFormula::Notify () 
-{ return ( m_formula &&  m_formula->ok() ) ? m_formula->Notify() : false ; }
+{ 
+  m_formula.reset ( nullptr ) ;
+  return ( m_formula &&  m_formula->ok() ) ? m_formula->Notify() : false ; 
+}
 // ============================================================================
 // make formula  
 // ============================================================================
@@ -534,6 +537,10 @@ Ostap::Functions::FuncTH2::~FuncTH2(){}
 // ============================================================================
 Bool_t Ostap::Functions::FuncTH2::Notify () 
 {  
+  //
+  m_xvar.reset ( nullptr ) ;
+  m_yvar.reset ( nullptr ) ;
+  //
   const bool b1 = ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
   const bool b2 = ( m_yvar && m_yvar->ok() ) ? m_yvar->Notify() : false ; 
   return b1 && b2 ;
@@ -738,6 +745,11 @@ Ostap::Functions::FuncTH3::~FuncTH3(){}
 // ============================================================================
 Bool_t Ostap::Functions::FuncTH3::Notify () 
 {  
+  //
+  m_xvar.reset ( nullptr ) ;
+  m_yvar.reset ( nullptr ) ;
+  m_zvar.reset ( nullptr ) ;
+  //
   const bool b1 = ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
   const bool b2 = ( m_yvar && m_yvar->ok() ) ? m_yvar->Notify() : false ; 
   const bool b3 = ( m_zvar && m_zvar->ok() ) ? m_zvar->Notify() : false ; 

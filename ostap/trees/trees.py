@@ -389,10 +389,10 @@ def _rt_contains_ ( tree , obj ) :
     """
     
     if   isinstance ( obj , integer_types ) :        
-        return 0 <= obj and obj < len ( tree )
+        return 0 <= obj < len ( tree )
     
     elif isinstance ( obj , string_types  ) :
-        return ( obj in self.branches() ) or ( obj in self.leaves () )
+        return ( obj in tree.branches () ) or ( obj in tree.leaves () )
     
     return False 
 
