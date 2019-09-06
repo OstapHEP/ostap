@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# =============================================================================
+## @file ostap-check-dependencies
+#  Check dependencies for ostap 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+# =============================================================================
+"""Check dependencies for ostap 
+"""
+# =============================================================================
+from ostap.logger.logger import getLogger
+logger = getLogger('ostap-check-dependencies')    
+# =============================================================================
+try :
+    import ROOT
+    logger.info  ( "ROOT           is imported from %s" % ROOT.__file__ ) 
+except ImportError :
+    logger.fatal ( "ROOT cannot be imported!")
+# =============================================================================    
+try :
+    import numpy
+    logger.info  ( "numpy          is imported from %s" % numpy.__file__ )     
+except ImportError :
+    message = """numpy cannot be imported! 
+    Numpy 'is needed for Fast Fourier Transform used for function/histogram parameterisation.
+    - There is no local replacement
+    - see http://numpy.org"""
+    logger.error ( message ) 
+# =============================================================================        
+try :
+    import scipy
+    logger.info  ( "scipy          is imported from %s" % scipy.__file__ )     
+except ImportError :
+    message = """scipy cannot be imported!
+    Scipy is used for an efficient alternative for 
+    - numerical integration
+    - root findings
+    - function minimization
+    - histogram/function parameterization
+    - see http://www.scipy.org"""
+    logger.warning ( message ) 
+# =============================================================================            
+try :
+    import pathos
+    logger.info  ( "pathos         is imported from %s" % pathos.__file__ )     
+except ImportError :
+    message = """pathos cannot be imported!
+    Pathos is used for the paralellel ``cluster''-processing
+    - see https://github.com/uqfoundation/pathos
+    - https://pathos.readthedocs.io
+    Pathos suite consists of:
+    - pathos
+    - multiprocess
+    - dill
+    - ppft"""
+    logger.warning ( message ) 
+# =============================================================================                    
+try :
+    import dill
+    logger.info  ( "dill           is imported from %s" % dill.__file__ )     
+except ImportError :
+    message = """dill (part of pathos-suite) cannot be imported!
+    Dill provdies a powerful object serialization needed for the parallel processing
+    - https://github.com/uqfoundation/dill
+    - https://pathos.readthedocs.io"""
+    logger.warning ( message ) 
+# =============================================================================                    
+try :
+    import multiprocess
+    logger.info  ( "multiprocess   is imported from %s" % multiprocess.__file__ )     
+except ImportError :
+    message = """multiprocess (part of pathos-suite) cannot be imported!
+    Multiprocess is used for the paralellel processing
+    - https://github.com/uqfoundation/multiprocess
+    - https://pathos.readthedocs.io"""
+    logger.warning ( message ) 
+# =============================================================================                    
+try :
+    import ppft
+    logger.info  ( "ppft           is imported from %s" % ppft.__file__ )     
+except ImportError :
+    message = """ppft (part of pathos-suite) cannot be imported!
+    Ppft is a distributed and parallel python
+    - https://github.com/uqfoundation/ppft
+    - https://pathos.readthedocs.io"""
+    logger.warning ( message ) 
+# =============================================================================                    
+try :
+    import terminaltables
+    logger.info  ( "terminaltables is imported from %s" % terminaltables.__file__ )     
+except ImportError :
+    message = """terminaltables cannot be imported!
+    Terminaltables allowsvery nice altenrative for table formatting
+    - https://github.com/Robpol86/terminaltables
+    - https://robpol86.github.io/terminaltables"""
+    logger.warning ( message ) 
+# =============================================================================                    
+    
+
+# =============================================================================
+##                                                                      The END 
+# =============================================================================
