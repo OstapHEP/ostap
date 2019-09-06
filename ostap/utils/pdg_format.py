@@ -38,15 +38,16 @@ __date__    = "2015-07-15"
 __version__ = "$Revision$"
 __all__ = (
     'frexp10'     , ## similar to math.frexp but with radix=10
-    'round_N'     , ## round floaing value to N-significant digits
+    'round_N'     , ## round floating value to N-significant digits
     'pdg_round'   , ## round value,error-pair according to PDG prescription
     'pdg_format'  , ## format value&error according to PDF prescription
     'pdg_format2' , ## format value+2errorr according to PDF
     'pdg_format3' , ## format value+3errors according to PDF
     )
 # ===============================================================================
-import ROOT,         math
-from   ostap.math.ve import cpp, VE 
+import ROOT,           math
+from   ostap.math.ve   import cpp, VE
+from   ostap.math.base import frexp10 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -60,26 +61,7 @@ else                       : logger = getLogger ( __name__                 )
 #  It is just a simple wrapper around boost::numeric::converter 
 #  @see Ostap::Math::round 
 cpp_round   = cpp.Ostap.Math.round
-cpp_frexp10 = cpp.Ostap.Math.frexp10 
 cpp_round_N = cpp.Ostap.Math.round_N 
-
-# =============================================================================
-## get mantissa (0.1<=m<1) and exponent for radix10
-#  similar for frexp, but use radix=10
-#  @code
-#  m,e = frexp10 ( value ) 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2015-07-20
-def frexp10 ( value ) :
-    """Get the mantissa (0.1<=m<1) and exponent for radix10
-    (similar for frexp, but use radix=10)
-    
-    >>> a,b = frexp10 ( value ) 
-    """
-    #
-    p = cpp_frexp10 ( value )
-    return p.first, p.second
 
 # =============================================================================
 ## get ``mantissa'' (1<=m<10) and exponent for radix10
@@ -94,7 +76,7 @@ def _frexp10_ ( value ) :
     similar for frexp, but use radix=10
     >>> m,e = _frexp10_ ( value ) 
     """
-    m,e = frexp10 ( value ) 
+    m , e = frexp10 ( value ) 
     return m*10,e-1
 
 # =============================================================================

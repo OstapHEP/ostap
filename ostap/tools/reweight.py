@@ -13,25 +13,31 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'Weight'        ,
-    'makeWeights'   ,
-    'WeightingPlot' , 
+    'Weight'        , ## the weighting object  
+    'makeWeights'   , ## helper function for   weighting iterations 
+    'WeightingPlot' , ## helper object to define the weighting rule & target
+    'W2Tree'        , ## helper to add the calculated weight to ROOT.TTree
+    'W2Data'        , ## helper to add the clacualted weight to ROOT.RooAbsData
     ) 
 # =============================================================================
 import ROOT, operator
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweigh' )
-else                       : logger = getLogger ( __name__              )
+from ostap.logger.logger    import getLogger
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweight' )
+else                       : logger = getLogger ( __name__               )
 # =============================================================================
 logger.info ( 'Set of utitilities for re-weigthing')
-from   ostap.core.pyrouts    import VE, SE
-from   ostap.math.base       import iszero
-from   ostap.core.ostap_types      import string_types, list_types 
-from   ostap.math.operations import Mul as MULT  ## needed for proper abstract multiplication
-import ostap.io.zipshelve    as            DBASE ## needed to store the weights&histos
+# =============================================================================
+from   ostap.core.pyrouts     import VE, SE
+from   ostap.math.base        import iszero
+from   ostap.core.ostap_types import string_types, list_types 
+from   ostap.math.operations  import Mul as MULT  ## needed for proper abstract multiplication
+import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
+from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/RooDataSet
+import ostap.trees.trees
+import ostap.fitting.dataset
 # =============================================================================
 ## @class AttrGetter
 #  simple class to bypass <code>operator.attrgetter</code> that
@@ -131,7 +137,7 @@ class Weight(object) :
                 ## 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
                 if not functions :
-                    logger.warning("No reweighting is available for ``%s'', skip it" % funname )
+                    logger.warning ( "No reweighting is available for ``%s'', skip it" % funname )
                     continue
                                 
                 if not isinstance (  functions , ( list , tuple ) ) :
@@ -443,23 +449,27 @@ class WeightingPlot(object) :
     def w  ( self )   :
         """``w''  - relative weigtht (relative importance is this variable)"""
         return self.__w 
-        
+
 # =============================================================================
-## make one re-weighting iteration 
+## The main  function: perform one re-weighting iteration 
 #  and reweight "MC"-data set to looks as "data"(reference) dataset
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
-def makeWeights  ( dataset                 ,
-                   plots    = []           ,
-                   database = "weights.db" ,
-                   compare  = None         ,   ## comparison function 
-                   delta    = 0.001        ,   ## delta for ``mean''  weigth variation
-                   minmax   = 0.05         ,   ## delta for ``minmax'' weigth variation
-                   power    = 0            ,   ## auto-determination
-                   debug    = True         ) : ## save intermediate information in DB 
+def makeWeights  ( dataset                  ,
+                   plots    = []            , 
+                   database = "weights.db"  ,
+                   compare  = None          , ## comparison function 
+                   delta    = 0.001         , ## delta for ``mean''  weight variation
+                   minmax   = 0.05          , ## delta for ``minmax'' weight variation
+                   power    = 0             , ## auto-determination
+                   debug    = True          , ## save intermediate information in DB
+                   tag      = "Reweighting" ) : 
 
-    assert 0 < delta  , "Reweighting: Invalid value for ``delta''  %s" % delta 
-    assert 0 < minmax , "Reweighting: Invalid value for ``minmax'' %s" % minmax 
+    assert 0 < delta  , "makeWeights(%s): Invalid value for ``delta''  %s" % ( tag , delta  )
+    assert 0 < minmax , "makeWeights(%s): Invalid value for ``minmax'' %s" % ( tag , minmax ) 
+
+    from ostap.logger.colorized   import allright , attention , infostr 
+    from ostap.utils.basic        import isatty
 
     power   = power if power >= 1 else len ( plots ) 
 
@@ -470,11 +480,8 @@ def makeWeights  ( dataset                 ,
         delta   = delta  * fudge_factor
         minmax  = minmax * fudge_factor
         
-
     save_to_db = [] 
     ## number of active plots for reweighting
-    active = 0
-    ## loop over plots 
     for wplot in plots  :
         
         what    = wplot.what       ## variable/function to plot/compare 
@@ -489,9 +496,9 @@ def makeWeights  ( dataset                 ,
         hdata = hdata0
         if isinstance ( hdata , ROOT.TH1 ) :  hdata = hdata.density ()
         
-        #
+        # =====================================================================
         ## make a plot on (MC) data with the weight
-        # 
+        # =====================================================================
         dataset.project ( hmc0 , what , how )
         
         st   = hmc0.stat()
@@ -499,70 +506,94 @@ def makeWeights  ( dataset                 ,
         if iszero ( mnmx[0] ) :
             logger.warning ( "Reweighting: statistic goes to zero %s/``%s''" % ( st , address ) ) 
             
-        #
+        # =====================================================================
         ## normalize MC
-        #
+        # =====================================================================
         hmc = hmc0.density() 
         
-        #
+        # =====================================================================
         ## calculate  the reweighting factor : a bit conservative (?)
-        # 
         #  this is the only important line
-        #
-        #  try to exploit finer binning if possible
-
-        if len ( hmc ) >= len( hdata )  : w =  ( 1.0 / hmc ) * hdata ## NB!      
-        else                            : w =  hdata / hmc           ## NB!
+        # =====================================================================
         
+        #  try to exploit finer binning if/when possible
+        if isinstance ( hmc   , ROOT.TH1 ) and \
+           isinstance ( hdata , ROOT.TH1 ) and \
+           len ( hmc ) >= len( hdata )  : w =  ( 1.0 / hmc ) * hdata ## NB!      
+        else                            : w =  hdata / hmc           ## NB!
+
+        # =====================================================================
         ## scale & get the statistics of weights 
         w   /= w.stat().mean().value()
         cnt  = w.stat()
         #
-        wvar = cnt.rms()/cnt.mean()
-        logger.info ( 'Reweighting: %24s: mean/(min,max):%20s/(%.3f,%.3f) RMS:%s[%%]' %
-                      ( "``" + address + "''"  ,
-                        cnt.mean().toString('(%.2f+-%.2f)') ,
-                        cnt.minmax()[0] ,
-                        cnt.minmax()[1] , (wvar * 100).toString('(%.2f+-%.2f)') ) ) 
+        mnw , mxw = cnt.minmax()
+        wvar  = cnt.rms()/cnt.mean()
+        good1 = wvar.value()      <= delta
+        good2 = abs ( mxw - mnw ) <= minmax 
+        good  = good1 and good2  ## small variance?         
+        #
+        afunc1 = allright if good1 else attention 
+        afunc2 = allright if good2 else attention
+        #
+        message  = "%s: %24s:" % ( tag , address ) 
+        message += ' ' + 'mean=%12s' % cnt.mean().toString('(%4.2f+-%4.2f)') 
+        message += ' ' + afunc2 ( 'min/max=%-5.3f/%5.3f' % ( cnt.minmax()[0] , cnt.minmax()[1] ) ) 
+        message += ' ' + afunc1 ( 'rms=%s[%%]' % (wvar * 100).toString('(%4.2f+-%4.2f)') ) 
+        logger.info  ( message ) 
         #
         ## make decision based on the variance of weights 
         #
         mnw , mxw = cnt.minmax()
-        if wvar.value() <= delta and abs ( mxw - mnw ) <= minmax : ## small variance? 
-            logger.info("Reweighting: No more reweights for ``%s'' [%.2f%%]/[(%+.1f,%+.1f)%%]" % \
-                        ( address , wvar * 100 , ( mnw - 1 ) * 100 ,  ( mxw - 1 ) * 100 ) )
+        if good : ## small variance?
+            message  = "%s: No more reweights for %s" % ( tag , address )
+            message += ' ' + allright (  "min/max/rms=%+3.1f/%+3.1f/%3.1f[%%]" % ( ( mnw - 1 ) * 100 ,  ( mxw - 1 ) * 100 , 100 * wvar ) )
+            logger.info ( message ) 
             del w , hdata , hmc 
         else :
-            save_to_db.append ( ( address , ww , hdata0 , hmc0 , hdata , hmc , w ) ) 
-        #
+            save_to_db.append ( ( address , ww , hdata0 , hmc0 , hdata , hmc , w ) )
+        # =====================================================================
         ## make a comparison (if needed)
-        # 
+        # =====================================================================
         if compare : compare ( hdata0 , hmc0 , address )
-
     
     ## for single reweighting 
-    if 1 == nplots : power = 1
+    ## if 1 == nplots : power = 1
     
-    if power != nplots :
-        logger.info ( "Reweighting: ``power'' is %g/#%d"  % ( power , nplots  ) )
+    ## if power != nplots :
+    #    logger.info ( "%s: ``power'' is %g/#%d"  % ( tag , power , nplots  ) )
 
-    active = len ( save_to_db )
-    if active !=  nplots :
-        logger.info ( "Reweighting: number of ``active'' reweights %s/#%d"  % ( active , nplots ) )
-        if database and save_to_db : 
-            power += ( nplots - active )
-            logger.info  ("Reweighting: ``power'' is changed to %g" %  power ) 
+    active = [ p[0] for p in save_to_db ]    
+    all    = [ p.address for p in plots ]
+    for i , a in enumerate ( all ) :
+        if a in active :
+            if isatty () : all[i] = attention ( a )
+            else         : all[i] = '*' + a + '*'
+        else :
+            if isatty () : all[i] = allright  ( a )
+            
+    logger.info ( "%s: reweights are: %s" % ( tag ,  ( ', '.join ( all ) ) ) ) 
     
+    ## if len ( active ) != nplots :
+    ##    if database and save_to_db : 
+    ##        power += ( nplots - len ( active ) ) 
+    ##        logger.info  ("%s: ``power'' is changed to %g" %  ( tag , power ) )
+            
+    nactive = len ( active )  
     while database and save_to_db :
 
         entry = save_to_db.pop() 
         
         address, ww , hd0, hm0, hd , hm , weight = entry  
 
-        eff_exp = 1.0 / power
-        if 1 != nplots and 1 != ww :
+        ## eff_exp = 1.0  / power
+        ## eff_exp = 0.95 / ( 1.0 * nactive ) ** 0.5
+        
+        eff_exp = 0.5  if 1 < nactive else 1 
+        
+        if 1 != ww :
             eff_exp *= ww
-            logger.info  ("Reweighting: apply ``effective exponent'' of %.3f for ``%s''" % ( eff_exp  , address ) )
+            logger.info  ("%s: apply ``effective exponent'' of %.3f for ``%s''" % ( tag , eff_exp  , address ) )
             
         if 1 != eff_exp and 0 < eff_exp : 
             weight = weight ** eff_exp
@@ -574,7 +605,7 @@ def makeWeights  ( dataset                 ,
         
         ## relative importance
         #if 1 != ww :
-        #    logger.info  ("Reweighting: apply ``relative importance factor'' of %.3g for ``'%s'" % ( ww , address ) )
+        #    logger.info  ("%s: apply ``relative importance factor'' of %.3g for ``'%s'" % ( tag , ww , address ) )
         #    weight = weight ** ww 
 
         with DBASE.open ( database ) as db :
@@ -589,18 +620,80 @@ def makeWeights  ( dataset                 ,
         
     return active 
 
-## some simple comparsion 
-def hCompare ( data , mc , title = '' , spline = True ) :
-
+# =============================================================================
+## @class W2Tree
+#  Helper class to add the weight into <code>ROOT.TTree</code>
+#  @code
+#  w    = Weight ( ... )      ## the weighting object
+#  tree = ...                 ## The tree
+#  wf   = W2Tree ( w , tree ) ## create the weighting function
+#  tree.add_new_branch ( 'weight' , wf ) 
+#  @endcode
+class W2Tree(FuncTree) :
+    """Helper class to add the weight into ROOT.TTree
+    >>> w    = Weight ( ... )      ## the weighting object
+    >>> tree = ...                 ## The tree
+    >>> wf   = W2Tree ( w , tree ) ## create the weighting function
+    >>> tree.add_new_branch ( 'weight' , wf )
+    """
+    def __init__ ( self , weight , tree = None ) :
+        
+        assert isinstance ( weight , Weight    )                 , 'Wrong type of weight!'
+        assert tree is None or isinstance ( tree  , ROOT.TTree ) , 'Wrong type of tree!'
+        
+        FuncTree.__init__ ( self , tree )
+        self.__weight = weight
+        
+    ## evaluate the weighter for the given TTree entry 
+    def evaluate ( self ) : 
+        """Evaluate the weighter for the given TTree entry"""
+        t = self.tree ()
+        w = self.__weight ( t ) 
+        return w
     
-    if not isinstance ( data , ( ROOT.TH1D , ROOT.TH1F ) ) : return
-    if not isinstance ( mc   , ( ROOT.TH1D , ROOT.TH1F ) ) : return
+    @property
+    def weight ( self ) :
+        """``weight'' : get the weighter object"""
+        return  self.__weight
+    
+# =============================================================================
+## @class W2Data
+#  Helper class to add the weight into <code>RooDataSet</code>
+#  @code
+#  w    = Weight ( ... )      ## the weighting object
+#  ds   = ...                 ## dataset 
+#  wf   = W2Data ( w , tree ) ## create the weighting function
+#  ds.add_new_var ( 'weight' , wf ) 
+#  @endcode
+class W2Data(FuncData) :
+    """Helper class to add the weight into <code>RooDataSet</code>
+    >>> w    = Weight ( ... )      ## the weighting object
+    >>> ds   = ...                 ## dataset 
+    >>> wf   = W2Data ( w , tree ) ## create the weighting function
+    >>> ds.add_new_var ( 'weight' , wf ) 
+    """
+    
+    def __init__ ( self , weight , data = None ) :
 
-    data.cmp_prnt( mc )
-
-    hd  = data.rescale_bins ( 1 ) 
-    hm  = mc  .rescale_bins ( 1 ) 
-
+        assert isinstance ( weight , Weight    )                      , 'Wrong type of weight!'
+        assert data is None or isinstance ( data  , ROOT.RooAbsData ) , 'Wrong type of data!'
+        
+        FuncData.__init__ ( self , data )
+        self.__weight = weight
+        
+    ## evaluate the weighter for the given RooAbsData entry 
+    def evaluate ( self ) : 
+        """Evaluate the weighter for the given RooAbsData entry"""
+        
+        d = self.data ()
+        w = self.__weight ( d ) 
+        return w
+    
+    @property
+    def weight ( self ) :
+        """``weight'' : get the weighter object"""
+        return  self.__weight
+    
 # =============================================================================
 if '__main__' == __name__ :
         

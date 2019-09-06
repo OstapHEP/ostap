@@ -11,8 +11,8 @@
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_frames_frames' )
-else                       : logger = getLogger ( __name__                  )
+if '__main__' ==  __name__ : logger = getLogger ( test_frames_frames' )
+else                       : logger = getLogger ( __name__            )
 # ============================================================================= 
 import ROOT, os 
 from ostap.frames.frames import DataFrame

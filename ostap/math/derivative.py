@@ -829,12 +829,12 @@ class Eval2VE(EvalNVE) :
         return VE ( val , cov2 )
     
 # =============================================================================
-## Calcualte the  derivative from analytical function \f$ \frac{\deriv f }{\deriv z }\f$.
+## Calcualte the  derivative from analytical function \f$ \frac{{\mathrm{d}} f }{{\mathrm{d}} z }\f$.
 #  The function is assumed to be analytical (Cauchy-Riemann conditions are valid).
 #  The derivative of the function
 #  \f$  f(z) \equiv u(x,y) + iv(x,u) \f$
 #  is calculated as 
-#  \f$ \frac{\deriv f}{\deriv z} \equiv \frac{\deriv u}{\deriv x} + i\frac{\deriv v}{\deriv x}\f$
+#  \f$ \frac{{\mathrm{d}} f}{{\mathrm{d}} z} \equiv \frac{{\mathrm{d}} u}{{\mathrm{d}} x} + i\frac{{\mathrm{d}} v}{{\mathrm{d}} x}\f$
 #  @code
 #  fun = ...
 #  d   = complex_derivative ( fun , x = 1+2j )

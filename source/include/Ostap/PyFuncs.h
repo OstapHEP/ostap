@@ -24,7 +24,7 @@ namespace Ostap
      *  Helper class to implemet "TTree-functions" in python
      *  @see Ostap::IFuncTree
      */
-     class PyFuncTree :  public Ostap::IFuncTree 
+    class PyFuncTree : public Ostap::IFuncTree 
     {
     public :
       // ======================================================================
@@ -32,7 +32,7 @@ namespace Ostap
        *  @param self python object
        *  @param tree pointer to the tree
        */
-      PyFuncTree ( PyObject*    self     , 
+      PyFuncTree ( PyObject*    self = 0 , 
                    const TTree* tree = 0 );
       // ======================================================================
       /// destructor 
@@ -43,7 +43,7 @@ namespace Ostap
       /// the basic 
       double operator() ( const TTree* tree = 0 ) const override ;
       // ======================================================================
-    public:
+   public:
       // ======================================================================
       /// get the pointer to TTree
       const TTree* tree () const { return m_tree ; }
@@ -51,12 +51,12 @@ namespace Ostap
     private:
       // ======================================================================
       /// potentially cached pointer to the tree 
-      mutable const TTree*    m_tree ;
+      mutable const TTree*    m_tree { nullptr } ;
       // ======================================================================
     private :
       // ======================================================================
       // self reference for python instance 
-      PyObject*         m_self ; // self reference for python instance 
+      PyObject*               m_self { nullptr } ; // self reference for python instance 
       // ======================================================================
     } ;
     // ========================================================================
@@ -72,7 +72,7 @@ namespace Ostap
        *  @param self python object
        *  @param data pointer to the data
        */
-      PyFuncData ( PyObject*         self     , 
+      PyFuncData ( PyObject*         self = 0 , 
                    const RooAbsData* data = 0 );
       // ======================================================================
       /// destructor 
@@ -91,12 +91,12 @@ namespace Ostap
     private:
       // ======================================================================
       /// potentially cached pointer to the tree 
-      mutable const RooAbsData* m_data ;
+      mutable const RooAbsData* m_data { nullptr } ;
       // ======================================================================
     private :
       // ======================================================================
       // self reference for python instance 
-      PyObject*           m_self ; // self-reference for python instance 
+      PyObject* m_self { nullptr } ; ; // self-reference for python instance 
       // ======================================================================
      } ;
     // ========================================================================

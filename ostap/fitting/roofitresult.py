@@ -18,7 +18,8 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT
-from   ostap.core.core          import Ostap, VE, valid_pointer 
+from   ostap.core.core          import Ostap, VE, valid_pointer
+from   ostap.core.ostap_types   import string_types 
 import ostap.fitting.variables     
 import ostap.fitting.printable     
 # =============================================================================

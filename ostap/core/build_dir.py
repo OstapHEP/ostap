@@ -57,7 +57,7 @@ if not build_dir :
 if not build_dir :
 
     from ostap.utils.cleanup import CleanUp as _CU
-    bdir = _CU.tempdir ( prefix = 'build_' )
+    bdir = _CU.tempdir ( prefix = 'build-' )
     if good_dir ( bdir ) : build_dir = bdir
     del _CU
 

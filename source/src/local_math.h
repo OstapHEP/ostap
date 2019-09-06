@@ -14,6 +14,8 @@
 #include "Ostap/Math.h"
 // ============================================================================
 /// local namespace to hide all tehcnical symbols 
+
+
 namespace 
 {
   // ==========================================================================
@@ -57,117 +59,149 @@ namespace
   ( 2.0L * std::numeric_limits<double>::epsilon() ) ;
   // ==========================================================================
   /** @var s_INFINITY_LOG_POS
-   *  representation of positive INFINITY_LOG 
-   */
-  constexpr double s_INFINITY_LOG_POS = std::log ( s_INFINITY ) ;
+  *  representation of positive INFINITY_LOG 
+  */
+  const double  s_INFINITY_LOG_POS = std::log ( s_INFINITY ) ;
   /** @var s_INFINITY_LOG
-   *  representation of positive INFINITY_LOG 
-   */
-  const     double s_INFINITY_LOG     = s_INFINITY_LOG_POS ;
+  *  representation of positive INFINITY_LOG 
+  */
   /** @var s_INFINITY_LOG_NEG
-   *  representation of negative INFINITY_LOG
-   */
-  constexpr double s_INFINITY_LOG_NEG = std::log ( 2 * s_SMALL2 ) ;
+  *  representation of negative INFINITY_LOG
+  */
+  const double  s_INFINITY_LOG_NEG = std::log ( 2 * s_SMALL2 ) ;
+
   // ==========================================================================
   // Constants
   // ==========================================================================
   /** @var s_LN10
-   *  \f$\ln(10)\f$ 
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  constexpr double      s_LN10 = std::log ( 10 ) ;
+  *  \f$\ln(10)\f$ 
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-05-23
+  */
+  const double       s_LN10 = std::log ( 10 ) ;
   // ==========================================================================
   /** @var s_SQRTPIHALF
-   *  helper constant \f$ \sqrt{\frac{\pi}{2}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  constexpr double s_SQRTPIHALF = std::sqrt( M_PI_2 ) ;
+  *  helper constant \f$ \sqrt{\frac{\pi}{2}}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double  s_SQRTPIHALF = std::sqrt( M_PI_2 ) ;
   // ==========================================================================
   /** @var s_SQRTPI
-   *  helper constant \f$ \sqrt{\pi}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2016-06-11
-   */
-  constexpr double s_SQRTPI = std::sqrt( M_PI ) ;
+  *  helper constant \f$ \sqrt{\pi}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+  *  @date 2016-06-11
+  */
+  const double  s_SQRTPI = std::sqrt( M_PI ) ;
   // ==========================================================================
   /** @var s_SQRT2PI
-   *  helper constant \f$ \sqrt{2\pi}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  constexpr double s_SQRT2PI    =       std::sqrt ( 2 * M_PI ) ;
+  *  helper constant \f$ \sqrt{2\pi}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double  s_SQRT2PI    =       std::sqrt ( 2 * M_PI ) ;
   // ===========================================================================
   /** @var s_SQRT2PIi
-   *  helper constant \f$ \frac{1}{\sqrt{2\pi}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  constexpr double s_SQRT2PIi    =      1./s_SQRT2PI ;
+  *  helper constant \f$ \frac{1}{\sqrt{2\pi}}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double  s_SQRT2PIi    =      1./s_SQRT2PI ;
   // ===========================================================================
   /** @var s_SQRT2 
-   *  helper constant \f$\sqrt{2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2013-08-25
-   */
-  constexpr double s_SQRT2      =       std::sqrt ( 2.0 )      ;
+  *  helper constant \f$\sqrt{2}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2013-08-25
+  */
+  const double  s_SQRT2      =       std::sqrt ( 2.0 )      ;
   // ===========================================================================
   /** @var s_SQRT2i 
-   *  helper constant \f$\frac{1}{\sqrt{2}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2013-08-25
-   */
-  constexpr double s_SQRT2i      =       1/std::sqrt ( 2.0 )    ;
+  *  helper constant \f$\frac{1}{\sqrt{2}}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2013-08-25
+  */
+  const double  s_SQRT2i      =       1/std::sqrt ( 2.0 )    ;
   // ===========================================================================
   /** @var s_HALFSQRTPI
-   *  helper constant \f$ \frac{\sqrt{\pi}}{2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  constexpr double s_HALFSQRTPI = 0.5 * std::sqrt(     M_PI ) ;
+  *  helper constant \f$ \frac{\sqrt{\pi}}{2}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double  s_HALFSQRTPI = 0.5 * std::sqrt(     M_PI ) ;
   // ==========================================================================
   /** @var s_HALFSQRTPIi
-   *  helper constant \f$ \frac{2}{\sqrt{\pi}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  constexpr double s_HALFSQRTPIi = 1/s_HALFSQRTPI  ;
+  *  helper constant \f$ \frac{2}{\sqrt{\pi}}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double  s_HALFSQRTPIi = 1/s_HALFSQRTPI  ;
   // ==========================================================================
   /** @var s_SQRT3 
-   *  helper constant \f$ \sqrt{3} \f$ 
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2015-08-21
-   */
-  constexpr double s_SQRT3 = std::sqrt ( 3.0 ) ;
+  *  helper constant \f$ \sqrt{3} \f$ 
+  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+  *  @date 2015-08-21
+  */
+  const double  s_SQRT3 = std::sqrt ( 3.0 ) ;
   // ==========================================================================
   /** @var s_HALFSQRTPI_log
-   *  helper constant \f$ \log \frac{\sqrt{\pi}}{2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  constexpr double s_HALFSQRTPI_log  = std::log ( 0.5 * std::sqrt(     M_PI )  ) ;
+  *  helper constant \f$ \log \frac{\sqrt{\pi}}{2}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double s_HALFSQRTPI_log  = std::log ( 0.5 * std::sqrt(     M_PI )  ) ;
   // ==========================================================================
   /** @var s_SQRT2PISQUARED 
-   *  helper constant  \f$   \sqrt{2}\pi^2\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2016-06-11
-   */
-  constexpr double s_SQRT2PISQUARED  = std::sqrt(2.0)*M_PI*M_PI ;
+  *  helper constant  \f$   \sqrt{2}\pi^2\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2016-06-11
+  */
+  const double s_SQRT2PISQUARED  = std::sqrt(2.0)*M_PI*M_PI ;
   // ==========================================================================
   /** @var s_SQRT2PISQUAREDi
-   *  helper constant  \f$   \frac{1}{\sqrt{2}\pi^2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2016-06-11
-   */
-  constexpr double s_SQRT2PISQUAREDi = 1.0/(std::sqrt(2.0)*M_PI*M_PI) ;
+  *  helper constant  \f$   \frac{1}{\sqrt{2}\pi^2}\f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2016-06-11
+  */
+  const double s_SQRT2PISQUAREDi = 1.0/(std::sqrt(2.0)*M_PI*M_PI) ;
   // ==========================================================================
   /** @var s_SQRT3overPI 
-   *  helper constant \f$ \frac{\sqrt{3}}{\pi} \f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2016-06-14
-   */
-  constexpr double s_SQRT3overPI = std::sqrt(3.0)/M_PI ;
+  *  helper constant \f$ \frac{\sqrt{3}}{\pi} \f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2016-06-14
+  */
+  const double s_SQRT3overPI = std::sqrt(3.0)/M_PI ;
+  // ==========================================================================
+  // Bukin & Co
+  // ==========================================================================
+  /** @var s_Bukin
+  *  useful constant for Bukin's function
+  *  \f$ \sqrt{ 2 \log 2 } \f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double s_Bukin   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
+  // ==========================================================================
+  /** @var s_ln2
+  *  useful constant for Bukin's function
+  *  \f$ \log 2 \f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double s_ln2 = std::log ( 2.0 ) ;
+ 
+
+  // ==========================================================================
+  // Novosibirsk & Co
+  // ==========================================================================
+  /** @var s_Novosibirsk
+  *  useful constant for evaliuation of ``Novosibirsk'' function
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-04-19
+  */
+  const double s_Novosibirsk = std::sqrt ( std::log ( 4.0 ) ) ;
+
+  const     double s_INFINITY_LOG     = s_INFINITY_LOG_POS ;
+
   // ==========================================================================
   /** the protected exponent
    *  @author Vanya BELYAEV

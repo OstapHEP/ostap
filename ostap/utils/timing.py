@@ -8,91 +8,47 @@
 """
 # =============================================================================
 __all__     = (
-    'clocks'         , ## context manager to count clocks 
     'timing'         , ## context manager to count time 
     'timer'          , ## ditto
-    'Clock'          , ## context manager to count clocks 
     'Timer'          , ## context manager to count time 
    )
 # =============================================================================
 from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.timing' )
-else                       : logger = getLogger( __name__             )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.timing' )
+else                       : logger = getLogger ( __name__             )
+_logger_t = type ( logger )
 del getLogger
 # =============================================================================
-import time
+from timeit import  default_timer as _timer 
 # ==============================================================================
-## @class Clock
-#  Smple context manager to measure the clock counts
-#
-#  @code
-#
-#  with Clock() :
-#     whatever action is here  
-#     at the exit it prints the clock counts 
-#  @endcode
-#
-# Or:
-#
-#  @code
-#
-#  with Clock() as c :
-#     whatever action is here
-#     at the exit it prints the clock counts 
-#
-#  print c.delta 
-# 
-#  @endcode
-class Clock(object):
-    """Simple context manager to measure the clock counts
-    >>> with Clock() :
-    ...  whatever action is here 
-    at the exit it prints the clock counts 
-    
-    >>> with Clock() as c :
-    ...  whatever action is here
-    at the exit it prints the clock counts 
-    
-    >>> print c.delta 
-    """
-    _logger = logger 
-    ##
-    def __init__  ( self , name = '' , logger = None , format = 'Clocks %-18s %s') :
-        self.name   = name
-        self.logger = logger if logger else self._logger 
-        self.format = format
-    def __enter__ ( self ) :
-        self.clock = time.clock()
-        return self 
-    def __exit__  ( self, *_ ) :
-        self.delta = time.clock() - self.clock
-        try :
-            message = self.format       % ( self.name , self.delta ) 
-        except TypeError :
-            message = 'Clocks %-18s %s' % ( self.name , self.delta )
-
-        self.logger.info ( message )
-        
-# =============================================================================
 ## @class Timer
 #  Simple context manager to measure the time 
 #  @code
-#
 #  with Timer() :
-#     whatever action is here 
-#     at the exit it prints the time 
+#     ... whatever action is here 
+#     ... at the exit it prints the time 
 #  @endcode
-#
 # Or:
-#
 #  @code
-#
 #  with Timer() as t :
-#     whatever action is here 
-#     at the exit it prints the clock counts 
-#
-#  print t.delta 
-# 
+#     ... whatever action is here 
+#     ... at the exit it prints the clock counts 
+#  print t.delta
+#  @endcode
+#  Print to specified logger :
+#  @code
+#  logger = ...
+#  wtih Timer ( logger = logger ) : ... 
+#  @endcode 
+#  Print to specified logger level  :
+#  @code
+#  logger = ...
+#  wtih Timer ( logger = logger.error  ) : ... 
+#  @endcode
+#  no print at all
+#  @code
+#  logger = ...
+#  wtih Timer ( logger = lambda *s : '' ) : ... 
 #  @endcode
 class Timer(object):
     """Simple context manager to measure the time
@@ -107,85 +63,64 @@ class Timer(object):
     ...  whatever action is
     at the exit it prints the clock counts 
     
-    >>> print t.delta 
+    >>> print t.delta
+
+    - Print to specified logger :
+    >>> logger = ...
+    >>> with Timer ( logger = logger ) : ... 
+
+    - Print to specified logger level  :
+    >>> logger = ...
+    >>> with Timer ( logger = logger.error  ) : ...
+    
+    - no print at all
+    >>> logger = ...
+    >>> with Timer ( logger = lambda *s : '' ) : ... 
     """
-    __logger = logger 
+    __logger = logger.info
     ##
-    def __init__  ( self , name = '' , logger = None , format = 'Timing %-18s %.3fs' ) :
+    def __init__  ( self , name = '' , logger = None , format = 'Timing %-18s %.3fs' ) :        
         self.name   = name
-        self.logger = logger if logger else self.__logger 
-        self.format = format
-    def __enter__ ( self ) :
-        self.time = time.time()
-        return self 
-    def __exit__  ( self, *_ ) :
-        self.delta = time.time() - self.time
         
+        if   logger and isinstance ( logger , _logger_t ) :
+            self.logger = logger.info
+        elif logger and callable   ( logger ) :
+            self.logger = logger
+        else :
+            self.logger = self.__logger 
+
+        self.format = format
+        
+    def __enter__ ( self ) :
+        self.start = _timer ()
+        return self
+    
+    def __exit__  ( self, *_ ) :
+        self.stop  = _timer ()
+        self.delta = self.stop - self.start         
         try :
             message = self.format       % ( self.name , self.delta ) 
         except TypeError :
             message = 'Timing %-18s %s' % ( self.name , self.delta )
 
-        self.logger.info ( message )
+        self.logger ( message )
             
-# =============================================================================
-## Simple context manager to measure the clock counts
-#
-#  @code
-#
-#  with clocks () :
-#     whatever action is here 
-#     at the exit it prints the clock counts
-#
-#  @endcode
-#
-# Or:
-#
-#  @code
-#
-#  with clocks () as c :
-#     whatever action is here
-#     at the exist it prints the clock counts 
-#
-#  print c.delta 
-# 
-#  @endcode
-def clocks ( name = '' , logger = None ) :
-    """Simple context manager to measure the clock counts 
-    
-    >>> with clocks () :
-    ...   whatever action is here
-    at the exit it prints the clock counts 
-    
-    >>> with clocks () as c :
-    ...   whatever action is here
-    at the exit it prints the clock counts 
-    
-    >>>print c.delta
-    """
-    return Clock ( name , logger )
-
 # =============================================================================
 ## Simple context manager to measure the time
 #
 #  @code
-#
 #  with timer () :
-#     whatever action is here 
-#     at the exit it prints the time
-#
+#     ... whatever action is here 
+#     ... at the exit it prints the time
 #  @endcode
 #
 # Or: 
 #
 #  @code
-#
 #  with timer () as t :
-#     whatever action is here 
-#     at the exit it prints the clock counts 
-#
+#     ... whatever action is here 
+#     ... at the exit it prints the clock counts 
 #  print t.delta 
-# 
 #  @endcode
 def timing ( name = '' , logger = None , format = 'Timing %-18s %.3fs') :
     """Simple context manager to measure the clock counts 
@@ -208,7 +143,7 @@ timer = timing   # ditto
 # =============================================================================
 if '__main__' == __name__ :
     
-    with timer ( logger = logger ), clocks ( logger = logger ) :  
+    with timer ( logger = logger ) :
         from ostap.utils.docme import docme
         docme ( __name__ , logger = logger )
         

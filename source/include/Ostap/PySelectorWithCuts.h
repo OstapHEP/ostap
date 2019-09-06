@@ -47,7 +47,8 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
-    virtual Bool_t Notify       () ;
+    Bool_t         Notify       () override ;
+    // ========================================================================
     virtual void   Init         ( TTree*   tree  ) ;
     virtual void   Begin        ( TTree*   tree  ) ;
     virtual void   SlaveBegin   ( TTree*   tree  ) ;

@@ -13,11 +13,13 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (  
-    'Chain' , ## helper class , needed for multiprocessing 
-    'Tree'  , ## helper class , needed for multiprocessing 
+    'Chain'           , ## helper class , needed for multiprocessing 
+    'Tree'            , ## helper class , needed for multiprocessing
+    'ActiveBranches'  , ## context manager to activate certain branches 
+    'active_branches' , ## context manager to activate certain branches 
   ) 
 # =============================================================================
-import ROOT
+import ROOT, os, math
 from   ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
 from   ostap.core.ostap_types import integer_types , long_type, string_types 
 from   ostap.logger.utils     import multicolumn
@@ -26,7 +28,7 @@ import ostap.trees.param
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger, allright,  attention 
+from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.trees' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
@@ -34,9 +36,10 @@ logger.debug ( 'Some useful decorations for Tree/Chain objects')
 # =============================================================================
 import ostap.trees.cuts
 # =============================================================================
-_large = 2**64
+_large = ROOT.TVirtualTreePlayer.kMaxEntries
 # =============================================================================
-from ostap.core.core import valid_pointer
+from ostap.core.core      import valid_pointer
+from ostap.utils.scp_copy import scp_copy 
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -60,16 +63,34 @@ ROOT.TChain.__bool__    = _tt_nonzero_
 #              no need in second call
 #  @see Analysis::PyIterator
 #  @see Ostap::Formula
+#  If only (small) fraction of branches is used in <code>cuts</code> and/or
+#  only small fraction of branches wil lbe used in the loop,
+#  the processing can be speed up siginificantly
+#  by specification of "active" branches:
+#  @code
+#  tree = ...
+#  sum_y = 0 
+#  for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False ) :
+def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False , active = () ) :
     """Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
     >>> for i in tree.withCuts ( 'pt>5' ) : print i.y
     
     Attention: TTree::GetEntry is already invoked for accepted events,
-    no need in second call 
+    no need in second call
+
+    - If only (small) fraction of branches is used in 'cuts' and/or
+    only small fraction of branches wil lbe used in the loop,
+    the processing can be speed up siginificantly
+    by specification of ``active'' branches:
+
+    >>> tree = ...
+    >>> sum_y = 0 
+    >>> for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
     """
     #
     last = min ( last , len ( self )  )
@@ -77,10 +98,21 @@ def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False ) :
     pit = Ostap.PyIterator ( self , cuts , first , last )
     if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
     #
+
+    if active :
+        abrs = set ( active )
+        cvar = self.the_variables ( cuts )
+        for v in  cvar : abrs.add ( v    )
+        abrs = tuple ( abrs ) 
+        context = ActiveBranches ( self , *abrs )
+    else :
+        from ostap.utils.utils import NoContext 
+        context = NoContext () 
+    
     from ostap.utils.progress_bar import ProgressBar 
     with ProgressBar ( min_value = first        ,
                        max_value = last         ,
-                       silent    = not progress ) as bar :
+                       silent    = not progress ) as bar , context as cntx :
         
         step = 13.0 * max ( bar.width , 101 ) / ( last - first ) 
         
@@ -337,6 +369,38 @@ ROOT.TTree .project = _tt_project_
 ROOT.TChain.project = _tt_project_
 
 # =============================================================================
+## check if object is in tree/chain  :
+#  @code
+#  tree = ...
+#  if obj in tree : 
+#  ...
+#  @endcode
+#  Operation is defiend:
+#  - integer value is "in tree" if it corresponds to the valid entry number
+#  - string  value is "in tree" if it corresponds to the name of branch or leaf 
+def _rt_contains_ ( tree , obj ) :
+    """Check if object is in tree/chain  :
+    >>> tree = ...
+    >>> if obj in tree : 
+    ...
+    Operation is defiend:
+    - integer value is ``in tree'' if it corresponds to the valid entry number
+    - string  value is ``in tree'' if it corresponds to the name of branch or leaf 
+    """
+    
+    if   isinstance ( obj , integer_types ) :        
+        return 0 <= obj < len ( tree )
+    
+    elif isinstance ( obj , string_types  ) :
+        return ( obj in tree.branches () ) or ( obj in tree.leaves () )
+    
+    return False 
+
+ROOT.TTree .__contains__ = _rt_contains_
+ROOT.TChain.__contains__ = _rt_contains_
+
+# =============================================================================
+
 ## get the statistic for certain expression in Tree/Dataset
 #  @code
 #  tree  = ... 
@@ -775,11 +839,13 @@ def _rt_print_ ( t ) :
     >>> print tree
     """
     ##
-    res = "Name: %s Enries/#%d" %  ( t.GetName() , t.GetEntries() ) 
+    res = "Name: %s Entries/#%d" %  ( t.GetName() , t.GetEntries() ) 
     if hasattr ( t , 'GetNtrees' ) : res += " Chain/#%d " %       t.GetNtrees()
     ##
-    _l          = t.leaves   ()
-    res        += "\nLeaves:\n%s"    % multicolumn ( list( _l ) , indent = 2 , pad = 1 )
+    _l          = list ( set ( t.leaves () ) ) 
+    _l . sort ()
+    _lt = [ "%s:%s" % ( l , t.leaf(l).get_type_short().replace (' [','[' ) ) for l in _l ]
+    res        += "\nLeaves:\n%s"    % multicolumn ( _lt , indent = 2 , pad = 1 )
 
     ## collect non-trivial branches 
     _b          = t.branches ()
@@ -787,7 +853,7 @@ def _rt_print_ ( t ) :
     _bs = set  ( _b )
     _ls = set  ( _l )
     _b  = list ( _bs - _ls ) 
-    _b . sort() 
+    _b . sort () 
     if _b : res += "\nNon-trivial branches:\n%s" % multicolumn ( _b , indent = 2 ,  pad = 1 )
 
     return res.replace ('\n','\n# ') 
@@ -795,7 +861,6 @@ def _rt_print_ ( t ) :
 ROOT.TTree.__repr__ = _rt_print_
 ROOT.TTree.__str__  = _rt_print_
 ROOT.TTree.pprint   = _rt_print_
-
 
 # =============================================================================
 
@@ -823,13 +888,14 @@ __types    = tuple ( tmp )
 del tmp 
 
 
-def __in_types ( t ) :
+def _in_types ( t ) :
     while 0 <= t.find ( 2 * ' ' ) : t = t.replace ( 2 * ' ' , ' ' )
     return t in __types 
-    
+
+
 # ==============================================================================
 ## print tree as table 
-def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
+def _rt_table_0_ ( tree , pattern = None , cuts = '' , prefix = '' , *args ) :
     """
     """
     ## get list of branches 
@@ -867,17 +933,9 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
         typename = tn
 
         selvars += 1 
-        if not __in_types ( tn ) : continue
+        if not _in_types ( tn ) : continue
         
         bbs.append ( b ) 
-
-    report  = '# %s("%s","%s"' % ( tree.__class__.__name__ , tree.GetName  () , tree.GetTitle () )
-    if tree.GetDirectory() :  report += ',%s' % tree.GetDirectory().GetName()
-    report += ')'
-    if tree.topdir :  report += '\n# top-dir:%s' % tree.topdir.GetName()
-    report += '\n# ' + allright ( '%d entries; %d/%d variables (selected/total)' % ( len ( tree  ) ,
-                                                                                     selvars       ,
-                                                                                     len ( tree.branches() ) ) )
 
     if hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
     else                             : bbstats = tree. statVar ( bbs , cuts , *args )
@@ -886,7 +944,6 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
     if isinstance ( bbstats , WSE )  : bbstats = { bbs[0] : bbstats } 
     
     for b in brs :
-
         
         l = tree.leaf ( b )
 
@@ -894,23 +951,7 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
             logger.warning ("table: can't get the leaf  \"%s\"" % b )
             continue
         
-        tn       = l.GetTypeName ()
-        typename = tn
-        
-        br = l.GetBranch()
-        if br :  
-            n = br.GetTitle()
-            typename = '%s %s '
-            p = n.find('[')
-            if  0 <= p :
-                p2 = n.find( '/' , p + 1 )
-                if p < p2 : typename = '%s %s' % ( tn , n[p:p2] )
-                else      : typename = '%s %s' % ( tn , n[p:  ] )            
-            else          : typename = '%s'    %   tn  
-
-        typename = typename.replace ( 'Float_t'  , 'float'  ) 
-        typename = typename.replace ( 'Double_t' , 'double' ) 
-        typename = typename.replace ( 'Bool_t'   , 'bool'   )
+        typename = l.get_type()
         
         rr = [ b , typename ]
         
@@ -926,7 +967,6 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
                     ( '%+.5g' % mnmx[1]      ).strip()                  , ## 5
                     '' if  n == n0 else '%.3g' % ( float ( n ) / n0 ) ]   ## 6            
         else :
-            ## logger.warning ("table: can't get info for the leaf \"%s\"" % b )
             rr +=  [ '-' , '-' , '-' , '-' , '' ]
             
         _vars.append ( tuple  ( rr ) )
@@ -964,38 +1004,134 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
         
     _vars = __vars 
 
-    sep      = '# +%s+%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
-                                        ( type_l       + 2 ) * '-' ,
-                                        ( mean_l+rms_l + 5 ) * '-' ,
-                                        ( min_l +max_l + 5 ) * '-' ,
-                                        ( num_l        + 2 ) * '-' )
-    fmt = '# | %%-%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds | %%%ds |'  % (
-        name_l ,
-        type_l ,
-        mean_l ,
-        rms_l  ,
-        min_l  ,
-        max_l  ,
-        num_l  )
-    
-    header  = fmt % ( 'Variable' ,
-                      'type'     , 
-                      'mean'     ,
-                      'rms'      ,
-                      'min'      ,
-                      'max'      ,
-                      '#'        )
-    
-    report += '\n' + sep
-    report += '\n' + header
-    report += '\n' + sep            
-    for v in _vars :
-        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , v[6] )
-        report += '\n' + line  
-    report += '\n' + sep
-    
-    return report, len ( sep )  
+    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
+        
+    fmt_name  = '%%%ds. %%-%ds' % ( index_l , name_l )
+    fmt_type  = '%%-%ds'        % type_l
+    fmt_mean  = '%%%ds'         % mean_l
+    fmt_rms   = '%%-%ds'        % rms_l
+    fmt_min   = '%%%ds'         % mean_l
+    fmt_max   = '%%-%ds'        % rms_l
+    fmt_num   = '%%%ds'         % num_l
 
+    title_l = index_l + 2 + name_l 
+    header = (
+        ( '{:^%d}' % title_l ).format ( 'Variable' ) ,
+        ( '{:^%d}' % type_l  ).format ( 'type'     ) ,
+        ( '{:^%d}' % mean_l  ).format ( 'mean'     ) ,
+        ( '{:^%d}' % rms_l   ).format ( 'rms'      ) ,
+        ( '{:^%d}' % min_l   ).format ( 'min'      ) ,
+        ( '{:^%d}' % max_l   ).format ( 'max'      ) ,
+        ( '{:^%d}' % num_l   ).format ( '#'        ) )    
+               
+    table_data = [ header ] 
+    for i , v in enumerate ( _vars ) :
+        table_data.append ( ( fmt_name  % ( i + 1 , v [ 0 ] ) ,
+                              fmt_type  %           v [ 1 ] ,
+                              fmt_mean  %           v [ 2 ] ,
+                              fmt_rms   %           v [ 3 ] ,
+                              fmt_min   %           v [ 4 ] ,
+                              fmt_max   %           v [ 5 ] ,
+                              fmt_num   %           v [ 6 ] ) )
+
+    tt = tree.GetTitle()
+    if tt and tt != tree.GetName() : 
+        title  = '%s("%s","%s") %d entries,' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
+    else :
+        title  = '%s("%s") %d entries,'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
+
+    nb = len ( tree.branches () )
+    title += '%d branches' % nb 
+    nl = len ( tree.leaves   () )
+    if nl != nb : title += '%d leaves' % nl
+        
+    if isinstance ( tree , ROOT.TChain ) :
+        nfiles = len ( tree.files() )
+        if 1 < nfiles : title += '/%d files ' % nfiles 
+        
+    import ostap.logger.table as T
+    t  = T.table (  table_data , title , prefix = prefix )
+    w  = T.table_width ( t )
+    return t , w 
+    
+
+# ==============================================================================
+## get a type of TLeaf object
+#  @code
+#  tree = ...
+#  leaf = t.leaf ( 'QQQ' )
+#  print leaf.get_type ( )
+#  @endcode 
+def _tl_type_ ( leaf ) :
+    """Get a type for TLeaf object
+    >>> tree = ...
+    >>> leaf = t.leaf ( 'QQQ' )
+    >>> print leaf.get_type ( )
+    """
+    
+    if not leaf : return 'NULL'
+    
+    branch   = leaf.GetBranch   ()
+    typename = leaf.GetTypeName () 
+    
+    name     = branch.GetTitle() 
+    p1       = name. find ( '[' ) 
+    p2       = name.rfind ( ']' )
+    if   0 < p1 < p2 :
+        typename = '%s [%s]' % ( typename , name [ p1 + 1 : p2 ] )
+    elif 0 < p1 :
+        typename = '%s [%s]' % ( typename , name [ p1 : ] )
+
+    typename = typename.replace ( 'Float_t'  , 'float'  ) 
+    typename = typename.replace ( 'Double_t' , 'double' ) 
+    typename = typename.replace ( 'Bool_t'   , 'bool'   )
+    
+    return typename 
+
+
+# =============================================================================
+_short_types_ = {
+    'Char_t'     : 'B' ,
+    'UChar_t'    : 'b' ,
+    'Short_t'    : 'S' ,
+    'UShort_t'   : 's' ,
+    'Int_t'      : 'I' , 
+    'UInt_t'     : 'i' ,
+    'Float_t'    : 'F' ,
+    'Float16_t'  : 'f' ,
+    'Double_t'   : 'D' ,
+    'Double32_t' : 'd' ,
+    'Long64_t'   : 'L' ,
+    'ULong64_t'  : 'l' ,
+    'Bool_t'     : 'O' ,
+    ##
+    'double'     : 'D' ,
+    'float'      : 'F' , 
+    'bool'       : 'O' ,
+    }
+# ==============================================================================
+## get a type of TLeaf object
+#  @code
+#  tree = ...
+#  leaf = t.leaf ( 'QQQ' )
+#  print leaf.get_short_type ( )
+#  @endcode 
+def _tl_type_short_ ( leaf ) :
+    """Get a type for TLeaf object
+    >>> tree = ...
+    >>> leaf = t.leaf ( 'QQQ' )
+    >>> print leaf.get_type ( )
+    """
+
+    ts = leaf.get_type ()
+    for k in reversed ( sorted ( _short_types_ ) ) :
+        ts = ts.replace ( k , _short_types_[k] )
+    return ts 
+
+# ==============================================================================
+ROOT.TLeaf . get_type       = _tl_type_
+ROOT.TLeaf . get_type_short = _tl_type_short_
+ROOT.TLeaf . get_short_type = _tl_type_short_
 
 # ==============================================================================
 ## print rot-tree in a form of the table
@@ -1003,62 +1139,26 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
 #  data = ...
 #  print dat.table() 
 #  @endcode
-def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , *args ) :
+def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , *args ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _rt_table_0_ ( dataset ,  variables , cuts , *args )[0]
-
-
-# =============================================================================
-## simplified printout for TTree/TChain
-#  @see TTree
-#  @code
-#
-#  >>> tree = ...
-#  >>> print tree.pprint()
-#
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-02-04
-def _rt_print_ ( t ) :
-    """Simplified print out for tree/chain
-
-    >>> tree = ...
-    >>> print tree.pprint() 
-    """
-    ##
-    res = "Name: %s Enries/#%d" %  ( t.GetName() , t.GetEntries() ) 
-    if hasattr ( t , 'GetNtrees' ) : res += " Chain/#%d " %       t.GetNtrees()
-    ##
-    _l          = t.leaves   ()
-    res        += "\nLeaves:\n%s"    % multicolumn ( list( _l ) , indent = 2 , pad = 1 )
-
-    ## collect non-trivial branches 
-    _b          = t.branches ()
-    
-    _bs = set  ( _b )
-    _ls = set  ( _l )
-    _b  = list ( _bs - _ls ) 
-    _b . sort() 
-    if _b : res += "\nNon-trivial branches:\n%s" % multicolumn ( _b , indent = 2 ,  pad = 1 )
-
-    return res.replace ('\n','\n# ') 
+    return _rt_table_0_ ( dataset , variables , cuts , prefix , *args )[0]
 
 
 # =============================================================================
 ##  print DataSet
-def _rt_print2_ ( data  ) :
+def _rt_print2_ ( data  , prefix = '' ) :
     """Print TTree/TChain"""
-
-    br = len ( data.branches() ) 
-    l  = len ( data            )
+    
+    br = len ( data.branches () ) + len ( data.leaves() )  
+    l  = len ( data             )
     if 10000000 < br * l : return _rt_print_ ( data )
     
     if not isatty() : return _rt_table_ ( data )
     th  , tw   = terminal_size()
-    rep , wid  = _rt_table_0_ ( data ) 
+    rep , wid  = _rt_table_0_ ( data , prefix = prefix ) 
     if wid < tw  : return rep
     ##
     return _rt_print_ ( data )
@@ -1067,7 +1167,6 @@ def _rt_print2_ ( data  ) :
 ROOT.TTree.__repr__ = _rt_print2_
 ROOT.TTree.__str__  = _rt_print2_
 ROOT.TTree.table    = _rt_table_ 
-
 
 # =============================================================================
 ## get list of files used for the given chain
@@ -1132,6 +1231,30 @@ def _rc_getslice_ ( self , start , stop , *step ) :
 
 ROOT.TChain.__getslice__ = _rc_getslice_
 
+
+# =============================================================================
+## iterator over individual trees in the echain
+#  @code
+#  chain = ...
+#  for tree in  chain.trees ()  :
+#       print len(tree)
+#  @endcode 
+def _rc_itrees_   ( self ) :
+    """Iterator over individual trees in the echain
+    >>> chain = ...
+    >>> for tree in  chain.trees ()  :
+    ...     print len(tree)
+    """
+
+    _files = self.files()
+    for _f in _files :
+
+        c = ROOT.TChain ( self.GetName() )
+        c.Add ( _f )
+        yield c
+        
+    
+    
 # =============================================================================
 ## Get the chain corresponding to the subset of files
 #  @code
@@ -1335,7 +1458,7 @@ ROOT.TTree.topdir = property ( top_dir , None , None )
 ## add new branch to the chain
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree   
-def _chain_add_new_branch ( chain , name , function , verbose = True ) :
+def _chain_add_new_branch ( chain , name , function , verbose = True , skip = False ) :
     """ Add new branch to the tree
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
@@ -1350,17 +1473,27 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
     files = chain.files   ()
     cname = chain.GetName () 
     
+    the_function = function
+    if   isinstance ( function , string_types    ) : pass 
+    elif isinstance ( function , Ostap.IFuncTree ) : pass
+    elif isinstance ( function , ROOT.TH1        ) : pass 
+    elif callable   ( function ) :
+        from ostap.trees.funcs import PyTreeFunction as PTF
+        the_function = PTF ( function )
+
     from ostap.utils.progress_bar import progress_bar
 
     verbose = verbose and 1 < len ( files )
     
+    import ostap.io.root_file
     for fname in progress_bar ( files , len ( files ) , silent = not verbose ) :
-
-        with ROOT.TFile.Open ( fname , 'UPDATE' , exception = True )  as  rfile :
+        
+        logger.debug ('Add_new_branch: processing file %s' % fname )
+        with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
             ## get the tree 
-            tt = rfile.Get ( cname )
+            ttree = rfile.Get ( cname )
             ## treat the tree 
-            add_new_branch ( tt , name , function ) 
+            add_new_branch    ( ttree , name , the_function , verbose , skip ) 
             
     ## recollect the chain 
     newc = ROOT.TChain ( cname )
@@ -1372,81 +1505,436 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
 ## add new branch to the tree
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree 
-def add_new_branch ( tree , name , function , verbose = True ) :
+def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
     """ Add new branch to the tree
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
     """
-    if isinstance (  tree  , ROOT.TChain ) :
-        return _chain_add_new_branch ( tree , name , function , verbose )
+    if isinstance ( tree  , ROOT.TChain ) :
+        return _chain_add_new_branch ( tree , name , function , verbose , skip )
 
     if not tree :
         logger.error (  "Invalid Tree!" )
         return
-
+    
     names = name 
-    if isinstance ( names , string_types ) : names = [ names ]    
+    if isinstance ( names , string_types ) : names = [ names ]
+    
     for n in names : 
         assert not n in tree.branches() ,'Branch %s already exists!' % n
 
-    if isinstance   ( function , ( string_types , ROOT.TH1 ) ) :
-        the_function = function
-    else : 
-        ftype        = type  ( function )
-        the_function = ftype ( function )
+    the_function = function
+    if   isinstance ( function , string_types    ) : pass 
+    elif isinstance ( function , Ostap.IFuncTree ) : pass
+    elif isinstance ( function , ROOT.TH1        ) : pass 
+    elif callable   ( function ) :
+        from ostap.trees.funcs import PyTreeFunction as PTF
+        the_function = PTF ( function )
 
-    from ostap.io.root_file    import REOPEN 
+    args  = [ n for n in names ] + [ the_function ]
+    args  = tuple ( args )
 
     tname = tree.GetName      ()
     tdir  = tree.GetDirectory ()
+    tpath = tree.path
 
-    args  = [ n for n in names ] + [ function ]
-    args  = tuple ( args )
-    
+    from ostap.io.root_file import REOPEN 
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
         
-        tdir.cd()
-        
-        branch = Ostap.Trees.add_branch ( tree , *args )
-        if not branch : logger.error("Branch is null!")
-        
-        if tfile.IsWritable() :
-            
+        tfile.cd() 
+        ttree = tfile.Get ( tpath )
+        sc    = Ostap.Trees.add_branch ( ttree , *args )
+        if   sc.isFailure () :
+            logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
+        elif tfile.IsWritable() :
             tfile.Write( "" , ROOT.TObject.kOverwrite )
-            return tdir.Get ( tname )                           ## RETURN 
-        
-        else : logger.error ( "Can't write TTree back to the file" )
-                
-        return tree                                             ## RETURN 
-    
-    
+            logger.debug ('Write back TTree %s to %s' % ( tpath , tfile ) )            
+        else :
+            logger.error ("Can't write TTree %s back to the file %s" % ( tpath , tfile ) )
+
 ROOT.TTree.add_new_branch = add_new_branch 
 
 # =============================================================================
-from ostap.utils.cleanup import CleanUp
+## Add specific re-weighting information into <code>ROOT.TTree</code>
+#  @see ostap.tools.reweight
+#  @see ostap.tools.reweight.Weight 
+#  @see ostap.tools.reweight.W2Tree 
+#  @code
+#  w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+#  tree = ...
+#  tree.add_reweighting ( w ) 
+#  @endcode 
+def add_reweighting ( tree , weighter , name = 'weight' ) :
+    """Add specific re-weighting information into ROOT.TTree
+    
+    >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+    >>> data = ...
+    >>> data.add_reweighting ( w )
+    - see ostap.tools.reweight
+    - see ostap.tools.reweight.Weight 
+    - see ostap.tools.reweight.W2Tree 
+    """
+    
+    import ostap.tools.reweight as W
+    
+    assert isinstance ( weighter , W.Weight ), "Invalid type of ``weighting''!"
+    
+    ## create the weigthting function 
+    wfun = W.W2Tree ( weighter )
+    
+    return data.add_new_branch (  name , wfun ) 
+
+ROOT.TTree.add_reweighting = add_reweighting
+    
+
+# =============================================================================
+## Get the effective entries in data frame
+#  @code
+#  data = ...
+#  neff = data.nEff('b1*b1')
+#  @endcode
+def _rt_nEff_  ( self , cuts = '' , *args ) :
+    """Get the effective entries in data frame 
+    >>> data = ...
+    >>> neff = data.nEff('b1*b1')
+    """
+    return Ostap.StatVar.nEff ( self , cuts , *args )
+
+ROOT.TTree.nEff = _rt_nEff_ 
+# =============================================================================
+
+from  ostap.stats.statvars import data_decorate as _dd
+_dd ( ROOT.TTree )
+
+# =============================================================================
+## get all variables needed to evaluate the expressions for the given tree
+#  @code
+#  tree = 
+#  vars = tree.the_variables ( [ 'x>0&& y<13' , 'zzz*15' ] )   
+#  vars = the_variables ( tree , [ 'x>0&& y<13' , 'zzz*15' ] ) ## ditto
+#  @endcode 
+def the_variables ( tree , expression , *args ) :
+    """Get all variables needed to evaluate the expressions for the given tree
+    >>> tree = 
+    >>> vars = tree.the_variables ( tree , [ 'x>0&& y<13' , 'zzz' ]  )
+    >>> vars =      the_variables (        [ 'x>0&& y<13' , 'zzz' ]  ) ##  ditto
+    """
+    from ostap.core.core import fID
+    
+    if isinstance  ( expression, ( list , tuple ) ) :
+        exprs = list ( expression ) 
+    else :
+        exprs = [ expression ]
+        
+    for e in args :
+        if isinstance  ( e , ( list , tuple ) ) :
+            exprs = exprs + list ( e ) 
+        else :
+            exprs.append ( e )
+
+    vars = set() 
+    for e in exprs :
+            
+        tf = Ostap.Formula ( fID() , str ( e ) , tree )
+        if not tf.ok()  :
+            logger.error ('the_variables: Invalid formula "%s"' % e )
+            del tf 
+            return None
+        
+        i    =  0
+        leaf = tf.GetLeaf ( i )
+        while leaf :
+            lname = leaf.GetName()
+            vars.add ( lname )
+            i += 1
+            leaf = tf.GetLeaf ( i )                
+
+        del tf
+
+    vvars  = list ( vars )
+    
+    leaves   = tree.leaves   ()
+    branches = tree.branches ()
+    all      = set ( leaves + branches )
+
+    ## If variable-sized vectors, add the lengths...
+
+    sizes = set()  
+    for v in vvars :
+
+        l  = tree.GetLeaf ( v )
+        t  = l.GetTitle ()
+        p1 = t. find ( '[' )
+        p2 = t.rfind ( ']' )
+        if 0 < p1 < p2 :
+            n = t [ p1 + 1 : p2 ]
+            n = n.replace ( '][' , ',' )
+            n = n.split   ( ',' ) 
+            for i in n :
+                if i in all : sizes.add ( i )
+            
+        b  = l   .GetBranch ( )
+        t  = b   .GetTitle  ( )
+        p1 = t. find ( '[' )
+        p2 = t.rfind ( ']' )
+        if 0 < p1 < p2 :
+            n = t [ p1 + 1 : p2 ]
+            n = n.replace ( '][' , ',' )
+            n = n.split   ( ',' ) 
+            for i in n :
+                if i in all : sizes.add ( i )
+                
+    vars  = [ v for v in vars if not v in sizes ]
+    vars.sort ()
+    
+    sizes = list ( sizes )
+    sizes.sort ()
+    
+    return  tuple ( sizes ) + tuple ( vars ) 
+
+
+ROOT.TTree.the_variables = the_variables
+
+# ===============================================================================
+## @class ActiveBranches
+#  Context manager to activate only certain branches in the tree.
+#  It drastically speeds up the iteration over the tree.
+#  @code
+#  tree = ...
+#  with ActiveBraches( tree , '*_Lb' , 'eta_Lc') :
+#    for i in range(1000000) :
+#        tree.GetEntry ( i )
+#        print tree.pt_Lb, tree.eta_Lc 
+#  @endcode
+class ActiveBranches(object) :
+    """Context manager to activate only certain branches in the tree.
+    - It drastically speeds up the iteration over the tree.
+    >>> tree = ...
+    >>> with ActiveBraches( tree , '*_Lb', 'eta_Lc') :
+    ...    for i in range(1000000) :
+    ...    tree.GetEntry ( i )
+    ...    print tree.pt_Lb, tree.eta_Lc
+    """
+    def __init__ ( self , tree , *vars ) :
+        
+        assert tree and vars , 'ActiveBrnaches: both tree and vars must be valid!'
+        
+        self.__tree = tree
+        self.__vars = vars 
+        
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
+        ## deactivate the all branches 
+        self.__tree.SetBranchStatus ( '*' , 0 )     ## deactivate *ALL* branches
+        for var in self.__vars :
+            ##  activate certain branches 
+            self.__tree.SetBranchStatus( var , 1 )  ## activate only certain branches
+            
+        return self.__tree 
+    
+    ## context manager: EXIT 
+    def __exit__ ( self , *_ ) :
+        ## reactivate all branches again 
+        self.__tree.SetBranchStatus ( '*' , 1 )     ## reactivate *ALL* branches
+        
+# ===============================================================================
+## Context manager to activate only certain branches in the tree.
+#  It drastically speeds up the iteration over the tree.
+#  @code
+#  tree = ...
+#  with active_braches ( tree , '*_Lb' , 'eta_Lc') :
+#    for i in range(1000000) :
+#        tree.GetEntry ( i )
+#        print tree.pt_Lb, tree.eta_Lc 
+#  @endcode
+def active_branches ( tree , *vars ) :
+    """Context manager to activate only certain branches in the tree.
+    - It drastically speeds up the iteration over the tree.
+    >>> tree = ...
+    >>> with active__braches ( tree , '*_Lb', 'eta_Lc') :
+    ...    for i in range(1000000) :
+    ...    tree.GetEntry ( i )
+    ...    print tree.pt_Lb, tree.eta_Lc
+    """
+    return ActiveBranches ( tree , *vars ) 
+    
+# ===============================================================================
+## Reduce the tree/chain
+#  @code
+#  tree = ....
+#  reduced1 = tree.reduce  ( 'pt>1' )
+#  reduced2 = tree.reduce  ( 'pt>1' , vars = [ 'p', 'pt' ,'q' ] )
+#  reduced3 = tree.reduce  ( 'pt>1' , no_vars = [ 'Q', 'z' ,'x' ] )
+#  reduced4 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } )
+#  reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , fname = 'OUTPUT.root' )
+#  @endcode
+def _rt_reduce_  ( tree          ,
+                   cuts          ,
+                   vars     = () , 
+                   no_vars  = () ,
+                   new_vars = {} ,
+                   fname    = '' ) :
+    """ Reduce the tree/chain
+    >>> tree = ....
+    >>> reduced1 = tree.reduce  ( 'pt>1' )
+    >>> reduced2 = tree.reduce  ( 'pt>1' , vars = [ 'p', 'pt' ,'q' ] )
+    >>> reduced3 = tree.reduce  ( 'pt>1' , no_vars = [ 'Q', 'z' ,'x' ] )
+    >>> reduced4 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } )
+    >>> reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , fname = 'OUTPUT.root' )
+    """
+    
+    from ostap.core.core       import strings as strings_ 
+    import ostap.frames.frames
+    
+    if not fname :
+        import ostap.utils.cleanup as CU
+        fname = CU.CleanUp.tempfile ( suffix = '.root' )
+        logger.debug ( 'reduce: temporary file will be used: %s' % fname )
+
+    frame = Ostap.DataFrame ( tree , enable = True )
+    for k in new_vars :
+        v     = new_vars[k]
+        frame = frame.Define ( k , v )
+
+    if cuts :
+        frame = frame.Filter ( cuts , 'CUTS' )
+
+    variables = set() 
+    if   vars    :
+        for v in vars     : variables.add ( v )
+        for v in new_vars : variables.add ( v )
+    elif no_vars :
+        variables += set  ( self.branches () )
+        variables += set  ( new_vars.keys () )
+        variables -= set  ( np_vars          )
+
+    report = frame.Report()
+    if variables :
+        variables = list     ( variables )  
+        variables = strings_ ( variables )
+        snapshot = frame.Snapshot ( tree.GetName() , fname , variables )
+    else : 
+        snapshot = frame.Snapshot ( tree.GetName() , fname )
+
+    from ostap.frames.frames import report_prnt
+    title =  'Tree/Frame reduce '
+    logger.info ( title + '\n%s' % report_prnt ( report , title , '# ') )
+
+    assert os.path.exists ( fname ) , 'No output file is found %s' %  fname 
+    
+    chain = ROOT.TChain ( tree.GetName () )
+    chain.Add ( fname )
+    return chain
+
+ROOT.TTree. reduce = _rt_reduce_
+
+# =============================================================================
+## files and utilisties for TTree/TChain "serialization"
+# =============================================================================
+## get some file info for the given path 
+def file_info ( fname ) :
+    """Get some file info for the given path
+    """
+    p , s , f = fname.partition ( '://' )
+    if p and s : return 'Protocol'
+    if os.path.exists ( fname ) and os.path.isfile ( fname ) and os.access ( fname , os.R_OK ) :
+        s = os.stat ( fname )
+        return s.st_mode , s.st_size , s.st_uid, s.st_gid, s.st_atime , s.st_mtime , s.st_ctime
+    return 'Invalid'
+# =============================================================================
+from ostap.utils.cleanup  import CleanUp
 # =============================================================================
 ## @class Chain
 #  simple class to keep pickable definitinon of tree/chain
 #  it is needed for multiprcessing 
 class Chain(CleanUp) :
-    """Simple class to keep definition of tree/chain
+    """Simple class to keep definition of tree/chain ``pickable''
     """
     def __getstate__  ( self ) :
-        return { 'name'     : self.__name     ,
-                 'files'    : self.__files    ,
-                 'first'    : self.__first    ,            
-                 'nevents'  : self.__nevents  }
-    def __setstate__  ( self , state ) :        
+
+        def fullfn ( f ) :
+            if os.path.exists ( f ) and os.path.isfile ( f ) :
+                ff = os.path.abspath ( f )
+                if os.path.samefile ( ff , f ) : return ff
+            return f
+        
+        file_infos = tuple ( ( fullfn ( f ) , file_info ( f ) ) for f in self.__files ) 
+        
+        return { 'name'     : self.__name    ,
+                 'first'    : self.__first   ,            
+                 'nevents'  : self.__nevents ,
+                 'files'    : file_infos     ,
+                 'host'     : self.__host    }
+    
+    def __setstate__  ( self , state ) :
+        
         self.__name    = state [ 'name'    ]
-        self.__files   = state [ 'files'   ]
         self.__first   = state [ 'first'   ]
         self.__nevents = state [ 'nevents' ]
+        #
+        origin         = state [ 'host'    ]
+        file_infos     = state [ 'files'   ]
+        ##
+        import socket 
+        self.__host    = socket.getfqdn ().lower()
+        ##
+        same_host      = origin == self.__host
+        files_         = []
+
+        for fname , finfo in file_infos :
+            if   same_host : files_.append ( fname )
+            else :
+                fnew = file_info ( fname )
+                if fnew == finfo :
+                    ## hosts are different but the files are the same (shared file system?)
+                    files_.append ( fname )
+                else :
+                    # =========================================================
+                    ## the file need to be copied locally
+                    full_name  = '%s:%s' % ( origin , fname ) 
+                    copied , t = scp_copy   ( full_name )
+                    if copied :
+                        cinfo = file_info ( copied )
+                        c = '%s -> %s' % ( full_name , "%s:%s" % ( self.__host , copied ) )
+                        if cinfo[:4] == finfo [:4] :
+                            files_.append ( copied )
+                            size = cinfo[1]
+                            s =  cinfo [ 1 ] / float ( 1024 ) / 1025 ##  MB 
+                            v = s / t                  ## MB/s 
+                            logger.debug ( 'File copied %s :  %.3f[MB] %.2f[s] %.3f[MB/s]' % ( c , s , t , v ) )
+                        else :
+                            logger.error ( 'Something wrong with the copy %s : %s vs %s ' % ( c , cinfo[:4] , finfo[:4] ) )
+                    else : logger.error ("Cannot copy the file %s"  % full_name )
+                        
+        self.__files = tuple ( files_ )
+        
         ## reconstruct the chain 
         self.__chain   = ROOT.TChain ( self.__name  )
         for f in self.__files  : self.__chain.Add ( f )
-                    
-    def __init__ ( self , tree = None ,  name = None , files = [] , first = 0 , nevents = -1  ) :
 
+    # ======================================================================================
+    ## create Chain object:
+    #  - either from the real TTree/TChain:
+    #  @code
+    #  chain = ...  ## ROOT.TChain
+    #  ch = Chain ( chain ) 
+    #  @endcode
+    #  - or from description:
+    #  @code
+    #  ch = Chain ( name = 'n', files = [ ... ] )
+    #  @endcode 
+    def __init__ ( self , tree = None , name = None , files = [] , first = 0 , nevents = -1  ) :
+        """ Create Chain object 
+        
+        - either from the real TTree/TChain:
+        
+        >>> chain = ...  ## ROOT.TChain
+        >>> ch = Chain ( chain )
+        
+        - or from description:
+        
+        >>> ch = Chain ( name = 'n', files = [ ... ] )
+        """
         assert ( name and files                  ) or \
                ( name and files and tree is True ) or \
                ( isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree  ) ) ,  \
@@ -1457,6 +1945,9 @@ class Chain(CleanUp) :
         self.__first   = int ( first )  
         self.__nevents = nevents if 0 <= nevents < ROOT.TChain.kMaxEntries else -1 
         self.__chain   = None
+
+        import socket 
+        self.__host    = socket.getfqdn ().lower()
         
         if files and isinstance ( files , str ) : files = files,
 
@@ -1468,7 +1959,7 @@ class Chain(CleanUp) :
             if not tree is True : 
                 chain = self.__create_chain() 
                 assert valid_pointer ( chain ), 'Invalid TChain!'
-                assert len ( files ) == len( chain.files() ) , 'Invalid length of files'
+                assert len ( files ) == len ( chain.files() ) , 'Invalid length of files'
                 self.__chain = chain 
             
         elif valid_pointer ( tree ) :
@@ -1486,8 +1977,7 @@ class Chain(CleanUp) :
                 
                 if isinstance ( topdir , ROOT.TFile ) : self.__files = topdir.GetName() ,
                 else :
-                    
-                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree_' )
+                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree-' )
                     from ostap.core.core import ROOTCWD
                     with ROOTCWD() : 
                         import ostap.io.root_file
@@ -1502,24 +1992,64 @@ class Chain(CleanUp) :
                 chain = ROOT.TChain( tree.GetName() )
                 chain.Add ( self.__files[0] )
                 tmp = chain
-                assert len ( chain ) == len ( tree ) , 'Something wrong happens here :-( '
+                assert chain.GetEntries() == tree.GetEntries () , 'Something wrong happens here :-( '
                 self.__chain = chain
 
-        ## ##  last adjustment
-        ## ll = len ( self )  
-        ## if  ll < self.__first :
-        ##     logger.warning ( 'Tree/Chain will be empty %s/%s' %   ( self.__first , ll ) )
-        ##     self.__first   = ll
-        ##     self.__nevents = 0
-                        
-        ## if number of events is specified: 
-        ## if 0 < self.__nevents :
-        ##    ll = len ( self )  
-        ##    self.__nevents = min ( self.__nevents , ll - self.__first )
+        # =====================================================================
+        ## The final adjustment
+        self.__lens = () 
+        if 0 < self.__first or 0 < nevents < _large :
+            
+            _first = self.__first
+            _files = []
+            total  = 0 
+            for f in self.__files :
+                
+                t = ROOT.TChain ( self.name )
+                t.Add ( f )
+                clen = t.GetEntries() 
 
+                if _first < clen :
+                    
+                    _files.append (  ( f , clen ) )
+                    total += clen
+                    
+                else             :                    
+                    _first -= clen
+                    continue 
+
+                if 0 < nevents and _first + nevents < total :
+                    break 
+                
+            ## redefine quantities:
+            self.__files = tuple ( ( f [0] for f in _files ) )
+            self.__lens  = tuple ( ( f [1] for f in _files ) )
+            self.__first = _first
+            
+            if 0 < nevents and _first + nevents < total : pass
+            else                                        : nevents = -1 
+            
+            self.__nevents = nevents 
+
+    # =========================================================================
+    ## get/calculate the lengths of the individual trees 
+    def calc_lens ( self ) :
+        """Get/calculate the lengths of the individual trees
+        """
+        if self.__lens : return self.__lens
+
+        lens = []
+        for f in self.__files :
+            t = ROOT.TChain ( self.name )
+            t.Add ( f )
+            lens.append ( t.GetEntries () )
+            
+        self.__lens = tuple ( lens )
+        return self.__lens
+        
     ## split the chain for several chains  with at most chunk_size entries
     def slow_split ( self , chunk_size = 200000 ) :
-        """Split the tree for several trees with chunk_size entries
+        """ Split the chain/tree for several chains/trees with at most chunk_size entries
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
@@ -1560,7 +2090,8 @@ class Chain(CleanUp) :
         for i in range ( 0 , last - first , chunk_size ) :
             ## yield lst [ i : min ( i + chunk_size , list_size ) ] 
             yield slice ( first + i , first + min ( i + chunk_size , last -first  ) ) 
-                       
+
+
     ## split the chain for several chains with at most chunk_size entries
     def split ( self , chunk_size = -1 , max_files = 10 ) :
         """Split the tree for several trees with chunk_size entries
@@ -1575,7 +2106,7 @@ class Chain(CleanUp) :
         
         ## first split on per-file basis
         fs     = self.files
-        chains = [ Chain ( tree = True , name = self.name , files = fs[c] ) for c in self.get_slices ( 0 , len(fs) , max_files ) ]
+        chains = [ Chain ( tree = True , name = self.name , files = fs[c] ) for c in self.get_slices ( 0 , len ( fs ) , max_files ) ]
         ## chains = [ Chain ( self.chain[c] ) for c in self.get_slices ( 0 , len(fs) , max_files ) ]
 
         if chunk_size < 0 : return tuple ( chains )
@@ -1592,9 +2123,16 @@ class Chain(CleanUp) :
 
         return  tuple ( result ) 
 
-
     ##  number of entries in the Tree/Chain
     def __len__ ( self ) :
+
+        if not self.__lens : self.calc_lens()
+            
+        if self.__lens  :
+            total  = sum ( self.__lens )
+            len1   = total - self.__first 
+            return len1 if self.__nevents < 0 else min ( len1 , self.__nevents )
+        
         if self.__chain is None : self.__chain = self.__create_chain () 
         return len ( self.__chain )
     
@@ -1636,25 +2174,43 @@ class Chain(CleanUp) :
         """``nevents'' : number of events to process"""
         return self.__nevents
 
-    ## get DataFrame 
-    def  frame ( self , *vars ) :
+    # ============================================================================
+    ## get DataFrame
+    #  @code
+    #  tree = ....
+    #  f  =  tree.frame () ## get
+    #  f1 =  tree.frame ('px', 'py' , 'pz') ## get frame with default branches
+    #  f2 =  tree.frame ( tx = 'px/pz' , ty = 'py/pz') ## define new variables
+    #  @endcode 
+    def  frame ( self , *vars , **newvars ) :
         """``frame'' : get ROOT.RDataFrame for the given chain/tree
         >>> tree = ....
-        >>> f  =  tree.frame () ## get
-        >>> f1 =  tree.frame ('px', 'py' , 'pz') ## get frame with default branches
+        >>> f  = tree.frame () ## get
+        >>> f1 = tree.frame ('px', 'py' , 'pz') ## get frame with default branches
+        >>> f2 = tree.frame ( tx = 'px/pz' , ty = 'py/pz') ## define new variables 
         """
         from ostap.frames.frames import DataFrame
         from ostap.core.core     import strings 
         fnames = strings  ( *self.files )
-        vnames = strings  ( *vars  )
-        return DataFrame ( self.name , fnames , vnames ) 
-        
+        vnames = strings  ( *vars       )
+        df = DataFrame  ( self.name , fnames , vnames )
+        for k in new_vars : df =  df.Define ( k , new_vars [k] )
+        return  df                              
+    
     def __str__ ( self ) :
         r = "Chain('%s',%s" % ( self.name , self.__files )
-        if 0 != self.first or 0 <= self.__nevents : r += ",%s,%s" % ( self.first , self.__nevents )            
+        if 0 != self.first or 0 <= self.__nevents :
+            r += ",%s,%s" % ( self.first , self.__nevents )            
         return r + ")"
     __repr__ = __str__
-    
+
+    # =========================================================================
+    ## delegate all other attributes to the underlying chain object 
+    def __getattr__  ( self , attr ) :
+        """Delegate all other attributes to the underlying chain object"""
+        return getattr  ( self.chain , attr )
+
+
 # =============================================================================
 ## @class Tree
 #  simple class to keep 'persistent' definition of the tree
@@ -1740,29 +2296,23 @@ class Tree(Chain) :
         return r + ")"
     __repr__ = __str__
 
-# =============================================================================
-## Get the effective entries in data frame
-#  @code
-#  data = ...
-#  neff = data.nEff('b1*b1')
-#  @endcode
-def _rt_nEff_  ( self , cuts = '' , *args ) :
-    """Get the effective entries in data frame 
-    >>> data = ...
-    >>> neff = data.nEff('b1*b1')
-    """
-    return Ostap.StatVar.nEff ( self , cuts , *args )
 
-ROOT.TTree.nEff = _rt_nEff_ 
-# =============================================================================
-
-from  ostap.stats.statvars import data_decorate as _dd
-_dd ( ROOT.TTree )
+    # =========================================================================
+    ## delegate all other attributes to the underlying chain object 
+    def __getattr__  ( self , attr ) :
+        """Delegate all other attributes to the underlying chain object"""
+        return getattr  ( self.chain , attr )
+    
+    @property
+    def tree ( self ) :
+        """``tree'' : get the underlying tree/chain"""
+        return self.chain
 
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.TTree   ,
-    ROOT.TChain     
+    ROOT.TTree  ,
+    ROOT.TChain ,   
+    ROOT.TLeaf      
     )
 _new_methods_       = (
     #
@@ -1817,7 +2367,15 @@ _new_methods_       = (
     ROOT.TTree.quartiles        ,
     ROOT.TTree.quintiles        ,
     ROOT.TTree.deciles          ,
-
+    #
+    ROOT.TTree.the_variables    ,
+    ROOT.TTree.add_new_branch   ,
+    ROOT.TTree.add_reweighting  ,
+    ROOT.TTree.reduce           ,
+    ##
+    ROOT.TLeaf.get_type         ,
+    ROOT.TLeaf.get_type_short   ,
+    ROOT.TLeaf.get_short_type   ,
     )
 # =============================================================================
 if '__main__' == __name__ :

@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright (c) Ostap developers.
 # ============================================================================= 
-# @file ostap/fitting/tests/test_fitting_components.py
+# @file ostap/fitting/tests/test_fitting_components_2D.py
 # Test module 
 # - It tests various multicomponents models 
 # ============================================================================= 
@@ -27,7 +27,7 @@ from ostap.fitting.background import make_bkg
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'ostap/fitting/tests/test_fitting_components' )
+    logger = getLogger ( 'test_fitting_components_2D' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================

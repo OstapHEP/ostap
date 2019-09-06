@@ -37,15 +37,19 @@ class  FillTask(Task) :
     - for 12-core machine, clear speed-up factor of about 8 is achieved 
     """
     ## 
-    def __init__ ( self ,  variables , selection , trivial = False ) :
+    def __init__ ( self               ,
+                   variables          ,
+                   selection          ,
+                   trivial   = False  , 
+                   use_frame = 100000 ) :
         
         self.variables = variables 
         self.selection = selection 
         self.trivial   = trivial  
-        self.output    = ()  
+        self.use_frame = use_frame 
+        self.__output  = ()  
 
-    def initializeLocal   ( self ) : pass
-    def initializeRemote  ( self ) : pass
+    def initialize_local   ( self ) : self.__output = () 
 
     ## the actual processing 
     def process ( self , item ) :
@@ -68,8 +72,8 @@ class  FillTask(Task) :
         
         if self.trivial and all : 
             import ostap.fitting.selectors
-            self.output = chain.make_dataset ( self.variables , self.selection , silent = True ) 
-            return
+            self.__output = chain.make_dataset ( self.variables , self.selection , silent = True ) 
+            return self.__output 
 
         from   ostap.fitting.selectors import SelectorWithVars
         
@@ -81,42 +85,44 @@ class  FillTask(Task) :
         args = ()  
         if not all : args  = nevents , first 
             
-        num = chain.process ( selector , *args , shortcut = all and self.trivial )
-        self.output = selector.data, selector.stat  
+        num = chain.process ( selector , *args                 ,
+                              shortcut  = all and self.trivial ,
+                              use_frame = self.use_frame       )
         
-        if  num < 0 :
-            logger.warning ("Processing status %s"  % num )
+        self.__output = selector.data, selector.stat  
+        
+        if  num < 0 : logger.warning ("Processing status %s"  % num )
         
         ##del selector.data
         ##del      selector        
-        logger.debug ( 'Processed %s and filled %d entries ' % ( item , len( self.output ) ) )
+        logger.debug ( 'Processed %s and filled %d entries ' % ( item , len( self.__output ) ) )
 
-        del item
-
-    def finalize ( self ) : pass 
+        return self.__output 
 
     ## merge results/datasets 
-    def _mergeResults(self, result) :
+    def merge_results ( self, result ) :
         
         if result :
             ds , stat = result
-            if not self.output or not self.output[0] :
-                self.output = ds , stat  
+            if not self.__output or not self.__output[0] :
+                self.__output = ds , stat  
             else :
-                ds_ , stat_ = self.output
+                ds_ , stat_ = self.__output
                 ds_.append ( ds )
-                stat_     = list(stat_)
-                stat_[0] += stat[0] ## total 
-                stat_[1] += stat[1] ## procesed 
-                stat_[2] += stat[2] ## skipped                
-                self.output = ds_ , tuple(stat_)
+                stat_.total      += stat.total     ## total 
+                stat_.processed  += stat.processed ## procesed 
+                stat_.skipped    += stat.skipped   ## skipped                
+                self.__output = ds_ , stat_
                 ds.clear () 
             del result            
-            logger.debug ( 'Merging: %d entries ' % len( self.output[0] ) )
+            logger.debug ( 'Merging: %d entries ' % len( self.__output[0] ) )
         else :
             logger.error ( "No valid results for merging" )
-
             
+    ## get the results 
+    def results ( self ) :
+        return self.__output
+    
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
 #  @code
@@ -124,7 +130,16 @@ class  FillTask(Task) :
 #  selector =  ...
 #  chain.pprocess ( selector )
 #  @endcode 
-def pprocess ( chain , selector , nevents = -1 , first = 0 , shortcut = True  , chunk_size = 100000 , ppservers = () , max_files = 10 , silent = False ) :
+def pprocess ( chain               ,
+               selector            ,
+               nevents    = -1     ,
+               first      = 0      ,
+               shortcut   = True   ,   ## important 
+               chunk_size = 100000 ,   ## important 
+               max_files  = 5      ,
+               ppservers  = ()     ,
+               use_frame  =  20000 ,   ## important 
+               silent     = False  ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -138,7 +153,9 @@ def pprocess ( chain , selector , nevents = -1 , first = 0 , shortcut = True  , 
     selection = selector.selection
     variables = selector.variables
 
-    trivial   = selector.trivial_vars and not selector.morecuts 
+    ## trivial   = selector.trivial_vars and not selector.morecuts
+    
+    trivial   = selector.really_trivial and not selector.morecuts 
     
     all = 0 == first and ( 0 > nevents or len ( chain ) <= nevents )
     
@@ -146,25 +163,25 @@ def pprocess ( chain , selector , nevents = -1 , first = 0 , shortcut = True  , 
         logger.info ("Configuration is ``trivial'': redefine ``chunk-size'' to -1")
         chunk_size = -1
         
-    task  = FillTask ( variables , selection , trivial )
-    wmgr  = WorkManager( ppservers = ppservers , silent = silent )
-    trees = ch.split ( chunk_size = chunk_size , max_files = max_files )
+    task  = FillTask ( variables , selection , trivial , use_frame )
+    wmgr  = WorkManager ( ppservers  = ppservers  , silent    = silent    )
+    trees = ch.split    ( chunk_size = chunk_size , max_files = max_files )
     wmgr.process( task , trees )
     del trees
     
-    dataset, stat = task.output 
+    dataset, stat = task.results()  
 
     selector.data = dataset
     selector.stat = stat 
 
     from ostap.logger.logger import attention 
-    skipped = 'Skipped:%d' % stat[2]
-    skipped = '/' + attention ( skipped ) if stat[2] else ''
+    skipped = 'Skipped:%d' % stat.skipped
+    skipped = '/' + attention ( skipped ) if stat.skipped else ''
     logger.info (
         'Selector(%s): Events Processed:%d/Total:%d%s CUTS: "%s"\n# %s' % (
         selector.name    ,
-        stat[1]          ,
-        stat[0]          ,
+        stat.processed   ,
+        stat.total       ,
         skipped          ,
         selector.cuts()  , dataset ) )            
     
@@ -192,5 +209,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+#                                                                       The END 
 # =============================================================================

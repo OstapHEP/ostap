@@ -31,13 +31,13 @@ from   ostap.parallel.parallel import Task, WorkManager
 class AddBranch(Task) :
     """Add new branch  to loooong TChain in parallel
     """
-
     def __init__          ( self , branch_name  , function ) :
         self.branch_name = branch_name
         self.function    = function 
-        self.output = ()
+        self.__output    = ()
     
-    def initializeLocal   ( self ) : self.output = () 
+    def initialize_local  ( self ) : self.__output = () 
+    def initialize_remote ( self ) : self.__output = () 
     def process           ( self , tree ) :
 
         import ostap.trees.trees
@@ -47,25 +47,30 @@ class AddBranch(Task) :
             ftype    = type ( function )
             function = ftype ( function )
 
-        files = set() 
+        files = set () 
         tree.chain.add_new_branch ( self.branch_name , function , verbose = False ) 
         for f in tree.files : files.add ( f )
 
         ## list of processed  files 
-        self.output = list ( files )
+        self.__output = list ( files )
+
+        return self.__output 
         
     ## merge results/datasets 
-    def _mergeResults( self , result) :
-        if not  self.output : self.output = result
+    def merge_results( self , result) :
+        
+        if not  self.__output : self.__output = result
         else :
             s = set()
-            for r in self.output : s.add ( r )
-            for r in      result : s.add ( r )
+            for r in self.__output : s.add ( r )
+            for r in      result   : s.add ( r )
             s = list ( s )
             s.sort()
-            self.output = tuple( s ) 
-
-
+            self.__output = tuple( s )
+            
+    ## get the results 
+    def results ( self ) : return self.__output
+    
 # =================================================================================
 ## Add new branch  to TChain in parallel
 #  @see ROOT.TTree.add_new_branch
@@ -121,5 +126,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+#                                                                       The END 
 # =============================================================================

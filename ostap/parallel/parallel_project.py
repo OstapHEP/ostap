@@ -49,15 +49,22 @@ class ProjectTask(Task) :
         self.histo.Reset()
         
     ## local initialization (executed once in parent process)
-    def initializeLocal   ( self ) :
+    def initialize_local   ( self ) :
         """Local initialization (executed once in parent process)
         """
         import ROOT,ostap.core.pyrouts
-        self.output = 0, self.histo.clone()
+        self.__output = 0, self.histo.clone()
     
     ## remote initialization (executed for each sub-processs)
-    def initializeRemote  ( self ) : pass 
+    def initialize_remote  ( self ) :
+        """Remote initialization (executed for each sub-processs
+        """
+        import ROOT,ostap.core.pyrouts
+        self.__output = 0, self.histo.clone()
     
+    ## finalization (executed at the end at parent process)
+    def finalize ( self ) : pass 
+
     ## the actual processing
     #   ``params'' is assumed to be a tuple/list :
     #  - the file name
@@ -92,23 +99,24 @@ class ProjectTask(Task) :
         
         ## use the regular projection  
         from ostap.trees.trees import _tt_project_ 
-        self.output = _tt_project_ ( chain      , self.output[1] ,
-                                     self.what  , self.cuts      ,
-                                     ''         ,
-                                     nevents    , first          )
+        self.__output = _tt_project_ ( chain      , self.output[1] ,
+                                       self.what  , self.cuts      ,
+                                       ''         ,
+                                       nevents    , first          )
         del item
         
-    ## finalization (executed at the end at parent process)
-    def finalize ( self ) : pass 
-
+        return self.__output 
+        
     ## merge results 
-    def _mergeResults ( self , result ) :
-        filtered    = self.output[0] + result[0] 
-        self.output[1].Add ( result[1] )
-        self.output = filtered, self.output[1]
+    def merge_results ( self , result ) :
+        filtered    = self.__output[0] + result[0] 
+        self.__output[1].Add ( result[1] )
+        self.output = filtered, self.__output[1]
         result[1].Delete () 
 
-
+    ## get the results 
+    def results (  self ) :
+        return self.__output 
     
 # =============================================================================  
 ## make a projection of the loooooooong chain into histogram using
@@ -147,10 +155,13 @@ def  cproject ( chain                ,
     
     task  = ProjectTask            ( histo , what , cuts )
     wmgr  = WorkManager   ( silent = silent )
-    wmgr.process ( task, ch.split  ( chunk_size  = chunk_size , max_files = max_files ) )
-    
-    filtered   = task.output[0] 
-    histo     += task.output[1]
+    wmgr.process ( task  , ch.split  ( chunk_size  = chunk_size , max_files = max_files ) )
+
+    ## unpack results 
+    _f , _h = task.results ()
+    filtered   = _f
+    histo     += _h
+    del _h 
     
     return filtered , histo 
 
@@ -211,8 +222,11 @@ def  tproject ( tree                 ,   ## the tree
     wmgr  = WorkManager            ( silent     = silent       )
     wmgr.process ( task, ch.split  ( chunk_size = chunk_size ) )
     
-    filtered   = task.output[0] 
-    histo     += task.output[1]
+    ## unpack results 
+    _f , _h = task.results ()
+    filtered   = _f
+    histo     += _h
+    del _h 
     
     return filtered , histo 
 
@@ -239,5 +253,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+#                                                                       The END 
 # =============================================================================

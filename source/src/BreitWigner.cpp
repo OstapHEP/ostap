@@ -83,7 +83,7 @@ namespace
     //
     if ( 0 >= r0 )           { return 0 ; }  // RETURN
     //
-    return gam0 * ( m0 / x ) * Ostap::Math::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
+    return gam0 * ( m0 / x ) * Ostap::Math::POW ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
   }
   // ==========================================================================
   std::complex<double> gamma_run_complex
@@ -114,7 +114,7 @@ namespace
     //
     if ( 0 >= r0 )           { return 0 ; }  // RETURN
     //
-    // return gam0 * ( m0 / x ) * Ostap::Math::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
+    // return gam0 * ( m0 / x ) * Ostap::Math::POW ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
     return gam0 * ( m0 / x ) * std::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
   }
   // ==========================================================================
@@ -124,7 +124,6 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
-  constexpr double s_BUKIN   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
   // ==========================================================================
 } //                                            The end of  anonymous namespace 
 // ============================================================================
@@ -1081,7 +1080,7 @@ double Ostap::Math::Rho0FromEtaPrime::operator() ( const double x ) const
   const double rho     = breit_wigner ( x ) ;
   if ( 0 >= rho         ) { return 0 ; }
   //
-  return rho * Ostap::Math::pow ( 2 * k_gamma / m_eta_prime , 3 ) * 20 ;
+  return rho * Ostap::Math::POW ( 2 * k_gamma / m_eta_prime , 3 ) * 20 ;
   //
 }
 // ============================================================================
@@ -2235,7 +2234,7 @@ bool Ostap::Math::Voigt::setSigma ( const double x )
 // ============================================================================
 double Ostap::Math::Voigt::fwhm   () const 
 {
-  const double fg = 2 * m_sigma * s_BUKIN ;
+  const double fg = 2 * m_sigma * s_Bukin ;
   return 0.5346 * m_gamma + std::sqrt ( 0.2166 * m_gamma * m_gamma + fg * fg ) ;
 }
 // ============================================================================
@@ -2347,7 +2346,7 @@ namespace
 }
 // ============================================================================
 double Ostap::Math::PseudoVoigt::fwhm_gauss()  const 
-{ return 2 * m_sigma * s_BUKIN ; }
+{ return 2 * m_sigma * s_Bukin ; }
 // ============================================================================
 void Ostap::Math::PseudoVoigt::update() 
 {
@@ -2908,7 +2907,7 @@ Ostap::Math::Gounaris23L::amplitude (  const double x ) const
   const double hp   = h_prime ( m() , k0 ) ;
   //
   const double v2 = k * k * dh + k0 * k0 * hp * ( m0_2 - x * x ) ;
-  const double v3 = Ostap::Math::pow ( k/k0 , 3 ) * m0() / x ;
+  const double v3 = Ostap::Math::POW ( k/k0 , 3 ) * m0() / x ;
   //
   return
     std::sqrt ( g0 () * m0 () ) /

@@ -1,7 +1,9 @@
 Ostap Project
 =============
-<!--[![Build Status](https://travis-ci.org/OstapHEP/ostap.svg?branch=master)](https://travis-ci.org/OstapHEP/ostap)-->
+[![Build Status](https://travis-ci.org/OstapHEP/ostap.svg?branch=master)](https://travis-ci.org/OstapHEP/ostap)
+[![Coverage Status](https://coveralls.io/repos/github/OstapHEP/ostap/badge.svg?branch=master)](https://coveralls.io/github/OstapHEP/ostap?branch=master)
 [![Build Status](https://dev.azure.com/OstapHep/OstapHep/_apis/build/status/OstapHEP.ostap?branchName=master)](https://dev.azure.com/OstapHep/OstapHep/_build/latest?definitionId=5&branchName=master)
+[![pipeline status](https://gitlab.cern.ch/ostapHep/ostaphep/badges/master/pipeline.svg)](https://gitlab.cern.ch/ostapHep/ostaphep/commits/master)
 [![Join the chat at https://gitter.im/OstapHEP/ostap](https://badges.gitter.im/OstapHEP/ostap.svg)](https://gitter.im/OstapHEP/ostap?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/81464356.svg)](https://zenodo.org/badge/latestdoi/81464356)
 
@@ -18,6 +20,24 @@ Key features include:
 -   Extended set of models.PDFs for [RooFit](https://root.cern.ch/roofit)
 -   Powerful, pickle-based persistency for object
 -   Interactive `ostap` analysis environment
+
+
+Dependencies
+------------
+- _mandatory_: [`ROOT/PyROOT`](https://root.cern.ch)
+- _highly desirable_: [`numpy`](https://numpy.org)
+   - mandatory for Fast Fourier Transform, used in histogram/function parameterization;
+   - optional for some other issues, in particular for the prime number treatment;  
+- _optional_: [`scipy`](https://www.scipy.org)
+   - numerical integration (quadratures, cubatures), root finding, minimization; 
+   - `ostap` offers home-made replacements, but the native methods from `scipy` are more efficient;
+- _optional_: [`pathos`](https://github.com/uqfoundation/pathos), [`dill`](https://github.com/uqfoundation/dill), [`multiprocess`](https://github.com/uqfoundation/multiprocess) and [`ppt`](https://github.com/uqfoundation/ppft)
+   - needed for parallel processing; 
+   - `ostap` offers a [`multiprocessing`](https://docs.python.org/2/library/multiprocessing.html)-based replacement with reduced functionality; 
+- _optional_: [`terminaltables`](https://pypi.org/project/terminaltables) 
+   - nice format of tables 
+         - in particular for nice printout for `ROOT.TTree`, `ROOT.TChain`, `ROOT.RooDataSet`, ... ;
+   - `ostap` offers a home-made replacement with a bit reduced functionalty.  
 
 Setup
 -----
@@ -45,6 +65,12 @@ After setting the enviroments clone the latest released version and build Ostap 
     make install
     source <INSTALL_DIRECTORY>/thisostap.sh 
 For the latest tag check the page https://github.com/OstapHEP/ostap/releases
+To update the package to latest version use following command:
+
+    git pull origin <latest tag>
+or to get the head version use:
+
+    git pull origin master
 
 Docker
 -----
@@ -85,6 +111,6 @@ To activate or deactivate the ostap environment use the following command
 
     conda activate ostap-env 
     conda deactivate  
-    
+The list of available version you can find here: https://anaconda.org/conda-forge/ostaphep/files.
 To know more about conda-forge, please visit conda page: https://conda-forge.org.
 

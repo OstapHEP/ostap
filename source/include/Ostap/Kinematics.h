@@ -84,10 +84,8 @@ namespace Ostap
      *  the covarinace matrix
      *
      *  @code
-     *
-     *   const LHCb::Particle* p = ... ;
-     *   double s2m = sigma2mass ( p -> momentum() , p -> momCovMatrix() ) ; 
-     *
+     *  const LHCb::Particle* p = ... ;
+     *  double s2m = sigma2mass ( p -> momentum() , p -> momCovMatrix() ) ; 
      *  @endcode
      *  
      *  @attention the correct result is returned only for time-like vectors! 
@@ -128,10 +126,8 @@ namespace Ostap
      *  the covarinace matrix
      *
      *  @code
-     *
-     *   const LHCb::Particle* p = ... ;
-     *   double sigma = sigmamass ( p -> momentum() , p -> momCovMatrix() ) ; 
-     *
+     *  const LHCb::Particle* p = ... ;
+     *  double sigma = sigmamass ( p -> momentum() , p -> momCovMatrix() ) ; 
      *  @endcode
      *  
      *  @attention the correct result is returned only for time-like vectors!
@@ -165,14 +161,11 @@ namespace Ostap
     /** evaluate the chi2 of the mass 
      *
      *  @code
-     *
      *   const LHCb::Particle* B = ... ;
-     *
      *   const double chi2 = 
      *       chi2mass ( 5.279 * GeV , 
      *                  B -> momentum()           , 
      *                  B -> momCovMatrix()       ) ; 
-     *
      *  @endcode
      *  
      *  @param mass       (in) nominal mass
@@ -211,13 +204,11 @@ namespace Ostap
     }
     // ========================================================================
     /** evaluate the dispersion of p from the particle 4-vector and 
-  *  the covarinace matrix
+     *  the covarinace matrix
      *
      *  @code
-     *
      *   const LHCb::Particle* p = ... ;
      *   double s2p = sigma2p ( p -> momentum() , p -> momCovMatrix() ) ; 
-     *
      *  @endcode
      *  
      *  @param momentum   (in) the particle momentum
@@ -386,10 +377,8 @@ namespace Ostap
      *  the covariance matrix
      *
      *  @code
-     *
-     *   const LHCb::Particle* p = ... ;
-     *   double s2y = sigma2y ( p -> momentum() , p -> momCovMatrix() ) ; 
-     *
+     *  const LHCb::Particle* p = ... ;
+     *  double s2y = sigma2y ( p -> momentum() , p -> momCovMatrix() ) ; 
      *  @endcode
      *  
      *  @param momentum   (in) the particle momentum
@@ -528,12 +517,13 @@ namespace Ostap
     // ========================================================================
     /** @class Gram
      *  Calculate a few simplest Gram determinants:
-     *  \f$ G\left( \begin{array}{lcr} p_1, & ... & p_n \\ 
-     *                                 q_1, & ... & q_n \right) \equiv 
+     *  \f[ G\left( \begin{array}{lcr} p_1, & ... & p_n \\ 
+     *                                 q_1, & ... & q_n \end{array} \right) 
+     *  \equiv 
      *  \left| \begin{array}{lcl}
      *    p_1q_1   & ... &   p_1q_n \\
      *    ...      & ... &   ...    \\
-     *    p_nq_1   & ... &   p_nq_n \right|\f$          
+     *    p_nq_1   & ... &   p_nq_n  \end{array} \right| \f]          
      *
      *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
      *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
@@ -547,11 +537,11 @@ namespace Ostap
     public:
       // ======================================================================
       /** non-symmetric Gram determinant
-       *  \f$ G \left(\begin{array}{ll} p_1 , & p_2 \\
-       *                                q_1 , & q_2 \end{array}\right) 
+       *  \f[ G \left(\begin{array}{ll} p_1  & p_2 \\
+       *                                q_1  & q_2 \end{array}\right) 
        *  = \left| \begin{array}{ll}
        *  p_1q_1 & p_1q_2 \\
-       *  p_2q_1 & p_2q_2 \end{array} \right| f\$
+       *  p_2q_1 & p_2q_2 \end{array} \right| \f]
        */
       static double G 
       ( const Ostap::LorentzVector& p1 , 
@@ -560,12 +550,12 @@ namespace Ostap
         const Ostap::LorentzVector& q2 ) ;
       // ======================================================================
       /** non-symmetric Gram determinant
-       *  \f$ G \left(\begin{array}{lll} p_1 , & p_2, & p_3 \\
-       *                                 q_1 , & q_2, & q_3 \end{array}\right) 
+       *  \f[ G \left(\begin{array}{lll} p_1  & p_2  & p_3 \\
+       *                                 q_1  & q_2  & q_3 \end{array}\right) 
        *  = \left| \begin{array}{lll}
        *  p_1q_1 & p_1q_2 & p_1q_3 \\
        *  p_2q_1 & p_2q_2 & p_2q_3 \\
-       *  p_3q_1 & p_3q_2 & p_3q_3 \end{array} \right| f\$
+       *  p_3q_1 & p_3q_2 & p_3q_3 \end{array} \right| \f]
        */
       static double G 
       ( const Ostap::LorentzVector& p1 , 
@@ -576,13 +566,13 @@ namespace Ostap
         const Ostap::LorentzVector& q3 ) ;
       // ======================================================================
       /** non-symmetric Gram determinant
-       *  \f$ G \left(\begin{array}{llll} p_1 , & p_2,& p_3, &p_4 \\
-       *                                 q_1 , & q_2, & q_3, &q_4 \end{array}\right) 
+       *  \f[ G \left(\begin{array}{llll} p_1  & p_2  & p_3 & p_4 \\
+       *                                  q_1  & q_2  & q_3 & q_4 \end{array}\right) 
        *  = \left| \begin{array}{llll}
        *  p_1q_1 & p_1q_2 & p_1q_3 & p_1q_4\\
        *  p_2q_1 & p_2q_2 & p_2q_3 & p_2q_4\\
        *  p_3q_1 & p_3q_2 & p_3q_3 & p_3q_4\\ 
-       *  p_4q_1 & p_4q_2 & p_4q_3 & p_4q_4\end{array} \right| f\$
+       *  p_4q_1 & p_4q_2 & p_4q_3 & p_4q_4\end{array} \right| \f]
        */
       static double G 
       ( const Ostap::LorentzVector& p1 , 
@@ -605,9 +595,9 @@ namespace Ostap
       ( const Ostap::LorentzVector& p1 ) ;
       // ======================================================================
       /** symmetric Gram determinant
-       *  \f$ Delta( p_1, p_2) \equiv 
-       *   G \left( \begin{array}{ll}p_1,& p_2 \\ 
-       *                             p_1,& p_2 \end{array} \right) \f$ 
+       *  \f[ Delta( p_1, p_2) \equiv 
+       *   G \left( \begin{array}{ll}p_1 & p_2 \\ 
+       *                             p_1 & p_2 \end{array} \right) \f] 
        *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
        *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
        *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
@@ -617,9 +607,9 @@ namespace Ostap
         const Ostap::LorentzVector& p2 ) ;
       // ======================================================================
       /** symmetric Gram determinant
-       *  \f$ Delta( p_1, p_2, p_3 ) \equiv 
-       *   G \left( \begin{array}{lll}p_1,& p_2, &p_3 \\ 
-       *                              p_1,& p_2, &p_3 \end{array} \right) \f$ 
+       *  \f[ Delta( p_1, p_2, p_3 ) \equiv 
+       *   G \left( \begin{array}{lll}p_1 & p_2 & p_3 \\ 
+       *                              p_1 & p_2 & p_3 \end{array} \right) \f] 
        *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
        *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
        *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
@@ -630,9 +620,9 @@ namespace Ostap
         const Ostap::LorentzVector& p3 ) ;
       // ======================================================================
       /** symmetric Gram determinant
-       *  \f$ Delta( p_1, p_2, p_3, p_4 ) \equiv 
-       *   G \left( \begin{array}{llll}p_1,& p_2, &p_3,&p_4 \\ 
-       *                               p_1,& p_2, &p_3,&p_4 \end{array} \right) \f$ 
+       *  \f[ Delta( p_1, p_2, p_3, p_4 ) \equiv 
+       *   G \left( \begin{array}{llll}p_1 & p_2 &p_3 &p_4 \\ 
+       *                               p_1 & p_2 &p_3 &p_4 \end{array} \right) \f] 
        *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
        *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
        *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
@@ -657,8 +647,8 @@ namespace Ostap
     /** simple function which evaluates the magnitude of 3-momentum
      *  of particle "v" in the rest system of particle "M"
      *
-     *  \f{displaymath} \left|\vec{p}\right| =
-     *     \sqrt{  \frac{\left(v\cdot M\right)^2}{M^2} -v^2} \f}
+     *  \f[ \left|\vec{p}\right| =
+     *     \sqrt{  \frac{\left(v\cdot M\right)^2}{M^2} -v^2} \f]
      *
      *  Note that this is clear Lorentz invarinat expresssion.
      *
@@ -692,7 +682,7 @@ namespace Ostap
     ( const Ostap::LorentzVector& v ,
       const Ostap::LorentzVector& M ) ;
     // =======================================================================
-    /**  simple function for evaluation of the euclidiam norm
+    /** simple function for evaluation of the euclidiam norm
      *  for LorentzVectors (E**2+Px**2+Py**2+Pz**2)
      *  @param vct the vector
      *  @return euclidian norm squared
@@ -703,9 +693,9 @@ namespace Ostap
     /** simple function which evaluates the transverse
      *  momentum with respect a certain 3D-direction:
      *
-     * \f$ r_T = \left| \vec{r} \right| = \left| \vec{v} -
+     * \f[ r_T = \left| \vec{r} \right| = \left| \vec{v} -
      *    \vec{d}\frac{\left(\vec{v}\vec{d}\right)}
-     *  { \left| \vec{d} \right|^2 } \right| \f$
+     *  { \left| \vec{d} \right|^2 } \right| \f]
      *
      *  @param mom the momentum
      *  @param dir the direction
@@ -720,9 +710,9 @@ namespace Ostap
     /** simple function which evaluates the transverse
      *  momentum with respect a certain 3D-direction:
      *
-     * \f$ r_T = \left| \vec{r} \right| =  = \left| \vec{v} -
+     * \f[ r_T = \left| \vec{r} \right| =  = \left| \vec{v} -
      * \vec{d}\frac{\left(\vec{v}\vec{d}\right)}
-     *  { \left| \vec{d} \right|^2 } \right| \f$
+     *  { \left| \vec{d} \right|^2 } \right| \f]
      *
      *  @param mom the momentum
      *  @param dir the direction
@@ -847,7 +837,7 @@ namespace Ostap
     /** Cosine of the angle between p1 and p2 in the rest frame of M
      *  \f$ \cos \theta = - \frac 
      *  { G   \left( \begin{array}{ll} M, &p_1 \\ M,& p_2 \end{array}\right) }
-     *  { \left\[ \Delta_2(M,p_1)\Delta_2(M,p_2)\right\]^{1/2} }\f$  
+     *  { \left[ \Delta_2(M,p_1)\Delta_2(M,p_2)\right]^{1/2} }\f$  
      *  @param v1 the first vector
      *  @param v2 the last vector
      *  @param M  the defintion of rest-system
@@ -904,17 +894,17 @@ namespace Ostap
      *  of "mother" particles (defined as d1+d2+h1+h2)
      *
      *  The angle is evaluated using the explicit
-     *  Lorenzt-invariant expression:
+     *  Lorentz-invariant expression:
      *  \f[
      *  \cos \chi =
      *   - \frac{ L_D^{\mu} L_H^{\mu} }
      *     { \sqrt{ \left[ -L_D^2 \right]\left[ -L_H^2 \right] }},
-     &   =
+     *   =
      *   - \frac{
-           *     \epsilon_{ijkl}d_1^{j}d_2^{k}\left(h_1+h_2\right)^l
+     *     \epsilon_{ijkl}d_1^{j}d_2^{k}\left(h_1+h_2\right)^l
      *     \epsilon_{imnp}h_1^{m}h_2^{n}\left(d_1+d_2\right)^p }
      *     { \sqrt{ \left[ -L_D^2 \right]\left[ -L_H^2 \right] }},
-     *  \f]
+     *  \f],
      *  where "4-normales" are defined as:
      *  \f[
      *   L_D^{\mu} = \epsilon_{\mu\nu\lambda\kappa}
@@ -948,8 +938,7 @@ namespace Ostap
      *
      *  The angle is  calculated using the explicit
      *   Lorentz-invariant expression:
-     *  \f[
-     *   \sin \chi =
+     *  \f[ \sin \chi =
      *   \frac  {
      *   \epsilon_{\mu\nu\lambda\delta}
      *   L_D^{\mu}L_H^{\nu}H^{\lambda}M^{\delta} }
@@ -963,17 +952,12 @@ namespace Ostap
      *   { \sqrt{
      *   \left[ -L_D^2 \right]\left[ -L_H^2    \right]
      *   \left[ \left(H\cdot M\right)^2-H^2M^2 \right]
-     *   }},
-     *  \f]
+     *   }} \f],
      *  where "4-normales" are defined as:
-     *  \f$
-     *  L_D^{\mu} = \epsilon_{\mu\nu\lambda\kappa}
-     *                d_1^{\nu}d_2^{\lambda}\left(h_1+h_2\right)^{\kappa}
-     *  \f$,
-     *  \f$
-     *  L_H^{\mu} = \epsilon_{\mu\lambda\delta\rho}
-     *  h_1^{\lambda}h_2^{\delta}\left(d_1+d_2\right)^{\rho}
-     *  \f$
+     *  \f$ L_D^{\mu} \equiv \epsilon_{\mu\nu\lambda\kappa}
+     *                d_1^{\nu}d_2^{\lambda}\left(h_1+h_2\right)^{\kappa} \f$,
+     *  \f$ L_H^{\mu} \equiv \epsilon_{\mu\lambda\delta\rho}
+     *  h_1^{\lambda}h_2^{\delta}\left(d_1+d_2\right)^{\rho} \f$
      *  and   \f$ D = d_1 + d_2 \f$,
      *        \f$ H = h_1 + h_2 \f$,
      *        \f$ M = D + H = d_1 + d_2 + h_1+h_2 \f$.

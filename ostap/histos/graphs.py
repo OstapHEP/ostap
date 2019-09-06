@@ -1014,12 +1014,12 @@ def _gr_ymax_ ( graph ) :
     >>> graph = ...
     >>> ymax  = graph.ymax () 
     """    
-    yxm  = None
-    np   = len(graph) 
-    for ip in range( np ) :
+    ymx  = None
+    np   = len ( graph ) 
+    for ip in range ( np ) :
         x , y = graph[ip] 
         if None == ymx or y >= ymx : ymx = y
-    return xmx
+    return ymx
 
 # =============================================================================
 ## get minimal-x 
@@ -1097,11 +1097,11 @@ def _gre_ymax_ ( graph ) :
     >>> graph = ...
     >>> ymax  = graph.ymax () 
     """    
-    yxm  = None
+    ymx  = None
     np   = len(graph) 
     for ip in range( np ) :
         x , y = graph[ip] 
-        y = y.value() + y.error() 
+        y = y.value() + abs ( y.error() ) 
         if None == ymx or y >= ymx : ymx = y
     return xmx
 

@@ -133,8 +133,13 @@ model_sim  = Models.SimFit (
 r , f = model_sim.fitTo ( dataset , silent = True )
 r , f = model_sim.fitTo ( dataset , silent = True )
 
-fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
+fA    = model_sim.draw ( 'A' , dataset , nbins = 50 )
+fB    = model_sim.draw ( 'B' , dataset , nbins = 50 )
+
+fNLL  = model_sim.draw_nll ( 'SM2' , dataset , range =   (0,1000)  )
+
+## significance 
+wilks = model_sim.wilks    ( 'SM2' , dataset  )
 
 logger.info ( 'Fit  results are: %s ' % r )
 

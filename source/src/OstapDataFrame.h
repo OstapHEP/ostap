@@ -31,7 +31,7 @@ namespace
   inline bool primitive ( const std::string& name )
   { return std::string::npos == name.find_first_of ( s_SYMBOLS ) ; }
   // ==========================================================================
-  /// is selection/weight a trivial one? 
+  /// is this selection/weight a trivial one? 
   inline bool trivial ( const std::string& selection ) 
   {
     return 
@@ -40,6 +40,7 @@ namespace
       "1."   == selection || 
       "1.0"  == selection || 
       "true" == selection || 
+      "True" == selection || 
       std::string::npos == selection.find_first_not_of (' ') ;
   }
   // ==========================================================================

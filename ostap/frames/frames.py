@@ -12,11 +12,11 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'DataFrame'   , ## RDataFrame object 
+    'DataFrame'   , ## RDataFrame object
+    'report_prnt' , ## print the report 
     ) 
 # =============================================================================
 import ROOT
-from ostap.core.core import cpp, Ostap 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -26,18 +26,21 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for ROOT::RDataFrame objects')
 # =============================================================================
+from   ostap.core.core    import cpp, Ostap 
+from   ostap.logger.utils import multicolumn
+# =============================================================================
 try : 
     DataFrame = ROOT.ROOT.RDataFrame
 except AttributeError :
     DataFrame = ROOT.ROOT.Experimental.TDataFrame 
-
+# =============================================================================
 Ostap.DataFrame    = DataFrame 
 
-DataFrame.columns  = lambda s : tuple( s.GetColumnNames() ) 
+DataFrame.columns  = lambda s : tuple ( s.GetColumnNames() ) 
 DataFrame.branches = DataFrame.columns 
 
 # ==============================================================================
-## modify constuctor for RDataFrame to enable/disbale implicit multithreading
+## modify constructor for RDataFrame to enable/disable Implicit multithreading
 #  @code
 #  f1 = DataFrame ( ... , enable = True  ) ## default
 #  f2 = DataFrame ( ... , enable = False ) ## default
@@ -47,7 +50,7 @@ DataFrame.branches = DataFrame.columns
 #  @see ROOT::IsImplicitMTEnabled
 def _fr_new_init_ ( self , *args , **kwargs ) :
     """Modify the DataFrame constuctor to allow (semi)automatic
-    manipulations wth ROOT.ROOT.EnablemplicitMT/DisableImplicitMT
+    manipulations wth ROOT.ROOT.EnableImplicitMT/DisableImplicitMT
     - see ROOT.ROOT.EnableImplicitMT 
     - see ROOT.ROOT.DisableImplicitMT
     - see ROOT.ROOT.IsImplicitMTEnabled
@@ -146,7 +149,6 @@ def _fr_statCov_ ( frame       ,
         
     return stat1 , stat2 , cov2 , length
 
-
 # =============================================================================
 ## Simplified print out for the  frame 
 #  @code 
@@ -160,11 +162,57 @@ def _fr_print_ ( t ) :
     >>> print frame
     """
     ##
-    res = "Frame Enries/#%d" %  len ( t )  
+    res = "DataFrame Enries/#%d" %  len ( t )  
     ##
-    _b          = t.columns ()
-    res        +=        "\nBranches: %s" % list( _b )
+    _c          = list ( t.columns () )
+    _c.sort ()  
+    res        += "\nColumns:\n%s" % multicolumn ( _c , indent = 2 , pad = 1 )
     return res
+
+# ===============================================================================
+## Print the frame report
+def report_prnt ( report , title  = '' , prefix = '' ) :
+    """Print a frame report
+    """
+    from ostap.core.core import binomEff
+    table  = []
+    lmax   = 5
+    n0     = -1 
+    for c in report :
+        if  n0 <= 0 : n0 = c.GetAll () 
+        name    = c.GetName ()
+        passed  = c.GetPass ()
+        all     = c.GetAll  ()
+        eff1    = binomEff  ( passed , all ) * 100 
+        eff2    = binomEff  ( passed ,  n0 ) * 100 
+        table.append (  ( name , passed , all , eff1 , eff2 )  )
+        lmax    = max ( len ( name ) , lmax , len ( 'Filter' ) )
+
+    lmax          =  max ( lmax + 2 , len ( 'Selection' ) + 2 )
+    fmt_name      =  '%%-%ds ' % lmax 
+    fmt_input     =  '%10d'
+    fmt_passed    =  '%-10d'
+    fmt_eff       =  '%8.3g +- %-8.3g'
+    fmt_cumulated =  '%8.3g +- %-8.3g'
+    
+    
+    header = ( ( '{:^%d}' % lmax ).format ( 'Filter'   ) ,               
+               ( '{:>10}'        ).format ( '#input '  ) ,
+               ( '{:<10}'        ).format ( ' #passed' ) ,
+               ( '{:^20}'        ).format ( 'efficiency [%]' ) ,
+               ( '{:^20}'        ).format ( 'cumulated efficiency [%]' ) )
+
+    table_data = [ header ]
+    for entry in table :
+        n, p, a , e1 , e2 = entry
+        table_data.append ( ( fmt_name      % n ,
+                              fmt_input     % a ,
+                              fmt_passed    % p  ,
+                              fmt_eff       % ( e1.value () , e1.error () ) ,
+                              fmt_cumulated % ( e2.value () , e2.error () ) ) )
+        
+    import ostap.logger.table as T
+    return T.table ( table_data , title , prefix )
 
 # ==============================================================================
 # decorate 
@@ -177,7 +225,6 @@ DataFrame .nEff       = _fr_nEff_
 DataFrame .statVar    = _fr_statVar_
 DataFrame .statCov    = _fr_statCov_
 
-
 from ostap.stats.statvars import  data_decorate 
 data_decorate ( DataFrame )
 del data_decorate
@@ -185,46 +232,6 @@ del data_decorate
 from ostap.fitting.dataset import ds_draw , ds_project
 DataFrame.draw    = ds_draw
 DataFrame.project = ds_project
-
-## # =============================================================================
-## def _fproject_ ( tree , histo ,  what , cuts ) :
-
-##     assert isinstance ( what , ( str , ROOT.TCut ) ) , "Invalid ``what'':%s" % what
-##     assert isinstance ( cuts , ( str , ROOT.TCut ) ) , "Invalid ``cuts'':%s" % cuts
-    
-##     what = str ( what )
-##     cuts = str ( cuts )
-
-##     frame = DataFrame ( tree ).Filter ( cuts ) 
-
-##     if isinstance ( histo , ROOT.TProfile2D ) :
-##         histo  = ROOT.ROOT.RDF.TProfile2DModel ( histo ) 
-##         return frame.Profile2D
-
-    
-##         return _fproject_ ( tree , ROOT.ROOT.RDF.TProfile2DModel ( histo ) , what , cuts )                             
-##     elif isinstance ( histo , ROOT.TProfile   ) :
-##         return _fproject_ ( tree , ROOT.ROOT.RDF.TProfile1DModel ( histo ) , what , cuts )
-##     elif isinstance ( histo , ROOT.TH3 ) :
-##         if isinstance ( histo,  ROOT.TH3D ) :
-##             return _fproject_ ( tree , ROOT.ROOT.RDF.TH3DModel  ( histo ) , what , cuts )
-##         return _fproject_ ( tree , ROOT.TH3D ( hd ) , what , cuts )
-##     elif isinstance ( histo , ROOT.TH2 ) :
-##         if isinstance ( histo,  ROOT.TH2D ) :
-##             return _fproject_ ( tree , ROOT.ROOT.RDF.TH2DModel  ( histo ) , what , cuts )
-##         return _fproject_ ( tree , ROOT.TH2D ( hd ) , what , cuts )
-##     elif isinstance ( histo , ROOT.TH1 ) :
-##         if isinstance ( histo,  ROOT.TH1D ) :
-##             return _fproject_ ( tree , ROOT.ROOT.RDF.TH1DModel  ( histo ) , what , cuts )
-##         return _fproject_ ( tree , ROOT.TH1D ( hd ) , what , cuts )
-
-##     if not ROOT.ROOT.IsImplicitMTEnabled() :
-##         ROOT.ROOT.EnableImplicitMT() :
-
-##     frame = DataFrame ( tree )
-    
-##     h1    = frame.Filter ( cuts ).Histo1D
-    
 
 
 _decorated_classes_ = (

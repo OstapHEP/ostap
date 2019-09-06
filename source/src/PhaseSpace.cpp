@@ -149,7 +149,7 @@ double Ostap::Math::PhaseSpace2::phasespace
   static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
   //
   return 0 < lam ?
-    s_inv8pi * Ostap::Math::pow ( std::sqrt ( lam ) / msq , 2 * L + 1 ) : 0.0 ;
+    s_inv8pi * Ostap::Math::POW ( std::sqrt ( lam ) / msq , 2 * L + 1 ) : 0.0 ;
 }
 // ============================================================================
 /*  calculate the particle momentum in rest frame

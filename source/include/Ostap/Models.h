@@ -1667,9 +1667,9 @@ namespace Ostap
        *  @param T    T-parameter    (T>0)
        */
       Tsallis
-        ( const double mass         = 0   ,
-          const double n            = 10  ,
-          const double T            = 1.1 ) ;
+      ( const double mass         = 0   ,
+        const double n            = 10  ,
+        const double T            = 1.1 ) ;
       /// destructor
       ~Tsallis() ;
       // ======================================================================

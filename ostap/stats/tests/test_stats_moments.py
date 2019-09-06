@@ -29,8 +29,8 @@ from   ostap.stats.moments import  ( Mean          ,
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_stats_moments' )
-else                       : logger = getLogger ( __name__        )
+if '__main__' ==  __name__ : logger = getLogger ( 'test_stats_moments' )
+else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
 
 # ============================================================================= 

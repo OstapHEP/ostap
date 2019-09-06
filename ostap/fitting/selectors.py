@@ -107,12 +107,13 @@ import ROOT, cppyy, math, sys
 # =============================================================================
 # logging 
 # =============================================================================
-from   ostap.logger.logger import getLogger, attention, allright
+from   ostap.logger.logger    import getLogger
+from   ostap.logger.colorized import attention, allright
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-from   ostap.core.core     import cpp, Ostap, items_loop 
-from   ostap.core.ostap_types    import num_types
+from   ostap.core.core        import cpp, Ostap, items_loop 
+from   ostap.core.ostap_types import num_types, string_types, integer_types  
 import ostap.fitting.roofit 
 # =============================================================================
 ## C++ Selector 
@@ -167,14 +168,23 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
     """Efficient selector that runs only for ``good''-events  
     """
     ## constructor 
-    def __init__ ( self , selection ) :
+    def __init__ ( self , selection , silence = False ) :
         """ Standart constructor
         """
+        self.__silence = silence
+
         ## initialize the base
-        self.__selection = str ( selection ) 
-        Ostap.SelectorWithCuts.__init__ ( self , selection , None , self )
-        if not self.cuts() :
-            raise RuntimeError ("__init__:  Invalid Formula %s " % self.cuts() )
+        self.__selection = str ( selection ).strip()  
+        Ostap.SelectorWithCuts.__init__ ( self , self.selection , None , self )
+        
+        if self.cuts () and not self.silence :
+            logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
+            
+    @property
+    def silence ( self ) :
+        """``silence''  : silent processing?"""
+        return self.__silence 
+    
     @property
     def selection ( self ) :
         """``selection'' -  selection to be used to preprocess TTree/TChain"""
@@ -185,13 +195,12 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
     def SlaveTerminate ( self               ) : pass 
     def Begin          ( self , tree = None ) : pass
     def SlaveBegin     ( self , tree        ) :
-        if not self.ok() or not self.formula() :
-            raise RuntimeError ("SlaveBegin:Invalid Formula %s " % self.cuts() )        
+        if not self.ok () :
+            raise RuntimeError ( "SlaveBegin:Invalid Formula %s " % self.cuts () )        
     def Init           ( self , tree        ) :
-        if not self.ok() or not self.formula() :
-            raise RuntimeError ("Init:      Invalid Formula %s " % self.cuts() )
+        if not self.ok () :
+            raise RuntimeError ( "Init:      Invalid Formula %s " % self.cuts () )
         
-
     ## the major method
     def Process        ( self , entry       ) :
         """The major method 
@@ -204,7 +213,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         #
         
         return 1
-    
+
 # =============================================================================
 _maxv =  0.95 * sys.float_info.max
 _minv = -0.95 * sys.float_info.max
@@ -255,6 +264,9 @@ class Variable(object) :
         assert accessor is None or callable ( accessor ) or isinstance ( accessor , str )  , \
                "Variable: illegal type for ``accessor'' %s/%s"  % ( accessor    , type ( accessor    ) )
 
+        self.__vmin = None
+        self.__vmax = None
+        
         if isinstance ( var , str ) :
 
             var = var.strip() 
@@ -274,6 +286,8 @@ class Variable(object) :
             description = description.replace('\n',' ')
 
             ## create the variable
+            self.__vmin = vmin 
+            self.__vmax = vmax 
             var = ROOT.RooRealVar ( var , description , vmin , vmax ) 
 
         if accessor is None :
@@ -284,7 +298,7 @@ class Variable(object) :
         if isinstance  ( accessor , str ) :
             accessor = accessor.strip() 
             if accessor  : 
-                from ostap.trees.funcs import FormulaFunc as FuncVar
+                from ostap.trees.funcs import FuncFormula as FuncVar
                 self.__formula  = accessor 
                 accessor = FuncVar ( accessor ) 
 
@@ -310,7 +324,21 @@ class Variable(object) :
     @property
     def minmax      (  self ) :
         """``minmax'' - the range for the variable """
-        return self.__minmax 
+        return self.__minmax    
+    @property
+    def vmin ( self ) :
+        """``vmin'' : minimal value (if set) """
+        if not self.__vmin is None : return self.__vmin
+        mnmx = self.minmax
+        if mnmx : return mnmx  [0]
+        return None    
+    @property
+    def vmax ( self ) :
+        """``vmax'' : maximal value (if set) """
+        if not self.__vmax is None : return self.__vmax
+        mnmx = self.minmax
+        if mnmx : return mnmx [1]
+        return None    
     @property
     def accessor    ( self ) :
         """``accessor'' - the actual callable to get the value from TTree/TChain"""
@@ -325,8 +353,15 @@ class Variable(object) :
         """``trivial'' - is this variable ``trivial''?"""
         return self.__formula ## and self.__formula == self.name
 
+    @property
+    def really_trivial ( self ) :
+        """``really_trivial'' - is it really trivia enough for RooFit?"""
+        triv = self.trivial 
+        return triv and  ( not '[' in triv ) and ( not ']' in triv )
+
+
 # =============================================================================
-## is this expression corresponds to valid formula?
+## is this expression corresponds to a valid RooFit formula?
 def valid_formula ( expression , varset ) :
 
     if isinstance ( expression , ROOT.TCut ) : expression =  str ( expression )
@@ -352,12 +387,51 @@ def valid_formula ( expression , varset ) :
     return fok
             
 # ==============================================================================
+## @class SelStat
+#  Helper class to keep the statististics for SelectorWithVars 
+class SelStat(object) :
+    """Helper class to keep the statististics for SelectorWithVars
+    """
+    def __init__ ( self ,  total = 0 , processed = 0 , skipped = 0 ) :
+        self.__total     = total
+        self.__processed = processed 
+        self.__skipped   = skipped  
+
+    @property
+    def total ( self ) :
+        """``total''   : total number of events"""
+        return self.__total
+    @total.setter
+    def total ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value ,\
+               "Invalid value for ``total''"
+        self.__total = value
+            
+    @property
+    def processed ( self ) :
+        """``processed''   : number of processed events"""
+        return self.__processed
+    @processed.setter
+    def processed ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value ,\
+               "Invalid value for ``processed''"
+        self.__processed = value
+        
+    @property
+    def skipped ( self ) :
+        """``skipped''   : number of skipped events (e.g. due to variabel ranges)"""
+        return self.__skipped
+    @skipped.setter
+    def skipped ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value ,\
+               "Invalid value for ``skipped''"
+        self.__skipped = value
+
+# ==============================================================================
 ## Define generic selector to fill RooDataSet from TChain
 #
 #  @code
-# 
 #  variables = [ ... ]
-#
 #  ## add a variable 'my_name1' from the tree/chain 
 #  variables += [ 
 #   #  name       descriptor           min-value , max-value  
@@ -384,18 +458,14 @@ def valid_formula ( expression , varset ) :
 #   Variable ( 'my_name4' , 'my_description4' , low       , high      , myvar ) 
 #  ]
 #
-#
 #  ## add already booked variables: 
 #  v5 = ROOT.RooRealVal( 'my_name5' )
 #  variables += [  Variable ( v5 , accessor = lambda s : s.var5 ) ]
 #
-#  
 #  ## add already booked variables: 
 #  v6 = ROOT.RooRealVal( 'my_name6' )
 #  variables += [  Variable ( v6                     ) ] ## get variable "my_name6"
 #
-#
-#  #
 #  ## finally create selector
 #  # 
 #  selector = SelectorWithVars (
@@ -405,7 +475,6 @@ def valid_formula ( expression , varset ) :
 #  chain = ...
 #  chain.process ( selector )
 #  dataset = selector.dataset
-# 
 #  @endcode
 #  @date   2014-03-02
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -477,21 +546,19 @@ class SelectorWithVars(SelectorWithCuts) :
             
         if not fullname : fullname = name 
 
-        self.__name = name 
+        self.__name     = name
+        self.__fullname = fullname 
         #
         ## create the logger 
         #
         from ostap.logger.logger  import getLogger
         self.__logger = logger ## getLogger ( fullname ) 
         #
-        self.__silence  = silence
-
-        ##
         assert 0 < len(variables) , "Empty list of variables"
         #
         ## instantiate the base class
         # 
-        SelectorWithCuts.__init__ ( self , selection ) ## initialize the base
+        SelectorWithCuts.__init__ ( self , selection , silence ) ## initialize the base
 
         self.__cuts      = cuts
         self.__variables = [] 
@@ -514,8 +581,10 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__varset   .add    ( vv.var )
             #
             if   vv.trivial and vv.name == vv.formula : pass
+            elif vv.really_trivial                    : pass
             elif vv.formula                           : pass
-            else                                      : self.__triv_vars = False
+            else                                      :
+                self.__triv_vars = False
             #
             vvars.add ( vv ) 
             
@@ -525,13 +594,13 @@ class SelectorWithVars(SelectorWithCuts) :
         triv_cuts        = not cuts
         
         self.__trivial = self.__triv_vars and self.__triv_sel and triv_cuts
-        if not silence :
-            tv = allright ( 'True' )  if  self.__triv_vars else  attention ( 'False' )
-            ts = allright ( 'True' )  if  self.__triv_sel  else  attention ( 'False' )
-            tc = allright ( 'True' )  if  triv_cuts        else  attention ( 'False' )
+        if not self.silence :
+            tv = allright ( 'True' ) if self.__triv_vars else attention ( 'False' )
+            ts = allright ( 'True' ) if self.__triv_sel  else attention ( 'False' )
+            tc = allright ( 'True' ) if triv_cuts        else attention ( 'False' )
             self.__logger.info ( "Suitable for fast processing: variables:%s, selection:%s, py-cuts:%s" % ( tv , ts , tc ) )
             
-        if not self.__silence: 
+        if not self.silence: 
             nl = 0
             dl = 0 
             for v in self.__variables :
@@ -539,25 +608,37 @@ class SelectorWithVars(SelectorWithCuts) :
                 dl = max ( dl , len( v.description ) )                 
             dl = max ( dl , len ( 'Description' ) + 2 ) 
             nl = max ( nl , len ( 'Variable'    ) + 2 ) 
-        
-            line1    = '\n# | %%%ds | %%-%ds |         min / max         | Trivial? | ' % ( nl , dl ) 
-            line2    = '\n# | %%%ds | %%-%ds | %%+11.3g / %%-+11.3g | %%s | ' % ( nl , dl )         
-            the_line = 'Booked %d  variables:' % len ( self.variables ) 
-            sep      = '\n# +%s+%s+%s+%s+' % ( (nl+2)*'-' , (dl+2)*'-' , 27*'-', 10*'-' )
-            the_line += sep 
-            the_line += line1 % ( 'Variable' , 'Description' )
-            the_line += sep
-            for v in self.__variables :
-                trivial = allright ('True') + 4* ' ' if v.trivial else attention ( 'False' ) + 3 * ' '
-                    
-                fmt = line2 % ( v.name        , 
-                                v.description ,
-                                v.minmax[0]   ,
-                                v.minmax[1]   ,
-                                trivial       )
-                the_line += fmt
-            the_line += sep 
-            self.__logger.info ( the_line )
+
+            fmt_name = '%%%ds' % nl
+            fmt_desc = '%%%ds' % dl
+            fmt_min  = '%+11.3g'
+            fmt_max  = '%-+11.3g'
+            fmt_triv = '%4s' 
+            
+            header = ( ( '{:^%d}' % nl ).format ( 'Variable'    ) ,
+                       ( '{:^%d}' % dl ).format ( 'Description' ) ,
+                       ( '{:>11}'      ).format ( 'min '        ) ,
+                       ( '{:<11}'      ).format ( ' max'        ) ,
+                       ( '{:^8}'       ).format ( 'Trivial?'    ) )
+            
+            table_data =  [ header ]
+            for v in  self.__variables :
+                triv = allright ( '    {:<4}'.format('yes') ) if v.really_trivial else attention ( '    {:<4}'.format ( 'no' ) )            
+                triv = allright ( 'Yes' ) if v.really_trivial else attention ( 'No' )            
+                table_data.append ( ( fmt_name % v.name        ,
+                                      fmt_desc % v.description ,
+                                      fmt_min  % v.minmax [0]  ,
+                                      fmt_max  % v.minmax [1]  , triv ) )
+                
+            if fullname != self.name : 
+                title = '%s("%s","%s") %d variables' % ( 'RooDataSet', self.name , fullname , len ( self.__varset ) )
+            else :
+                title = '%s("%s") %d variables'      % ( 'RooDataSet', self.name ,            len ( self.__varset ) )
+                        
+            import ostap.logger.table as T
+            t  = T.table (  table_data , title , '# ' )
+            self.__logger.info ( "Booked dataset: %s\n%s" % ( title , t ) ) 
+
             
         ## Book dataset
         self.__data = ROOT.RooDataSet (
@@ -576,12 +657,17 @@ class SelectorWithVars(SelectorWithCuts) :
         from collections import defaultdict
         self.__skip     = defaultdict(int)
         self.__notifier = None
-        self.__stat    = [ 0 , 0 , 0 ] 
+        self.__stat     = SelStat() 
 
     @property 
     def name ( self ) :
         """``name''  - the name of selector/dataset"""
-        return self.__name 
+        return self.__name
+    
+    @property 
+    def fullname ( self ) :
+        """``fullname''  - the fullname of selector/dataset"""
+        return self.__fullname 
     
     @property 
     def data ( self ) :
@@ -613,6 +699,13 @@ class SelectorWithVars(SelectorWithCuts) :
     def trivial_vars( self ) :
         """``trivial_vars'' : are all variables ``trivial'' (suitable for fast-processing)?"""
         return self.__triv_vars
+
+    @property
+    def really_trivial ( self ) :
+        """``really_trivial'' : is a set of variables really trivial (for RooFit)?"""
+        for v in self.variables :
+            if not v.really_trivial : return False
+        return True
     
     @property
     def trivial_sel( self ) :
@@ -631,31 +724,28 @@ class SelectorWithVars(SelectorWithCuts) :
     
     @property
     def skipped ( self ) :
-        """``skipped'' : total number of skept entries"""
-        return self.__stat[2]
+        """``skipped'' : total number of skipped entries"""
+        return self.stat.skipped
     
     @property
     def processed  ( self ) :
         """``processed'' : number of processeed events (after cuts)"""
-        return self.__stat[1]
+        return self.stat.processed 
     
     @property
     def total  ( self ) :
         """``total'' : total number of processeed events (before cuts)"""
-        return self.__stat[0]
+        return self.stat.total
 
     @property
     def stat ( self ) :
         """``stat'' : Total/processed/skipped events"""
-        return tuple(self.__stat)
+        return self.__stat    
     @stat.setter
     def stat ( self , value  ) :
-        assert 2<= len(value), 'Invalid "value":%s' % str ( value )
-        self.__stat[0] = value[0]
-        self.__stat[1] = value[1]
-        self.__stat[2] = value[2]
-        
-        
+        assert isinstance ( value , SelStat ) , 'Invalid "value":%s' % str ( value )
+        self.__stat = value 
+
     ## get the dataset 
     def dataset   ( self  ) :
         """ Get the data-set """ 
@@ -672,19 +762,19 @@ class SelectorWithVars(SelectorWithCuts) :
         if self.GetEntry ( entry ) <=  0 : return 0             ## RETURN 
         #
         
-        if not self.__progress and not self.__silence :
-            self.__stat[0] =  self.fChain.GetEntries()
+        if not self.__progress and not self.silence :
+            self.stat.total =  self.fChain.GetEntries()
             self.__logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , self.fChain.GetName() , self.total ) )
             ## decoration:
             from ostap.utils.progress_bar import ProgressBar
-            self.__progress = ProgressBar ( max_value = self.total     ,
-                                            silent    = self.__silence )
+            self.__progress = ProgressBar ( max_value = self.total   ,
+                                            silent    = self.silence )
             
-        if not self.__silence :
+        if not self.silence :
             if 0 == self.processed % 1000 or 0 == entry % 1000 or 0 == self.event() % 1000 : 
                 self.__progress.update_amount ( self.event () )
                 
-        self.__stat[1] += 1
+        self.stat.processed += 1
         
         #
         ## == for more convenience
@@ -716,7 +806,7 @@ class SelectorWithVars(SelectorWithCuts) :
             value     = vfun ( bamboo )
             if not vmin <= value <= vmax :   ## MUST BE IN RANGE!
                 self.__skip[v.name] += 1     ## SKIP EVENT
-                self.__stat[2]      += 1     ## SKIP EVENT 
+                self.stat.skipped   += 1     ## SKIP EVENT 
                 return 0                     ## RETURN 
 
             var.setVal ( value ) 
@@ -732,6 +822,28 @@ class SelectorWithVars(SelectorWithCuts) :
         """``callable'' interface to Selector
         """
         return self.fill ( entry ) 
+
+    # =========================================================================
+    ## clone this selector
+    #  @code
+    #  sel = ...
+    #  new_sel = sel.clone ( name = 'QUQU' , fullname = 'FullName  ) 
+    #  @endcode
+    def clone ( self , **kwargs ) :
+        """Clone the selector
+        >>> sel = ...
+        >>> new_sel = sel.clone ( name = 'QUQU' , fullname = 'FullName  ) 
+        """
+        
+        kw = {}
+        kw [ 'variables' ] = self.variables
+        kw [ 'selection' ] = self.selection 
+        kw [ 'cuts'      ] = self.morecuts
+        kw [ 'silence'   ] = self.silence
+
+        kw.update ( kwargs )
+        return SelectorWithVars ( **kw ) 
+
 
     ## termination 
     def Terminate ( self  ) :
@@ -752,9 +864,9 @@ class SelectorWithVars(SelectorWithCuts) :
             return  ## RETURN
 
         ##get total number of input events from base class 
-        self.__stat[0] = self.event()
+        self.stat.total = self.event()
         
-        if not self.__silence :
+        if not self.silence :
             skipped = 'Skipped:%d' % self.skipped
             skipped = '/' + attention ( skipped ) if self.skipped else ''
             cuts    = allright ( '"%s"' % self.cuts () ) if self.trivial_sel else attention ( '"%s"'  % self.cuts() ) 
@@ -765,9 +877,8 @@ class SelectorWithVars(SelectorWithCuts) :
                 self.processed ,
                 skipped        , 
                 cuts           ) )            
-            self.__logger.info ( 'Selector(%s): dataset created:%s' %  ( self.__name ,  self.__data ) )
             
-        if self.__data and not self.__silence :
+        if self.__data and not self.silence :
             vars = []
             for v in self.__variables :
                 s    = self.__data.statVar( v.name )
@@ -796,13 +907,13 @@ class SelectorWithVars(SelectorWithCuts) :
             max_l   = len ( 'max'  ) + 2 
             skip_l  = len ( 'Skip' ) 
             for v in vars :
-                name_l = max ( name_l , len ( v[0] ) )
-                desc_l = max ( desc_l , len ( v[1] ) )
-                mean_l = max ( mean_l , len ( v[2] ) )
-                rms_l  = max ( rms_l  , len ( v[3] ) )
-                min_l  = max ( min_l  , len ( v[4] ) )
-                max_l  = max ( max_l  , len ( v[5] ) )
-                skip_l = max ( skip_l , len ( v[6] ) )
+                name_l = max ( name_l , len ( v [ 0 ] ) )
+                desc_l = max ( desc_l , len ( v [ 1 ] ) )
+                mean_l = max ( mean_l , len ( v [ 2 ] ) )
+                rms_l  = max ( rms_l  , len ( v [ 3 ] ) )
+                min_l  = max ( min_l  , len ( v [ 4 ] ) )
+                max_l  = max ( max_l  , len ( v [ 5 ] ) )
+                skip_l = max ( skip_l , len ( v [ 6 ] ) )
 
             sep      = '# -%s+%s+%s+%s+%s-' % ( ( name_l       + 2 ) * '-' ,
                                                 ( desc_l       + 2 ) * '-' ,
@@ -827,24 +938,41 @@ class SelectorWithVars(SelectorWithCuts) :
             else                 : report += ' Cuts:' + attention ('non-trivial'   ) + ';'
             if not self.__cuts   : report += ' '      + allright  ( 'no py-cuts'   )  
             else                 : report += ' '      + attention ( 'with py-cuts' )
-                                                            
-            header  = fmt % ( 'Variable'    ,
-                              'Description' ,
-                              'mean' ,
-                              'rms'  ,
-                              'min'  ,
-                              'max'  ,
-                              'skip' )
-            report += '\n' + sep
-            report += '\n' + header
-            report += '\n' + sep            
+
+            
+            fmt_name = '%%-%ds' % name_l 
+            fmt_desc = '%%-%ds' % desc_l
+            fmt_mean = '%%%ds'  % mean_l
+            fmt_rms  = '%%-%ds' % rms_l
+            fmt_min  = '%%%ds'  % min_l
+            fmt_max  = '%%-%ds' % max_l
+            fmt_skip = '%%-%ds' % skip_l
+            
+            header = ( ( '{:^%d}' % name_l ).format ( 'Variable'    ) ,
+                       ( '{:^%d}' % desc_l ).format ( 'Description' ) ,
+                       ( '{:^%d}' % mean_l ).format ( 'mean'        ) ,
+                       ( '{:^%d}' % rms_l  ).format ( 'rms'         ) ,
+                       ( '{:^%d}' % min_l  ).format ( 'min'         ) ,
+                       ( '{:^%d}' % max_l  ).format ( 'max'         ) ,
+                       ( '{:^%d}' % skip_l ).format ( 'skip'        ) )
+            
+            table_data = [  header ]
             for v in vars :
-                line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , attention ( v[6] ) )
-                report += '\n' + line  
-            report += '\n' + sep
-            self.__logger.info ( report ) 
-        
-        if not len ( self.__data ) :
+                table_data.append ( ( fmt_name % v [ 0 ] ,
+                                      fmt_desc % v [ 1 ] ,
+                                      fmt_mean % v [ 2 ] ,
+                                      fmt_rms  % v [ 3 ] ,
+                                      fmt_min  % v [ 4 ] ,
+                                      fmt_max  % v [ 5 ] ,
+                                      attention ( fmt_skip % v [ 6 ] ) if v[6]  else v[6] ) ) 
+            
+            import ostap.logger.table as T
+            title = report 
+            t  = T.table ( table_data , title , '# ')
+            self.__logger.info ( title + '\n' + t )
+            
+            
+        if not self.__data or not len ( self.__data ) :
             skip = 0
             for k,v in items_loop ( self.__skip ) : skip += v 
             self.__logger.warning("Selector(%s): empty dataset! Total:%s/Processed:%s/Skipped:%d"
@@ -862,7 +990,7 @@ class SelectorWithVars(SelectorWithCuts) :
         # 
         result = SelectorWithCuts.Init ( self , chain ) 
 
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
         #
         return result 
@@ -871,7 +999,7 @@ class SelectorWithVars(SelectorWithCuts) :
         ## 
         result = SelectorWithCuts.Begin ( self , tree )
 
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
 
         return result
@@ -880,10 +1008,10 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         result = SelectorWithCuts.SlaveBegin ( self , tree )
         #
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
         #
-        self.__stat[0] =  tree.GetEntries()
+        self.stat.total =  tree.GetEntries()
         #
         if self.__notifier :
             self.__notifier.exit()
@@ -899,7 +1027,7 @@ class SelectorWithVars(SelectorWithCuts) :
     def Notify         ( self ) :
         #
         result = SelectorWithCuts.Notify ( self )
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
 
         return result 
@@ -908,7 +1036,7 @@ class SelectorWithVars(SelectorWithCuts) :
         # 
         result = SelectorWithCuts.SlaveTerminate ( self )
 
-        if self.__progress and not self.__silence :
+        if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
 
         if self.__notifier :
@@ -917,7 +1045,6 @@ class SelectorWithVars(SelectorWithCuts) :
             
         return result 
 
-
 # =============================================================================
 import os
 from   ostap.core.workdir import workdir
@@ -925,8 +1052,8 @@ from   ostap.io.zipshelve import ZipShelf
 # =============================================================================
 
 # ==============================================================================
-## Generic selector which loads already loaded datasets from cache
-#
+## @class    SelectorWithVarsCached
+#  Generic selector which loads already loaded datasets from cache
 #  @date   2014-07-02
 #  @author Sasha Baranov a.baranov@cern.ch
 class SelectorWithVarsCached(SelectorWithVars) :
@@ -1014,7 +1141,7 @@ class SelectorWithVarsCached(SelectorWithVars) :
         return 1
 
 # =============================================================================
-## Create the dataset from the tree
+## Create thew dataset from the tree
 #  @code 
 #  tree = ...
 #  ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
@@ -1050,7 +1177,6 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         if vv.trivial and vv.name == vv.formula : 
             
             assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
-            assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
             
             varset.add  ( vv.var )
             vars.add ( vv )
@@ -1070,7 +1196,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         if _maxv > mx : cuts.append ( "(%s <= %.16g)" % ( vv.name , mx      ) )
 
     ## 
-    cuts = ROOT.TCut(' && '.join(cuts) ) if cuts else ROOT.TCut() 
+    cuts = ROOT.TCut(' && '.join(cuts) ) if cuts else ROOT.TCut()
 
     ## extended varset
     stor    = set() 
@@ -1090,39 +1216,35 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
                 if tt : break 
         if not tt : tt = tree
 
-        from   ostap.core.core import fID
-        for expression in expressions : 
-            tf   = Ostap.Formula ( fID () , str ( expression ) , tt )
-            assert tf.ok() , 'Invalid formula %s' % expression 
-            i    = 0 
-            leaf = tf.GetLeaf( i )
-            while leaf :
-                lname = leaf.GetName()
-                if not lname in varsete :
-                    v = Variable ( lname )
-                    varsete.add  ( v.var )
-                    stor.add ( v ) 
-                i   += 1
-                leaf = tf.GetLeaf( i )                    
-            del tf 
-    
+        lvars = tt.the_variables ( *expressions )
+        assert not lvars is None , 'Unable to get the basic variables for %s' % expressions 
+        for lname in lvars :
+            if not lname in varsete :
+                v = Variable ( lname )
+                varsete.add  ( v.var )
+                stor.add ( v )
+                
     if not name :
         from ostap.core.core import dsID 
-        name = '%s_%s' % ( dsID() , tree.GetName() )
-    if not title : title = '%s/%s' % ( name , tree.GetTitle() )
+        name = dsID () 
+    if not title and tree.GetName() != tree.GetTitle  :
+        title = tree.GetTitle ()
 
     total     = len ( tree )
     processed = tree.statVar ( '1' , selection    ).nEntries()
     skipped   = tree.statVar ( '1' , str ( cuts ) ).nEntries() 
 
-    stat = total, processed , processed - skipped
+    stat = SelStat ( total , processed , processed - skipped )
 
-    from ostap.logger.utils import rooSilent, rootError  
+    from ostap.logger.utils import rooSilent, rootError
+    from ostap.utils.timing import timing
+        
+    if not silent : logger.info ( "Start to fill the dataset") 
     with rooSilent ( ROOT.RooFit.ERROR  , True ) :
         with rootError( ROOT.kWarning ) :
             ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
             varsete = ds.get()
-            
+                
     ## add complex expressions 
     if formulas :
         # a
@@ -1169,19 +1291,22 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         ds = ds1
         
     if not silent : 
-        skipped = 'Skipped:%d' % stat[2]
-        skipped = '/' + attention ( skipped ) if stat[2] else '' 
-        logger.info (
-            'make_dataset: Events Total:%d/Processed:%s%s CUTS: "%s"\n# %s' % (
-            stat[0] ,
-            stat[1] ,
-            skipped ,
-            selection  , ds ) )            
+        skipped = 'Skipped:%d' % stat.skipped 
+        skipped = '/' + attention ( skipped ) if stat.skipped else ''
+        table   = ds.table () 
+        report = 'make_dataset: Events Total:%d/Processed:%s%s CUTS:"%s" dataset\n%s' % (
+            stat.total     ,
+            stat.processed ,
+            skipped        ,
+            selection      ,
+            ds             )
+        logger.info (  report.replace ( '\n','\n# ' ) )
         
     return ds , stat 
 
 ROOT.TTree.make_dataset = make_dataset
         
+
 # =============================================================================
 ## define the helper function for proper decoration of ROOT.TTree/TChain
 #
@@ -1224,7 +1349,7 @@ ROOT.TTree.make_dataset = make_dataset
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
 #
-def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , silent = False  ) :
+def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , silent = False  , use_frame = 50000 ) :
     """ ``Process'' the tree/chain with proper TPySelector :
     
     >>> from ostap.fitting.selectors import Selector    
@@ -1238,16 +1363,142 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     ## process all events? 
     all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
 
-
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
-        trivial = selector.trivial_vars and not selector.morecuts
-        if trivial : 
-            if not silent : logger.info ( "Make try to use the shortcut!" )
-            ds , stat  = self.make_dataset( variables = selector.variables , selection = selector.selection , silent = silent )
+        if selector.really_trivial and not selector.morecuts :
+            if not silent : logger.info ( "Make try to use the SHORTCUT!" )
+            ds , stat  = self.make_dataset ( variables = selector.variables , selection = selector.selection , silent = silent )
             selector.data = ds
             selector.stat = stat 
-            return 1 
-                            
+            return 1
+        
+    # =========================================================================
+    ## If the length is large and selection is not empty,
+    #  try to pre-filter using RDataFrame machinery into  temporary file 
+    #  @see ROOT.RDataFrame.Filter
+    #  @see ROOT.RDataFrame.Snapshot
+    #  It can be very efficient is selection/filtering cuts are harsh enough.    
+    if all and 0 < use_frame and isinstance ( self , ROOT.TTree ) and use_frame <= len ( self ) :
+        
+        if isinstance ( selector , SelectorWithVars ) and selector.selection :
+            
+            if not silent : logger.info ( "Make try to use the intermediate TFrame!" )
+            
+            from ostap.utils.utils   import ImplicitMT 
+            import ostap.frames.frames
+            
+            total  = len ( self )
+            
+            frame  = Ostap.DataFrame ( self , enable = True )
+            
+            vars   = list ( selector.variables )
+            tvars  = [ v for v in vars if     v.trivial ] ## trivial vars 
+            vars_  = [ v for v in vars if not v.trivial ] ## non-trivial vars
+            nvars  = []
+            scuts  = []
+
+            ranges = []
+
+            ## loop over trivial vars :
+            for v in tvars :
+                
+                mn , mx = v.minmax
+                if v.name == v.formula :  ## really trivial variable 
+                    nvars.append ( v ) 
+                else :                    ## almost trivial: formula exists  
+                    newv  = Variable  ( v.var                       ,
+                                        description = v.description ,
+                                        vmin        = v.vmin        ,
+                                        vmax        = v.vmax        ,
+                                        accessor    = v.name        ) ## make it trivial!
+                    nvars.append ( newv )
+                    logger.debug  ( 'PROCESS: define %s as %s ' % ( v.name , v.formula ) )                    
+                    frame = frame.Define ( v.name , v.formula )  ## define new variable  for the frame
+                    
+                if _minv < mn :
+                    lcut = "(%.16g <= %s)" % ( mn     , v.name )
+                    if silent : scuts.append  (   lcut )
+                    else      : ranges.append ( ( lcut , 'RANGE(%s,low)'  % v.name ) )
+                        
+                if _maxv > mx :
+                    hcut = "(%s <= %.16g)" % ( v.name , mx     )
+                    if silent : scuts.append ( hcut )
+                    else      : ranges.append ( ( hcut , 'RANGE(%s,high)' % v.name ) )
+
+            frame  = frame.Filter ( selector.selection , 'SELECTION' )            
+
+            for  c , f in ranges : 
+                frame = frame.Filter ( c  , f )
+                logger.debug  ( 'PROCESS: add cut %s ' % c )
+
+            if scuts :
+                acut = ' && '.join ( ( "(%s)" % c for c in scuts ) )
+                frame = frame.Filter ( acut , 'RANGES' )
+                logger.debug  ( 'PROCESS: add cut %s ' % acut )
+
+            from ostap.utils.cleanup import TempFile
+            with TempFile ( suffix = '.root' , prefix = 'frame-' ) as tf :
+                if not silent : logger.info ( 'Prepare snapshot/loop over the tree %s' % tf.filename )
+                report   = frame . Report ()
+
+                if vars_  :
+                    ## is some variables are non-trivial: dump the whole tree 
+                    snapshot = frame . Snapshot ( 'tree' , tf.filename )
+                else      :
+                    ## otherwise dump only needed variables 
+                    bvars = self.the_variables( [ v.formula for v in tvars ] )
+                    avars = list ( bvars ) + [ v.name for v in nvars if not v in bvars ] 
+                    from ostap.core.core import strings as _strings 
+                    logger.debug ('PROCESS: dump only %s' % list ( avars ) )
+                    snapshot = frame . Snapshot ( 'tree' , tf.filename , _strings ( *avars ) )
+
+                if not silent :
+                    from ostap.frames.frames import report_prnt
+                    title =  'Tree -> Frame -> Tree filter/transformation '
+                    logger.info ( title + '\n%s' % report_prnt ( report , title , '# ') )
+                    
+                total_0 = -1
+                for c in report :
+                    if  total_0 < 0 : total_0 = c.GetAll()
+                    else            : break
+                        
+                if not silent : logger.info ( 'Write %s' % tf.filename  ) 
+                import ostap.io.root_file
+
+                assert frame.Count().GetValue()>0 , 'Selection result is empty'
+                
+                with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 
+                    tree         = tt.tree
+                    if not silent :
+                        import ostap.logger.table as  T
+                        t = str ( tree )
+                        t = T.add_prefix ( t , '# ')
+                        logger.info ( 'Filtered frame/tree for the futher processing:\n%s' % t )
+                        
+                    new_selector = SelectorWithVars ( nvars + vars_ ,
+                                                      ''            , ## no cuts here! 
+                                                      cuts     = selector.morecuts ,
+                                                      name     = selector.name     ,
+                                                      fullname = selector.fullname ,
+                                                      silence  = selector.silence  )
+                    
+                    if not silent : logger.info ( 'redirect to other processing' )
+                    
+                    result       = _process_ ( tree , new_selector ,
+                                               nevents   = -1      ,
+                                               first     =  0      ,
+                                               shortcut  = True    ,
+                                               silent    = silent  ,
+                                               use_frame = -1      )
+
+                    selector.data = new_selector.data
+
+                    selector.stat.total     = total_0
+                    selector.stat.processes = new_selector.stat.processed 
+                    selector.stat.skiped    = new_selector.stat.skipped 
+                    del new_selector
+                    
+                    return result
+                
     import ostap.fitting.roofit
     
     nevents = nevents if 0 <= nevents else ROOT.TChain.kMaxEntries
@@ -1263,18 +1514,31 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     store = self.store()
     if store and store.tree() :
         tree = store.tree()
-        return _process_ ( tree , selector , events ,   silent = silent )
+        return _process_ ( tree     ,  selector  ,
+                           nevents   = nevents   ,
+                           first     = first     ,
+                           shortcut  = shortcut  ,
+                           silent    = silent    ,
+                           use_frame = use_frame )
 
     from ostap.fitting.roofit import useStorage
+    
     with useStorage() :
+        
         logger.info ('Prepare the cloned dataset with TTree-storage type')
         from ostap.core.core import dsID            
         cloned = self.Clone ( dsID() )
-    result = _process_ ( cloned , selector , events , silent = silent )
-    cloned.reset()
-    del cloned
-    return result
-            
+        
+        result = _process_ ( cloned , selector ,
+                             nevents   = nevents   ,
+                             first     = first     ,
+                             shortcut  = shortcut  ,
+                             silent    = silent    ,
+                             use_frame = use_frame )
+        cloned.reset()
+        del cloned
+        return result
+        
 _process_. __doc__ += '\n' + Ostap.Process.process.__doc__
 
 # =============================================================================

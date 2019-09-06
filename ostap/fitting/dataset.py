@@ -23,7 +23,7 @@ __all__     = (
     'ds_project' , ## project variables from RooDataSet to histogram 
     )
 # =============================================================================
-import ROOT, random
+import ROOT, random, math
 from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
@@ -33,12 +33,13 @@ import ostap.fitting.printable
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger , allright,  attention
+from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.dataset' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug( 'Some useful decorations for RooAbsData object')
 # =============================================================================
+from ostap.logger.colorized import allright,  attention
 _new_methods_ = []
 
 # =============================================================================
@@ -418,9 +419,8 @@ _new_methods_ += [
 
 
 
-
 # =============================================================================
-## Helper project method for RooDataSet
+## Helper project method for RooDataSet/DataFrame/... and similar objects 
 #
 #  @code 
 #    
@@ -436,7 +436,7 @@ _new_methods_ += [
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
 def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
-    """Helper project method for RooDataSet
+    """Helper project method for RooDataSet/DataFrame/... and similar objects 
     
     >>> h1   = ROOT.TH1D(... )
     >>> dataset.project ( h1.GetName() , 'm', 'chi2<10' ) ## project variable into histo
@@ -483,6 +483,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             else                      : vars.append ( w ) 
         ##return ds_project ( dataset , histo , vars , cuts , *args ) 
 
+    ## what is it ? 
     if isinstance ( what , ROOT.RooArgList ) :
         vars  = [ w for w in what ]
         cuts0 = cuts 
@@ -506,24 +507,28 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         if instance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
 
-    if  1 <= len(what) and isinstance ( what[0] , ROOT.RooAbsReal ) and isinstance ( cuts , str ) : 
-        if '' == cuts : cuts0 = 0 
+    ## what it is ????
+    if  1 <= len ( what ) \
+           and isinstance ( what[0] , ROOT.RooAbsReal ) \
+           and isinstance ( cuts , str ) :
+        
+        if   '' == cuts : cuts0 = 0 
         elif isinstance ( cuts , str ) :
             cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
-    if   isinstance ( histo , ROOT.TH3 ) and 3 == len(what)  :
+    if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
         return Ostap.HistoProject.project3 ( dataset ,
                                              histo   , 
                                              what[2] ,
                                              what[1] ,
                                              what[0] , cuts , *args) 
-    elif isinstance ( histo , ROOT.TH2 ) and 2 == len(what)  :
+    elif isinstance ( histo , ROOT.TH2 ) and 2 == len ( what )  :
         return Ostap.HistoProject.project2 ( dataset ,
                                              histo   , 
                                              what[1] ,
                                              what[0] , cuts , *args )
-    elif isinstance ( histo , ROOT.TH1 ) and 1 == len(what)  :
+    elif isinstance ( histo , ROOT.TH1 ) and 1 == len ( what )  :
         return Ostap.HistoProject.project  ( dataset ,
                                              histo   , 
                                              what[0] , cuts , *args )
@@ -772,6 +777,7 @@ ROOT.RooDataSet.project     = ds_project
 ROOT.RooDataSet.__getattr__ = _ds_getattr_
 ROOT.RooAbsData.sFactor     = _rad_sFactor_
 
+
 for d in ( ROOT.RooAbsData  ,
            ROOT.RooDataSet  ,
            ROOT.RooDataHist ) :
@@ -865,6 +871,42 @@ _new_methods_ += [
     ROOT.RooDataSet .addVar      ,
     ROOT.RooDataSet .add_new_var ,
     ROOT.RooDataSet .add_var     ,
+    ]
+
+# =============================================================================
+## Add specific re-weighting information into dataset
+#  @see ostap.tools.reweight
+#  @see ostap.tools.reweight.Weight 
+#  @see ostap.tools.reweight.W2Data 
+#  @code
+#  w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+#  data = ...
+#  data.add_reweighting ( w ) 
+#  @endcode 
+def add_reweighting ( data , weighter , name = 'weight' ) :
+    """Add specific re-weighting information into dataset
+    
+    >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+    >>> data = ...
+    >>> data.add_reweighting ( w )
+    - see ostap.tools.reweight
+    - see ostap.tools.reweight.Weight 
+    - see ostap.tools.reweight.W2Data 
+    """
+    
+    import ostap.tools.reweight as W
+    
+    assert isinstance ( weighter , W.Weight ), "Invalid type of ``weighting''!"
+    
+    ## create the weigthting function 
+    wfun = W.W2Data ( weighter  )
+    
+    return data.add_new_var ( name , wfun ) 
+
+
+ROOT.RooDataSet.add_reweighting = add_reweighting
+_new_methods_ += [
+    ROOT.RooDataSet .add_reweighting
     ]
 
 # =============================================================================
@@ -1225,11 +1267,13 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
         
     _vars.sort()
 
-    report  = '# %s("%s","%s"):' % ( dataset.__class__.__name__ ,
-                                     dataset.GetName  () ,
-                                     dataset.GetTitle () )
-    report += allright ( '%d entries, %d variables' %  ( len ( dataset )   ,
-                                                         len ( varset  ) ) )
+    tt = dataset.GetTitle()
+    if tt and tt != dataset.GetName() : 
+        title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
+    else :
+        title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () ) 
+        
+    title +=  '%d entries, %d variables' %  ( len ( dataset ) , len ( varset ) )
 
     if not _vars :
         return report , 120 
@@ -1237,12 +1281,12 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
 
     weight = None
     if   isinstance ( dataset , ROOT.RooDataHist ) :
-        if dataset.isNonPoissonWeighted() : report += attention ( ' Binned/Weighted' )
-        else                              : report += allright  ( ' Binned' )
+        if dataset.isNonPoissonWeighted() : title += ' Binned/Weighted' 
+        else                              : title += ' Binned'
     elif dataset.isWeighted () :
         
-        if dataset.isNonPoissonWeighted() : report += attention ( ' Weighted' )
-        else : report += attention ( ' Weighted(Poisson)' )
+        if dataset.isNonPoissonWeighted() : title += ' Weighted' 
+        else :                              title += ' Weighted/Poisson'
 
         dstmp = None 
         wvar  = None
@@ -1268,8 +1312,8 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
             if 1 == len ( wvars ):
                 wvar = wvars.pop()
                 
-        if not wvar : wvar = Ostap.Utils.getWeight ( dataset )
-        if     wvar : report += attention ( ' with "%s"' % wvar )
+        if not wvar : wvar   = Ostap.Utils.getWeight ( dataset )
+        if     wvar : title += ' with "%s"' % wvar
                 
         store = None 
         if dstmp :            
@@ -1304,7 +1348,7 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
                     mean = s.mean   ()
                     rms  = s.rms    ()
                     weight = '*%s*' % wvar
-                    r    = (  weight                           ,   ## 0 
+                    r    = (  weight                            ,   ## 0 
                               'Weight variable'                 ,   ## 1 
                               ('%+.5g' % mean.value() ).strip() ,   ## 2
                               ('%.5g'  % rms          ).strip() ,   ## 3 
@@ -1337,47 +1381,49 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
         min_l  = max ( min_l  , len ( v[4] ) )
         max_l  = max ( max_l  , len ( v[5] ) )
         
-    sep      = '# +%s+%s+%s+%s+' % ( ( name_l       + 2 ) * '-' ,
-                                     ( desc_l       + 2 ) * '-' ,
-                                     ( mean_l+rms_l + 5 ) * '-' ,
-                                     ( min_l +max_l + 5 ) * '-' )
-    fmt = '# | %%-%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds |'  % (
-        name_l ,
-        desc_l ,
-        mean_l ,
-        rms_l  ,
-        min_l  ,
-        max_l  )
+    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
     
-                
-    header  = fmt % ( 'Variable'    ,
-                      'Description' ,
-                      'mean'        ,
-                      'rms'         ,
-                      'min'         ,
-                      'max'         )
-    
-    report += '\n' + sep
-    report += '\n' + header
-    report += '\n' + sep
+    fmt_name = '%%%ds. %%-%ds' % ( index_l , name_l )
+    fmt_desc = '%%-%ds' % desc_l
+    fmt_mean = '%%%ds'  % mean_l
+    fmt_rms  = '%%-%ds' % rms_l
+    fmt_min  = '%%%ds'  % min_l
+    fmt_max  = '%%-%ds' % max_l
 
-    vlst   = _vars
-    
-    if weight : vlst = _vars[:-1]
-    
-    for v in vlst :
-        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5]  )
-        report += '\n' + line  
-    report += '\n' + sep
-    
-    if weight :
-        v = _vars[-1]
-        line    =  fmt % ( v[0] , v[1] , v[2] , v[3] , v[4] , v[5]  )
-        report += '\n' + line.replace ( weight , attention ( weight ) ) 
-        report += '\n' + sep
+    title_l = index_l + 2 + name_l  
+    header = [ ( '{:^%d}' % title_l ).format ( 'Variable'    ) ,
+               ( '{:^%d}' % desc_l  ).format ( 'Description' ) ,
+               ( '{:^%d}' % mean_l  ).format ( 'mean'        ) ,
+               ( '{:^%d}' % rms_l   ).format ( 'rms'         ) ,
+               ( '{:^%d}' % min_l   ).format ( 'min'         ) ,
+               ( '{:^%d}' % max_l   ).format ( 'max'         ) ]
+
+    if weight : header.append ( 'W' )
         
-    return report , len ( sep ) 
+    table_data = [ tuple  ( header ) ]
 
+    vlst = vars
+
+    for i , v in enumerate ( _vars ) :
+                
+        cols = [ fmt_name %  ( i + 1 , v [ 0 ] ) ,
+                 fmt_desc %            v [ 1 ] ,
+                 fmt_mean %            v [ 2 ] ,
+                 fmt_rms  %            v [ 3 ] ,
+                 fmt_min  %            v [ 4 ] ,
+                 fmt_max  %            v [ 5 ] ]
+        
+        if   weight and i + 1 == len ( _vars ) :
+            cols.append ( 'W' )
+            cols = [ allright (  c ) for c in cols ] 
+        elif weight                            : cols.append ( ' ' )
+        
+        table_data.append ( tuple ( cols ) ) 
+
+    import ostap.logger.table as T
+    t  = T.table ( table_data , title )
+    w  = T.table_width ( t ) 
+    return t , w 
 
 # ==============================================================================
 ## print dataset in  a form of the table
@@ -1399,12 +1445,12 @@ def _ds_print2_ ( dataset ) :
     if dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) :
         store = dataset.store()
         if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) : pass
-        else : return _ds_print_ ( dataset )        
+        else : return _ds_print_ ( dataset )         
     from ostap.utils.basic import terminal_size, isatty 
     if not isatty() : return _ds_table_ ( dataset )
     th  , tw  = terminal_size()
     rep , wid = _ds_table_0_ ( dataset ) 
-    if wid < tw     : return rep
+    if wid < tw  : return rep
     return _ds_print_ ( dataset )
 
 

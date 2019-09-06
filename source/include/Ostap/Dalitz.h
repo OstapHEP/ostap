@@ -131,21 +131,21 @@ namespace Ostap
       /**  \f$ \theta^{*}_{12}\f$ is angle between 
        *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
        *   \f$ \cos \theta^{*}_{12} = 
-       *   \left\frac { p_1p_2}{P_1P_2}\right|_{\vec{P}=0}\f$
+       *   \left.\frac { p_1p_2}{P_1P_2}\right|_{\vec{P}=0}\f$
        */
       double cos_12  ( const double s1 , const double s2 ) const ;
       // =====================================================================
       /**  \f$ \theta^{*}_{23}\f$ is angle between 
        *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
        *   \f$ \cos \theta^{*}_{23} = 
-       *   \left\frac { p_2p_3}{P_2P_3}\right|_{\vec{P}=0}\f$
+       *   \left.\frac { p_2p_3}{P_2P_3}\right|_{\vec{P}=0}\f$
        */
       double cos_23  ( const double s1 , const double s2 ) const ;
       // ======================================================================
       /**  \f$ \theta^{*}_{31}\f$ is angle between 
        *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
        *   \f$ \cos \theta^{*}_{31} = 
-       *   \left\frac { p_3p_1}{P_3P_1}\right|_{\vec{P}=0}\f$
+       *   \left.\frac { p_3p_1}{P_3P_1}\right|_{\vec{P}=0}\f$
        */
       double cos_31  ( const double s1 , const double s2 ) const ;
       // ======================================================================
@@ -300,10 +300,10 @@ namespace Ostap
       // ======================================================================
       /** Dalitz plot density:
        *  \f$ R_3 = 
-       *  \frac{1}{32s} \int \deriv s_1 \deriv s_2 \deriv Omega \deriv \phi_3 
+       *  \frac{1}{32s} \int {\mathrm{d}} s_1 {\mathrm{d}} s_2 {\mathrm{d}} Omega {\mathrm{d}} \phi_3 
        *  \Theta { -G \left( s_1, s_2 , s , m_2^2, m_1^2, m_3^2 \right) } \f$
        *  Here we take 
-       *  \f$ \int \deriv \Omega = 4\pi\f$ and \f$ \int \deriv \phi_3 = 2\pi\f$. 
+       *  \f$ \int {\mathrm{d}} \Omega = 4\pi\f$ and \f$ \int {\mathrm{d}} \phi_3 = 2\pi\f$. 
        */
       double density       ( const double s1  , const double s2  ) const ;
       // ======================================================================
@@ -320,7 +320,7 @@ namespace Ostap
     public:   // 1-dimension 
       // ======================================================================
       /** Dalitz density in 1-dimension:
-       *  \f$  \frac{\deriv R_3}{\deriv s_2} = 
+       *  \f$  \frac{{\mathrm{d}} R_3}{{\mathrm{d}} s_2} = 
        *  \frac{\pi^2}{2ss_2}
        *  \lambda^{1/2} ( s_2, s, m_1^2) 
        *  \lambda^{1/2} ( s_2, m_2^2, m_3^2) 
@@ -329,7 +329,7 @@ namespace Ostap
       double dRds2   ( const double s1 ) const ;
       // ======================================================================
       /** Dalitz density in 1-dimension:
-       *  \f$  \frac{\deriv R_3}{\deriv s_3} = 
+       *  \f$  \frac{{\mathrm{d}} R_3}{{\mathrm{d}} s_3} = 
        *  \frac{\pi^2}{2ss_3}
        *  \lambda^{1/2} ( s_3, s, m_2^2) 
        *  \lambda^{1/2} ( s_3, m_3^2, m_1^2) 
@@ -338,7 +338,7 @@ namespace Ostap
       double dRds3   ( const double s3 ) const ;
       // ======================================================================
       /** Dalitz density in 1-dimension:
-       *  \f$  \frac{\deriv R_3}{\deriv s_1} = 
+       *  \f$  \frac{{\mathrm{d}} R_3}{{\mathrm{d}} s_1} = 
        *  \frac{\pi^2}{2ss_1}
        *  \lambda^{1/2} ( s_1, s, m_3^2) 
        *  \lambda^{1/2} ( s_1, m_1^2, m_2^2) 
@@ -402,9 +402,9 @@ namespace Ostap
     } ;
     // ========================================================================
     /** Get a full integrated phase space over Dalitz plot 
-     *  \f$  R(s) = \int \int R(s_1,s_2) \deriv s_1 \deriv s_2 =
+     *  \f$  R(s) = \int \int R(s_1,s_2) {\mathrm{d}} s_1 {\mathrm{d}} s_2 =
      *  \int _{(m_2+m_3)^2}^{ (\sqrt{s}-m_1)^2}
-     *  \frac{\deriv s_2}{s_2}
+     *  \frac{{\mathrm{d}} s_2}{s_2}
      *  \lambda^{1/2}(s_2,s,m_1^2)
      *  \lambda^{1/2}(s_2,m_2^2,m_3^2)\f$ 
      */

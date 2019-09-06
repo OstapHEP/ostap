@@ -21,6 +21,8 @@
   <class name = "std::binary_function&lt;double,double,double&gt;" />
 
   <class name = "Ostap::Math::Tensors::Epsilon"  />
+
+  <class pattern = "std::vector&lt;Ostap::WStatEntity,*&gt;" />
   
   <class name   = "Ostap::Math::WorkSpace">
     <field name = "m_workspace" transient="true"/>      

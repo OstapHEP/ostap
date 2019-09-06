@@ -91,21 +91,59 @@ class Files(object):
                   maxfiles    = -1      ,
                   silent      = False   ) :
         #
-        from copy import deepcopy
-        #
-        self.files        = []
         if isinstance ( files , str ) :  files =  [ files ]
         #
-        self.patterns     = deepcopy ( files ) 
+        #
+        
         self.description  = description
         self.maxfiles     = maxfiles
-        self.silent       = silent 
+        self.__silent     = silent 
+
+        from copy import deepcopy
+        self.__patterns   = list ( set ( deepcopy ( files ) ) )
+        self.__patterns.sort()
         
+        self.__files      = []        
+
         # =====================================================================
         # convert list of patterns into the list of files 
         # =====================================================================
         
-        _files   = set()
+        _files   = self.the_files ()
+
+        if not self.silent :
+            logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description   ,
+                                                                   len(self.patterns) , 
+                                                                   len( _files )    ) )        
+        self.add_files ( _files )
+
+        if not self.silent :
+            logger.info ('Loaded: %s' % self )
+            
+    @property 
+    def files     ( self ) :
+        """``files'' : the list of files"""
+        return tuple ( self.__files    )
+    
+    @property
+    def patterns  ( self ) :
+        """``patterns'' : the list of patterns"""
+        return tuple ( self.__patterns )
+    
+    @property
+    def silent    ( self ) :
+        """``silent'' : silent processing?"""
+        return self.__silent
+    @silent.setter
+    def silent    ( self , value ) :
+        self.__silent = True if value else  False
+        
+    # =========================================================================
+    ## Get the list of files form the patterns 
+    def the_files ( self ) :
+        """Get the list of files form the patterns"""
+        
+        _files = set ()
         for pattern in  self.patterns :
             
             _added = False  
@@ -120,18 +158,31 @@ class Files(object):
                 for f in glob.iglob ( pattern ) :
                     if not f in self.files :
                         _files.add ( f )
-                        
-        if not self.silent :
-            logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description   ,
-                                                                   len(self.patterns) , 
-                                                                   len( _files )    ) )
 
-        self.add_files ( _files )
+        ## final sort 
+        _files = list ( _files )
+        _files.sort   ()
+        
+        return tuple ( _files )
+        
+    # =========================================================================
+    ## set files 
+    def set_files ( self , files ) :
+        """Set files"""
+        assert isinstance ( files , ( list , tuple , set ) ),\
+               'Invalid list of files %s' % files
+        self.__files = list ( set ( files ) ) 
+        self.__files.sort()
 
-        if not self.silent :
-            logger.info ('Loaded: %s' % self )
-            
-                                   
+    # =========================================================================
+    ## set patterns
+    def set_patterns ( self , patterns ) :
+        """Set files"""
+        assert isinstance ( patterns , ( list , tuple , set ) ),\
+               'Invalid list of patterns %s' % patterns
+        self.__patterns = list ( set ( patterns ) ) 
+        self.__patterns.sort()
+
     def __getstate__ ( self ) :
 
         return {
@@ -143,11 +194,11 @@ class Files(object):
             }
     
     def __setstate__ ( self , state ) :
-        self.files       = state.get('files'      , []    ) 
-        self.patterns    = state.get('patterns'   , []    )
-        self.description = state.get('description', ''    )
-        self.maxfiles    = state.get('maxfiles'   , -1    )
-        self.silent      = state.get('silent'     , False )
+        self.__files     = state.get ( 'files'      , []    ) 
+        self.__patterns  = state.get ( 'patterns'   , []    )
+        self.description = state.get ( 'description', ''    )
+        self.maxfiles    = state.get ( 'maxfiles'   , -1    )
+        self.silent      = state.get ( 'silent'     , False )
 
 
     ## add files 
@@ -156,9 +207,14 @@ class Files(object):
         """
         
         if isinstance ( files  , str ) : files  = [ files  ]
-        
+
+        ## eliminate duplicates and sort 
+        files = list  ( set ( files ) )
+        files.sort ()
+        nf    = len ( files )
+        max_value = nf if 0 >= self.maxfiles else min ( nf , self.maxfiles )
         from ostap.utils.progress_bar import ProgressBar 
-        with ProgressBar ( max_value = len ( files ) , silent = self.silent ) as bar :
+        with ProgressBar ( max_value = max_value , silent = self.silent ) as bar :
             self.progress = bar 
             for f in files :
                 if   0 >= self.maxfiles                 : self.treatFile ( f ) 
@@ -169,7 +225,7 @@ class Files(object):
                 
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
-        self.files.append ( the_file )
+        self.__files.append ( the_file )
         self.progress += 1
  
      ## merge two sets together
@@ -182,8 +238,8 @@ class Files(object):
         p1 = set ( self .patterns )
         p2 = set ( other.patterns )
         
-        self.files    = list ( f1 | f2 )
-        self.patterns = list ( p1 | p2 )
+        self.set_files    ( f1 | f2 )
+        self.set_patterns ( p1 | p2 )
         
         return self
     
@@ -264,9 +320,9 @@ class Files(object):
                         silent       = True             )
         
         from copy import deepcopy
-        result.files    = deepcopy ( self.files    )
-        result.patterns = deepcopy ( self.patterns )
-        result.silent   = self.silent 
+        result.set_files    ( deepcopy ( self.files    ) ) 
+        result.set_patterns ( deepcopy ( self.patterns ) )
+        result.silent     = self.silent 
                                      
         return result 
 
@@ -303,12 +359,16 @@ class Files(object):
                        silent      = kwargs.get( 'silent'      , self.silent      ) )
     
     ##  reload!
-    def reload ( self ) :
-        self.files = []
-        from copy import deepcopy
-        self.add_files ( deepcopy ( self.patterns ) )
+    def reload ( self , silent = True ) :
         
-
+        prev_silent   = self.silent
+        self.__silent = silent
+        
+        self.__files  = []
+        self.add_files ( self.the_files ()  )
+        
+        self.__silent = prev_silent
+        
     # =========================================================================
     ##  Get an element or slice 
     #   @code
@@ -334,8 +394,8 @@ class Files(object):
         return "<#files: %4d>" % len ( self.files ) 
     
     def __repr__    ( self ) : return self.__str__()
-    def __nonzero__ ( self ) : return bool(self.files)
-    def __len__     ( self ) : return len (self.files)
+    def __nonzero__ ( self ) : return bool ( self.files )
+    def __len__     ( self ) : return len  ( self.files )
   
 
 # =============================================================================
@@ -427,7 +487,33 @@ class Data(Files):
         self.e_list1     = state.get('e_list1'    , set() )
         self.chain       = ROOT.TChain( state['chain'] )
         for f in  self.files :   self.chain.Add ( f ) 
-        
+
+    ## check the content of the two trees 
+    def check_trees ( self , tree1 , tree2 , the_file = '' ) :
+
+        if tree1 and tree2 :
+            
+            branches1 = set ( tree1.branches () )                
+            leaves1   = set ( tree1.leaves   () )
+            
+            branches2 = set ( tree2.branches () )                
+            leaves2   = set ( tree2.leaves   () )
+
+            if branches1 != branches2 :
+                missing = list ( branches1 - branches2 )
+                missing . sort ()
+                extra   = list ( branches2 - branches1 )
+                extra   . sort ()                    
+                logger.warning ( "Tree('%s'): missing/extra branches %s/%s in %s" %  ( tree1.GetName() , missing , extra , the_file ) )
+                
+            if ( ( branches1 != leaves1 ) or ( branches2 != leaves2 ) ) and leaves1 != leaves2 :
+                missing = list ( leaves1 - leaves2 )
+                missing . sort ()
+                extra   = list ( leaves2 - leaves1 )
+                extra   . sort ()                    
+                logger.warning ( "Tree('%s'): missing/extra leaves   %s/%s in %s" %  ( tree1.GetName() , missing , extra , the_file ) )
+
+                
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         """Add the file to TChain
@@ -439,7 +525,8 @@ class Data(Files):
             tmp1 = ROOT.TChain ( self.chain .GetName() )
             tmp1.Add ( the_file )
             
-            if  tmp1 :
+            if  tmp1 :                
+                self.check_trees ( tmp1 , self.chain , the_file )                
                 Files.treatFile ( self     , the_file ) 
                 self.chain .Add ( the_file )
             else : 
@@ -459,8 +546,7 @@ class Data(Files):
                "<#files: {}; Entries: {}; No/empty: {}>".format ( nf , nc  ,  ne ) 
 
 
-
-      ## conversion to boolean
+    ## conversion to boolean
     def __nonzero__ ( self )  :
         return bool(self.files) and bool(self.chain)
 
@@ -485,8 +571,8 @@ class Data(Files):
                 other.chain.GetName() , 
                 ) )
 
-        self.patterns += other.patterns
-        for f in other.e_list1 :self.e_list1.add ( f ) 
+        self.set_patterns ( self.patterns + other.patterns )
+        for f in other.e_list1 : self.e_list1.add ( f ) 
         for f in other.files :
             if not f in self.files : 
                 self.chain. Add ( f )
@@ -544,20 +630,18 @@ class Data(Files):
         for f in self.files : result.chain.Add ( f ) 
         
         from copy import deepcopy
-        result.files    = deepcopy ( self.files    ) 
-        result.patterns = deepcopy ( self.patterns ) 
-        result.e_list1  = deepcopy ( self.e_list1  ) 
+        result.set_files    ( deepcopy ( self.files    ) )
+        result.set_patterns ( deepcopy ( self.patterns ) )
+        result.e_list1      = deepcopy ( self.e_list1  ) 
         
         return result 
     
     ##  reload!
-    def reload ( self ) :
-        self.files   = [] 
+    def reload ( self , silent = True ) :
         self.chain   = ROOT.TChain ( self.chain.GetName() )
         self.e_list1 = set() 
-        ## 
-        from copy import deepcopy
-        self.add_files ( deepcopy ( self.patterns ) )
+        ##
+        Files.reload ( self , silent ) 
 
     # =========================================================================
     ##  Get a sub-sample
@@ -650,30 +734,43 @@ class Data2(Data):
         self.missing1st = missing1st
         self.missing2nd = missing2nd
         
-        self.files  = []
-        self.files2 = []
+        self.__files2 = []
         if not quick : 
             Data.__init__( self , chain1 , files , description , maxfiles , silent , quick = False )
             self.chain1  = self.chain 
-            self.files   = self.chain .files()[:]
-            self.files2  = self.chain2.files()[:]
+            self.set_files  ( self.chain .files()[:] ) 
+            self.set_files2 ( self.chain2.files()[:] )
         else :
             Data.__init__( self , chain1 , []    , description , maxfiles , silent =  True , quick = True )
             self.chain1  = self.chain 
             self.silent  = silent
-            self.files   = self._quick_add_ ( self.chain  ,  files )
-            self.files2  = self._quick_add_ ( self.chain2 ,  files )
-            self.files   = self.chain .files()[:]
-            self.files2  = self.chain2.files()[:]
+            self.set_files  ( self._quick_add_ ( self.chain  ,  files ) ) 
+            self.set_files2 ( self._quick_add_ ( self.chain2 ,  files ) ) 
+            self.set_files  ( self.chain .files()[:] ) 
+            self.set_files2 ( self.chain2.files()[:] ) 
             if not self.silent :
                 logger.info ('Loaded: %s' % self )
 
+    @property 
+    def files2    ( self ) :
+        """``files2'' : the list of files"""
+        return tuple ( self.__files2   ) 
+
+    # =========================================================================
+    ## set files 
+    def set_files2 ( self , files ) :
+        """Set files2"""
+        assert isinstance ( files , ( list , tuple , set ) ),\
+               'Invalid list of files %s' % files
+        self.__files2 = list ( set ( files ) ) 
+        self.__files2.sort()
+        
     def __getstate__ ( self ) :
 
         state = Data.__getstate__( self )
         state [ 'e_list2'    ] = self.e_list2
         state [ 'chain2'     ] = self.chain2.GetName()
-        state [ 'files2'     ] = self.files2 
+        state [ 'files2'     ] = self.__files2 
         state [ 'missing1st' ] = self.missing1st
         state [ 'missing2nd' ] = self.missing2nd
         
@@ -683,17 +780,17 @@ class Data2(Data):
 
         Data.__setstate__ ( self , state )
         
-        self.e_list2     = state.get   ('e_list2'    , set() )
-        self.chain2      = ROOT.TChain ( state['chain2'] )
-        self.files2      = state.get   ('files2'     , []    )
-        self.missing1st  = state.get   ('missing1st' , True  )
-        self.missing2nd  = state.get   ('missing2nd' , True  )
+        self.e_list2     = state.get   ( 'e_list2'    , set() )
+        self.chain2      = ROOT.TChain (  state['chain2'] )
+        self.__files2    = state.get   ( 'files2'     , []    )
+        self.missing1st  = state.get   ( 'missing1st' , True  )
+        self.missing2nd  = state.get   ( 'missing2nd' , True  )
         
         for f in  self.files2 : self.chain2.Add ( f ) 
         
         self.chain1  = self.chain 
 
-      ## the specific action for each file 
+    ## the specific action for each file 
     def treatFile ( self, the_file ) :
         """Add the file to TChain
         """
@@ -705,25 +802,28 @@ class Data2(Data):
             tmp2 = ROOT.TChain ( self.chain2.GetName() )
             tmp2.Add ( the_file )
 
+            if tmp1 : self.check_trees ( tmp1 , self.chain  , the_file )
+            if tmp2 : self.check_trees ( tmp2 , self.chain2 , the_file )
+  
             if  tmp1 and tmp2      : 
                 Files.treatFile ( self     , the_file ) 
-                self.chain .Add    ( the_file )
-                self.chain2.Add    ( the_file )
-                self.files2.append ( the_file ) 
+                self.chain .Add      ( the_file )
+                self.chain2.Add      ( the_file )
+                self.__files2.append ( the_file ) 
             elif tmp2 and not tmp1 and self.missing1st :
                 self.e_list1.add ( the_file  )
                 if not self.silent : 
                     logger.warning ( "No/empty chain1 '%s'      in file '%s'" % ( self.chain .GetName() ,
                                                                                   the_file )            )
                 self.chain2.Add ( the_file )
-                self.files2.append ( the_file ) 
+                self.__files2.append ( the_file ) 
             elif tmp1 and not tmp2 and self.missing2nd :  
                 self.e_list2.add ( the_file )
                 if not self.silent : 
                     logger.warning ( "No/empty chain2 '%s'      in file '%s'" % ( self.chain2.GetName() ,
                                                                                   the_file )            ) 
                 self.chain .Add ( the_file )            
-                self.files .append ( the_file ) 
+                self.set_files  ( self.files + ( the_file , ) )  
             else :
                 self.e_list1.add ( the_file )
                 self.e_list2.add ( the_file )
@@ -782,7 +882,7 @@ class Data2(Data):
                 other.chain2.GetName() , 
                 ) )
 
-        self.patterns += other.patterns
+        self.set_patterns ( self.patterns + other.patterns )
         for f in other.e_list1 :self.e_list1.add ( f ) 
         for f in other.e_list2 :self.e_list2.add ( f )
         #
@@ -832,9 +932,9 @@ class Data2(Data):
         p1  = set ( self .patterns )
         p2  = set ( other.patterns )
         
-        result.files    = list ( f1 & f1o )
-        result.files2   = list ( f2 & f2o )        
-        result.patterns = list ( p1 | p2 )
+        result.set_files    ( f1 & f1o )
+        result.set_files2   ( f2 & f2o )        
+        result.set_patterns ( p1 | p2  )
         result.e_list1  = self.e_list1 | other.e_list1
         result.e_list2  = self.e_list2 | other.e_list2
         result.silent   = self.silent
@@ -863,27 +963,24 @@ class Data2(Data):
         result.chain1  = result.chain
 
         from copy import deepcopy
-        result.files       = deepcopy ( self.files      ) 
-        result.files2      = deepcopy ( self.files2     ) 
-        result.patterns    = deepcopy ( self.patterns   ) 
-        result.e_list1     = deepcopy ( self.e_list1    ) 
-        result.e_list2     = deepcopy ( self.e_list2    ) 
-        result.missing1st  = deepcopy ( self.missing1st ) 
-        result.missing2nd  = deepcopy ( self.missing2nd ) 
+        result.set_files    ( self.files    ) 
+        result.set_files2   ( self.files2   ) 
+        result.set_patterns ( self.patterns ) 
+        result.e_list1      = deepcopy ( self.e_list1    ) 
+        result.e_list2      = deepcopy ( self.e_list2    ) 
+        result.missing1st   = deepcopy ( self.missing1st ) 
+        result.missing2nd   = deepcopy ( self.missing2nd ) 
         
         return result 
 
     ##  reload!
-    def reload ( self ) :
-        self.files   = [] 
-        self.files2  = [] 
-        self.chain   = ROOT.TChain ( self.chain .GetName() )
-        self.chain2  = ROOT.TChain ( self.chain2.GetName() )
-        self.e_list1 = set () 
-        self.e_list2 = set ()
-        ## 
-        from copy import deepcopy
-        self.add_files ( deepcopy ( self.patterns ) )
+    def reload ( self , silent = True ) :
+        self.__files2  = []
+        ##
+        self.chain2    = ROOT.TChain ( self.chain2.GetName() )
+        self.e_list2   = set ()
+        ##
+        Data.reload ( self , silent ) 
         ##
         self.chain1  = self.chain 
 

@@ -217,7 +217,7 @@ def _sc_print_ ( sc ) :
     """
     BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list ( range ( 8 ) )
     ##
-    from ostap.logger.logger   import colored_string
+    from ostap.logger.colorized import colored_string
     if   sc.isSuccess     () : return colored_string( 'SUCCESS'     , WHITE , GREEN  , True ) 
     elif sc.isRecoverable () : return colored_string( 'RECOVERABLE' , RED   , YELLOW , True ) 
     elif _FAILURE != sc.getCode  () :
@@ -345,7 +345,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
 # =============================================================================
 ## Set/Set name/title 
-# ==========================================================================
+# =============================================================================
 def _tn_name_get_ ( self )         : return self.GetName()
 def _tn_name_set_ ( self , value ) : self.SetName( value )
 _tn_name_doc_ = "``name'' of the object using GetName/SetName"
@@ -354,6 +354,27 @@ def _tn_title_set_ ( self , value ) : self.SetTitle( value )
 _tn_title_doc_ = "``title'' of the object using GetTitle/SetTitle"
 ROOT.TNamed.name  = property ( _tn_name_get_  ,  _tn_name_set_  , None , _tn_name_doc_  ) 
 ROOT.TNamed.title = property ( _tn_title_get_ ,  _tn_title_set_ , None , _tn_title_doc_ ) 
+
+# =============================================================================
+## Get the full path of the named object
+#  @code
+#  obj  = ...
+#  path = obj.path
+#  @endcode 
+def _tn_path_ ( obj ) :
+    """Get the full path of the named object
+    >>> obj  = ...
+    >>> path = obj.path
+    """
+    if not valid_pointer ( obj ) : return "<INVALID-OBJECT>"
+    d = obj.GetDirectory() if hasattr ( obj , 'GetDirectory' ) else None 
+    if not d : return obj.GetName()
+    dp = d.GetPath()
+    h , s , p = dp.rpartition(':/')
+    if p : return  '/'.join ( [ p , obj.GetName () ] )
+    return obj.GetName() 
+
+ROOT.TNamed.path = property ( _tn_path_ , None , None , None  ) 
 
 # =============================================================================
 ## split string using separators: blanks,
@@ -392,6 +413,20 @@ def loop_items ( d ) :
 # =============================================================================
 ## define the build directory for ROOT 
 import ostap.core.build_dir 
+
+# =============================================================================
+_decorated_classes_ = (
+    ROOT.TObject ,
+    ROOT.TNamed  ,   
+    )
+
+_new_methods_       = (
+    #
+    ROOT.TObject.draw  ,
+    ROOT.TNamed .name  ,
+    ROOT.TNamed .title ,
+    ROOT.TNamed .path  ,
+    )
 
 # =============================================================================
 if '__main__' == __name__ :

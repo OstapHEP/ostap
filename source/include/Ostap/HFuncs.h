@@ -28,7 +28,7 @@ namespace Ostap
     /** @class FuncTH Ostap/HFuncs.h
      *  simple implementation of Tree-function based on TH
      */
-    class FuncTH : public Ostap::IFuncTree, public TObject
+    class FuncTH : public TObject , public Ostap::IFuncTree
     {
     public:
       // ======================================================================
@@ -125,6 +125,10 @@ namespace Ostap
       /// destructor 
       virtual ~FuncTH1 () ;
       // ======================================================================
+    public:
+      // ======================================================================
+      FuncTH1* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
     protected : // private constructor without histogram 
       // ======================================================================
       /** constructor without histogram 
@@ -146,7 +150,7 @@ namespace Ostap
     public:
       // ======================================================================
       ///  evaluate the formula for  TTree
-      double operator() ( const TTree* tree ) const override ;
+      double operator () ( const TTree* tree ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -155,8 +159,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      Bool_t Notify () override { return notify () ; }
-      bool   notify () const ;
+      Bool_t Notify () override  ; 
       // ======================================================================
     private: 
       // ======================================================================
@@ -245,6 +248,10 @@ namespace Ostap
       /// destructor 
       virtual ~FuncTH2 () ;
       // ======================================================================
+    public:
+      // ======================================================================
+      FuncTH2* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
     protected : // private constructor without histogram 
       // ======================================================================
       /** constructor without histogram 
@@ -281,8 +288,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      Bool_t Notify () override { return notify () ; }
-      bool   notify () const ;
+      Bool_t Notify () override ;
       // ======================================================================
     protected:
       // ======================================================================
@@ -390,6 +396,10 @@ namespace Ostap
       /// destructor 
       virtual ~FuncTH3 () ;
       // ======================================================================
+    public:
+      // ======================================================================
+      FuncTH3* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
     protected : // private constructor without histogram 
       // ======================================================================
       /** constructor without histogram 
@@ -430,8 +440,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      Bool_t Notify () override { return notify () ; }
-      bool   notify () const ;
+      Bool_t Notify () override ; 
       // ======================================================================
     protected:
       // ======================================================================

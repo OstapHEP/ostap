@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file ostap/tools/splot.py
-#  Helper utilities to get sWeights in a form of function/histogram
+#  Helper utilities to get sWeights in a form of a function or histogram
 #  (often needed in practice, e.g to add these values to TTree, 
 #  avoiding the direct usage of ROOT.RooStat.SPlot)
 # 
@@ -16,7 +16,7 @@
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 
 # =============================================================================
-""" Helper utilities to get sWeights in a form of function/histogram
+""" Helper utilities to get sWeights in a form of a function or histogram
 (often needed in practice, e.g to add these values to TTree,
 avoiding the direct usage of ROOT.RooStat.SPlot)
 
@@ -50,7 +50,7 @@ from   ostap.fitting.variables    import FIXVAR
 from   ostap.histos.histos        import Histo1DFun 
 # =============================================================================
 #  @class sPlot1D
-#  Helper class to get <code>sWeigts</code> in a form of historgams/function objects.
+#  Helper class to get <code>sWeigts</code> in a form of a historgams  or function objects.
 #  It is often useful to avoid the direct usage of ROOT.RooStat.SPlot 
 #  @see RooStat::SPlot
 #  @see M.Pivk, F.R. Le Deberder,
@@ -59,6 +59,14 @@ from   ostap.histos.histos        import Histo1DFun
 #  @see http://arxiv.org/abs/physics/0402083
 #  @see https://doi.org/10.1016/j.nima.2005.08.106
 #  @date   2019-05-14
+#  @code
+#  dataset = ...
+#  pdf     = ...
+#  r , f   = pdf.fitTo ( dataset , ... )
+#  s = sPlot1D ( pdf , dataset )
+#  weigths  = s. weights
+#  hweigths = s.hweights
+#  @endcode
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 class sPlot1D(object) :
     """ Helper class to get sWeigtts in form of historgams/function objects.
@@ -69,6 +77,12 @@ class sPlot1D(object) :
     ...    Published in Nucl.Instrum.Meth. A555 (2005) 356
     - see http://arxiv.org/abs/physics/0402083
     - see https://doi.org/10.1016/j.nima.2005.08.106
+    
+    >>> pdf     = ...
+    >>> r , f   = pdf.fitTo ( dataset , ... )
+    >>> s = sPlot1D ( pdf , dataset )
+    >>> weigths  = s. weights
+    >>> hweigths = s.hweights
     """
     def __init__ ( self             ,
                    pdf              ,
@@ -76,10 +90,9 @@ class sPlot1D(object) :
                    fitresult = None ,  
                    fast      = True ,   ## fast histogram filling ? (bin centers)
                    nbins     = 100  ,   ## histogram bining 
-                   access    = {}   ,   ## historgam access options 
+                   access    = {}   ,   ## histogram access options 
                    fitopts   = {}   ) : ## PDF.fitTo options 
-        
-        
+                
         assert dataset or fitresult, 'Either dataset or fitresult must be specified!'
         
         assert isinstance ( pdf     , PDF              ) and \
@@ -95,7 +108,8 @@ class sPlot1D(object) :
             vars   = pdf.pdf.getParameters ( dataset )
 
             ## make a proper (re)fit fixing everything  but yields
-            with FIXVAR ( [ v  for v in vars if not v in cmps ] ) :                 
+            with FIXVAR ( [ v  for v in vars if not v in cmps ] ) :
+                logger.info ('Refit with the fixed parameters') 
                 fitresult , f = pdf.fitTo ( dataset , silent = True , draw = False , **fitopts )
                 
         elif fitresult :
@@ -120,9 +134,6 @@ class sPlot1D(object) :
             if fast  : hc = p.roo_histo ( histo = template , events = False )
             else     : hc = p.    histo ( histo = template , errors = False )
             
-            ## ## convert to density historgam ?
-            ## hc   =  hc.density()
-            
             hcomponents [ n ] = hc
 
         ## sum of all histograms 
@@ -146,7 +157,6 @@ class sPlot1D(object) :
         del hsum
         del template 
 
-
         components = {}
         for k in hcomponents : components [k] = Histo1DFun ( hcomponents [k] , **access )
         
@@ -156,10 +166,8 @@ class sPlot1D(object) :
         self.__hcomponents = hcomponents
         self.__components  =  components 
         self.__hweights    = hweights 
-        self.__weights     =  weights 
-        
-        
-        
+        self.__weights     =  weights         
+                
     @property
     def components  ( self ) :
         """``components''  :  get fit components (as functions)"""

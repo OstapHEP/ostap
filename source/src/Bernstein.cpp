@@ -1561,7 +1561,7 @@ namespace
   {
     if ( k < j ) { return 0 ; }
     const long double c = 
-      Ostap::Math::choose ( k , j ) * Ostap::Math::pow ( 2 , j ) ;
+      Ostap::Math::choose ( k , j ) * Ostap::Math::POW ( 2 , j ) ;
     //
     return 0 == ( k - j ) % 2 ?  c : -c ;
   }
@@ -1773,7 +1773,7 @@ double Ostap::Math::integrate_poly
   }
   //
   return 
-    Ostap::Math::pow ( b.xmax() - b.xmin()  , m + 1 ) * 
+    Ostap::Math::POW ( b.xmax() - b.xmin()  , m + 1 ) * 
     std::accumulate  ( nc.begin() , nc.end() , 0.0L ) / ( N + m + 1 ) ;
 }
 // ============================================================================ 
@@ -1798,7 +1798,7 @@ namespace
     //
     Ostap::Math::Bernstein a ( nc.begin() , nc.end  () , b.xmin() , b.xmax() ) ;
     //
-    return Ostap::Math::pow ( b.xmax() - b.xmin()  , m ) * a.integral ( low , high ) ;  
+    return Ostap::Math::POW ( b.xmax() - b.xmin()  , m ) * a.integral ( low , high ) ;  
   }
   // ==========================================================================
 }

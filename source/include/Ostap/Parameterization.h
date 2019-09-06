@@ -173,24 +173,24 @@ namespace Ostap
     public : // projections/integrations  as functions 
       // ======================================================================
       /** integrate over x dimension 
-       *  \f$ f(y) =  \int_{x_{min}}^{x_{max}} F(x,y) \deriv x \f$
+       *  \f$ f(y) =  \int_{x_{min}}^{x_{max}} F(x,y) {\mathrm{d}} x \f$
        */
       LegendreSum integralX  () const ;
       // ======================================================================
       /** integrate over Y dimension 
-       *  \f$ f(x) =  \int_{y_{min}}^{y_{max}} F(x,y) \deriv y \f$
+       *  \f$ f(x) =  \int_{y_{min}}^{y_{max}} F(x,y) {\mathrm{d}} y \f$
        */
       LegendreSum integralY  () const ;
       // ======================================================================
     public:
       // ======================================================================
       /** integrate over x dimension 
-       *  \f$ f(y) =  \int_{x_{low}}^{x_{high}} F(x,y) \deriv x \f$
+       *  \f$ f(y) =  \int_{x_{low}}^{x_{high}} F(x,y) {\mathrm{d}} x \f$
        */
       LegendreSum integralX  ( const double xlow  , const double xhigh ) const ;
       // ======================================================================
       /** integrate over y dimension 
-       *  \f$ f(x) =  \int_{y_{low}}^{y_{high}} F(x,y) \deriv y \f$
+       *  \f$ f(x) =  \int_{y_{low}}^{y_{high}} F(x,y) {\mathrm{d}} y \f$
        */
       LegendreSum integralY  ( const double ylow  , const double yhigh ) const ;
       // ======================================================================
@@ -198,7 +198,7 @@ namespace Ostap
       // =======================================================================
       /** get the integral 
        *  \f$ \int_{x_{low}}^{x_{high}}
-       *      \int_{y_{low}}^{y_{high}} F(x,y)\deriv x \deriv y \f$
+       *      \int_{y_{low}}^{y_{high}} F(x,y){\mathrm{d}} x {\mathrm{d}} y \f$
        */
       double      integral   ( const double xlow  ,   
                                const double xhigh , 
@@ -207,7 +207,7 @@ namespace Ostap
       // =====================================================================
       /** get the integral 
        *  \f$ \int_{x_{min}}^{x_{max}}
-       *      \int_{y_{min}}^{y_{max}}F(x,y)\deriv x \deriv y \f$
+       *      \int_{y_{min}}^{y_{max}}F(x,y){\mathrm{d}} x {\mathrm{d}} y \f$
        */
       double      integral   ()                     const ;
       // ======================================================================
@@ -270,10 +270,10 @@ namespace Ostap
     // ========================================================================
     /** @class  LegendreSum3  Ostap/Parameterization.h
      *  3D-parameterization  as sum of Legendre polynomials 
-     *  \f$ S(x,y,z) = \sum_{i0}^{n_x}\sum_{j=0}^{n_y}\sum_{k=0}^{n_z}c_{i,j}
+     *  \f[ S(x,y,z) = \sum_{i0}^{n_x}\sum_{j=0}^{n_y}\sum_{k=0}^{n_z}c_{i,j}
      *      P_i(x^\prime)
-     *      P_j(y^\prime)\f$,
-     *      P_k(z^\prime)\f$,
+     *      P_j(y^\prime)
+     *      P_k(z^\prime)\f],
      * where:
      *  - \f$ x^{\prime} = \frac{2x-x_{min}-x_{max}}{x_{max}-x_{min}}\f$,
      *  - \f$ y^{\prime} = \frac{2y-y_{min}-y_{max}}{y_{max}-y_{min}}\f$. 
@@ -286,10 +286,10 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor 
-       *  \f$ S(x,y,z) = \sum_{i0}^{n_x}\sum_{j=0}^{n_y}\sum_{k=0}^{n_z}c_{i,j}
+       *  \f[ S(x,y,z) = \sum_{i0}^{n_x}\sum_{j=0}^{n_y}\sum_{k=0}^{n_z}c_{i,j}
        *      P_i(x^\prime)
-       *      P_j(y^\prime)\f$,
-       *      P_k(z^\prime)\f$,
+       *      P_j(y^\prime)
+       *      P_k(z^\prime)\f],
        * where:
        *  - \f$ x^{\prime} = \frac{2x-x_{min}-x_{max}}{x_{max}-x_{min}}\f$,
        *  - \f$ y^{\prime} = \frac{2y-y_{min}-y_{max}}{y_{max}-y_{min}}\f$. 
@@ -307,7 +307,7 @@ namespace Ostap
         const double   zmax     =  1 ) ;
       // ======================================================================
       /** constructor orm the product of two Legendre sums
-       *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \timex S_z(z) \f$ 
+       *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 
        *  @param sx (INPUT) the first  Legendre sum 
        *  @param sy (INPUT) the second Legendre sum 
        *  @param sz (INPUT) the third Legendre sum 
@@ -317,7 +317,7 @@ namespace Ostap
                      const LegendreSum&  sz ) ;
       // ======================================================================
       /** constructor form the product of two Legendre sums
-       *  \f$ S(x,y,z) = S_{xy}(x,y) \timex S_z(z) \f$ 
+       *  \f$ S(x,y,z) = S_{xy}(x,y) \times S_z(z) \f$ 
        *  @param sxy (INPUT) the first  Legendre sum 
        *  @param sz  (INPUT) the second Legendre sum 
        */
@@ -468,34 +468,34 @@ namespace Ostap
     public : // projections/integrations
       // ======================================================================
       /** integrate over x dimension 
-       *  \f$ f_x(y,z) =  \int_{x_{min}}^{x_{max}} f(x,y,z) \deriv x \f$
+       *  \f$ f_x(y,z) =  \int_{x_{min}}^{x_{max}} f(x,y,z) {\mathrm{d}} x \f$
        */
       LegendreSum2  integralX  () const ;
       // ======================================================================
       /** integrate over y dimension 
-       *  \f$ f_y(x,z) =  \int_{y_{min}}^{y_{max}} f(x,y,z) \deriv y \f$
+       *  \f$ f_y(x,z) =  \int_{y_{min}}^{y_{max}} f(x,y,z) {\mathrm{d}} y \f$
        */
       LegendreSum2 integralY  () const ;
       // ======================================================================
       /** integrate over z dimension 
-       *  \f$ f_z(x,y) =  \int_{z_{min}}^{z_{max}} f(x,y,z) \deriv z \f$
+       *  \f$ f_z(x,y) =  \int_{z_{min}}^{z_{max}} f(x,y,z) {\mathrm{d}} z \f$
        */
       LegendreSum2 integralZ  () const ;
       // ======================================================================
     public:
       // ======================================================================
       /** integrate over x dimension 
-       *  \f$ f_x(y,z) =  \int_{x_{low}}^{x_{high}} f(x,y,z) \deriv x \f$
+       *  \f$ f_x(y,z) =  \int_{x_{low}}^{x_{high}} f(x,y,z) {\mathrm{d}} x \f$
        */
       LegendreSum2 integralX ( const double xlow , const double xhigh ) const ;
       // ======================================================================
       /** integrate over y dimension 
-       *  \f$ f_y(x,z) =  \int_{y_{low}}^{y_{high}} f(x,y,z) \deriv y \f$
+       *  \f$ f_y(x,z) =  \int_{y_{low}}^{y_{high}} f(x,y,z) {\mathrm{d}} y \f$
        */
       LegendreSum2 integralY ( const double ylow , const double yhigh ) const ;
       // ======================================================================
       /** integrate over z dimension 
-       *  \f$ f_z(x,y) =  \int_{z_{low}}^{z_{high}} f(x,y,z) \deriv z \f$
+       *  \f$ f_z(x,y) =  \int_{z_{low}}^{z_{high}} f(x,y,z) {\mathrm{d}} z \f$
        */
       LegendreSum2 integralZ ( const double zlow , const double zhigh ) const ;
       // ======================================================================
@@ -503,7 +503,7 @@ namespace Ostap
       // ======================================================================
       /** integral 
        *  \f$ \int_{x_{low}}^{x_{high}}\int_{y_{low}}^{y_{high}}
-       *    \int_{z_{low}}^{z_{high}} f(x,y,z) \deriv x \deriv y \deriv z \f$ 
+       *    \int_{z_{low}}^{z_{high}} f(x,y,z) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z \f$ 
        */
       double integral ( const double xlow , const double xhigh , 
                         const double ylow , const double yhigh , 
@@ -511,7 +511,7 @@ namespace Ostap
       // ======================================================================
       /** integral 
        *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}
-       *    \int_{z_{min}}^{z_{max}} f(x,y,z) \deriv x \deriv y \deriv z \f$ 
+       *    \int_{z_{min}}^{z_{max}} f(x,y,z) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z \f$ 
        */
       double integral () const ;
       // ======================================================================
@@ -779,44 +779,44 @@ namespace Ostap
     public : // projections/integrations
       // ======================================================================
       /** integrate over x dimension 
-       *  \f$ f(y,z,u) =  \int_{x_{min}}^{x_{max}} F(x,y,z,u) \deriv x \f$
+       *  \f$ f(y,z,u) =  \int_{x_{min}}^{x_{max}} F(x,y,z,u) {\mathrm{d}} x \f$
        */
       LegendreSum3  integralX  () const ;
       // ======================================================================
       /** integrate over y dimension 
-       *  \f$ f(x,z,u) =  \int_{y_{min}}^{y_{max}} F(x,y,z,u) \deriv y \f$
+       *  \f$ f(x,z,u) =  \int_{y_{min}}^{y_{max}} F(x,y,z,u) {\mathrm{d}} y \f$
        */
       LegendreSum3  integralY  () const ;
       // ======================================================================
       /** integrate over z dimension 
-       *  \f$ f(x,y,u) =  \int_{z_{min}}^{z_{max}} F(x,y,z,u) \deriv z \f$
+       *  \f$ f(x,y,u) =  \int_{z_{min}}^{z_{max}} F(x,y,z,u) {\mathrm{d}} z \f$
        */
       LegendreSum3  integralZ  () const ;
       // ======================================================================
       /** integrate over u dimension 
-       *  \f$ f(x,y,z) =  \int_{u_{min}}^{u_{max}} F(x,y,z,u) \deriv u \f$
+       *  \f$ f(x,y,z) =  \int_{u_{min}}^{u_{max}} F(x,y,z,u) {\mathrm{d}} u \f$
        */
       LegendreSum3  integralU  () const ;
       // ======================================================================
     public:
       // ======================================================================
       /** integrate over x dimension 
-       *  \f$ f(y,z,u) =  \int_{x_{low}}^{x_{high}} F(x,y,z,u) \deriv x \f$
+       *  \f$ f(y,z,u) =  \int_{x_{low}}^{x_{high}} F(x,y,z,u) {\mathrm{d}} x \f$
        */
       LegendreSum3 integralX ( const double xlow , const double xhigh ) const ;
       // ======================================================================
       /** integrate over y dimension 
-       *  \f$ f(x,z,u) =  \int_{y_{low}}^{y_{high}} F(x,y,z,u) \deriv y \f$
+       *  \f$ f(x,z,u) =  \int_{y_{low}}^{y_{high}} F(x,y,z,u) {\mathrm{d}} y \f$
        */
       LegendreSum3 integralY ( const double ylow , const double yhigh ) const ;
       // ======================================================================
       /** integrate over z dimension 
-       *  \f$ f(x,y,u) =  \int_{z_{low}}^{z_{high}} F(x,y,z,u) \deriv z \f$
+       *  \f$ f(x,y,u) =  \int_{z_{low}}^{z_{high}} F(x,y,z,u) {\mathrm{d}} z \f$
        */
       LegendreSum3 integralZ ( const double zlow , const double zhigh ) const ;
       // ======================================================================
       /** integrate over u dimension 
-       *  \f$ f(x,y,z) =  \int_{u_{low}}^{u_{high}} F(x,y,z,u) \deriv u \f$
+       *  \f$ f(x,y,z) =  \int_{u_{low}}^{u_{high}} F(x,y,z,u) {\mathrm{d}} u \f$
        */
       LegendreSum3 integralU ( const double ulow , const double uhigh ) const ;
       // ======================================================================
@@ -825,7 +825,7 @@ namespace Ostap
       /** integral 
        *  \f$ \int_{x_{low}}^{x_{high}}\int_{y_{low}}^{y_{high}}
        *      \int_{z_{low}}^{z_{high}}\int_{u_{low}}^{u_{high}}
-       *       f(x,y,z,u) \deriv x \deriv y \deriv z \deriv u \f$ 
+       *       f(x,y,z,u) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z {\mathrm{d}} u \f$ 
        */
       double integral ( const double xlow , const double xhigh , 
                         const double ylow , const double yhigh , 
@@ -835,7 +835,7 @@ namespace Ostap
       /** integral 
        *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}
        *      \int_{z_{min}}^{z_{max}}\int_{u_{min}}^{u_{max}} 
-       *      f(x,y,z,u) \deriv x \deriv y \deriv z \deriv u \f$ 
+       *      f(x,y,z,u) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z {\mathrm{d}} u \f$ 
        */
       double integral () const ;
       // ======================================================================

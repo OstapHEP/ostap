@@ -34,39 +34,15 @@
 // ============================================================================
 namespace 
 {
-  // ==========================================================================
-  // Bukin & Co
-  // ==========================================================================
-  /** @var s_Bukin
-   *  useful constant for Bukin's function
-   *  \f$ \sqrt{ 2 \log 2 } \f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  constexpr double s_Bukin   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
-  // ==========================================================================
-  /** @var s_ln2
-   *  useful constant for Bukin's function
-   *  \f$ \log 2 \f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  constexpr double s_ln2 = std::log ( 2.0 ) ;
-  // ==========================================================================
-  // Novosibirsk & Co
-  // ==========================================================================
-  /** @var s_Novosibirsk
-   *  useful constant for evaliuation of ``Novosibirsk'' function
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
-  const double s_Novosibirsk = std::sqrt ( std::log ( 4.0 ) ) ;
+
+
   // ==========================================================================
   /** evaluate the helper function \f[ f = \frac{\sinh (x) }{x} \f]
-   *  it allows to calculate Novosibirsk's function in efficient and regular way
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
+  *  it allows to calculate Novosibirsk's function in efficient and regular way
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2010-05-23
+  */
+
   double x_sinh ( const double x , double precision = s_PRECISION )
   {
     //
@@ -795,9 +771,9 @@ double Ostap::Math::GenGaussV2::kurtosis () const
   //
   const double ek2 = my_exp ( kappa() * kappa() ) ;
   //
-  return  Ostap::Math::pow ( ek2 , 4 )  
-    + 2 * Ostap::Math::pow ( ek2 , 3 ) 
-    + 3 * Ostap::Math::pow ( ek2 , 2 ) - 6 ;
+  return  Ostap::Math::POW ( ek2 , 4 )  
+    + 2 * Ostap::Math::POW ( ek2 , 3 ) 
+    + 3 * Ostap::Math::POW ( ek2 , 2 ) - 6 ;
 }
 // ============================================================================
 // get the tag 

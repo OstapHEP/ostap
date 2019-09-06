@@ -91,6 +91,8 @@ __all__     = (
     'vFloats'        , ## std::vector<float>
     'vInts'          , ## std::vector<int>
     'vLongs'         , ## std::vector<long>
+    ##
+    'frexp10'        , ## similar to math.frexp but woith radix=10
     ) 
 # =============================================================================
 import ROOT, cppyy, sys 
@@ -119,6 +121,7 @@ vDoubles = std.vector ( 'double' )
 vFloats  = std.vector ( 'float'  )
 vInts    = std.vector ( 'int'    )
 vLongs   = std.vector ( 'long'   )
+
 
 # =============================================================================
 ##  get the sign of the number 
@@ -594,12 +597,34 @@ def is_complex ( value ) :
     """
     return isinstance ( value , ( complex, COMPLEX , COMPLEXf  , COMPLEXl ) )
 
+# =============================================================================
 ## decorated classes 
 _decorated_classes_  = (
     COMPLEX  ,
     COMPLEXf ,
     COMPLEXl ,
     )
+
+# =============================================================================
+## C++ version of frexp woith radix 10 
+cpp_frexp10 = Ostap.Math.frexp10 
+# =============================================================================
+## get mantissa (0.1<=m<1) and exponent for radix10
+#  similar for frexp, but use radix=10
+#  @code
+#  m,e = frexp10 ( value ) 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-07-20
+def frexp10 ( value ) :
+    """Get the mantissa (0.1<=m<1) and exponent for radix10
+    (similar for frexp, but use radix=10)
+    
+    >>> a,b = frexp10 ( value ) 
+    """
+    #
+    p = cpp_frexp10 ( value )
+    return p.first, p.second
 
 # =============================================================================
 if '__main__' == __name__ :

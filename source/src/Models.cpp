@@ -1049,7 +1049,7 @@ double Ostap::Math::Amoroso::variance () const
     const double gx1 = gsl_sf_gamma ( x1       ) ;
     const double gx2 = gsl_sf_gamma ( x2       ) ;
     //
-    return theta2() * ( gx2 / ga - Ostap::Math::pow ( gx1 / ga , 2 ) ) ;
+    return theta2() * ( gx2 / ga - Ostap::Math::POW ( gx1 / ga , 2 ) ) ;
   }
   //
   const double lnga = gsl_sf_lngamma ( alpha () ) ;
@@ -1438,7 +1438,7 @@ double Ostap::Math::BetaPrime::variance () const
   const double a = alpha () ;
   const double b = beta  () ;
   //
-  return m_scale * m_scale * a *  ( a + b + 1 ) / ( b - 2 ) / Ostap::Math::pow ( b - 1 , 2 ) ;
+  return m_scale * m_scale * a *  ( a + b + 1 ) / ( b - 2 ) / Ostap::Math::POW ( b - 1 , 2 ) ;
 }
 // ===========================================================================
 double Ostap::Math::BetaPrime::sigma () const 
@@ -1869,7 +1869,7 @@ double Ostap::Math::Argus::pdf ( const double x ) const
   if ( y <= 0 || y >= 1 ) { return 0 ; }
   //
   double res   = s_SQRT2PIi ;
-  res         *= Ostap::Math::pow ( m_shape , 3 ) ;
+  res         *= Ostap::Math::POW ( m_shape , 3 ) ;
   res         /= Psi_   ( m_shape ) ;
   res         *= y ;
   //
@@ -2145,8 +2145,8 @@ namespace
     const unsigned short N     ) 
   {
     return _factorial_ ( N ) *  
-      ( 1 / Ostap::Math::pow ( alpha         , N + 1 ) - 
-        1 / Ostap::Math::pow ( alpha + delta , N + 1 ) ) ;  
+      ( 1 / Ostap::Math::POW ( alpha         , N + 1 ) - 
+        1 / Ostap::Math::POW ( alpha + delta , N + 1 ) ) ;  
   }
   // ==========================================================================
 }
@@ -2214,8 +2214,8 @@ double Ostap::Math::TwoExpos::derivative
   const long double b  = tau2 () ;
   //
   return 
-    ( Ostap::Math::pow ( a , N ) *  std::exp ( a * dx ) - 
-      Ostap::Math::pow ( b , N ) *  std::exp ( b * dx ) ) / n0 ;
+    ( Ostap::Math::POW ( a , N ) *  std::exp ( a * dx ) - 
+      Ostap::Math::POW ( b , N ) *  std::exp ( b * dx ) ) / n0 ;
 }
 // ============================================================================
 // get the tag
@@ -2391,7 +2391,7 @@ double Ostap::Math::Tsallis::integral
   if ( 0 < m_mass ) 
   {
     // split points 
-    static const std::array<int,5> s_split = {{ 1 ,  3  , 10 , 20 , 50 }} ;
+    static const std::array<int,7> s_split = {{ 1 ,  3  , 10 , 20 , 50 , 100 , 1000 }} ;
     for( const auto p : s_split )
     {
       const double middle = m_mass * p ;

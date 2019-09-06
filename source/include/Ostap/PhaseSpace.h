@@ -460,9 +460,9 @@ namespace Ostap
     public:
       // ======================================================================
       /** Get a full integrated phase space over Dalitz plot 
-       *  \f$  R(s) = \int \int R(s_1,s_2) \deriv s_1 \deriv s_2 =
+       *  \f$  R(s) = \int \int R(s_1,s_2) {\mathrm{d}} s_1 {\mathrm{d}} s_2 =
        *  \int _{(m_2+m_3)^2}^{ (\sqrt{s}-m_1)^2}
-       *   \frac{\deriv s_2}{s_2}
+       *   \frac{{\mathrm{d}} s_2}{s_2}
        *   \lambda^{1/2}(s_2,s,m_1^2)
        *   \lambda^{1/2}(s_2,m_2^2,m_3^2)\f$ 
        */

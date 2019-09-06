@@ -120,7 +120,7 @@ class DataAndLumi(Data2):
         ne  = len ( self.e_list1 )
         ne2 = len ( self.e_list2 )
         
-        sf  = set(self.files) == set(self.files2)
+        sf  = set ( self.files ) == set ( self.files2 )
         
         if not self.e_list1 and not self.e_list2 :            
             return "<Luminosity: {}pb-1; #files: {}; Entries: {};>"   .format ( l , nf ,       nc ) if sf else \
@@ -155,9 +155,9 @@ class DataAndLumi(Data2):
         p   = set ( self .patterns )
         po  = set ( other.patterns )
         
-        result.files    = list ( f1 & f1o )
-        result.files2   = list ( f2 & f2o )        
-        result.patterns = list ( p  | po  )
+        result.set_files    ( f1 & f1o )
+        result.set_files2   ( f2 & f2o )        
+        result.set_patterns ( p  | po  )
         result.e_list1  = self.e_list1 | other.e_list1
         result.e_list2  = self.e_list2 | other.e_list2
         result.silent   = self.silent
@@ -187,26 +187,19 @@ class DataAndLumi(Data2):
         result.chain1  = result.chain
         result.lumi    = result.chain2
 
-        result.files    = deepcopy ( self.files    ) 
-        result.files2   = deepcopy ( self.files2   ) 
-        result.patterns = deepcopy ( self.patterns ) 
+        result.set_files    ( self.files    ) 
+        result.set_files2   ( self.files2   ) 
+        result.set_patterns ( self.patterns ) 
         result.e_list1  = deepcopy ( self.e_list1  ) 
         result.e_list2  = deepcopy ( self.e_list2  ) 
         
         return result 
 
-    ##  reload!
-    def reload ( self ) :
-        self.files   = [] 
-        self.files2  = [] 
-        self.chain   = ROOT.TChain ( self.chain .GetName() )
-        self.chain2  = ROOT.TChain ( self.chain2.GetName() )
-        self.e_list1 = set () 
-        self.e_list2 = set () 
+    ## reload!
+    def reload ( self , silent = True ) :
         ## 
-        self.add_files ( deepcopy ( self.patterns ) )
+        Data2.reload ( self , silent ) 
         ##
-        self.chain1  = self.chain 
         self.lumi    = self.chain2 
  
     # =========================================================================

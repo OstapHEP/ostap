@@ -1,4 +1,3 @@
-// $Id$ 
 // ============================================================================
 // Include files 
 // ============================================================================
@@ -17,10 +16,26 @@
  *  @date 2013-05-06 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *
- *                    $Revision$
- *  Last modification $Date$
- *  by                $Author$
  */
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  const std::string s_whitespaces = " \t\n\r\f\v" ;
+  inline std::string strip ( const std::string& s                          ,
+                             const std::string& whitespace = s_whitespaces )
+  {
+    const std::string::size_type p1 = s .find_first_not_of ( whitespace );
+    if ( std::string::npos == p1 ) { return ""; }
+    
+    
+    const std::string::size_type p2 = s .find_last_not_of ( whitespace ) ; 
+    const auto range = p2 + 1 - p1 ;
+    
+    return s .substr ( p1 , range );
+  }
+  // ==========================================================================
+}
 // ============================================================================
 ClassImp(Ostap::SelectorWithCuts) ;
 // ============================================================================
@@ -31,11 +46,12 @@ Ostap::SelectorWithCuts::SelectorWithCuts
   TTree*             tree , 
   PyObject*          self ) 
   : Ostap::Selector ( tree , self ) 
-  , fMycuts            ( cuts        ) 
+  , fMycuts            ( strip ( cuts ) ) 
   , fMyformula         () 
-  , m_event            ( 0           )            
+  , m_event            ( 0              )            
 {
-  if ( tree ) { fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
+  if ( tree && !fMycuts.empty() )
+  { fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
 }
 // ============================================================================
 // constructor 
@@ -45,11 +61,12 @@ Ostap::SelectorWithCuts::SelectorWithCuts
   TTree*             tree , 
   PyObject*          self ) 
   : Ostap::Selector ( tree , self      ) 
-  , fMycuts            ( cuts.GetTitle () ) 
+  , fMycuts            ( strip ( cuts.GetTitle () ) ) 
   , fMyformula         () 
   , m_event            ( 0           )            
 {
-  if ( tree ) { fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
+  if ( tree && !fMycuts.empty() )
+  { fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
 }
 // ============================================================================
 // virtual destructor 
@@ -71,7 +88,8 @@ void Ostap::SelectorWithCuts::Init ( TTree* tree )
   /// reset the event counter 
   m_event = 0 ;
   //
-  fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ;
+  if ( !fMycuts.empty() ) 
+  { fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
   //
   TPySelector::Init ( tree ) ;
 }
@@ -86,7 +104,8 @@ void Ostap::SelectorWithCuts::Begin ( TTree* tree )
 void Ostap::SelectorWithCuts::SlaveBegin ( TTree* tree ) 
 {
   //
-  fMyformula.reset( new Ostap::Formula ( "" , fMycuts , tree ) ) ;
+  if ( !fMycuts.empty() ) 
+  { fMyformula.reset( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
   //
   TPySelector::SlaveBegin ( tree ) ;
 }
@@ -98,7 +117,7 @@ Bool_t Ostap::SelectorWithCuts::Process      ( Long64_t entry )
   /// increment the event counter 
   ++m_event  ;
   //
-  if ( fMyformula && fMyformula->GetNdim() && !fMyformula ->evaluate() ) 
+  if ( !fMycuts.empty() && fMyformula && fMyformula->GetNdim() && !fMyformula ->evaluate() )
   { return false ; }
   //
   return TPySelector::Process ( entry ) ;
@@ -107,8 +126,7 @@ Bool_t Ostap::SelectorWithCuts::Process      ( Long64_t entry )
 // is formula OK?
 // ============================================================================
 bool Ostap::SelectorWithCuts::ok () const // is formula OK ? 
-{ return fMyformula && fMyformula->ok () ; }
-
+{ return fMycuts.empty() || ( fMyformula && fMyformula->ok () ) ; }
 
 // ============================================================================
 // The END 

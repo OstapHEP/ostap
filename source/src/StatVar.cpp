@@ -2459,8 +2459,8 @@ double Ostap::StatVar::nEff
     .Define ( weight2  , []( double v ) { return v * v ; } , { weight } ) ;
   //
   const double zero = 0.0 ;
-  auto  sumw_  = t.Reduce ( std::plus<double>() , { weight  } , zero ) ;
-  auto  sumw2_ = t.Reduce ( std::plus<double>() , { weight2 } , zero ) ;
+  auto  sumw_  = t.Reduce ( std::plus<double>() ,  weight   , zero ) ;
+  auto  sumw2_ = t.Reduce ( std::plus<double>() ,  weight2  , zero ) ;
   //
   const double sumw  = *sumw_  ;
   const double sumw2 = *sumw2_ ;
@@ -2767,43 +2767,48 @@ Ostap::StatVar::central_moment
     .Define ( weight  , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) 
     .Define ( weight2 , [] ( double w ) { return w * w ; } , { weight } ) 
     // 
-    .Define ( vmom    , [order,mu]( double v , double w )->double {
-        const long double lv = v ;
-        const long double lw = w ;
-        return lw ? lw * std::pow ( lv - mu , order ) : 0.0 ;
-      } , { var , weight } )   
+    .Define ( vmom    , [order,mu]( double v , double w )->double 
+              {
+                const long double lv = v ;
+                const long double lw = w ;
+                return lw ? lw * std::pow ( lv - mu , order ) : 0.0 ;
+              } , { var , weight } )   
     //
-    .Define ( vmom2   , [order,mu]( double v , double w )->double {
-        const long double lv = v ;
-        const long double lw = w ;
-        return lw ? lw * std::pow ( lv - mu , 2 * order ) : 0.0 ;
-      } , { var , weight } ) 
+    .Define ( vmom2   , [order,mu]( double v , double w )->double 
+              {
+                const long double lv = v ;
+                const long double lw = w ;
+                return lw ? lw * std::pow ( lv - mu , 2 * order ) : 0.0 ;
+              } , { var , weight } ) 
     //
-    .Define ( vmp1    , [order,mu]( double v , double w )->double {
-        const long double lv = v ;
-        const long double lw = w ;
-        return lw ? lw * std::pow ( lv - mu , order + 1 ) : 0.0 ;
-      } , { var , weight } )   
+    .Define ( vmp1    , [order,mu]( double v , double w )->double 
+              {
+                const long double lv = v ;
+                const long double lw = w ;
+                return lw ? lw * std::pow ( lv - mu , order + 1 ) : 0.0 ;
+              } , { var , weight } )   
     //
-    .Define ( vmm1   , [order,mu]( double v , double w )->double {
-        const long double lv = v ;
-        const long double lw = w ;
-        return lw ? lw * std::pow ( lv - mu , order - 1 ) : 0.0 ;
-      } , { var , weight } ) 
+    .Define ( vmm1   , [order,mu]( double v , double w )->double 
+              {
+                const long double lv = v ;
+                const long double lw = w ;
+                return lw ? lw * std::pow ( lv - mu , order - 1 ) : 0.0 ;
+              } , { var , weight } ) 
     //
-    .Define ( vm2   , [order,mu]( double v , double w )->double {
-        const long double lv = v ;
-        const long double lw = w ;
-        return lw ? lw * std::pow ( lv - mu , 2 ) : 0.0 ;
-      } , { var , weight } ) ;
+    .Define ( vm2   , [order,mu]( double v , double w )->double 
+              {
+                const long double lv = v ;
+                const long double lw = w ;
+                return lw ? lw * std::pow ( lv - mu , 2 ) : 0.0 ;
+              } , { var , weight } ) ;
   //
   auto _mom   = t.Reduce ( std::plus<double>() , vmom     ) ;
   auto _mom2  = t.Reduce ( std::plus<double>() , vmom2    ) ;
   auto _mp1   = t.Reduce ( std::plus<double>() , vmp1     ) ;
   auto _mm1   = t.Reduce ( std::plus<double>() , vmm1     ) ;
   auto _m2    = t.Reduce ( std::plus<double>() , vm2      ) ;
-  auto _sumw  = t.Reduce ( std::plus<double>() , weight  ) ;
-  auto _sumw2 = t.Reduce ( std::plus<double>() , weight2 ) ;
+  auto _sumw  = t.Reduce ( std::plus<double>() , weight   ) ;
+  auto _sumw2 = t.Reduce ( std::plus<double>() , weight2  ) ;
   //
   const long double sumw  = *_sumw  ;
   //
@@ -2822,12 +2827,12 @@ Ostap::StatVar::central_moment
   //  
   long double v = mom / sumw ;
   /// correct O(1/n) bias  for  3rd and 4th order moments :
-  if      ( 3 == order ) { v *=  n * n / ( ( n - 1  ) * ( n - 2 ) ) ; }
+  if      ( 3 == order ) { v *= n * n / ( ( n - 1 ) * ( n - 2 ) ) ; }
   else if ( 4 == order ) 
   {
     const double n0 =  ( n - 1 ) * ( n - 2 ) * ( n - 3 ) ;
-    const double n1 =  n * ( n * n - 2 * n +  3 ) / n0   ;
-    const double n2 =  3 * n * ( 2 * n - 3 )      / n0   ;
+    const double n1 =  n * ( n * n - 2 * n + 3 ) / n0 ;
+    const double n2 =  3 * n * ( 2 * n - 3 )     / n0 ;
     v = n1 * v - n2 * m2 * m2 / ( sumw * sumw ) ;
   }
   //

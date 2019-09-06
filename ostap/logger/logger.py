@@ -27,9 +27,6 @@ __all__ = (
     'noColor'        , ## context manager to switch off color logging locally  
     'make_colors'    , ## force colored logging 
     'reset_colors'   , ## reset colored logging
-    'colored_string' , ## make a colored string
-    'attention'      , ## make "attention" string
-    'allright'       , ## make "allright" string
     ##
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL' ,
     )
@@ -92,40 +89,6 @@ logging.addLevelName ( logging.ERROR     , 'ERROR  '  )
 logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
 
 
-
-# =============================================================================
-# - is sys.stdout attached to terminal or not ?
-# - do we run IPYTHON ? 
-from ostap.utils.basic import isatty
-
-# =============================================================================
-# COLORS: 
-# =============================================================================
-## global flag to indicate if we use colored logging
-__with_colors__ = False
-# =============================================================================
-## Is colorization enabled ? 
-def with_colors() :
-    """Is colorization enabled ?"""
-    global __with_colors__
-    return bool(__with_colors__) and isatty() 
-# =============================================================================
-## reset colorization of logging 
-def reset_colors() :
-    """Reset colorization of logging 
-    >>> reset_colors()
-    """
-    logging.addLevelName ( logging.CRITICAL  , 'FATAL  '  )
-    logging.addLevelName ( logging.WARNING   , 'WARNING'  )
-    logging.addLevelName ( logging.DEBUG     , 'DEBUG  '  )
-    logging.addLevelName ( logging.INFO      , 'INFO   '  )
-    logging.addLevelName ( logging.ERROR     , 'ERROR  '  )
-    logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
-    #
-    global __with_colors__
-    __with_colors__ = False 
-    return with_colors()  
-    
 # =============================================================================
 ## get configured logger
 #  @code
@@ -133,7 +96,7 @@ def reset_colors() :
 #  logger2 = getLogger ( 'LOGGER2' , level = logging.INFO )
 #  @endcode 
 def getLogger ( name                                                 ,
-                fmt    = '# %(name)-25s %(levelname)-7s %(message)s' ,
+                fmt    = '# %(name)-29s %(levelname)-7s %(message)s' ,
                 level  = logging.VERBOSE - 2                         ,
                 stream = None                                        ) :  
     """Get the proper logger
@@ -142,7 +105,7 @@ def getLogger ( name                                                 ,
     """
     #
     logger = logging.getLogger ( name )
-    logger.propagate =  False 
+    logger.propagate =  False  ## ???
     ##logger.propagate =  True
     #
     while logger.handlers :
@@ -266,69 +229,36 @@ def logError   () :
     return logLevel (  logging.ERROR   - 1 )
 
 
-## ASCII colors :
-BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list ( range ( 8 ) )
-    
 # =============================================================================
-## provide colored string
-#  @code
-#  print colored_string ( 'Hello' , foreground = RED , background = YELLOW , bold = True )
-#  @endcode 
-def colored_string ( what               ,
-                     foreground = None  ,
-                     background = None  ,
-                     bold       = False ,
-                     blink      = False ,
-                     underline  = False ) :
+## BASIC   colorization
+# =============================================================================
+from ostap.logger.colorized import ( with_colors    ,
+                                     colored_string ,
+                                     attention      ,
+                                     allright       ,
+                                     infostr        ,
+                                     decolorize     )
+# =============================================================================
+__colored_logger = []
+# =============================================================================
+## reset colorization of logging 
+def reset_colors () :
+    """Reset colorization of logging 
+    >>> reset_colors()
     """
-    >>> print colored_string ( 'Hello' , foreground = RED , background = YELLOW , bold = True , blink = True , underline = True )
-    """
-    ## nothing to colorize or no coloring is activated
-    if not what or not with_colors() or not isatty() : return what
+    logging.addLevelName ( logging.CRITICAL  , 'FATAL  '  )
+    logging.addLevelName ( logging.WARNING   , 'WARNING'  )
+    logging.addLevelName ( logging.DEBUG     , 'DEBUG  '  )
+    logging.addLevelName ( logging.INFO      , 'INFO   '  )
+    logging.addLevelName ( logging.ERROR     , 'ERROR  '  )
+    logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
+    #
+    while __colored_logger :
+        __colored_logger.pop()
 
-    ## nothing to do 
-    if ( foreground is None ) and ( background is None ) :
-        if ( not bold ) and ( not blink ) and ( not underline ) : return what 
-
-    RESET_SEQ = "\033[0m"
-    COLOR_SEQ = "\033[1;%dm"
-    BOLD_SEQ  = "\033[1m"    if bold      else ''
-    BLINK_SEQ = "\033[5m"    if blink     else '' 
-    ULINE_SEQ = "\033[4m"    if underline else '' 
-    
-    fg = COLOR_SEQ % ( 30 + ( foreground % 8 ) ) if not foreground is None else '' 
-    bg = COLOR_SEQ % ( 40 + ( background % 8 ) ) if not background is None else '' 
-    
-    return '{foreground}{background}{underline}{bold}{blink}{what}{reset}'.format (
-        foreground = fg        , 
-        background = bg        ,
-        underline  = ULINE_SEQ ,
-        bold       = BOLD_SEQ  , 
-        blink      = BLINK_SEQ , 
-        what       = what      ,
-        reset      = RESET_SEQ )
-
-# =============================================================================
-## attention!
-def attention ( what ) :
-    """Attention string """
-    return colored_string ( what                ,
-                            foreground = YELLOW ,
-                            background = RED    ,
-                            bold       = True   ,
-                            blink      = True   ,
-                            underline  = True   )
-
-# =============================================================================
-## allright 
-def allright ( what ) :
-    """Allright string """
-    return colored_string ( what                ,
-                            foreground = YELLOW ,
-                            background = GREEN  ,
-                            bold       = True   ,
-                            blink      = False  ,
-                            underline  = False  )
+    from ostap.logger.colorized import set_with_colors
+    set_with_colors ( False )
+    return with_colors()
 
 # =============================================================================
 ## make colors 
@@ -336,25 +266,31 @@ def make_colors () :
     """Colorize logging
     """
 
-    if with_colors() : return
-    if not isatty () : return  ## no colorization for non-TTY output 
+    if __colored_logger : return
     
-    global __with_colors__
-    __with_colors__ = True 
+    from ostap.logger.colorized import set_with_colors
+    set_with_colors ( True )
+
+    if not with_colors () : return
     
-    def  makeName ( level , fg = None  , bg = None , blink = False , underline = False ) :
+    def  makeName ( level , fg = None  , bg = None , blink = False , underline = False , bgb = False , fgb = False ) :
 
         name = logging.getLevelName ( level )
         bold = fg is None and bg is None and not uderline 
-        return colored_string ( name , fg , bg , bold , blink , underline ) 
+        bold = True
+        return colored_string ( name , fg , bg , bold , blink , underline , fg_bright = fgb , bg_bright = bgb ) 
+
+    from ostap.logger.colorized import RED , BLUE , YELLOW , GREEN , WHITE
     
     logging.addLevelName ( logging.CRITICAL ,  makeName ( logging.CRITICAL , fg = RED    , bg  = BLUE   , blink     = True ) )
-    logging.addLevelName ( logging.WARNING  ,  makeName ( logging.WARNING  , fg = RED    , bg  = YELLOW , underline = True ) )
-    logging.addLevelName ( logging.ERROR    ,  makeName ( logging.ERROR    , fg = YELLOW , bg  = RED    , blink     = True ) )
+    logging.addLevelName ( logging.WARNING  ,  makeName ( logging.WARNING  , fg = RED    , bg  = YELLOW , underline = True , bgb = True ) )
+    logging.addLevelName ( logging.ERROR    ,  makeName ( logging.ERROR    , fg = YELLOW , bg  = RED    , blink     = True , bgb = True , fgb = True ) )
     logging.addLevelName ( logging.INFO     ,  makeName ( logging.INFO     , bg = BLUE   , fg  = WHITE  ) )
     logging.addLevelName ( logging.DEBUG    ,  makeName ( logging.DEBUG    , bg = GREEN  , fg  = WHITE  ) )
 
+    __colored_logger.append ( 1 ) 
     return with_colors() 
+
 
 # =============================================================================
 ## @class ColorLogging
@@ -464,6 +400,7 @@ def keepColor () :
 ## reset colors
 ## for ipython mode and TTY output activate colors 
 ## if with_ipython() and isatty  () :
+from ostap.utils.basic import isatty
 if isatty  () :
     make_colors()
     
@@ -475,7 +412,7 @@ if __name__ == '__main__' :
 
     setLogging ( 0 )
     
-    logger = getLogger ( 'ostap.logger')
+    logger = getLogger ( 'ostap.logger.logger')
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
@@ -537,5 +474,5 @@ if __name__ == '__main__' :
     logger.info ( 80*'*'  )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -30,7 +30,6 @@ __all__     = (
     #
     'virtualMemory'      , ## context manager to count virtual memory increase 
     'memory'             , ## ditto
-    'clocks'             , ## context manager to count clocks 
     'timing'             , ## context manager to count time 
     'timer'              , ## ditto
     'profiler'           , ## context manager to perform profiling
@@ -68,6 +67,8 @@ __all__     = (
     'cmd_exists'         , ## check the existence of the certain command/executable
     ##
     'which'              , ## which command (from shutil)
+    ##
+    'gen_password'       , ## generate password/secret 
    )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
@@ -80,7 +81,7 @@ del getLogger
 # =============================================================================
 from sys                import version_info  as python_version 
 ## timing stuff
-from ostap.utils.timing import clocks, timing, timer
+from ostap.utils.timing import timing, timer
 ## other useful stuff 
 from ostap.utils.basic  import isatty, with_ipython
 ## ... and more useful stuff 
@@ -525,7 +526,7 @@ class ImplicitMT(object) :
     """
     def __init__  ( self , enable = True ) :
 
-        if   isisnatnce ( enable , bool ) : 
+        if   isinstance ( enable , bool ) : 
             self.__enable   =        enable
             self.__nthreads =        0
         elif isinstance ( enable , int  ) and 0 <= enable : 
@@ -533,13 +534,18 @@ class ImplicitMT(object) :
             self.__nthreads =        enable 
         else :
             raise  TypeError ( "ImplicitMT: invalid ``enable'' flag :%s/%s" % ( enable , type ( enable ) ) )
-        
+
+    @property
+    def enable   ( self ) : return self.__enable
+    @property
+    def nthreads ( self ) : return self.__nthreads
+    
     ## Context manager: ENTER 
     def __enter__ ( self ) :
             
         self.__initial = ROOT.ROOT. IsImplicitMTEnabled ()
         
-        if bool ( self.enabled ) == bool ( self.enable ) : pass 
+        if bool ( self.__initial ) == bool ( self.enable ) : pass 
         elif self.enable : ROOT.ROOT.EnableImplicitMT  ( self.__nthreads )
         else             : ROOT.ROOT.DisableImplicitMT ()
 
@@ -548,7 +554,7 @@ class ImplicitMT(object) :
     ## Context manager: EXIT
     def __exit__ ( self , *_ ) :
 
-        _curr = ROOT.ROOT.IsImplicitMTEnabled()
+        _current = ROOT.ROOT.IsImplicitMTEnabled()
 
         if   _current == self.__initial : pass
         elif _current                   : ROOT.ROOT.DisableImplicitMT ()
@@ -714,6 +720,29 @@ def vrange ( x_min , x_max , n = 100 ) :
         f2 = i * fn
         f1 = 1 - f2
         yield  x_min * f1 + f2 * x_max 
+
+
+# =============================================================================
+## Generate the random string, that can be used as password or secret word
+#  @code
+#  password = gen_password () 
+#  @endcode 
+def gen_password ( len = 12 ) :
+    """Generate the random string, that can be used as password or secret word
+    >>> password = gen_password () 
+    """
+    import random , string
+    symbols = string.ascii_letters + string.digits
+    ## save random state 
+    state = random.getstate ()
+    ## reset the random seed
+    random.seed ()
+    ## generate the password 
+    result = ''.join ( random.choice ( symbols ) for i in range ( len ) )
+    ## restore the random state 
+    random.setstate ( state )
+    ## 
+    return result
 
 # =============================================================================
 if '__main__' == __name__ :

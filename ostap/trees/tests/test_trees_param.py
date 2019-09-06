@@ -11,8 +11,12 @@
 # @see Ostap::Math::LegendreSum4
 # @see Ostap::DataParam
 # ============================================================================= 
-""" Test module 
-# - It tests unbinned parameterization
+""" Test unbinned parameterizations
+- see Ostap::Math::LegendreSum
+- see Ostap::Math::LegendreSum2
+- see Ostap::Math::LegendreSum3
+- see Ostap::Math::LegendreSum4
+- see Ostap::DataParam
 """
 # ============================================================================= 
 __author__ = "Ostap developers"
@@ -28,9 +32,9 @@ from   ostap.core.core    import hID, SE, Ostap
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'ostap/trees/tests/test_trees_param')
+    logger = getLogger ( 'test_trees_param' )
 else : 
-    logger = getLogger ( __name__ )
+    logger = getLogger ( __name__           )
 # =============================================================================
 from ostap.utils.cleanup import CleanUp
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_trees_param_' ) 

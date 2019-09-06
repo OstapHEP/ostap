@@ -36,8 +36,10 @@ namespace Ostap
   {
   public:
     // ========================================================================
-    /// the actual type for styatistic 
-    typedef Ostap::WStatEntity  Statistic ;
+    /// the actual type for statistic 
+    typedef Ostap::WStatEntity     Statistic  ;
+    /// the actual type for vector of statistic 
+    typedef std::vector<Statistic> Statistics ;
     // ========================================================================
     /// the actual type for interval 
     typedef std::pair<double,double>  Interval  ;

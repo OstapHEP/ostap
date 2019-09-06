@@ -1,0 +1,210 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# =============================================================================
+## @file ostap/parallel/utils.py
+#
+#  Useful utilities for multiprocessing and parallel processing for Ostap
+#  Actualy it is just a little bit upgraded version of original
+#  GaudiMP.Parallel module developed by Pere MATO Pere.Mato@cern.ch
+#
+#  The original module relies on some obsolete python modules (e.g. pyssh)
+#  and it has limitations related to the pickling.
+#
+#  The upgraded module relies on <code>pathos</code> suite that
+#  has very attratcive functionality and solve pickling issues
+#  @see https://github.com/uqfoundation/pathos
+#
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2016-02-23
+# =============================================================================
+"""Useful utilities for multiprocessing and parallel processing for Ostap
+
+Actualy it is just a little bit upgraded version of original
+GaudiMP.Parallel module developed by Pere MATO Pere.Mato@cern.ch
+
+The original module relies on some obsolete python modules (e.g. pyssh)
+and it has limitations related to the pickling.
+
+The upgraded module relies on <code>pathos</code> suite that
+has very attractive functionality and solve the issues with pickling
+@see https://github.com/uqfoundation/pathos
+
+"""
+# =============================================================================
+__version__ = '$Revision$'
+__author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
+__date__    = '2016-02-23'
+__all__     = (
+    'get_ppservers'    , ## get list of PP-servers  
+    'get_remote_conf'  , ## get PP-configuration for remote PP-server 
+    )
+# =============================================================================
+from ostap.logger.logger    import getLogger
+if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
+else                      : logger = getLogger ( __name__               ) 
+# =============================================================================
+## Get the PP-configuration for the remote host form the configuration file 
+#  @code
+#  env , script , profile = get_remote_config ( 'lxplu701.cern.ch' ) 
+#  @endcode
+#  The configuration information is looked in the following sections:
+#  -  host-specific section "Parallel:<remote-host>"
+#  -  domain specific section "Parallel:<remote-domain>"
+#  -  global section "Parallel"
+def get_remote_conf ( remote ) :
+    """ Get the PP-configuration for the remote host form the configuration file 
+    >>> env , script , profile = get_remote_config ( 'lxplu701.cern.ch' ) 
+    The configuration information is looked in the following sections:
+    -  host-specific section ``Parallel:<remote-host>''
+    -  domain specific section ``Parallel:<remote-domain>''
+    -  global section ``Parallel''
+    """
+    environment = ''
+    script      = None
+    profile     = None 
+    
+    import socket
+    remote = socket.getfqdn ( remote ).lower()
+    
+    import ostap.core.config as CONFIG
+    # =====================================================================
+    # 1) Try to get specific configuration for the given remote host
+    if ( not environment ) or ( not script ) or ( not profile ) :
+        for k in CONFIG.config :
+            if not k.startswith ( 'Parallel:' ) : continue
+            klow   = k.lower()
+            if klow[9:].strip() == remote : 
+                node = CONFIG.config[ k ]
+                if not environment : environment = node.get ( 'environment' , ''   )
+                if not script      : script      = node.get ( 'script'      , None )
+                if not profile     : profile     = node.get ( 'profile'     , None )                
+                break
+            
+    # =====================================================================
+    # 2) Try to get the domain-specific configuration
+    if ( not environment ) or ( not script ) or ( not profile ) :
+        for k in CONFIG.config :
+            if not k.startswith ( 'Parallel:' ) : continue
+            klow   = k.lower()
+            domain = klow[9:].strip()
+            if domain and remote.endswith ( domain ) and domain != remote :
+                node = CONFIG.config[ k ]
+                if not environment : environment = node.get ( 'environment' , ''   )
+                if not script      : script      = node.get ( 'script'      , None )
+                if not profile     : profile     = node.get ( 'profile'     , None )
+                
+    # =====================================================================
+    # 3) Try to get global configuration
+    if ( not environment ) or ( not script ) or ( not profile ) :
+        import ostap.core.config as CONFIG
+        if CONFIG.config.has_section  ( 'Parallel' ) :
+            node = CONFIG.config [ 'Parallel' ]
+            if not environment : environment = node.get ( 'environment' , ''   )
+            if not script      : script      = node.get ( 'script'      , None )
+            if not profile     : profile     = node.get ( 'profile'     , None )
+
+    return environment , script , profile
+
+# =============================================================================
+## get the defined PP-servers through the following scan:
+#  - the domain-specific configuration section ``Parallel:<local-domain>''
+#  - the global configuration section ``Parallel''
+#  - the environment variable <code>OSTAP_PPSERVERS</code>
+#  @code
+#  ppservers = get_ppservers () 
+#  @endcode
+def get_ppservers  ( local_host = '' ) :
+    """Get the defined list of PP-servers through the following scan:
+    - the domain-specific configuration section ``Parallel:<local-domain>''
+    - the global configuration section ``Parallel''
+    - the environment variable <code>OSTAP_PPSERVERS</code>
+    
+    >>> ppservers = get_ppservers ()
+    
+    """
+    import socket, string 
+    local_host = socket.getfqdn ( local_host ).lower()
+
+    import ostap.core.config as CONFIG
+
+    ppsvc1 = ()
+    ws     = string.whitespace
+    # =================================================================
+    ## 1) try domain specific configuration 
+    for k in CONFIG.config :
+        if not k.startswith ( 'Parallel:' ) : continue
+        klow   = k.lower()
+        domain = klow[9:].strip()
+        if domain and local_host.endswith ( domain ) and domain != local_host :
+            node   = CONFIG.config[ k ]
+            pp     = node.get( 'ppservers' , '()' )
+            ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
+
+    if not ppsvc1 and CONFIG.config.has_section  ( 'Parallel' ) :
+        node = CONFIG.config [ 'Parallel' ]
+        pp     = node.get( 'ppservers' , '()' )
+        ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
+            
+    ## use the environment variables
+    import os 
+    ppsvc2    = tuple ( os.getenv ( 'OSTAP_PPSERVERS','').split( ',' ) )
+    
+    if ppsvc1 : logger.debug ( 'Get PP-servers from config          : %s' % list ( ppsvc1 ) )    
+    if ppsvc2 : logger.debug ( 'Get PP-servers from OSTAP_PPSERVERS : %s' % list ( ppsvc2 ) )
+
+    ppsvc = set ( ppsvc1 + ppsvc2 )
+    ppsvc.discard ( '' )
+    
+    return tuple ( ppsvc )
+                
+
+
+# =============================================================================
+## Get the maximum size of jobs chunk
+#  for large number of parallel jobs one often gets error
+#  <code>OSError 24 ("Too many open files") </code>
+#  The good solution is to inclrease the limits
+#  - either via <code>ulimit</code>
+#  - or (better) via modification in <code>/etc/security/limits.conf</code>
+#  @code
+#  *               soft    nofile         65535
+#  *               hard    nofile         65535 
+#  @endcode
+#  But this idea does not work nicely due to protection/permissions.
+#  Therefore the alternative idea is to split number of parallel jobs into
+#  several chunks of "reasonable" size, e.g. 20% of the soft limit
+#  @code
+#  maxjobs = get_max_jobs_chunk ( 1000 ) 
+#  @endcode
+def get_max_jobs_chunk ( jobs_chunk = None ) :
+    """Get the maximum size of jobs chunk
+    for large number of parallel jobs one often gets error
+    ``OSError 24 ('Too many open files')''
+    The good solution is to increase the limits
+    - either via ``ulimit''
+    - or (better) via modification in ``/etc/security/limits.conf'', such as :
+    ... *               soft    nofile         65535
+    ... *               hard    nofile         65535 
+    But this idea does not work nicely due to protection/permissions.
+    Therefore the alternative idea is to split number of parallel jobs into
+    several chunks of ``reasonable'' size, e.g. 20% of the soft limit :
+    
+    >>> maxjobs = get_max_jobs_chunk ( 1000 )
+    
+    """
+    import resource
+    lim = min ( *resource.getrlimit ( resource.RLIMIT_NOFILE) ) // 3 
+    from ostap.core.ostap_types import integer_types 
+    if isinstance ( jobs_chunk , integer_types ) and 1 <= jobs_chunk :
+        return min ( lim , jobs_chunk )
+    return lim
+
+# =============================================================================
+if '__main__' == __name__ :
+    
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )    
+# =============================================================================
+#                                                                       The END 
+# =============================================================================
+

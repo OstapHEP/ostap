@@ -20,49 +20,42 @@
 # The module has been developed and used with great success in
 # ``Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter''
 #
-#
 # Create new DB:
 #
 # @code
-#
-# >>> import zipshelve  ## import the ZipShelve module 
+# >>> import zipshelve  
 # >>> db = zipshelve.open ('a_db', 'n')    ## create new DB
 # ...
 # >>> abcde = ...
 # >>> db['some_key'] =  abcde              ## add information to DB
 # ...
 # >>> db.close()
-#
 # @endcode 
 #
 # Access to DB in read-only mode :
 #
 # @code
-#
-# >>> import zipshelve  ## import the ZipShelve module 
+# >>> import zipshelve  
 # >>> db = zipshelve.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
 # ...
 # >>> for key in db : print(key)
 # ...
 # >>> abcd = db['some_key']
-#
 # @endcode 
 #
 # Access existing DB in update mode :
 #
 # @code
-#
-# >>> import ziphelve  ## import the ZipShelve module 
+# >>> import ziphelve  
 # >>> db = zipshelve.open ('a_db' )    ## access existing dbase in update mode
 # ...
 # >>> for key in db : print key
 # ...
 # >>> abcd = db['some_key']
-#
 # @endcode 
 #
-# @attention: In case DB-name has extention "gz", the whole data base
-#             will be gzipped. 
+# @attention: In case DB-name has extension ``.gz'', the whole data base
+#             will be ``gzip''-ed. 
 #
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2010-04-30
@@ -87,17 +80,17 @@ The module has been developed and used with great success in
 
  Create new DB:
 
- >>> import zipshelve as DBASE  ## import the ZipShelve module 
- >>> db = DBASE.open ('a_db', 'n')    ## create new DB
+ >>> import zipshelve as DBASE  
+ >>> db = DBASE.open ('a_db', 'n')      ## create new DB
  ...
  >>> abcde = ...
- >>> db['some_key'] =  abcde              ## add information to DB
+ >>> db['some_key'] =  abcde            ## add information to DB
  ...
  >>> db.close()
 
  Access to DB in read-only mode :
 
- >>> import zipshelve as DBASE  ## import the ZipShelve module 
+ >>> import zipshelve as DBASE  
  >>> db = DBASE.open ('a_db' , 'r' )    ## access existing dbase in read-only mode
  ...
  >>> for key in db : print(key)
@@ -106,14 +99,14 @@ The module has been developed and used with great success in
 
  Access existing DB in update mode :
 
- >>> import zipshelve as DBASE ## import the ZipShelve module 
- >>> db = DBASE.open ('a_db' )    ## access existing dbase in update mode
+ >>> import zipshelve as DBASE 
+ >>> db = DBASE.open ('a_db' )          ## access existing dbase in update mode
  ...
  >>> for key in db : print(key)
  ...
  >>> abcd = db['some_key']
  
- In case DB-name has extension 'gz', the whole data base will be gzipped
+ In case DB-name has extension ``.gz'', the whole data base will be ``gzip''-ed
 
 """
 # =============================================================================
@@ -131,13 +124,14 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.zipshelve' )
 else                      : logger = getLogger ( __name__             )
 # =============================================================================
+logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
+# =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
 try:
     from cPickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
 except ImportError:
-    from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL 
-
+    from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
 # =============================================================================
 ## to be compatible between  Python2 and Python3 
 PROTOCOL = 2
@@ -155,53 +149,28 @@ import os, sys
 import zlib        ## use zlib to compress DB-content 
 import shelve      ## 
 import shutil
-# =============================================================================
-_modes_ = {
-    # =========================================================================
-    # 'r'	Open existing database for reading only
-    # 'w'	Open existing database for reading and writing
-    # 'c'	Open database for reading and writing, creating it if it doesn’t exist
-    # 'n'	Always create a new, empty database, open for reading and writing
-    # =========================================================================
-    'n'        : 'n' ,
-    'c'        : 'c' ,
-    'r'        : 'r' ,
-    'u'        : 'w' ,
-    'w'        : 'w' ,
-    'a'        : 'w' ,
-    ##
-    '+'        : 'w' ,        
-    'w+'       : 'w' ,
-    'rw'       : 'w' ,
-    'new'      : 'n' ,
-    'create'   : 'c' ,
-    'recreate' : 'n' ,
-    'read'     : 'r' ,        
-    'write'    : 'w' ,        
-    'update'   : 'w' ,        
-    'append'   : 'w' ,        
-    }
-_dbases = []
+from ostap.io.compress_shelve import CompressShelf
 # =============================================================================
 ## @class ZipShelf
 #  Zipped-version of ``shelve''-database
 #    Modes: 
 #    - 'r' Open existing database for reading only
 #    - 'w' Open existing database for reading and writing
-#    - 'c' Open database for reading and writing, creating it if it doesn’t exist (default)
+#    - 'c' Open database for reading and writing, creating if it does not  exist (default)
 #    - 'n' Always create a new, empty database, open for reading and writing
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-class ZipShelf(shelve.Shelf):
-    """ Zipped-version of ``shelve''-database
+class ZipShelf(CompressShelf):
+    """Zipped-version of ``shelve''-database
     Modes: 
     - 'r'  Open existing database for reading only
     - 'w'  Open existing database for reading and writing
-    - 'c'  Open database for reading and writing, creating it if it doesn’t exist
+    - 'c'  Open database for reading and writing, creating if it does not exist
     - 'n'  Always create a new, empty database, open for reading and writing
-    Modes: %s 
-    # =========================================================================
-    """ % _modes_
+    """ 
+    ## the known "standard" extensions: 
+    extensions = '.gz' , 
+    ## 
     def __init__(
         self                                   ,
         filename                               ,
@@ -211,102 +180,27 @@ class ZipShelf(shelve.Shelf):
         writeback   = False                    ,
         silent      = False                    ,
         keyencoding = 'utf-8'                  ) :
-        
-        ## the mode 
-        mode = _modes_.get( mode.lower() , '' )
-        if not mode :
-            logger.warning("Unknown opening mode '%s', replace with 'c'")
-            mode = 'c'
+
 
         ## save arguments for pickling....
-        self.__init_args = ( filename    ,
-                             'c' if mode == 'n' else mode ,
-                             protocol    ,
-                             compress    ,
-                             writeback   ,
-                             silent      )
+        self.__init_args = ( filename  ,
+                             mode      ,
+                             protocol  ,
+                             compress  ,
+                             writeback ,
+                             silent    )
 
-        #
-        ## expand the actual file name 
-        filename  = os.path.expandvars ( filename )
-        filename  = os.path.expanduser ( filename )
-        filename  = os.path.expandvars ( filename )
-        filename  = os.path.expandvars ( filename )
-        
-        self.__gzip          = False 
-        self.__filename      = filename
-        self.__remove        = False
-        self.__silent        = silent
-        self.__opened        = False 
-
-        if not self.__silent :
-            logger.info ( 'Open DB: %s' % filename ) 
-        
-        if filename.endswith( '.gz' ) :
-            
-            if os.path.exists ( filename ) and 'r' == mode :
-                ## gunzip into temporary location
-                filename_ = self._gunzip ( filename ) 
-                if not os.path.exists ( filename_ ) :
-                    raise TypeError ( "Unable to gunzip properly: %s" % filename )
-                if not self.__silent : 
-                    size1 = os.path.getsize ( filename  ) 
-                    size2 = os.path.getsize ( filename_ )
-                    logger.info("GZIP uncompression %s: %.1f%%" %  ( filename , (size2*100.0)/size1 ) )
-                filename        = filename_ 
-                self.__filename = filename_
-                self.__remove   = True
-            elif os.path.exists ( filename ) and 'r' != mode :
-                ## unzip in place
-                filename_     = filename[:-3]
-                # remove existing file (if needed) 
-                if os.path.exists ( filename_ ) : os.remove ( filename_ )
-                size1 = os.path.getsize ( filename  ) 
-                # gunzip in place 
-                self.__in_place_gunzip  ( filename ) 
-                ##
-                if not os.path.exists ( filename_ ) :
-                    raise TypeError ( "Unable to gunzip properly: %s" % filename )
-                if not self.__silent : 
-                    size2 = os.path.getsize ( filename_ )
-                    logger.info("GZIP uncompression %s: %.1f%%" %  ( filename , (size2*100.0)/size1 ) ) 
-                filename        = filename_ 
-                self.__gzip     = True 
-                self.__filename = filename_
-                self.__remove   = False
-            else : 
-                ## 
-                filename        = filename[:-3]
-                self.__gzip     = True 
-                self.__filename = filename
-
-        try                : import anydbm as dbm
-        except ImportError : import           dbm
-
-        if python_version.major > 2 : 
-            shelve.Shelf.__init__ (
-                self                              ,
-                dbm.open ( self.filename , mode ) ,
-                protocol                          ,
-                writeback                         ,
-                keyencoding                       )
-        else :
-            shelve.Shelf.__init__ (
-                self                              ,
-                dbm.open ( self.filename , mode ) ,
-                protocol                          ,
-                writeback                         ) 
-            self.keyencoding = keyencoding
-            
-        
         self.__compresslevel = compress
-        self.__opened        = True
-        self.__mode          = mode
         
-        ## keep in the list of known/opened databases 
-        #_dbases.append ( self )
-
-
+        ## initialize the base class 
+        CompressShelf.__init__ ( self        ,
+                                 filename    ,
+                                 mode        ,
+                                 protocol    ,
+                                 writeback   ,
+                                 silent      ,
+                                 keyencoding ) 
+        
     ## needed for proper (un)pickling 
     def __getinitargs__ ( self ) :
         """for proper (un_pickling"""
@@ -323,317 +217,54 @@ class ZipShelf(shelve.Shelf):
         """for proper (un)pickling"""
         pass
     
-    @property 
-    def filename ( self ) :
-        "``filename'' :   the actual file name for database"
-        return self.__filename
-
-    @property 
-    def opened   ( self ) :
-        "``open'' : is data base opened?"
-        return self.__opened
-
-    @property
-    def mode    ( self ) :
-        "``mode'' : the actual open-mode for the database"
-
-    @property
-    def protocol( self ) :
-        "``protocol'' : pickling protocol"
-        return self._protocol
-
     @property
     def compresslevel ( self ) :
         "``compress level'' :  zip compression level"
         return self.__compresslevel 
 
-    ## valid, opened DB 
-    def __nonzero__ ( self ) :
-        return self.opened and not isinstance ( self.dict , shelve._ClosedDict ) and not self.dict is None 
+    # =========================================================================
+    ## compress (gzip) the file into temporary location, keep original
+    def compress_file   ( self , filein ) :
+        """Compress (gzip) the file into temporary location, keep original
+        """
+        import tempfile , gzip , io 
+        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db.gz' )
+        with io.open ( filein , 'rb' ) as fin :
+            with gzip.open ( fileout , 'wb') as fout : 
+                shutil.copyfileobj ( fin , fout )                
+                return fileout 
 
-    def __bool__    (  self ) : return slef.__nonzero__ ()
+    # =========================================================================
+    ## uncompress (gunzip) the file into temporary location, keep original
+    def uncompress_file ( self , filein ) :
+        """Uncompress (gunzip) the file into temporary location, keep original
+        """
+        import tempfile, gzip , io   
+        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
+        with gzip.open ( filein  , 'rb' ) as fin : 
+            with io.open ( fileout , 'wb' ) as fout : 
+                shutil.copyfileobj ( fin , fout )            
+                return fileout
     
-    ## destructor 
-    def __del__ ( self ) :
-        """ Destructor 
+    # ==========================================================================
+    ## compress (zip)  the item  using <code>zlib.compress</code>
+    def compress_item ( self , value ) :
+        """Compress (zip) the item using ``zlib.compress''
+        - see zlib.compress
         """
-        ## close if opened 
-        if self.opened : self.close()  
+        f = BytesIO ()
+        p = Pickler ( f , self.protocol )
+        p.dump ( value )
+        return zlib.compress ( f.getvalue() , self.compresslevel )
 
-    ## iterator over good keys 
-    def ikeys ( self , pattern = '' ) :
-        """Iterator over avilable keys (patterns included).
-        Pattern matching is performed accoriding to
-        fnmatch/glob/shell rules [it is not regex!] 
-        
-        >>> db = ...
-        >>> for k in db.ikeys('*MC*') : print(k)
-        
-        """
-        keys_ = self.keys()
-        
-        if not pattern :
-            good = lambda s,p : True
-        else :
-            import fnmatch
-            good = lambda s,p : fnmatch.fnmatchcase ( k , p )
-        
-        for k in sorted ( keys_ ) :
-            if good ( k , pattern ) : yield k
-
-    ## list the avilable keys 
-    def ls    ( self , pattern = '' ) :
-        """List the available keys (patterns included).
-        Pattern matching is performed accoriding to
-        fnmatch/glob/shell rules [it is not regex!] 
-
-        >>> db = ...
-        >>> db.ls() ## all keys
-        >>> db.ls ('*MC*')        
-        
-        """
-        n  = os.path.basename ( self.filename )
-        ap = os.path.abspath  ( self.filename ) 
-        ll = getLogger ( n )
-        
-        try :
-            fs = os.path.getsize ( self.filename )
-        except :
-            fs = -1
-            
-        if    fs < 0            : size = "???"
-        elif  fs < 1024         : size = str(fs)
-        elif  fs < 1024  * 1024 :
-            size = '%.2fkB' % ( float ( fs ) / 1024 )
-        elif  fs < 1024  * 1024 * 1024 :
-            size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
-        else :
-            size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
-            
-        ll.info ( 'Database: %s #keys: %d size: %s' % ( ap , len ( self ) , size ) )
-                
-        keys = [] 
-        for k in self.ikeys ( pattern ): keys.append ( k )
-        keys.sort()
-        if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
-        else    : mlen = 2 
-        fmt = ' --> %%-%ds : %%s' % mlen 
-        for k in keys :
-            ss = len ( self.dict[k] ) ##  compressed size 
-            if    ss < 1024 : size = '%8d' % ss 
-            elif  ss < 1024  * 1024 :
-                size = '%8.3f kB' %  ( float ( ss ) / 1024 )
-            elif  ss < 1024  * 1024 * 1024 :
-                size = '%8.3f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
-            else :
-                size = '%8.3f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
-            
-            ll.info ( fmt  % ( k , size ) ) 
-        
-        
-    ## close and gzip (if needed)
-    def close ( self ) :
-        """ Close the file (and gzip it if required) 
-        """
-        if not self.opened : return 
-        ##
-        shelve.Shelf.close ( self )
-        self.__opened = False  
-        ##
-        if self.__remove and os.path.exists ( self.__filename ) :
-            if not self.__silent :
-                logger.info( 'REMOVE: ', self.__filename )
-            os.remove ( self.__filename )
-        ##
-        if self.__gzip and os.path.exists ( self.__filename ) :
-            # get the initial size 
-            size1 = os.path.getsize ( self.__filename )
-            # gzip the file
-            self.__in_place_gzip ( self.__filename ) 
-            #
-            if not os.path.exists ( self.__filename + '.gz' ) :
-                logger.warning( 'Unable to compress the file %s ' % self.__filename  )
-            size2 = os.path.getsize( self.__filename + '.gz' )
-            if not self.__silent : 
-                logger.info( 'GZIP compression %s: %.1f%%' % ( self.__filename, (size2*100.0)/size1 ) ) 
-
-        ## remove from list of known databases 
-        if self in _dbases :
-            _dbases.remove ( self )
-            
-    ## gzip the file (``in-place'') 
-    def __in_place_gzip   ( self , filein ) :
-        """Gzip the file ``in-place''
-        
-        It is better to use here ``os.system'' or ``popen''-family,
-        but it does not work properly for multiprocessing environemnt        
-        """
-        if os.path.exists ( filein + '.gz' ) : os.remove ( filein + '.gz' )
-        #
-        # gzip the file 
-        fileout = self._gzip ( filein )
-        # 
-        if os.path.exists ( fileout ) :
-            # rename the temporary file 
-            shutil.move ( fileout , filein + '.gz' )
-            #
-            import time
-            time.sleep( 3 )
-            #
-            # remove the original
-            os.remove   ( filein ) 
-
-    ## gunzip the file (``in-place'') 
-    def __in_place_gunzip   ( self , filein ) :
-        """Gunzip the file ``in-place''
-        
-        It is better to use here ``os.system'' or ``popen''-family,
-        but unfortunately it does not work properly for multithreaded environemnt        
-        """
-        #
-        filename = filein[:-3]            
-        if os.path.exists ( filename ) : os.remove ( filename )
-        #
-        # gunzip the file 
-        fileout = self._gunzip ( filein )
-        #        
-        if os.path.exists ( fileout ) :
-            # rename the temporary file 
-            shutil.move ( fileout , filename )
-            #
-            import time
-            time.sleep( 3 )
-            #
-            # remove the original
-            os.remove   ( filein ) 
-
-    ## gzip the file into temporary location, keep original
-    def _gzip   ( self , filein ) :
-        """ Gzip the file into temporary location, keep original
-        """
-        if not os.path.exists  ( filein  ) :
-            raise NameError ( "GZIP: non existing file: " + filein )
-        #
-        fin  =      file ( filein  , 'r' )
-        #
-        import tempfile 
-        fd,fileout = tempfile.mkstemp ( prefix = 'tmp_' , suffix = '_zdb.gz' )
-        #
-        import gzip 
-        fout = gzip.open ( fileout , 'w' )
-        #
-        try : 
-            for all in fin : fout.write ( all )
-        finally:
-            fout.close()
-            fin .close()   
-            import time
-            time.sleep( 3 ) 
-        return fileout
-        
-    ## gzip the file into temporary location, keep original
-    def _gunzip ( self , filein ) :
-        """Gunzip the file into temporary location, keep original
-        """
-        if not os.path.exists  ( filein  ) :
-            raise NameError ( "GUNZIP: non existing file: " + filein )
-        #
-        import gzip 
-        fin  = gzip.open ( filein  , 'r' )
-        #
-        import tempfile 
-        fd,fileout = tempfile.mkstemp ( prefix = 'tmp_' , suffix = '_zdb' )
-        fout = file ( fileout , 'w' )
-        #
-        try : 
-            for all in fin : fout.write ( all )
-        finally: 
-            fout.close()
-            fin .close()
-            import time
-            time.sleep( 3 ) 
-        return fileout
-
-    #
-    ## some context manager functionality
-    # 
-    def __enter__ ( self      ) : return self 
-    def __exit__  ( self , *_ ) : self.close ()
-
-    ## print .
-    def __repr__ ( self ) :
-        
-        kls = self.__class__
-        if kls.__module__.startswith('__') and kls.__module__.endswith('__') :
-            kname = kls.__name__
-        else :
-            kname = '%s.%s' % (  kls.__module__ , kls.__name__ ) 
-        
-        if   self and len ( self ) :
-            return "%s('%s'): %d object(s)" % ( kname , self.filename , len(self) ) 
-        elif self :
-            return "%s('%s'): empty"        % ( kname , self.filename ) 
-        return "Invalid/Closed %s('%s')"    % ( kname , self.filename )
-    
-    __str__ = __repr__
-
-# =============================================================================
-## ``get-and-uncompress-item'' from dbase 
-def _zip_getitem (self, key):
-    """ ``get-and-uncompress-item'' from dbase 
-    """
-    try:
-        value = self.cache[key]
-    except KeyError:
-        f = BytesIO(zlib.decompress(self.dict[key.encode(self.keyencoding )]))
-        value = Unpickler(f).load()
-        if self.writeback:
-            self.cache[key] = value
-    return value
-
-# =============================================================================
-## ``set-and-compress-item'' to dbase 
-def _zip_setitem ( self , key , value ) :
-    """``set-and-compress-item'' to dbase 
-    """
-    if self.writeback:
-        self.cache[key] = value
-    f = BytesIO()
-    p = Pickler(f, self._protocol)
-    p.dump(value)
-    self.dict[key.encode(self.keyencoding)] = zlib.compress( f.getvalue(), self.compresslevel)
-
-ZipShelf.__getitem__ = _zip_getitem
-ZipShelf.__setitem__ = _zip_setitem
-
-
-# =============================================================================
-## add an object into data base
-#  @code
-#  dbase  = ...
-#  object = ...
-#  dbase.ls() 
-#  object >> dbase ## add object into dbase 
-#  dbase.ls() 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2016-06-04
-def _db_rrshift_ ( db , object ) :
-    """Add an object into data base
-    
-    dbase  = ...
-    object = ...
-    dbase.ls() 
-    object >> dbase ## add object into dbase 
-    dbase.ls() 
-    """
-    if   hasattr ( object , 'GetName' ) : name = object.GetName()
-    elif hasattr ( object , 'name'    ) : name = object.name   ()
-    else : name = object.__class__.__name__
-    #
-    db [ name] = object 
-    
-ZipShelf.__rrshift__ = _db_rrshift_
+    # =========================================================================
+    ## uncompres (unzip) the item using <code>zlib.decompress</code>
+    def uncompress_item ( self , value ) :
+        """Uncompress (nuzip) the item using ``zlib.decompress''
+        -  see zlib.decompress
+        """        
+        f = BytesIO ( zlib.decompress ( value ) )
+        return Unpickler ( f ) . load ( )
 
 # =============================================================================
 ## helper finction to access ZipShelve data base
@@ -667,16 +298,13 @@ def open ( filename                                 ,
                       silent        ,
                       keyencoding   )
 
-
-
 # =============================================================================
 ## @class TmpZipShelf
 #  TEMPORARY Zipped-version of ``shelve''-database
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
 class TmpZipShelf(ZipShelf):
-    """
-    TEMPORARY Zipped-version of ``shelve''-database     
+    """TEMPORARY Zipped-version of ``shelve''-database     
     """    
     def __init__(
         self                                   ,
@@ -687,11 +315,11 @@ class TmpZipShelf(ZipShelf):
 
         ## create temporary file name 
         import tempfile
-        filename = tempfile.mktemp  ( suffix = '.zdb' )
+        filename = tempfile.mktemp  ( prefix = 'tmpdb-' , suffix = '.zdb' )
         
         ZipShelf.__init__ ( self        ,  
                             filename    ,
-                            'n'         ,
+                            'c'         ,
                             protocol    ,
                             compress    , 
                             False       , ## writeback 
@@ -730,33 +358,11 @@ def tmpdb ( protocol      = HIGHEST_PROTOCOL        ,
                          silent        ,
                          keyencoding   ) 
     
-# ============================================================================
-logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database")
-# =============================================================================
-## a bit more decorations for shelve  (optional)
-import ostap.io.shelve_ext
-
-
-# =============================================================================
-# some gymnastic to close all DBs 
-# =============================================================================
-import atexit
-def _close_dbs_ () :
-    while _dbases :
-        db = _dbases.pop()
-        if db :
-            logger.info ('Close ZipShelve database "%s"' % db.filename() ) 
-            db.close()
-        del db
-        
-atexit.register ( _close_dbs_ ) 
-    
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
 # =============================================================================
 # The END 
 # =============================================================================

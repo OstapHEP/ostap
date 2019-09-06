@@ -7,6 +7,7 @@
 // Include files
 // ============================================================================
 #include "Ostap/AddBranch.h"
+#include "Ostap/AddVars.h"
 #include "Ostap/BLOB.h"
 #include "Ostap/BSpline.h"
 #include "Ostap/Bernstein.h"
@@ -269,8 +270,9 @@ namespace
     Ostap::Math::SVectorWithError<6,double> __sv6 ;
     Ostap::Math::SVectorWithError<8,double> __sv8 ;
     //
-    std::vector<Ostap::Math::ValueWithError>  _dver ;
+    std::vector<Ostap::Math::ValueWithError>               _dver1 ;
     std::vector<std::vector<Ostap::Math::ValueWithError> > _dver2 ;
+    std::vector<Ostap::WStatEntity>                        _dver3 ;
     //
     std::vector<Ostap::Vector2>  _vct_2 ;
     std::vector<Ostap::Vector3>  _vct_3 ;

@@ -525,23 +525,55 @@ for _a in (
 
 # =============================================================================        
 ## @class SimFit
-#  Helper class to simplify creation and usage of simultaneous PDF
+#  Helper pdf-like class to simplify creation and usage of simultaneous PDF
 #  @code
+#  sample = ROOT.RooCategory( 'sample', 'fitting sample' , 'A' , 'B' )
+#  pdfA   = ... ## pdf for the sample 'A'
+#  pdfB   = ... ## pdf for the sample 'B'
+#  simfit = SimFit (  sample , { 'A' : pdfA , 'B' : pdfB } )
 #  @endcode 
 #  @see RooSimultaneous
+#  Note that this class is *not* PDF, but it behaves rather similar to PDF,
+#  and, in partcualr has such methods like
+#  - <code>fitTo</code>
+#  - <code>draw</code>
+#  - <code>nll</code>
+#  - <code>draw_nll</code>
+#  - <code>wilks</code>
+#  - <code>minuit</code> 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-23
 class SimFit ( MakeVar ) :
-    """Helper class to simplify the creation and usage of simultaneous PDF
+    """Helper pdf-like class to simplify the creation and usage of simultaneous PDF
     
-    - see RooSimultaneous 
-    """
-    
+    >>> sample = ROOT.RooCategory( 'sample', 'fitting sample' , 'A' , 'B' )
+    >>> pdfA   = ... ## pdf for the sample 'A'
+    >>> pdfB   = ... ## pdf for the sample 'B'
+    >>> simfit = SimFit (  sample , { 'A' : pdfA , 'B' : pdfB } )
+
+    - see RooSimultaneous
+
+    Note that this class is *not* PDF, but it behaves rather similar to PDF,
+    and, in partcualr has such methods as 
+    - fitTo
+    - draw
+    - nll
+    - draw_nll
+    - wilks
+    - minuit
+    """    
     def __init__ ( self              ,
                    sample            , 
                    categories        ,
                    name       = None , 
                    title      = ''   ) :
+        """Helper pdf-like class to simplify the creation and usage of simultaneous PDF
+        
+        >>> sample = ROOT.RooCategory( 'sample', 'fitting sample' , 'A' , 'B' )
+        >>> pdfA   = ... ## pdf for the sample 'A'
+        >>> pdfB   = ... ## pdf for the sample 'B'
+        >>> simfit = SimFit (  sample , { 'A' : pdfA , 'B' : pdfB } )
+        """
         
         if isinstance ( sample , ( tuple , list ) ) :
             _cat = ROOT.RooCategory ( 'sample' , 'sample' )
@@ -693,7 +725,7 @@ class SimFit ( MakeVar ) :
         """Get the certain predefined drawing option
         >>> options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
         >>> pdf = ...
-        >>> pdf.draw_options['signal_style'] = [ options ]
+        >>> pdf.draw_options['signal_style'] = options 
         - and later:
         >>> options = pdf.draw_option ( 'signal_style' )
         """
@@ -725,7 +757,7 @@ class SimFit ( MakeVar ) :
                 timer  = False ,
                 args   = ()    , **kwargs ) :
         """
-        Perform the actual fit (and draw it)
+        Perform the actual fit (and draw it optionally)
         >>> r,f = model.fitTo ( dataset )
         >>> r,f = model.fitTo ( dataset , weighted = True )    
         >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
@@ -775,7 +807,7 @@ class SimFit ( MakeVar ) :
                silent  = True ,
                **kwargs       ) :
         """
-        Draw the PDF&data for the given   category
+        Draw the PDF&data for the given category
         >>> pdf.fitTo ( dataset )
         >>> pf.draw ( 'signal' , dataset , nbins = 100 ) 
         """
@@ -946,7 +978,41 @@ class SimFit ( MakeVar ) :
                                 range  = range  ,
                                 silent = silent ,
                                 args   = args   , **kwargs )
+
+    # ========================================================================
+    ## get the actual minimizer for the explicit manipulations
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  m    = pdf.minuit  ( data )
+    #  m.migrad()
+    #  m.hesse ()
+    #  m.minos ( param )
+    #  @endcode
+    #  @see RooMinimizer
+    def minuit ( self , dataset   ,
+                 max_calls = -1   ,
+                 max_iter  = -1   , 
+                 optconst  = True , ## optimize const 
+                 strategy  = None ,
+                 args      =   () , **kwargs  ):
+        """Get the actual minimizer for the explicit manipulations
+        >>> data = ...
+        >>> pdf  = ...
+        >>> m    = pdf.minuit ( data )
+        >>> m.migrad()
+        >>> m.hesse ()
+        >>> m.minos ( param )
+        - see ROOT.RooMinimizer
+        """
+        return self.pdf.minuit ( dataset               ,
+                                 max_calls = max_calls ,
+                                 max_iter  = max_iter  ,
+                                 optconst  = optconst  ,
+                                 strategy  = strategy  ,
+                                 args      = args      , **kwargs )
     
+                                 
 # =============================================================================
 _decorated_classes_  = (
     ROOT.RooCategory , 

@@ -4,17 +4,26 @@
 // STD& STL
 // ===============================================================================
 #include <string>
-#include <random>
+#include <cstdio>
 // ===============================================================================
 // local
 // ===============================================================================
 #include "OstapDataFrame.h"
+#include "local_hash.h"
 // ===============================================================================
-std::string Ostap::tmp_name ( std::string            prefix   , 
-                              const std::string&  /* name  */ ) 
+std::string Ostap::tmp_name 
+( std::string        prefix , 
+  const std::string& name   )
 {
-  static std::mt19937_64 s_random ;
-  return prefix + std::to_string ( s_random() ) ;
+  // the storage 
+  static char s_buffer [ 32 ] ;
+  //
+  std::size_t hv = 0 ;
+  std::hash_combine ( hv , name   ) ;
+  std::hash_combine ( hv , prefix ) ;
+  // 
+  std::size_t s = std::snprintf ( s_buffer , 32 , "%X" , hv ) ;
+  return prefix + std::string   ( s_buffer , s_buffer + s   ) ;
 }
 // ==========================================================================  
 // The END 

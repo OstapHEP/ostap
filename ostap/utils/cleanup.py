@@ -3,12 +3,13 @@
 # =============================================================================
 ## @file ostap/utils/cleanup.py
 #  Module with some simple but useful utilities
-#  to deal  with tempoary files and directories 
+#  to deal  with temporary files and directories
+#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10  
 # =============================================================================
 """Module with some simple but useful utilities
-to deal  with tempoary files and directories 
+to deal  with temporary files and directories 
 Module with some simple but useful utilities for
 """
 # =============================================================================
@@ -17,15 +18,43 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 __all__     = (
     'CleanUp'  , ## Simple (base) class to deal with temporary files and directories
-    'TempFile' , ## Simple placeholder for temproary file  
+    'TempFile' , ## Simple placeholder for temporary file  
     )
 # =============================================================================
-import os
+import os, tempfile, datetime  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.cleanup' )
 else                       : logger = getLogger( __name__              )
 del getLogger
+# =============================================================================
+## temporary directory for <code>tempfile</code> module
+_TmpDir = None
+if not _TmpDir :
+    ## 1) check the environment variable OSTAP_TMPDIR 
+    _TmpDir = os.environ.get('OSTAP_TMPDIR',None)
+if not _TmpDir :
+    ## 2) check the configuration file 
+    import ostap.core.config as OCC 
+    _TmpDir = OCC.general.get ( 'TmpDir' , None )
+    del OCC 
+if not _TmpDir : _TmpDir = None     
+# ===============================================================================
+## Context mamager to define/redefine TmpDir for <code>tempfile</code> module
+class UseTmpDir ( object ) :
+    """Context mamager to define/redefine TmpDir for the tempfile module
+    """
+    def __init__   ( self , tmp_dir = None ) :
+        self.tmp_dir  = tmp_dir
+        self.previous = None 
+        
+    def __enter__  ( self ) :
+        self.previous    = tempfile.tempdir
+        tempfile.tempdir = self.tmp_dir
+        
+    def __exit__   ( self , *_ ) :
+        tempfile.tempdir = self.previous 
+
 # =============================================================================
 ## @class CleanUp
 #  Simple (base) class to get temporary files
@@ -34,9 +63,10 @@ class  CleanUp(object) :
     """Simple (base) class to get temporary files
     and directories and to remove them at exit
     """
-    _tmpfiles = set()
-    _tmpdirs  = set()
-
+    _tmpfiles  = set ()
+    _tmpdirs   = set ()
+    _protected = set ()
+    
     @property
     def tmpdir ( self ) :
         """``tmpdir'' : return the name of temporary managed directory
@@ -74,43 +104,62 @@ class  CleanUp(object) :
                 logger.debug ( 'temporary file          added %s' % o )
 
     @staticmethod
-    def tempdir ( suffix = '' , prefix = 'tmp_' ) :
+    def tempdir ( suffix = '' , prefix = 'tmp-' , date = True ) :
         """Get the name of the temporary directory.
         The directory will be cleaned-up and deleted at-exit.
         >>> dirname = CleanUp.tempdir() 
         """
-        import tempfile
-        tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
-        CleanUp._tmpdirs.add ( tmp )
-        logger.debug ( 'temporary directory requested %s' % tmp   )
-        return tmp        
+        with UseTmpDir ( _TmpDir ) :
+            if date :
+                now = datetime.datetime.now()
+                prefix = "%s%s-"   %  ( prefix , now.strftime ( "%Y-%b-%d" ) )
+            tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
+            CleanUp._tmpdirs.add ( tmp )
+            logger.debug ( 'temporary directory requested %s' % tmp   )
+            return tmp        
     
     @staticmethod
-    def tempfile ( suffix = '' , prefix = 'tmp_' , dir = None ) :
+    def tempfile ( suffix = '' , prefix = 'tmp-' , dir = None , date = True ) :
         """Get the name of the temporary file. The file will be deleted at-exit
         >>> fname = CleanUp.tempfile() 
         """
-        import tempfile
-        _file = tempfile.NamedTemporaryFile( suffix = suffix ,
-                                             prefix = prefix ,
-                                             dir    = dir    , 
-                                             delete = False  )
-        fname = _file.name
-        _file.close()
-        os.unlink(fname)
-        assert not os.path.exists ( fname )
-        CleanUp._tmpfiles.add ( fname )
-        logger.debug ( 'temporary file      requested %s' % fname )
-        return fname
+        with UseTmpDir ( _TmpDir ) :
+            if date :
+                now = datetime.datetime.now()
+                prefix = "%s%s-"   %  ( prefix , now.strftime ( "%Y-%b-%d" ) )            
+            _file = tempfile.NamedTemporaryFile ( suffix = suffix ,
+                                                  prefix = prefix ,
+                                                  dir    = dir    , 
+                                                  delete = False  )
+            fname = _file.name
+            _file.close()
+            os.unlink(fname)
+            assert not os.path.exists ( fname )
+            CleanUp._tmpfiles.add ( fname )
+            logger.debug ( 'temporary file      requested %s' % fname )
+            return fname
 
+    @staticmethod
+    def protect_file ( fname ) :
+        """Protect the temporary from removal"""        
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+            CleanUp._protected.add ( fname ) 
+            logger.debug  ( 'the file is protected: %s ' % fname )
+            
     @staticmethod
     def remove_file ( fname ) :
         """Remove the (temporary) file
         """
         if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+
+            if fname in CleanUp._protected :
+                logger.debug  ( 'do not remove the protected file : %s ' % fname )
+                return False
+
             logger.verbose ( 'remove temporary file : %s' % fname )
             try    : os.remove ( fname )
             except : pass
+            
         if os.path.exists  ( fname ) and os.path.isfile ( fname ) :
             logger.error   ( 'failed to remove file : %s' %  fname  )
             return False 
@@ -168,6 +217,11 @@ def _cleanup_ () :
         f = tmp_dirs.pop()
         CleanUp.remove_dir ( f )
 
+    for fname in CleanUp._protected :
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+            logger.info ( "Temporary file is kept : %s" % fname )
+
+        
 # =============================================================================
 ## @class TempFile
 #  Base class-placeholder for the temporary  file 
@@ -176,6 +230,7 @@ class TempFile(object) :
     """
     
     def __init__ ( self , suffix = '' , prefix = '' , dir = None ) :
+        
         self.__filename = CleanUp.tempfile (  suffix = suffix ,
                                               prefix = prefix ,
                                               dir    = dir    )
