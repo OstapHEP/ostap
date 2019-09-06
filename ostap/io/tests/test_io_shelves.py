@@ -24,8 +24,8 @@ import ROOT
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_io_shelves' )
-else                       : logger = getLogger ( __name__                )
+if '__main__' ==  __name__ : logger = getLogger ( 'test_io_shelves' )
+else                       : logger = getLogger ( __name__          )
 # =============================================================================
 from   ostap.math.base       import iszero
 from   ostap.core.pyrouts    import VE

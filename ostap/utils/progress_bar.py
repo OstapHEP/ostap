@@ -477,7 +477,12 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
     >>> for i in progress_bar  ( range ( 10000 ) ) :
     ...      do something here
     """
-    if   max_value is None and hasattr ( iterable , '__len__' ) :
+    import collections 
+    if   max_value is None  \
+           and isinstance ( iterable , collections.Iterable ) \
+           and isinstance ( iterable , collections.Sized    ) :
+        max_value = len ( iterable ) 
+    elif max_value is None and hasattr ( iterable , '__len__' ) :
         max_value = len ( iterable )
     elif max_value is None and hasattr ( iterable , 'size'    ) :
         max_value = iterable.size()

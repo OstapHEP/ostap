@@ -97,7 +97,7 @@ class Files(object):
         
         self.description  = description
         self.maxfiles     = maxfiles
-        self.silent       = silent 
+        self.__silent     = silent 
 
         from copy import deepcopy
         self.__patterns   = list ( set ( deepcopy ( files ) ) )
@@ -123,12 +123,21 @@ class Files(object):
     @property 
     def files     ( self ) :
         """``files'' : the list of files"""
-        return tuple ( self.__files    ) 
+        return tuple ( self.__files    )
+    
     @property
     def patterns  ( self ) :
         """``patterns'' : the list of patterns"""
-        return tuple ( self.__patterns ) 
-
+        return tuple ( self.__patterns )
+    
+    @property
+    def silent    ( self ) :
+        """``silent'' : silent processing?"""
+        return self.__silent
+    @silent.setter
+    def silent    ( self , value ) :
+        self.__silent = True if value else  False
+        
     # =========================================================================
     ## Get the list of files form the patterns 
     def the_files ( self ) :
@@ -350,11 +359,16 @@ class Files(object):
                        silent      = kwargs.get( 'silent'      , self.silent      ) )
     
     ##  reload!
-    def reload ( self ) :
-        self.__files = []
+    def reload ( self , silent = True ) :
+        
+        prev_silent   = self.silent
+        self.__silent = silent
+        
+        self.__files  = []
         self.add_files ( self.the_files ()  )
         
-
+        self.__silent = prev_silent
+        
     # =========================================================================
     ##  Get an element or slice 
     #   @code
@@ -623,11 +637,11 @@ class Data(Files):
         return result 
     
     ##  reload!
-    def reload ( self ) :
+    def reload ( self , silent = True ) :
         self.chain   = ROOT.TChain ( self.chain.GetName() )
         self.e_list1 = set() 
         ##
-        Files.reload ( self ) 
+        Files.reload ( self , silent ) 
 
     # =========================================================================
     ##  Get a sub-sample
@@ -960,13 +974,13 @@ class Data2(Data):
         return result 
 
     ##  reload!
-    def reload ( self ) :
+    def reload ( self , silent = True ) :
         self.__files2  = []
         ##
         self.chain2    = ROOT.TChain ( self.chain2.GetName() )
         self.e_list2   = set ()
         ##
-        Data.reload ( self ) 
+        Data.reload ( self , silent ) 
         ##
         self.chain1  = self.chain 
 

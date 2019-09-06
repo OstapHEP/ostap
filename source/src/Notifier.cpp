@@ -68,20 +68,37 @@ void Ostap::Utils::Notifier::_pre_action()
 }
 // ============================================================================
 void Ostap::Utils::Notifier::_post_action()
-{ if ( nullptr != m_tree ) { m_tree->SetNotify   ( this ) ; } }
+{ if ( nullptr != m_tree ) { m_tree -> SetNotify ( this ) ; } }
 // ============================================================================
 bool Ostap::Utils::Notifier::exit()
 {
-  //
   if ( nullptr == m_tree || m_tree->GetNotify() != this ) { return false ; }
   //
   if ( this != m_old ) { m_tree->SetNotify ( m_old ) ; } // RESTORE OLD NOTIFICATIONS 
   m_tree = nullptr ;
   return true ;
 }
-
-
-
+// ============================================================================
+// Is this object known for notifier ? 
+// ============================================================================
+bool Ostap::Utils::Notifier::known ( const TObject* obj ) const 
+{
+  if  ( nullptr == obj ) { return false ; }
+  for ( const TObject *item :  m_objects ) 
+  {
+    //
+    if      ( nullptr == item      ) { continue    ; }
+    else if ( item    == this      ) { continue    ; }
+    else if ( item    == obj       ) { return true ; } //     RETURN
+    //
+    const Ostap::Utils::Notifier* other = 
+      dynamic_cast<const Ostap::Utils::Notifier*>( item ) ;
+    if      ( nullptr == other     ) { continue    ; }
+    else if ( other->known ( obj ) ) { return true ; }
+    //
+  }
+  return false ;
+}
 // ============================================================================
 ClassImp(Ostap::Utils::Notifier) 
 // ============================================================================

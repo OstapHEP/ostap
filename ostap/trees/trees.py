@@ -895,7 +895,7 @@ def _in_types ( t ) :
 
 # ==============================================================================
 ## print tree as table 
-def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
+def _rt_table_0_ ( tree , pattern = None , cuts = '' , prefix = '' , *args ) :
     """
     """
     ## get list of branches 
@@ -1050,7 +1050,7 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , *args ) :
         if 1 < nfiles : title += '/%d files ' % nfiles 
         
     import ostap.logger.table as T
-    t  = T.table (  table_data , title )
+    t  = T.table (  table_data , title , prefix = prefix )
     w  = T.table_width ( t )
     return t , w 
     
@@ -1139,17 +1139,17 @@ ROOT.TLeaf . get_short_type = _tl_type_short_
 #  data = ...
 #  print dat.table() 
 #  @endcode
-def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , *args ) :
+def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , *args ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _rt_table_0_ ( dataset , variables , cuts , *args )[0]
+    return _rt_table_0_ ( dataset , variables , cuts , prefix , *args )[0]
 
 
 # =============================================================================
 ##  print DataSet
-def _rt_print2_ ( data  ) :
+def _rt_print2_ ( data  , prefix = '' ) :
     """Print TTree/TChain"""
     
     br = len ( data.branches () ) + len ( data.leaves() )  
@@ -1158,7 +1158,7 @@ def _rt_print2_ ( data  ) :
     
     if not isatty() : return _rt_table_ ( data )
     th  , tw   = terminal_size()
-    rep , wid  = _rt_table_0_ ( data ) 
+    rep , wid  = _rt_table_0_ ( data , prefix = prefix ) 
     if wid < tw  : return rep
     ##
     return _rt_print_ ( data )
@@ -1458,7 +1458,7 @@ ROOT.TTree.topdir = property ( top_dir , None , None )
 ## add new branch to the chain
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree   
-def _chain_add_new_branch ( chain , name , function , verbose = True ) :
+def _chain_add_new_branch ( chain , name , function , verbose = True , skip = False ) :
     """ Add new branch to the tree
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
@@ -1489,12 +1489,11 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
     for fname in progress_bar ( files , len ( files ) , silent = not verbose ) :
         
         logger.debug ('Add_new_branch: processing file %s' % fname )
-          
         with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
             ## get the tree 
             ttree = rfile.Get ( cname )
             ## treat the tree 
-            add_new_branch    ( ttree , name , the_function ) 
+            add_new_branch    ( ttree , name , the_function , verbose , skip ) 
             
     ## recollect the chain 
     newc = ROOT.TChain ( cname )
@@ -1506,18 +1505,18 @@ def _chain_add_new_branch ( chain , name , function , verbose = True ) :
 ## add new branch to the tree
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree 
-def add_new_branch ( tree , name , function , verbose = True ) :
+def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
     """ Add new branch to the tree
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
     """
     if isinstance ( tree  , ROOT.TChain ) :
-        return _chain_add_new_branch ( tree , name , function , verbose )
+        return _chain_add_new_branch ( tree , name , function , verbose , skip )
 
     if not tree :
         logger.error (  "Invalid Tree!" )
         return
-
+    
     names = name 
     if isinstance ( names , string_types ) : names = [ names ]
     

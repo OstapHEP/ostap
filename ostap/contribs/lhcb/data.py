@@ -195,10 +195,10 @@ class DataAndLumi(Data2):
         
         return result 
 
-    ##  reload!
-    def reload ( self ) :
+    ## reload!
+    def reload ( self , silent = True ) :
         ## 
-        Data2.reload ( self ) 
+        Data2.reload ( self , silent ) 
         ##
         self.lumi    = self.chain2 
  

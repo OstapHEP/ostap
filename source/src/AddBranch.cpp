@@ -61,7 +61,12 @@ Ostap::Trees::add_branch
   if ( !branch ) { return Ostap::StatusCode ( CANNOT_CREATE_BRANCH ) ; }
   //
   const TObject* o = dynamic_cast<const TObject*>( &func ) ;
+  //
   Ostap::Utils::Notifier notifier { tree , o ? const_cast<TObject*>(o) : nullptr } ;
+  //
+  // due to  some strange reasons we need to invoke the Notifier explicitely.
+  // - otherwise FuncTH1::Notify causes crash..
+  notifier.Notify() ;
   //
   const Long64_t nentries = tree->GetEntries(); 
   for ( Long64_t i = 0 ; i < nentries ; ++i )

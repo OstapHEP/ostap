@@ -60,7 +60,7 @@ namespace  Ostap
       /// virtual destructor 
       virtual        ~Notifier () ; // virtual destructor 
       /// the main method 
-      virtual Bool_t  Notify   () ;
+      Bool_t  Notify () override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -77,7 +77,10 @@ namespace  Ostap
       inline bool add  ( std::unique_ptr<TYPE>& o ) 
       { return this -> add ( o.get() ) ; }
       // ======================================================================
-      // exit from  notification
+      /// is this object known for notifier ? 
+      bool known ( const TObject* obj ) const ;
+      // ======================================================================
+      // exit from  notification context 
       bool exit() ;
       // ======================================================================
     private:

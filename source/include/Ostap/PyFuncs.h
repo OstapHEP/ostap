@@ -43,7 +43,7 @@ namespace Ostap
       /// the basic 
       double operator() ( const TTree* tree = 0 ) const override ;
       // ======================================================================
-    public:
+   public:
       // ======================================================================
       /// get the pointer to TTree
       const TTree* tree () const { return m_tree ; }

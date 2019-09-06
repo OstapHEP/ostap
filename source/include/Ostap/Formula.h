@@ -19,10 +19,7 @@ namespace Ostap
 {
   // ==========================================================================
   /** @class Formula Ostap/Formula.h
-   * 
-   *  Simple extention of class TTreeFormula 
-   *  for easier usage in python 
-   *
+   *  Simple extention of class TTreeFormula for a bit easier usage in python 
    *  @see TTreeFormula
    *  @author Vanya Belyaev
    *  @date   2013-05-06

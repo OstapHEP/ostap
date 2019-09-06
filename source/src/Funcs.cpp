@@ -69,7 +69,7 @@ Ostap::Functions::FuncFormula::FuncFormula
 // ============================================================================
 Ostap::Functions::FuncFormula*
 Ostap::Functions::FuncFormula::Clone ( const char* /* newname */ ) const 
-{ return new FuncFormula ( *this ) ;}
+{ return new FuncFormula ( *this ) ; }
 // ============================================================================
 // destructor
 // ============================================================================
@@ -77,7 +77,7 @@ Ostap::Functions::FuncFormula::~FuncFormula(){}
 // ============================================================================
 // notify 
 // ============================================================================
-bool Ostap::Functions::FuncFormula::notify() const
+Bool_t Ostap::Functions::FuncFormula::Notify () 
 { return ( m_formula &&  m_formula->ok() ) ? m_formula->Notify() : false ; }
 // ============================================================================
 // make formula  
@@ -353,8 +353,12 @@ Ostap::Functions::FuncTH1::~FuncTH1(){}
 // ============================================================================
 // notify 
 // ============================================================================
-bool Ostap::Functions::FuncTH1::notify () const
-{ return ( m_xvar &&  m_xvar->ok() ) ? m_xvar->Notify() : false ; }
+Bool_t Ostap::Functions::FuncTH1::Notify () 
+{  
+  /// attention! here   we delete the variable instead of notofy/reset 
+  m_xvar.reset ( nullptr ) ;
+  return ( m_xvar &&  m_xvar->ok() ) ? m_xvar->Notify() : false ; 
+}
 // ============================================================================
 // make the formula
 // ============================================================================
@@ -375,11 +379,13 @@ double Ostap::Functions::FuncTH1::operator() ( const TTree* tree ) const
 {
   //
   // the tree 
-  if ( nullptr != tree  && tree != m_tree )
+  // if ( nullptr != tree  && tree != m_tree )
+  if ( tree != m_tree )
   { 
     m_tree = tree  ;
     m_xvar.reset ( nullptr ) ;
   }
+  //
   Ostap::Assert ( nullptr != m_tree , 
                   "Invalid Tree"    , 
                   "Ostap::Function::FuncTH1" ) ;
@@ -526,7 +532,7 @@ Ostap::Functions::FuncTH2::~FuncTH2(){}
 // ============================================================================
 // notify 
 // ============================================================================
-bool Ostap::Functions::FuncTH2::notify () const
+Bool_t Ostap::Functions::FuncTH2::Notify () 
 {  
   const bool b1 = ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
   const bool b2 = ( m_yvar && m_yvar->ok() ) ? m_yvar->Notify() : false ; 
@@ -730,7 +736,7 @@ Ostap::Functions::FuncTH3::~FuncTH3(){}
 // ============================================================================
 // notify 
 // ============================================================================
-bool Ostap::Functions::FuncTH3::notify () const
+Bool_t Ostap::Functions::FuncTH3::Notify () 
 {  
   const bool b1 = ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
   const bool b2 = ( m_yvar && m_yvar->ok() ) ? m_yvar->Notify() : false ; 
