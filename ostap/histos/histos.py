@@ -4221,22 +4221,18 @@ def _h2_rescale_ ( h2 , factor = 1 ) :
 ROOT.TH2F. rescale_bins = _h2_rescale_ 
 ROOT.TH2D. rescale_bins = _h2_rescale_ 
 
-
 # =============================================================================
 ## sample the histogram using gaussian hypothesis
-#
 #  @code
-#
-#   >>> h = ... ##  the histogram
-#
-#   >>> s1 = h.sample()  ## the sampled hist
-#
+#  >>> h = ...          ## original histogram
+#  >>> s1 = h.sample ()  ## the sampled histogram
+#  >>> s2 = h.gauss  ()  ## ditto 
+#  >>> s3 = h.gauss  ( accept = lambda s : 0<s ) ## only positive numbers 
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  
-def _sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
+def _h_sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
     """Sample the histogram using gaussian hypothesis 
-    >>> h  = ...         ##  the histogram 
+    >>> h  = ...         ## original histogram 
     >>> s1 = h.sample()  ## the sampled hist
     """
     #
@@ -4249,7 +4245,7 @@ def _sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
         v1 = histo[bin]
         
         ## sample it! 
-        v2 = VE ( v1.gauss ( accept = accept , nmax = nmax ) )
+        v2 = VE    ( v1.gauss ( accept = accept , nmax = nmax ) )
         
         v2.setCov2 ( v1.cov2() )
         
@@ -4257,9 +4253,46 @@ def _sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
         
     return result
 
-ROOT.TH1 ._sample_ = _sample_
-ROOT.TH1 .sample   = _sample_
+ROOT.TH1 ._sample_ = _h_sample_
+ROOT.TH1 .sample   = _h_sample_
+ROOT.TH1 .gauss    = _h_sample_
 
+# =============================================================================
+## sample the histogram using the Poisson hypothesis
+#  @code
+#  histo = ...
+#  h1 = histo.poisson () ## sample using poisson hypothesis
+#  h2 = histo.poisson ( fluctuate =   True ) ## fluctuate Poisson mean 
+#  h3 = histo.poisson ( accept = lambda s : s>10 ) ## require all numbers are large
+#  @endcode
+def _h_poisson_ ( histo , fluctuate = False , accept = lambda s : True ) :
+    """Sample the histogram using the Poisson hypothesis
+    >>> histo = ...
+    >>> h1 = histo.poisson () ## sample using poisson hypothesis
+    >>> h2 = histo.poisson ( fluctuate =   True ) ## fluctuate Poisson mean 
+    >>> h3 = histo.poisson ( accept = lambda s : s>10 ) ## require all numbers are large
+    """
+    result = histo.Clone ( hID () )
+    result.Reset() 
+    if not result.GetSumw2() : result.Sumw2()
+    
+    for bin in histo :
+
+        ## getbin content
+        v1 = histo[bin]
+        
+        ## sample it!
+        p  = v1.poisson ( fluctuate , accept )
+
+        v2 = VE ( p , p  )
+        
+        result [bin] = v2
+        
+    return result
+    
+ROOT.TH1 .poisson = _h_poisson_
+
+    
 # =============================================================================
 ## Get the Figure-of-Merit (FoM) for the pure signal distribution,
 #  e.g. from sPlot)
@@ -7043,10 +7076,14 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
 
 # =============================================================================
 _decorated_classes_ = (
+    ROOT.TH1   ,
+    #
     ROOT.TH1F  ,
     ROOT.TH1D  ,
+    #
     ROOT.TH2F  ,
     ROOT.TH2D  ,
+    #
     ROOT.TH3F  ,
     ROOT.TH3D  ,
     #
@@ -7430,7 +7467,9 @@ _new_methods_   = (
     ROOT.TH2F. rescale_bins ,
     ROOT.TH2D. rescale_bins ,
     #
-    ROOT.TH1 . sample ,
+    ROOT.TH1  . sample  ,
+    ROOT.TH1  . gauss   ,
+    ROOT.TH1  . poisson ,
     #
     ROOT.TH1D . fom_1 ,
     ROOT.TH1D . fom_2 ,
