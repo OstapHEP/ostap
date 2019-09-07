@@ -88,7 +88,7 @@ OstapHep is now available on the conda-forge channel https://github.com/conda-fo
 
 Install mininconda
 
-    wget http://repo.continuum.io.miniconda/Miniconda3-latest-Linux-x86_64.sh
+    wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     sh Miniconda3-latest-Linux-x86_64.sh
     
 Set the conda environments
