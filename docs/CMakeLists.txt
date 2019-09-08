@@ -6,11 +6,12 @@ find_package(Doxygen REQUIRED dot)
 
 if (BUILD_DOC AND DOXYGEN_FOUND)
 
+   find_package (ROOT)
+   string(APPEND ROOT_DOXYTAG ${ROOT_VERSION_MAJOR} ${ROOT_VERSION_MINOR})
+
    find_file (ROOT_TAG_FILE ROOT.tag ${CMAKE_CURRENT_BINARY_DIR} )      
    if( NOT EXISTS ${ROOT_TAG_FILE} )  
      find_program (WGET_EXECUTABLE wget)
-     find_package (ROOT)
-     string(APPEND ROOT_DOXYTAG ${ROOT_VERSION_MAJOR} ${ROOT_VERSION_MINOR})
      set( ROOT_TAG_URL  http://root.cern.ch/doc/v${ROOT_DOXYTAG}/ROOT.tag ) 
      add_custom_target ( root_doxy_tag
                          DEPENDS ROOT.tag 
@@ -25,6 +26,7 @@ if (BUILD_DOC AND DOXYGEN_FOUND)
   set(DOXYGEN_OUTPUT_DIR  ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
   set(DOXYGEN_INDEX_FILE  ${DOXYGEN_OUTPUT_DIR}/html/index.html)
   set(DOXYGEN_TAGFILE     ${DOXYGEN_OUTPUT_DIR}/ostap.tag)
+  set(DOXYGEN_LATEX       ${DOXIGEN_OUTPUT_DIR}/latex/refman.tex)
 
   file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
 
@@ -33,12 +35,19 @@ if (BUILD_DOC AND DOXYGEN_FOUND)
  
   configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)              
 
- add_custom_target(DoxyGen
+  add_custom_target(DoxyGen
         DEPENDS root_doxy_tag ${DOXYFILE_IN} ostap 
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT} 2> grep -e 'Fontconfig error: Cannot load default config file' -v 
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen (could be time consuming O(15-20'))"
-        MAIN_DEPENDENCY   ${DOXYFILE_OUT} ${DOXYFILE_IN}
+        MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
+        VERBATIM)
+
+  add_custom_target(PdfDoc 
+        DEPENDS ${DOXIGEN_LATEX}
+        COMMAND make pdf 
+        WORKING_DIRECTORY ${DOXIGEN_OUTPUT_DIR}/latex
+        COMMENT "Building PDF-documentation"
         VERBATIM)
 
 ## include(GNUInstallDirs)

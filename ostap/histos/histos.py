@@ -1892,8 +1892,10 @@ ROOT.TH1D. agrestiCoullEff = lambda haccepted,htotal : binomEff_h1 ( haccepted ,
 ## @var one_sigma
 #  the width of the +-1 sigma confidence interval 
 one_sigma   = 0.682689492137086  ## the width of the +-1 sigma confidence interval 
+## @var two_sigma
 #  the width of the +-2 sigma confidence interval 
 two_sigma   = 0.9544997361036415 ## the width of the +-2 sigma confidence interval 
+## @var three_sigma
 #  the width of the +-3 sigma confidence interval 
 three_sigma = 0.9973002039367398 ## the width of the +-3 sigma confidence interval 
 # =============================================================================
@@ -2119,9 +2121,6 @@ ROOT.TH2F . __floordiv__  = binomEff_h2
 ROOT.TH2D . __floordiv__  = binomEff_h2
 ROOT.TH3F . __floordiv__  = binomEff_h3
 ROOT.TH3D . __floordiv__  = binomEff_h3
-
-
-
  
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors
@@ -5274,13 +5273,10 @@ for t in ( ROOT.TH3F , ROOT.TH3D ) :
     t . sum        = _h1_accumulate_
     t . integrate  = _h3_integrate_ 
 
-## generic
+# generic sscaling
 ROOT.TH1 . scale      = _h_scale_
 
-
-
 HStats   = Ostap.Utils.HistoStat
-
 # =============================================================================
 ## calculate bin-by-bin momenta 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

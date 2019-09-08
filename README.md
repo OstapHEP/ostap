@@ -1,4 +1,4 @@
-Ostap Project
+Ostap Project                   
 =============
 [![Build Status](https://travis-ci.org/OstapHEP/ostap.svg?branch=master)](https://travis-ci.org/OstapHEP/ostap)
 [![Coverage Status](https://coveralls.io/repos/github/OstapHEP/ostap/badge.svg?branch=master)](https://coveralls.io/github/OstapHEP/ostap?branch=master)
@@ -15,28 +15,28 @@ Project started in 2009 from the private collections of python functions used in
 
 Key features include:
 
--   Very easy manipulations with [ROOT](http://root.cern.ch/)  and [RooFit](https://root.cern.ch/roofit) objects: histograms, trees, datasets, etc
--   Very easy interface to [RooFit](https://root.cern.ch/roofit) machinery
--   Extended set of models.PDFs for [RooFit](https://root.cern.ch/roofit)
+-   Very easy manipulations with [ROOT] and [RooFit] objects: histograms, trees, datasets, etc
+-   Very easy interface to [RooFit] machinery
+-   Extended set of `models.PDFs` for [RooFit]
 -   Powerful, pickle-based persistency for object
 -   Interactive `ostap` analysis environment
 
 
 Dependencies
 ------------
-- _mandatory_: [`ROOT/PyROOT`](https://root.cern.ch)
-- _highly desirable_: [`numpy`](https://numpy.org)
+- _mandatory_: [ROOT], [RooFit]
+- _highly desirable_: [numpy]
    - mandatory for Fast Fourier Transform, used in histogram/function parameterization;
    - optional for some other issues, in particular for the prime number treatment;  
-- _optional_: [`scipy`](https://www.scipy.org)
+- _optional_: [scipy]
    - numerical integration (quadratures, cubatures), root finding, minimization; 
    - `ostap` offers home-made replacements, but the native methods from `scipy` are more efficient;
-- _optional_: [`pathos`](https://github.com/uqfoundation/pathos), [`dill`](https://github.com/uqfoundation/dill), [`multiprocess`](https://github.com/uqfoundation/multiprocess) and [`ppt`](https://github.com/uqfoundation/ppft)
+- _optional_: [pathos], [dill], [multiprocess] and [ppt]
    - needed for parallel processing; 
-   - `ostap` offers a [`multiprocessing`](https://docs.python.org/2/library/multiprocessing.html)-based replacement with reduced functionality; 
-- _optional_: [`terminaltables`](https://pypi.org/project/terminaltables) 
+   - `ostap` offers a [multiprocessing]-based replacement with reduced functionality; 
+- _optional_: [terminaltables]
    - nice format of tables 
-         - in particular for nice printout for `ROOT.TTree`, `ROOT.TChain`, `ROOT.RooDataSet`, ... ;
+         - in particular for nice printout for `TTree`, `TChain`, `RooDataSet`, ... ;
    - `ostap` offers a home-made replacement with a bit reduced functionalty.  
 
 Setup
@@ -111,6 +111,20 @@ To activate or deactivate the ostap environment use the following command
 
     conda activate ostap-env 
     conda deactivate  
-The list of available version you can find here: https://anaconda.org/conda-forge/ostaphep/files.
-To know more about conda-forge, please visit conda page: https://conda-forge.org.
+
+The list of available version you can find [here](https://anaconda.org/conda-forge/ostaphep/files).
+To know more about conda-forge, please visit [conda page](https://conda-forge.org).
+
+
+
+[ROOT]: http://root.cern.ch
+[RooFit]: https://root.cern.ch/roofit 
+[numpy]: https://numpy.org 
+[scipy]: https://www.scipy.org 
+[pathos]: https://github.com/uqfoundation/pathos 
+[dill]: https://github.com/uqfoundation/dill
+[multiprocess]: https://github.com/uqfoundation/multiprocess
+[ppt]: https://github.com/uqfoundation/ppft
+[multiprocessing]:https://docs.python.org/2/library/multiprocessing.html
+[terminaltables]: https://pypi.org/project/terminaltables
 
