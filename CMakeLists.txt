@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
 project(ostap LANGUAGES CXX)
 include(CTest)
