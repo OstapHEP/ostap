@@ -2007,14 +2007,14 @@ ROOT.TH1D.eff_jeffreys                = lambda accepted,rejected,interval=one_si
 ROOT.TH1F.eff_clopper_pearson         = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.clopper_pearson_interval         , interval ) 
 ROOT.TH1D.eff_clopper_pearson         = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.clopper_pearson_interval         , interval ) 
 
-## for _h in ( ROOT.TH1F , ROOT.TH1D ) : 
-##     _h.eff_wald                      .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_wilson_score              .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_wilson_score_continutity  .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_arcsin                    .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_agresti_coull             .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_jeffreys                  .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_clopper_pearson           .__doc__ = binom_interval_h1.__doc__ 
+for _h in ( ROOT.TH1F , ROOT.TH1D ) : 
+    _h.eff_wald                      .__doc__ = binom_interval_h1.__doc__ 
+    _h.eff_wilson_score              .__doc__ = binom_interval_h1.__doc__ 
+    _h.eff_wilson_score_continutity  .__doc__ = binom_interval_h1.__doc__ 
+    _h.eff_arcsin                    .__doc__ = binom_interval_h1.__doc__ 
+    _h.eff_agresti_coull             .__doc__ = binom_interval_h1.__doc__ 
+    _h.eff_jeffreys                  .__doc__ = binom_interval_h1.__doc__ 
+    _h.eff_clopper_pearson           .__doc__ = binom_interval_h1.__doc__ 
 
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors 
@@ -2348,19 +2348,26 @@ def objectAsFunction ( obj ) :
     return obj
 
 
-## ==============================================================================
+# ==============================================================================
+## trivial helper base ....
 class FUNCX  (object) : pass
 
+# ==============================================================================
+## constant 
 class FUNC_C0(FUNCX) :
     def __init__ ( self , value       ) : self.value = value 
     def __call__ ( self , x ,      *y ) : return self.value 
     def integral ( self , xmin , xmax ) : return ( xmax - xmin ) * self.value
     
+# ==============================================================================
+## trivial 1D-function 
 class FUNC_F1(FUNCX) :
     def __init__ ( self , func        ) : self.func = func 
     def __call__ ( self , x    ,   *y ) : return self.func ( float ( x ) )  
     def integral ( self , xmin , xmax ) : return self.func.Integral( xmin , xmax )
     
+# ==============================================================================
+## trivial 2D-function 
 class FUNC_F2(FUNCX) :
     def __init__ ( self , func        ) : self.func = func 
     def __call__ ( self , x , y ,  *z ) : return self.func ( float ( x ) , float ( y ) ) 
@@ -2368,6 +2375,8 @@ class FUNC_F2(FUNCX) :
                    xmin , xmax        ,
                    ymin , ymax        ) : return self.func.Integral( xmin , xmax ,
                                                                      ymin , ymax )
+# ==============================================================================
+## trivial 3D-function 
 class FUNC_F3(FUNCX) :
     def __init__ ( self , func        ) : self.func = func 
     def __call__ ( self , x , y ,  z  ) : return self.func ( float ( x ) ,
@@ -2379,6 +2388,8 @@ class FUNC_F3(FUNCX) :
                    zmin , zmax        ) : return self.func.Integral( xmin , xmax ,
                                                                      xmin , xmax ,
                                                                      zmin , zmax )
+# ==============================================================================
+## everything else 
 class FUNC_OTHER(FUNCX) :
     def __init__ ( self , func        ) :
         self.func = func

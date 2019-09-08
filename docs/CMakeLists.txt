@@ -23,10 +23,12 @@ if (BUILD_DOC AND DOXYGEN_FOUND)
      add_custom_target ( root_doxy_tag COMMENT ${ROOT_TAG_FILE} ) 
     endif() 
 
+
   set(DOXYGEN_OUTPUT_DIR  ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
   set(DOXYGEN_INDEX_FILE  ${DOXYGEN_OUTPUT_DIR}/html/index.html)
-  set(DOXYGEN_TAGFILE     ${DOXYGEN_OUTPUT_DIR}/ostap.tag)
-  set(DOXYGEN_LATEX       ${DOXIGEN_OUTPUT_DIR}/latex/refman.tex)
+  set(DOXYGEN_TAG_FILE    ${DOXYGEN_OUTPUT_DIR}/ostap.tag)
+  set(DOXYGEN_LATEX_DIR   ${DOXYGEN_OUTPUT_DIR}/latex)
+  set(DOXYGEN_LATEX_FILE  ${DOXYGEN_OUTPUT_DIR}/latex/refman.tex)
 
   file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
 
@@ -43,11 +45,12 @@ if (BUILD_DOC AND DOXYGEN_FOUND)
         MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
         VERBATIM)
 
-  add_custom_target(PdfDoc 
-        DEPENDS ${DOXIGEN_LATEX}
+  add_custom_target(pdfdoc 
+        DEPENDS          DoxyGen ${DOXIGEN_LATEX_FILE}
         COMMAND make pdf 
-        WORKING_DIRECTORY ${DOXIGEN_OUTPUT_DIR}/latex
+        WORKING_DIRECTORY ${DOXIGEN_LATEX_DIR}
         COMMENT "Building PDF-documentation"
+        MAIN_DEPENDENCY  ${DOXIGEN_LATEX_FILE}
         VERBATIM)
 
 ## include(GNUInstallDirs)
@@ -67,8 +70,8 @@ endif()
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/ROOT.tag)
  install(FILES     ${CMAKE_CURRENT_BINARY_DIR}/ROOT.tag   DESTINATION docs )
 endif()
-if(EXISTS ${DOXYGEN_OUTPUT_DIR}/ostap.tag)
- install(FILES     ${DOXYGEN_OUTPUT_DIR}/ostap.tag        DESTINATION docs )
+if(EXISTS ${DOXYGEN_TAG_FILE})
+ install(FILES     ${DOXYGEN_TAG_FILE}                    DESTINATION docs )
 endif()
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
