@@ -5427,7 +5427,8 @@ ROOT.TH1.nEff = ROOT.TH1.GetEffectiveEntries
 # =============================================================================
 ## calculate bin-by-bin moments
 #  \f$ m(k_x,k_y; x , y  ) \equiv 
-#   \frac{ \sum_i (x_i - x)^{n_x} (y_i - y)^{n_y} N_i }
+#   \frac{ \sum_i (x_i - x)^{n_x}
+#                 (y_i - y)^{n_y} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h2 = ...
@@ -5448,7 +5449,8 @@ _h2_moment_ . __doc__ +=  '\n' + HStats.moment2.__doc__
 # =============================================================================
 ## calculate bin-by-bin central moments
 #  \f$ m(k_x,k_y; x , y  ) \equiv 
-#   \frac{ \sum_i (x_i - \mu_x)^{k_x} (y_i - \mu_y)^{k_y} N_i }
+#   \frac{ \sum_i (x_i - \mu_x)^{k_x}
+#                 (y_i - \mu_y)^{k_y} N_i }
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h2 = ...
@@ -5470,7 +5472,8 @@ _h2_cmoment_ . __doc__ +=  '\n' + HStats.central_moment2.__doc__
 ## calculate bin-by-bin standartized moment
 #  \f$ m(k_x,k_y; x , y  ) \equiv
 #   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}}
-#   \frac{ \sum_i (x_i - \mu_x)^{k_x} (y_i - \mu_y)^{k_y} N_i }
+#   \frac{ \sum_i (x_i - \mu_x)^{k_x}
+#                 (y_i - \mu_y)^{k_y} N_i }
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h2 = ...
@@ -5497,7 +5500,9 @@ for h in ( ROOT.TH2F , ROOT.TH2D ) :
 # =============================================================================
 ## calculate bin-by-bin moment
 #  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
-#   \frac{ \sum_i (x_i - x)^{k_x} (y_i - y)^{k_y} (z_i - z )^{k_z} N_i 
+#   \frac{ \sum_i (x_i - x)^{k_x}
+#                 (y_i - y)^{k_y}
+#                 (z_i - z )^{k_z} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h3 = ...
@@ -5520,7 +5525,7 @@ _h3_moment_ . __doc__ +=  '\n' + HStats.moment3.__doc__
 #  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
 #   \frac{ \sum_i (x_i - \mu_x)^{k_x}
 #                 (y_i - \mu_y)^{k_y}
-#                 (z_i - \muz )^{k_z} N_i 
+#                 (z_i - \muz )^{k_z} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h3 = ...
@@ -5544,7 +5549,7 @@ _h3_cmoment_ . __doc__ +=  '\n' + HStats.central_moment3.__doc__
 #   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}\sigma_z^{k_z}}
 #   \frac{ \sum_i (x_i - \mu_x)^{k_x}
 #                 (y_i - \mu_y)^{k_y}
-#                 (z_i - \muz )^{k_z} N_i 
+#                 (z_i - \muz )^{k_z} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h3 = ...

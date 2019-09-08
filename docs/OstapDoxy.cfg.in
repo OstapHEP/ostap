@@ -8,11 +8,15 @@ HTML_FOOTER          = @PROJECT_SOURCE_DIR@/docs/OstapFooter.html
 INPUT                = 
 FILE_PATTERNS        =  
 
+# =============================================================================
 ## python source & python tests
+# =============================================================================
 INPUT               += @PROJECT_SOURCE_DIR@/ostap
 FILE_PATTERNS       += *.py 
 
+# =============================================================================
 ## C++ source  
+# =============================================================================
 INPUT               += @PROJECT_SOURCE_DIR@/source/include  
 INPUT               += @PROJECT_SOURCE_DIR@/source/src 
 
@@ -25,7 +29,9 @@ EXCLUDE_PATTERNS    += */src/owens.cpp
 EXCLUDE_PATTERNS    += */src/Faddeeva.hh
 EXCLUDE_PATTERNS    += */src/Faddeeva.cpp
 
+# =============================================================================
 ## examples
+# =============================================================================
 INPUT               += @PROJECT_SOURCE_DIR@/examples
 FILE_PATTERNS       += *.cpp *.h *.C 
 
@@ -38,6 +44,7 @@ HAVE_DOT             = @DOXYGEN_HAVE_DOT@
 EXTRA_PACKAGES      += times
 EXTRA_PACKAGES      += amsmath
 EXTRA_PACKAGES      += graphicx
+EXTRA_PACKAGES      += newunicodechar
 
 BUILTIN_STL_SUPPORT  = YES
 

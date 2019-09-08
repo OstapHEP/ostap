@@ -102,7 +102,8 @@ namespace Ostap
       // ======================================================================
       /** get the "bin-by-bin"-moment around the specified  "value"
        *  \f$ m(k_x,k_y; x , y  ) \equiv 
-       *   \frac{ \sum_i (x_i - x)^{k_x} (y_i - y)^{k_y} N_i }
+       *   \frac{ \sum_i (x_i - x)^{k_x} 
+       *                 (y_i - y)^{k_y} N_i }
        *        { \sum_j N_j } \f$ 
        *  @param histo histogram
        *  @param kx    the moment parameter
@@ -120,7 +121,8 @@ namespace Ostap
       // ======================================================================
       /** get the "bin-by-bin"-central moment
        *  \f$ m(k_x,k_y; x , y  ) \equiv 
-       *   \frac{ \sum_i (x_i - \mu_x)^{k_x} (y_i - \mu_y)^{k_y} N_i }
+       *   \frac{ \sum_i (x_i - \mu_x)^{k_x} 
+       *                 (y_i - \mu_y)^{k_y} N_i }
        *        { \sum_j N_j } \f$ 
        *  @param histo histogram
        *  @param kx    the moment parameter
@@ -135,7 +137,8 @@ namespace Ostap
       /** get the "bin-by-bin"-standartized moment
        *  \f$ m(k_x,k_y; x , y  ) \equiv 
        *   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}}
-       *   \frac{ \sum_i (x_i - \mu_x)^{k_x} (y_i - \mu_y)^{k_y} N_i }
+       *   \frac{ \sum_i (x_i - \mu_x)^{k_x} 
+                         (y_i - \mu_y)^{k_y} N_i }
        *        { \sum_j N_j } \f$ 
        *  @param histo histogram
        *  @param kx    the moment parameter
@@ -151,8 +154,9 @@ namespace Ostap
       // ======================================================================
       /** get the "bin-by-bin"-moment around the specified  "value"
        *  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
-       *   \frac{ \sum_i (x_i - x)^{k_x} \
-       *                 (y_i - y)^{k_y} (z_i - z )^{k_z} N_i 
+       *   \frac{ \sum_i (x_i - x)^{k_x} 
+       *                 (y_i - y)^{k_y} 
+       *                 (z_i - z )^{k_z} N_i }
        *        { \sum_j N_j } \f$ 
        *  @param histo histogram
        *  @param kx    the moment parameter
@@ -176,7 +180,7 @@ namespace Ostap
        *  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
        *   \frac{ \sum_i (x_i -\mu_x)^{k_x} 
        *                 (y_i - \mu_y)^{k_y} 
-       *                 (z_i - \mu_zz )^{k_z} N_i 
+       *                 (z_i - \mu_zz )^{k_z} N_i}
        *        { \sum_j N_j } \f$ 
        *  @param histo histogram
        *  @param kx    the moment parameter
@@ -195,7 +199,7 @@ namespace Ostap
        *   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}\sigma_z^{k_z}}
        *   \frac{ \sum_i (x_i -\mu_x)^{k_x} 
        *                 (y_i - \mu_y)^{k_y} 
-       *                 (z_i - \mu_zz )^{k_z} N_i 
+       *                 (z_i - \mu_zz )^{k_z} N_i }
        *        { \sum_j N_j } \f$ 
        *  @param histo histogram
        *  @param kx    the moment parameter

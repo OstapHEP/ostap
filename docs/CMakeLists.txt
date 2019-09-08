@@ -19,7 +19,6 @@ if (BUILD_DOC AND DOXYGEN_FOUND)
                          COMMENT "(w)get ROOT.tag file from ${ROOT_TAG_URL}" )
      find_file (ROOT_TAG_FILE ROOT.tag ${CMAKE_CURRENT_BINARY_DIR} )
     else()
-     message ( 'ROOT tag' ) 
      add_custom_target ( root_doxy_tag COMMENT ${ROOT_TAG_FILE} ) 
     endif() 
 
