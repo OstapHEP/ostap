@@ -6,29 +6,29 @@ find_package(Doxygen REQUIRED dot)
 
 if (BUILD_DOC AND DOXYGEN_FOUND)
 
+   message ('project source dir' ${PROJECT_SOURCE_DIR})
+   message ('current source dir' ${CMAKE_CURRENT_SOURCE_DIR})
+   message ('current binary dir' ${CMAKE_CURRENT_BINARY_DIR})
+
+   set  (ROOT_DOXYTAG "master")
    find_package (ROOT)
-   string(APPEND ROOT_DOXYTAG ${ROOT_VERSION_MAJOR} ${ROOT_VERSION_MINOR})
+   if (${ROOT_VERSION_MAJOR} AND ${ROOT_VERSION_MINOR}) 
+      string(CONCAT ROOT_DOXYTAG v ${ROOT_VERSION_MAJOR} ${ROOT_VERSION_MINOR})
+   endif() 
 
-   find_file (ROOT_TAG_FILE ROOT.tag ${CMAKE_CURRENT_BINARY_DIR} )      
-   if( NOT EXISTS ${ROOT_TAG_FILE} )  
-     find_program (WGET_EXECUTABLE wget)
-     set( ROOT_TAG_URL  http://root.cern.ch/doc/v${ROOT_DOXYTAG}/ROOT.tag ) 
-     add_custom_target ( root_doxy_tag
-                         DEPENDS ROOT.tag 
-                         COMMAND ${WGET_EXECUTABLE} -q ${ROOT_TAG_URL} 
-                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                         COMMENT "(w)get ROOT.tag file from ${ROOT_TAG_URL}" )
-     find_file (ROOT_TAG_FILE ROOT.tag ${CMAKE_CURRENT_BINARY_DIR} )
-    else()
-     add_custom_target ( root_doxy_tag COMMENT ${ROOT_TAG_FILE} ) 
-    endif() 
-
+   find_program (WGET_EXECUTABLE wget)
+   set( ROOT_TAG_URL  http://root.cern.ch/doc/${ROOT_DOXYTAG}/ROOT.tag ) 
+   add_custom_command ( OUTPUT ROOT.tag 
+                        COMMAND ${WGET_EXECUTABLE} -q ${ROOT_TAG_URL} 
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                        COMMENT "Download ROOT.tag file from ${ROOT_TAG_URL}" )
 
   set(DOXYGEN_OUTPUT_DIR  ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
   set(DOXYGEN_INDEX_FILE  ${DOXYGEN_OUTPUT_DIR}/html/index.html)
   set(DOXYGEN_TAG_FILE    ${DOXYGEN_OUTPUT_DIR}/ostap.tag)
   set(DOXYGEN_LATEX_DIR   ${DOXYGEN_OUTPUT_DIR}/latex)
   set(DOXYGEN_LATEX_FILE  ${DOXYGEN_OUTPUT_DIR}/latex/refman.tex)
+  set(DOXYGEN_PDF_FILE    ${DOXYGEN_OUTPUT_DIR}/latex/refman.pdf)
 
   file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
 
@@ -37,21 +37,25 @@ if (BUILD_DOC AND DOXYGEN_FOUND)
  
   configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)              
 
-  add_custom_target(DoxyGen
-        DEPENDS root_doxy_tag ${DOXYFILE_IN} ostap 
+  add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE} ${DOXYGEN_LATEX_FILE}
+        DEPENDS ostap ${DOXYFILE_IN} ROOT.tag  
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT} 2> grep -e 'Fontconfig error: Cannot load default config file' -v 
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen (could be time consuming O(15-20'))"
         MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
         VERBATIM)
 
-  add_custom_target(pdfdoc 
-        DEPENDS          DoxyGen ${DOXIGEN_LATEX_FILE}
+  add_custom_command(OUTPUT ${DOXYGEN_PDF_FILE}
+        DEPENDS     DoxyGen ${DOXYGEN_LATEX_FILE}
         COMMAND make pdf 
-        WORKING_DIRECTORY ${DOXIGEN_LATEX_DIR}
+        WORKING_DIRECTORY   ${DOXYGEN_LATEX_DIR}
         COMMENT "Building PDF-documentation"
-        MAIN_DEPENDENCY  ${DOXIGEN_LATEX_FILE}
+        MAIN_DEPENDENCY     ${DOXYGEN_LATEX_FILE}
         VERBATIM)
+
+  add_custom_target(DoxyGen DEPENDS         ${DOXYGEN_INDEX_FILE})
+  add_custom_target(pdfdoc  DEPENDS DoxyGen ${DOXYGEN_PDF_FILE})
+
 
 ## include(GNUInstallDirs)
 

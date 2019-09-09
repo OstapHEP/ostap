@@ -5532,7 +5532,7 @@ _h3_moment_ . __doc__ +=  '\n' + HStats.moment3.__doc__
 #  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
 #   \frac{ \sum_i (x_i - \mu_x)^{k_x}
 #                 (y_i - \mu_y)^{k_y}
-#                 (z_i - \muz )^{k_z} N_i}
+#                 (z_i - \mu_z)^{k_z} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h3 = ...
@@ -5556,7 +5556,7 @@ _h3_cmoment_ . __doc__ +=  '\n' + HStats.central_moment3.__doc__
 #   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}\sigma_z^{k_z}}
 #   \frac{ \sum_i (x_i - \mu_x)^{k_x}
 #                 (y_i - \mu_y)^{k_y}
-#                 (z_i - \muz )^{k_z} N_i}
+#                 (z_i - \mu_z)^{k_z} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h3 = ...

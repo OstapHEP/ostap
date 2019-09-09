@@ -1,22 +1,15 @@
-Welcome to the Ostap project!
-==================================
+.. ostap documentation master file, created by
+   sphinx-quickstart on Sun Sep  8 21:50:37 2019.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-To get started, first :ref:`install the skhep module <installation>` and then read the :ref:`main documentation <documentation>`.
-
-If there's a feature missing you'd like to see, you can :ref:`contribute to Ostap<contributing>`
-
-.. Here's some maths: :math:`\decay{D^{0}}{h^{+}h^{-}}`, and :math:`\pT` and :math:`x`.
+Welcome to ostap's documentation!
+=================================
 
 .. toctree::
-   :hidden:
    :maxdepth: 2
+   :caption: Contents:
 
-   about.rst
-   installation.rst
-   documentation.rst
-   contributing.rst
-   faq.rst
-..   affiliations.rst
 
 
 Indices and tables
