@@ -89,6 +89,8 @@ if (SPHINX_EXECUTABLE)
  set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
  set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
 
+ file(GLOB  rstfiles "${CMAKE_CURRENT_SOURCE_DIR}/*.rst")
+
  # Only regenerate Sphinx when:
  # - Doxygen has rerun
  # - Our doc files have been updated
@@ -97,18 +99,19 @@ add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
                    COMMAND 
                    ${SPHINX_EXECUTABLE} -b html
                    # Tell Breathe where to find the Doxygen output
-                   -Dbreathe_projects.CatCutifier=${DOXYGEN_OUTPUT_DIR}/xml
+                   -Dbreathe_projects.ostap=${DOXYGEN_OUTPUT_DIR}
                    ${SPHINX_SOURCE} ${SPHINX_BUILD}
                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                    DEPENDS
                    # Other docs files you want to track should go here (or in some variable)
                    ${CMAKE_CURRENT_SOURCE_DIR}/index.rst
                    ${DOXYGEN_INDEX_FILE}
+                   ${rstfiles}
                    MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
                    COMMENT "Generating documentation with Sphinx")
  
 # Nice named target so we can run the job easily
-add_custom_target(Sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
+add_custom_target(Sphinx DEPENDS ${SPHINX_INDEX_FILE})
 
 
 if(EXISTS (${SPHINX_BUILD} ) )

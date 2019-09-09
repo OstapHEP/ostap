@@ -2007,14 +2007,18 @@ ROOT.TH1D.eff_jeffreys                = lambda accepted,rejected,interval=one_si
 ROOT.TH1F.eff_clopper_pearson         = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.clopper_pearson_interval         , interval ) 
 ROOT.TH1D.eff_clopper_pearson         = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.clopper_pearson_interval         , interval ) 
 
-for _h in ( ROOT.TH1F , ROOT.TH1D ) : 
-    _h.eff_wald                      .__doc__ = binom_interval_h1.__doc__ 
-    _h.eff_wilson_score              .__doc__ = binom_interval_h1.__doc__ 
-    _h.eff_wilson_score_continutity  .__doc__ = binom_interval_h1.__doc__ 
-    _h.eff_arcsin                    .__doc__ = binom_interval_h1.__doc__ 
-    _h.eff_agresti_coull             .__doc__ = binom_interval_h1.__doc__ 
-    _h.eff_jeffreys                  .__doc__ = binom_interval_h1.__doc__ 
-    _h.eff_clopper_pearson           .__doc__ = binom_interval_h1.__doc__ 
+# for _h in ( ROOT.TH1F , ROOT.TH1D ) : 
+#     _h.eff_wald                      .__doc__ = binom_interval_h1.__doc__ 
+#     _h.eff_wilson_score              .__doc__ = binom_interval_h1.__doc__ 
+#     _h.eff_wilson_score_continutity  .__doc__ = binom_interval_h1.__doc__ 
+#     _h.eff_arcsin                    .__doc__ = binom_interval_h1.__doc__ 
+#     _h.eff_agresti_coull             .__doc__ = binom_interval_h1.__doc__ 
+#     _h.eff_jeffreys                  .__doc__ = binom_interval_h1.__doc__ 
+#     _h.eff_clopper_pearson           .__doc__ = binom_interval_h1.__doc__ 
+
+
+
+
 
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors 

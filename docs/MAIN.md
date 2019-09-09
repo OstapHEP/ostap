@@ -14,7 +14,6 @@ Key features include
 -   Powerful, pickle-based persistency for object
 -   Interactive `ostap` analysis environment
 
-
 Dependencies
 ------------
 
@@ -47,4 +46,5 @@ Dependencies
 [terminaltables]: https://pypi.org/project/terminaltables
 [Kali]:http://inspirehep.net/record/1111459
 [Bender]:http://lhcb-release-area.web.cern.ch/LHCb-release-area/DOC/bender
+
 
