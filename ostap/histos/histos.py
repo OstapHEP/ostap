@@ -2017,9 +2017,6 @@ ROOT.TH1D.eff_clopper_pearson         = lambda accepted,rejected,interval=one_si
 #     _h.eff_clopper_pearson           .__doc__ = binom_interval_h1.__doc__ 
 
 
-
-
-
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors 
 #  @code 

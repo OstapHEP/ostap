@@ -1,7 +1,7 @@
 # first we can indicate the documentation build as an option and set it to ON by default
 option(BUILD_DOC "Build documentation?" ON)
 
-find_package(Doxygen) 
+find_package(Doxygen COMPONENTS dot) 
 ## find_package(Sphinx  REQUIRED)
 
 if (BUILD_DOC AND DOXYGEN_FOUND)
