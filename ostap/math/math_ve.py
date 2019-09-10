@@ -320,7 +320,7 @@ _igamma_ = cpp.Ostap.Math.igamma
 #  @see https://en.wikipedia.org/wiki/Reciprocal_gamma_function
 def igamma ( x ) :
     r"""'igamma' function taking into account the uncertainties
-    \f$ f(x) = \frac{1}{\Gamma(x)}\f$
+    \f[ f(x) = \frac{1}{\Gamma(x)} \f]
     - see https://en.wikipedia.org/wiki/Reciprocal_gamma_function
     """
     fun = getattr ( x , '__igamma__' , None )
@@ -368,11 +368,13 @@ _fma_ = cpp.Ostap.Math.fma
 #  @endcode 
 #  @warning invalid and small covariances are ignored
 def fma ( x , y , z , cxy = 0 , cxz = 0 , cyz = 0 ) : 
-    """ Evaluate fma(x,y,z)=x*y+z with uncertainties
+    """ Evaluate `fma(x,y,z)=x*y+z` with uncertainties
+    
     >>> x = ...
     >>> y = ...
     >>> z = ...
-    >>> print fma ( x , y , z ) 
+    >>> print fma ( x , y , z )
+    
     """
     _x = VE ( x )
     _y = VE ( y )
@@ -389,7 +391,7 @@ _hypot_ = cpp.Ostap.Math.hypot
 #  @return the value of <code>hypot</code> function
 #  @warning invalid and small covariances are ignored
 def hypot ( x , y , c = 0 ) : 
-    """ evaluate hypot(x,y)=sqrt{x*x+y*y} witn uncertainties 
+    """ Evaluate hypot(x,y)=sqrt{x*x+y*y} with uncertainties 
     """
     _x = VE ( x )
     _y = VE ( y )
@@ -398,8 +400,8 @@ def hypot ( x , y , c = 0 ) :
 
 _pochhammer = cpp.Ostap.Math.pochhammer
 # =============================================================================
-## calculate Pochhammer's  symbol
-#   \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+## \overload calculate Pochhammer's  symbol
+#  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f]
 #  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
 #  @param x (INPUT) the parameter 
 #  @param n (INPUT) the parameter 
@@ -409,9 +411,9 @@ _pochhammer = cpp.Ostap.Math.pochhammer
 #  @see Ostap::Math::falling_factorial
 #  @see Ostap::Math::pochhammer 
 def pochhammer ( x , n ) :
-    """ calculate Pochhammer's  symbol
+    r""" calculate Pochhammer's  symbol
     \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
-    @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+    - see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
     """
     assert is_integer ( n ) and  0<= n < 2**16, \
            "pochhammer: invalid n=%s" % n
@@ -431,7 +433,8 @@ _gauss_pdf_ = cpp.Ostap.Math.gauss_pdf
 #  @param sigma sigma-parameter (width)
 #  @return gaussian PDF 
 def gauss_pdf( x , mu = 0.0 , sigma = 1.0 ) :
-    """Standard gaussian PDF
+    """Standard gaussian PDF:
+    
     >>> x,mu, sigma = ....
     >>> pdf = gauss_pdf ( x  , mu , sigma )
     """
@@ -449,7 +452,8 @@ _gauss_cdf_ = cpp.Ostap.Math.gauss_cdf
 #  @param sigma sigma-parameter (width)
 #  @return gaussian CDF 
 def gauss_cdf ( x , mu = 0.0 , sigma = 1.0 ) :
-    """Standard gaussian CDF
+    """Standard gaussian CDF:
+    
     >>> x,mu, sigma = ....
     >>> cdf = gauss_cdf ( x  , mu , sigma )
     """

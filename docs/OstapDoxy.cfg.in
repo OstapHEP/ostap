@@ -30,6 +30,8 @@ EXCLUDE_PATTERNS    += */src/owens.hpp
 EXCLUDE_PATTERNS    += */src/owens.cpp
 EXCLUDE_PATTERNS    += */src/Faddeeva.hh
 EXCLUDE_PATTERNS    += */src/Faddeeva.cpp
+EXCLUDE_PATTERNS    += */src/Integrator*.cpp     
+EXCLUDE_PATTERNS    += */src/Integrator*.h
 
 # =============================================================================
 ## examples
@@ -37,7 +39,7 @@ EXCLUDE_PATTERNS    += */src/Faddeeva.cpp
 INPUT               += @PROJECT_SOURCE_DIR@/examples
 FILE_PATTERNS       += *.cxx *.C
 
-TAGFILES            += ./ROOT.tag=https://root.cern.ch/doc/v@ROOT_DOXYTAG@/
+TAGFILES            += ./ROOT.tag=https://root.cern.ch/doc/@ROOT_DOXYTAG@/
 
 RECURSIVE            = YES 
 HAVE_DOT             = @DOXYGEN_HAVE_DOT@
@@ -71,3 +73,6 @@ PDF_HYPERLINKS       = YES
 
 WARN_IF_UNDOCUMENTED =  NO
 QUIET                = YES
+
+SEARCHENGINE         = YES
+SERVER_BASED_SEARCH  =  NO
