@@ -249,7 +249,7 @@ class Weight(object) :
 
     # =========================================================================
     ## @class WeightingVar
-    #  Helper class to keep information about singe reweighting
+    #  Helper class to keep information about single reweighting
     #  - accessor : an accessor function that extracts the variable(s)
     #               from  TTree/TChain/RooDataSet
     #  - address  : the  address in DBASE, where reweigftjnig callable(s) is/are stored
@@ -278,7 +278,7 @@ class Weight(object) :
                        address          ,   ## the address of   reweighintg object in DBASE 
                        merge     = True ,   ## merge sequence of reweigthing objects ?
                        skip      = None ) : ## skip some reweigting objects ? 
-            """Keep information about singe reweighting
+            """Keep information about single reweighting
             - ``accessor'' : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
             - ``address''  : the  address in DBASE, where reweigftjnig callable(s) is/are stored
             - ``merge''    : merge list of callables from DB into the single callable ?
@@ -306,7 +306,7 @@ class Weight(object) :
             
         @property
         def accessor ( self ) :
-            """``accessor'' - the accessro function to get the variable from TTree/TChain/RooDataSet
+            """``accessor'' - the accessor function to get the variable from TTree/TChain/RooDataSet
             e.g.  to get the variable ``x'' : 
             >>> xvar   = lambda s : s.x
             get to     variables fo  2D-reweighting:
@@ -318,7 +318,7 @@ class Weight(object) :
             """``address''  - the address in DB with the reweighting information
             for the  given varibale(s).
             A callable (or list of  callables) is expected in database
-            These callables accept ther result of ``accessor'' as their argument
+            These callables accept their result of ``accessor'' as their argument
             """
             return self.__address 
         @property
@@ -440,7 +440,7 @@ class WeightingPlot(object) :
         return self.__data 
     @property
     def  mc_histo ( self ) :
-        """``mc_histo'' : template/shape for the mc-historgam, to be used for reweighting.
+        """``mc_histo'' : template/shape for the mc-histogram, to be used for reweighting.
         It is used as the  first argument of ``dataset.project'' method 
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
@@ -517,10 +517,10 @@ def makeWeights  ( dataset                  ,
         # =====================================================================
         
         #  try to exploit finer binning if/when possible
-        if isinstance ( hmc   , ROOT.TH1 ) and \
-           isinstance ( hdata , ROOT.TH1 ) and \
-           len ( hmc ) >= len( hdata )  : w =  ( 1.0 / hmc ) * hdata ## NB!      
-        else                            : w =  hdata / hmc           ## NB!
+        if isinstance ( hmc   , ( ROOT.TH1F , ROOT.TH1D ) ) and \
+           isinstance ( hdata , ( ROOT.TH1F , ROOT.TH1D ) ) and \
+           len ( hmc ) >= len( hdata )  : w = ( 1.0 / hmc ) * hdata ## NB!      
+        else                            : w = hdata / hmc           ## NB!
 
         # =====================================================================
         ## scale & get the statistics of weights 
@@ -584,14 +584,30 @@ def makeWeights  ( dataset                  ,
 
         entry = save_to_db.pop() 
         
-        address, ww , hd0, hm0, hd , hm , weight = entry  
+        address , ww , hd0 , hm0 , hd , hm , weight = entry  
 
         ## eff_exp = 1.0  / power
         ## eff_exp = 0.95 / ( 1.0 * nactive ) ** 0.5
+
+        cnt = weight.stat()
+        mnw, mxw = cnt.minmax()
         
-        eff_exp = 0.5  if 1 < nactive else 1 
-        
-        if 1 != ww :
+        if   0.95 < mnw and mxw < 1.05 :            
+            eff_exp = 0.75 if 1 < nactive else 1.50
+        elif 0.90 < mnw and mxw < 1.10 :            
+            eff_exp = 0.70 if 1 < nactive else 1.30
+        elif 0.80 < mnw and mxw < 1.20 :            
+            eff_exp = 0.65 if 1 < nactive else 1.25
+        elif 0.70 < mnw and mxw < 1.30 :            
+            eff_exp = 0.60 if 1 < nactive else 1.15            
+        elif 0.50 < mnw and mxw < 1.50 :            
+            eff_exp = 0.55 if 1 < nactive else 1.10            
+        else :
+            eff_exp = 0.50 if 1 < nactive else 1.0
+
+        ## print 'effective exponent is:', eff_exp , address , mnw , mxw , (1.0/mnw)*mnw**eff_exp , (1.0/mxw)*mxw**eff_exp 
+                
+        if 1 < nactive and 1 != ww :
             eff_exp *= ww
             logger.info  ("%s: apply ``effective exponent'' of %.3f for ``%s''" % ( tag , eff_exp  , address ) )
             
