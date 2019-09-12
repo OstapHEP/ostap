@@ -1154,7 +1154,14 @@ class PDF (MakeVar) :
         frame = var.frame ( *fargs )
         result.plotOn ( frame , *largs  )
 
-        import ostap.histos.graphs 
+        import ostap.histos.graphs
+
+        ## scale it if needed
+        if 1 != sf :
+            logger.info ('Apply scale factor of %s'  % sf )
+            graph  = frame.getObject (0)
+            graph *= sf 
+        
         gr      = frame.getObject ( 0 )
         mn , mx = gr.minmax()
         m  , e  = frexp10 ( mx )
@@ -1171,12 +1178,6 @@ class PDF (MakeVar) :
             frame.SetYTitle  ( '' )
             frame.SetZTitle  ( '' )
 
-        ## scale it if needed
-        if 1 !=  sf :
-            logger.info ('Apply scale factor of %s'  %s )
-            graph  = frame.getObject (0)
-            graph *= sf 
-            
         ## draw it! 
         if not ROOT.gROOT.IsBatch() :
             with rootWarning ():
