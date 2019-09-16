@@ -334,8 +334,8 @@ for iter in range ( 1 , maxIter + 1 ) :
         h1 = hdata.density()
         h2 = hmc  .density()
         
-        print 'MIN DATA/MC : ' , h1 ( mn [0] , mn [1] ) , h2 ( mn [0] , mn[1] )
-        print 'MAX DATA/MC : ' , h1 ( mx [0] , mx [1] ) , h2 ( mx [0] , mx[1] )
+        logger.info  ('MIN DATA/MC : %s,%s' %( h1 ( mn [0] , mn [1] ), h2 ( mn [0] , mn[1] )))
+        logger.info  ('MAX DATA/MC : %s,%s' % (h1 ( mx [0] , mx [1] ), h2 ( mx [0] , mx[1] )))
         
         ## 4e) 2D-statistics 
         mcstat = mcds.statCov('x','y','weight')
