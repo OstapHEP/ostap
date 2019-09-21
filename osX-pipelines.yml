@@ -18,4 +18,9 @@ jobs:
      cd build
      ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j 16
     displayName: 'test'
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName:   ${{ parameters.artifact }}
+      targetPath: '$(System.DefaultWorkingDirectory)/build'
+    condition: always()
   
