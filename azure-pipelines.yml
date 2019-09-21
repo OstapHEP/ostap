@@ -24,3 +24,4 @@ jobs:
     LCG: 'LCG_96python3'
     CMTCONFIG: 'x86_64-centos7-gcc8-opt'
     artifact: 'test_cs7_lcg96_gcc8_python3'
+-template: osX-pipelines.yml
