@@ -20,7 +20,7 @@ jobs:
     displayName: 'test'
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName:   ${{ parameters.artifact }}
+      artifactName:   osx
       targetPath: '$(System.DefaultWorkingDirectory)/build'
     condition: always()
   
