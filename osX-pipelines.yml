@@ -15,6 +15,7 @@ jobs:
      export PYTHONPATH=/usr/local/lib/root:$PYTHONPATH
      export PATH=/usr/local/bin/root:$PATH
      source build/INSTALL/thisostap.sh 
+     cd build
      ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j 16
     displayName: 'test'
   
