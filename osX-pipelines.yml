@@ -1,0 +1,20 @@
+jobs:
+- job: osx
+  pool:
+    vmImage: macOS-10.14
+  timeoutInMinutes: 360
+  steps:
+  - script: |
+     brew install root
+     mkdir build
+     cd build
+     cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install
+    displayName: 'build'
+  - script: |
+     export PATH=/usr/local/bin/root:$PATH
+     export PYTHONPATH=/usr/local/lib/root:$PYTHONPATH
+     export PATH=/usr/local/bin/root:$PATH
+     source build/INSTALL/thisostap.sh 
+     ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j 16
+    displayName: 'test'
+  
