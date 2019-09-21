@@ -11,9 +11,6 @@ jobs:
      cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install
     displayName: 'build'
   - script: |
-     export PATH=/usr/local/bin/root:$PATH
-     export PYTHONPATH=/usr/local/lib/root:$PYTHONPATH
-     export PATH=/usr/local/bin/root:$PATH
      source build/INSTALL/thisostap.sh 
      cd build
      ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j 16
