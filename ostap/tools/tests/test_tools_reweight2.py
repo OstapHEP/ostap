@@ -44,6 +44,7 @@ if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
 import ostap.parallel.kisa
 
+
 if not os.path.exists( testdata ) :
     #
     seed =  1234567890 
@@ -51,7 +52,7 @@ if not os.path.exists( testdata ) :
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
     # 1) 2D histograms
-    ix , iy  = 25 , 20
+    ix , iy  = 45 , 25
     hdata  = h2_axes ( [ 20.0/ix*i for i in range ( ix + 1 ) ] ,
                        [ 15.0/iy*i for i in range ( iy + 1 ) ] )
     # 2) non-equal binning 1D histograms for x-component    
@@ -74,19 +75,20 @@ if not os.path.exists( testdata ) :
         datatree.Branch ( 'x' , xvar , 'x/F' )
         datatree.Branch ( 'y' , yvar , 'y/F' )
     
-        
-        for i in range ( 0, 1000000 ) :
+        N1 = 1000000
+        for i in range ( 0, N1 ) :
+            
             v1 = random.gauss ( 0 , 3 )
             v2 = random.gauss ( 0 , 2 )
             
             x  =  4 + v1 + v2   
             y  = 12      - v2
             
-            while 20 < x : x-=20 
-            while 15 < y : y-=15
+            while 20 < x : x -= 20 
+            while 15 < y : y -= 15
 
-            while 0 > x  : x+=20
-            while 0 > y  : y+=15
+            while  0 > x : x += 20
+            while  0 > y : y += 15
             
             hdata .Fill ( x , y )
             hxdata.Fill ( x )
@@ -98,18 +100,19 @@ if not os.path.exists( testdata ) :
             datatree.Fill()
             
            
-        for i in range ( 0, 1000000 ) :
+        for i in range ( 0 , N1 ) :
+            
             v1 = random.gauss ( 0 , 3 )
             v2 = random.gauss ( 0 , 2 )
             
             x  = 14 + v1 + v2   
             y  =  3      + v2
             
-            while 20 < x : x-=20 
-            while 15 < y : y-=15
+            while 20 < x : x -= 20 
+            while 15 < y : y -= 15
             
-            while 0 > x  : x+=20
-            while 0 > y  : y+=15
+            while  0 > x : x += 20
+            while  0 > y : y += 15
             
             hdata .Fill ( x , y )
             hxdata.Fill ( x )
@@ -120,7 +123,8 @@ if not os.path.exists( testdata ) :
             
             datatree.Fill()
             
-        for i in range ( 0 , 2000000 ) :
+        for i in range ( 0 , 2 * N1 ) :
+            
             x = random.uniform ( 0 , 20 ) 
             y = random.uniform ( 0 , 15 )
             
@@ -148,8 +152,9 @@ if not os.path.exists( testdata ) :
         yvar = array  ( 'f', [ 0.0 ] )
         mctree.Branch ( 'x' , xvar , 'x/F' )
         mctree.Branch ( 'y' , yvar , 'y/F' )
-        
-        for i in  range ( 200000 ) :
+
+        N2 = 200000
+        for i in  range ( N2 ) :
 
             xv = random.uniform ( 0 , 20 ) 
             yv = random.uniform ( 0 , 15 ) 
@@ -162,7 +167,7 @@ if not os.path.exists( testdata ) :
         fx = lambda x : ( x/10.0-1 ) ** 2
         fy = lambda y : ( y/ 7.5-1 ) ** 2
         
-        for i in  range ( 200000 ) :
+        for i in  range ( N2 ) :
             
             while True : 
                 xv = random.uniform ( 0 , 20 )
@@ -195,11 +200,14 @@ datastat = datatree.statCov('x','y')
 # =============================================================================
 ## prebook MC histograms
 # =============================================================================
-ix , iy  = 45 , 35
+ix , iy  = 45 , 25  # #DATA
+ix , iy  = 60 , 50 
+## ix , iy  = 35 , 22  
+## ix , iy  = 60 , 40
 hmc  = h2_axes ( [ 20.0/ix*i for i in range ( ix + 1 ) ] ,
                  [ 15.0/iy*i for i in range ( iy + 1 ) ] )
 
-ix , iy  = 50 , 45 
+ix , iy  = 60 , 36 
 hmcx = h1_axis ( [ 20.0/ix*i for i in range ( ix + 1 ) ] )
 hmcy = h1_axis ( [ 15.0/iy*i for i in range ( iy + 1 ) ] )
 
@@ -216,7 +224,7 @@ else :
     logger.info('Existing weights DBASE will be used') 
     
 # =============================================================================
-## make reweigthing iterations
+## make reweighting iterations
 
 from   ostap.tools.reweight         import Weight, makeWeights,  WeightingPlot, W2Data  
 from   ostap.fitting.selectors      import SelectorWithVars, Variable 
@@ -255,7 +263,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         mctree.process ( selector , silent = True )
         mcds = selector.data             ## dataset        
 
-    with timing ( 'Add weight to MC-dataset' , logger = logger ) : 
+    with timing ( 'Add weight to MC-dataset' , logger = logger ) :
         ## 1b) add  "weight" variable to dataset 
         mcds.add_reweighting ( weighter ,  name = 'weight' ) 
         
@@ -264,11 +272,11 @@ for iter in range ( 1 , maxIter + 1 ) :
     # =========================================================================
     ## 2) update weights
     plots = [ WeightingPlot ( 'y:x' , 'weight' , '2D-reweight' , hdata  , hmc  ) ]
-    if 3 < iter: 
+    if 2 < iter: 
         plots  = [
-            WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hxdata , hmcx       ) ,  
-            WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy       ) , 
-            WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  , 0.8 ) , 
+            WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hxdata , hmcx        ) ,  
+            WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy        ) , 
+            WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  , 0.99 ) , 
             ]
 
     with timing ( 'Make one reweighting iteration:' , logger = logger ) : 
@@ -278,7 +286,8 @@ for iter in range ( 1 , maxIter + 1 ) :
             mcds                                   , ## what to be reweighted
             plots                                  , ## reweighting plots/setup
             dbname                                 , ## DBASE with reweigting constant 
-            delta = 0.02                           , ## stopping criteria 
+            delta  = 0.04                          , ## stopping criteria
+            minmax = 0.08                          , ## stopping criteria  
             power = 2 if 1 != len ( plots ) else 1 , ## tune: effective power
             tag = "Reweight/%d" % iter             ) ## tag for printout
         
@@ -321,6 +330,12 @@ for iter in range ( 1 , maxIter + 1 ) :
         logger.info ( hh + "DATA(xy) / MC(xy) ``min/max-distance'' (%s)/(%s)[%%] at (x,y)min/max=(%.1f,%.1f)/(%.1f,%.1f)" % (
             (100*mn[2]-100).toString ( '%+.1f+-%.1f' ) ,
             (100*mx[2]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mn[1] , mx[0]  , mx[1] ) )
+
+        h1 = hdata.density()
+        h2 = hmc  .density()
+        
+        logger.info  ('MIN DATA/MC : %s,%s' %( h1 ( mn [0] , mn [1] ), h2 ( mn [0] , mn[1] )))
+        logger.info  ('MAX DATA/MC : %s,%s' % (h1 ( mx [0] , mx [1] ), h2 ( mx [0] , mx[1] )))
         
         ## 4e) 2D-statistics 
         mcstat = mcds.statCov('x','y','weight')

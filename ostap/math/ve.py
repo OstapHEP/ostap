@@ -12,9 +12,9 @@
 # @endcode
 # @see Ostap::Math::ValueWithError
 # ============================================================================= 
-""" Simple ``value-with-error'' concept
+r""" Simple `value-with-error' concept
 
->>> a = VE (1,0.1**2)
+>>> a = VE (1,0.1**2) 
 >>> b = VE (2,0.2**2)
 >>> c = a + b
 
@@ -187,6 +187,7 @@ def _ve_prec2_ ( s )  :
 VE . b2s        = _ve_b2s_
 VE . prec       = _ve_prec2_
 VE . precision  = _ve_prec2_
+VE . purity     = _ve_purity_
 
 _is_le_    = Ostap.Math.LessOrEqual ( 'double' )()
 
@@ -429,6 +430,7 @@ _new_methods_ = (
     VVE.Vector . __repr__ , 
     VVE.Vector . __len__  , 
     VE . b2s              , 
+    VE . purity           , 
     VE . prec             , 
     VE . precision        , 
     VE . __lt__           ,

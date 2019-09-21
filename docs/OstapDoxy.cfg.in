@@ -1,41 +1,64 @@
 PROJECT_NAME         = "ostap @OSTAP_VERSION@"
-OUTPUT_DIRECTORY     = @CMAKE_CURRENT_BINARY_DIR@/doxygen_doc 
-GENERATE_TAGFILE     = @CMAKE_CURRENT_BINARY_DIR@/ostap_doxy.tag
+OUTPUT_DIRECTORY     = @DOXYGEN_OUTPUT_DIR@
+GENERATE_TAGFILE     = @DOXYGEN_TAGFILE@
 
-HTML_HEADER          = @CMAKE_CURRENT_SOURCE_DIR@/docs/OstapHeader.html
-HTML_FOOTER          = @CMAKE_CURRENT_SOURCE_DIR@/docs/OstapFooter.html
+HTML_HEADER          = @PROJECT_SOURCE_DIR@/docs/OstapHeader.html
+HTML_FOOTER          = @PROJECT_SOURCE_DIR@/docs/OstapFooter.html
 
 INPUT                = 
 FILE_PATTERNS        =  
 
+# =============================================================================
 ## python source & python tests
-INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/ostap
+# =============================================================================
+INPUT               += @PROJECT_SOURCE_DIR@/docs/MAIN.md
+INPUT               += @PROJECT_SOURCE_DIR@/ostap/
 FILE_PATTERNS       += *.py 
 
+# =============================================================================
 ## C++ source  
-INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/include  
-INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/source/src 
+# =============================================================================
+INPUT               += @PROJECT_SOURCE_DIR@/source/include/
+INPUT               += @PROJECT_SOURCE_DIR@/source/src/ 
+FILE_PATTERNS       += *.cpp *.h 
 
 EXCLUDE_PATTERNS    += */src/*cubature.cpp
 EXCLUDE_PATTERNS    += */src/vwrapper.h
 EXCLUDE_PATTERNS    += */src/clencurt.h
 EXCLUDE_PATTERNS    += */src/converged.h
+EXCLUDE_PATTERNS    += */src/owens.hpp
+EXCLUDE_PATTERNS    += */src/owens.cpp
+EXCLUDE_PATTERNS    += */src/Faddeeva.hh
+EXCLUDE_PATTERNS    += */src/Faddeeva.cpp
+EXCLUDE_PATTERNS    += */src/Integrator*.cpp     
+EXCLUDE_PATTERNS    += */src/Integrator*.h
 
+# =============================================================================
 ## examples
-INPUT               += @CMAKE_CURRENT_SOURCE_DIR@/examples
-FILE_PATTERNS       += *.cpp *.h *.C 
+# =============================================================================
+INPUT               += @PROJECT_SOURCE_DIR@/examples
+FILE_PATTERNS       += *.cxx *.C
 
-TAGFILES            += ./ROOT.tag=https://root.cern.ch/doc/v@ROOT_DOXYTAG@/
+TAGFILES            += ./ROOT.tag=https://root.cern.ch/doc/@ROOT_DOXYTAG@/
 
 RECURSIVE            = YES 
-HAVE_DOT             = @HAVE_DOT@
+HAVE_DOT             = @DOXYGEN_HAVE_DOT@
+
+EXTRACT_ALL          = YES 
+EXTRACT_PRIVATE      = YES 
+EXTRACT_STATIC       = YES 
+## EXTRACT_ANON_NSPACES = YES 
 
 # Following for Latex formulas
 EXTRA_PACKAGES      += times
 EXTRA_PACKAGES      += amsmath
 EXTRA_PACKAGES      += graphicx
+EXTRA_PACKAGES      += newunicodechar
 
 BUILTIN_STL_SUPPORT  = YES
+
+CALL_GRAPH           = YES 
+CALLER_GRAPH         = YES 
 
 ## output formats 
 GENERATE_HTML        = YES 
@@ -50,3 +73,6 @@ PDF_HYPERLINKS       = YES
 
 WARN_IF_UNDOCUMENTED =  NO
 QUIET                = YES
+
+SEARCHENGINE         = YES
+SERVER_BASED_SEARCH  =  NO

@@ -104,7 +104,7 @@ namespace
    *  @param i INPUT spline number 
    *  @param k INPUT spline order 
    *  @param x INPUT the argument 
-   *  @param know INPUT vector of knots (assumed to be ordered) 
+   *  @param knots INPUT vector of knots (assumed to be ordered) 
    */
   inline double bspline 
   ( const          short       i     ,  // the spline number   
@@ -146,7 +146,7 @@ namespace
    *  @param i INPUT spline number 
    *  @param k INPUT spline order 
    *  @param x INPUT the argument 
-   *  @param know INPUT vector of knots (assumed to be ordered) 
+   *  @param knots INPUT vector of knots (assumed to be ordered) 
    */
   inline double mspline 
   ( const          short       i     ,  // the spline number   
@@ -177,7 +177,7 @@ namespace
    *  @param i INPUT spline number 
    *  @param k INPUT spline order 
    *  @param x INPUT the argument 
-   *  @param know INPUT vector of knots (assumed to be ordered) 
+   *  @param knots INPUT vector of knots (assumed to be ordered) 
    */
   inline double ispline 
   ( const          short       i     ,  // the spline number   

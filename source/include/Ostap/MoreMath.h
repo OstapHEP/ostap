@@ -142,10 +142,17 @@ namespace Ostap
      */
     double  erfcx ( const double x ) ;
     // ========================================================================
+    /** complementary error function
+     *  @see std::erfc 
+     */
     inline  double  erfc  ( const double x ) { return std::erfc ( x ) ; }
+    // ========================================================================
+    /** error function
+     *  @see std::erf 
+     */
     inline  double  erf   ( const double x ) { return std::erf  ( x ) ; }
     // ========================================================================
-    /** complex error function (the error function of complex arguments)
+    /** \overload complex error function (the error function of complex arguments)
      *  @param x  the argument 
      *  @return the value of the coplmex error function 
      *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
@@ -155,7 +162,7 @@ namespace Ostap
      */
     std::complex<double> erf   ( const std::complex<double>& x ) ;
     // ========================================================================
-    /** complementary complex error function 
+    /** \overload complementary complex error function 
      *  \f$ 1 -  erf (x) = erfc(x)  \f$         
      *  @param x  the argument 
      *  @return the value of the complementary complex error function 
@@ -177,7 +184,7 @@ namespace Ostap
      */
     std::complex<double> erfcx ( const std::complex<double>& x ) ;
     // ========================================================================
-    /** imaginary error function 
+    /** Imaginary error function 
      *  \f[\mathrm{erfi}(x) = -i \mathrm{erf}(ix) =\frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt \f] 
      *  @param x the argument
      *  @return the value of the imaginary error function 
@@ -187,7 +194,7 @@ namespace Ostap
      */
     double               erfi ( const double x ) ;
     // ========================================================================
-    /** imaginary error function 
+    /** \overload Imaginary error function 
      *  \f[\mathrm{erfi}(x) = -i \mathrm{erf}(ix) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt\f] 
      *  @param x the argument
      *  @return the value of the imaginary error function 
@@ -217,7 +224,7 @@ namespace Ostap
      */
     double               dowson     ( const double                x ) ;
     // ========================================================================
-    /** Dowson function 
+    /** \overload Compute Dowson function 
      *  \f[ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f] 
      *  @return the value of Dawson function 
      *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
@@ -227,25 +234,25 @@ namespace Ostap
      */
     std::complex<double> dowson     ( const std::complex<double>& x ) ;
     // ========================================================================
-    /** compute sech function 
+    /** Compute <code>sech</code> function 
      *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]
      *  @return the value of sech function 
      */
     double sech ( const double x ) ;
     // ========================================================================
-    /** compute sech function 
+    /** \overload Compute <code>sech</code> function 
      *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]
      *  @return the value of sech function 
      */
     std::complex<double> sech ( const std::complex<double>& x ) ;
     // ========================================================================
-    /** compute inverse Gamma function 
+    /** Compute inverse Gamma function 
      *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
      *  @return the value of inverse Gamma functions 
      */
     double igamma ( const double x ) ;    
     // ========================================================================
-    /** compute psi function 
+    /** Compute psi function 
      *  \f[ f(x) = \frac{d}{dx}\ln \Gamma(x)\f]
      *  @return the value of psi function 
      */

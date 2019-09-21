@@ -415,47 +415,53 @@ namespace Ostap
       const double          rho ) ; 
     // ========================================================================
     /** get Kullback-Liebler divergency 
-     *  return the divergency for valid arguments, -1 otherwise
+     *  @see Ostap::Math::ValueWithError::kullback
+     *  @return the divergency for valid arguments, -1 otherwise
      */
     inline double kullback 
     ( const ValueWithError& a , 
       const ValueWithError& b ) { return a.kullback ( b ) ; }
     // ========================================================================
-    /** get (squared) Hellinger distance for two (gaussian) varibales 
+    /** get (squared) Hellinger distance for two (gaussian) variables 
+     *  @see Ostap::Math::ValueWithError::hellinger
      *  @see https://en.wikipedia.org/wiki/Hellinger_distance
-     *  return Hellinger distance for two (gaussian) varibales 
+     *  @return squared Hellinger distance for two (gaussian) variables 
      */
     inline double hellinger2
     ( const ValueWithError& a ,
       const ValueWithError& b ) { return a.hellinger2 ( b ) ; }
     // ========================================================================
-    /// evaluate the "fraction"  a/(a+b)
+    /// evaluate the "fraction":  \f$ \frac{a}{a+b} \f$ 
     inline ValueWithError frac 
     ( const ValueWithError& a , 
       const ValueWithError& b ) { return a.frac ( b ) ; }
-    /// evaluate the "fraction"  a/(a+b)
+    /** \overload evaluate the "fraction": \f$ \frac{a}{a+b} \f$ 
+     */
     inline ValueWithError frac 
     ( const ValueWithError& a , 
       const double          b ) { return a.frac ( b ) ; }
-    /// evaluate the "fraction"  a/(a+b)
+    /** \overload evaluate the "fraction": \f$ \frac{a}{a+b} \f$ 
+     */
     inline ValueWithError frac 
     ( const double          a , 
       const ValueWithError& b ) { return frac ( ValueWithError ( a ) , b ) ; }
     // ========================================================================
-    /// evaluate the "asymmetry"  (a-b)/(a+b)
+    /// evaluate the "asymmetry":   \f$ \frac{a-b}{a+b} \f$ 
     inline ValueWithError asym 
     ( const ValueWithError& a , 
       const ValueWithError& b ) { return a.asym ( b ) ; }
-    /// evaluate the "asymmetry"  (a-b)/(a+b)
+    /** \overload evaluate the "asymmetry": \f$ \frac{a-b}{a+b} \f$  
+     */
     inline ValueWithError asym 
     ( const ValueWithError& a , 
       const double          b ) { return a.asym ( b ) ; }
-    /// evaluate the "asymmetry"  (a-b)/(a+b)
+    /** \overload  evaluate the "asymmetry": \f$ \frac{a-b}{a+b} \f$ 
+     */
     inline ValueWithError asym 
     ( const double          a , 
       const ValueWithError& b ) { return asym ( ValueWithError ( a ) , b ) ; }
     // ========================================================================
-    /** evaluate abs(a) 
+    /** Evaluate <code>abs(a)</code> 
      *  @param a (INPUT) the value 
      *  @return the absolute value 
      */
@@ -492,7 +498,7 @@ namespace Ostap
     // ========================================================================
     /** simple evaluation of efficiency from statistically independend
      * "exclusive" samples "accepted" and "rejected"
-     *  \f$ \varepsilon = \frac{1}{ 1 + \frac{N_{rejected}}{N_accepted}}\f$ 
+     *  \f[ \varepsilon = \frac{1}{ 1 + \frac{N_{rejected}}{N_{accepted}}}\f] 
      *  @param accepted  (IN) accepted sample 
      *  @param rejected  (IN) rejected sample 
      *  @return the binomial efficiency 
@@ -503,8 +509,8 @@ namespace Ostap
       const ValueWithError& rejected ) ;
     // ========================================================================
     /** evaluate the binomial efficiency for Bernulli scheme with weights 
-     *  \f[ R = \frac{N_acc}{N_tot} = \frac{N_acc}{N_acc+N_rej} = 
-     *          \left( 1 + \frac{N_rej}{N_acc}\right)^{-1} \f]
+     *  \f[ R = \frac{N_{acc}}{N_{tot}} = \frac{N_{acc}}{N_{acc}+N_{rej}} = 
+     *          \left( 1 + \frac{N_{rej}}{N_{acc}}\right)^{-1} \f]
      *  @param nAccepted (INPUT) number of accepted (weighted) events 
      *  @param nRejected (INPUT) number of rejected (weighted) events 
      *  @return the binomial efficiency 
@@ -524,7 +530,7 @@ namespace Ostap
     // ========================================================================
     /** calculate the ratio of weighted to unweighted statistic 
      *  \f[ R = \frac{N_w}{N}  = \frac{ \sum_1^{N} w_i }{N} \f] 
-     *  using jackknife method:
+     *  using Jackknife' method:
      *  \f[ \sigma^2(R) = \left( \sum_1^N w_i^2 - NR^2 \right) / (N-1)^2 \f] 
      *  - thanks to Wouter Hulsbergen 
      *  @see http://en.wikipedia.org/wiki/Jackknife_%28statistics%29
@@ -541,7 +547,7 @@ namespace Ostap
     ( const ValueWithError& nWeighted , 
       const unsigned long   n         ) ;  
     // ========================================================================
-    /** evaluate pow(a,b)
+    /** \overload evaluate <code>pow(a,b)</code>:   \f$ a^b \f$ 
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
      *  @return the <c>a</c> raised to power <c>b</c> 
@@ -551,7 +557,7 @@ namespace Ostap
     ( const ValueWithError& a , 
       const int             b ) ;
     // ========================================================================    
-    /** evaluate pow(a,b)
+    /** \overload evaluate <code> pow(a,b)<code>:  \f$ a^b \f$ 
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
      *  @return the <c>a</c> raised to power <c>b</c> 
@@ -561,7 +567,7 @@ namespace Ostap
     ( const ValueWithError& a , 
       const double          b ) ;
     // ========================================================================
-    /** evaluate pow(a,b)
+    /** \overload evaluate <code>pow(a,b)</code>:  \f$ a^b \f$ 
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
      *  @return the <c>a</c> raised to power <c>b</c> 
@@ -571,7 +577,7 @@ namespace Ostap
     ( const int             a , 
       const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate pow(a,b)
+    /** \overload evaluate <code>pow(a,b)</code>: \f$ a^b \f$ 
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
      *  @return the <c>a</c> raised to power <c>b</c> 
@@ -581,7 +587,7 @@ namespace Ostap
     ( const double          a , 
       const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate pow(a,b)
+    /** \overload evaluate <code>pow(a,b)</code>: \f$ a^b \f$ 
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
      *  @return the <c>a</c> raised to power <c>b</c> 
@@ -591,7 +597,7 @@ namespace Ostap
     ( const ValueWithError& a , 
       const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate exp(b)
+    /** evaluate <code>exp(b)</code>: \f$ \mathrm{e}^b \f$ 
      *  @param b (INPUT) the exponent 
      *  @return the <c>e</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
@@ -599,7 +605,7 @@ namespace Ostap
     ValueWithError exp
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate exp2(b)
+    /** evaluate <code>exp2(b)<code>: \f$ 2^b \f$ 
      *  @param b (INPUT) the exponent 
      *  @return the <c>2</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
@@ -607,7 +613,7 @@ namespace Ostap
     ValueWithError exp2
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate expm1(b)
+    /** evaluate <code>expm1(b)</code>: \f$ \mathrm{e}^b-1 \f$ 
      *  @param b (INPUT) the exponent 
      *  @return  expm1(b) 
      *  @warning invalid and small covariances are ignored 
@@ -615,7 +621,7 @@ namespace Ostap
     ValueWithError expm1
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate log(b)
+    /** evaluate <code>log(b)</code>: \f$ \log b \f$
      *  @param b (INPUT) the parameter 
      *  @return logarithm
      *  @warning invalid and small covariances are ignored 
@@ -623,7 +629,7 @@ namespace Ostap
     ValueWithError log
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate log2(b)
+    /** evaluate <code>log2(b)</code>: \f$ \log_2 b \f$  
      *  @param b (INPUT) the parameter 
      *  @return logarithm on base 2 
      *  @warning invalid and small covariances are ignored 
@@ -631,7 +637,7 @@ namespace Ostap
     ValueWithError log2
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate log10(b)
+    /** evaluate <code>log10(b)</code>: \f$ \log_{10} b \f$  
      *  @param b (INPUT) the parameter 
      *  @return logarithm on base 10 
      *  @warning invalid and small covariances are ignored 
@@ -639,7 +645,7 @@ namespace Ostap
     ValueWithError log10
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate log1p(b)
+    /** evaluate <code>log1p(b)</code>:  \f$ \log (1+b) \f$
      *  @param b (INPUT) the parameter 
      *  @return  log1p(b)
      *  @warning invalid and small covariances are ignored 
@@ -647,7 +653,7 @@ namespace Ostap
     ValueWithError log1p
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate sqrt(b)
+    /** evaluate <code>sqrt(b)</code>: \f$ \sqrt{b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  sqrt(b)
      *  @warning invalid and small covariances are ignored 
@@ -655,14 +661,14 @@ namespace Ostap
     ValueWithError sqrt
     ( const ValueWithError& b ) ;
     // ========================================================================
-    /** evaluate 'signed sqrt' 
+    /** \overload evaluate "signed sqrt": \f$ \sign(b)\sqrt{\left|b\right|}\f$ 
      *  @param a (INPUT) the value 
      *  @return the signed-sqrt  
      */
     ValueWithError signed_sqrt 
     ( const ValueWithError& a ) ;
     // ========================================================================    
-    /** evaluate cbrt(b)
+    /** evaluate <code>cbrt(b)</code>: \f$ \sqrt[3]{b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  cbrt(b)
      *  @warning invalid and small covariances are ignored 
@@ -670,7 +676,7 @@ namespace Ostap
     ValueWithError cbrt
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate sin(b)
+    /** evaluate <code>sin(b)</code>:  \f$ \sin{b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  sin(b)
      *  @warning invalid and small covariances are ignored 
@@ -678,7 +684,7 @@ namespace Ostap
     ValueWithError sin 
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate cos(b)
+    /** evaluate <code>cos(b)</code>: \f$ \cos{b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  cos(b)
      *  @warning invalid and small covariances are ignored 
@@ -686,7 +692,7 @@ namespace Ostap
     ValueWithError cos 
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate tan(b)
+    /** evaluate <code>tan(b)</code>: \f$ \tan{b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  tan(b)
      *  @warning invalid and small covariances are ignored 
@@ -694,7 +700,7 @@ namespace Ostap
     ValueWithError tan 
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate sinh(b)
+    /** evaluate <code>sinh(b)</code>:  \f$ \sinh{b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  sinh(b)
      *  @warning invalid and small covariances are ignored 
@@ -702,7 +708,7 @@ namespace Ostap
     ValueWithError sinh 
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate cosh(b)
+    /** evaluate <code>cosh(b)</code>:  \f$ \cosh{b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  cosh(b)
      *  @warning invalid and small covariances are ignored 
@@ -710,7 +716,7 @@ namespace Ostap
     ValueWithError cosh 
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate tanh(b)
+    /** evaluate <code>tanh(b)</code>:   \f$ \tanh{b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  tanh(b)
      *  @warning invalid and small covariances are ignored 
@@ -718,7 +724,7 @@ namespace Ostap
     ValueWithError tanh 
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate sech(b)
+    /** \overload evaluate <code>sech(b)</code>: \f$ \frac{1}{\cosh b}\f$
      *  @param b (INPUT) the parameter 
      *  @return  sech(b)
      *  @warning invalid and small covariances are ignored 
@@ -726,7 +732,7 @@ namespace Ostap
     ValueWithError sech 
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate erf(b) the error function 
+    /** \overload evaluate <code>erf(b)</code>, the error function 
      *  @param b (INPUT) the parameter 
      *  @return  erf(b)
      *  @warning invalid and small covariances are ignored 
@@ -735,7 +741,7 @@ namespace Ostap
     ValueWithError erf
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate erfc(b) complementary error function 
+    /** \overload evaluate <code>erfc(b)</code>, complementary error function 
      *  @param b (INPUT) the parameter 
      *  @return  erfc(b)
      *  @warning invalid and small covariances are ignored 
@@ -744,7 +750,7 @@ namespace Ostap
     ValueWithError erfc
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate erfi(b)  imaginary error function 
+    /** \overload evaluate <code>erfi(b)</code>,  imaginary error function 
      *  @param b (INPUT) the parameter 
      *  @return  erfc(b)
      *  @warning invalid and small covariances are ignored 
@@ -753,7 +759,7 @@ namespace Ostap
     ValueWithError erfi
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate erfcx(b) complementary scaled error function 
+    /** \overload evaluate <code>erfcx(b)</code>, complementary scaled error function 
      *  @param b (INPUT) the parameter 
      *  @return  erfc(b)
      *  @warning invalid and small covariances are ignored 
@@ -762,15 +768,16 @@ namespace Ostap
     ValueWithError erfcx
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate probit(b)
+    /** \overload evaluate <code>probit(b)</code> 
      *  @param b (INPUT) the parameter 
      *  @return  erfc(b)
+     *  @see https://en.wikipedia.org/wiki/Probit
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError probit
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate asin(b)
+    /** evaluate <code>asin(b)</code>: \f$ \asin  b \f$ 
      *  @param b (INPUT) the parameter 
      *  @return  asin(b)
      *  @warning invalid and small covariances are ignored 
@@ -778,7 +785,7 @@ namespace Ostap
     ValueWithError asin
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate acos(b)
+    /** evaluate <code>acos(b)</code>:  \f$ \acos b \f$ 
      *  @param b (INPUT) the parameter 
      *  @return  acos(b)
      *  @warning invalid and small covariances are ignored 
@@ -786,7 +793,7 @@ namespace Ostap
     ValueWithError acos
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate atan(b)
+    /** evaluate <code>atan(b)</code>:  \f$  \atan b \f$
      *  @param b (INPUT) the parameter 
      *  @return  atan(b)
      *  @warning invalid and small covariances are ignored 
@@ -794,7 +801,7 @@ namespace Ostap
     ValueWithError atan
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate atan2(y,x)
+    /** evaluate <code>atan2(y,x)</code> 
      *  @param y    (INPUT) the parameter 
      *  @param x    (INPUT) the parameter 
      *  @param corr (INPUT) the correlation coefficient   -1<=corr<=1 
@@ -807,7 +814,7 @@ namespace Ostap
       const ValueWithError& x        , 
       const double          corr = 0 ) ;
     // ========================================================================    
-    /** evaluate asinh(b)
+    /** evaluate <code>asinh(b)</code>  
      *  @param b (INPUT) the parameter 
      *  @return  asinh(b)
      *  @warning invalid and small covariances are ignored 
@@ -815,7 +822,7 @@ namespace Ostap
     ValueWithError asinh
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate acosh(b)
+    /** evaluate <code>acosh(b)</code>
      *  @param b (INPUT) the parameter 
      *  @return  acosh(b)
      *  @warning invalid and small covariances are ignored 
@@ -823,7 +830,7 @@ namespace Ostap
     ValueWithError acosh
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate atanh(b)
+    /** evaluate <code>atanh(b)</code>
      *  @param b (INPUT) the parameter 
      *  @return  atanh(b)
      *  @warning invalid and small covariances are ignored 
@@ -831,7 +838,7 @@ namespace Ostap
     ValueWithError atanh
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate tgamma(b)
+    /** evaluate <code>tgamma(b)</code>:  \f$ \Gamma(b) \f$ 
      *  @param b (INPUT) the parameter 
      *  @return  Gamma(b)
      *  @warning invalid and small covariances are ignored 
@@ -839,7 +846,7 @@ namespace Ostap
     ValueWithError tgamma
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate lgamma(b)
+    /** evaluate <code>lgamma(b)</code>: \f$ \log\Gamma (b)\f$
      *  @param b (INPUT) the parameter 
      *  @return  log(Gamma(b))
      *  @warning invalid and small covariances are ignored 
@@ -847,7 +854,7 @@ namespace Ostap
     ValueWithError lgamma
     ( const ValueWithError& b ) ;
     // ========================================================================    
-    /** evaluate igamma(b)
+    /** evaluate <code>igamma(b)</code>:  \f$ \frac{1}{\Gamma(b)}\f$ 
      *  @param b (INPUT) the parameter 
      *  @return  1/Gamma(b)
      *  @warning invalid and small covariances are ignored 
@@ -855,7 +862,7 @@ namespace Ostap
     ValueWithError igamma
     ( const ValueWithError& b ) ;
     // ========================================================================
-    /** evaluate Pochhammer symbol 
+    /** \overload evaluate Pochhammer symbol 
      *  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
      *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
      *  @param x (INPUT) the parameter 
@@ -870,20 +877,19 @@ namespace Ostap
     ( const ValueWithError& x ,  
       const unsigned short n ) ;
     // ========================================================================
-    /** evaluate standard Gauss PDF 
+    /** \overload evaluate standard Gauss PDF 
      *  @param x the value 
      *  @return valeu of the standard gaussian PDF  
      */
     ValueWithError gauss_pdf ( const ValueWithError& x ) ;
     // ========================================================================
-    /** evaluate standard Gauss CDF 
+    /** \overload evaluate standard Gauss CDF 
      *  @param x the value 
      *  @return value of the standard gaussian CDF  
      */
     ValueWithError gauss_cdf  ( const ValueWithError& x ) ;    
     // ========================================================================    
-    /** evaluate <code>hypot(x,y)</code>
-     *  \f$ \sqrt( x^2 + y^2 ) \f$
+    /** evaluate <code>hypot(x,y)</code>: \f$ \sqrt( x^2 + y^2 ) \f$
      *   @param x (INPUT) the first parameter
      *   @param y (INPUT) the second parameter
      *   @param c (INPUT) the correlation coefficient  (-1<=c<=1)
@@ -894,7 +900,7 @@ namespace Ostap
       const ValueWithError& y     , 
       const double          c = 0 ) ;
     // ========================================================================    
-    /** evaluate fma(x,y,z) = x*y+x 
+    /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 
      *  @param x    (INPUT) the parameter 
      *  @param z    (INPUT) the parameter 
@@ -1032,18 +1038,18 @@ namespace Ostap
     ValueWithError b2s    ( const ValueWithError& v ) ;
     // ========================================================================
     /** calculate the "effective purity" ratio using the identity
-     *  \f$ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f$
+     *  \f[ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f]
      *  and the effective "background-to-signal" ratio is estimated as 
-     *  \f$ \left.\frac{B}{S}\right|_{\mathrm{eff}} = \frac{\sigma^2(S)}{S} -1 \f$, 
+     *  \f[ \left.\frac{B}{S}\right|_{\mathrm{eff}} = \frac{\sigma^2(S)}{S} -1 \f], 
      *  finally one gets 
-     *  \f$ p_{\mathrm{eff}} \equiv \frac{S}{\sigma^2(S)}\f$
+     *  \f[ p_{\mathrm{eff}} \equiv \frac{S}{\sigma^2(S)}\f]
      *  @see Ostap::Math::b2s 
      *  @param v the value 
      *  @return the effective purity or -1 
      */
     ValueWithError purity ( const ValueWithError& v ) ;
     // ========================================================================
-    /** calculate "asymmetry" of two elements  \f$ \kappa = \frac{a-b}{a+b}\f$ 
+    /** calculate "asymmetry" of two elements: \f$ \kappa = \frac{a-b}{a+b}\f$ 
      *  taking into account the correlation coefficient  
      *  @param a  (input) the first value 
      *  @param b  (input) the second value 
@@ -1170,7 +1176,7 @@ namespace Ostap
     { return abssum ( vct )  ; }
     // ========================================================================    
     /** evaluate polynomial
-     *  \f$f(x) = a_0 + a_1x + a_2x^2 + ... + a_{n-1}x^{n-1} + a_nx^n\f$
+     *  \f[ f(x) = a_0 + a_1x + a_2x^2 + ... + a_{n-1}x^{n-1} + a_nx^n\f]
      *  such as \f$f(0) = a_0 \f$      
      *  using Horner rule
      *  @param poly  INPUT the coefficients
@@ -1182,7 +1188,7 @@ namespace Ostap
                                const ValueWithError&      x    ) ;
     // ======================================================================
     /** evaluate polynomial
-     *  \f$f(x) = a_0x^n + a_1x^{n-1}+ ... + a_{n-1}x + a_n\f$, 
+     *  \f[ f(x) = a_0x^n + a_1x^{n-1}+ ... + a_{n-1}x + a_n\f], 
      *  such as \f$f(0) = a_n \f$      
      *  using Horner rule
      *  @param poly  INPUT the coefficients 
@@ -1213,11 +1219,11 @@ namespace Ostap
     inline std::string to_string ( const ValueWithError& v ) 
     { return v.toString() ; }
     // ========================================================================
-  } //                                             end of namespace Ostap::Math 
+  } //                                         The end of namespace Ostap::Math 
   // ==========================================================================
-} //                                                    end of namespace Ostap
+} //                                                 The end of namespace Ostap
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================
 #endif // OSTAP_VALUEWITHERRORS_H
 // ============================================================================

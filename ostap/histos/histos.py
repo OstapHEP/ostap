@@ -1892,8 +1892,10 @@ ROOT.TH1D. agrestiCoullEff = lambda haccepted,htotal : binomEff_h1 ( haccepted ,
 ## @var one_sigma
 #  the width of the +-1 sigma confidence interval 
 one_sigma   = 0.682689492137086  ## the width of the +-1 sigma confidence interval 
+## @var two_sigma
 #  the width of the +-2 sigma confidence interval 
 two_sigma   = 0.9544997361036415 ## the width of the +-2 sigma confidence interval 
+## @var three_sigma
 #  the width of the +-3 sigma confidence interval 
 three_sigma = 0.9973002039367398 ## the width of the +-3 sigma confidence interval 
 # =============================================================================
@@ -2005,15 +2007,6 @@ ROOT.TH1D.eff_jeffreys                = lambda accepted,rejected,interval=one_si
 ROOT.TH1F.eff_clopper_pearson         = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.clopper_pearson_interval         , interval ) 
 ROOT.TH1D.eff_clopper_pearson         = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.clopper_pearson_interval         , interval ) 
 
-## for _h in ( ROOT.TH1F , ROOT.TH1D ) : 
-##     _h.eff_wald                      .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_wilson_score              .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_wilson_score_continutity  .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_arcsin                    .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_agresti_coull             .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_jeffreys                  .__doc__ = binom_interval_h1.__doc__ 
-##     _h.eff_clopper_pearson           .__doc__ = binom_interval_h1.__doc__ 
-
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors 
 #  @code 
@@ -2119,9 +2112,6 @@ ROOT.TH2F . __floordiv__  = binomEff_h2
 ROOT.TH2D . __floordiv__  = binomEff_h2
 ROOT.TH3F . __floordiv__  = binomEff_h3
 ROOT.TH3D . __floordiv__  = binomEff_h3
-
-
-
  
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors
@@ -2349,19 +2339,26 @@ def objectAsFunction ( obj ) :
     return obj
 
 
-## ==============================================================================
+# ==============================================================================
+## trivial helper base ....
 class FUNCX  (object) : pass
 
+# ==============================================================================
+## constant 
 class FUNC_C0(FUNCX) :
     def __init__ ( self , value       ) : self.value = value 
     def __call__ ( self , x ,      *y ) : return self.value 
     def integral ( self , xmin , xmax ) : return ( xmax - xmin ) * self.value
     
+# ==============================================================================
+## trivial 1D-function 
 class FUNC_F1(FUNCX) :
     def __init__ ( self , func        ) : self.func = func 
     def __call__ ( self , x    ,   *y ) : return self.func ( float ( x ) )  
     def integral ( self , xmin , xmax ) : return self.func.Integral( xmin , xmax )
     
+# ==============================================================================
+## trivial 2D-function 
 class FUNC_F2(FUNCX) :
     def __init__ ( self , func        ) : self.func = func 
     def __call__ ( self , x , y ,  *z ) : return self.func ( float ( x ) , float ( y ) ) 
@@ -2369,6 +2366,8 @@ class FUNC_F2(FUNCX) :
                    xmin , xmax        ,
                    ymin , ymax        ) : return self.func.Integral( xmin , xmax ,
                                                                      ymin , ymax )
+# ==============================================================================
+## trivial 3D-function 
 class FUNC_F3(FUNCX) :
     def __init__ ( self , func        ) : self.func = func 
     def __call__ ( self , x , y ,  z  ) : return self.func ( float ( x ) ,
@@ -2380,6 +2379,8 @@ class FUNC_F3(FUNCX) :
                    zmin , zmax        ) : return self.func.Integral( xmin , xmax ,
                                                                      xmin , xmax ,
                                                                      zmin , zmax )
+# ==============================================================================
+## everything else 
 class FUNC_OTHER(FUNCX) :
     def __init__ ( self , func        ) :
         self.func = func
@@ -4221,22 +4222,18 @@ def _h2_rescale_ ( h2 , factor = 1 ) :
 ROOT.TH2F. rescale_bins = _h2_rescale_ 
 ROOT.TH2D. rescale_bins = _h2_rescale_ 
 
-
 # =============================================================================
 ## sample the histogram using gaussian hypothesis
-#
 #  @code
-#
-#   >>> h = ... ##  the histogram
-#
-#   >>> s1 = h.sample()  ## the sampled hist
-#
+#  >>> h = ...          ## original histogram
+#  >>> s1 = h.sample ()  ## the sampled histogram
+#  >>> s2 = h.gauss  ()  ## ditto 
+#  >>> s3 = h.gauss  ( accept = lambda s : 0<s ) ## only positive numbers 
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  
-def _sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
+def _h_sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
     """Sample the histogram using gaussian hypothesis 
-    >>> h  = ...         ##  the histogram 
+    >>> h  = ...         ## original histogram 
     >>> s1 = h.sample()  ## the sampled hist
     """
     #
@@ -4249,7 +4246,7 @@ def _sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
         v1 = histo[bin]
         
         ## sample it! 
-        v2 = VE ( v1.gauss ( accept = accept , nmax = nmax ) )
+        v2 = VE    ( v1.gauss ( accept = accept , nmax = nmax ) )
         
         v2.setCov2 ( v1.cov2() )
         
@@ -4257,9 +4254,46 @@ def _sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
         
     return result
 
-ROOT.TH1 ._sample_ = _sample_
-ROOT.TH1 .sample   = _sample_
+ROOT.TH1 ._sample_ = _h_sample_
+ROOT.TH1 .sample   = _h_sample_
+ROOT.TH1 .gauss    = _h_sample_
 
+# =============================================================================
+## sample the histogram using the Poisson hypothesis
+#  @code
+#  histo = ...
+#  h1 = histo.poisson () ## sample using poisson hypothesis
+#  h2 = histo.poisson ( fluctuate =   True ) ## fluctuate Poisson mean 
+#  h3 = histo.poisson ( accept = lambda s : s>10 ) ## require all numbers are large
+#  @endcode
+def _h_poisson_ ( histo , fluctuate = False , accept = lambda s : True ) :
+    """Sample the histogram using the Poisson hypothesis
+    >>> histo = ...
+    >>> h1 = histo.poisson () ## sample using poisson hypothesis
+    >>> h2 = histo.poisson ( fluctuate =   True ) ## fluctuate Poisson mean 
+    >>> h3 = histo.poisson ( accept = lambda s : s>10 ) ## require all numbers are large
+    """
+    result = histo.Clone ( hID () )
+    result.Reset() 
+    if not result.GetSumw2() : result.Sumw2()
+    
+    for bin in histo :
+
+        ## getbin content
+        v1 = histo[bin]
+        
+        ## sample it!
+        p  = v1.poisson ( fluctuate , accept )
+
+        v2 = VE ( p , p  )
+        
+        result [bin] = v2
+        
+    return result
+    
+ROOT.TH1 .poisson = _h_poisson_
+
+    
 # =============================================================================
 ## Get the Figure-of-Merit (FoM) for the pure signal distribution,
 #  e.g. from sPlot)
@@ -5241,13 +5275,10 @@ for t in ( ROOT.TH3F , ROOT.TH3D ) :
     t . sum        = _h1_accumulate_
     t . integrate  = _h3_integrate_ 
 
-## generic
+# generic sscaling
 ROOT.TH1 . scale      = _h_scale_
 
-
-
 HStats   = Ostap.Utils.HistoStat
-
 # =============================================================================
 ## calculate bin-by-bin momenta 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -5394,7 +5425,8 @@ ROOT.TH1.nEff = ROOT.TH1.GetEffectiveEntries
 # =============================================================================
 ## calculate bin-by-bin moments
 #  \f$ m(k_x,k_y; x , y  ) \equiv 
-#   \frac{ \sum_i (x_i - x)^{n_x} (y_i - y)^{n_y} N_i }
+#   \frac{ \sum_i (x_i - x)^{n_x}
+#                 (y_i - y)^{n_y} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h2 = ...
@@ -5415,7 +5447,8 @@ _h2_moment_ . __doc__ +=  '\n' + HStats.moment2.__doc__
 # =============================================================================
 ## calculate bin-by-bin central moments
 #  \f$ m(k_x,k_y; x , y  ) \equiv 
-#   \frac{ \sum_i (x_i - \mu_x)^{k_x} (y_i - \mu_y)^{k_y} N_i }
+#   \frac{ \sum_i (x_i - \mu_x)^{k_x}
+#                 (y_i - \mu_y)^{k_y} N_i }
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h2 = ...
@@ -5437,7 +5470,8 @@ _h2_cmoment_ . __doc__ +=  '\n' + HStats.central_moment2.__doc__
 ## calculate bin-by-bin standartized moment
 #  \f$ m(k_x,k_y; x , y  ) \equiv
 #   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}}
-#   \frac{ \sum_i (x_i - \mu_x)^{k_x} (y_i - \mu_y)^{k_y} N_i }
+#   \frac{ \sum_i (x_i - \mu_x)^{k_x}
+#                 (y_i - \mu_y)^{k_y} N_i }
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h2 = ...
@@ -5464,7 +5498,9 @@ for h in ( ROOT.TH2F , ROOT.TH2D ) :
 # =============================================================================
 ## calculate bin-by-bin moment
 #  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
-#   \frac{ \sum_i (x_i - x)^{k_x} (y_i - y)^{k_y} (z_i - z )^{k_z} N_i 
+#   \frac{ \sum_i (x_i - x)^{k_x}
+#                 (y_i - y)^{k_y}
+#                 (z_i - z )^{k_z} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h3 = ...
@@ -5487,7 +5523,7 @@ _h3_moment_ . __doc__ +=  '\n' + HStats.moment3.__doc__
 #  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
 #   \frac{ \sum_i (x_i - \mu_x)^{k_x}
 #                 (y_i - \mu_y)^{k_y}
-#                 (z_i - \muz )^{k_z} N_i 
+#                 (z_i - \mu_z)^{k_z} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h3 = ...
@@ -5511,7 +5547,7 @@ _h3_cmoment_ . __doc__ +=  '\n' + HStats.central_moment3.__doc__
 #   \frac{1}{\sigma_x^{k_x}\sigma_y^{k_y}\sigma_z^{k_z}}
 #   \frac{ \sum_i (x_i - \mu_x)^{k_x}
 #                 (y_i - \mu_y)^{k_y}
-#                 (z_i - \muz )^{k_z} N_i 
+#                 (z_i - \mu_z)^{k_z} N_i}
 #        { \sum_j N_j } \f$ 
 #  @code
 #  h3 = ...
@@ -7043,10 +7079,14 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
 
 # =============================================================================
 _decorated_classes_ = (
+    ROOT.TH1   ,
+    #
     ROOT.TH1F  ,
     ROOT.TH1D  ,
+    #
     ROOT.TH2F  ,
     ROOT.TH2D  ,
+    #
     ROOT.TH3F  ,
     ROOT.TH3D  ,
     #
@@ -7430,7 +7470,9 @@ _new_methods_   = (
     ROOT.TH2F. rescale_bins ,
     ROOT.TH2D. rescale_bins ,
     #
-    ROOT.TH1 . sample ,
+    ROOT.TH1  . sample  ,
+    ROOT.TH1  . gauss   ,
+    ROOT.TH1  . poisson ,
     #
     ROOT.TH1D . fom_1 ,
     ROOT.TH1D . fom_2 ,

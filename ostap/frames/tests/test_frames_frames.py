@@ -11,7 +11,7 @@
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( test_frames_frames' )
+if '__main__' ==  __name__ : logger = getLogger ( 'test_frames_frames' )
 else                       : logger = getLogger ( __name__            )
 # ============================================================================= 
 import ROOT, os 

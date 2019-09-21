@@ -1,27 +1,26 @@
-Welcome to the Ostap project!
-==================================
+.. include:: ./references.rst
 
-To get started, first :ref:`install the skhep module <installation>` and then read the :ref:`main documentation <documentation>`.
+ostap project
+=============
 
-If there's a feature missing you'd like to see, you can :ref:`contribute to Ostap<contributing>`
+Nowadays ROOT_/PyROOT_ is de-facto standard tools for performing physics analysis.  The `ostap` project is a community-driven initiative aiming to provide more user-friendly  and more intuitive interface to ROOT_/PyROOT_ and RooFit_ and extending the existing functionality.
 
-.. Here's some maths: :math:`\decay{D^{0}}{h^{+}h^{-}}`, and :math:`\pT` and :math:`x`.
+Project started in 2009 from the private collections of python functions used  in Kali_ framework for the calibration of LHCb electromagnetic calorimeter.  A lot of functionality is picked from Bender_ project,  the python-based physics analysis environment used in LHCb experiment.  Till Autumn 2016 the project was a part of LHCb software suit and with  great success has been used for preparation of approximately 30 physics papers.  A standalone, LHCb independent version, has appeared at start of 2017
 
 .. toctree::
-   :hidden:
    :maxdepth: 2
+   :caption: Contents:
 
-   about.rst
-   installation.rst
-   documentation.rst
-   contributing.rst
-   faq.rst
-..   affiliations.rst
+   installation
+   start 
+   documentation
+   faq
+   contributing
+   about
 
-
-Indices and tables
-==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+

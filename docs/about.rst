@@ -4,6 +4,7 @@ Core team
 
 Project startup team:
   * Vanya Belyaev (ITEP, Moscow - LHCb)
+  * Tatiana Ovsiannikova (ITEP, Moscow - LHCb)
   * Sasha Mazurov (University of Birmingham - LHCb)
   * Eduardo Rodrigues (University of Cincinnati - DIANA, LHCb)
 
