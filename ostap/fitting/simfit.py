@@ -586,7 +586,7 @@ class SimFit ( MakeVar ) :
         if not name  : name  = 'SimFit_'                 +          sample.GetName()
         if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
 
-        ## propagatethe name 
+        ## propagate the name 
         self.name = name
         
         self.__sample       = sample 
@@ -927,7 +927,7 @@ class SimFit ( MakeVar ) :
         >>> nll, sf = model.nll ( dataset )
         - see RooAbsPdf::createNLL 
         """
-        return self.pdf.nll ( dataset , silent = silenbt , args = args , **kwargs )
+        return self.pdf.nll ( dataset , silent = silent , args = args , **kwargs )
 
     # =========================================================================
     ## draw/prepare NLL or LL-profiles for selected variable

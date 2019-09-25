@@ -53,6 +53,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Bernstein3D.cpp
                          src/Binomial.cpp
                          src/BreitWigner.cpp
+                         src/ChebyshevApproximation.cpp
                          src/Choose.cpp
                          src/Combine.cpp
                          src/Chi2Fit.cpp
@@ -99,8 +100,9 @@ add_library(ostap SHARED src/format.cpp
                          src/Polynomials.cpp   
                          src/Printable.cpp
                          src/PyBLOB.cpp
-                         src/PyFuncs.cpp ## temporarily removed 
-                         src/PyPdf.cpp   ## temporarily removed 
+                         src/PyCallable.cpp 
+                         src/PyFuncs.cpp 
+                         src/PyPdf.cpp   
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp

@@ -359,9 +359,10 @@ class MakeVar ( object ) :
         return None 
             
     # =========================================================================
-    ## technical function to parse arguments for <code>fitTo</code>  function
+    ## technical function to parse arguments for <code>fitTo</code> and 
+    #  <code>nll</code>  methods
     def parse_args ( self ,  dataset = None , *args , **kwargs ) :
-        """Technical function to parse arguments for fitTo function
+        """Technical function to parse arguments for fitTo/nll/.. methods
         """
         _args = []
         for a in args :
@@ -378,14 +379,18 @@ class MakeVar ( object ) :
             
             ## skip "drawing" options 
             if   klow in drawing_options                            : continue 
-            if   klow in ( 'draw' , 'draw_option', 'draw_options' ) : continue 
+            if   klow in ( 'draw'            ,
+                           'drawoption'      ,
+                           'drawoptions'     ,
+                           'draw_option'     ,
+                           'draw_options'    ) : continue 
             
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
             
             elif kup in ( 'VERBOSE' ,        ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Verbose (     a ) ) 
             elif kup in ( 'SILENT'           ,
-                           'SILENCE'         ) and isinstance ( a , bool ) :
+                          'SILENCE'          ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
             elif kup in ( 'STRATEGY'         , 
                           'MINUITSTRATEGY'   ,
@@ -416,7 +421,9 @@ class MakeVar ( object ) :
             
             elif kup in ( 'WEIGHTED'         ,
                           'SUMW2'            ,
-                          'SUMW2ERROR'       ) and isinstance ( a , bool ) :
+                          'SUMW2ERR'         ,
+                          'SUMW2ERROR'       ,
+                          'SUMW2ERRORS'      ) and isinstance ( a , bool ) :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -456,7 +463,8 @@ class MakeVar ( object ) :
                  and isinstance ( a[0] ,  num_types ) \
                  and isinstance ( a[1] ,  num_types ) \
                  and a[0] < a[1]  : 
-                _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )                 
+                _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )
+                _args.append   (  ROOT.RooFit.CloneData ( a ) )                
             elif kup in ( 'MINIMIZER'  ,     ) and isinstance ( a , list_types   ) \
                  and isinstance ( a[0] ,  string_types ) \
                  and isinstance ( a[1] ,  string_types ) :
@@ -520,7 +528,11 @@ class MakeVar ( object ) :
         kset.discard  ( 'NumCPU'     ) ## trivial
         kset.discard  ( 'Verbose'    ) ## trivial 
         kset.discard  ( 'Timer'      ) ## trivial 
-        kset.discard  ( 'PrintLevel' ) ## trivial 
+        kset.discard  ( 'PrintLevel' ) ## trivial
+
+        ## duplicates? 
+        if len ( kset ) != len ( keys ) :
+            self.warning ("duplicated options!")            
         #
         if kset : self.debug ( 'parse_args: Parsed arguments %s' % keys )
         ## if kset : self.info  ( 'parse_args: Parsed arguments %s' % keys )
@@ -533,8 +545,8 @@ class MakeVar ( object ) :
     # =========================================================================
     
     # =============================================================================
-    ## construct (on-flight) RooFormularVar for the product of
-    #  <code>var1</code> and <code>var1</code>
+    ## construct (on-flight) <code>RooFormularVar</code> for the product of
+    #  <code>var1</code> and <code>var2</code> \f$ v \equiv  v_1 v_2\f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -588,7 +600,7 @@ class MakeVar ( object ) :
 
     # =============================================================================
     ## construct (on-flight) RooFormularVar for the sum  of
-    #  <code>var1</code> and <code>var1</code>
+    #  <code>var1</code> and <code>var2</code> \f$ v\equiv  v_1 + v_2\f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -640,10 +652,9 @@ class MakeVar ( object ) :
         
         return result
 
-
     # =============================================================================
     ## construct (on-flight) RooFormularVar for the subtraction  of
-    #  <code>var1</code> and <code>var1</code>
+    #  <code>var1</code> and <code>var1</code>: \f$ v\equiv v_1 - v_2\f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -696,8 +707,8 @@ class MakeVar ( object ) :
         return result
 
     # =============================================================================
-    ## construct (on-flight) RooFormularVar for the division of
-    #  <code>var1</code> and <code>var1</code>
+    ## construct (on-flight) RooFormularVar for the ratio of
+    #  <code>var1</code> and <code>var2</code>: \f$   v\equiv \frac{v_1}{v_2} \f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -755,8 +766,8 @@ class MakeVar ( object ) :
     vars_difference = vars_subtract
 
     # =============================================================================
-    ## construct (on-flight) RooFormularVar for the fraction  of
-    #  <code>var1</code> and <code>var1</code>
+    ## construct (on-flight) <code>RooFormularVar</code> for the fraction  of
+    #  <code>var1</code> and <code>var2</code>: \f$ v \equiv \frac{v_1}{v_1+v_2}\f$
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -803,7 +814,6 @@ class MakeVar ( object ) :
         self.aux_keep.append ( result  )
         
         return result
-
     
     # =========================================================================
     ## Soft/Gaussian constraints 
@@ -1028,9 +1038,9 @@ class MakeVar ( object ) :
     def make_constraint ( self , var , value , name = '' ,  title = '' ) :
         """Create ready-to-use ``soft'' gaussian constraint for the variable
         
-        >>> var     = ...                            ## the variable 
-        >>> extcntr = var.constaint( VE(1,0.1**2 ) ) ## create constrains 
-        >>> model.fitTo ( ... , extcntr )            ## use it in the fit 
+        >>> var     = ...                              ## the variable 
+        >>> extcntr = xxx.constraint ( VE(1,0.1**2 ) ) ## create constrains 
+        >>> model.fitTo ( ... , constraint = extcntr ) ## use it in the fit 
         """
         
         ## create the gaussian constraint
@@ -1089,32 +1099,28 @@ class H1D_dset(MakeVar) :
     def xaxis ( self ) :
         """The histogram x-axis variable"""
         return self.__xaxis
-
     @property
     def histo ( self ) :
         """The  histogram itself"""
         return self.__histo
-
     @property
     def density( self ) :
         """Treat the histo as ``density'' histogram?"""
-        return self.__density
-    
+        return self.__density    
     @property
     def silent( self ) :
         """Use the silent mode?"""
         return self.__silent
-
     @property
     def dset ( self ) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
-
     @property
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
-    
+
+
 # =============================================================================
 ## simple convertor of 2D-histo to data set
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -1161,32 +1167,26 @@ class H2D_dset(MakeVar) :
     def xaxis  ( self ) :
         """The histogram x-axis variable"""
         return self.__xaxis
-
     @property     
     def yaxis  ( self ) :
         """The histogram y-axis variable"""
         return self.__yaxis
-
     @property
     def histo ( self ) :
         """The  histogram itself"""
         return self.__histo
-
     @property
     def density( self ) :
         """Treat the histo as ``density'' histogram?"""
-        return self.__density
-    
+        return self.__density    
     @property
     def silent( self ) :
         """Use the silent mode?"""
         return self.__silent
-
     @property
     def dset ( self ) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
-
     @property
     def histo_hash ( self ) :
         """Hash value for the histogram"""
@@ -1243,37 +1243,30 @@ class H3D_dset(MakeVar) :
     def xaxis  ( self ) :
         """The histogram x-axis variable"""
         return self.__xaxis
-
     @property     
     def yaxis  ( self ) :
         """The histogram y-axis variable"""
-        return self.__yaxis
-    
+        return self.__yaxis    
     @property     
     def zaxis  ( self ) :
         """The histogram z-axis variable"""
         return self.__zaxis
-
     @property
     def histo ( self ) :
         """The  histogram itself"""
         return self.__histo
-
     @property
     def density( self ) :
         """Treat the histo as ``density'' histogram?"""
-        return self.__density
-    
+        return self.__density    
     @property
     def silent( self ) :
         """Use the silent mode?"""
         return self.__silent
-
     @property
     def dset ( self ) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
-
     @property
     def histo_hash ( self ) :
         """Hash value for the histogram"""
@@ -1284,7 +1277,8 @@ class H3D_dset(MakeVar) :
 #  helper class to build/keep the list of ``phi''-arguments
 #   - needed e.g. for polynomial functions
 class Phases(MakeVar) :
-    """Helper class to build/keep the list of ``phi''-arguments (needed e.g. for polynomial functions)
+    """Helper class to build/keep the list of ``phi''-arguments,
+    (needed e.g. for polynomial functions)
     """
     ## Create vector of phases (needed for various polynomial forms)
     def __init__( self  , power , the_phis = None ) :
@@ -1408,7 +1402,7 @@ class Phases(MakeVar) :
 
 # =============================================================================        
 ## @class RooPolyBase
-#  Helper base clas to make Ostap wrapper for the native RooFit polynomials 
+#  Helper base class to make Ostap wrapper for the native RooFit polynomials 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-04-27
 class RooPolyBase(MakeVar) :
@@ -1515,5 +1509,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+#                                                                       The END 
 # =============================================================================

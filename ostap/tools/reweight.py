@@ -517,9 +517,18 @@ def makeWeights  ( dataset                  ,
         # =====================================================================
         
         #  try to exploit finer binning if/when possible
-        if isinstance ( hmc   , ( ROOT.TH1F , ROOT.TH1D ) ) and \
-           isinstance ( hdata , ( ROOT.TH1F , ROOT.TH1D ) ) and \
-           len ( hmc ) >= len( hdata )  : w = ( 1.0 / hmc ) * hdata ## NB!      
+        if   isinstance ( hmc   , ( ROOT.TH1F , ROOT.TH1D ) ) and \
+           isinstance ( hdata , ( ROOT.TH1F , ROOT.TH1D ) )   and \
+           len ( hmc ) >= len( hdata )                        : w = ( 1.0 / hmc ) * hdata ## NB!      
+        ## elif isinstance ( hmc   , ( ROOT.TH2F , ROOT.TH2D ) ) and \
+        ##    isinstance ( hdata , ( ROOT.TH2F , ROOT.TH2D ) )   and \
+        ##    len ( hmc.GetXaxis() ) >= len( hdata.GetXaxis () ) and \
+        ##    len ( hmc.GetYaxis() ) >= len( hdata.GetYaxis () ) : w = ( 1.0 / hmc ) * hdata ## NB!      
+        ## elif isinstance ( hmc   , ( ROOT.TH3F , ROOT.TH3D ) ) and \
+        ##    isinstance ( hdata , ( ROOT.TH3F , ROOT.TH3D ) )   and \
+        ##    len ( hmc.GetXaxis() ) >= len( hdata.GetXaxis () ) and \
+        ##    len ( hmc.GetYaxis() ) >= len( hdata.GetYaxis () ) and \
+        ##    len ( hmc.GetZaxis() ) >= len( hdata.GetZaxis () ) : w = ( 1.0 / hmc ) * hdata ## NB!      
         else                            : w = hdata / hmc           ## NB!
 
         # =====================================================================

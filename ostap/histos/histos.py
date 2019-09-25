@@ -7041,7 +7041,7 @@ for t in  ( ROOT.TH1D             ,
             setattr ( t , method , dumpHisto )
 
 # =============================================================================
-## Hashing finction for the histograms
+## Hashing function for the histograms
 #  @code
 #  histo = ...
 #  h     = hash ( histo ) 

@@ -42,17 +42,14 @@ class AddBranch(Task) :
 
         import ostap.trees.trees
 
-        if isinstace ( self.function ,  str ) : function = self.function
-        else :
-            ftype    = type ( function )
-            function = ftype ( function )
-
         files = set () 
-        tree.chain.add_new_branch ( self.branch_name , function , verbose = False ) 
+        tree.chain.add_new_branch ( self.branch_name , self.function , verbose = False ) 
         for f in tree.files : files.add ( f )
 
-        ## list of processed  files 
-        self.__output = list ( files )
+        ## list of processed  files
+        files =  list ( files )
+        files.sort()
+        self.__output = tuple ( files )
 
         return self.__output 
         
@@ -93,9 +90,9 @@ def add_new_branch ( chain , branch_name , function , verbose = True ) :
     
     ch    = Chain ( chain ) 
     
-    task  = AddBranch ( branch_name ,  function  )
+    task  = AddBranch   ( branch_name ,  function  )
     wmgr  = WorkManager ( silent = not verbose  )
-    trees = ch.split ( max_files = 1  )
+    trees = ch.split    ( max_files = 1  )
     
     wmgr.process( task , trees )
     

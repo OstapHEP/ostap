@@ -42,7 +42,7 @@ from   ostap.fitting.utils    import ( RangeVar   , MakeVar  , numcpu   ,
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
 else                       : logger = getLogger ( __name__              )
-# =============================================================================        
+# =============================================================================
 ## @class PDF
 #  The helper base class for implementation of various PDF-wrappers 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -54,7 +54,7 @@ class PDF (MakeVar) :
 
         ## name is defined via base class MakeVar 
         self.name  = name ## name is defines via base class MakeVar 
-        
+     
         self.__signals         = ROOT.RooArgList ()
         self.__backgrounds     = ROOT.RooArgList ()
         self.__components      = ROOT.RooArgList ()
@@ -64,12 +64,12 @@ class PDF (MakeVar) :
         self.__splots          = []
         self.__histo_data      = None
         self.__draw_var        = None
-        self.__special         = True if special else False 
         self.__fit_result      = None
         self.__vars            = ROOT.RooArgSet  ()
         self.__tricks          = True
         self.__draw_options    = {} ## predefined drawing options for this PDF
         self.__fit_options     = () ## predefined fit options for this PDF
+        self.__special         = True if special else False
         
         if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
@@ -96,7 +96,7 @@ class PDF (MakeVar) :
         self.__alist3     = []
         self.__config     = {}
         self.__pdf        = None
-
+        
         self.vars.add ( self.__xvar ) 
 
         self.config = { 'name' : self.name , 'xvar' : self.xvar ,  'special' : self.special }
@@ -133,6 +133,24 @@ class PDF (MakeVar) :
         assert xmin < xmax, 'Invalid xmin/xmax range: %s/%s' % ( xmin , xmax )
 
         return xmin , xmax 
+
+    @property
+    def pdf  ( self ) :
+        """The actual PDF (ROOT.RooAbsPdf)"""
+        return self.__pdf
+    @pdf.setter
+    def pdf  ( self , value ) :
+        if value is None :
+            self.__pdf = value
+            return        
+        assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
+        if not self.special :
+            assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
+        self.__pdf = value
+    @property
+    def pdf_name ( self ) :
+        """``pdf_name'' : get the name of the underlying RooAbsPdf"""
+        return  self.pdf.GetName() if self.pdf else ''
         
     @property 
     def vars ( self ) :
@@ -179,24 +197,6 @@ class PDF (MakeVar) :
         if val and not self.__tricks :
             raise ValueError("Can't allow tricks&shortcuts!")
         self.__tricks = val
-    @property
-    def pdf  ( self ) :
-        """The actual PDF (ROOT.RooAbsPdf)"""
-        return self.__pdf
-    @pdf.setter
-    def pdf  ( self , value ) :
-        if value is None :
-            self.__pdf = value
-            return
-        
-        assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
-        if not self.special :
-            assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
-        self.__pdf = value
-    @property
-    def pdf_name ( self ) :
-        """``pdf_name'' : get the name of the underlying RooAbsPdf"""
-        return  self.pdf.GetName() if self.pdf else ''
     @property
     def fit_result ( self ) :
         """``fit_result'' : (the latest) fit resut (TFitResult)"""
@@ -1014,55 +1014,8 @@ class PDF (MakeVar) :
 
         return result, self.draw ( hdataset , nbins = nbins , silent = silent , **draw_opts )
 
-    # =========================================================================
-    ## create NLL
-    #  @code
-    #  model.fitTo ( dataset , ... )
-    #  nll, sfactor  = model.nll ( 'dataset )
-    #  @endcode
-    #  @see RooAbsPdf::createNLL
-    #  @attention Due to the bug/typo in<c> RooAbsPdf.clreateNLL</c>, line 817 
-    #  <c>CloneData</c> depends on <c>Optimize</c>
-    #  @todo report problem to RooFit and fix it! 
-    def nll ( self            ,
-              dataset         ,
-              silent  = True  ,
-              args    = ()    , **kwargs ) :
-        """Get NLL object from the pdf
-        >>> model.fitTo ( dataset , ... )
-        >>> nll, sf = model.nll ( dataset )
-        - see RooAbsPdf::createNLL 
-        """
-        
-        ## convert if needed 
-        if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
-            dataset = dataset.dset 
 
-        clone   = kwargs.pop ( 'clone' , False )
-        nllopts = [ ROOT.RooFit.CloneData ( clone ) ]
 
-        ## due to the bug in<c> RooAbsPdf.clreateNLL</c>,
-        #   <c>CloneData</c> depends on <c>Optimize</c>
-        #  @todo report problem to RooFit and fix it! 
-        if not clone :
-            nllopts.append ( ROOT.RooFit.Optimize ( False ) )             
-        
-        ncpu     = kwargs.pop ( 'ncpu'  , numcpu () )
-        if    isinstance ( ncpu , ROOT.RooCmdArg ) :
-            nllopts.append ( ncpu ) 
-        elif  isinstance ( ncpu , int            ) :
-            nllopts.append ( ROOT.RooFit.NumCPU (  ncpu ) )
-        else                                       :
-            nllopts.append ( ROOT.RooFit.NumCPU ( *ncpu ) )
-        ##
-        nllopts = args + tuple ( nllopts )
-        #
-        ## get s-Factor 
-        sf  = dataset.sFactor() 
-        
-        if kwargs : self.warning("nll: unknown parameters, ignore: %s"    % kwargs)
-
-        return self.pdf.createNLL ( dataset , *nllopts ) , sf 
 
     # =========================================================================
     ## draw/prepare NLL or LL-profiles for selected variable
@@ -1140,7 +1093,7 @@ class PDF (MakeVar) :
         largs  = tuple ( largs ) 
         
         ## create NLL 
-        nll, sf = self.nll ( dataset , silent = silent , **kwargs )  
+        nll , sf = self.nll ( dataset , silent = silent , **kwargs )  
 
         result  = nll
 
@@ -1150,7 +1103,7 @@ class PDF (MakeVar) :
             profile = nll.createProfile ( avar )
             result  = profile
             
-        ## prepare the  frame & plot 
+        ## prepare the frame & plot 
         frame = var.frame ( *fargs )
         result.plotOn ( frame , *largs  )
 
@@ -1184,6 +1137,41 @@ class PDF (MakeVar) :
                 if draw : frame.draw ( kwargs.get('draw_options', '' ) )
 
         return result , frame
+            
+    # =========================================================================
+    ## create NLL
+    #  @code
+    #  model.fitTo ( dataset , ... )
+    #  nll, sfactor  = model.nll ( dataset )
+    #  @endcode
+    #  @see RooAbsPdf::createNLL
+    #  @attention Due to the bug/typo in<c> RooAbsPdf.createNLL</c>, line 817 
+    #  <c>CloneData</c> depends on <c>Optimize</c>
+    #  @todo report problem to RooFit and fix it! 
+    def nll ( self            ,
+              dataset         ,
+              silent  = True  ,
+              args    = ()    , **kwargs ) :
+        """Create NLL object from the pdf
+        >>> model.fitTo ( dataset , ... )
+        >>> nll, sf = model.nll ( dataset )
+        - see RooAbsPdf::createNLL 
+        """
+        
+        ## convert if needed 
+        if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
+            dataset = dataset.dset 
+
+        clone = kwargs.pop ( 'clone' , False )
+        kwargs [ 'clone' ] = clone 
+        if not clone : kwargs['optimize'] = False 
+
+        opts = self.parse_args ( dataset , *args , **kwargs )
+
+        ## get s-Factor 
+        sf   = dataset.sFactor() 
+
+        return self.pdf.createNLL ( dataset , *opts ) , sf 
 
     # ========================================================================
     ## evaluate "significance" using Wilks' theorem via NLL
@@ -1222,7 +1210,7 @@ class PDF (MakeVar) :
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
             dataset = dataset.dset 
                           
-        ## get all parametrs
+        ## get all parameters
         pars = self.pdf.getParameters ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
@@ -1272,8 +1260,7 @@ class PDF (MakeVar) :
                     
             ## apply scale factor
             if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
-            dnll *= sf
-            
+            dnll *= sf            
                 
             ## convert the difference in likelihoods into sigmas 
             result = 2.0 * abs ( dnll )
@@ -1282,7 +1269,53 @@ class PDF (MakeVar) :
             del nll
             
         return result if 0<=dnll else -1*result 
+
+    # ========================================================================
+    ## get the actual minimizer for the explicit manipulations
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  m    = pdf.minuit  ( data )
+    #  m.migrad()
+    #  m.hesse ()
+    #  m.minos ( param )
+    #  @endcode
+    #  @see RooMinimizer
+    def minuit ( self , dataset   ,
+                 max_calls = -1   ,
+                 max_iter  = -1   , 
+                 optconst  = True , ## optimize const 
+                 strategy  = None ,
+                 args      =   () , **kwargs  ):
+        """Get the actual minimizer for the explicit manipulations
+        >>> data = ...
+        >>> pdf  = ...
+        >>> m    = pdf.minuit ( data )
+        >>> m.migrad()
+        >>> m.hesse ()
+        >>> m.minos ( param )
+        - see ROOT.RooMinimizer
+        """
+
+        ## parse the arguments 
+        ## opts = self.parse_args    ( dataset ,
+        ##                            ROOT.RooFit.Offset    ( True  ) ,
+        ##                            ROOT.RooFit.CloneData ( False ) , *args , **kwargs )
+        ## nll  = self.pdf.createNLL ( dataset , *opts )
+
+        nll , sf = self.nll ( dataset , args = args , **kwargs )
+        
+        m    = ROOT.RooMinimizer ( nll )
+        if isinstance  ( optconst  , bool ) : m.optimizeConst ( optconst ) 
+        if isinstance  ( max_calls , integer_types ) and 1 < max_calls :
+            m.setMaxFunctionCalls ( max_calls )
+        if isinstance  ( max_iter  , integer_types ) and 1 < max_iter  :
+            m.setMaxIterations    ( max_iter  )
+        if isinstance  ( strategy , integer_types  ) and 0 <= strategy <= 2 :
+            m.setStrategy ( strategy )
             
+        return m  
+
     # =========================================================================
     ## perform sPlot-analysis 
     #  @code
@@ -1446,50 +1479,6 @@ class PDF (MakeVar) :
                 if mn < 0 or vv < mn : mn = vv
                 if mx < 0 or vv > mx : mx = vv 
         return mn , mx 
-
-    # ========================================================================
-    ## get the actual minimizer for the explicit manipulations
-    #  @code
-    #  data = ...
-    #  pdf  = ...
-    #  m    = pdf.minuit  ( data )
-    #  m.migrad()
-    #  m.hesse ()
-    #  m.minos ( param )
-    #  @endcode
-    #  @see RooMinimizer
-    def minuit ( self , dataset   ,
-                 max_calls = -1   ,
-                 max_iter  = -1   , 
-                 optconst  = True , ## optimize const 
-                 strategy  = None ,
-                 args      =   () , **kwargs  ):
-        """Get the actual minimizer for the explicit manipulations
-        >>> data = ...
-        >>> pdf  = ...
-        >>> m    = pdf.minuit ( data )
-        >>> m.migrad()
-        >>> m.hesse ()
-        >>> m.minos ( param )
-        - see ROOT.RooMinimizer
-        """
-
-        ## parse the arguments 
-        opts = self.parse_args    ( dataset ,
-                                    ROOT.RooFit.Offset    ( True  ) ,
-                                    ROOT.RooFit.CloneData ( False ) , *args , **kwargs )
-        nll  = self.pdf.createNLL ( dataset , *opts )
-        
-        m = ROOT.RooMinimizer ( nll )
-        if isinstance  ( optconst  , bool ) : m.optimizeConst ( optconst ) 
-        if isinstance  ( max_calls , integer_types ) and 1 < max_calls :
-            m.setMaxFunctionCalls ( max_calls )
-        if isinstance  ( max_iter  , integer_types ) and 1 < max_iter  :
-            m.setMaxIterations    ( max_iter  )
-        if isinstance  ( strategy , integer_types  ) and 0 <= strategy <= 2 :
-            m.setStrategy ( strategy )
-            
-        return m  
 
     # ========================================================================
     ## clean some stuff 

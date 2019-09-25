@@ -848,7 +848,10 @@ for model in ( Ostap.Math.Chebyshev              ,
                ## interpolation polynomials 
                Ostap.Math.Neville     ,
                Ostap.Math.Lagrange    ,
-               Ostap.Math.Barycentric ,               
+               Ostap.Math.Barycentric ,
+               ## helper stufff
+               Ostap.Functions.PyCallable        , 
+               Ostap.Math.ChebyshevApproximation ,
                ) :
     model.tf1          = _tf1_ 
     model.sp_integrate = sp_integrate_1D

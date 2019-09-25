@@ -21,7 +21,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class PyVar Ostap/PyVar.h
-     *  The attempt to create pytho analogue of RooFormulaVar
+     *  The attempt to create python analogue of RooFormulaVar
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date   2019-04-28
      */
@@ -101,16 +101,15 @@ namespace Ostap
     public: 
       // ======================================================================
       /** Standard constructor
-       *  @param name      the obkect name 
-       *  @param title     the objkect title
+       *  @param name      the object name 
+       *  @param title     the object title
        *  @param function  python object 
        *  @param variables the list of variables 
        */
-      PyVar2 ( const char*      name      , 
-              const char*       title     ,
-              PyObject*         function  , 
-              const RooArgList& variables ) ;
-      
+      PyVar2 ( const char*       name      , 
+               const char*       title     ,
+               PyObject*         function  , 
+               const RooArgList& variables ) ;
       /// Copy constructor
       PyVar2 ( const PyVar2& right , const char* name = 0 ) ;
       /// virtual destructor
