@@ -1513,7 +1513,44 @@ def _gr_transform_ ( graph , fun = lambda x , y : y ) :
 
 
 # =============================================================================
-ROOT.TGraph       . __len__       = ROOT.TGraphErrors . GetN 
+## transform the graph
+#  @code
+#  nll = ....
+#  fun = lambda x, y : math.exp ( -1 * y )  
+#  lh  = nll.transform ( fun ) 
+#  @endcode e
+def _grae_transform_ ( graph , fun = lambda x , y : y ) :
+    """Transform the graph
+    
+    >>> nll = ....
+    >>> fun = lambda x, y : math.exp ( -1 * y )  
+    >>> lh  = nll.transform ( fun ) 
+    
+    """
+    
+    new_graph = ROOT.TGraphAsymmErrors ( graph ) 
+    ## make a copy 
+    copy_graph_attributes ( graph , new_graph )
+    
+    for i in graph :
+        
+        x , exl , exh , y ,  eyl , eyh  = graph [ i ]
+
+        v  = fun ( x , y               )        
+        v1 = fun ( x , y + abs ( eyh ) ) 
+        v2 = fun ( x , y - abs ( eyl ) )
+        
+        if   v1 <= v <= v2 : evl , evh = v1 -v , v2-v 
+        elif v2 <= v <= v1 : evl , evh = v2 -v , v1-v
+        elif       v <= v1 : evl , evh = 0 , max ( v1 , v2 ) - v
+        elif v1 <= v       : evl , evh = min ( v1 , v2 ) - v , 0
+        
+        new_graph[i] = x , exl , exh , v , evl , evh 
+        
+    return new_graph 
+
+# =============================================================================
+ROOT.TGraph       . __len__       = ROOT.TGraph . GetN 
 ROOT.TGraph       . __contains__  = lambda s,i : i in range(0,len(s))
 ROOT.TGraph       . __iter__      = _gr_iter_ 
 ROOT.TGraph       . __call__      = _gr_call_
@@ -1565,6 +1602,8 @@ ROOT.TGraphAsymmErrors . ymin        = _grae_ymin_
 ROOT.TGraphAsymmErrors . xmax        = _grae_xmax_ 
 ROOT.TGraphAsymmErrors . ymax        = _grae_ymax_ 
 
+ROOT.TGraphAsymmErrors . transform   = _grae_transform_
+
 ROOT.TGraph       . integral         = _gr_integral_
 ROOT.TGraph       . asTF1            = _gr_as_TF1_
 
@@ -1582,6 +1621,40 @@ ROOT.TGraph            .filter        = _gr0_filter_
 ROOT.TGraphErrors      .filter        = _gr1_filter_ 
 ROOT.TGraphAsymmErrors .filter        = _gr2_filter_ 
 
+
+# ==========================================================================
+import ostap.math.math_ve as mve
+
+ROOT.TGraph.__exp__    = lambda g : g.transform ( fun = lambda x, y : mve.exp    ( y ) )
+ROOT.TGraph.__exp2__   = lambda g : g.transform ( fun = lambda x, y : mve.exp2   ( y ) )
+ROOT.TGraph.__expm1__  = lambda g : g.transform ( fun = lambda x, y : mve.expm1  ( y ) )
+ROOT.TGraph.__sqrt__   = lambda g : g.transform ( fun = lambda x, y : mve.sqrt   ( y ) )
+ROOT.TGraph.__cbrt__   = lambda g : g.transform ( fun = lambda x, y : mve.cbrt   ( y ) )
+ROOT.TGraph.__log__    = lambda g : g.transform ( fun = lambda x, y : mve.log    ( y ) )
+ROOT.TGraph.__log2__   = lambda g : g.transform ( fun = lambda x, y : mve.log2   ( y ) )
+ROOT.TGraph.__log10__  = lambda g : g.transform ( fun = lambda x, y : mve.log10  ( y ) )
+ROOT.TGraph.__log1p__  = lambda g : g.transform ( fun = lambda x, y : mve.log1p  ( y ) )
+ROOT.TGraph.__sin__    = lambda g : g.transform ( fun = lambda x, y : mve.sin    ( y ) )
+ROOT.TGraph.__cos__    = lambda g : g.transform ( fun = lambda x, y : mve.cos    ( y ) )
+ROOT.TGraph.__tan__    = lambda g : g.transform ( fun = lambda x, y : mve.tan    ( y ) )
+ROOT.TGraph.__sinh__   = lambda g : g.transform ( fun = lambda x, y : mve.sinh   ( y ) )
+ROOT.TGraph.__cosh__   = lambda g : g.transform ( fun = lambda x, y : mve.cosh   ( y ) )
+ROOT.TGraph.__tanh__   = lambda g : g.transform ( fun = lambda x, y : mve.tanh   ( y ) )
+ROOT.TGraph.__asin__   = lambda g : g.transform ( fun = lambda x, y : mve.asin   ( y ) )
+ROOT.TGraph.__acos__   = lambda g : g.transform ( fun = lambda x, y : mve.acos   ( y ) )
+ROOT.TGraph.__atan__   = lambda g : g.transform ( fun = lambda x, y : mve.atan   ( y ) )
+ROOT.TGraph.__asinh__  = lambda g : g.transform ( fun = lambda x, y : mve.asinh  ( y ) )
+ROOT.TGraph.__acosh__  = lambda g : g.transform ( fun = lambda x, y : mve.acosh  ( y ) )
+ROOT.TGraph.__atanh__  = lambda g : g.transform ( fun = lambda x, y : mve.atanh  ( y ) )
+ROOT.TGraph.__erf__    = lambda g : g.transform ( fun = lambda x, y : mve.erf    ( y ) )
+ROOT.TGraph.__erfc__   = lambda g : g.transform ( fun = lambda x, y : mve.erfc   ( y ) )
+ROOT.TGraph.__erfcx__  = lambda g : g.transform ( fun = lambda x, y : mve.erfcx  ( y ) )
+ROOT.TGraph.__erfi__   = lambda g : g.transform ( fun = lambda x, y : mve.erfi   ( y ) )
+ROOT.TGraph.__tgamma__ = lambda g : g.transform ( fun = lambda x, y : mve.tgamma ( y ) )
+ROOT.TGraph.__lgamma__ = lambda g : g.transform ( fun = lambda x, y : mve.lgamma ( y ) )
+ROOT.TGraph.__sech__   = lambda g : g.transform ( fun = lambda x, y : mve.sech   ( y ) )
+ROOT.TGraph.__probit__ = lambda g : g.transform ( fun = lambda x, y : mve.probit ( y ) )
+ROOT.TGraph.__pow__    = lambda g , *o : g.transform ( fun = lambda x, y : mve.pow ( y , *o ) )
 
 # =============================================================================
 ## set color attributes  
@@ -2869,6 +2942,37 @@ _new_methods_      = (
     ROOT.TGraph       . __irshift__   , 
     #
     ROOT.TGraph       . transform     ,
+    #
+    ROOT.TGraph . __exp__    , 
+    ROOT.TGraph . __exp2__   ,
+    ROOT.TGraph . __expm1__  , 
+    ROOT.TGraph . __sqrt__   , 
+    ROOT.TGraph . __cbrt__   , 
+    ROOT.TGraph . __log__    , 
+    ROOT.TGraph . __log2__   , 
+    ROOT.TGraph . __log10__  , 
+    ROOT.TGraph . __log1p__  ,
+    ROOT.TGraph . __sin__    ,
+    ROOT.TGraph . __cos__    ,
+    ROOT.TGraph . __tan__    ,
+    ROOT.TGraph . __sinh__   ,
+    ROOT.TGraph . __cosh__   ,
+    ROOT.TGraph . __tanh__   ,
+    ROOT.TGraph . __asin__   ,
+    ROOT.TGraph . __acos__   ,
+    ROOT.TGraph . __atan__   ,
+    ROOT.TGraph . __asinh__  ,
+    ROOT.TGraph . __acosh__  ,
+    ROOT.TGraph . __atanh__  ,
+    ROOT.TGraph . __erf__    ,
+    ROOT.TGraph . __erfc__   ,
+    ROOT.TGraph . __erfcx__  ,
+    ROOT.TGraph . __erfi__   ,
+    ROOT.TGraph . __tgamma__ ,
+    ROOT.TGraph . __lgamma__ ,
+    ROOT.TGraph . __sech__   ,
+    ROOT.TGraph . __probit__ ,
+    ROOT.TGraph . __pow__    ,
     #
     ROOT.TGraphErrors . __getitem__   ,
     ROOT.TGraphErrors . __setitem__   ,
