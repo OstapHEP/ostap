@@ -731,7 +731,8 @@ class WeightsFiles(CleanUp) :
             with tarfile.open ( wf , 'r' ) as tar :
                 logger.debug ( "Open tarfile %s" % wf )
                 ## tar.list()
-                tmpdir = self.tmpdir 
+                tmpdir = self.tempdir ( prefix = 'tmp-chopping-weights-' )  
+                self.trash.add ( tmpdir ) 
                 tar.extractall ( path = tmpdir )                
                 logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                 weights_files  = [ os.path.join ( tmpdir , i ) for i in tar.getnames() ]
@@ -741,7 +742,7 @@ class WeightsFiles(CleanUp) :
 
     @property
     def files   ( self ) :
-        "``files'': the weigths file"
+        "``files'': the weights file"
         import copy
         return copy.deepcopy ( self.__weights_files ) 
 # =============================================================================
@@ -1171,7 +1172,7 @@ def _add_response_tree ( tree , *args ) :
             tfile.Write( "" , ROOT.TFile.kOverwrite )
             return sc , tdir.Get ( tree.GetName() )    ## RETURN
         
-        else : logger.warning ( "Can't write TTree back to the file" )
+        else : logger.error ( "Can't write TTree back to the file" )
         
         return sc , tree                               ## RETURN
 
@@ -1182,10 +1183,14 @@ def _add_response_chain ( chain , *args ) :
     
     import ostap.trees.trees
     
-    files  = chain.files()
-    cname  = chain.GetName() 
+    files   = chain.files()
+    cname   = chain.GetName() 
     
-    status = None 
+    if not files :
+        logger.warning ( 'addChoppingResponse: empty chain (no files)' )
+        return Ostap.StatusCode ( 900 ) , chain 
+
+    status  = None 
     
     verbose = 1 < len ( files )
     from ostap.utils.progress_bar import progress_bar
@@ -1200,7 +1205,7 @@ def _add_response_chain ( chain , *args ) :
             
     newc = ROOT.TChain ( cname )
     for f in  files : newc.Add ( f  )
- 
+        
     return status, newc
   
 

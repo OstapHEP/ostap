@@ -280,18 +280,55 @@ class StatMerger(object) :
     #  merged = ...
     #  merged.print_stat ()
     #  @endcode 
-    def print_stats ( self , prefix = '' ) :
+    def print_stats ( self , prefix = '' , cputime = None ) :
         """Print job execution sstatistics
         >>> merged = ...
         >>> merged.print_stats () 
         """
-        for line in self.__str__  ( prefix ).replace('\n#','\n').split('\n') : logger.info ( line ) 
+        suffix = ''
+        if cputime and 0 < cputime :
+
+            sumtime = 0
+            for host in self.__merged :
+                se       = self.__merged[host]
+                sumtime += se.time
+                
+            if 0 < sumtime :
+                
+                h1 , r1 = divmod ( cputime , 3600 )
+                m1 , s1 = divmod ( r1      ,   60 )
+                
+                h2 , r2 = divmod ( sumtime , 3600 )
+                m2 , s2 = divmod ( r2      ,   60 )
+                
+                h1 = int ( h1 ) 
+                h2 = int ( h2 )
+                
+                m1 = int ( m1 ) 
+                m2 = int ( m2 )
+                
+                s1 = int ( s1 )
+                s2 = int ( s2 )
+                
+                if   h1     : suffix  = ' %02d:%02d:%02ds'    % ( h1 , m1 , s1 )
+                elif m1     : suffix  = ' %02d:%02ds'         % (      m1 , s1 )
+                else        : suffix  = ' %02ds'              %             s1 
+                
+                if   h2     : suffix += ' vs %02d:%02d:%02ds' % ( h2 , m2 , s2 )
+                elif m2     : suffix += ' vs %02d:%02ds'      % (      m2 , s2 )
+                else        : suffix += ' vs %02ds'           %             s2 
+                
+                gain = float ( sumtime ) / cputime
+                suffix += ' (Gain: %.1f)'   % gain
+
+                
+        for line in self.__str__  ( prefix , suffix ).replace('\n#','\n').split('\n') : logger.info ( line ) 
                 
     ## standard printout 
-    def __str__  ( self , prefix = '' ) :
+    def __str__  ( self , prefix = '' , suffix = '' ) :
 
         text = [] 
-        text.append ( '%sJob execution statistics:'% prefix) 
+        text.append ( '%sJob execution statistics:%s'% ( prefix , suffix ) )
         text.append ( ' #jobs |   %   | total time |  time/job  | job server' )        
         fmt1 = '%6d | %5.1f | %10.4g | %10.4g | %-s'
         fmt0 = '%6d |       |            |            | %-s'

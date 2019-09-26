@@ -22,11 +22,13 @@ __all__     = (
     )
 # =============================================================================
 import os, tempfile, datetime  
+from   sys import version_info as python_version 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.cleanup' )
 else                       : logger = getLogger( __name__              )
 del getLogger
+from ostap.core.ostap_types import string_types
 # =============================================================================
 ## temporary directory for <code>tempfile</code> module
 _TmpDir = None
@@ -40,9 +42,9 @@ if not _TmpDir :
     del OCC 
 if not _TmpDir : _TmpDir = None     
 # ===============================================================================
-## Context mamager to define/redefine TmpDir for <code>tempfile</code> module
+## Context manager to define/redefine TmpDir for <code>tempfile</code> module
 class UseTmpDir ( object ) :
-    """Context mamager to define/redefine TmpDir for the tempfile module
+    """Context manager to define/redefine TmpDir for the tempfile module
     """
     def __init__   ( self , tmp_dir = None ) :
         self.tmp_dir  = tmp_dir
@@ -53,7 +55,8 @@ class UseTmpDir ( object ) :
         tempfile.tempdir = self.tmp_dir
         
     def __exit__   ( self , *_ ) :
-        tempfile.tempdir = self.previous 
+        if self.previous :
+            tempfile.tempdir = self.previous 
 
 # =============================================================================
 ## @class CleanUp
@@ -67,6 +70,14 @@ class  CleanUp(object) :
     _tmpdirs   = set ()
     _protected = set ()
     
+    ## @attention ensure that important attributes are available even before __init__
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(CleanUp, cls).__new__( cls )
+        else                         : obj = super(CleanUp, cls).__new__( cls , *args , **kwargs )
+        ## define the local trash 
+        obj.__trash = set() 
+        return obj
+ 
     @property
     def tmpdir ( self ) :
         """``tmpdir'' : return the name of temporary managed directory
@@ -103,6 +114,17 @@ class  CleanUp(object) :
                 self._tmpfiles.add ( o )
                 logger.debug ( 'temporary file          added %s' % o )
 
+    @property
+    def trash ( self ) :
+        """``trash'' : local trash (files, directory), to be removed at deletion of the instance"""
+        return self.__trash
+    
+    ## delete all local trash (files, directory)
+    def __del__ ( self ) :
+        """Delete all local trash (files, directory)
+        """
+        while self.__trash : self.remove ( self.__trash.pop () )
+            
     @staticmethod
     def tempdir ( suffix = '' , prefix = 'tmp-' , date = True ) :
         """Get the name of the temporary directory.

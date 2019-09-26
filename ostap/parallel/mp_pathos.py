@@ -272,6 +272,9 @@ class WorkManager ( object ) :
         """Helper internal method to process the task with chunks of data 
         """
 
+        from timeit import  default_timer as _timer
+        start = _timer()
+
         if isinstance ( task , Task ) :
             kwargs.pop ( 'merger' , None ) 
             return self.__process_task ( task , chunks , **kwargs ) 
@@ -281,6 +284,7 @@ class WorkManager ( object ) :
         merged_stat_pp = StatMerger ()
         merger         = kwargs.pop ( 'merger' , TaskMerger ( ) ) 
 
+        
         njobs = sum  ( len(c) for c in chunks ) 
         from ostap.utils.progress_bar import ProgressBar
         with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
@@ -309,8 +313,8 @@ class WorkManager ( object ) :
                 self.pool.join  ()
 
         ## finalize task 
-        what.finalize () 
-        self.print_statistics ( merged_stat_pp , merged_stat )
+        what.finalize ()
+        self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
         ## 
         return merger.results 
 
@@ -321,13 +325,16 @@ class WorkManager ( object ) :
         """
         assert isinstance ( task , Task ), 'Invalid task type  %s' % type (  task ) 
         
+        from timeit import  default_timer as _timer
+        start = _timer()
+
         ## inialize the task
         task.initialize_local ()
         
         ## mergers for statistics 
         merged_stat    = StatMerger ()
         merged_stat_pp = StatMerger ()
-
+        
         njobs = sum  ( len(c) for c in chunks ) 
         from ostap.utils.progress_bar import ProgressBar
         with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
@@ -356,7 +363,7 @@ class WorkManager ( object ) :
                 self.pool.join  ()
 
         task.finalize () 
-        self.print_statistics ( merged_stat_pp , merged_stat )
+        self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
         ## 
         return task.results ()
     
@@ -381,15 +388,15 @@ class WorkManager ( object ) :
     
     # =========================================================================
     ## print the job execution statistics 
-    def print_statistics ( self , stat_pp , stat_loc ) :
+    def print_statistics ( self , stat_pp , stat_loc , cputime =  None ) :
         """Print the job execution statistics 
         """        
         if self.silent : return
 
         if stat_pp.njobs == stat_loc.njobs : 
-            stat_pp .print_stats ( 'pp-' )
+            stat_pp .print_stats ( 'pp-' , cputime )
         else : 
-            stat_loc.print_stats ( 'qq-' )
+            stat_loc.print_stats ( 'qq-' , cputime )
                 
             
 # =============================================================================

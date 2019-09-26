@@ -79,11 +79,11 @@ class WeightsFiles(CleanUp) :
                 with tarfile.open ( weights_files , 'r' ) as tar :
                     ## tar.list() 
                     xmls   = [ f for f in xml_files ( tar ) ] 
-                    tmpdir = self.tempdir ( prefix = 'weights_' )
+                    tmpdir = self.tempdir ( prefix = 'tmp-tmva-weights-' )
                     tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                     weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
-                    self.__trash = tmpdir 
+                    self.trash.add ( tmpdir ) 
             else :
                 weights_files = [ weights_files ]
 
@@ -122,17 +122,6 @@ class WeightsFiles(CleanUp) :
         self.__methods       = tuple ( [ i for  i in  weights_files.keys() ] )
         import copy
         self.__weights_files = copy.deepcopy ( weights_files ) 
-
-    # ========================================================================
-    ## clean the temporary trash
-    def clean ( self ) :
-        if self.__trash :
-            self.remove_dir ( self.__trash )
-            self.__trash = None 
-            
-    ## delete the file 
-    def __del__ (  self ):
-        self.clean ()
 
     @property
     def methods ( self ) :
@@ -1358,7 +1347,7 @@ def _add_response_tree  ( tree  , *args ) :
 
 # =============================================================================
 def _add_response_chain ( chain , *args ) :
-    """Specific axction to ROOT.TChain
+    """Specific action to ROOT.TChain
     """
     
     import ostap.trees.trees
@@ -1366,6 +1355,10 @@ def _add_response_chain ( chain , *args ) :
     files  = chain.files()
     cname  = chain.GetName() 
     
+    if not files :
+        logger.warning ( 'addTMVAResponse: empty chain (no files)' )
+        return Ostap.StatusCode ( 900 ) , chain 
+
     status = None 
     
     verbose = True and 1 < len ( files )
