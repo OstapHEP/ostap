@@ -1536,9 +1536,9 @@ def _grae_transform_ ( graph , fun = lambda x , y : y ) :
         
         x , exl , exh , y ,  eyl , eyh  = graph [ i ]
 
-        v  = fun ( x , y               )        
-        v1 = fun ( x , y + abs ( eyh ) ) 
-        v2 = fun ( x , y - abs ( eyl ) )
+        v  = float ( fun ( x , y               ) )
+        v1 = float ( fun ( x , y + abs ( eyh ) ) )
+        v2 = float ( fun ( x , y - abs ( eyl ) ) ) 
 
         vmin = min ( v , v1 , v2 )
         vmax = max ( v , v1 , v2 )

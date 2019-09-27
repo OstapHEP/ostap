@@ -519,6 +519,18 @@ class MakeVar ( object ) :
                 nc = numcpu()
                 if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) ) 
 
+        # =============================================================
+        ## check sumw2 for the weighted datasets 
+        if dataset and dataset.isWeighted() :
+            for a in _args :
+                if 'Sumw2Error' !=  a.name : continue
+                if not bool ( a.getInt(0) ) :
+                    logger.warning ("parse_args: 'sumw2=False' is specified for the weighted  dataset!") 
+                break 
+            else :
+                logger.warning ("parse_args: 'no sumw2=True' is specified for the weighted  dataset") 
+
+                
         keys = [ str ( a ) for a in _args ]
         keys.sort ()
         
@@ -529,6 +541,8 @@ class MakeVar ( object ) :
         kset.discard  ( 'Verbose'    ) ## trivial 
         kset.discard  ( 'Timer'      ) ## trivial 
         kset.discard  ( 'PrintLevel' ) ## trivial
+
+        
 
         ## duplicates? 
         if len ( kset ) != len ( keys ) :

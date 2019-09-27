@@ -81,7 +81,7 @@ ROOT.RooCategory.labels = _rc_labels_
 #  ds_cmb = combined_data ( sample  ,
 #                vars    , { 'cc' : ds_cc ,  'zz' : ds_00 } )
 #  @endcode
-#  - weighted variant:
+#  - weighted variant: combine unweighted datasets and then apply weight 
 #  @code
 #  wvars = ROOT.RooArgSet ( m2c , SS_sw ) 
 #  dsw_cmb   = combined_data ( sample ,
