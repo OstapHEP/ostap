@@ -1539,11 +1539,11 @@ def _grae_transform_ ( graph , fun = lambda x , y : y ) :
         v  = fun ( x , y               )        
         v1 = fun ( x , y + abs ( eyh ) ) 
         v2 = fun ( x , y - abs ( eyl ) )
-        
-        if   v1 <= v <= v2 : evl , evh = v1 -v , v2-v 
-        elif v2 <= v <= v1 : evl , evh = v2 -v , v1-v
-        elif       v <= v1 : evl , evh = 0 , max ( v1 , v2 ) - v
-        elif v1 <= v       : evl , evh = min ( v1 , v2 ) - v , 0
+
+        vmin = min ( v , v1 , v2 )
+        vmax = max ( v , v1 , v2 )
+        evl  = vmin - v
+        evh  = vmax - v
         
         new_graph[i] = x , exl , exh , v , evl , evh 
         
