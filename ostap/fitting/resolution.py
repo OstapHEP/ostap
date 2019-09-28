@@ -3,18 +3,22 @@
 # =============================================================================
 ## @file ostap/fitting/resolution.py
 #  Set of useful resolution models:
-#  - single Gaussian
+#  - single Gaussian                     (gaussian   tails)
 #  - double Gaussian                     (gaussian   tails)
 #  - symmetric Apolonious                (exponenial tails)
+#  - Sech/hyperbolic  secant             (exponenial tails)
 #  - symmetric double-sided Crystal Ball (power-law  tails)
+#  - symmetric Student-T                 (power-law  tails)
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2017-07-13
 # =============================================================================
 """Set of useful resolution models:
-- single Gaussian
+- single Gaussian                     (gaussian   tails)
 - double Gaussian                     (gaussian   tails)
 - symmetric Apolonious                (exponenial tails)
+- Sech/hyperbolic  secant             (exponenial tails)
 - symmetric double-sided Crystal Ball (power-law  tails)
+- Student-T                           (power-law  tails)
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -26,6 +30,8 @@ __all__     = (
     'ResoGauss2'    , ## double-Gaussian resolutin model,
     'ResoApo2'      , ## symmetric Apolonios resolution model,
     'ResoCB2'       , ## symmetric double-sided Crystal Ball resolution model,
+    'ResoStudentT'  , ## Student-T resolution model,
+    'ResoSech'      , ## Sech/hyperbolic secant  resolution model 
     )
 # =============================================================================
 import ROOT
@@ -50,10 +56,12 @@ class ResoGauss(RESOLUTION) :
                    xvar         ,   ## the variable 
                    sigma        ,   ## the first sigma 
                    mean  = None ) : ## mean-value
-        ## initialize the base
+        
         if mean is None : mean = ROOT.RooConstVar(
             'mean_%s'  % name ,
-            'mean(%s)' % name , 0 )                 
+            'mean(%s)' % name , 0 )
+        
+        ## initialize the base
         super(ResoGauss,self).__init__( name  = name  ,
                                         xvar  = xvar  ,
                                         sigma = sigma ,
@@ -297,11 +305,121 @@ class ResoCB2(RESOLUTION) :
     @n.setter
     def n ( self , value ) :
         value = float ( value )
-        assert 1.e-4 <= value <= 40 , "``n'' must be in [1.e-4,40] interval"
+        assert 1.e-4 <= value <= 40,  "``n'' must be in [1.e-4,40] interval"
         self.__n.setVal ( value )
 
-models.add ( ResoCB2 ) 
+models.add ( ResoCB2 )
 
+# =============================================================================
+## @class ResoStudentT
+#  (symmetric) Student-T model for the resolution
+#  @see Ostap::Models::StudentT
+#  @see Ostap::Math::StudentT
+#  @see http://en.wikipedia.org/wiki/Student%27s_t-distribution
+class ResoStudentT(RESOLUTION) :
+    """Student-T model for the resolution
+    - see http://en.wikipedia.org/wiki/Student%27s_t-distribution
+    """
+    def __init__ ( self        ,
+                   name        , ## the name 
+                   xvar        , ## the variable
+                   sigma       , ## the sigma
+                   n           , ## N-parameter
+                   mean = None ) :
+        
+        if mean is None : mean = ROOT.RooConstVar(
+            'mean_%s'  % name ,
+            'mean(%s)' % name , 0 )                 
+        
+        ## initialize the base 
+        super(ResoStudentT,self).__init__ ( name  = name  ,
+                                            xvar  = xvar  ,
+                                            sigma = sigma ,
+                                            mean  = mean  )
+        
+        self.__n     = self.make_var (
+            n                      ,
+            'ResoN_'        + name ,
+            'ResoN(%s)'     % name , n , 1.e-6 , 100 )
+        
+        # 
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.StudentT (
+            "ResoStT_"    + name ,
+            "ResoStT(%s)" % name ,
+            self.xvar   ,
+            self.mean   ,
+            self.sigma  ,
+            self.n      )
+        
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'sigma'    : self.sigma ,
+            'n'        : self.n     ,
+            'mean'     : self.mean  }
+        
+    @property
+    def n ( self  ) :
+        """``n'' parameter for symmetric Student-T resolution function"""
+        return self.__n
+    
+    @n.setter
+    def n ( self , value ) :
+        value = float ( value )
+        assert 1.e-6 <= value , "``n'' must be positive!"
+        self.__n.setVal ( value )
+
+models.add ( ResoStudentT )
+
+
+# =============================================================================
+## @class ResoSech
+#  Sech/hyperbolic  secant model for the resolution: exponential tails, leptokurtic
+#  @see Ostap::Models::Sech 
+#  @see Ostap::Math::Sech 
+#  @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+class ResoSech(RESOLUTION) :
+    """Sech/hyperbolic secant  for the resolution:
+    - exponential tails
+    - leptokurtic 
+    - see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+    """
+    def __init__ ( self        ,
+                   name        , ## the name 
+                   xvar        , ## the variable
+                   sigma       , ## the sigma
+                   mean = None ) :
+        
+        if mean is None : mean = ROOT.RooConstVar(
+            'mean_%s'  % name ,
+            'mean(%s)' % name , 0 )                 
+        
+        ## initialize the base 
+        super(ResoSech,self).__init__ ( name  = name  ,
+                                        xvar  = xvar  ,
+                                        sigma = sigma ,
+                                        mean  = mean  )
+        
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.StudentT (
+            "ResoSech_"    + name ,
+            "ResoSech(%s)" % name ,
+            self.xvar   ,
+            self.mean   ,
+            self.sigma  )
+        
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'sigma'    : self.sigma ,
+            'mean'     : self.mean  }
+        
+models.add ( ResoSech )
 # =============================================================================
 if '__main__' == __name__ :
     

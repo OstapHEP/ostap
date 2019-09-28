@@ -1502,13 +1502,111 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , skip = Fa
     return newc 
 
 # ==============================================================================
-## add new branch to the tree
+## Add new branch to the tree
+# 
+#   - Using formula:
+#   @code
+#   >>> tree = ....
+#   >>> tree.add_new_branch ( 'pt2' , 'pt*pt' ) ## use formula
+#   @endcode
+# 
+#   - Sampling from 1D-histogram
+#   @code 
+#   >>> tree = ...
+#   >>> h1   = ...  ## 1D histogram to be sampled 
+#   >>> tree.add_new_branch ( 'ntracks' , h1 )
+#   @endcode
+# 
+#   - Sampling from 2D-histogram
+#   @code
+#   >>> tree = ...
+#   >>> h2   = ...  ## 2D histogram to be sampled 
+#   >>> tree.add_new_branch ( [ 'pt', 'eta' ] ,  h2 )
+#   @endcode
+#
+#   - Sampling from 3D-histogram
+#   @code
+#   >>> tree = ...
+#   >>> h3   = ...  ## 3D histogram to be sampled 
+#   >>> tree.add_new_branch ( [ 'pt', 'eta' , 'ntracks' ] ,  h3 )
+#   @endcode
+# 
+#   - adding 1D-histogram as function:
+#     for  each entry it gets the value of `mLb` variable
+#     and stores the value from the historgam in new `S_sw` variable:
+#   @code
+#   >>> h  = ...  ## historgam, e.g. sPlot 
+#   >>> fn = Ostap.Functions.FuncTH1 ( sph , 'mLb' )
+#   >>> tree.add_new_branch ( 'S_sw' , fn )
+#   @endcode
+# 
+#   - arbitrary function derived from Ostap.ITreeFunc:
+#   @code
+#   >>> fun = ...
+#   >>> tree.add_new_branch ( 'Var' , fun )
+#   @endcode
+# 
+#   -  Several variables can be filled at once:
+#   @code
+#   >>> tree = ....
+#   >>> tree.add_new_branch ( { 'pt2' : 'pt*pt'  ,
+#   ...                         'et2' : 'pt*pt+mass*mass' } , None ) ## use formulas
+#   @endcode
+#   @attention it makes a try to reopen the file with tree in UPDATE mode,
+#              and it fails when it is not possible!
+#
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree 
 def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
     """ Add new branch to the tree
+
+    - Using formula:
+    
+    >>> tree = ....
+    >>> tree.add_new_branch ( 'pt2' , 'pt*pt' ) ## use formula
+    
+    - Sampling from 1D-histogram
+    
+    >>> tree = ...
+    >>> h1   = ...  ## 1D histogram to be sampled 
+    >>> tree.add_new_branch ( 'ntracks' , h1 )
+    
+    - Sampling from 2D-histogram
+    
+    >>> tree = ...
+    >>> h2   = ...  ## 2D histogram to be sampled 
+    >>> tree.add_new_branch ( [ 'pt', 'eta' ] ,  h2 )
+    
+    - Sampling from 3D-histogram
+    
+    >>> tree = ...
+    >>> h3   = ...  ## 3D histogram to be sampled 
+    >>> tree.add_new_branch ( [ 'pt', 'eta' , 'ntracks' ] ,  h3 )
+
+    - adding histogram as function: for  each entry it gets the value of `mLb` variable
+    and stores the value from the historgam in new `S_sw` variable:
+    
+    >>> h  = ...  ## historgam, e.g. sPlot 
+    >>> fn = Ostap.Functions.FuncTH1 ( sph , 'mLb' )
+    >>> tree.add_new_branch ( 'S_sw' , fn )
+    
+    - arbitrary function derived from Ostap.ITreeFunc:
+    
+    >>> fun = ...
+    >>> tree.add_new_branch ( 'Var' , fun )
+    
+    -  Several variables can be filled at once:
+    >>> tree = ....
+    >>> tree.add_new_branch ( { 'pt2' : 'pt*pt'  ,
+    ...                         'et2' : 'pt*pt+mass*mass' } , None ) ## use formulas
+    
+    
+    - ATTENTION: it makes a try to reopen the file with tree in UPDATE mode,
+    and it fails when it is not possible!
+    
     - see Ostap::Trees::add_branch
-    - see Ostap::IFuncTree 
+    - see Ostap::IFuncTree
+    
     """
     if isinstance ( tree  , ROOT.TChain ) :
         return _chain_add_new_branch ( tree , name , function , verbose , skip )
@@ -1517,22 +1615,58 @@ def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
         logger.error (  "Invalid Tree!" )
         return
     
+    if isinstance ( function , dict ) :
+        assert name     is None , 'add_branch: when function is dict, name must be None!'
+        name , function = function , None 
+        
     names = name 
     if isinstance ( names , string_types ) : names = [ names ]
-    
-    for n in names : 
-        assert not n in tree.branches() ,'Branch %s already exists!' % n
 
-    the_function = function
-    if   isinstance ( function , string_types    ) : pass 
-    elif isinstance ( function , Ostap.IFuncTree ) : pass
-    elif isinstance ( function , ROOT.TH1        ) : pass 
-    elif callable   ( function ) :
-        from ostap.trees.funcs import PyTreeFunction as PTF
-        the_function = PTF ( function )
+    funcs = []
 
-    args  = [ n for n in names ] + [ the_function ]
-    args  = tuple ( args )
+    if isinstance ( name  ,  dict ) :
+        
+        assert function is None, 'add_branch: when name     is dict, function must be None!'
+
+        typeformula = False 
+        for k in  name.keys() :
+            
+            assert not k in tree.branches() ,'Branch %s already exists!' % k
+            v = name [ k ]
+            if   isinstance ( v , string_types    ) : pass
+            elif isinstance ( v , Ostap.IFuncTree ) : typeformula = True
+            else : raise TypeError ('add_branch: Unknown brnach %s/%s for %s'  % ( v , type( v ) , k ) )
+                    
+        if typeformula : MMAP = Ostap.Trees.FUNCTREEMAP
+        else           : MMAP = std.map  ( 'std::string'       , 'std::string' )
+        
+        mmap = MMAP () 
+        for k in name.keys() :
+            v = name [ k ]
+            if typeformula and isinstance ( v , string_types ) :
+                v = Ostap.Functions.FuncFormula ( v , tree )
+                funcs.append ( v ) 
+            ## mmap.insert ( PAIR ( k , v ) )
+            mmap[ k ] = v 
+            
+        args = mmap ,
+
+    else : 
+        
+        for n in names : 
+            assert not n in tree.branches() ,'Branch %s already exists!' % n
+            
+        the_function = function
+        if   isinstance ( function , string_types    ) : pass 
+        elif isinstance ( function , Ostap.IFuncTree ) : pass
+        elif isinstance ( function , ROOT.TH1        ) : pass 
+        elif callable   ( function ) :
+            from ostap.trees.funcs import PyTreeFunction as PTF
+            the_function = PTF ( function )
+            
+        args  = [ n for n in names ] + [ the_function ]
+        args  = tuple ( args )
+
 
     tname = tree.GetName      ()
     tdir  = tree.GetDirectory ()
