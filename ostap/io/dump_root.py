@@ -124,22 +124,26 @@ def dump_root ( objects , rfile  = '' ) :
         rfile = 'ROOT_Objects_%s.root ' % ROOT.gROOT.GetVersionInt()
 
     if isinstance ( objects , ROOT.TObject ) : objects = [ objects ]
-        
-    import ostap.io.root_file 
-    with ROOT.TFile ( fname , 'RECREATE' ) as f :
-
+    
+    import ostap.io.root_file
+    
+    from   ostap.core.core import ROOTCWD
+    
+    with ROOTCWD(), ROOT.TFile ( rfile , 'RECREATE' ) as f :
+        f.cd () 
         for o in objects :
             o.Write()
             logger.info ( 'Dump object of type %s' %   type ( o ) ) 
         f.ls    ()
-
+            
     return rfile 
 
 # =============================================================================
 ## read all objects from  ROOT file 
-def read_root ( fname ) :
+def read_root ( fname ) :    
     """Read all objects from  ROOT file """
-    import ostap.io.root_file 
+    
+    import ostap.io.root_file
     with ROOT.TFile.Open ( fname , 'READ' ) as f :
         
         f.ls()
@@ -193,8 +197,8 @@ if '__main__' == __name__ :
         ROOT.TTreeFormula()   
         ]
 
-    fname = dump_root ( objects )
-    read_root ( fname ) 
+    file_name = dump_root ( objects )
+    read_root ( file_name ) 
     
 # =============================================================================
 ##                                                                      The END 
