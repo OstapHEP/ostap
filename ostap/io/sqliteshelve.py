@@ -57,6 +57,15 @@
 #
 # @endcode 
 #
+# @attention: When one tries to read the database with pickled ROOT object using newer
+# version of ROOT, one could get a ROOT read error,
+# in case of evoltuion in ROOT streamers for some  classes, e.g. <code>ROOT.TH1D</code>>
+# @code 
+# Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
+# Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+# @endcode
+# The solution is simple and described in  file ostap.io.dump_root
+# @see ostap.io.dump_root
 # 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
@@ -99,6 +108,14 @@ Access to DB in read-only mode :
 # >>> for key in db : print key
 # ...
 # >>> abcd = db['some_key']
+
+ Attention: When one tries to read the database with pickled ROOT object using newer
+ version of ROOT, one could get a ROOT read error,
+ in case of evoltuion in ROOT streamers for some  classes, e.g. ROOT.TH1D
+ > Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
+ > Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+ The solution is simple and described in  file ostap.io.dump_root
+ - see ostap.io.dump_root
 """
 # =============================================================================
 from   __future__        import print_function
@@ -274,6 +291,15 @@ class SQLiteShelf(SqliteDict):
         self.__protocol    = protocol
 
     @property
+    def  writeback  ( self ):
+        """``writeback'' : the same as ``autocommit'':
+        If one  enables `autocommit`, changes will be committed after each operation
+        (more inefficient but safer).
+        Otherwise, changes are committed on `self.commit()`,
+        `self.clear()` and `self.close()`."""        
+        return self.autocommit
+    
+    @property
     def compression ( self ) :
         """The  compression level from zlib"""
         return self.__compression
@@ -314,6 +340,31 @@ class SQLiteShelf(SqliteDict):
         
         """
         return self.__dir( pattern )
+    
+    # =========================================================================
+    ## clone the database into new one
+    #  @code
+    #  db  = ...
+    #  ndb = db.clone ( 'new_file.db' )
+    #  @endcode
+    def clone ( self , new_name ) : 
+        """ Clone the database into new one
+        >>> old_db = ...
+        >>> new_db = new_db.clone ( 'new_file.db' )
+        """
+        new_db = SQLiteShelf ( new_name                           ,
+                               mode           = 'n'               ,
+                               tablename      = self.tablename    ,
+                               writeback      = self.writeback    ,                                
+                               protocol       = self.protocol     ,
+                               compress_level = self.compression  , 
+                               journal_mode   = self.journal_mode )
+        
+        ## copy the content 
+        for key in self.keys() : new_db [ key ] = self [ key ]
+        
+        new_db.sync ()  
+        return new_db 
 
 # =============================================================================
 ## ``get-and-uncompress-item'' from dbase 

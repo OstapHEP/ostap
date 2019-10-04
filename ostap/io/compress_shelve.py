@@ -117,7 +117,8 @@ class CompressShelf(shelve.Shelf,object):
         self                   ,
         filename               ,
         mode        = 'c'      , 
-        protocol    = PROTOCOL , 
+        protocol    = PROTOCOL ,
+        compress    = 0        , 
         writeback   = False    ,
         silent      = False    ,
         keyencoding = 'utf-8'  ) :
@@ -135,7 +136,8 @@ class CompressShelf(shelve.Shelf,object):
         filename  = os.path.expandvars ( filename )
         filename  = os.path.expandvars ( filename )
         
-        self.__compress      = False 
+        self.__compresslevel = compress
+        self.__compress      = False
         self.__filename      = filename
         self.__remove        = False
         self.__silent        = silent
@@ -220,6 +222,11 @@ class CompressShelf(shelve.Shelf,object):
         """``protocol'' : pickling protocol used in the shelve"""
         return self._protocol
     
+    @property
+    def compresslevel ( self ) :
+        "``compress level'' : compression level"
+        return self.__compresslevel 
+
     @property 
     def filename ( self ) :
         "``filename'' :   the actual file name for database"
@@ -235,6 +242,11 @@ class CompressShelf(shelve.Shelf,object):
         "``mode'' : the actual open-mode for the database"
         return self.__mode
     
+    @property
+    def silent ( self ) :
+        "``silent'' : silent actions?"
+        return self.__silent 
+
     @property
     def protocol( self ) :
         "``protocol'' : pickling protocol"
@@ -455,28 +467,42 @@ class CompressShelf(shelve.Shelf,object):
     @abc.abstractmethod
     def compress_item   ( self , value ) :
         """Compress the value  using the certain compressing engine"""
-        return None
+        return NotImplemented
 
     # =========================================================================
     @abc.abstractmethod
     def uncompress_item ( self , value ) :
         """Uncompress the value  using the certain compressing engine"""
-        return None
+        return NotImplemented
 
     # =========================================================================
     ## Compress the file into temporary location, keep original
     @abc.abstractmethod 
     def compress_file   ( self , filein ) :
         """Compress the file into temporary location, keep the original """
-        return None 
+        return NotImplemented
 
+    # =========================================================================
     ## Uncompress the file into temporary location, keep original
     @abc.abstractmethod 
     def uncompress_file ( self , filein ) :
         """Uncompress the file into temporary location, keep the original"""
-        return None
+        return NotImplemented
 
-
+    # =========================================================================
+    ## clone the database into new one
+    #  @code
+    #  db  = ...
+    #  ndb = db.clone ( 'new_file.db' )
+    #  @endcode
+    @abc.abstractmethod
+    def clone ( self , filename ) :
+        """ Clone the database into new one
+        >>> old_db = ...
+        >>> new_db = new_db.clone ( 'new_file.db' )
+        """
+        return NotImplemented
+            
 # ============================================================================
 ## a bit more decorations for shelve  (optional)
 import ostap.io.shelve_ext

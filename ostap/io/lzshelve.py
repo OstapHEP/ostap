@@ -63,6 +63,16 @@
 # @attention: In case DB-name has extensions ``.lz'', ``.xz'', the whole data base
 #             will be ``LZMA''-ed ". 
 #
+# @attention: When one tries to read the database with pickled ROOT object using newer
+# version of ROOT, one could get a ROOT read error,
+# in case of evoltuion in ROOT streamers for some  classes, e.g. <code>ROOT.TH1D</code>>
+# @code 
+# Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
+# Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+# @endcode
+# The solution is simple and described in  file ostap.io.dump_root
+# @see ostap.io.dump_root
+#
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2010-04-30
 # =============================================================================
@@ -113,6 +123,14 @@ The module has been developed and used with great success in
  
  In case DB-name has extension ``.lz'', ``.xz'', the whole data base will be ``LZMA''-ed
 
+ Attention: When one tries to read the database with pickled ROOT object using newer
+ version of ROOT, one could get a ROOT read error,
+ in case of evoltuion in ROOT streamers for some  classes, e.g. ROOT.TH1D
+ > Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
+ > Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+ The solution is simple and described in  file ostap.io.dump_root
+ - see ostap.io.dump_root
+ 
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -154,7 +172,7 @@ import os, sys
 import lzma        ## use lzma to compress DB-content 
 import shelve      ## 
 import shutil
-from ostap.io.compress_shelve import CompressShelf
+from   ostap.io.compress_shelve import CompressShelf
 # =============================================================================
 ## @class LzShelf
 #  ``LZMA''-version of ``shelve''-database
@@ -194,13 +212,12 @@ class LzShelf(CompressShelf):
                              writeback ,
                              silent    )
 
-        self.__compresslevel = compress
-        
         ## initialize the base class 
         CompressShelf.__init__ ( self        ,
                                  filename    ,
                                  mode        ,
                                  protocol    ,
+                                 compress    , 
                                  writeback   ,
                                  silent      ,
                                  keyencoding ) 
@@ -221,11 +238,6 @@ class LzShelf(CompressShelf):
         """for proper (un)pickling"""
         pass
     
-    @property
-    def compresslevel ( self ) :
-        "``compress level'' :  zip compression level"
-        return self.__compresslevel 
-
     # =========================================================================
     ## compress (LZMA) the file into temporary location, keep original
     def compress_file   ( self , filein ) :
@@ -271,8 +283,33 @@ class LzShelf(CompressShelf):
         f = BytesIO ( lzma.decompress ( value ) )
         return Unpickler ( f ) . load ( )
 
+    # =========================================================================
+    ## clone the database into new one
+    #  @code
+    #  db  = ...
+    #  ndb = db.clone ( 'new_file.db' )
+    #  @endcode
+    def clone ( self , new_name ) :
+        """ Clone the database into new one
+        >>> old_db = ...
+        >>> new_db = new_db.clone ( 'new_file.db' )
+        """
+        new_db = LzShelf ( new_name                         ,
+                           mode        =  'c'               ,
+                           protocol    = self.protocol      ,
+                           compress    = self.compresslevel , 
+                           writeback   = self.writeback     ,
+                           silent      = self.silent        ,
+                           keyencoding = self.keyencoding   )
+        
+        ## copy the content 
+        for key in self.keys() : new_db [ key ] = self [ key ]
+        
+        new_db.sync ()  
+        return new_db 
+  
 # =============================================================================
-## helper finction to access LzShelve data base
+## helper function to access LzShelve data base
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
 def open ( filename                            ,

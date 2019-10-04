@@ -49,6 +49,16 @@
 #
 # @endcode 
 #
+# @attention: When one tries to read the database with pickled ROOT object using newer
+# version of ROOT, one could get a ROOT read error,
+# in case of evoltuion in ROOT streamers for some  classes, e.g. <code>ROOT.TH1D</code>>
+# @code 
+# Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
+# Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+# @endcode
+# The solution is simple and described in  file ostap.io.dump_root
+# @see ostap.io.dump_root
+# 
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2015-07-31
 # 
@@ -82,7 +92,14 @@
  >>> for key in db : print(key)
  ...
  >>> abcd = db['some_key']
- 
+
+ Attention: When one tries to read the database with pickled ROOT object using newer
+ version of ROOT, one could get a ROOT read error,
+ in case of evoltuion in ROOT streamers for some  classes, e.g. ROOT.TH1D
+ > Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
+ > Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+ The solution is simple and described in  file ostap.io.dump_root
+ - see ostap.io.dump_root 
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -290,7 +307,30 @@ class RootShelf(RootOnlyShelf):
                   args      = ()       ):
         RootOnlyShelf.__init__ ( self , filename , mode , writeback , args = args )
         self.__protocol      = protocol
-        self.__compresslevel = compress 
+        self.__compresslevel = compress
+
+    # =========================================================================
+    ## clone the database into new one
+    #  @code
+    #  db  = ...
+    #  ndb = db.clone ( 'new_file.db' )
+    #  @endcode
+    def clone ( self , new_name ) :
+        """ Clone the database into new one
+        >>> old_db = ...
+        >>> new_db = new_db.clone ( 'new_file.db' )
+        """
+        new_db = RootShelf ( new_name                         ,
+                             mode        =  'c'               ,
+                             protocol    = self.protocol      ,
+                             compress    = self.compresslevel )
+        
+        ## copy the content 
+        for key in self.keys() : new_db [ key ] = self [ key ]
+        
+        new_db.sync ()  
+        return new_db 
+
     @property
     def protocol ( self ) :
         """``protocol'' : pickle protocol"""
@@ -300,7 +340,7 @@ class RootShelf(RootOnlyShelf):
         """``compresslevel'' : zlib compression level
         """
         return self.__compresslevel
-        
+
 # =============================================================================
 ##  get object (unpickle if needed)  from dbase
 #   @code
@@ -460,5 +500,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
