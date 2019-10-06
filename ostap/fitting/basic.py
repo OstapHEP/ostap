@@ -1109,10 +1109,17 @@ class PDF (MakeVar) :
 
         import ostap.histos.graphs
 
+        ## remove a bit strange drawing artefacts (the first and the last points )
+        if var.minmax() :
+            vmn , vmx = var.minmax()
+            graph   = frame.getObject ( 0 )
+            if graph.remove ( remove = lambda x,y : not vmn <= x <= vmx ) :
+                logger.info ('draw_nll: remove drawing artefacts  at the first and the last points' ) 
+                                        
         ## scale it if needed
         if 1 != sf :
-            logger.info ('Apply scale factor of %s'  % sf )
-            graph  = frame.getObject (0)
+            logger.info ('draw_nll: apply scale factor of %s due to dataset weights' % sf )
+            graph  = frame.getObject ( 0 )
             graph *= sf 
         
         gr      = frame.getObject ( 0 )
@@ -1130,6 +1137,8 @@ class PDF (MakeVar) :
             frame.SetXTitle  ( '' )
             frame.SetYTitle  ( '' )
             frame.SetZTitle  ( '' )
+
+        
 
         ## draw it! 
         if not ROOT.gROOT.IsBatch() :

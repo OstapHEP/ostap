@@ -755,6 +755,35 @@ def _gr_setitem_ ( graph , ipoint , point )  :
     graph.SetPoint      ( ipoint , x , y )
 
 
+# ==============================================================================
+## remove the point from the graph
+#  @code
+#  graph = ...
+#  del graph[1] 
+#  @endcode 
+def _gr_delitem_ ( graph, ipoint ) :
+    """Remove the point from the graph
+    >>> graph = ...
+    >>> del graph[1] 
+    >>> del graph[1:-1:2] 
+    """
+    #
+    if isinstance ( ipoint , slice ) :
+        old_len   = len ( graph ) 
+        istart , istop , istep = ipoint.indices ( old_len  )
+        idel = 0
+        np   = 0
+        for i in  range ( istart , istop , istep ) :
+            np += 1 
+            d = graph.RemovePoint ( i - idel )
+            if 0 <= d : idel += 1
+        new_len = len ( graph ) 
+        return newlen + np == old_len
+    elif not ipoint in graph : raise IndexError 
+    #
+    d = graph.RemovePoint ( ipoint )
+    return  0 <= d
+
 # =============================================================================
 ## iterate over the points in TGraph
 #  @code 
@@ -1402,80 +1431,48 @@ def _gr2_sorted_ ( graph , reverse = False ) :
     return new_graph 
 
 # =============================================================================
-## filter points from the graph
+## remove points that do not satisfy the criteria
 #  @code
 #  graph = ...
-#  f     = graph.filter( lambda s : s[1]>0 ) 
-#  @endcode
-#  @date   2016-03-28 
-def _gr0_filter_ ( graph , accept ):
-    """Filter points from the graph
-    >>> graph = ...
-    >>> f     = graph.filter( lambda s : s[1]>0 ) 
+#  graph.remove ( lambda s : s[0]<0.0 ) 
+#  @endcode 
+def _gr_remove_ ( graph , remove ) :
+    """Remove points that do not satisfy the criteria
+    >> graph = ...
+    >>> graph.remove ( lambda s : s[0]<0.0 ) 
     """
-    oitems =      ( i for i in graph.items() ) 
-    fitems = list ( filter ( accept , oitems ) )
-    
-    new_graph = ROOT.TGraph ( len( fitems ) )
-    copy_graph_attributes ( graph , new_graph )
-    
-    ip = 0 
-    for item in fitems :
-        new_graph[ip] = item[1:]
-        ip += 1
+    old_len = len ( graph ) 
 
-    return new_graph
-
-# =============================================================================
-## filter points from the graph
-#  @code
-#  graph = ...
-#  f     = graph.filter( lambda s : s[1]>0 ) 
-#  @endcode
-#  @date   2016-03-28 
-def _gr1_filter_ ( graph , accept ):
-    """Filter points from the graph
-    >>> graph = ...
-    >>> f     = graph.filter( lambda s : s[1]>0 ) 
-    """
-    oitems =      ( i for i in graph.items() ) 
-    fitems = list ( filter ( accept , oitems ) )
-    
-    new_graph = ROOT.TGraphErrors ( len( fitems ) )
-    copy_graph_attributes ( graph , new_graph )
-    
-    ip = 0 
-    for item in fitems :
-        new_graph[ip] = item[1:]
-        ip += 1
-
-    return new_graph
-
-
-# =============================================================================
-## filter points from the graph
-#  @code
-#  graph = ...
-#  f     = graph.filter( lambda s : s[1]>0 ) 
-#  @endcode
-#  @date   2016-03-28 
-def _gr2_filter_ ( graph , accept ):
-    """Filter points from the graph
-    >>> graph = ...
-    >>> f     = graph.filter( lambda s : s[1]>0 ) 
-    """
-    
-    oitems =      ( i for i in graph.items() ) 
-    fitems = list ( filter ( accept , oitems ) )
-    
-    new_graph = ROOT.TGraphAsymmErrors ( len( fitems ) )
-    copy_graph_attributes ( graph , new_graph )
-    
-    ip = 0 
-    for item in fitems :
-        new_graph[ip] = item[1:]
-        ip += 1
+    removed = [] 
+    for point in graph :
+        if remove ( *graph [ point ] ) :
+            removed.append ( point )
         
+    ir = 0 
+    for i in  removed :
+        d = graph.RemovePoint ( i - ir ) 
+        if 0 <= d : ir += 1
+
+    return len ( graph ) - old_len 
+
+# =============================================================================
+## create new graph, that contais only "good/filtered" points
+#  @code
+#  graph = ...
+#  new_graph = graph.filter ( lambda s : s[0]<0.0 ) 
+#  @endcode 
+def _gr_filter_ ( graph , accept , name = '' ) :
+    """ Create new graph, that contais only ``good/filtered'' points
+    >>> graph = ...
+    >>> new_graph = graph.filter ( lambda s : s[0]<0.0 ) 
+    """
+
+    if not name : name = graph.GetName() + '_filter'
+    new_graph = graph.Clone ( name )
+    copy_graph_attributes ( graph , new_graph )
+    
+    new_graph.remove ( lambda *s : not accept ( *s ) )
+    
     return new_graph
 
 
@@ -1567,6 +1564,7 @@ ROOT.TGraph       .  minmax       = _gr_yminmax_
 
 ROOT.TGraph       . __getitem__   = _gr_getitem_ 
 ROOT.TGraph       . __setitem__   = _gr_setitem_
+ROOT.TGraph       . __delitem__   = _gr_delitem_
 ROOT.TGraph       .     items     = _gr_iteritems_
 ROOT.TGraph       . iteritems     = _gr_iteritems_
 
@@ -1617,9 +1615,8 @@ ROOT.TGraphErrors      .sorted        = _gr1_sorted_
 ROOT.TGraphAsymmErrors .sorted        = _gr2_sorted_ 
 
 
-ROOT.TGraph            .filter        = _gr0_filter_
-ROOT.TGraphErrors      .filter        = _gr1_filter_ 
-ROOT.TGraphAsymmErrors .filter        = _gr2_filter_ 
+ROOT.TGraph            .filter        = _gr_filter_
+ROOT.TGraph            .remove        = _gr_remove_
 
 
 # ==========================================================================
@@ -3057,8 +3054,7 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors .sorted        ,
     #
     ROOT.TGraph            .filter        ,
-    ROOT.TGraphErrors      .filter        ,
-    ROOT.TGraphAsymmErrors .filter        ,
+    ROOT.TGraph            .remove        ,
     ##
     ROOT.TGraph.transpose                 ,
     ROOT.TGraph.T                         ,     

@@ -1158,8 +1158,7 @@ def _add_response_tree ( tree , *args ) :
     from   ostap.core.core    import Ostap, ROOTCWD
     from   ostap.io.root_file import REOPEN
     
-    tdir  = tree.GetDirectory()
-    
+    tdir  = tree.GetDirectory()    
     with ROOTCWD () , REOPEN ( tdir )  as tfile  : 
         
         tdir.cd()
