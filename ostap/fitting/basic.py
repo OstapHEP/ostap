@@ -728,9 +728,9 @@ class PDF (MakeVar) :
                 dstyle   = self.draw_option (   'combined_background_style' , **kwargs )
                 if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle )
                 
-            kwargs.pop ( 'combined_background_options' , ()     )
-            kwargs.pop ( 'combined_background_style'   , ()     )
-            kwargs.pop ( 'draw_combined_backgrounds'   , drawit )
+            kwargs.pop ( 'combined_background_options' , ()   )
+            kwargs.pop ( 'combined_background_style'   , ()   )
+            kwargs.pop ( 'draw_combined_backgrounds'   , True )
             
             ## ugly :-(
             ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
@@ -762,9 +762,9 @@ class PDF (MakeVar) :
                 dstyle   = self.draw_option (   'combined_component_style' , **kwargs )
                 if drawit : self._draw ( self.combined_components , frame , doptions , dstyle )
                 
-            kwargs.pop ( 'combined_component_options' , ()     )
-            kwargs.pop ( 'combined_component_style'   , ()     )
-            kwargs.pop ( 'draw_combined_component'    , drawit )
+            kwargs.pop ( 'combined_component_options' , ()   )
+            kwargs.pop ( 'combined_component_style'   , ()   )
+            kwargs.pop ( 'draw_combined_component'    , True )
                     
             ## draw ``signal'' components
             soptions     = self.draw_option (    'signal_options'  , **kwargs )
@@ -780,9 +780,9 @@ class PDF (MakeVar) :
                 dstyle    = self.draw_option (   'combined_signal_style'  , **kwargs )
                 if drawit : self._draw ( self.combined_signals , frame , doptions , dstyle )
                 
-            kwargs.pop ( 'combined_signal_options' , ()     )
-            kwargs.pop ( 'combined_signal_style'   , ()     )
-            kwargs.pop ( 'draw_combined_signal'    , drawit )
+            kwargs.pop ( 'combined_signal_options' , ()   )
+            kwargs.pop ( 'combined_signal_style'   , ()   )
+            kwargs.pop ( 'draw_combined_signal'    , True )
             
             #
             ## the total fit curve
@@ -2211,7 +2211,13 @@ class PDF (MakeVar) :
     
     # =============================================================================
     ## make list of variables/fractions for compound PDFs 
-    def make_fracs ( self , N , pname , ptitle , fractions = True , recursive = True , fracs = [] )  :
+    def make_fracs ( self             ,
+                     N                ,
+                     pname            ,
+                     ptitle           ,
+                     fractions = True ,
+                     recursive = True ,
+                     fracs     = []   )  :
         """Make list of variables/fractions for compound PDF
         """
         assert is_integer ( N ) and 2 <= N , \
@@ -2244,14 +2250,25 @@ class PDF (MakeVar) :
     
     # =============================================================================
     ## helper function to build composite (non-extended) PDF from components 
-    def add_pdf ( self , pdflist , name , title , fname , ftitle , recursive = True ) :
+    def add_pdf ( self             ,
+                  pdflist          ,
+                  name             ,
+                  title            ,
+                  fname            ,
+                  ftitle           ,
+                  recursive = True ,
+                  fractions = []   ) :
         """Helper function to build composite (non-extended) PDF from components 
         """
         ##
         pdfs   = ROOT.RooArgList() 
         for pdf in pdflist : pdfs.add  ( pdf )
-        fs     = self.make_fracs ( len ( pdfs ) , fname , ftitle ,
-                                  fractions = True , recursive = recursive )
+        fs     = self.make_fracs ( len ( pdfs )          ,
+                                   fname                 ,
+                                   ftitle                ,
+                                   fractions = True      ,
+                                   recursive = recursive ,
+                                   fracs     = fractions )
         fracs  = ROOT.RooArgList()
         for f in fs : fracs.add ( f ) 
         pdf    = ROOT.RooAddPdf ( name , title , pdfs , fracs , recursive )
@@ -2777,11 +2794,13 @@ class Fit1D (PDF) :
     >>> pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background 
     """
     def __init__ ( self                          , 
-                   signal                        ,    ## the main signal 
+                   signal              = None    ,    ## the main signal 
                    background          = None    ,    ## the main background 
                    othersignals        = []      ,    ## additional signal         components
                    otherbackgrounds    = []      ,    ## additional background     components
-                   others              = []      ,    ## additional non-classified components 
+                   others              = []      ,    ## additional non-classified components
+                   signals             = []      ,    ## alternative : all signals 
+                   backgrounds         = []      ,    ## alternative : all backgrounds  
                    suffix              = ''      ,    ## the suffix 
                    name                = ''      ,    ## the name 
                    extended            = True    ,    ## extended fits ?
@@ -2790,19 +2809,27 @@ class Fit1D (PDF) :
                    combine_others      = False   ,    ## combine signal PDFs into single "COMPONENT"  ?             
                    recursive           = True    ,    ## recursive fractions for NON-extended models?
                    xvar                = None    ,
-                   S                   = []      ,    ## yeilds for ``signals''
-                   B                   = []      ,    ## yeilds for ``background''
-                   C                   = []      ,    ## yeilds for ``components''
-                   F                   = []      ) :  ## fractions  
-
+                   S                   = []      ,    ## yields for ``signals''
+                   B                   = []      ,    ## yields for ``background''
+                   C                   = []      ,    ## yields for ``components''
+                   F                   = []      ,    ## fractions for noin-extended fit 
+                   fS                  = []      ,    ## fraction for combined signal
+                   fB                  = []      ,    ## fraction for combined background
+                   fC                  = []      ) :  ## fraction for combined components
+        
         ##  save all arguments 
         self.__args = {
-            'signal'     : signal     , 'othersignals'     : othersignals     ,
-            'background' : background , 'otherbackgrounds' : otherbackgrounds ,
-            'others'     : others     ,
-            'extended'   : extended   ,
+            'signal'              : signal           ,
+            'othersignals'        : othersignals     ,
+            'signals'             : signals          ,
+            'background'          : background       ,
+            'otherbackgrounds'    : otherbackgrounds ,
+            'backgrounds'         : backgrounds      ,
+            'others'              : others           ,
+            'extended'            : extended         ,
             ##
-            'suffix'     : suffix     , 'name'             : name             , 
+            'suffix'              : suffix           ,
+            'name'                : name             , 
             ##
             'combine_signals'     : combine_signals     ,
             'combine_backgrounds' : combine_backgrounds ,
@@ -2811,7 +2838,13 @@ class Fit1D (PDF) :
             ##
             'xvar'                : xvar  ,
             ## 
-            'S' : S , 'B' : B , 'C' : C , 'F' : F ,            
+            'S'                   : S  , ## signal     yields 
+            'B'                   : B  , ## background yields       
+            'C'                   : C  , ## component  yields 
+            'F'                   : F  , ## fractions ( for non-extended fits)
+            'fS'                  : fS , ## fractions for combined signal
+            'fB'                  : fB , ## fractions for combined background
+            'fC'                  : fC , ## fractions for combined component
             }
         
         self.__suffix              = suffix
@@ -2826,13 +2859,29 @@ class Fit1D (PDF) :
         self.__args_C = C
         self.__args_F = F
         
+        assert signal or signals , "Fit1D:``signal'' or ``signals'' must be specified!"
+        
+        if signals :
+            if signal       : raise AttributeError ( "Fit1D: ``signal''       specified for valid ``signals''!" )
+            if othersignals : raise AttributeError ( "Fit1D: ``othersignals'' specified for valid ``signals''!" )
+            signal      = signals [ 0  ]
+            othersignal = signals [ 1: ]
+            signals     = [] 
+            
+        if backgrounds :
+            if background       : raise AttributeError ( "Fit1D: ``background''       specified for valid ``backgrounds''!")
+            if otherbackgrounds : raise AttributeError ( "Fit1D: ``otherbackgrounds'' specified for valid ``backgrounds''!")
+            background       = backgrounds [ 0  ]
+            otherbackrgounds = backgrounds [ 1: ]
+            backgrounns      = [] 
+
         ## wrap signal if needed 
         if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone() 
         ## if bare RooFit pdf,  fit variable must be specified
         elif isinstance ( signal , ROOT.RooAbsPdf ) and xvar :
             self.__signal = Generic1D_pdf (  signal , xvar )
         else :
-            raise AttributeError("Invalid type for ``signal'': %s/%s"  % (  signal , type( signal ) ) )
+            raise AttributeError ( "Fit1D:Invalid type for ``signal'': %s/%s"  % (  signal , type( signal ) ) )
         
         if not name :
             name = '%s' % self.__signal.name 
@@ -2903,7 +2952,9 @@ class Fit1D (PDF) :
                                                 'signal_'    + suffix ,
                                                 'signal(%s)' % suffix ,
                                                 'fS%s_%%d'   % suffix ,
-                                                'fS%s_%%d'   % suffix , recursive = True )
+                                                'fS%s_%%d'   % suffix ,
+                                                recursive = True      ,
+                                                fractions = fS        )
             ## new signal
             self.__signal      = Generic1D_pdf   ( sig , self.xvar , 'SIGNAL_' + suffix )
             self.__all_signals = ROOT.RooArgList ( sig )
@@ -2919,7 +2970,9 @@ class Fit1D (PDF) :
                                                 'background_'    + suffix ,
                                                 'background(%s)' % suffix ,
                                                 'fB%s_%%d'       % suffix ,
-                                                'fB%s_%%d'       % suffix , recursive = True )
+                                                'fB%s_%%d'       % suffix ,
+                                                recursive = True          ,
+                                                fractions = fB            )
             ## new background
             self.__background      = Generic1D_pdf   ( bkg , self.xvar , 'BACKGROUND_' + suffix )
             self.__all_backgrounds = ROOT.RooArgList ( bkg )
@@ -2936,7 +2989,9 @@ class Fit1D (PDF) :
                                                 'other_'    + suffix ,
                                                 'other(%s)' % suffix ,
                                                 'fC%s_%%d'  % suffix ,
-                                                'fC%s_%%d'  % suffix )
+                                                'fC%s_%%d'  % suffix ,
+                                                recursive = True     ,
+                                                fractions = fC       ) 
             ## save old background
             self.__other          = Generic1D_pdf   ( cmp , self.xvar , 'COMPONENT_' + suffix )
             self.__all_components = ROOT.RooArgList ( cmp )
@@ -3003,8 +3058,12 @@ class Fit1D (PDF) :
             for b in self.__all_backgrounds : self.alist1.add ( b )
             for c in self.__all_components  : self.alist1.add ( c )
 
-            fic = self.make_fracs ( ns + nb + nc , 'f%s_%%d' % suffix , 'f%s_%%d'  % suffix ,
-                                    fractions  = True , recursive = self.recursive , fracs = F )
+            fic = self.make_fracs ( ns + nb + nc ,
+                                    'f%s_%%d' % suffix          ,
+                                    'f%s_%%d' % suffix          ,
+                                    fractions  = True           ,
+                                    recursive  = self.recursive ,
+                                    fracs      = F              )
                 
             for f in fic                    : self.__nums_fractions.append ( f )   
             for f in self.__nums_fractions  : self.alist2.add ( f ) 
@@ -3049,10 +3108,13 @@ class Fit1D (PDF) :
             'combine_others'      : self.combine_others      ,
             'recursive'           : self.recursive           ,
             'xvar'                : self.xvar                ,
-            'S'                   : S                        ,
-            'B'                   : B                        ,
-            'C'                   : C                        ,
-            'F'                   : F                        ,            
+            'S'                   : self.S                   ,
+            'B'                   : self.B                   ,
+            'C'                   : self.C                   ,
+            'F'                   : self.F                   ,            
+            'fS'                  : self.fS                  ,
+            'fB'                  : self.fB                  ,
+            'fC'                  : self.fC                  ,
             }
         
     @property
