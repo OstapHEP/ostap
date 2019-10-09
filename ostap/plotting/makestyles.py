@@ -511,6 +511,7 @@ def make_ostap_style ( name                           ,
     conf [ 'LineStyleString_12' ] = "60 16 8 16"
     conf [ 'LineStyleString_13' ] = "168 32"
     conf [ 'LineStyleString_14' ] = "32  32"
+    conf [ 'LineStyleString_15' ] = "80  20"
 
     ## create the style 
     style       = ROOT.TStyle ( name , description )

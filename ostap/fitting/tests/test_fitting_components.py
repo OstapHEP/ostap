@@ -285,11 +285,12 @@ def test_nonextended3 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_extended1    () 
-    test_extended2    () 
-    test_nonextended1 () 
-    test_nonextended2 () 
-    test_nonextended3 () 
+    pass 
+    ## test_extended1    () 
+    ## test_extended2    () 
+    ## test_nonextended1 () 
+    ## test_nonextended2 () 
+    ## test_nonextended3 () 
     
 # =============================================================================
 # The END 

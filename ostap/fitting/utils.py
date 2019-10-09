@@ -371,6 +371,9 @@ class MakeVar ( object ) :
             else : _args.append ( a ) 
 
         from ostap.plotting.fit_draw import keys  as drawing_options
+
+        silent  = None
+        verbose = None
         
         for k , a in items_loop ( kwargs ) :
             
@@ -388,9 +391,26 @@ class MakeVar ( object ) :
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
             
             elif kup in ( 'VERBOSE' ,        ) and isinstance ( a , bool ) :
-                _args.append ( ROOT.RooFit.Verbose (     a ) ) 
+                
+                if not verbose is None :
+                    if a != verbose : 
+                        logger.warning ( 'parse_args: Redefine VERBOSE to %s' %  a ) 
+                        verbose = a                        
+                if not silent is None :
+                    if a == silent :
+                        logger.warning ( 'parse_args: confusing VERBOSE/SILENT %s/%s' % ( a , silent ) )
+                        silent = not a 
+                _args.append ( ROOT.RooFit.Verbose (     a ) )
             elif kup in ( 'SILENT'           ,
                           'SILENCE'          ) and isinstance ( a , bool ) :
+                if not silent is None :
+                    if a != silent : 
+                        logger.warning ( 'parse_args: Redefine SILENT to %s' %  a ) 
+                        verbose = a                        
+                if not verbose is None :
+                    if a == verbose :
+                        logger.warning ( 'parse_args: confusing SILENT/VERBOSE %s/%s' % ( a , verbose ) )
+                        verbose = not a
                 _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
             elif kup in ( 'STRATEGY'         , 
                           'MINUITSTRATEGY'   ,
@@ -464,7 +484,6 @@ class MakeVar ( object ) :
                  and isinstance ( a[1] ,  num_types ) \
                  and a[0] < a[1]  : 
                 _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )
-                _args.append   (  ROOT.RooFit.CloneData ( a ) )                
             elif kup in ( 'MINIMIZER'  ,     ) and isinstance ( a , list_types   ) \
                  and isinstance ( a[0] ,  string_types ) \
                  and isinstance ( a[1] ,  string_types ) :
@@ -530,7 +549,6 @@ class MakeVar ( object ) :
             ##else :
             ##    logger.warning ("parse_args: 'no sumw2=True' is specified for the weighted  dataset") 
 
-                
         keys = [ str ( a ) for a in _args ]
         keys.sort ()
         
@@ -541,8 +559,6 @@ class MakeVar ( object ) :
         kset.discard  ( 'Verbose'    ) ## trivial 
         kset.discard  ( 'Timer'      ) ## trivial 
         kset.discard  ( 'PrintLevel' ) ## trivial
-
-        
 
         ## duplicates? 
         if len ( kset ) != len ( keys ) :

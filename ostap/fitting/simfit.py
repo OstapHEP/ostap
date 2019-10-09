@@ -213,9 +213,9 @@ def combined_hdata ( sample        ,
     PAIR = std.pair ( 'const std::string' , 'TH1*' )
     mm   = MAP()
     
-    d1   = 0 
-    d2   = 0 
-    d3   = 0
+    nd1   = 0 
+    nd2   = 0 
+    nd3   = 0
     
     labels = sample.labels ()
     
@@ -223,18 +223,22 @@ def combined_hdata ( sample        ,
         
         histo = histograms.pop  ( label ) 
         
-        if   isinstance ( histo , ROOT.TH3 ) : d3 += 1
-        elif isinstance ( histo , ROOT.TH2 ) : d2 += 1
-        elif isinstance ( histo , ROOT.TH1 ) : d1 += 1
+        if   isinstance ( histo , ROOT.TH3 ) : nd3 += 1
+        elif isinstance ( histo , ROOT.TH2 ) : nd2 += 1
+        elif isinstance ( histo , ROOT.TH1 ) : nd1 += 1
         
         mm.insert ( PAIR ( label , histo ) )
 
+    assert not histograms, 'Unknown histograms: %s' % histograms.keys() 
 
-    assert not historgams, 'Unknown histograms: %s' % histograms.keys() 
-        
-    assert ( d3 or d2 ) and ( d3 or d1 ) and ( d2 or d1 ), \
-           'Histograms of different dimensions cannot be combined !'
-        
+    d1 = 0 < nd1
+    d2 = 0 < nd2
+    d3 = 0 < nd3
+    
+    assert ( not d1 and not d2 ) or \
+           ( not d2 and not d3 ) or \
+           ( not d3 and not d1 ) , 'Mismatch in histogram dimensions!'
+            
     name  = name  if name  else dsID()
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
 
@@ -335,11 +339,18 @@ class Sim1D(PDF) :
 
         for k , pdf in items_loop ( self.categories ) :
             
-            for c in pdf.signals     : self.signals    .add ( c ) 
-            for c in pdf.backgrounds : self.backgrounds.add ( c ) 
-            for c in pdf.crossterms1 : self.crossterms1.add ( c ) 
-            for c in pdf.crossterms2 : self.crossterms2.add ( c ) 
+            for c in pdf.signals              : self.signals             .add ( c ) 
+            for c in pdf.backgrounds          : self.backgrounds         .add ( c ) 
+            for c in pdf.crossterms1          : self.crossterms1         .add ( c ) 
+            for c in pdf.crossterms2          : self.crossterms2         .add ( c ) 
+            for c in pdf.combined_signals     : self.combined_signals    .add ( c ) 
+            for c in pdf.combined_backgrounds : self.combined_background .add ( c ) 
+            for c in pdf.combined_components  : self.combined_components .add ( c ) 
 
+            ## copy draw options 
+            for k in pdf.draw_options :
+                self.draw_options [ k ] = pdf.draw_options [ k ]
+            
             ## for c in pdf.alist1      : self.alist1.add ( c ) 
             ## for c in pdf.alist2      : self.alist2.add ( c ) 
 
@@ -663,11 +674,20 @@ class SimFit ( MakeVar ) :
                                        cmp.xvar    ,
                                        add_to_signals = False )
                 
-            for c in cmp.signals     : dpdf.signals    .add ( c ) 
-            for c in cmp.backgrounds : dpdf.backgrounds.add ( c ) 
-            for c in cmp.crossterms1 : dpdf.crossterms1.add ( c ) 
-            for c in cmp.crossterms2 : dpdf.crossterms2.add ( c )
-
+            for c in cmp.signals :
+                if not c in dpdf.signals              : dpdf.signals             .add ( c )
+            for c in cmp.backgrounds :
+                if not c in dpdf.backgrounds          : dpdf.backgrounds         .add ( c ) 
+            for c in cmp.crossterms1 :
+                if not c in dpdf.crossterms1          : dpdf.crossterms1         .add ( c )
+            for c in cmp.crossterms2 :
+                if not c in dpdf.crossterms2          : dpdf.crossterms2         .add ( c )
+            for c in cmp.combined_signals :
+                if not c in dpdf.combined_signals     : dpdf.combined_signals    .add ( c ) 
+            for c in cmp.combined_backgrounds :
+                if not c in dpdf.combined_backgrounds : dpdf.combined_backgrounds.add ( c ) 
+            for c in cmp.combined_components :
+                if not c in dpdf.combined_components  : dpdf.combined_components .add ( c ) 
 
             dpdf.draw_options.update ( cmp.draw_options )
                         
@@ -839,13 +859,17 @@ class SimFit ( MakeVar ) :
         _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  ) 
         _slice = ROOT.RooFit.Slice      ( self.sample    , category )
 
-        bkgoptions   = self.draw_option ( 'backrground_options' , **kwargs ) + ( _slice , _proj )
-        ct1options   = self.draw_option ( 'crossterm1_options'  , **kwargs ) + ( _slice , _proj )
-        ct2options   = self.draw_option ( 'crossterm2_options'  , **kwargs ) + ( _slice , _proj )        
-        cmpoptions   = self.draw_option (  'component_options'  , **kwargs ) + ( _slice , _proj )
-        sigoptions   = self.draw_option (     'signal_options'  , **kwargs ) + ( _slice , _proj )
-        totoptions   = self.draw_option (  'total_fit_options'  , **kwargs ) + ( _slice , _proj )
+        bkgoptions   = self.draw_option ( 'background_options' , **kwargs ) + ( _slice , _proj )
+        ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs ) + ( _slice , _proj )
+        ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs ) + ( _slice , _proj )        
+        cmpoptions   = self.draw_option (  'component_options' , **kwargs ) + ( _slice , _proj )
+        sigoptions   = self.draw_option (     'signal_options' , **kwargs ) + ( _slice , _proj )
+        totoptions   = self.draw_option (  'total_fit_options' , **kwargs ) + ( _slice , _proj )
         
+        cbkgoptions  = self.draw_option ( 'combined_background_options' , **kwargs ) + ( _slice , _proj )
+        csigoptions  = self.draw_option ( 'combined_signal_options'     , **kwargs ) + ( _slice , _proj )
+        ccmpoptions  = self.draw_option ( 'combined_component_options'  , **kwargs ) + ( _slice , _proj )
+
         kwargs [ 'data_options'       ] = data_options
         kwargs [ 'signal_options'     ] = sigoptions 
         kwargs [ 'background_options' ] = bkgoptions 
@@ -854,6 +878,10 @@ class SimFit ( MakeVar ) :
         kwargs [ 'component_options'  ] = cmpoptions 
         kwargs [ 'total_fit_options'  ] = totoptions 
 
+        kwargs [ 'combined_background_options' ] = cbkgoptions 
+        kwargs [ 'combined_component_options'  ] = ccmpoptions 
+        kwargs [ 'combined_signal_options'     ] = csigoptions 
+        
         from ostap.fitting.roocollections import KeepArgs
 
         cat_pdf  = self.categories [ category ]

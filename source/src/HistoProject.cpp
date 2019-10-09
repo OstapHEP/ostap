@@ -423,7 +423,8 @@ Ostap::StatusCode Ostap::HistoProject::project
   const std::string&  selection  ) 
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if ( nullptr  == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  else if ( dynamic_cast<TH2*>( histo ) ) { return Ostap::StatusCode ( 301 ) ; }  
   else { histo->Reset() ; } // reset the histogram 
   //
   TH1D model {} ; histo->Copy ( model ) ;
@@ -459,7 +460,8 @@ Ostap::StatusCode Ostap::HistoProject::project2
   const std::string&  selection   )
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if      ( nullptr == histo            ) { return Ostap::StatusCode ( 301 ) ; }
+  else if ( dynamic_cast<TH3*>( histo ) ) { return Ostap::StatusCode ( 301 ) ; }  
   else { histo->Reset() ; } // reset the historgam 
   //
   const bool no_cuts = trivial ( selection ) ;
@@ -499,7 +501,7 @@ Ostap::StatusCode Ostap::HistoProject::project3
   const std::string&  selection   )
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if ( nullptr  == histo ) { return Ostap::StatusCode ( 301 ) ; }
   else { histo->Reset() ; } // reset the historgam 
   //
   const bool no_cuts = trivial ( selection  ) ; 

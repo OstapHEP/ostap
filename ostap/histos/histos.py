@@ -72,26 +72,30 @@ def _h_new_init_ ( self , *args ) :
 
 # =============================================================================
 ## a bit modified 'Clone' function for histograms
-#  - it automaticlaly assign unique ID
+#  - it automatically assign unique ID
 #  - it ensures that cloned histogram is not going to die with
 #    the accidentally opened file/directory
+#  - a title can be optionally redefined 
 #  @attention clone is always goes to ROOT main memory!
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h_new_clone_ ( self , hid = '' ) :
+def _h_new_clone_ ( self , name = '' , title = ''  ) :
     """Modifiled Clone-function
     - it automatically assigns unique ID
     - it ensures that cloned histogram is not going to die with
     the accidentally opened file/directory
+    - a title can be optionally redefined 
     """
-    if not hid : hid = hID()
+    if not name : name = hID()
     #
     with ROOTCWD() :
         ROOT.gROOT.cd() 
-        nh = self._old_clone_ ( hid )
+        nh = self._old_clone_ ( name )
         nh.SetDirectory ( ROOT.gROOT ) ## ATTENTION!
         ## optionally 
-        if not nh.GetSumw2() : nh.Sumw2() 
+        if not nh.GetSumw2() : nh.Sumw2()
+        
+    if title : nh.SetTitle ( title ) 
     return nh
 
 # =============================================================================

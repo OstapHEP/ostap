@@ -55,11 +55,14 @@ class PDF (MakeVar) :
         ## name is defined via base class MakeVar 
         self.name  = name ## name is defines via base class MakeVar 
      
-        self.__signals         = ROOT.RooArgList ()
-        self.__backgrounds     = ROOT.RooArgList ()
-        self.__components      = ROOT.RooArgList ()
-        self.__crossterms1     = ROOT.RooArgSet  () 
-        self.__crossterms2     = ROOT.RooArgSet  () 
+        self.__signals               = ROOT.RooArgList ()
+        self.__backgrounds           = ROOT.RooArgList ()
+        self.__components            = ROOT.RooArgList ()
+        self.__crossterms1           = ROOT.RooArgSet  () 
+        self.__crossterms2           = ROOT.RooArgSet  () 
+        self.__combined_signals      = ROOT.RooArgList ()
+        self.__combined_backgrounds  = ROOT.RooArgList ()
+        self.__combined_components   = ROOT.RooArgList ()
         ## take care about sPlots 
         self.__splots          = []
         self.__histo_data      = None
@@ -247,16 +250,36 @@ class PDF (MakeVar) :
         
     @property
     def signals     ( self ) :
-        """The list/ROOT.RooArgList of all ``signal'' components, e.g. for visualization"""
+        """The list/ROOT.RooArgList of all ``signal'' components,
+        e.g. for visualization"""
         return self.__signals
     @property
     def backgrounds ( self ) :
-        """The list/ROOT.RooArgList of all ``background'' components, e.g. for visualization"""
+        """The list/ROOT.RooArgList of all ``background'' components,
+        e.g. for visualization"""
         return self.__backgrounds 
     @property
     def components  ( self ) :
-        """The list/ROOT.RooArgList of all ``other'' components, e.g. for visualization"""
-        return self.__components      
+        """The list/ROOT.RooArgList of all ``other'' components,
+        e.g. for visualization"""
+        return self.__components
+
+    @property
+    def combined_signals     ( self ) :
+        """The list/ROOT.RooArgList of all combined ``signal'' components,
+        e.g. for visualization"""
+        return self.__combined_signals
+    @property
+    def combined_backgrounds ( self ) :
+        """The list/ROOT.RooArgList of all combined ``background'' components,
+        e.g. for visualization"""
+        return self.__combined_backgrounds 
+    @property
+    def combined_components  ( self ) :
+        """The list/ROOT.RooArgList of all combined ``other'' components,
+        e.g. for visualization"""
+        return self.__combined_components
+
     @property 
     def crossterms1 ( self ) :
         """``cross-terms'': cross-components for multidimensional PDFs e.g.
@@ -271,7 +294,7 @@ class PDF (MakeVar) :
         - Signal(x)*Background(y)*Background(z) for 3D-fits, etc...         
         """        
         return self.__crossterms2
-
+    
     @property
     def histo_data  ( self ):
         """Histogram representation as DataSet (RooDataSet)"""
@@ -697,7 +720,18 @@ class PDF (MakeVar) :
             self._draw( self.backgrounds , frame , boptions , bbstyle )
             kwargs.pop ( 'background_options' , () )
             kwargs.pop ( 'background_style'   , () )
-
+            
+            ## draw combined ``background'' components 
+            if self.combined_backgrounds :
+                drawit   = self.draw_option ( 'draw_combined_background'    , **kwargs )
+                doptions = self.draw_option ( 'combined_background_options' , **kwargs ) 
+                dstyle   = self.draw_option (   'combined_background_style' , **kwargs )
+                if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle )
+                
+            kwargs.pop ( 'combined_background_options' , ()     )
+            kwargs.pop ( 'combined_background_style'   , ()     )
+            kwargs.pop ( 'draw_combined_backgrounds'   , drawit )
+            
             ## ugly :-(
             ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
             ct1bstyle    = self.draw_option (   'crossterm1_style' , **kwargs ) 
@@ -721,6 +755,17 @@ class PDF (MakeVar) :
             kwargs.pop ( 'component_options' , () )
             kwargs.pop ( 'component_style'   , () )
 
+            ## draw combined ``other'' components 
+            if self.combined_components :
+                drawit   = self.draw_option ( 'draw_combined_component'    , **kwargs )
+                doptions = self.draw_option ( 'combined_component_options' , **kwargs ) 
+                dstyle   = self.draw_option (   'combined_component_style' , **kwargs )
+                if drawit : self._draw ( self.combined_components , frame , doptions , dstyle )
+                
+            kwargs.pop ( 'combined_component_options' , ()     )
+            kwargs.pop ( 'combined_component_style'   , ()     )
+            kwargs.pop ( 'draw_combined_component'    , drawit )
+                    
             ## draw ``signal'' components
             soptions     = self.draw_option (    'signal_options'  , **kwargs )
             sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
@@ -728,6 +773,17 @@ class PDF (MakeVar) :
             kwargs.pop ( 'signal_options' , () )
             kwargs.pop ( 'signal_style'   , () )
 
+            ## draw combined ``signals'' components 
+            if self.combined_signals :
+                drawit    = self.draw_option ( 'draw_combined_signal'     , **kwargs )
+                doptions  = self.draw_option ( 'combined_signal_options'  , **kwargs ) 
+                dstyle    = self.draw_option (   'combined_signal_style'  , **kwargs )
+                if drawit : self._draw ( self.combined_signals , frame , doptions , dstyle )
+                
+            kwargs.pop ( 'combined_signal_options' , ()     )
+            kwargs.pop ( 'combined_signal_style'   , ()     )
+            kwargs.pop ( 'draw_combined_signal'    , drawit )
+            
             #
             ## the total fit curve
             #
@@ -742,7 +798,7 @@ class PDF (MakeVar) :
             #
             ## suppress ugly axis labels
             #
-            if not kwargs.get( 'draw_axis_title' , False ) :  
+            if not kwargs.get ( 'draw_axis_title' , False ) :  
                 frame.SetXTitle ( '' )
                 frame.SetYTitle ( '' )
                 frame.SetZTitle ( '' )
@@ -821,19 +877,33 @@ class PDF (MakeVar) :
         """
         import ostap.plotting.fit_draw as FD
 
-        keys = key , key.lower() , key.upper() 
-        
-        ##  check the explicitely provided arguments
-        for k in keys : 
-            if k in kwargs : return kwargs [ k ]
+        key_transform = lambda s : s.lower().replace('_','')
 
+        the_key = key_transform ( key ) 
+
+        ok = 'combinedback' in the_key 
+
+        ## 1. check the explicitely provided arguments
+        for k in kwargs :
+            if key_transform ( k ) == the_key :
+                if ok :
+                    print 'FOUND from kwargs!', k, kwargs[k] 
+                return kwargs[ k ]
+            
         ## check the predefined drawing options for this PDF 
-        for k in keys :  
-            if k in self.draw_options : return self.draw_options.get ( k)
-
+        for k in self.draw_options :
+            if key_transform ( k ) == the_key :
+                if ok :
+                    print 'FOUND from draw_options!', k , self.draw_options.get ( k)
+                return self.draw_options.get ( k)
+            
         ## check the default options
-        for k in keys :  
-            if hasattr ( FD , k ) : return getattr ( FD , k ) 
+        for k in dir ( FD ) :
+            if k.startswith ( '__' ) or k.endswith ( '__' ) : continue 
+            if key_transform ( k ) == the_key :
+                if ok :
+                    print 'FOUND from fit_draw', k , getattr ( FD , k )
+                return getattr ( FD , k ) 
 
         ##  use the default value 
         return default 
@@ -866,9 +936,9 @@ class PDF (MakeVar) :
         >>> pdf.add_draw_option ( 'components_style' ) = Styles ( Line (... ), Area ( ...) , ... ] 
         >>> pdf.add_draw_option ( 'signal_style'     ) = ROOT.RooFit.LineColor ( 2 )
         """
-        
+
         key = key.lower() 
-        
+
         import ostap.plotting.fit_draw as FD
         if not key in FD.keys :
             self.warning("Unknown draw_option '%s'" % key )
@@ -1177,6 +1247,16 @@ class PDF (MakeVar) :
 
         opts = self.parse_args ( dataset , *args , **kwargs )
 
+        ## skip some artifacts from MakeVars.parse_args 
+        ok = []
+        for o in opts :
+            if o.name == 'SumW2Error'      : continue
+            if o.name == 'PrintLevel'      : continue
+            if o.name == 'PrintEvalErrors' : continue
+            ok.append ( o )
+            
+        opts = tuple ( ok ) 
+        
         ## get s-Factor 
         sf   = dataset.sFactor() 
 
@@ -2657,19 +2737,19 @@ class H1D_pdf(H1D_dset,PDF) :
 # =============================================================================
 ## @class Fit1D
 #  The actual model for 1D-mass fits
-#  @param signal             PDF for 'signal'     component                 (Ostap/PDF or RooAbsPdf)
-#  @param background         PDF for 'background' component                 (Ostap/PDF or RooAbsPdf)
-#  @param othersignals       list of PDFs for other 'signal' components     (Ostap/PDF or RooAbsPdf)
-#  @param otherbackgrouds    list of PDFs for other 'background' components (Ostap/PDF or RooAbsPdf)
-#  @param others             list of 'other' components                     (Ostap/PDF or RooAbsPdf)
-#  @param name               the name of compound PDF 
-#  @param suffix             ... add this  suffix for the PDF name
-#  @param extended           build 'extended' PDF
-#  @param combine_signals    combine all signal components into single SIGNAL?
-#  @param combine_background combine all background components into single BACKGROUND?
-#  @param combine_others     combine all other components into single COMPONENT?
-#  @param recirsive          use recursive fractions for compound PDF
-#  @param xvar               the fitting variable, must be specified if components are given as RooAbsPdf
+#  @param signal              PDF for 'signal'     component                 (Ostap/PDF or RooAbsPdf)
+#  @param background          PDF for 'background' component                 (Ostap/PDF or RooAbsPdf)
+#  @param othersignals        list of PDFs for other 'signal' components     (Ostap/PDF or RooAbsPdf)
+#  @param otherbackgrouds     list of PDFs for other 'background' components (Ostap/PDF or RooAbsPdf)
+#  @param others              list of 'other' components                     (Ostap/PDF or RooAbsPdf)
+#  @param name                the name of compound PDF 
+#  @param suffix              ... add this  suffix for the PDF name
+#  @param extended            build 'extended' PDF
+#  @param combine_signals     combine all signal components into single SIGNAL?
+#  @param combine_backgrounds combine all background components into single BACKGROUND?
+#  @param combine_others      combine all other components into single COMPONENT?
+#  @param recirsive           use recursive fractions for compound PDF
+#  @param xvar                the fitting variable, must be specified if components are given as RooAbsPdf
 #  @code 
 #  gauss = Gauss_pdf( ... ) 
 #  pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background
@@ -2679,19 +2759,19 @@ class H1D_pdf(H1D_dset,PDF) :
 class Fit1D (PDF) :
     """The actual fit-model for generic 1D-fits
     Parameters
-    - signal             : PDF for 'signal'     component                 (Ostap/PDF or RooAbsPdf)
-    - background         : PDF for 'background' component                 (Ostap/PDF or RooAbsPdf)
-    - othersignals       : list of PDFs for other 'signal' components     (Ostap/PDF or RooAbsPdf)
-    - otherbackgrouds    : list of PDFs for other 'background' components (Ostap/PDF or RooAbsPdf)
-    - others             : list of 'other' components                     (Ostap/PDF or RooAbsPdf)
-    - name               : The name of compound PDF 
-    - suffix             : ... add this  suffix for the PDF name
-    - extended           : build 'extended' PDF
-    - combine_signals    : combine all signal components into single SIGNAL?
-    - combine_background : combine all background components into single BACKGROUND?
-    - combine_others     : combine all other components into single COMPONENT?
-    - recirsive          : use recursive fractions for compound PDF
-    - xvar               : the fitting variable, must be specified if components are given as RooAbsPdf
+    - signal              : PDF for 'signal'     component                 (Ostap/PDF or RooAbsPdf)
+    - background          : PDF for 'background' component                 (Ostap/PDF or RooAbsPdf)
+    - othersignals        : list of PDFs for other 'signal' components     (Ostap/PDF or RooAbsPdf)
+    - otherbackgrouds     : list of PDFs for other 'background' components (Ostap/PDF or RooAbsPdf)
+    - others              : list of 'other' components                     (Ostap/PDF or RooAbsPdf)
+    - name                : The name of compound PDF 
+    - suffix              : ... add this  suffix for the PDF name
+    - extended            : build 'extended' PDF
+    - combine_signals     : combine all signal components into single SIGNAL?
+    - combine_backgrounds : combine all background components into single BACKGROUND?
+    - combine_others      : combine all other components into single COMPONENT?
+    - recirsive           : use recursive fractions for compound PDF
+    - xvar                : the fitting variable, must be specified if components are given as RooAbsPdf
 
     >>> gauss = Gauss_pdf( ... ) 
     >>> pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background 
@@ -2828,8 +2908,9 @@ class Fit1D (PDF) :
             self.__signal      = Generic1D_pdf   ( sig , self.xvar , 'SIGNAL_' + suffix )
             self.__all_signals = ROOT.RooArgList ( sig )
             self.__sigs        = sigs 
-            self.__signal_fractions = fracs 
+            self.__signal_fractions = fracs
             self.verbose('%2d signals     are combined into single SIGNAL'     % len ( sigs ) )
+            self.combined_signals.add ( sig ) 
 
         ## combine background components into single backhround (if needed ) 
         self.__background_fractions = () 
@@ -2845,6 +2926,7 @@ class Fit1D (PDF) :
             self.__bkgs            = bkgs 
             self.__background_fractions = fracs 
             self.verbose ('%2d backgrounds are combined into single BACKGROUND' % len ( bkgs ) ) 
+            self.combined_backgrounds.add ( bkg ) 
 
         ## combine other components into single component (if needed ) 
         self.__components_fractions = () 
@@ -2860,6 +2942,7 @@ class Fit1D (PDF) :
             self.__all_components = ROOT.RooArgList ( cmp )
             self.__components_fractions = fracs 
             self.verbose('%2d components  are combined into single COMPONENT'    % len ( cmps ) )
+            self.combined_components.add ( cmp ) 
 
 
         self.__nums_signals     = [] 
@@ -3037,19 +3120,61 @@ class Fit1D (PDF) :
         """(Recursive) fractions for the compound signal components (empty for simple signal) """
         lst = [ i for i in self.__signal_fractions ]
         return tuple ( lst )
+    @fS.setter
+    def fS ( self , value ) :
 
+        if   isinstance ( value , num_types          ) : value = [ value           ]
+        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
+        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
+        elif isinstance ( value , list_types         ) : pass
+        elif isinstance ( value , ROOT.RooArgList    ) : pass
+
+        for f , v in zip ( self.__signal_fractions , value ) :
+            vv = float ( v )
+            if f.minmax() and not vv in f :
+                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+            f.setVal   ( vv ) 
+            
     @property
     def fB ( self  ) :
         """(Recursive) fractions for the compound background components (empty for simple background)"""
         lst = [ i for i in self.__background_fractions ]
         return tuple ( lst )
-    
+    @fB.setter
+    def fB ( self , value ) :
+
+        if   isinstance ( value , num_types          ) : value = [ value           ]
+        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
+        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
+        elif isinstance ( value , list_types         ) : pass
+        elif isinstance ( value , ROOT.RooArgList    ) : pass
+
+        for f , v in zip ( self.__background_fractions , value ) :
+            vv = float ( v )
+            if f.minmax() and not vv in f :
+                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+            f.setVal   ( vv ) 
+                
     @property
     def fC ( self  ) :
         """(Recursive) fractions for the compound ``other'' components (empty for no additional commponents case)"""
         lst = [ i for i in self.__components_fractions ]
         return tuple ( lst )
+    @fC.setter
+    def fC ( self , value ) :
 
+        if   isinstance ( value , num_types          ) : value = [ value           ]
+        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
+        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
+        elif isinstance ( value , list_types         ) : pass
+        elif isinstance ( value , ROOT.RooArgList    ) : pass
+
+        for f , v in zip ( self.__components_fractions , value ) :
+            vv = float ( v )
+            if f.minmax() and not vv in f :
+                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+            f.setVal   ( vv ) 
+            
     @property
     def S ( self ) :
         """Get the  yields of signal component(s) (empty for non-extended fits)

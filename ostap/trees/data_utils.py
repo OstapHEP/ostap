@@ -685,6 +685,15 @@ class Data(Files):
                       silent      = self.silent           ,
                       quick       = self.quick            )
 
+    # =========================================================================
+    ## get DataFrame for the chain
+    #  @see ROOT::RDataFrame
+    @property
+    def frame ( self ) :
+        """Get the DataFrame for the chain"""
+        from   ostap.frames.frames import DataFrame
+        return DataFrame ( self.chain )
+    
 # =============================================================================
 ## @class Data2
 #  Simple utility to access two chains in the set of ROOT-files
@@ -1032,6 +1041,15 @@ class Data2(Data):
                        missing1st  = self.missing1st        ,
                        missing2nd  = self.missing2nd        )
  
+    # =========================================================================
+    ## get DataFrame for the chain
+    #  @see ROOT::RDataFrame
+    @property
+    def frame2 ( self ) :
+        """Get the DataFrame for the chain"""
+        from   ostap.frames.frames import DataFrame
+        return DataFrame ( self.chain2 )
+    
 # =============================================================================
 
 # =============================================================================
