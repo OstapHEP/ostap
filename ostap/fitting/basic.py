@@ -881,28 +881,20 @@ class PDF (MakeVar) :
 
         the_key = key_transform ( key ) 
 
-        ok = 'combinedback' in the_key 
-
         ## 1. check the explicitely provided arguments
         for k in kwargs :
             if key_transform ( k ) == the_key :
-                if ok :
-                    print 'FOUND from kwargs!', k, kwargs[k] 
                 return kwargs[ k ]
             
         ## check the predefined drawing options for this PDF 
         for k in self.draw_options :
             if key_transform ( k ) == the_key :
-                if ok :
-                    print 'FOUND from draw_options!', k , self.draw_options.get ( k)
                 return self.draw_options.get ( k)
             
         ## check the default options
         for k in dir ( FD ) :
             if k.startswith ( '__' ) or k.endswith ( '__' ) : continue 
             if key_transform ( k ) == the_key :
-                if ok :
-                    print 'FOUND from fit_draw', k , getattr ( FD , k )
                 return getattr ( FD , k ) 
 
         ##  use the default value 
