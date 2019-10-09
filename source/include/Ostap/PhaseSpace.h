@@ -224,10 +224,8 @@ namespace Ostap
       PhaseSpaceLeft ( const std::vector<double>&      masses        , 
                        const double                    scale     = 1 ) ;      
       /// special case: true 2-body phasespace 
-      PhaseSpaceLeft ( const char*  /* tag */   , 
-                       const double m1          , 
-                       const double m2          ,
-                       const double scale    =  1 ) ;
+      PhaseSpaceLeft ( const PhaseSpace2& ps2        , 
+                       const double       scale =  1 ) ;
       /// destructor
       ~PhaseSpaceLeft () ;                                       // destructor
       // ======================================================================
@@ -239,9 +237,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the threshold 
-      double threshold  () const { return m_threshold ; }
+      double         threshold  () const { return m_threshold ; }
+      /// get the number of particles : 0 means true 2-body! 
+      unsigned short N          () const { return m_num       ; }
       /// get the scale 
-      double scale      () const { return m_scale     ; }
+      double         scale      () const { return m_scale     ; }
+      // ======================================================================
+      // const PhaseSpace2& ps2() const { return m_ps2 ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
@@ -260,13 +262,13 @@ namespace Ostap
     private:
       // ======================================================================
       /// the threshold
-      double         m_threshold ; // the threshold
+      double         m_threshold         ; // the threshold
       /// number of particles
-      unsigned short m_num       ; // number of particles
+      unsigned short m_num       { 0   } ; // number of particles
       /// the scale  factor 
-      double         m_scale     ; // the scale factor
+      double         m_scale     { 1.0 } ; // the scale factor
       /// true 2-body phase-space 
-      PhaseSpace2    m_ps2       ;
+      PhaseSpace2    m_ps2       {}      ;
       // ======================================================================
     private:
       // ======================================================================

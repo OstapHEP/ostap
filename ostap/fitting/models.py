@@ -170,6 +170,8 @@ __all__ = (
     'CSpline_pdf'          , ## positive monotonic convex or concave spline 
     'CPSpline_pdf'         , ## positive convex or concave spline
     ##
+    'PSSmear_pdf'          , ## smeared PhaseSpace-based PDF 
+    ##
     'Linear_pdf'           , ## positive linear polynom 
     'Parabolic_pdf'        , ## positive parabolic polynom  
     ## the native RooFit background shapes

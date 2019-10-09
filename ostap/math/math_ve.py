@@ -438,11 +438,8 @@ def gauss_pdf( x , mu = 0.0 , sigma = 1.0 ) :
     >>> x,mu, sigma = ....
     >>> pdf = gauss_pdf ( x  , mu , sigma )
     """
-    m =       float ( mu    )
-    s = abs ( float ( sigma ) )  
-    y      = ( VE ( x ) - m ) / s
-    ## 
-    return _gauss_pdf_ ( y ) / s if  0 < y.cov2() else _gauss_pdf_ ( y.value() ) / s
+    y =  VE ( x ) 
+    return _gauss_pdf_ ( y if 0 < y.cov2() else y.value () , mu , sigma )
 
 _gauss_cdf_ = cpp.Ostap.Math.gauss_cdf
 # =============================================================================
@@ -457,12 +454,8 @@ def gauss_cdf ( x , mu = 0.0 , sigma = 1.0 ) :
     >>> x,mu, sigma = ....
     >>> cdf = gauss_cdf ( x  , mu , sigma )
     """
-    m  = float ( mu )
-    s  = abs ( float ( sigma ) )
-    y  = ( VE ( x ) - m ) / s
-    ##
-    return _gauss_cdf_ ( y ) if 0 < y.cov2() else _gauss_cdf_ ( y.value() )
-
+    y =  VE ( x ) 
+    return _gauss_cdf_ ( y if 0 < y.cov2() else y.value () , mu , sigma )
         
 # =============================================================================
 ## FIX

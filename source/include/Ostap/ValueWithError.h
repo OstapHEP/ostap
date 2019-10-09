@@ -881,13 +881,17 @@ namespace Ostap
      *  @param x the value 
      *  @return valeu of the standard gaussian PDF  
      */
-    ValueWithError gauss_pdf ( const ValueWithError& x ) ;
+    ValueWithError gauss_pdf ( const ValueWithError& x         , 
+                               const double          mu    = 0 , 
+                               const double          sigma = 1 ) ;
     // ========================================================================
     /** \overload evaluate standard Gauss CDF 
      *  @param x the value 
      *  @return value of the standard gaussian CDF  
      */
-    ValueWithError gauss_cdf  ( const ValueWithError& x ) ;    
+    ValueWithError gauss_cdf  ( const ValueWithError& x         ,
+                                const double          mu    = 0 , 
+                                const double          sigma = 1 ) ;
     // ========================================================================    
     /** evaluate <code>hypot(x,y)</code>: \f$ \sqrt( x^2 + y^2 ) \f$
      *   @param x (INPUT) the first parameter

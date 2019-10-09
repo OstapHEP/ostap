@@ -351,7 +351,8 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
   const unsigned short num       , 
   const double         scale     ) 
   : m_threshold ( std::abs ( threshold ) )
-  , m_num       ( num )
+  , m_num       ( num   )
+  , m_scale     ( scale ) 
   , m_ps2       () 
 {
   Ostap::Assert ( 2 <= m_num , 
@@ -364,8 +365,9 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 ( const std::vector<double>& masses ,
   const double               scale  )
-  : m_threshold (  0 )
-  , m_num       ( masses.size()      )
+  : m_threshold (  0            )
+  , m_num       ( masses.size() )
+  , m_scale     ( scale ) 
   , m_ps2       () 
 {
   Ostap::Assert ( 2 <= m_num                    , 
@@ -388,13 +390,12 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 // special case: true 2-body phasespace 
 // ============================================================================
 Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
-( const char*  /* tag */   , 
-  const double m1          , 
-  const double m2          ,
-  const double scale       ) 
-  : m_threshold ( std::abs ( m1 ) + std::abs ( m2 ) ) 
-  , m_num       ( 0 ) 
-  , m_ps2 ( m1 , m2 ) 
+( const Ostap::Math::PhaseSpace2& ps2   , 
+  const double                    scale ) 
+  : m_threshold ( ps2.m1()  + ps2.m2()  ) 
+  , m_num       ( 0       ) // ATTENTION HERE!! 
+  , m_scale     ( scale   ) 
+  , m_ps2       ( ps2     ) 
 {}
 // ============================================================================
 // destructor

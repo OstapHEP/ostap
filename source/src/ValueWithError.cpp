@@ -2588,13 +2588,17 @@ Ostap::Math::interpolate
  */
 // ============================================================================
 Ostap::Math::ValueWithError
-Ostap::Math::gauss_pdf  ( const Ostap::Math::ValueWithError& x )
+Ostap::Math::gauss_pdf  
+( const Ostap::Math::ValueWithError& x     , 
+  const double                       mu    , 
+  const double                       sigma ) 
 {
-  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) ) { return gauss_pdf ( x.value() ) ; }
+  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) ) 
+  { return gauss_pdf ( x.value() , mu , sigma ) ; }
   // the value  
-  const double v =   gauss_pdf  ( x.value() ) ;
+  const double v = gauss_pdf  ( x.value() , mu , sigma ) ;
   // derivative  
-  const double d = - v * x.value() ;
+  const double d = - v * (  x.value()  - mu ) / ( sigma * sigma ) ;
   // result 
   return Ostap::Math::ValueWithError ( v  , d  * d * x.cov2() ) ;
 }
@@ -2605,13 +2609,17 @@ Ostap::Math::gauss_pdf  ( const Ostap::Math::ValueWithError& x )
  */
 // ============================================================================
 Ostap::Math::ValueWithError
-Ostap::Math::gauss_cdf  ( const Ostap::Math::ValueWithError& x )
+Ostap::Math::gauss_cdf
+( const Ostap::Math::ValueWithError& x , 
+  const double                       mu    , 
+  const double                       sigma ) 
 {
-  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) ) { return gauss_cdf ( x.value() ) ; }
+  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) )
+  {  return gauss_cdf ( x.value() , mu , sigma ) ; }
   // the value  
-  const double v = gauss_cdf ( x.value() ) ;
+  const double v = gauss_cdf ( x.value () , mu , sigma ) ;
   // derivative  
-  const double d = gauss_pdf ( x.value() )  ;
+  const double d = gauss_pdf ( x.value () , mu , sigma )  ;
   // result 
   return Ostap::Math::ValueWithError ( v  , d  * d * x.cov2() ) ;
 }

@@ -2655,7 +2655,7 @@ class Sum1D(PDF) :
         name = name if name else 'Sum_%s_%s' % (  pdf1.name , pdf2.name ) 
 
         ## initialize the base class
-        PDF.__init__ ( name , xvar )
+        PDF.__init__ ( self , name , xvar )
 
         self.__pdf1     = pdf1
         self.__pdf2     = pdf2
@@ -2663,16 +2663,19 @@ class Sum1D(PDF) :
         self.__fraction = self.make_var ( fraction ,
                                           'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
                                           'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
-                                          fraction , 0 , 1 ) 
-        self.alist1     = ROOT.RooArgList (
-            self.__pdf1.pdf ,
-            self.__pdf2.pdf )
-        self.alist2     = ROOT.RooArgList (
-            self.__fraction  )
-        self.alist3     = self.__pdf1 , self.__pdf2
+                                          fraction , 0 , 1 )
         
-        self.pdf = ROOT.RooAddPdf ( name , 
-                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1, self.alist2 )
+        self.alist1     = ROOT.RooArgList ( self.pdf1.pdf ,
+                                            self.pdf2.pdf )
+        self.alist2     = ROOT.RooArgList ( self.fraction )
+        ## self.alist3     = self.__pdf1 , self.__pdf2 ## ??? 
+        
+        self.pdf = ROOT.RooAddPdf ( name , '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
+                                    self.pdf1.pdf ,
+                                    self.pdf2.pdf ,
+                                    self.fraction )
+        ## self.alist1 ,
+        ## self.alist2 )
         
         if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
         if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
@@ -2864,17 +2867,19 @@ class Fit1D (PDF) :
         if signals :
             if signal       : raise AttributeError ( "Fit1D: ``signal''       specified for valid ``signals''!" )
             if othersignals : raise AttributeError ( "Fit1D: ``othersignals'' specified for valid ``signals''!" )
-            signal      = signals [ 0  ]
-            othersignal = signals [ 1: ]
+            signal       = signals [ 0   ]
+            othersignals = signals [ 1 : ]
+            self.debug ( 'Split signals %s into %s and %s' % ( signals , signal , othersignals  ) )                                                                   
             signals     = [] 
             
         if backgrounds :
             if background       : raise AttributeError ( "Fit1D: ``background''       specified for valid ``backgrounds''!")
             if otherbackgrounds : raise AttributeError ( "Fit1D: ``otherbackgrounds'' specified for valid ``backgrounds''!")
-            background       = backgrounds [ 0  ]
-            otherbackrgounds = backgrounds [ 1: ]
-            backgrounns      = [] 
-
+            background       = backgrounds [ 0   ]
+            otherbackgrounds = backgrounds [ 1 : ]
+            self.debug ( 'Split backgrounds %s into %s and %s' % ( backgrounds , background , otherbackgrounds ) )                                                                   
+            backgrounds      = [] 
+            
         ## wrap signal if needed 
         if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone() 
         ## if bare RooFit pdf,  fit variable must be specified
