@@ -181,7 +181,8 @@ class PDF2 (PDF) :
                 dataset  = None ,
                 nbins    = 100  ,
                 silent   = True ,
-                in_range = None , **kwargs ) :
+                in_range = None ,
+                args     = ()   , **kwargs ) :
         """ Draw the projection over 1st variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
@@ -202,7 +203,8 @@ class PDF2 (PDF) :
                            nbins    = nbins     ,
                            ybins    = 20        , ## fake 
                            silent   = silent    ,
-                           in_range = in_range  , **kwargs )
+                           in_range = in_range  ,
+                           args     = args      , **kwargs )
     
     # =========================================================================
     ## draw the projection over 2nd variable
@@ -221,7 +223,8 @@ class PDF2 (PDF) :
                 dataset  = None ,
                 nbins    = 100  ,
                 silent   = True ,
-                in_range = None , **kwargs ) :
+                in_range = None ,
+                args     = ()   , **kwargs ) :
         """
         Draw the projection over 2nd variable
         
@@ -243,7 +246,8 @@ class PDF2 (PDF) :
                            nbins    = nbins     ,
                            ybins    = 20        , ## fake
                            silent   = silent    ,
-                           in_range = in_range  , **kwargs )
+                           in_range = in_range  ,
+                           args     = args      , **kwargs )
 
     # =========================================================================
     ## draw as 2D-histograms 
@@ -283,6 +287,7 @@ class PDF2 (PDF) :
                ybins                 =   20 ,
                silent                = True ,
                in_range              = None ,
+               args                  = ()   , 
                **kwargs                     ) : 
         """
         Make 1D-plot:
@@ -346,7 +351,8 @@ class PDF2 (PDF) :
         result = PDF.draw ( self            ,
                             dataset         ,
                             nbins  = nbins  ,
-                            silent = silent ,  **args )
+                            silent = silent ,
+                            aargs  = args   , **args )
 
         self.draw_var = None
         return result 

@@ -558,7 +558,7 @@ class PDF (MakeVar) :
         return result, frame 
 
     ## helper method to draw set of components 
-    def _draw ( self , what , frame , options , style = None ) :
+    def _draw ( self , what , frame , options , style = None , args = () ) :
         """ Helper method to draw set of components
         """
 
@@ -583,7 +583,8 @@ class PDF (MakeVar) :
             
             for s in st         : command.add ( s )
             for o in options    : command.add ( o ) 
-
+            for a in args       : command.add ( a )
+ 
             self.pdf .plotOn ( frame , command )
             
             ncmps = [ c.GetName() for c in cmps ]
@@ -635,7 +636,8 @@ class PDF (MakeVar) :
                dataset               = None ,
                nbins                 = 100  ,   ## Frame binning
                silent                = True ,   ## silent mode ?
-               style                 = None ,   ## use another style ? 
+               style                 = None ,   ## use another style ?
+               args                  = ()   , 
                **kwargs                     ) :
         """  Visualize the fits results
         >>> r,f = model.draw ( dataset )
@@ -712,8 +714,15 @@ class PDF (MakeVar) :
             if dataset and binned and nbins :
                 data_options = data_options + ( ROOT.RooFit.Binning ( nbins ) , )
 
-            if dataset : dataset .plotOn ( frame , ROOT.RooFit.Invisible() , *data_options )
-            
+            if dataset :
+                command    = ROOT.RooLinkedList()
+                for o in data_options : command.add ( o )
+                for a in args         : command.add ( a )
+                invisible = ROOT.RooFit.Invisible()  
+                command.add ( invisible ) 
+                dataset .plotOn ( frame , command )
+                del command
+                
             ## draw various ``background'' terms
             boptions     = self.draw_option ( 'background_options' , **kwargs ) 
             bbstyle      = self.draw_option (   'background_style' , **kwargs )
@@ -726,7 +735,7 @@ class PDF (MakeVar) :
                 drawit   = self.draw_option ( 'draw_combined_background'    , **kwargs )
                 doptions = self.draw_option ( 'combined_background_options' , **kwargs ) 
                 dstyle   = self.draw_option (   'combined_background_style' , **kwargs )
-                if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle )
+                if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle , args )
                 
             kwargs.pop ( 'combined_background_options' , ()   )
             kwargs.pop ( 'combined_background_style'   , ()   )
@@ -736,7 +745,7 @@ class PDF (MakeVar) :
             ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
             ct1bstyle    = self.draw_option (   'crossterm1_style' , **kwargs ) 
             if hasattr ( self , 'crossterms1' ) and self.crossterms1 : 
-                self._draw( self.crossterms1 , frame , ct1options , ct1bstyle )
+                self._draw( self.crossterms1 , frame , ct1options , ct1bstyle , args )
             kwargs.pop ( 'crossterm1_options' , () )
             kwargs.pop ( 'crossterm1_style' , () )
 
@@ -744,14 +753,14 @@ class PDF (MakeVar) :
             ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs )
             ct2bstyle    = self.draw_option (   'crossterm2_style' , **kwargs ) 
             if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
-                self._draw( self.crossterms2 , frame , ct2options , ct2bstyle )
+                self._draw( self.crossterms2 , frame , ct2options , ct2bstyle , args )
             kwargs.pop ( 'crossterm2_options' , () )
             kwargs.pop ( 'crossterm2_style'   , () )
 
             ## draw ``other'' components
             coptions     = self.draw_option (  'component_options' , **kwargs )
             cbstyle      = self.draw_option (    'component_style' , **kwargs )
-            self._draw( self.components , frame , coptions , cbstyle )
+            self._draw( self.components , frame , coptions , cbstyle , args )
             kwargs.pop ( 'component_options' , () )
             kwargs.pop ( 'component_style'   , () )
 
@@ -760,7 +769,7 @@ class PDF (MakeVar) :
                 drawit   = self.draw_option ( 'draw_combined_component'    , **kwargs )
                 doptions = self.draw_option ( 'combined_component_options' , **kwargs ) 
                 dstyle   = self.draw_option (   'combined_component_style' , **kwargs )
-                if drawit : self._draw ( self.combined_components , frame , doptions , dstyle )
+                if drawit : self._draw ( self.combined_components , frame , doptions , dstyle , args )
                 
             kwargs.pop ( 'combined_component_options' , ()   )
             kwargs.pop ( 'combined_component_style'   , ()   )
@@ -769,7 +778,7 @@ class PDF (MakeVar) :
             ## draw ``signal'' components
             soptions     = self.draw_option (    'signal_options'  , **kwargs )
             sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
-            self._draw( self.signals , frame , soptions , sbstyle )
+            self._draw( self.signals , frame , soptions , sbstyle , args )
             kwargs.pop ( 'signal_options' , () )
             kwargs.pop ( 'signal_style'   , () )
 
@@ -778,7 +787,7 @@ class PDF (MakeVar) :
                 drawit    = self.draw_option ( 'draw_combined_signal'     , **kwargs )
                 doptions  = self.draw_option ( 'combined_signal_options'  , **kwargs ) 
                 dstyle    = self.draw_option (   'combined_signal_style'  , **kwargs )
-                if drawit : self._draw ( self.combined_signals , frame , doptions , dstyle )
+                if drawit : self._draw ( self.combined_signals , frame , doptions , dstyle , args )
                 
             kwargs.pop ( 'combined_signal_options' , ()   )
             kwargs.pop ( 'combined_signal_style'   , ()   )
@@ -793,7 +802,12 @@ class PDF (MakeVar) :
             #
             ## draw data once more
             #
-            if dataset : dataset  .plotOn ( frame , *data_options )            
+            if dataset :
+                command    = ROOT.RooLinkedList()
+                for o in data_options : command.add ( o )
+                for a in args         : command.add ( a ) 
+                dataset .plotOn ( frame , command )
+                del command
 
             #
             ## suppress ugly axis labels

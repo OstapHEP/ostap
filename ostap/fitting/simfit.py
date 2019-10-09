@@ -448,6 +448,7 @@ class Sim1D(PDF) :
                dataset        ,  ## must be specified!
                nbins   =  100 ,
                silent  = True ,
+               args    = ()   , 
                **kwargs       ) :
         """
         Draw the PDF&data for the given   category
@@ -497,7 +498,8 @@ class Sim1D(PDF) :
             return PDF.draw ( self ,
                               dataset = dataset ,
                               nbins   = nbins   ,
-                              silent  = silent  , **kwargs )
+                              silent  = silent  ,
+                              args    = args    , **kwargs )
         
         
 # =============================================================================

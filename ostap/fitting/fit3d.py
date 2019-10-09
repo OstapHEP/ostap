@@ -161,12 +161,13 @@ class PDF3 (PDF2) :
     #  fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
     #
     #  @endcode 
-    def draw1 ( self            ,
+    def draw1 ( self             ,
                 dataset   = None ,
                 nbins     = 100  ,
                 silent    = True ,
                 in_range2 = None ,
-                in_range3 = None , **kwargs ) :
+                in_range3 = None ,
+                args      = ()   , **kwargs ) :
         """ Draw the projection over 3rd variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
@@ -195,7 +196,8 @@ class PDF3 (PDF2) :
                            nbins    = nbins     ,
                            ybins    = 20        , ## fake 
                            silent   = silent    ,
-                           in_range = in_range  , **kwargs )
+                           in_range = in_range  ,
+                           args     = args      , **kwargs )
 
 
     # =========================================================================
@@ -216,7 +218,8 @@ class PDF3 (PDF2) :
                 nbins     = 100  ,
                 silent    = True ,
                 in_range1 = None ,
-                in_range3 = None , **kwargs ) :
+                in_range3 = None ,
+                args      = ()   , **kwargs ) :
         """ Draw the projection over 2nd variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
@@ -245,7 +248,8 @@ class PDF3 (PDF2) :
                            nbins    = nbins     ,
                            ybins    = 20        , ## fake 
                            silent   = silent    ,
-                           in_range = in_range  , **kwargs )
+                           in_range = in_range  ,
+                           args     = args      , **kwargs )
 
 
     # =========================================================================
@@ -265,7 +269,8 @@ class PDF3 (PDF2) :
                 nbins     = 100  ,
                 silent    = True ,
                 in_range1 = None ,
-                in_range2 = None , **kwargs ) :
+                in_range2 = None ,
+                args      = ()   ,  **kwargs ) :
         """ Draw the projection over 3rd variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
@@ -294,18 +299,20 @@ class PDF3 (PDF2) :
                            nbins    = nbins     ,
                            ybins    = 20        , ## fake 
                            silent   = silent    ,
-                           in_range = in_range  , **kwargs )
+                           in_range = in_range  ,
+                           args     = args      , **kwargs )
     
     
     # =========================================================================
     ## make 1D-plot
-    def draw ( self                         ,
-               drawvar               = None ,
-               dataset               = None ,
-               nbins                 =  100 ,
-               silent                = True ,
-               in_range              = None ,
-               **kwargs                     ) : 
+    def draw ( self            ,
+               drawvar  = None ,
+               dataset  = None ,
+               nbins    =  100 ,
+               silent   = True ,
+               in_range = None ,
+               args     = ()   , 
+               **kwargs        ) : 
         """
         Make 1D-plot:
         """
@@ -317,7 +324,8 @@ class PDF3 (PDF2) :
                             dataset  = dataset  ,
                             nbins    = nbins    ,
                             silent   =  silent  ,
-                            in_range = in_range , **kwargs )
+                            in_range = in_range ,
+                            args     = args     , **kwargs )
                             
     # =========================================================================
     ## fit the 3D-histogram (and draw it)

@@ -238,7 +238,8 @@ class Efficiency ( object ) :
     def draw ( self ,
                dataset = None  ,
                nbins   = 100   ,
-               silent  = False ,  **kwargs ) :
+               silent  = False ,
+               args    = ()    , **kwargs ) :
         """Draw the efficiency (and the dataset)
         >>> dataset = ... 
         >>> eff     = Efficiency1D( ... )
@@ -254,7 +255,8 @@ class Efficiency ( object ) :
         
         return self.pdf_draw.draw ( dataset         ,
                                     nbins  = nbins  ,
-                                    silent = silent , **kwargs )
+                                    silent = silent ,
+                                    args   = args   , **kwargs )
     
 
 # =============================================================================
