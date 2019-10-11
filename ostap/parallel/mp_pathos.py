@@ -134,20 +134,28 @@ class WorkManager ( object ) :
                 from ostap.utils.utils import gen_password 
                 secret = gen_password ( 16 )
                 
-            self.__ppservers = [
-                ppServer ( remote                    ,
-                           environment = environment ,
-                           script      = script      ,
-                           profile     = profile     ,
-                           secret      = secret      ,
-                           timeout     = timeout     ) for remote in ppservers ]
+            ppsrvs = [ ppServer ( remote                    ,
+                                  environment = environment ,
+                                  script      = script      ,
+                                  profile     = profile     ,
+                                  secret      = secret      ,
+                                  timeout     = timeout     ) for remote in ppservers ]
+            
+            ppbad  = [ p for p in ppsrvs if not p.pid ]
+            ppgood = [ p for p in ppsrvs if     p.pid ]
+            
+            self.__ppservers = tuple ( ppgood ) 
+            
+            if ppbad :
+                rs = [ p.remote_host for p in ppbad ] 
+                logger.warning ('Failed to start remote ppservers at %s' %  rs ) 
 
             ## if remote servers are available, reduce a bit the load for local server
             ## if ncpus == 'autodetect' or ncpus == 'auto' :
             ##    self.ncpus = max  ( 0 , self.ncpus - 2 )
             
-            ##  some trick to setup the password.
-            ## unfortnuately  ParallelPool interface does not allow it :-( 
+            ## some trick to setup the password.
+            ## unfortunately ParallelPool interface does not allow it :-( 
             import pathos.parallel as PP
             _ds = PP.pp.Server.default_secret 
             PP.pp.Server.default_secret = secret 

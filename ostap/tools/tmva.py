@@ -239,12 +239,13 @@ class Trainer(object):
                    signal                     ,  # signal sample/tree
                    background                 ,  # background sample/tree 
                    signal_cuts       = ''     ,  # signal cuts 
-                   background_cuts   = ''     ,  # background cuts 
+                   background_cuts   = ''     ,  # background cuts                   
                    spectators        = []     ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
                    configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents" ,
                    signal_weight     = None   ,                
                    background_weight = None   ,
+                   prefilter         = ''     ,  ## prefilter cuts before TMVA data loader 
                    ##
                    output_file       = ''     ,  ## the name of output file
                    verbose           = True   ,
@@ -287,12 +288,17 @@ class Trainer(object):
         self.__background        = background
         self.__background_cuts   = background_cuts 
         self.__background_weight = background_weight
+
+        self.__prefilter         = ROOT.TCut ( prefilter ) 
+        
         self.__category          = int ( category )
         self.__make_plots        = True if make_plots else False
         
         self.__spectators        = [] 
         
-        self.__verbose = True if verbose else False 
+        ## self.__verbose = True if verbose else False 
+        self.__verbose = True if ( verbose and  self.category <= 0 ) else False 
+
         self.__name    = name 
 
         self.__logging           = False
@@ -413,6 +419,11 @@ class Trainer(object):
     def background_weight ( self ) :
         """``background_weight'' : weight to be applied for ``background'' sample"""
         return self.__background_weight
+
+    @property
+    def prefilter ( self ) :
+        """``prefilter'' : cuts ot be applied/prefilter before processing"""
+        return self.__prefilter
     
     @property
     def bookingoptions ( self ) :
@@ -607,25 +618,27 @@ class Trainer(object):
                 self.bookingoptions   )
 
             factory.SetVerbose( self.verbose )
-
         
             ## 
             dataloader = ROOT.TMVA.DataLoader ( self.dirname )
 
             #
+            all_vars = [] 
             for v in self.variables :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
+                all_vars.append ( vv[0] ) 
                 dataloader.AddVariable  ( *vv )    
             logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) ) 
 
             for v in self.spectators :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )             
+                all_vars.append ( vv[0] ) 
                 dataloader.AddSpectator ( *vv )
                 #
             if self.spectators : 
-                logger.info ( "Trainer(%s):        spectators:%s" % ( self.name , self.spectators ) )
+                logger.info ( "Trainer(%s):        spectators:``%s''" % ( self.name ,      self.spectators ) )
             #            
             if self.signal_cuts :
                 logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) )
@@ -633,6 +646,31 @@ class Trainer(object):
             if self.background_cuts :
                 logger.info ( "Trainer(%s): Background   cuts:``%s''" % ( self.name , self.background_cuts ) )
             #
+            if self.prefilter :
+                if self.verbose : logger.info ( 'Start data pre-filtering before TMVA processing' )
+                all_vars.append   ( self.prefilter )
+                if self.signal_cuts     : all_vars.append ( self.signal_cuts     )
+                if self.background_cuts : all_vars.append ( self.background_cuts )
+                
+                import ostap.trees.trees
+                avars = self.signal.the_variables ( all_vars )
+
+                import ostap.trees.cuts 
+                cuts  = ROOT.TCut ( self.prefilter )
+                
+                scuts = { 'PreSelect' : cuts , 'Signal'     : self.signal_cuts     }
+                bcuts = { 'PreSelect' : cuts , 'Background' : self.background_cuts }
+
+                from ostap.frames.tree_reduce import ReduceTree as RT
+                silent = not self.verbose or not self.category in ( 0, -1 )
+                self.__sigrt = RT ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
+                if self.verbose : logger.info ( 'Signal     prefilter  %s' %  str ( self.__SigRT ) )                
+                self.__bkgrt = RT ( self.background , selection = bcuts , save_vars = avars , silent = silent )
+                if self.verbose : logger.info ( 'Background prefilter  %s' %  str ( self.__BkgRT ) )
+                                
+                self.__signal     = self.__sigrt.chain
+                self.__background = self.__bkgrt.chain
+                
             if self.verbose :
                 sc = ROOT.TCut ( self.    signal_cuts )
                 bc = ROOT.TCut ( self.background_cuts )

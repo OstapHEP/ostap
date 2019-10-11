@@ -151,7 +151,11 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         verbose        = True     ,
         ## make_plots     = False    ,   
         logging        = True     ,  ## produce  log-files 
-        parallel       = True     )  ## parallel training
+        parallel       = True     ,  ## parallel training
+        prefilter      = 'var1>-1.8'
+        
+        ## parallel_conf  = { 'ncpus' : 0 , 'ppservers' : 'auto' }
+        )
 
     from ostap.utils.timing import timing
 

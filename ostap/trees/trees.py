@@ -1785,7 +1785,7 @@ def the_variables ( tree , expression , *args ) :
 
         del tf
 
-    vvars  = list ( vars )
+    vvars    = list ( vars )
     
     leaves   = tree.leaves   ()
     branches = tree.branches ()
@@ -1892,75 +1892,6 @@ def active_branches ( tree , *vars ) :
     """
     return ActiveBranches ( tree , *vars ) 
     
-# ===============================================================================
-## Reduce the tree/chain
-#  @code
-#  tree = ....
-#  reduced1 = tree.reduce  ( 'pt>1' )
-#  reduced2 = tree.reduce  ( 'pt>1' , vars = [ 'p', 'pt' ,'q' ] )
-#  reduced3 = tree.reduce  ( 'pt>1' , no_vars = [ 'Q', 'z' ,'x' ] )
-#  reduced4 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } )
-#  reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , fname = 'OUTPUT.root' )
-#  @endcode
-def _rt_reduce_  ( tree          ,
-                   cuts          ,
-                   vars     = () , 
-                   no_vars  = () ,
-                   new_vars = {} ,
-                   fname    = '' ) :
-    """ Reduce the tree/chain
-    >>> tree = ....
-    >>> reduced1 = tree.reduce  ( 'pt>1' )
-    >>> reduced2 = tree.reduce  ( 'pt>1' , vars = [ 'p', 'pt' ,'q' ] )
-    >>> reduced3 = tree.reduce  ( 'pt>1' , no_vars = [ 'Q', 'z' ,'x' ] )
-    >>> reduced4 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } )
-    >>> reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , fname = 'OUTPUT.root' )
-    """
-    
-    from ostap.core.core       import strings as strings_ 
-    import ostap.frames.frames
-    
-    if not fname :
-        import ostap.utils.cleanup as CU
-        fname = CU.CleanUp.tempfile ( suffix = '.root' )
-        logger.debug ( 'reduce: temporary file will be used: %s' % fname )
-
-    frame = Ostap.DataFrame ( tree , enable = True )
-    for k in new_vars :
-        v     = new_vars[k]
-        frame = frame.Define ( k , v )
-
-    if cuts :
-        frame = frame.Filter ( cuts , 'CUTS' )
-
-    variables = set() 
-    if   vars    :
-        for v in vars     : variables.add ( v )
-        for v in new_vars : variables.add ( v )
-    elif no_vars :
-        variables += set  ( self.branches () )
-        variables += set  ( new_vars.keys () )
-        variables -= set  ( np_vars          )
-
-    report = frame.Report()
-    if variables :
-        variables = list     ( variables )  
-        variables = strings_ ( variables )
-        snapshot = frame.Snapshot ( tree.GetName() , fname , variables )
-    else : 
-        snapshot = frame.Snapshot ( tree.GetName() , fname )
-
-    from ostap.frames.frames import report_prnt
-    title =  'Tree/Frame reduce '
-    logger.info ( title + '\n%s' % report_prnt ( report , title , '# ') )
-
-    assert os.path.exists ( fname ) , 'No output file is found %s' %  fname 
-    
-    chain = ROOT.TChain ( tree.GetName () )
-    chain.Add ( fname )
-    return chain
-
-ROOT.TTree. reduce = _rt_reduce_
 
 # =============================================================================
 ## files and utilisties for TTree/TChain "serialization"
@@ -2015,6 +1946,8 @@ class Chain(CleanUp) :
         same_host      = origin == self.__host
         files_         = []
 
+        self.__lens    = ()
+        
         for fname , finfo in file_infos :
             if   same_host : files_.append ( fname )
             else :
@@ -2344,7 +2277,36 @@ class Chain(CleanUp) :
         """Delegate all other attributes to the underlying chain object"""
         return getattr  ( self.chain , attr )
 
+    # =========================================================================
+    ## add/merge two chains 
+    def __add__ ( self , other ) :
+        """Add/merge two chains
+        """
+        if  0 != self.first   : return NotImplemented 
+        if -1 != self.nevents : return NotImplemented
 
+        if   isinstance ( other , Chain ) and self.name == other.name and\
+               0 == other.first and -1 == other.nevents :
+            
+            files1 = set  ( self.files  )
+            files2 = set  ( other.files ) 
+            files  = list ( files1 | files2 )
+            files.sort()
+            
+            return Chain ( name = self.name , files = files )
+        
+        elif isinstance ( other , ROOT.TChain ) and self.name != other.name :
+            
+            files1 = set  ( self.files      )
+            files2 = set  ( other.files()   )  
+            files  = list ( files1 | files2 )
+            files.sort ()
+            
+            return Chain ( name = self.name , files = files )
+        
+        return NotImplemented
+        
+        
 # =============================================================================
 ## @class Tree
 #  simple class to keep 'persistent' definition of the tree
@@ -2505,7 +2467,6 @@ _new_methods_       = (
     ROOT.TTree.the_variables    ,
     ROOT.TTree.add_new_branch   ,
     ROOT.TTree.add_reweighting  ,
-    ROOT.TTree.reduce           ,
     ##
     ROOT.TLeaf.get_type         ,
     ROOT.TLeaf.get_type_short   ,

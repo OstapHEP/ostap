@@ -421,6 +421,8 @@ class Data(Files):
         ## we will need Ostap machinery for trees&chains here
         import ostap.trees.trees 
 
+        self.__quick = True if quick else False
+        
         ## decorate files 
         if isinstance ( files , str ) : files = [ files ]
 
@@ -444,7 +446,12 @@ class Data(Files):
             self.silent = silent
             self.files  = self._quick_add_ ( self.chain ,  files )
             if not self.silent : logger.info ('Loaded: %s' % self )
-                
+
+    @property
+    def  quick ( self ) :
+        """``quick'' :  quick processing?"""
+        return self.__quick
+    
     ## can ``quick-add'' be applied for certain patterns?
     def _use_quick_ ( self , files ) :
         """Can ``quick-add'' be applied for certain patterns?
@@ -476,14 +483,14 @@ class Data(Files):
         state = Files.__getstate__( self )
         state [ 'e_list1' ] = self.e_list1
         state [ 'chain'   ] = self.chain.GetName()
-        
+        stat  [ 'quick'   ] = self.quick 
         return state
 
     ## unpickling 
     def __setstate__ ( self , state ) :
 
         Files.__setstate__ ( self , state )
-        
+        self.__quick     = state.get('quick'      , False )
         self.e_list1     = state.get('e_list1'    , set() )
         self.chain       = ROOT.TChain( state['chain'] )
         for f in  self.files :   self.chain.Add ( f ) 

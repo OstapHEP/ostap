@@ -71,6 +71,7 @@ class AddChopping(Task) :
             
     ## get the results 
     def results  ( self ) : return self.__output 
+
 # ===================================================================================
 ## @class ChopperTraining
 #  parallel procession for TMVA chopping
@@ -195,10 +196,10 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
     return nc
 
 # =============================================================================
-## Perform parallel traning of TMVA/Chopping
+## Perform parallel training of TMVA/Chopping
 #  - internal  function for ostap.tools.chopping.Trainer
 #  @see  ostap.tools.chopping.Trainer
-def chopping_training ( chopper ) :
+def chopping_training ( chopper , ncpus = 'autodetect' , ppservers = () ) :
     """Perform parallel traning of TMVA/Chopping
     - internal  function for ostap.tools.chopping.Trainer
     - see  ostap.tools.chopping.Trainer
@@ -206,8 +207,8 @@ def chopping_training ( chopper ) :
 
     import sys
     
-    task = ChopperTraining()
-    wmgr = WorkManager ( silent = False )
+    task = ChopperTraining ()
+    wmgr = WorkManager ( silent = False , ncpus = ncpus , ppservers = ppservers )
     
     params = [ ( i , chopper ) for i in range ( chopper.N ) ]
     

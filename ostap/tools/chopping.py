@@ -189,15 +189,18 @@ class Trainer(object) :
                    spectators        = []            ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
                    configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ,
-                   signal_weight     = None          ,                
-                   background_weight = None          ,                                     
-                   name              = 'TMVAChopper' ,   # the name 
-                   verbose           = False         ,   # verbose ? 
-                   chop_signal       = False         ,   # chop the signal     ?
-                   chop_background   = True          ,   # chop the background ?
-                   logging           = True          ,   # create log-files    ?
-                   make_plots        = True          ,   # make standard plots ?
-                   parallel          = True          ) : # paralell trainingg  ? 
+                   signal_weight     = None                  ,                
+                   background_weight = None                  ,
+                   prefilter         = ''                    ,   # prefilter cuts before TMVA data loader 
+                   ##
+                   name              = 'TMVAChopper'         ,   # the name 
+                   verbose           = False                 ,   # verbose ? 
+                   chop_signal       = False                 ,   # chop the signal     ?
+                   chop_background   = True                  ,   # chop the background ?
+                   logging           = True                  ,   # create log-files    ?
+                   make_plots        = True                  ,   # make standard plots ?
+                   parallel          = True                  ,   # parallel training  ? 
+                   parallel_conf     = {}                    ) : # parallel configuration ? 
         
         """Create TMVA ``chopping'' trainer
         
@@ -222,8 +225,11 @@ class Trainer(object) :
 
         self.__chop_signal     = True if chop_signal     else False 
         self.__chop_background = True if chop_background else False 
-        self.__parallel        = True if parallel        else False
+        self.__parallel        = True if parallel        else False 
         self.__logging         = True if logging         else False
+        
+        self.__parallel_conf   = {}
+        self.__parallel_conf.update ( parallel_conf )
         
         assert  self.__chop_signal or self.__chop_background, "Neither signal nor background chopping" 
         
@@ -233,10 +239,11 @@ class Trainer(object) :
         self.__signal            = signal     
         self.__background        = background 
 
-        self.__methods           = tuple(methods) 
+        self.__methods           = tuple ( methods) 
         self.__signal_weight     = signal_weight 
         self.__signal_cuts       = ROOT.TCut ( signal_cuts )     
-        
+
+        self.__prefilter         = ROOT.TCut ( prefilter   )
         self.__background_weight = background_weight 
         self.__background_cuts   = ROOT.TCut ( background_cuts ) 
 
@@ -281,8 +288,57 @@ class Trainer(object) :
             st = hb2.stat()
             if 0 >=  st.min()  : logger.warning ("Some background categories are empty!")                 
             logger.info('Background category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
+        
+        if self.prefilter :
+            
+            ##if self.verbose :
+            all_vars = [ self.prefilter ]           
+            for v in self.variables  :
+                vv = v
+                if isinstance ( vv , str ) : vv = ( vv , 'F' )
+                all_vars.append ( vv[0] ) 
+            for v in self.spectators :
+                vv = v
+                if isinstance ( vv , str ) : vv = ( vv , 'F' )
+                all_vars.append ( vv[0] )
+                
+            if self.signal_cuts     : all_vars.append ( self.signal_cuts     )
+            if self.background_cuts : all_vars.append ( self.background_cuts )
 
+            ## do not forget to process the chopping category index!
+            all_vars.append ( self.category ) 
+                
+            import ostap.trees.cuts 
+            cuts  = ROOT.TCut ( self.prefilter )            
+            scuts = { 'PreSelect' : cuts , 'Signal'     : self.signal_cuts     }
+            bcuts = { 'PreSelect' : cuts , 'Background' : self.background_cuts }
 
+            import ostap.trees.trees
+            avars = self.signal.the_variables ( all_vars )
+            
+            if self.parallel :
+                import ostap.parallel.parallel_reduce as TR
+            else :
+                import ostap.frames.tree_reduce       as TR
+
+            silent = not self.verbose 
+            logger.info ( 'Pre-filter Signal     before processing' )
+            self.__SigTR = TR.reduce ( signal             ,
+                                       selection = scuts  ,
+                                       save_vars = avars  ,
+                                       silent    = silent )
+            logger.info ( 'Pre-filter Background before processing' )
+            self.__BkgTR = TR.reduce ( background         ,
+                                       selection = bcuts  ,
+                                       save_vars = avars  ,
+                                       silent    = silent )
+            
+            signal     = self.__SigTR.chain
+            background = self.__BkgTR.chain
+                
+            ## do not propagate prefilters to TMVA
+            self.__prefilter = ''
+                        
         ##  trick to please Kisa 
         from ostap.trees.trees import Chain
         self.__signal            = Chain ( signal     ) 
@@ -319,7 +375,7 @@ class Trainer(object) :
             bcuts = icategory * bcuts if bcuts else icategory
 
         mp = self.make_plots and ( self.verbose or 0 == i ) 
-        t  = TMVATrainer ( methods           = self.methods           ,
+        t  = TMVATrainer ( methods           = self.methods          ,
                           variables         = self.variables         ,
                           signal            = self.signal            ,
                           background        = self.background        ,
@@ -328,16 +384,18 @@ class Trainer(object) :
                           configuration     = self.configuration     ,
                           signal_weight     = self.signal_weight     ,
                           background_weight = self.background_weight ,
-                          output_file       = ''              , 
+                          prefilter         = self.prefilter         ,
                           ##
-                          signal_cuts       = scuts           , 
-                          background_cuts   = bcuts           ,
+                          output_file       = ''                     , 
                           ##
-                          name              = nam             ,
-                          verbose           = self.verbose    ,
-                          logging           = self.logging    ,
-                          make_plots        = mp              ,
-                          category          = i               )
+                          signal_cuts       = scuts                  , 
+                          background_cuts   = bcuts                  ,
+                          ##
+                          name              = nam                    ,
+                          verbose           = self.verbose           ,
+                          logging           = self.logging           ,
+                          make_plots        = mp                     ,
+                          category          = i                      )
         
         return t
     
@@ -370,6 +428,11 @@ class Trainer(object) :
     def parallel ( self ) :
         """``parallel'' : use parallelisation for training"""
         return self.__parallel
+
+    @property
+    def parallel_conf ( self ) :
+        """``parallel_conf'' : configuration for parallel processing"""
+        return self.__parallel_conf
     
     @property
     def logging  ( self ) :
@@ -441,6 +504,11 @@ class Trainer(object) :
         """``background_weight'' : weight to be applied for ``background'' sample"""
         return self.__background_weight
 
+    @property
+    def prefilter ( self ) :
+        """``prefilter'' : cuts ot be applied/prefilter before processing"""
+        return self.__prefilter
+    
     @property
     def bookingoptions ( self ) :
         """``bookingoptions'' : options used to book TMVA::Factory"""
@@ -514,7 +582,7 @@ class Trainer(object) :
         >>> output_files  = trainer. output_files ## output ROOT files 
         >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
         """
-        result = self.p_train() if self.parallel else self.s_train()
+        result = self.p_train () if self.parallel else self.s_train ()
 
         if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
             try :
@@ -632,7 +700,7 @@ class Trainer(object) :
     ## use the parallel training 
     def p_train ( self ) :
         """The main method: training of all subsamples in parallel  
-        - Use the trainer for paralell training 
+        - Use the trainer for parallel training 
         >>> trainer.p_train()
         
         - Get  results from the  trainer
@@ -643,9 +711,9 @@ class Trainer(object) :
         """
         from ostap.parallel.parallel_chopping import chopping_training as _training_
         
-        ##  train it! 
-        results = _training_ ( self )
-
+        ##  train it!
+        results = _training_ ( self , **self.parallel_conf )
+        
         assert self.N == len ( results [0] ) , 'Invalid number of weights files '
         assert self.N == len ( results [1] ) , 'Invalid number of   class files '
         assert self.N == len ( results [2] ) , 'Invalid number of  output files '
