@@ -1478,9 +1478,9 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     snapshot = frame . Snapshot ( 'tree' , tf.filename , _strings ( *avars ) )
 
                 if not silent :
-                    from ostap.frames.frames import report_prnt
+                    from ostap.frames.frames import report_print
                     title =  'Tree -> Frame -> Tree filter/transformation '
-                    logger.info ( title + '\n%s' % report_prnt ( report , title , '# ') )
+                    logger.info ( title + '\n%s' % report_print ( report , title , '# ') )
                     
                 total_0 = -1
                 for c in report :

@@ -252,7 +252,7 @@ class Weight(object) :
     #  Helper class to keep information about single reweighting
     #  - accessor : an accessor function that extracts the variable(s)
     #               from  TTree/TChain/RooDataSet
-    #  - address  : the  address in DBASE, where reweigftjnig callable(s) is/are stored
+    #  - address  : the  address in DBASE, where reweighting callable(s) is/are stored
     #  - merge    : merge list of callables from DB into the single callable ?
     #  - skip     : use only certain elements from the list of callables from DBASE
     #

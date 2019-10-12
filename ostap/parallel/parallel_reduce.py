@@ -72,15 +72,26 @@ class  ReduceTask(Task) :
         cname = rt.chain.GetName()
         cfile = rt.output
         
-        return Chain ( name = cname ,  files = [ cfile ] ) 
+        return Chain ( name = cname ,  files = [ cfile ] ) , rt.table 
     
     ## merge results/datasets 
     def merge_results ( self, result ) :
         
         if result :
             if not self.__output : self.__output = result 
-            else                 : self.__output = self.__output + result
-            
+            else                 :
+                a , b = self.__output
+                c , d = result
+                m     = []
+                if len ( b ) != d : logger.warning ( 'merge: mismatch in table size!!')
+                for i , j in zip ( b , d ) :
+                    n1, p1, a1 = i
+                    n2, p2, a2 = j
+                    if n1 != n2 : logger.warning ('merge: mismatch in row names!')
+                    item = n1 , p1+p2 , a1 + a1                    
+                    m.append ( item )
+                self.__output = a + c , m 
+                                                         
     ## get the results 
     def results ( self ) :
         return self.__output
@@ -120,8 +131,6 @@ def reduce ( chain               ,
                               addselvars = addselvars ,
                               silent     = silent     )
     
-
-    
     ch   = Chain ( chain ) 
 
     task = ReduceTask ( selection  ,
@@ -133,9 +142,14 @@ def reduce ( chain               ,
     trees = ch.split     ( max_files = 1  )
     wmgr.process         ( task , trees   )
 
-    result = task.results ()
+    result , table  = task.results ()
     for i in result.files : result.trash.add ( i )
-    
+
+    if not silent :
+        from ostap.frames.frames import report_print_table 
+        title = 'Tree -> Frame -> Tree filter/transformation'
+        logger.info ( 'Reduce tree:\n%s' % report_print_table ( table , title , '# ' ) )
+        
     if not output : return result
     
     reduced = ReduceTree ( result.chain        ,

@@ -34,13 +34,13 @@ from ostap.core.ostap_types import string_types
 _TmpDir = None
 if not _TmpDir :
     ## 1) check the environment variable OSTAP_TMPDIR 
-    _TmpDir = os.environ.get('OSTAP_TMPDIR',None)
+    _TmpDir = os.environ.get  ( 'OSTAP_TMPDIR' , None )
 if not _TmpDir :
     ## 2) check the configuration file 
     import ostap.core.config as OCC 
     _TmpDir = OCC.general.get ( 'TmpDir' , None )
     del OCC 
-if not _TmpDir : _TmpDir = None     
+if not _TmpDir : _TmpDir = None
 # ===============================================================================
 ## Context manager to define/redefine TmpDir for <code>tempfile</code> module
 class UseTmpDir ( object ) :
@@ -57,6 +57,44 @@ class UseTmpDir ( object ) :
     def __exit__   ( self , *_ ) :
         if self.previous :
             tempfile.tempdir = self.previous 
+
+
+## # =============================================================================
+## ## clean an ancient stuff from TMP directory
+## def clean_ancient_stuff ( what = _TmpDir , startwith = '/tmp' ) :
+    
+##     with UseTmpDir ( what ) :
+##         tdir = tempfile.gettempdir()
+##         if os.path.exist ( tdir ) and os.path.isdir ( tdir ) :
+##             import getpass
+##             username = getpass.getuser()
+##             if tdir.startswith ( startdir ) :
+##                 commandp = 'find %s -type f -atime +1 -print' % tdir 
+##                 commandd = 'find %s -type f -atime +1 -print' % tdir 
+##                 import subprocess
+##                 pp = bprocess.Pipe ( commandp.split() ,
+##                                      stdout = subprocess.PIPE ,
+##                                      stderr = subprocess.PIPE )
+                
+##                 op , ep = pp.communucate ()
+##                 op = op.split ( '\n' )
+##                 ep = ep.split ( '\n' )
+##                 if '' in op : op.remove  ('')
+##                 if '' in ep : ep.remove  ('')
+##                 ppc = pp.returncode
+##                 if ppc or ep : pass
+                
+##                 pd = bprocess.Pipe ( commandd.split() ,
+##                                      stdout = subprocess.PIPE ,
+##                                      stderr = subprocess.PIPE )
+                                
+##                 od , ed = pd.communucate ()
+##                 od = od.split ( '\n' )
+##                 ed = ed.split ( '\n' )
+##                 if '' in od : od.remove  ('')
+##                 if '' in ed : ed.remove  ('')
+##                 pdc = pd.returncode
+##                 if pdc or ed : pass
 
 # =============================================================================
 ## @class CleanUp

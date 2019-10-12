@@ -231,10 +231,23 @@ class Trainer(object) :
         self.__parallel_conf   = {}
         self.__parallel_conf.update ( parallel_conf )
         
-        assert  self.__chop_signal or self.__chop_background, "Neither signal nor background chopping" 
-        
+        assert  self.__chop_signal or self.__chop_background, "Neither signal nor background chopping"         
         self.__category  = category 
         self.__N         = N
+
+        assert signal     , 'Invaild Signal is specified!'
+        assert background , 'Invaild Signal is specified!'
+        
+        from ostap.trees.trees import Chain      
+        if   isinstance ( signal     , Chain           ) : signal     =     signal.chain
+        elif isinstance ( signal     , ROOT.RooAbsData ) :
+            if ROOT.RooAbsData.Tree !=  signal     : signal.convertToTreeStore ()
+            signal     = signal.tree ()
+            
+        if   isinstance ( background , Chain           ) : background = background.chain 
+        elif isinstance ( background , ROOT.RooAbsData ) :
+            if ROOT.RooAbsData.Tree != background : background.convertToTreeStore ()
+            background = background.tree ()
 
         self.__signal            = signal     
         self.__background        = background 
@@ -302,17 +315,21 @@ class Trainer(object) :
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 all_vars.append ( vv[0] )
                 
-            if self.signal_cuts     : all_vars.append ( self.signal_cuts     )
-            if self.background_cuts : all_vars.append ( self.background_cuts )
-
+            if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
+            if self.signal_weight     : all_vars.append ( self.signal_weight     )
+            if self.background_cuts   : all_vars.append ( self.background_cuts   )
+            if self.background_weight : all_vars.append ( self.background_weight )
+            
             ## do not forget to process the chopping category index!
             all_vars.append ( self.category ) 
                 
             import ostap.trees.cuts 
             cuts  = ROOT.TCut ( self.prefilter )            
-            scuts = { 'PreSelect' : cuts , 'Signal'     : self.signal_cuts     }
-            bcuts = { 'PreSelect' : cuts , 'Background' : self.background_cuts }
-
+            scuts = { 'PreSelect' : cuts }
+            bcuts = { 'PreSelect' : cuts } 
+            if self.signal_cuts     : scuts.update ( { 'Signal'     : self.signal_cuts     } ) 
+            if self.background_cuts : bcuts.update ( { 'Background' : self.background_cuts } )
+            
             import ostap.trees.trees
             avars = self.signal.the_variables ( all_vars )
             

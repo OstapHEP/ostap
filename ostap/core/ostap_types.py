@@ -62,7 +62,7 @@ num_types = integer_types + ( float , )
 str_types = str,
 
 list_types     = list , tuple
-listlike_types = list_types + ( set , C.Iterable )
+listlike_types = list_types + ( set , C.Sequence )
 dict_types     = dict ,
 dictlike_types = dict ,               C.Mapping  
 

@@ -12,8 +12,10 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'DataFrame'   , ## RDataFrame object
-    'report_prnt' , ## print the report 
+    'DataFrame'          , ## RDataFrame object
+    'report_print'       , ## print the report 
+    'report_print_table' , ## print the report 
+    'report_as_table'    , ## print the report 
     ) 
 # =============================================================================
 import ROOT
@@ -170,32 +172,36 @@ def _fr_print_ ( t ) :
     return res
 
 # ===============================================================================
-## Print the frame report
-def report_prnt ( report , title  = '' , prefix = '' ) :
-    """Print a frame report
+## Print the frame report data
+def report_print_table ( report , title  = '' , prefix = '' ) :
+    """Print a frame report data 
     """
     from ostap.core.core import binomEff
-    table  = []
-    lmax   = 5
+    
     n0     = -1 
-    for c in report :
-        if  n0 <= 0 : n0 = c.GetAll () 
-        name    = c.GetName ()
-        passed  = c.GetPass ()
-        all     = c.GetAll  ()
-        eff1    = binomEff  ( passed , all ) * 100 
-        eff2    = binomEff  ( passed ,  n0 ) * 100 
-        table.append (  ( name , passed , all , eff1 , eff2 )  )
-        lmax    = max ( len ( name ) , lmax , len ( 'Filter' ) )
+    lmax   =  5
+    table  = []
+    
+    for name, passed, all in report :
 
+        n0 = max ( n0 , all , passed )
+        
+        eff1 = binomEff ( passed , all ) * 100
+        
+        eff2 = binomEff ( passed ,  n0 ) * 100
+        
+        lmax = max ( len ( name ) , lmax , len ( 'Filter ' ) ) 
+        
+        item = name ,  passed , all , eff1 , eff2 
+        table.append ( item )
+        
     lmax          =  max ( lmax + 2 , len ( 'Selection' ) + 2 )
     fmt_name      =  '%%-%ds ' % lmax 
     fmt_input     =  '%10d'
     fmt_passed    =  '%-10d'
     fmt_eff       =  '%8.3g +- %-8.3g'
     fmt_cumulated =  '%8.3g +- %-8.3g'
-    
-    
+        
     header = ( ( '{:^%d}' % lmax ).format ( 'Filter'   ) ,               
                ( '{:>10}'        ).format ( '#input '  ) ,
                ( '{:<10}'        ).format ( ' #passed' ) ,
@@ -213,6 +219,30 @@ def report_prnt ( report , title  = '' , prefix = '' ) :
         
     import ostap.logger.table as T
     return T.table ( table_data , title , prefix )
+
+# ===============================================================================
+## Print the frame report
+def report_as_table ( report ) :
+    """Print a frame report
+    """
+    table = []
+    for c in report:
+        name    = c.GetName ()
+        passed  = c.GetPass ()
+        all     = c.GetAll  ()
+        table.append (  ( name , passed , all )  )
+
+    return table 
+
+# ===============================================================================
+## Print the frame report
+def report_print ( report , title  = '' , prefix = '' ) :
+    """Print a frame report
+    """
+    table = report_as_table ( report ) 
+    return report_print_table ( table , title, prefix )
+
+
 
 # ==============================================================================
 # decorate 

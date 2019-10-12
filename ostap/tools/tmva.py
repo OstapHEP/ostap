@@ -278,8 +278,16 @@ class Trainer(object):
         self.__variables         = tuple ( variables  )
         
         from ostap.trees.trees import Chain
-        if isinstance ( signal     , Chain ) : signal     =     signal.chain 
-        if isinstance ( background , Chain ) : background = background.chain 
+        
+        if   isinstance ( signal     , Chain           ) : signal     =     signal.chain
+        elif isinstance ( signal     , ROOT.RooAbsData ) :
+            if ROOT.RooAbsData.Tree !=  signal     : signal.convertToTreeStore ()
+            signal     = signal.tree ()
+            
+        if   isinstance ( background , Chain           ) : background = background.chain 
+        elif isinstance ( background , ROOT.RooAbsData ) :
+            if ROOT.RooAbsData.Tree != background : background.convertToTreeStore ()
+            background = background.tree ()
 
         self.__signal            = signal
         self.__signal_cuts       = signal_cuts  
@@ -649,27 +657,32 @@ class Trainer(object):
             if self.prefilter :
                 if self.verbose : logger.info ( 'Start data pre-filtering before TMVA processing' )
                 all_vars.append   ( self.prefilter )
-                if self.signal_cuts     : all_vars.append ( self.signal_cuts     )
-                if self.background_cuts : all_vars.append ( self.background_cuts )
+                
+                if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
+                if self.signal_weight     : all_vars.append ( self.signal_weight     )
+                if self.background_cuts   : all_vars.append ( self.background_cuts   )
+                if self.background_weight : all_vars.append ( self.background_weight )
                 
                 import ostap.trees.trees
                 avars = self.signal.the_variables ( all_vars )
 
                 import ostap.trees.cuts 
                 cuts  = ROOT.TCut ( self.prefilter )
-                
-                scuts = { 'PreSelect' : cuts , 'Signal'     : self.signal_cuts     }
-                bcuts = { 'PreSelect' : cuts , 'Background' : self.background_cuts }
+                scuts = { 'PreSelect' : cuts }
+                bcuts = { 'PreSelect' : cuts } 
+                if self.signal_cuts     : scuts.update ( { 'Signal'     : self.signal_cuts     } ) 
+                if self.background_cuts : bcuts.update ( { 'Background' : self.background_cuts } )
 
-                from ostap.frames.tree_reduce import ReduceTree as RT
+                ## import ostap.frames.tree_reduce       as TR
+                import ostap.parallel.parallel_reduce as TR
+                
                 silent = not self.verbose or not self.category in ( 0, -1 )
-                self.__sigrt = RT ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
-                if self.verbose : logger.info ( 'Signal     prefilter  %s' %  str ( self.__SigRT ) )                
-                self.__bkgrt = RT ( self.background , selection = bcuts , save_vars = avars , silent = silent )
-                if self.verbose : logger.info ( 'Background prefilter  %s' %  str ( self.__BkgRT ) )
-                                
-                self.__signal     = self.__sigrt.chain
-                self.__background = self.__bkgrt.chain
+                logger.info ( 'Pre-filter Signal     before processing' )
+                self.__SigTR = TR.reduce ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
+                logger.info ( 'Pre-filter Background before processing' )
+                self.__BkgTR = RT.reduce ( self.background , selection = bcuts , save_vars = avars , silent = silent )                                
+                self.__signal     = self.__SigTR.chain
+                self.__background = self.__BkgTR.chain
                 
             if self.verbose :
                 sc = ROOT.TCut ( self.    signal_cuts )

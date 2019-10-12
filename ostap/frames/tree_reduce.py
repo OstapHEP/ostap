@@ -17,7 +17,8 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'ReduceTree'
+    'ReduceTree' ,
+    'reduce'     ,    
     ) 
 # =============================================================================
 import ROOT, os 
@@ -81,7 +82,8 @@ class ReduceTree(CleanUp):
         if    selection and isinstance ( selection , cut_types ) :
             ss = str ( selection ).strip() 
             if len ( ss )  < Lmax : filter_name = ss          
-            else                  : filter_name = 'SELECTION' 
+            else                  : filter_name = 'SELECTION'
+            logger.info  ( 'Add filter/1 %s :  %s' % ( ss , filter_name ) )
             frame = frame.Filter ( ss  , filter_name )
             selections.append ( ss ) 
         elif selection and isinstance ( selection , dictlike_types  ) :
@@ -90,6 +92,7 @@ class ReduceTree(CleanUp):
                 assert isinstance ( s , cut_types ),\
                        'Invalid selection type %s/%s' % ( s , type ( s ) )
                 ss = str ( s ).strip()
+                logger.info ( 'Add filter/2 %s :  %s' % ( ss , filter_name ) )
                 frame = frame.Filter ( ss , str ( filter_name ) ) 
                 selections.append ( ss ) 
         elif selection and isinstance ( selection , listlike_types ) :
@@ -100,6 +103,8 @@ class ReduceTree(CleanUp):
                 ##
                 if len ( ss ) < Lmax          : filter_name = ss
                 else                          : filter_name = 'SELECTION%d' % i
+                #
+                logger.info ( 'Add filter/3 %s :  %s' % ( ss , filter_name ) )
                 frame = frame.Filter ( ss , filter_name )
                 selections.append ( ss ) 
         elif selection :
@@ -152,11 +157,13 @@ class ReduceTree(CleanUp):
         self.__output = output 
 
         self.__report = 'Tree -> Frame -> Tree filter/transformation'
+        self.__table  = [] 
         if report :
-            from ostap.frames.frames import report_prnt
+            from ostap.frames.frames import report_print, report_as_table 
             title = self.__report 
-            self.__report += '\n%s' % report_prnt ( report , title , '# ')
-
+            self.__report += '\n%s' % report_print ( report , title , '# ')
+            self.__table   = report_as_table ( report )
+                
         fs = os.path.getsize ( self.__output )        
         gb , r = divmod ( fs ,  1024 * 1024 * 1024 )
         mb , r = divmod ( r  ,  1024 * 1024 )
@@ -193,7 +200,11 @@ class ReduceTree(CleanUp):
         """``tree'': the reduced chain/tree (same as chain)"""
         return self.__chain
 
-
+    @property
+    def table ( self ) :
+        """``table'' : get the statitics as table"""
+        return self.__table
+    
 # ===============================================================================
 ## Reduce the tree/chain
 #  @code
