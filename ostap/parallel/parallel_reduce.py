@@ -83,12 +83,18 @@ class  ReduceTask(Task) :
                 a , b = self.__output
                 c , d = result
                 m     = []
-                if len ( b ) != d : logger.warning ( 'merge: mismatch in table size!!')
+                if len ( b ) != len ( d ) :
+                    logger.warning ( 'merge: mismatch in table size!!')
+                    logger.info    ( 'b is %s'  % str ( b ) )  
+                    logger.info    ( 'd is %s'  % str ( d ) )  
                 for i , j in zip ( b , d ) :
                     n1, p1, a1 = i
                     n2, p2, a2 = j
-                    if n1 != n2 : logger.warning ('merge: mismatch in row names!')
-                    item = n1 , p1+p2 , a1 + a1                    
+                    if n1 != n2 :
+                        logger.warning ('merge: mismatch in row names!')
+                        logger.info ( 'i: %s' % str ( i ) ) 
+                        logger.info ( 'j: %s' % str ( j ) )                         
+                    item = n1 , p1 + p2 , a1 + a2
                     m.append ( item )
                 self.__output = a + c , m 
                                                          

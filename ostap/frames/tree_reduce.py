@@ -83,7 +83,6 @@ class ReduceTree(CleanUp):
             ss = str ( selection ).strip() 
             if len ( ss )  < Lmax : filter_name = ss          
             else                  : filter_name = 'SELECTION'
-            logger.info  ( 'Add filter/1 %s :  %s' % ( ss , filter_name ) )
             frame = frame.Filter ( ss  , filter_name )
             selections.append ( ss ) 
         elif selection and isinstance ( selection , dictlike_types  ) :
@@ -92,7 +91,6 @@ class ReduceTree(CleanUp):
                 assert isinstance ( s , cut_types ),\
                        'Invalid selection type %s/%s' % ( s , type ( s ) )
                 ss = str ( s ).strip()
-                logger.info ( 'Add filter/2 %s :  %s' % ( ss , filter_name ) )
                 frame = frame.Filter ( ss , str ( filter_name ) ) 
                 selections.append ( ss ) 
         elif selection and isinstance ( selection , listlike_types ) :
@@ -104,7 +102,6 @@ class ReduceTree(CleanUp):
                 if len ( ss ) < Lmax          : filter_name = ss
                 else                          : filter_name = 'SELECTION%d' % i
                 #
-                logger.info ( 'Add filter/3 %s :  %s' % ( ss , filter_name ) )
                 frame = frame.Filter ( ss , filter_name )
                 selections.append ( ss ) 
         elif selection :
@@ -112,7 +109,7 @@ class ReduceTree(CleanUp):
 
         if not output : 
             output = self.tempfile ( prefix = 'frame-' , suffix = '.root' )
-            logger.debug ( 'ReduceTree: output file is %s' % output )  
+            ## logger.debug ( 'ReduceTree: output file is %s' % output )  
             if not tmp_keep : self.trash.add ( output  )
 
         if  selections : report = frame.Report()
