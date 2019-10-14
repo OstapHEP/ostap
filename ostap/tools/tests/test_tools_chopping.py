@@ -37,7 +37,7 @@ if not os.path.exists( data_file ) :
     
     nB = 20000
     nS = 10000
-    
+
     s_evt_per_run = 927
     b_evt_per_run = 511
     

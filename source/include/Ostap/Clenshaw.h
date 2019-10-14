@@ -30,6 +30,47 @@ namespace Ostap
      */
     namespace Clenshaw
     {
+      // ========================================================================
+      /** get the N-th term of the recurrent sequence:
+       *  \f$ \phi_{k+1} (x) = \alpha_k(x) \phi_k(x) + \beta_k(x) \phi_{k-1} (x) \f$ 
+       *   with initial conditions \f$ \phi_0(x) \f$ and \f$ \phi_1(x)\f$ 
+       *  @param x the value of x 
+       *  @param N the order of the coefficient
+       *  @param alpha  Callable <code>alpha(k,x)</code> corresponding to \f$ \alpha_k(x) \f$ 
+       *  @param beta  Callable <code>beta(k,x)</code> corresponding to \f$ \beta_k(x) \f$ 
+       *  @param phi0  Callable <code>phi0(x)</code> corresponding to \f$ \phi_0(x) \f$ 
+       *  @param phi1  Callable <code>phi1(x)</code> corresponding to \f$ \phi_1(x) \f$ 
+       *  @return the value of \f$ \phi_N(x) \f$
+       */
+      template <class ALPHA, 
+                class BETA , 
+                class PHI0 , 
+                class PHI1 > 
+      inline long double 
+      term ( const long double  x     , 
+             const unsigned int N     , 
+             ALPHA              alpha , 
+             BETA               beta  ,
+             PHI0               phi0  , 
+             PHI1               phi1  ) 
+      {
+        //
+        if      ( 0 ==  N ) { return phi0 ( x ) ; }
+        else if ( 1 ==  N ) { return phi1 ( x ) ; }
+        //
+        long double phi_0 = phi0 ( x ) ;
+        long double phi_1 = phi1 ( x ) ;
+        long double phi_2 = 0 ;
+        //
+        for ( unsigned int k = 1 ; k < N ; ++ k ) 
+        {
+          phi_2 = alpha ( k , x ) * phi_1 + beta ( k , x )  * phi_0 ;
+          phi_0 = phi_1 ;
+          phi_1 = phi_2 ;
+        }
+        //
+        return phi_2 ;
+      }    
       // ======================================================================
       /** Generic form of Clenshaw algorithm.
        *

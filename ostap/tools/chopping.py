@@ -235,19 +235,37 @@ class Trainer(object) :
         self.__category  = category 
         self.__N         = N
 
-        assert signal     , 'Invaild Signal is specified!'
-        assert background , 'Invaild Signal is specified!'
-        
+        assert signal     , 'Invalid Signal     is specified!'
+        assert background , 'Invalid Backrgound is specified!'
+
         from ostap.trees.trees import Chain      
-        if   isinstance ( signal     , Chain           ) : signal     =     signal.chain
+        if   isinstance ( signal     , Chain           ) : pass 
+        elif isinstance ( signal     , ROOT.TTree      ) : signal = Chain ( signal ) 
         elif isinstance ( signal     , ROOT.RooAbsData ) :
-            if ROOT.RooAbsData.Tree !=  signal     : signal.convertToTreeStore ()
-            signal     = signal.tree ()
-            
-        if   isinstance ( background , Chain           ) : background = background.chain 
+            signal.convertToTreeStore ()
+            if signal.isWeighted() : 
+                from ostap.core.core import Ostap
+                ## try to get the weight from dataset 
+                ws = Ostap.Utils.getWeight ( signal ) 
+                if ws :
+                    sw = ws if not signal_weight else signal_weight * ROOT.TCut ( ws )
+                    signal_weight = sw
+                    logger.info ( 'Redefine Signal     weight to be %s' % signal_weight )
+            signal     = Chain ( signal.tree () )
+                        
+        if   isinstance ( background , Chain           ) : pass 
+        if   isinstance ( background , ROOT.TTree      ) : background = Chain ( background ) 
         elif isinstance ( background , ROOT.RooAbsData ) :
-            if ROOT.RooAbsData.Tree != background : background.convertToTreeStore ()
-            background = background.tree ()
+            background.convertToTreeStore ()
+            if background.isWeighted() : 
+                from ostap.core.core import Ostap             
+                ## try to get the weight from dataset 
+                ws = Ostap.Utils.getWeight ( background ) 
+                if ws :
+                    bw = ws if not background_weight else background_weight * ROOT.TCut ( ws )
+                    backround_weight = bw 
+                    logger.info ( 'Redefine Background weight to be %s' % background_weight )
+            background = Chain ( background.tree () ) 
 
         self.__signal            = signal     
         self.__background        = background 
@@ -278,30 +296,10 @@ class Trainer(object) :
         dirname                  = dir_name ( self.name ) 
         self.__dirname           = dirname 
         self.__trainer_dirs      = [] 
-        
-        cat = '(%s)%%%d' % ( self.category , self.N  )
-        
-        if self.chop_signal      :
-            hs1 = ROOT.TH1F( hID() , 'Signal categories' , self.N * 5 , -0.5 , self.N - 1 ) 
-            hs2 = h1_axis ( [ -0.5+i for i in range(   self.N + 1 ) ] , title = hs1.GetTitle() ) 
-            self.signal.project     ( hs1 , cat , self.signal_cuts )
-            self.signal.project     ( hs2 , cat , self.signal_cuts )
-            self.__sig_histos = hs1,hs2
-            st = hs2.stat()
-            if 0 >=  st.min()  : logger.warning ("Some signal categories are empty!")                 
-            logger.info('Signal     category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
-                        
-        if self.chop_background  :
-            hb1 = ROOT.TH1F( hID() , 'Background categories' , self.N * 5 , -0.5 , self.N - 1 ) 
-            hb2 = h1_axis ( [ -0.5+i for i in range(   self.N + 1 ) ] , title = hb1.GetTitle() ) 
-            self.background.project ( hb1 , cat , self.background_cuts )
-            self.background.project ( hb2 , cat , self.background_cuts )
-            self.__bkg_histos = hb1,hb2
-            ##
-            st = hb2.stat()
-            if 0 >=  st.min()  : logger.warning ("Some background categories are empty!")                 
-            logger.info('Background category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
-        
+
+        # =====================================================================
+        ## prefilter 
+        # =====================================================================
         if self.prefilter :
             
             ##if self.verbose :
@@ -338,29 +336,58 @@ class Trainer(object) :
             else :
                 import ostap.frames.tree_reduce       as TR
 
+            print 'all_vars ' , all_vars 
+            print 'avars    ' , avars 
+            
             silent = not self.verbose 
             logger.info ( 'Pre-filter Signal     before processing' )
-            self.__SigTR = TR.reduce ( signal             ,
+            self.__SigTR = TR.reduce ( self.signal        ,
                                        selection = scuts  ,
                                        save_vars = avars  ,
                                        silent    = silent )
             logger.info ( 'Pre-filter Background before processing' )
-            self.__BkgTR = TR.reduce ( background         ,
+            self.__BkgTR = TR.reduce ( self.background    ,
                                        selection = bcuts  ,
                                        save_vars = avars  ,
                                        silent    = silent )
             
-            signal     = self.__SigTR.chain
-            background = self.__BkgTR.chain
-                
+            self.__signal     = self.__SigTR
+            self.__background = self.__BkgTR
+
             ## do not propagate prefilters to TMVA
-            self.__prefilter = ''
+            self.__prefilter = ''                        
+
+        # =====================================================================
+        ## Category population:
+        # =====================================================================
+        cat = '(%s)%%%d' % ( self.category , self.N  )        
+        if self.chop_signal      :
+            hs1 = ROOT.TH1F( hID() , 'Signal categories' , self.N * 5 , -0.5 , self.N - 1 ) 
+            hs2 = h1_axis ( [ -0.5+i for i in range(   self.N + 1 ) ] , title = hs1.GetTitle() ) 
+            self.signal.project     ( hs1 , cat , self.signal_cuts )
+            self.signal.project     ( hs2 , cat , self.signal_cuts )
+            self.__sig_histos = hs1   , hs2
+            st = hs2.stat()
+            if 0 >=  st.min()  : logger.warning ("Some signal categories are empty!")                 
+            logger.info('Signal     category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
                         
+        if self.chop_background  :
+            hb1 = ROOT.TH1F( hID() , 'Background categories' , self.N * 5 , -0.5 , self.N - 1 ) 
+            hb2 = h1_axis ( [ -0.5+i for i in range(   self.N + 1 ) ] , title = hb1.GetTitle() ) 
+            self.background.project ( hb1 , cat , self.background_cuts )
+            self.background.project ( hb2 , cat , self.background_cuts )
+            self.__bkg_histos = hb1 , hb2
+            ##
+            st = hb2.stat()
+            if 0 >=  st.min()  : logger.warning ("Some background categories are empty!")                 
+            logger.info('Background category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
+
+        
         ##  trick to please Kisa 
         from ostap.trees.trees import Chain
-        self.__signal            = Chain ( signal     ) 
-        self.__background        = Chain ( background )  
-
+        if isinstance ( self.__signal     , ROOT.TTree ) :  self.__signal     = Chain ( self.__signal     ) 
+        if isinstance ( self.__background , ROOT.TTree ) :  self.__background = Chain ( self.__background ) 
+        
         ## book the trainers 
         self.__trainers      = () 
         self.__weights_files = []
@@ -394,8 +421,8 @@ class Trainer(object) :
         mp = self.make_plots and ( self.verbose or 0 == i ) 
         t  = TMVATrainer ( methods           = self.methods          ,
                           variables         = self.variables         ,
-                          signal            = self.signal            ,
-                          background        = self.background        ,
+                          signal            = self.__signal          ,
+                          background        = self.__background      ,
                           spectators        = self.spectators        ,
                           bookingoptions    = self.bookingoptions    ,
                           configuration     = self.configuration     ,
@@ -494,7 +521,7 @@ class Trainer(object) :
     @property
     def signal ( self ) :
         """``signal'' :  TTree for signal events"""
-        return self.__signal
+        return self.__signal.chain
     
     @property
     def signal_cuts ( self ) :
@@ -509,7 +536,7 @@ class Trainer(object) :
     @property
     def background ( self ) :
         """``background'' :  TTree for background events"""
-        return self.__background
+        return self.__background.chain 
     
     @property
     def background_cuts ( self ) :

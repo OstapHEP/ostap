@@ -279,15 +279,35 @@ class Trainer(object):
         
         from ostap.trees.trees import Chain
         
-        if   isinstance ( signal     , Chain           ) : signal     =     signal.chain
+        if   isinstance ( signal     , Chain           ) : pass 
+        elif isinstance ( background , ROOT.TTree      ) : signal = Chain ( signal ) 
         elif isinstance ( signal     , ROOT.RooAbsData ) :
-            if ROOT.RooAbsData.Tree !=  signal     : signal.convertToTreeStore ()
-            signal     = signal.tree ()
+            signal.convertToTreeStore ()
+            if signal.isWeighted() : 
+                from ostap.core.core import Ostap
+                ## try to get the weight from dataset 
+                ws = Ostap.Utils.getWeight ( signal ) 
+                if ws :
+                    sw = ws if not signal_weight else signal_weight * ROOT.TCut ( ws )
+                    signal_weight = sw
+                    logger.info ( 'Redefine Signal     weight to be %s' % signal_weight )
+            signal     = Chain ( signal.tree () ) 
+
             
-        if   isinstance ( background , Chain           ) : background = background.chain 
+        if   isinstance ( background , Chain           ) : pass 
+        elif isinstance ( background , ROOT.TTree      ) : background = Chain ( background ) 
         elif isinstance ( background , ROOT.RooAbsData ) :
-            if ROOT.RooAbsData.Tree != background : background.convertToTreeStore ()
-            background = background.tree ()
+            background.convertToTreeStore ()
+            if background.isWeighted() : 
+                from ostap.core.core import Ostap             
+                ## try to get the weight from dataset 
+                ws = Ostap.Utils.getWeight ( background ) 
+                if ws :
+                    bw = ws if not background_weight else background_weight * ROOT.TCut ( ws )
+                    backround_weight = bw 
+                    logger.info ( 'Redefine Background weight to be %s' % background_weight )
+            background = Chain ( background.tree () )
+            
 
         self.__signal            = signal
         self.__signal_cuts       = signal_cuts  
@@ -401,7 +421,7 @@ class Trainer(object):
     @property
     def signal ( self ) :
         """``signal'' :  TTree for signal events"""
-        return self.__signal
+        return self.__signal.chain 
     
     @property
     def signal_cuts ( self ) :
@@ -416,7 +436,7 @@ class Trainer(object):
     @property
     def background ( self ) :
         """``background'' :  TTree for background events"""
-        return self.__background
+        return self.__background.chain
     
     @property
     def background_cuts ( self ) :
@@ -681,8 +701,8 @@ class Trainer(object):
                 self.__SigTR = TR.reduce ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
                 logger.info ( 'Pre-filter Background before processing' )
                 self.__BkgTR = RT.reduce ( self.background , selection = bcuts , save_vars = avars , silent = silent )                                
-                self.__signal     = self.__SigTR.chain
-                self.__background = self.__BkgTR.chain
+                self.__signal     = self.__SigTR
+                self.__background = self.__BkgTR
                 
             if self.verbose :
                 sc = ROOT.TCut ( self.    signal_cuts )

@@ -203,15 +203,21 @@ class ReduceTree(CleanUp):
         return self.__table
     
 # ===============================================================================
-## Reduce the tree/chain
+## Powerful method to reduce/tranform the tree/chain.
+#  It relies on Ostap.DataFrame ( alias for ROOT.ROOT.DataFrame) and allows
+#  - filter entries from TTree/TChain
+#  - add new colums
+#  - remove unnesessary columns
 #  @code
 #  tree = ....
-#  reduced1 = tree.reduce  ( 'pt>1' )
-#  reduced2 = tree.reduce  ( 'pt>1' , vars = [ 'p', 'pt' ,'q' ] )
-#  reduced3 = tree.reduce  ( 'pt>1' , no_vars = [ 'Q', 'z' ,'x' ] )
-#  reduced4 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } )
-#  reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , output = 'OUTPUT.root' )
+#  reduced1 = tree.reduce ( 'pt>1' )
+#  reduced2 = tree.reduce ( 'pt>1' , save_vars = [ 'p', 'pt' ,'q' ]  )
+#  reduced3 = tree.reduce ( 'pt>1' , no_vars   = [ 'Q', 'z' ,'x' ]   )
+#  reduced4 = tree.reduce ( 'pt>1' , new_vars  = { 'pt2' : 'pt*pt' } )
+#  reduced5 = tree.reduce ( 'pt>1' , new_vars  = { 'pt2' : 'pt*pt' } , output = 'OUTPUT.root' )
 #  @endcode
+#  @see Ostap::DataFrame
+#  @see ROOT::RDataFrame
 def reduce  ( tree               ,
               selection          ,
               save_vars  = ()    , 
@@ -221,14 +227,23 @@ def reduce  ( tree               ,
               addselvars = False ,
               silent     = False ) :
     
-    """ Reduce the tree/chain
+    """ Powerful method to reduce/tranform the tree/chain.
+    It relies on Ostap.DataFrame ( alias for ROOT.ROOT.DataFrame) and allows
+    - filter entries from TTree/TChain
+    - add new colums
+    - remove unnesessary columns
+    
     >>> tree = ....
     >>> reduced1 = tree.reduce  ( 'pt>1' )
     >>> reduced2 = tree.reduce  ( 'pt>1' , vars = [ 'p', 'pt' ,'q' ] )
     >>> reduced3 = tree.reduce  ( 'pt>1' , no_vars = [ 'Q', 'z' ,'x' ] )
     >>> reduced4 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } )
     >>> reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , output = 'OUTPUT.root' )
+    
     """
+    
+    nb0 = len ( tree.branches() )
+    ne0 = len ( tree            )
 
     reduced = ReduceTree ( tree                    ,
                            selection  = selection  ,
@@ -242,10 +257,15 @@ def reduce  ( tree               ,
 
     from ostap.trees.trees import Chain
     
-    chain = Chain ( reduced.chain )
-    if not output : chain.trash.add ( reduced.output )  
+    result = Chain ( reduced.chain )
+    if not output : result.trash.add ( reduced.output )  
 
-    return chain
+    if silent :        
+        nb = len ( result.chain.branches() )
+        ne = len ( result.chain            )        
+        logger.info ( 'reduce: reduced (%dx%d) -> (%dx%d) (branches x entries) ' % ( nb0  , ne0 ,  nb , ne ) ) 
+                      
+    return result
 
 
 ROOT.TTree. reduce = reduce

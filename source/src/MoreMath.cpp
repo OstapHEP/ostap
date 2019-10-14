@@ -1081,5 +1081,71 @@ std::pair<double,double> Ostap::Math::pochhammer_with_derivative
 ( const double         x , 
   const unsigned short n ) { return _pochhammer2_ ( x , n ) ; }
 // ============================================================================
+
+
+// ============================================================================
+/*  get the intermediate polynom \f$ g_l (x)\f$ used for the calculation of 
+ *  the angular-momentum Blatt-Weisskopf centrifugal-barrier factor 
+ *  @see S.U.Chung "Formulas for Angular-Momentum Barrier Factors", BNL-QGS-06-01
+ *  @see https://physique.cuso.ch/fileadmin/physique/document/2015_chung_brfactor1.pdf
+ *
+ *  The complex-valued polynomials \f$ g_l(x) \f$  with integer 
+ *  coefficients can be written as 
+ *  \f[ g_l(x) = \sum_{k=0}^{l} a_{lk}(-ix)^{l-k}\f] with
+ *  \f$ a_{lk} = \frac{(l+k)!}{2^k k! (l-k)!}\f$ and \f$a_{l0}=1\f$.
+ *
+ *  It satisfies the recurrent relation
+ *  \f[ g_{l+1}(x) = (2l+1)g_l(x) -  x^2 g_{l-1}(x)\f] 
+ *  with the initial values of \f$ g_0(x) \equiv 1 \f$ 
+ *  and \f$ g_1(x) \equiv -ix + 1\f$.
+ *  This recurrense relation is used for the actual calculation.
+ *
+ *  @param  x  the value of scaled relative momentum 
+ *  @param  l  the orbital momentum 
+ *  @return the value of \f$ g_l(x) \f$
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2019-10-13
+ *  @see Ostap::Math::barrier_factor 
+ *  @see Ostap::Math::barrier_absg 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::barrier_g 
+( const double       x , 
+  const unsigned int l ) 
+{
+  //
+  if      ( 0 == l ) {  return                        1 ; }
+  else if ( 1 == l ) {  return std::sqrt (  1 + x * x ) ; }
+  //
+  // real part 
+  const long double re_g = Ostap::Math::Clenshaw::term 
+    ( x  , 
+      l  , 
+      [] ( const unsigned int    k    , 
+           const long double  /* t */ ) -> long double { return  2 * k+1 ; } , 
+      [] ( const unsigned int /* k */ , 
+           const long double     t    ) -> long double { return -t * t   ; } , 
+      [] ( const long double  /* t */ ) -> long double { return  1       ; } , 
+      [] ( const long double  /* t */ ) -> long double { return  1       ; } ) ;
+  //
+  // imaginary part 
+  const long double im_g = Ostap::Math::Clenshaw::term 
+    ( x  , 
+      l  , 
+      [] ( const unsigned int    k    , 
+           const long double  /* t */ ) -> long double { return  2 * k+1 ; } , 
+      [] ( const unsigned int /* k */ , 
+           const long double     t    ) -> long double { return -t * t   ; } , 
+      [] ( const long double  /* t */ ) -> long double { return  0       ; } , 
+      [] ( const long double     t    ) -> long double { return -t       ; } ) ;
+  //
+  return std::complex<double> ( re_g , im_g ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
 // The END 
 // ============================================================================

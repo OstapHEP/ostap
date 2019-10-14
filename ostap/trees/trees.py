@@ -1930,7 +1930,7 @@ class Chain(CleanUp) :
                  'nevents'  : self.__nevents ,
                  'files'    : file_infos     ,
                  'host'     : self.__host    }
-    
+        
     def __setstate__  ( self , state ) :
         
         self.__name    = state [ 'name'    ]
@@ -1939,6 +1939,7 @@ class Chain(CleanUp) :
         #
         origin         = state [ 'host'    ]
         file_infos     = state [ 'files'   ]
+        #
         ##
         import socket 
         self.__host    = socket.getfqdn ().lower()
@@ -2004,20 +2005,32 @@ class Chain(CleanUp) :
         """
         assert ( name and files                  ) or \
                ( name and files and tree is True ) or \
-               ( isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree  ) ) ,  \
+               isinstance ( tree , Chain         ) or \
+               ( isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree  ) ) ,\
                "Invalid tree/name/files combination: %s/%s%s" % ( tree , name , files    )
+        
         assert isinstance ( first , int ) and  0 <= first     , \
                "Invalid ``first'' %s/%s"                      % ( first , type ( first ) ) 
-
+        
         self.__first   = int ( first )  
         self.__nevents = nevents if 0 <= nevents < ROOT.TChain.kMaxEntries else -1 
         self.__chain   = None
-
+        self.__name    = 'Unknown!'
+        
         import socket 
         self.__host    = socket.getfqdn ().lower()
-        
+
+        ## copy-like 
+        if isinstance  ( tree , Chain ) :
+            name    = tree.name 
+            files   = tree.files
+            first   = tree.first
+            nevents = tree.nevents 
+            tree    = tree.chain
+
         if files and isinstance ( files , str ) : files = files,
 
+                         
         if name and files :
 
             self.__name  = name

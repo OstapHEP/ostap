@@ -136,9 +136,13 @@ def reduce ( chain               ,
                               output     = output     ,
                               addselvars = addselvars ,
                               silent     = silent     )
+
+    
+    nb0  = len ( chain.branches() )
+    ne0  = len ( chain            )
     
     ch   = Chain ( chain ) 
-
+    
     task = ReduceTask ( selection  ,
                         save_vars  ,
                         new_vars   ,
@@ -151,21 +155,26 @@ def reduce ( chain               ,
     result , table  = task.results ()
     for i in result.files : result.trash.add ( i )
 
+    if output : ## merge results into single output file 
+        reduced = ReduceTree ( result.chain        ,
+                               selection  = ''     ,
+                               save_vars  = ()     ,
+                               addselvars = False  ,
+                               silent     = True   ,
+                               output     = output )
+        
+        result = Chain ( reduced.chain ) 
+        
     if not silent :
         from ostap.frames.frames import report_print_table 
         title = 'Tree -> Frame -> Tree filter/transformation'
         logger.info ( 'Reduce tree:\n%s' % report_print_table ( table , title , '# ' ) )
         
-    if not output : return result
-    
-    reduced = ReduceTree ( result.chain        ,
-                           selection  = ''     ,
-                           save_vars  = ()     ,
-                           addselvars = False  ,
-                           silent     = silent ,
-                           output     = output )
-
-    return Chain ( reduced.chain ) 
+        nb = len ( result.chain.branches() )
+        ne = len ( result.chain            )        
+        logger.info ( 'reduce: reduced (%dx%d) -> (%dx%d) (branches x entries) ' % ( nb0  , ne0 ,  nb , ne ) ) 
+        
+    return Chain ( result.chain ) 
 
 ROOT.TTree .preduce  = reduce
 ROOT.TTree .ppreduce = reduce

@@ -2796,7 +2796,7 @@ class Fit1D (PDF) :
     - combine_signals     : combine all signal components into single SIGNAL?
     - combine_backgrounds : combine all background components into single BACKGROUND?
     - combine_others      : combine all other components into single COMPONENT?
-    - recirsive           : use recursive fractions for compound PDF
+    - recursive           : use recursive fractions for compound PDF
     - xvar                : the fitting variable, must be specified if components are given as RooAbsPdf
 
     >>> gauss = Gauss_pdf( ... ) 
