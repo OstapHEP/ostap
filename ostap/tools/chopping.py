@@ -347,9 +347,8 @@ class Trainer(object) :
                                        selection = bcuts  ,
                                        save_vars = avars  ,
                                        silent    = silent )
-            
-            self.__signal     = self.__SigTR
-            self.__background = self.__BkgTR
+            self.__signal     = Chain ( self.__SigTR.chain ) 
+            self.__background = Chain ( self.__BkgTR.chain ) 
 
             ## do not propagate prefilters to TMVA
             self.__prefilter = ''                        

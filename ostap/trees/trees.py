@@ -1930,6 +1930,11 @@ class Chain(CleanUp) :
                  'nevents'  : self.__nevents ,
                  'files'    : file_infos     ,
                  'host'     : self.__host    }
+
+    ## def __del__ ( self ) :
+    ##     if self.trash :
+    ##         print 'I am deleting ', self.trash
+    ##     CleanUp.__del__ ( self ) 
         
     def __setstate__  ( self , state ) :
         

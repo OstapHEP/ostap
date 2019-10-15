@@ -19,8 +19,7 @@ __all__     = (
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.reduce' )
-else                       : logger = getLogger ( __name__     )
+logger = getLogger ( 'ostap.parallel.reduce' )
 # =============================================================================
 import ROOT
 from   ostap.parallel.parallel import Task, WorkManager
@@ -172,9 +171,10 @@ def reduce ( chain               ,
         
         nb = len ( result.chain.branches() )
         ne = len ( result.chain            )        
-        logger.info ( 'reduce: reduced (%dx%d) -> (%dx%d) (branches x entries) ' % ( nb0  , ne0 ,  nb , ne ) ) 
+        f  = float ( nb0 * ne0 ) / ( nb  * ne ) 
+        logger.info ( 'reduce: (%dx%d) -> (%dx%d) %.1f (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
         
-    return Chain ( result.chain ) 
+    return result 
 
 ROOT.TTree .preduce  = reduce
 ROOT.TTree .ppreduce = reduce

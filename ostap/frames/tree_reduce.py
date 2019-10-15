@@ -262,8 +262,9 @@ def reduce  ( tree               ,
 
     if silent :        
         nb = len ( result.chain.branches() )
-        ne = len ( result.chain            )        
-        logger.info ( 'reduce: reduced (%dx%d) -> (%dx%d) (branches x entries) ' % ( nb0  , ne0 ,  nb , ne ) ) 
+        ne = len ( result.chain            )
+        f  = float ( nb0 * ne0 ) / ( nb  * ne ) 
+        logger.info ( 'reduce: (%dx%d) -> (%dx%d) %.1f (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
                       
     return result
 
