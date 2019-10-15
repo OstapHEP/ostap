@@ -336,9 +336,6 @@ class Trainer(object) :
             else :
                 import ostap.frames.tree_reduce       as TR
 
-            print 'all_vars ' , all_vars 
-            print 'avars    ' , avars 
-            
             silent = not self.verbose 
             logger.info ( 'Pre-filter Signal     before processing' )
             self.__SigTR = TR.reduce ( self.signal        ,
