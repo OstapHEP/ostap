@@ -158,15 +158,16 @@ def _ve_purity_ ( s ) :
     """
     #
     vv = s.value ()
-    if   vv <= 0 or iszero ( vv ) : return VE(-1,0)
+    if   vv <= 0 or iszero ( vv ) : return VE ( -1 , 0 )
     #
-    c2 = s.cov2() 
-    if   c2 <= 0 or iszero ( c2 ) : return VE(-1,0)
-    elif isequal ( vv , c2  )     : return VE( 1,0)
-    elif c2 < vv                  : return VE(-1,0)
+    c2 = s.cov2()
     #
-    return s / cov2 
-    
+    if   c2 <= 0 or iszero ( c2 ) : return VE ( -1 , 0 )
+    elif isequal ( vv , c2  )     : return VE (  1 , 0 )
+    elif c2 < vv                  : return VE ( -1 , 0 )
+    #
+    return s / c2 
+
 # ============================================================================= 
 ## Get precision with ``some'' error estimate.
 def _ve_prec2_ ( s )  :
@@ -182,7 +183,7 @@ def _ve_prec2_ ( s )  :
     if     c <  0 or s.value() == 0  : return VE(-1,0)
     elif   c == 0                    : return VE( 0,0)
     #
-    return c/abs(s) 
+    return c / abs ( s ) 
 
 VE . b2s        = _ve_b2s_
 VE . prec       = _ve_prec2_
