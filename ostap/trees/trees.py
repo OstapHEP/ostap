@@ -741,25 +741,29 @@ def _rt_leaves_ ( t , pattern = '' , *args ) :
     vlst =  t.GetListOfLeaves()
 
     if not vlst : return tuple()
-    if pattern :        
+
+    if not pattern :
+
+        lst  = [ v.GetName() for v in vlst  ]
+        lst.sort ()
+        return tuple ( lst ) 
+
+    if isinstance ( pattern , string_type ) : pattern  = [ pattern ]
+
+    lst = set()
+    for p in patterns : 
         try : 
             import re
-            c  =  re.compile ( pattern , *args )
-            lst  = [ v.GetName() for v in vlst if c.match ( v.GetName () ) ]
-            lst.sort()
-            return tuple ( lst ) 
+            c    =  re.compile ( p , *args )
+            vars = [ v.GetName() for v in vlst if c.match ( v.GetName () ) ]
+            lst  = lst | set ( vars  ) 
         except :
-            logger.error ('leaves: exception is caught, skip it' , exc_info = True ) 
+            logger.error ('leaves("%s"): exception is caught, use all ' % p  , exc_info = True ) 
+            lst  = lst | set ( [ v.GetName() for v in vlst  ] )
             
-    lst  = [ v.GetName() for v in vlst  ]
-    lst.sort()
+    lst = list ( lst )
+    lst.sort () 
     return tuple ( lst ) 
-
-
-    
-    _lst = [ l.GetName() for l in _lst ] 
-    _lst.sort()
-    return tuple( _lst ) 
 
 ROOT.TTree.leaves   = _rt_leaves_
 

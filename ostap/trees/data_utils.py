@@ -48,7 +48,7 @@ __all__     = (
     'Data2'       , ## collect files and create two TChain objects 
     )
 # =============================================================================
-import ROOT, glob, random, math  
+import ROOT, os, glob, random, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -74,6 +74,7 @@ class DataProcessor (object) :
         data = self.data.clone() 
         data.add_files ( items )
         return data
+
 # =============================================================================
 ## @class Files
 #  Simple utility to pickup the list of files 
@@ -144,19 +145,26 @@ class Files(object):
         """Get the list of files form the patterns"""
         
         _files = set ()
+        
+        _prots = 0 
+        _norms = 0 
         for pattern in  self.patterns :
             
             _added = False  
             for p in protocols :
-                if p in pattern : 
-                    if not pattern in self.files :
+                if pattern.startswith ( p ) or p in pattern : 
+                    if not pattern in _files :
                         _files.add  ( pattern )
+                        _prots +=1 
                     _added = True
                     break
                 
             if not _added : 
                 for f in glob.iglob ( pattern ) :
-                    if not f in self.files :
+                    f = os.path.abspath  ( f )
+                    f = os.path.normpath ( f )                    
+                    if not f in _files :
+                        _norms += 1 
                         _files.add ( f )
 
         ## final sort 
@@ -199,7 +207,6 @@ class Files(object):
         self.description = state.get ( 'description', ''    )
         self.maxfiles    = state.get ( 'maxfiles'   , -1    )
         self.silent      = state.get ( 'silent'     , False )
-
 
     ## add files 
     def add_files ( self , files ) :
@@ -262,7 +269,7 @@ class Files(object):
             return NotImplemented
         return self.add_data ( other )    
     
-    ## merge two sets togather
+    ## merge two sets together
     def __add__ ( self , other ) :
         """ Merge two sets together
         >>> ds1 = ...
@@ -396,8 +403,19 @@ class Files(object):
     def __repr__    ( self ) : return self.__str__()
     def __nonzero__ ( self ) : return bool ( self.files )
     def __len__     ( self ) : return len  ( self.files )
-  
 
+    ## ## copy the all files into certain directory with the certain pattern
+    ## def copy_files ( self , directory = '.' , pattern = None ) :
+
+    ##     copied = []
+    ##     for i , f in enumerate ( self.files ) :
+    ##         head, tail = os.path.split ( f ) 
+            
+            
+            
+            
+        
+        
 # =============================================================================
 ## @class Data
 #  Simple utility to access to certain chain in the set of ROOT-files

@@ -88,7 +88,8 @@ def add_new_branch ( chain , branch_name , function , verbose = True ) :
     elif isinstance ( chain , ROOT.TTree  ) : 
         return _add_branch_ ( chain , branch_name , function , verbose = False ) 
     
-    ch    = Chain ( chain ) 
+    ch       = Chain ( chain ) 
+    branches = set   ( chain.branches() )
     
     task  = AddBranch   ( branch_name ,  function  )
     wmgr  = WorkManager ( silent = not verbose  )
@@ -99,6 +100,9 @@ def add_new_branch ( chain , branch_name , function , verbose = True ) :
     nc = ROOT.TChain ( chain.name )
     for f in ch.files :  nc.Add ( f )
     
+    nb = list ( set ( nc.branches () ) - branches ) 
+    if nb : logger.info ( 'Added branches:\n%s' % nc.table ( variables = nb , prefix = '# ' ) ) 
+
     return nc 
 
 

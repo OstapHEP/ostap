@@ -1222,7 +1222,7 @@ class Reader(object)  :
     #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getitem__ ( self , method ) :
-        """Helper utility to  get the correspondig function from the  reader:
+        """Helper utility to  get the corresponding function from the  reader:
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
         >>> mlp_fun  =  reader['MLP']  ## <-- here! 

@@ -519,9 +519,6 @@ def canvas_pull ( canvas               ,
     hmarl   = left_margin / hfactor
     hmarr   = 0.0
 
-    
-
-
     vStep0 = 2 * vStep * 1     / ( 1 + ratio )
     vStep1 = 2 * vStep * ratio / ( 1 + ratio )
 
@@ -606,7 +603,7 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
         pad.draw ()
         pad.cd   ()
 
-        ## redefne label font and size 
+        ## redefine the label font and size 
         for attr in ( 'GetXaxis' , 'GetYaxis' , 'GetZaxis' ) :
             if not hasattr ( obj , attr ) : continue
             

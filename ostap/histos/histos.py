@@ -810,8 +810,7 @@ ROOT.TH3   .   size       = lambda s : s.GetNbinsX() * s.GetNbinsY() * s.GetNbin
 ROOT.TH1D  . nbins        = lambda s : s.GetNbinsX() 
 ROOT.TH1F  . nbins        = lambda s : s.GetNbinsX() 
 ROOT.TH1D  .  bins        = lambda s : s.GetNbinsX() 
-ROOT.TH1F  .  bins        = lambda s : s.GetNbinsX() 
-
+ROOT.TH1F  .  bins        = lambda s : s.GetNbinsX()
 ROOT.TH2D  . nbinsx       = lambda s : s.GetNbinsX()
 ROOT.TH2D  . nbinsy       = lambda s : s.GetNbinsY()
 ROOT.TH2F  . nbinsx       = lambda s : s.GetNbinsX()

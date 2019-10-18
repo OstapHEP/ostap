@@ -173,8 +173,9 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                                    aux           = aux           )
     
     from ostap.trees.trees import Chain
-    ch    = Chain ( chain )
-    
+    ch       = Chain ( chain )
+    branches = set   ( chain.branches() )
+
     task  = AddChopping ( chopper       = chopper       ,
                           N             = N             ,
                           inputs        = inputs        , 
@@ -192,6 +193,9 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
     
     nc = ROOT.TChain ( chain.name )
     for f in ch.files :  nc.Add ( f )
+
+    nb = list ( set ( nc.branches () ) - branches ) 
+    if nb : logger.info ( 'Added branches:\n%s' % nc.table ( variables = nb , prefix = '# ' ) ) 
     
     return nc
 

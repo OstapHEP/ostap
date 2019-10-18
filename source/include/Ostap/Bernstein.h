@@ -25,9 +25,6 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
-
-
-
 // ============================================================================
 namespace Ostap
 {

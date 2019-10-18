@@ -679,10 +679,16 @@ class PSPol_pdf(PolyBase) :
     def mass ( self ) :
         """``mass''-variable for the fit (alias for ``x'' or ``xvar'')"""
         return self.xvar
+    
     @property
     def phasespace ( self ) :
         """``phasespace''-function for PS*pol function"""
         return self.__ps 
+
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for polynomial function"""
+        return self.__power
 
 models.append ( PSPol_pdf ) 
 
