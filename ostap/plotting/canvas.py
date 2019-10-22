@@ -32,26 +32,20 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.canvas' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-_canvases = {} 
+_canvases = {}
 # =============================================================================
-## The default configuration 
-# =============================================================================
-import ostap.core.config as OCC
-width_  = OCC.canvas.get ( 'Width'  , fallback = '1000' )
-try               : width_  = int  ( width_ ) 
-except ValueError : width_  = 1000 
-height_ = OCC.canvas.get ( 'Height' , fallback =  '800' )
-try               : height_ = int  ( height_ ) 
-except ValueError : height_ = 800 
+from ostap.plotting.makestyles import  ( canvas_width , canvas_height ,
+                                         margin_left  , margin_right  ,
+                                         margin_top   , margin_bottom )
 
 # =============================================================================
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-10-19
-def getCanvas ( name   = 'glCanvas' ,   ## canvas name 
-                title  = 'Ostap'    ,   ## canvas title
-                width  = width_     ,   ## canvas width
-                height = height_    ) : ## canvas height 
+def getCanvas ( name   = 'glCanvas'    ,   ## canvas name 
+                title  = 'Ostap'       ,   ## canvas title
+                width  = canvas_width  ,   ## canvas width
+                height = canvas_height ) : ## canvas height 
     """Get create canvas/create new canvas
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
@@ -275,15 +269,15 @@ atexit.register ( _remove_canvases_ )
 #       histo_ij.Draw()
 #  @endcode
 #  @see https://root.cern/doc/master/canvas2_8C.html
-def canvas_partition ( canvas               , 
-                       nx                   ,
-                       ny                   ,
-                       left_margin   = 0.14 ,
-                       right_margin  = 0.04 ,   
-                       bottom_margin = 0.14 ,
-                       top_margin    = 0.04 ,
-                       hSpacing      = 0.0  ,
-                       vSpacing      = 0.0  ) :
+def canvas_partition ( canvas                        , 
+                       nx                            ,
+                       ny                            ,
+                       left_margin   = margin_left   , 
+                       right_margin  = margin_right  , 
+                       bottom_margin = margin_bottom , 
+                       top_margin    = margin_right  ,
+                       hSpacing      = 0.0           ,
+                       vSpacing      = 0.0           ) :
     """Perform partition of Canvas into pads with no inter-margins
 
     canvas = ...
@@ -454,13 +448,13 @@ ROOT.TCanvas.partition = canvas_partition
 #  canvas = ...
 #  pads   = canvas.vsplit ( [1,2,1] )    
 #  @endcode 
-def canvas_vsplit ( canvas               ,
-                    heights              ,
-                    left_margin   = 0.14 ,
-                    right_margin  = 0.04 ,   
-                    bottom_margin = 0.14 ,
-                    top_margin    = 0.04 ,
-                    vSpacing      = 0.0  ) :
+def canvas_vsplit ( canvas                        ,
+                    heights                       ,
+                    left_margin   = margin_left   , 
+                    right_margin  = margin_right  , 
+                    bottom_margin = margin_bottom , 
+                    top_margin    = margin_right  ,
+                    vSpacing      = 0.0           ) :
     """ Split canvas in y-direction into non-equal pads, proportionally to heights
     >>> canvas = ...
     >>> pads   = canvas.vsplit ( [1,2,1] )    
@@ -571,13 +565,13 @@ ROOT.TCanvas.vsplit = canvas_vsplit
 #  canvas = ...
 #  pads   = canvas.pull_partition ( 0.20 ) ## top-pad 4-times larger    
 #  @endcode 
-def canvas_pull ( canvas               ,
-                  ratio         = 4.0  ,
-                  left_margin   = 0.14 ,
-                  right_margin  = 0.04 ,   
-                  bottom_margin = 0.14 ,
-                  top_margin    = 0.04 ,
-                  vSpacing      = 0.0  ) :
+def canvas_pull ( canvas                        ,
+                  ratio         = 4.0           ,
+                  left_margin   = margin_left   , 
+                  right_margin  = margin_right  , 
+                  bottom_margin = margin_bottom , 
+                  top_margin    = margin_right  ,
+                  vSpacing      = 0.0           ) :
     """Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
     
     >>> canvas = ...
@@ -590,7 +584,7 @@ def canvas_pull ( canvas               ,
                            right_margin  = right_margin  ,
                            bottom_margin = bottom_margin ,
                            top_margin    = top_margin    ,
-                           vSpacing      =  vSpacing     )
+                           vSpacing      = vSpacing      )
 
 ROOT.TCanvas.pull_partition = canvas_pull
 

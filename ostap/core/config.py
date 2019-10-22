@@ -48,7 +48,8 @@ config [ 'General'  ] = {
     'Parallel'  : 'PATHOS'
     }
 
-config [ 'Canvas'   ] = { 'Width' :  '1000' , 'Height' :  '800' } 
+config [ 'Canvas'   ] = { 'Width'        :  '1000' , 'Height'       :  '800' ,
+                          'MarginTop'    : '0.03'  , 'MarginBottom' : '0.12' }  
 config [ 'Fit Draw' ] = {}
 config [ 'Parallel' ] = {}
 
