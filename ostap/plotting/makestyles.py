@@ -65,24 +65,28 @@ canvas_height = height_ if 20 <= height_ else  800
 tmp_    = OCC.canvas.get ( 'MarginTop'   , fallback = '%f'  % margin_top      )
 try               : tmp_  = float ( tmp_ ) 
 except ValueError : tmp_  = margin_top
-if 0 < tmp_ < 1 : margin_top = tmp_
+if   0 <      tmp_ < 1             : margin_top = tmp_
+elif 0 < -1 * tmp_ < canvas_height : margin_top = abs ( 1.0 * tmp_ / canvas_height )  
 ## 
 tmp_    = OCC.canvas.get ( 'MarginBottom' , fallback = '%f' %  margin_bottom  )
 try               : tmp_  = float ( tmp_ ) 
 except ValueError : tmp_  = margin_bottom 
-if 0 < tmp_ < 1 : margin_bottom = tmp_
+if   0 <      tmp_ < 1             : margin_bottom = tmp_
+elif 0 < -1 * tmp_ < canvas_height : margin_bottom = abs ( 1.0 * tmp_ / canvas_height )  
 #
 tmp_    = margin_bottom * canvas_width / canvas_height 
 tmp_    = OCC.canvas.get ( 'MarginLeft'   , fallback = '%f'  % tmp_ ) 
 try               : tmp_  = float ( tmp_ ) 
 except ValueError : tmp_  = margin_left
-if 0 < tmp_ < 1 : margin_left = tmp_
+if   0 <      tmp_ < 1             : margin_left = tmp_
+elif 0 < -1 * tmp_ < canvas_width  : margin_left = abs ( 1.0 * tmp_ / canvas_width  )  
 #
 tmp_    = margin_top    * canvas_width / canvas_height 
 tmp_    = OCC.canvas.get ( 'MarginRight'   , fallback = '%f'  % tmp_ ) 
 try               : tmp_  = float ( tmp_ ) 
 except ValueError : tmp_  = margin_right 
-if 0 < tmp_ < 1 : margin_right = tmp_
+if   0 <      tmp_ < 1             : margin_right = tmp_
+elif 0 < -1 * tmp_ < canvas_width  : margin_right = abs ( 1.0 * tmp_ / canvas_width  )  
 
 logger.verbose ( 'Default parameters: ')
 logger.verbose ( '  canvas_height : %s ' % canvas_height )
