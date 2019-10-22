@@ -1009,6 +1009,43 @@ class SimFit ( MakeVar ) :
                                 silent = silent ,
                                 args   = args   , **kwargs )
 
+
+    # ========================================================================
+    ## evaluate "significance" using Wilks' theorem via NLL
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data , ... )
+    #  sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma' ] )
+    #  @endcode
+    def wilks2 ( self                           ,
+                 var                            ,
+                 dataset                        ,
+                 fix                            , ## variables to fix 
+                 range          = ( 0 , None )  ,
+                 silent         = True          ,
+                 opt_const      = True          ,
+                 max_calls      = 10000         ,
+                 max_iterations = -1            ,
+                 strategy       = None          ,
+                 args           = () , **kwargs ) :
+        """Evaluate ``significance'' using Wilks' theorem via NLL
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data , ... )
+        >>> sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma'] )
+        """
+        return self.pdf.wilks2 ( var                              ,
+                                 dataset        = dataset         ,
+                                 fix            = fix             ,
+                                 range          = range           , 
+                                 silent         = silent          , 
+                                 opt_const      = opt_const       ,
+                                 max_calls      = max_calls       ,
+                                 max_iterations = max_iterations  ,
+                                 strategy       = strategy        ,
+                                 args           = args , **kwargs )
+    
     # ========================================================================
     ## get the actual minimizer for the explicit manipulations
     #  @code

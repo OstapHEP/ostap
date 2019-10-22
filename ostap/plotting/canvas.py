@@ -278,10 +278,10 @@ atexit.register ( _remove_canvases_ )
 def canvas_partition ( canvas               , 
                        nx                   ,
                        ny                   ,
-                       left_margin   = 0.10 ,
-                       right_margin  = 0.05 ,   
-                       bottom_margin = 0.10 ,
-                       top_margin    = 0.05 ,
+                       left_margin   = 0.14 ,
+                       right_margin  = 0.04 ,   
+                       bottom_margin = 0.14 ,
+                       top_margin    = 0.04 ,
                        hSpacing      = 0.0  ,
                        vSpacing      = 0.0  ) :
     """Perform partition of Canvas into pads with no inter-margins
@@ -312,16 +312,15 @@ def canvas_partition ( canvas               ,
     wsy = abs ( canvas.GetWindowHeight () ) 
 
     #
-    ## if parametes given in the absolute units, convert them into relative coordinates
+    ## if parameters given in the absolute units, convert them into relative coordinates
     #
     
-    if   left_margin < 0 :   left_margin = abs (   left_margin ) / wsx
-    if  right_margin < 0 :  right_margin = abs (  right_margin ) / wsx
-    if bottom_margin < 0 : bottom_margin = abs ( bottom_margin ) / wsy
-    if    top_margin < 0 :    top_margin = abs (    top_margin ) / wsy
-    
-    if hSpacing      < 0 : hSpacing = abs ( hSpacing ) / wsx
-    if vSpacing      < 0 : vSpacing = abs ( vSpacing ) / wsy
+    if not 0 <  left_margin  < 1 :   left_margin = abs (   left_margin ) / wsx
+    if not 0 < right_margin  < 1 :  right_margin = abs (  right_margin ) / wsx
+    if not 0 < bottom_margin < 1 : bottom_margin = abs ( bottom_margin ) / wsy
+    if not 0 < top_margin    < 1 :    top_margin = abs ( bottom_margin ) / wsy    
+    if not 0 < vSpacing      < 1 :      vSpacing = abs ( vSpacing )      / wsy
+    if not 0 < hSpacing      < 1 :      hSpacing = abs ( hSpacing )      / wsx
 
     #
     ## check consistency 
@@ -344,7 +343,7 @@ def canvas_partition ( canvas               ,
     vStep    = ( 1.0 - bottom_margin - top_margin   - (ny-1) * vSpacing ) / ny
     if 0 > vStep : raise AttributeError('partition: v-step=%f' % vStep  )
         
-    hStep    = ( 1.0 - left_margin   - right_margin - (nx-1) * vSpacing ) / nx 
+    hStep    = ( 1.0 - left_margin   - right_margin - (nx-1) * hSpacing ) / nx 
     if 0 > hStep : raise AttributeError('partition: h-step=%f' % hStep  )
 
     hposr, hposl, hmarr, hmarl, hfactor = 0.,0.,0.,0.,0.
@@ -392,7 +391,7 @@ def canvas_partition ( canvas               ,
                 vmaru   = 0.0
 
             canvas.cd(0)
-            pname = 'pad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
+            pname = 'glPad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
             pad   = ROOT.gROOT.FindObject ( pname )
             if pad : del pad
             pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
@@ -447,42 +446,24 @@ ROOT.TCanvas.pads = property ( _cnv_pads_ , None , _cnv_del_pads_ )
 
 ROOT.TCanvas.partition = canvas_partition
 
+
 # ==============================================================================
-## Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+## Split canvas in y-direction into non-equal pads,
+#  proportionally to <code>heights</code> 
 #  @code
-#  canvas    = ...
-#  pad_u, pud_b= canvas.pull_partition ( 0.20 )    
-#  canvas.cd(0)
-#  pad_u.Draw()
-#  pad_u.cd() 
-#  object1.Draw()    
-#  canvas.cd(0)
-#  pad_b.Draw()
-#  pad_b.cd() 
-#  object2.Draw()
+#  canvas = ...
+#  pads   = canvas.vsplit ( [1,2,1] )    
 #  @endcode 
-def canvas_pull ( canvas               ,
-                  ratio         = 0.80 ,
-                  left_margin   = 0.10 ,
-                  right_margin  = 0.05 ,   
-                  bottom_margin = 0.10 ,
-                  top_margin    = 0.05 ,
-                  hSpacing      = 0.0  ,
-                  vSpacing      = 0.0  ) :
-    """Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
-    
-    >>> canvas    = ...
-    >>> pad_u, pud_b= canvas.pull_partition ( 0.20 )
-    
-    >>> canvas.cd(0)
-    >>> pad_u.Draw()
-    >>> pad_u.cd() 
-    >>> object1.Draw()
-    
-    >>> canvas.cd(0)
-    >>> pad_b.Draw()
-    >>> pad_b.cd() 
-    >>> object2.Draw()
+def canvas_vsplit ( canvas               ,
+                    heights              ,
+                    left_margin   = 0.14 ,
+                    right_margin  = 0.04 ,   
+                    bottom_margin = 0.14 ,
+                    top_margin    = 0.04 ,
+                    vSpacing      = 0.0  ) :
+    """ Split canvas in y-direction into non-equal pads, proportionally to heights
+    >>> canvas = ...
+    >>> pads   = canvas.vsplit ( [1,2,1] )    
     """
 
     ## get the window size
@@ -493,56 +474,66 @@ def canvas_pull ( canvas               ,
     ## if parametes given in the absolute units, convert them into relative coordinates
     #
     
-    if   left_margin < 0 :   left_margin = abs (   left_margin ) / wsx
-    if  right_margin < 0 :  right_margin = abs (  right_margin ) / wsx
-    if bottom_margin < 0 : bottom_margin = abs ( bottom_margin ) / wsy
-    if    top_margin < 0 :    top_margin = abs ( bottom_margin ) / wsy
-    
-    if hSpacing      < 0 : hSpacing = abs ( hSpacing ) / wsx
-    if vSpacing      < 0 : vSpacing = abs ( vSpacing ) / wsy
+    if not 0 <  left_margin  < 1 :   left_margin = abs (   left_margin ) / wsx
+    if not 0 < right_margin  < 1 :  right_margin = abs (  right_margin ) / wsx
+    if not 0 < bottom_margin < 1 : bottom_margin = abs ( bottom_margin ) / wsy
+    if not 0 < top_margin    < 1 :    top_margin = abs ( bottom_margin ) / wsy    
+    if not 0 < vSpacing      < 1 :      vSpacing = abs (      vSpacing ) / wsy
+
+    hSpacing = 0
     
     hposr, hposl, hmarr, hmarl, hfactor = 0.,0.,0.,0.,0.
     vposr, vposd, vmard, vmaru, vfactor = 0.,0.,0.,0.,0.
-
-    nx = 1
-    ny = 2
     
+    nx = 1
+    ny = len ( heights ) 
+
+    vSize    = ( 1.0 - bottom_margin - top_margin   - ( ny - 1 ) * vSpacing ) 
+    hSize    = ( 1.0 - left_margin   - right_margin - ( nx - 1 ) * hSpacing ) 
+
     vStep    = ( 1.0 - bottom_margin - top_margin   - ( ny - 1 ) * vSpacing ) / ny
     if 0 > vStep : raise AttributeError('partition: v-step=%f' % vStep  )
     
-    hStep    = ( 1.0 - left_margin   - right_margin - ( nx - 1 ) * vSpacing ) / nx 
+    hStep    = ( 1.0 - left_margin   - right_margin - ( nx - 1 ) * hSpacing ) / nx 
     if 0 > hStep : raise AttributeError('partition: h-step=%f' % hStep  )
-    
+
+    sumy = sum ( heights ) / vSize 
+    hy   = [ h*vSize/sum(heights) for h in reversed ( heights ) ]
+
     hposl   = 0
-    hposr   = left_margin + hStep
+    hposr   = left_margin + hStep 
     hfactor = hposr - hposl
     hmarl   = left_margin / hfactor
     hmarr   = 0.0
 
-    vStep0 = 2 * vStep * 1     / ( 1 + ratio )
-    vStep1 = 2 * vStep * ratio / ( 1 + ratio )
-
     del canvas.pads
     pads   = {}
     
-    ix     = 0 
-    for iy in range(2) :
+    ix     = 0
+    
+    for iy , height in enumerate ( hy ) : 
         
         if 0 == iy : 
             vposd   = 0.0
-            vposu   = bottom_margin + vStep0
+            vposu   = bottom_margin + height
             vfactor = vposu - vposd 
             vmard   = bottom_margin / vfactor
             vmaru   = 0.0 
-        else : 
+        elif ny == iy + 1 : 
             vposd   = vposu + vSpacing
-            vposu   = vposd + vStep1 + top_margin
+            vposu   = vposd + height + top_margin
             vfactor = vposu - vposd
             vmard   = 0.0
             vmaru   = top_margin    / vfactor
+        else :
+            vposd   = vposu + vSpacing
+            vposu   = vposd + height
+            vfactor = vposu - vposd
+            vmard   = 0.0
+            vmaru   = 0.0
             
-        canvas.cd(0)
-        pname = 'pad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
+        canvas.cd ( 0 )
+        pname = 'glPad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
         pad   = ROOT.gROOT.FindObject ( pname )
         if pad : del pad
         pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
@@ -571,6 +562,35 @@ def canvas_pull ( canvas               ,
         canvas.pads [ key ] = pads [ key ]
             
     return canvas.pads 
+
+ROOT.TCanvas.vsplit = canvas_vsplit 
+
+# ==============================================================================
+## Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+#  @code
+#  canvas = ...
+#  pads   = canvas.pull_partition ( 0.20 ) ## top-pad 4-times larger    
+#  @endcode 
+def canvas_pull ( canvas               ,
+                  ratio         = 4.0  ,
+                  left_margin   = 0.14 ,
+                  right_margin  = 0.04 ,   
+                  bottom_margin = 0.14 ,
+                  top_margin    = 0.04 ,
+                  vSpacing      = 0.0  ) :
+    """Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+    
+    >>> canvas = ...
+    >>> pads   = canvas.pull_partition ( 4.0 ) ## top-pad 4-times larger    
+    
+    """
+    return canvas_vsplit ( canvas                        ,
+                           heights       = ( 1 , ratio ) ,
+                           left_margin   = left_margin   ,
+                           right_margin  = right_margin  ,
+                           bottom_margin = bottom_margin ,
+                           top_margin    = top_margin    ,
+                           vSpacing      =  vSpacing     )
 
 ROOT.TCanvas.pull_partition = canvas_pull
 

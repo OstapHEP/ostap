@@ -979,7 +979,7 @@ class FIXVAR(object):
             
     def __enter__ ( self        ) :
 
-        self.fixed = [ c.isConstant() for c in self.vars ]  
+        self.fixed = tuple ( [ c.isConstant() for c in self.vars ] )
         for v in self.vars : v.fix ()
         
         return self

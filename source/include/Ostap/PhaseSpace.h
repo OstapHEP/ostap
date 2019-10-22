@@ -243,7 +243,7 @@ namespace Ostap
       /// get the scale 
       double         scale      () const { return m_scale     ; }
       // ======================================================================
-      // const PhaseSpace2& ps2() const { return m_ps2 ; }
+      const PhaseSpace2& ps2    () const { return m_ps2       ; }
       // ======================================================================
     public: // integrals
       // ======================================================================

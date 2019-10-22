@@ -405,7 +405,7 @@ class ResoSech(RESOLUTION) :
         
         ## finally build pdf
         # 
-        self.pdf = Ostap.Models.StudentT (
+        self.pdf = Ostap.Models.Sech (
             "ResoSech_"    + name ,
             "ResoSech(%s)" % name ,
             self.xvar   ,

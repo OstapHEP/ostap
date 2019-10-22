@@ -1850,7 +1850,8 @@ class PSSmear_pdf ( PDF ) :
                 t , s = ps0.threshold() , ps0.scale() 
                 PS = lambda x : Ostap.Math.PhaseSpaceLeft ( t + x , N , s )
             else      :
-                m1 , m2 , s = ps0.ps2.m1() , ps0.ps2.m2() , ps0.scale() 
+                ps2 = ps0.ps2() 
+                m1 , m2 , s = ps2.m1() , ps2.m2() , ps0.scale() 
                 PS2 = lambda x : Ostap.Math.PhaseSpace2    ( m1 + x    , m2 )
                 PS  = lambda x : Ostap.Math.PhaseSpaceLeft ( PS2 ( x ) , s  )
             

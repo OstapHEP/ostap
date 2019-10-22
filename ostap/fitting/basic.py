@@ -29,14 +29,14 @@ __all__     = (
 import ROOT, math,  random
 import ostap.fitting.roofit 
 import ostap.fitting.variables
-from   builtins               import range
-from   ostap.core.core        import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
-from   ostap.math.base        import iszero , frexp10 
-from   ostap.core.ostap_types import ( is_good_number , is_integer ,
-                                       integer_types  , num_types  , list_types ) 
-from   ostap.fitting.roofit   import SETVAR, PDF_fun
-from   ostap.logger.utils     import roo_silent   , rootWarning
-from   ostap.fitting.utils    import ( RangeVar   , MakeVar  , numcpu   , 
+from   builtins                import range
+from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
+from   ostap.math.base         import iszero , frexp10 
+from   ostap.core.ostap_types  import ( is_good_number , is_integer , string_types , 
+                                       integer_types  , num_types  , list_types   ) 
+from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
+from   ostap.logger.utils      import roo_silent   , rootWarning
+from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , 
                                        fit_status , cov_qual , H1D_dset , get_i  ) 
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -1252,6 +1252,7 @@ class PDF (MakeVar) :
         if not clone : kwargs['optimize'] = False 
 
         opts = self.parse_args ( dataset , *args , **kwargs )
+        if not silent and opts : self.info ('nll options: %s ' % list ( opts ) )
 
         ## skip some artifacts from MakeVars.parse_args 
         ok = []
@@ -1261,7 +1262,9 @@ class PDF (MakeVar) :
             if o.name == 'PrintEvalErrors' : continue
             ok.append ( o )
             
-        opts = tuple ( ok ) 
+        opts = tuple ( ok )
+        
+        if not silent and opts : self.info ('NLL options: %s ' % list ( opts ) )
         
         ## get s-Factor 
         sf   = dataset.sFactor() 
@@ -1300,6 +1303,8 @@ class PDF (MakeVar) :
                 kwargs['ncpu']  = 1 
                 return self.wilks ( var     = var      ,
                                     dataset = hdataset ,
+                                    range   = range    ,
+                                    silent  = silent   , 
                                     args    = args     , **kwargs )
         ## convert if needed 
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
@@ -1311,6 +1316,15 @@ class PDF (MakeVar) :
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars
         
+        ## unpack the range 
+        minv , maxv = range        
+        if maxv is None : maxv = var.value
+
+        error = 0 
+        if isinstance ( maxv , VE ) :
+            if 0 < maxv.cov2 () : error = maxv.error() 
+            maxv = maxv.value ()
+            
         with roo_silent ( silent ) :
             
             nll , sf = self.nll ( dataset         ,
@@ -1318,18 +1332,10 @@ class PDF (MakeVar) :
                                   clone  = False  ,
                                   args   = args   , **kwargs ) 
             
-            ## unpack the range 
-            minv , maxv = range
 
-            if maxv is None : maxv = var.value
-
-            error = -1 
-            if isinstance ( maxv , VE ) :
-                if 0 < maxv.cov2() : error = maxv.error() 
-                maxv = maxv.value()
-
-            vv = var.getVal() 
-            with RangeVar ( var , minv , maxv ) :
+            vv = var.getVal()
+            mn = min ( minv , maxv - error )
+            with RangeVar ( var , mn , maxv + error ) :
 
                 with SETVAR ( var ) : 
                     var.setVal ( minv )
@@ -1366,6 +1372,145 @@ class PDF (MakeVar) :
         return result if 0<=dnll else -1*result 
 
     # ========================================================================
+    ## evaluate "significance" using Wilks' theorem via NLL
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data , ... )
+    #  sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma' ] )
+    #  @endcode
+    def wilks2 ( self                           ,
+                 var                            ,
+                 dataset                        ,
+                 fix                            , ## variables to fix 
+                 range          = ( 0 , None )  ,
+                 silent         = True          ,
+                 opt_const      = True          ,
+                 max_calls      = 10000         ,
+                 max_iterations = -1            ,
+                 strategy       = None          ,
+                 args           = () , **kwargs ) :
+        """Evaluate ``significance'' using Wilks' theorem via NLL
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data , ... )
+        >>> sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma'] )
+        """
+        # if histogram, convert it to RooDataHist object:
+        if isinstance  ( dataset , ROOT.TH1 ) :
+            # if histogram, convert it to RooDataHist object:
+            xminmax = dataset.xminmax() 
+            with RangeVar( self.xvar , *xminmax ) :
+                density = kwargs.pop ( 'density' , False )
+                silent  = kwargs.pop ( 'silent'  , True  )                
+                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                hdataset        = self.histo_data.dset
+                kwargs['ncpu']  = 1 
+                return self.wilks2 ( var            = var             ,
+                                     dataset        = hdataset        ,
+                                     fix            = fix             ,
+                                     range          = range           , 
+                                     silent         = silent          ,
+                                     opt_const      = opt_const       , 
+                                     max_calls      = max_calls       , 
+                                     max_iterations = max_iterations  ,
+                                     strategy       = None            ,
+                                     args           = args , **kwargs )
+        ## convert if needed 
+        if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
+            dataset = dataset.dset 
+                          
+        ## get all parameters
+        pars = self.pdf.getParameters ( dataset )
+        
+        assert var in pars , "Variable %s is not a parameter/1"   % var
+        if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
+        
+        if   isinstance ( fix , string_types    ) : fix = [ fix ] 
+        elif isinstance ( fix , ROOT.RooAbsReal ) : fix = [ fix ] 
+        
+        fixed = []
+        for f in fix :
+            assert f in pars , "Variable %s is not a parameter/2"   % f            
+            fixed.append ( f if isinstance ( f , ROOT.RooAbsReal ) else pars [ f ] )
+
+        del pars
+
+        logger.info ( "Wilks: fixed variables: %s" % [ f.GetName()  for f in fixed] )
+
+        ## unpack the range 
+        minv , maxv = range        
+        if maxv is None : maxv = var.value
+        
+        error = 0 
+        if isinstance ( maxv , VE ) :
+            if 0 < maxv.cov2 () : error = maxv.error() 
+            maxv = maxv.value ()
+
+        with roo_silent ( silent ) :
+
+            ## fix "fixed" variables and redefine range for main variable
+            mn = min ( minv , maxv - error )
+            with FIXVAR ( fixed ) , RangeVar ( var , mn , maxv + error ) :
+
+                ## create NLL 
+                nLL , sf = self.nll ( dataset         ,
+                                      silent = silent ,
+                                      clone  = False  ,
+                                      args   = args   , **kwargs )
+                
+                ## create MINUIT minimizer 
+                minuit = self.minuit ( nLL = nLL ,
+                                       max_calls      = max_calls      ,
+                                       maX_iterations = max_iterations ,
+                                       opt_const      = opt_const      ,
+                                       strategy       =  strategy      )
+
+                ## make 1st fit 
+                with SETVAR ( var ) , FIXVAR ( var ) :                
+                    var.setVal ( maxv )
+                    st = minuit.migrad ()
+                    nll_max = nLL.getVal ()
+                    print 'after maxv',maxv
+                    
+                if 0 < error :
+
+                    with SETVAR ( var ) , FIXVAR ( var ) :                
+                        var.setVal ( maxv + error )
+                        st  = minuit.migrad ()
+                        ve1 = nLL.getVal ()
+                        print 'after maxv+error',maxv+error 
+                        
+                    with SETVAR ( var ) , FIXVAR ( var ) :                
+                        var.setVal ( maxv - error )
+                        st  = minuit.migrad ()
+                        ve2 = nLL.getVal ()
+                        print 'after maxv-error', maxv-error 
+
+                    nll_max = VE ( nll_max , 0.25 * ( ve1 - ve2 ) ** 2 ) 
+                    
+                ## make 2nd fit 
+                with SETVAR ( var ) , FIXVAR ( var ) :                
+                    var.setVal ( minv )
+                    st = minuit.migrad ()
+                    nll_min = nLL.getVal ()
+                    print 'after minv', minv 
+    
+                dnll = nll_min - nll_max
+
+            ## apply scale factor
+            if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
+            dnll *= sf            
+        
+            ## convert the difference in likelihoods into sigmas 
+            result = 2.0 * abs ( dnll )
+            result = result ** 0.5
+            
+            del minuit, nLL
+            
+        return result if 0 <= dnll else -1 * result 
+                
+    # ========================================================================
     ## get the actual minimizer for the explicit manipulations
     #  @code
     #  data = ...
@@ -1376,12 +1521,14 @@ class PDF (MakeVar) :
     #  m.minos ( param )
     #  @endcode
     #  @see RooMinimizer
-    def minuit ( self , dataset   ,
-                 max_calls = -1   ,
-                 max_iter  = -1   , 
-                 optconst  = True , ## optimize const 
-                 strategy  = None ,
-                 args      =   () , **kwargs  ):
+    def minuit ( self                   ,
+                 dataset         = None ,
+                 max_calls       = -1   ,
+                 max_iterations  = -1   , 
+                 opt_const       = True , ## optimize const 
+                 strategy        = None ,
+                 nLL             = None , ## nLL  
+                 args            =   () , **kwargs  ):
         """Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
@@ -1398,15 +1545,17 @@ class PDF (MakeVar) :
         ##                            ROOT.RooFit.CloneData ( False ) , *args , **kwargs )
         ## nll  = self.pdf.createNLL ( dataset , *opts )
 
-        nll , sf = self.nll ( dataset , args = args , **kwargs )
+        assert nLL or dataset , "minuit: nLL or dataset *must* be specified!" 
+        if not nLL : 
+            nLL , _ = self.nll ( dataset , args = args , **kwargs )
         
-        m    = ROOT.RooMinimizer ( nll )
-        if isinstance  ( optconst  , bool ) : m.optimizeConst ( optconst ) 
-        if isinstance  ( max_calls , integer_types ) and 1 < max_calls :
+        m    = ROOT.RooMinimizer ( nLL )
+        if isinstance  ( opt_const  , bool ) : m.optimizeConst ( opt_const ) 
+        if isinstance  ( max_calls      , integer_types ) and 1 < max_calls :
             m.setMaxFunctionCalls ( max_calls )
-        if isinstance  ( max_iter  , integer_types ) and 1 < max_iter  :
-            m.setMaxIterations    ( max_iter  )
-        if isinstance  ( strategy , integer_types  ) and 0 <= strategy <= 2 :
+        if isinstance  ( max_iterations , integer_types ) and 1 < max_iterations :
+            m.setMaxIterations    ( max_iterations  )
+        if isinstance  ( strategy , integer_types       ) and 0 <= strategy <= 2 :
             m.setStrategy ( strategy )
             
         return m  
