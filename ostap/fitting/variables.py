@@ -1059,13 +1059,30 @@ def _rrv_setbins_ ( self , bins ) :
     else :
         logger.error ('bins: invalid binning scheme %s/%s' % ( bins , type ( bins  ) ) ) 
 
-                     
+_bins_doc_ = """Get bining scheme :
+
+>>> vars =. ..
+>>> bins = vars.bins
+
+Set Binning scheme : 
+
+>>> vars.bins = ROOT.RooBinning ( ... )
+
+>>> vars.bins = 100 , [0, 2, 3, 4, 5, 6]
+
+>>> vars.bins = 100 , 1.0 , 2.0
+
+>>> vars.bins = 1.0 , 2.0 , 100 
+"""
+
 # =============================================================================
 ROOT.RooRealVar.bins = property (  ROOT.RooRealVar.getBinning ,
-                                   _rrv_setbins_              ,
-                                   None                       ,
-                                   "Get/set binning scheme"   )
+                                   _rrv_setbins_  , None  , _bins_doc_ )
         
+_new_methods_ += [
+    ROOT.RooRealVar. bins ,
+    ]
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooRealVar       ,
