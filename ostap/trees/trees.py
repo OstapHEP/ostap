@@ -751,7 +751,7 @@ def _rt_leaves_ ( t , pattern = '' , *args ) :
     if isinstance ( pattern , string_types ) : pattern  = [ pattern ]
 
     lst = set()
-    for p in patterns : 
+    for p in pattern : 
         try : 
             import re
             c    =  re.compile ( p , *args )
