@@ -1034,7 +1034,7 @@ def _rrv_setbins_ ( self , bins ) :
          isinstance  ( bins[2] , integer_types ) and 0 < nbins[2]      :
         
         low , high , n = bins 
-        bs = ROOT.RooUniformBinning ( n , low , high )
+        bs = ROOT.RooUniformBinning ( low , high , n )
         self.setBinning ( bs )
 
     elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
