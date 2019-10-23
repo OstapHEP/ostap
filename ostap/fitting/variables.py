@@ -18,7 +18,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     'SETVAR'          , ## context manager to preserve the current value for RooRealVar
-    'FIXVAR'          , ## context manager to fix/unfix variables 
+    'FIXVAR'          , ## context manager to fix/unfix variables
+    'KeepBinning'     , ## context manager to preserve the binning scheme
     'scale_var'       , ## construct "easy" RooFormulaVar  
     'add_var'         , ## construct "easy" RooFormulaVar
     ## simple "inline" formulas
@@ -34,7 +35,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core  import VE
-from   ostap.core.ostap_types import num_types 
+from   ostap.core.ostap_types import num_types, list_types, integer_types   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -988,7 +989,80 @@ class FIXVAR(object):
         for v , c in zip ( self.vars , self.fixed ) :
             if not c : v.release()
             
+# =============================================================================
+## Simple context manager to keep the binning scheme
+#  @code
+#  var = ...
+#  var.setBins      ( 100 )
+#  with KeepBinning ( var ) :
+#     vars.setBins  ( 10 )
+#  @endcode
+class KeepBinning(object):
+    """Simple context manager to keep the binning scheme
+    >>> var = ...
+    >>> var.setBins   ( 100 )
+    >>> with KeepBins ( var ) :
+    ...     vars.setBins ( 10 )
+    """
+    def __init__  ( self , var ) :
+        self.__var = var
+        
+    def __enter__ ( self ) :
+        self.__bins = self.__var.getBinning()
+        return self
+    
+    def __exit__  ( self , *_ ) :
+        self.__var.setBinning ( self.__bins )
+    
+    @property
+    def bins ( self ) :
+        """``bins'' : the binning scheme"""
 
+# =============================================================================
+## set the bining scheme 
+def _rrv_setbins_ ( self , bins ) :
+    """Set the binnning scheme"""
+    if   bins and isinstance ( bins , ROOT.RooAbsBinning ) :
+        self.setBining ( bins )
+    elif isinstance  ( bins , integer_types ) and 0 < bins :
+        self.setBins ( bins )
+    elif isinstance  ( bins    , list_types    ) and 2 == len ( bins ) and \
+         isinstance  ( bins[0] , integer_types ) and 0 < bins[0]       and \
+         isinstance  ( bins[1] , list_types    ) :
+        
+        from array import array
+        a  = array  ( 'd' , bins[1] )
+        bs = ROOT.RooBinning ( bins[0] , a )
+        self.setBinning ( bs )         
+
+    elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
+         isinstance  ( bins[0] , integer_types ) and 0 < nbins[0]      and \
+         isinstance  ( bins[1] , num_types     )                       and \
+         isinstance  ( bins[2] , num_types     ) and bins[1] < bins[2] : 
+
+        n , low , high = bins 
+        bs = ROOT.RooBinning ( n , low , high )
+        self.setBinning ( bs )
+        
+    elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
+         isinstance  ( bins[0] , num_types     )                       and \
+         isinstance  ( bins[1] , num_types     ) and bins[0] < bins[2] and \
+         isinstance  ( bins[2] , integer_types ) and 0 < nbins[2]      :
+        
+        low , high , n = bins 
+        bs = ROOT.RooBinning ( n , low , high )
+        self.setBinning ( bs )         
+            
+    else :
+        logger.error ('bins: invalid binning scheme %s/%s' % ( bins , type ( bins  ) ) ) 
+
+                     
+# =============================================================================
+ROOT.RooRealVar.bins = property (  ROOT.RooRealVar.getBinning ,
+                                   _rrv_setbins_              ,
+                                   None                       ,
+                                   "Get/set binning scheme"   )
+        
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooRealVar       ,

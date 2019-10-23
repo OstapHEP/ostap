@@ -420,7 +420,12 @@ class PDF2 (PDF) :
     #  data   = model.generate ( 100000 , varset )
     #  data   = model.generate ( 100000 , varset , extended = True )     
     #  @endcode
-    def generate ( self ,  nEvents , varset = None , extended = False ,  *args ) :
+    def generate ( self             ,  
+                   nEvents          ,
+                   varset   = None  ,
+                   extended = False ,
+                   binning  = {}    ,
+                   args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
@@ -435,7 +440,7 @@ class PDF2 (PDF) :
         if   not varset :
             varset = ROOT.RooArgSet( self.xvar , self.yvar )
         elif isinstance ( varset , ROOT.RooAbsReal ) :
-            varset = ROOT.RooArgSet( varser )
+            varset = ROOT.RooArgSet( varset )
 
         if not self.xvar in varset :
             vs = ROOT.RooArgSet()
@@ -448,8 +453,19 @@ class PDF2 (PDF) :
             vs . add ( self.yvar )
             for  v in varset : vs.add ( v )
             varset = vs
-            
-        return self.pdf.generate ( varset , *args )
+
+        from ostap.fitting.variables import KeepBinning        
+        with KeepBinning ( self.xvar ) , KeepBinning ( self.yvar ) : 
+
+            if binning :
+                
+                xbins = binning.get ( self.xvar.name , None )
+                ybins = binning.get ( self.yvar.name , None )
+
+                if xbins : self.xvar.bins = xbins
+                if ybins : self.yvar.bins = ybins
+                                        
+            return self.pdf.generate ( varset , *args )
 
     # =========================================================================
     ## simple 'function-like' interface 

@@ -391,7 +391,12 @@ class PDF3 (PDF2) :
     #  data   = model.generate ( 100000 , varset )
     #  data   = model.generate ( 100000 , varset , extended =  =   True )     
     #  @endcode
-    def generate ( self ,  nEvents , varset = None , extended = False ,  *args ) :
+    def generate ( self             ,
+                   nEvents          ,
+                   varset   = None  ,
+                   extended = False , 
+                   binning  = {}    ,
+                   args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
@@ -406,7 +411,7 @@ class PDF3 (PDF2) :
         if   not varset :
             varset = ROOT.RooArgSet( self.xvar , self.yvar , self.zvar )
         elif isinstance ( varset , ROOT.RooAbsReal ) :
-            varset = ROOT.RooArgSet( varser )
+            varset = ROOT.RooArgSet( varset )
 
         if not self.xvar in varset :
             vs = ROOT.RooArgSet()
@@ -426,6 +431,19 @@ class PDF3 (PDF2) :
             for  v in varset : vs.add ( v )
             varset = vs
             
+        from ostap.fitting.variables import KeepBinning        
+        with KeepBinning ( self.xvar ) , KeepBinning ( self.yvar ), KeepBinning ( self.zvar ) : 
+            
+            if binning :
+                
+                xbins = binning.get ( self.xvar.name , None )
+                ybins = binning.get ( self.yvar.name , None )
+                zbins = binning.get ( self.zvar.name , None )
+                
+                if xbins : self.xvar.bins = xbins
+                if ybins : self.yvar.bins = ybins
+                if zbins : self.zvar.bins = zbins
+   
         return self.pdf.generate ( varset , *args )
 
 

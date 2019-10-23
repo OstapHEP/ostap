@@ -71,6 +71,7 @@ def _rc_labels_ ( self ) :
 
     return tuple ( labs ) 
 
+    
 ROOT.RooCategory.labels = _rc_labels_
 
 # =============================================================================
@@ -630,8 +631,9 @@ class SimFit ( MakeVar ) :
             
             self.__categories [ label ] = cmp
             _xv = cmp.xvar
+
             
-        sim_pdf     = PDF ( self.name , xvar = _xv )
+        sim_pdf     = PDF ( self.name , xvar = _xv )            
         sim_pdf.pdf = ROOT.RooSimultaneous ( 'Sim_' + self.name , title , self.sample )
         
         keys = self.categories.keys()
@@ -642,10 +644,13 @@ class SimFit ( MakeVar ) :
         
         for k , cmp in items_loop ( self.categories ) :
             
-            for c in cmp.signals      : self.pdf.signals    .add ( c ) 
-            for c in cmp.backgrounds  : self.pdf.backgrounds.add ( c ) 
-            for c in cmp.crossterms1  : self.pdf.crossterms1.add ( c ) 
-            for c in cmp.crossterms2  : self.pdf.crossterms2.add ( c )
+            for c in cmp.signals              : self.pdf.signals             .add ( c ) 
+            for c in cmp.backgrounds          : self.pdf.backgrounds         .add ( c ) 
+            for c in cmp.crossterms1          : self.pdf.crossterms1         .add ( c ) 
+            for c in cmp.crossterms2          : self.pdf.crossterms2         .add ( c )
+            for c in cmp.combined_signals     : self.pdf.combined_signals    .add ( c )
+            for c in cmp.combined_backgrounds : self.pdf.combined_backgrounds.add ( c )
+            for c in cmp.combined_components  : self.pdf.combined_components .add ( c )
             
             self.pdf.draw_options.update ( cmp.draw_options )
             
@@ -1078,8 +1083,64 @@ class SimFit ( MakeVar ) :
                                  optconst  = optconst  ,
                                  strategy  = strategy  ,
                                  args      = args      , **kwargs )
+
     
-                                 
+    # =========================================================================
+    ## generate toy-sample according to PDF
+    #  @code
+    #  model  = ....
+    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  varset = ....
+    #  data   = model.generate ( 100000 , varset )
+    #  data   = model.generate ( 100000 , varset , extended = True )     
+    #  @endcode
+    def generate ( self                  , 
+                   nEvents               , 
+                   varset        = None  ,
+                   extended      = False ,
+                   args          = ()    ,
+                   binning       = {}    ,
+                   category_args = {}    ) :
+        """Generate toy-sample according to PDF
+        >>> model  = ....
+        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        
+        >>> varset = ....
+        >>> data   = model.generate ( 100000 , varset )
+        >>> data   = model.generate ( 100000 , varset , extended =  =   True )
+        """
+
+        labels = self.sample.labels()
+        
+        assert len ( labels ) == len ( nEvents ), 'Invalid length of nEvents array'
+        
+        vars   = ROOT.RooArgSet()
+        data   = {}
+
+        ## generate all categories separately:        
+        for l , n in zip ( labels , nEvents ) :
+            
+            cargs = []
+            for a in args                         : cargs.append ( a )
+            for a in category_args.get ( l , () ) : cargs.append ( a )
+            cargs = tuple ( cargs )
+                
+            pdf   = self.categories [ l ]
+            ds    = pdf.generate ( n                   ,
+                                   varset   = varset   ,
+                                   extended = extended ,
+                                   binning  = binning  ,
+                                   args     = cargs    )
+            
+            data [ l ]  = ds 
+            vars       |= ds.varset()                 
+
+        ## combine generated datasets 
+        return combined_data ( self.sample ,
+                               vars        , 
+                               data        )
+    
+                                
 # =============================================================================
 _decorated_classes_  = (
     ROOT.RooCategory , 

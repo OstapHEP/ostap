@@ -33,7 +33,7 @@ from   builtins                import range
 from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
 from   ostap.math.base         import iszero , frexp10 
 from   ostap.core.ostap_types  import ( is_good_number , is_integer , string_types , 
-                                       integer_types  , num_types  , list_types   ) 
+                                        integer_types  , num_types  , list_types   ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , 
@@ -1591,7 +1591,12 @@ class PDF (MakeVar) :
     #  data   = model.generate ( 100000 , varset )
     #  data   = model.generate ( 100000 , varset , extended = True )     
     #  @endcode
-    def generate ( self ,  nEvents , varset = None , extended = False ,  *args ) :
+    def generate ( self             ,
+                   nEvents          ,
+                   varset   = None  ,
+                   extended = False ,
+                   binning  = None  ,
+                   args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
@@ -1603,19 +1608,27 @@ class PDF (MakeVar) :
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
         if  extended :
             args = args + ( ROOT.RooFit.Extended () , )
+            
         if   not varset :
-            varset = ROOT.RooArgSet( self.xvar )
+            varset = ROOT.RooArgSet ( self.xvar )
         elif isinstance ( varset , ROOT.RooAbsReal ) :
-            varset = ROOT.RooArgSet( varser )
-
+            varset = ROOT.RooArgSet ( varset    )
+            
         if not self.xvar in varset :
             vs = ROOT.RooArgSet()
             vs . add ( self.xvar )
             for  v in varset : vs.add ( v )
             varset = vs  
 
-        return self.pdf.generate (  varset , *args )
+        from ostap.fitting.variables import KeepBinning
 
+        with KeepBinning ( self.xvar ) : 
+
+            if isinstance ( binning , dict ) :
+                binning = binning.get ( self.xvar.name , None )                 
+            if binning : self.xvar.bins = binning
+                    
+            return self.pdf.generate (  varset , *args )
 
     # =========================================================================
     ## simple 'function-like' interface 
