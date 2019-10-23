@@ -748,7 +748,7 @@ def _rt_leaves_ ( t , pattern = '' , *args ) :
         lst.sort ()
         return tuple ( lst ) 
 
-    if isinstance ( pattern , string_type ) : pattern  = [ pattern ]
+    if isinstance ( pattern , string_types ) : pattern  = [ pattern ]
 
     lst = set()
     for p in patterns : 
