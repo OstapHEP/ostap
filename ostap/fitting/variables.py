@@ -1024,8 +1024,29 @@ def _rrv_setbins_ ( self , bins ) :
     """Set the binnning scheme"""
     if   bins and isinstance ( bins , ROOT.RooAbsBinning ) :
         self.setBining ( bins )
+
     elif isinstance  ( bins , integer_types ) and 0 < bins :
         self.setBins ( bins )
+        
+    elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
+         isinstance  ( bins[0] , num_types     )                       and \
+         isinstance  ( bins[1] , num_types     ) and bins[0] < bins[2] and \
+         isinstance  ( bins[2] , integer_types ) and 0 < nbins[2]      :
+        
+        low , high , n = bins 
+        bs = ROOT.RooUniformBinning ( n , low , high )
+        self.setBinning ( bs )
+
+    elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
+         isinstance  ( bins[0] , integer_types ) and 0 < nbins[0]      and \
+         isinstance  ( bins[1] , num_types     )                       and \
+         isinstance  ( bins[2] , num_types     ) and bins[1] < bins[2] : 
+
+        n , low , high = bins 
+        bs = ROOT.RooUniformBinning ( low , high , n )
+        self.setBinning ( bs )
+        
+        
     elif isinstance  ( bins    , list_types    ) and 2 == len ( bins ) and \
          isinstance  ( bins[0] , integer_types ) and 0 < bins[0]       and \
          isinstance  ( bins[1] , list_types    ) :
@@ -1034,25 +1055,7 @@ def _rrv_setbins_ ( self , bins ) :
         a  = array  ( 'd' , bins[1] )
         bs = ROOT.RooBinning ( bins[0] , a )
         self.setBinning ( bs )         
-
-    elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
-         isinstance  ( bins[0] , integer_types ) and 0 < nbins[0]      and \
-         isinstance  ( bins[1] , num_types     )                       and \
-         isinstance  ( bins[2] , num_types     ) and bins[1] < bins[2] : 
-
-        n , low , high = bins 
-        bs = ROOT.RooBinning ( n , low , high )
-        self.setBinning ( bs )
-        
-    elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
-         isinstance  ( bins[0] , num_types     )                       and \
-         isinstance  ( bins[1] , num_types     ) and bins[0] < bins[2] and \
-         isinstance  ( bins[2] , integer_types ) and 0 < nbins[2]      :
-        
-        low , high , n = bins 
-        bs = ROOT.RooBinning ( n , low , high )
-        self.setBinning ( bs )         
-            
+    
     else :
         logger.error ('bins: invalid binning scheme %s/%s' % ( bins , type ( bins  ) ) ) 
 
