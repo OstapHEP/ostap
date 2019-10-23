@@ -1447,6 +1447,7 @@ class PDF (MakeVar) :
             if 0 < maxv.cov2 () : error = maxv.error() 
             maxv = maxv.value ()
 
+        vname = var.GetName() 
         with roo_silent ( silent ) :
 
             ## fix "fixed" variables and redefine range for main variable
@@ -1469,32 +1470,28 @@ class PDF (MakeVar) :
                 ## make 1st fit 
                 with SETVAR ( var ) , FIXVAR ( var ) :                
                     var.setVal ( maxv )
-                    st = minuit.migrad ()
+                    st = minuit.migrad      ('1st fit:   %s=%s' % ( vname , maxv ) )
                     nll_max = nLL.getVal ()
-                    print 'after maxv',maxv
                     
                 if 0 < error :
 
                     with SETVAR ( var ) , FIXVAR ( var ) :                
                         var.setVal ( maxv + error )
-                        st  = minuit.migrad ()
+                        st  = minuit.migrad ('Fit(+err): %s=%s' % ( vname , ( maxv + error ) ) ) 
                         ve1 = nLL.getVal ()
-                        print 'after maxv+error',maxv+error 
                         
                     with SETVAR ( var ) , FIXVAR ( var ) :                
                         var.setVal ( maxv - error )
-                        st  = minuit.migrad ()
+                        st  = minuit.migrad ('Fit(-err): %s=%s' % ( vname , ( maxv - error ) ) )
                         ve2 = nLL.getVal ()
-                        print 'after maxv-error', maxv-error 
 
                     nll_max = VE ( nll_max , 0.25 * ( ve1 - ve2 ) ** 2 ) 
                     
                 ## make 2nd fit 
                 with SETVAR ( var ) , FIXVAR ( var ) :                
                     var.setVal ( minv )
-                    st = minuit.migrad ()
+                    st = minuit.migrad      ('2nd fit:   %s=%s' % ( vname , minv )  )
                     nll_min = nLL.getVal ()
-                    print 'after minv', minv 
     
                 dnll = nll_min - nll_max
 
@@ -1502,7 +1499,7 @@ class PDF (MakeVar) :
             if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
             dnll *= sf            
         
-            ## convert the difference in likelihoods into sigmas 
+            ## convert the difference in likelihoods into sigmas/significance
             result = 2.0 * abs ( dnll )
             result = result ** 0.5
             

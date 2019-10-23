@@ -376,7 +376,7 @@ def _rfr_results_( self , *vars ) :
 #  minuit.migrad() 
 #  @endcode
 #  @see RooMinimizer 
-def _rm_migrad_  ( self ) :
+def _rm_migrad_  ( self , tag = "" ) :
     """Run MIGRAD for RooMinimizer
     - see ROOT.RooMinimizer 
     >>> pdf = ...
@@ -386,7 +386,7 @@ def _rm_migrad_  ( self ) :
     status = self._old_migrad_()
     if 0 != status :
         from   ostap.fitting.utils import fit_status 
-        logger.error ( "MIGRAD status %s"  % fit_status ( status ) )
+        logger.error ( "MIGRAD %s status %s"  % ( tag , fit_status ( status ) ) )
     return status 
 
 # =============================================================================
