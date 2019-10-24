@@ -35,7 +35,8 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core  import VE
-from   ostap.core.ostap_types import num_types, list_types, integer_types   
+from   ostap.core.ostap_types import ( num_types     , list_types   ,
+                                       integer_types , string_types )   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1022,42 +1023,113 @@ class KeepBinning(object):
 ## set the bining scheme 
 def _rrv_setbins_ ( self , bins ) :
     """Set the binnning scheme"""
+
+    ## prepended/appended with name?
+    name = None
+    
+    if bins and isinstance  ( bins , list_types ) :
+        if   2 == len ( bins ) and isinstance ( bins[-1] , string_types ) :
+            bins, name = bins 
+        elif 2 == len ( bins ) and isinstance ( bins[ 0] , string_types ) :
+            name , bins = bins 
+        elif isinstance ( bins[-1] , string_types ) :
+            bins = bins [:-1] 
+            name = bins [ -1]
+        elif isinstance ( bins[ 0] , string_types ) :
+            bins = bins [1: ] 
+            name = bins [0  ]
+        
     if   bins and isinstance ( bins , ROOT.RooAbsBinning ) :
-        self.setBining ( bins )
+        if name : self.setBining ( bins , name )
+        else    : self.setBining ( bins )
+        return
 
     elif isinstance  ( bins , integer_types ) and 0 < bins :
-        self.setBins ( bins )
-        
-    elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
-         isinstance  ( bins[0] , num_types     )                       and \
-         isinstance  ( bins[1] , num_types     ) and bins[0] < bins[2] and \
-         isinstance  ( bins[2] , integer_types ) and 0 < nbins[2]      :
-        
-        low , high , n = bins 
-        bs = ROOT.RooUniformBinning ( low , high , n )
-        self.setBinning ( bs )
+        if name : self.setBins ( bins , name )
+        else    : self.setBins ( bins )
+        return
 
-    elif isinstance  ( bins    , list_types    ) and 3 == len ( bins ) and \
-         isinstance  ( bins[0] , integer_types ) and 0 < nbins[0]      and \
-         isinstance  ( bins[1] , num_types     )                       and \
-         isinstance  ( bins[2] , num_types     ) and bins[1] < bins[2] : 
-
-        n , low , high = bins 
-        bs = ROOT.RooUniformBinning ( low , high , n )
-        self.setBinning ( bs )
-        
-        
-    elif isinstance  ( bins    , list_types    ) and 2 == len ( bins ) and \
-         isinstance  ( bins[0] , integer_types ) and 0 < bins[0]       and \
-         isinstance  ( bins[1] , list_types    ) :
-        
-        from array import array
-        a  = array  ( 'd' , bins[1] )
-        bs = ROOT.RooBinning ( bins[0] , a )
-        self.setBinning ( bs )         
-    
+    if isinstance  ( bins , list_types ) :
+        if   4 == len ( bins ) and isinstance ( bins[-1] , string_types ) : bins = bins [:-1]
+        elif 3 == len ( bins ) and isinstance ( bins[-1] , string_types ) : bins = bins [:-1]
     else :
-        logger.error ('bins: invalid binning scheme %s/%s' % ( bins , type ( bins  ) ) ) 
+        logger.error ('bins: invalid binning scheme/1 %s/%s' % ( bins , type ( bins  ) ) ) 
+        return 
+
+    if   3 == len ( bins ) : ## low,high,bins or bins,low,high
+        
+        if   isinstance  ( bins[0] , ROOT.RooAbsReal )                       and \
+             isinstance  ( bins[1] , ROOT.RooAbsReal )                       and \
+             isinstance  ( bins[2] , integer_types   ) and 0 < nbins[2]      :
+            
+            low , high , n = bins 
+            bs = ROOT.RooParamBinning ( low , high , n )
+            if name : self.setBinning ( bs  , name )
+            return 
+            
+        elif isinstance  ( bins[0] , integer_types   ) and 0 < nbins[0]      and \
+             isinstance  ( bins[1] , ROOT.RooAbsReal )                       and \
+             isinstance  ( bins[2] , ROOT.RooAbsReal ) : 
+            
+            n , low , high = bins 
+            bs = ROOT.RooParamBinning ( low , high , n )
+            if name : self.setBinning ( bs  , name )
+            return 
+            
+        elif isinstance  ( bins[0] , num_types       )                       and \
+             isinstance  ( bins[1] , num_types       ) and bins[0] < bins[2] and \
+             isinstance  ( bins[2] , integer_types   ) and 0 < nbins[2]      :
+            
+            low , high , n = bins 
+            bs = ROOT.RooUniformBinning ( low , high , n )
+            if name : self.setBinning ( bs  , name )
+            self.setBinning ( bs )
+            return 
+
+        elif isinstance  ( bins[0] , integer_types   ) and 0 < nbins[0]      and \
+             isinstance  ( bins[1] , num_types       )                       and \
+             isinstance  ( bins[2] , num_types       ) and bins[1] < bins[2] : 
+            
+            n , low , high = bins 
+            bs = ROOT.RooUniformBinning ( low , high , n )
+            if name : self.setBinning ( bs  , name )
+            else    : self.setBinning ( bs         )
+            return 
+
+    elif 2 == len ( bins )  :  ## nbins, bins  or bins, nbins 
+
+        if   isinstance  ( bins[0] , integer_types ) and 0 < bins[0]       and \
+             isinstance  ( bins[1] , list_types    ) and \
+             len( bins[1] ) == bins[0] + 1 :
+        
+            from array import array
+            a  = array  ( 'd' , bins[1] )
+            bs = ROOT.RooBinning ( bins[0] , a )
+            if name : self.setBinning ( bs  , name )
+            else    : self.setBinning ( bs         )
+            return 
+
+        elif isinstance  ( bins[1] , integer_types ) and 0 < bins[1]       and \
+             isinstance  ( bins[0] , list_types    ) and \
+             len( bins[0] ) == bins[1] + 1 :
+
+            from array import array
+            a  = array  ( 'd' , bins[1] )
+            bs = ROOT.RooBinning ( bins[0] , a )
+            if name : self.setBinning ( bs  , name )
+            else    : self.setBinning ( bs         )
+            return
+        
+    elif 4 <= len ( bins ) :  ## bins
+
+        from array import array
+        a  = array  ( 'd' , bins )
+        bs = ROOT.RooBinning ( len  ( bins ) -1 , a )
+        if name : self.setBinning ( bs  , name )
+        else    : self.setBinning ( bs         )
+        return
+                    
+    logger.error ('bins: invalid binning scheme/3 %s/%s' % ( bins , type ( bins  ) ) ) 
 
 _bins_doc_ = """Get bining scheme :
 
