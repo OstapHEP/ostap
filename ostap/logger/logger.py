@@ -4,13 +4,12 @@
 # Copyright Ostap developers
 # =============================================================================
 """Ostap simple logger.
-
-Bsed on the logging of the Gaudi software project of CERN:
+Based on the logging of the Gaudi software project of CERN:
 - Simple control (global and local)  over logging threshold.
  Primitive utilities for colorized logging.
 """
 # =============================================================================
-import logging
+import logging, os, sys  
 # =============================================================================
 __all__ = (
     'getLogger'      , ## get (configured) logger
@@ -31,7 +30,7 @@ __all__ = (
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL' ,
     )
 # =============================================================================
-# Message levels
+# Message levels   (a'la Gaudi) 
 ALL     = 0
 VERBOSE = 1
 DEBUG   = 2
@@ -39,7 +38,9 @@ INFO    = 3
 WARNING = 4
 ERROR   = 5
 FATAL   = 6
-
+# =============================================================================
+## some manipulations with logging module
+if not hasattr ( logging , 'VERBOSE' ) : logging.VERBOSE = 5
 # =============================================================================
 ## some manipulations with logging module
 if not hasattr ( logging , 'VERBOSE' ) : logging.VERBOSE = 5
@@ -57,17 +58,16 @@ def _verbose1_(self, msg, *args, **kwargs):
 def _verbose2_(msg, *args, **kwargs):
     """Log a message with severity 'VERBOSE' on the root logger.
     """
-    if len(logging.root.handlers) == 0 : logging.basicConfig()
+    if not logging.root.handlers : logging.basicConfig()
     logging.root.verbose (msg, *args, **kwargs)
 
 # =============================================================================
-## add method 'verbose' to logger 
+# add method 'verbose' to logger 
 logging.Logger.verbose = _verbose1_
 
 # =============================================================================
 ## add method 'verbose' to root logger 
 logging.verbose        = _verbose2_
-
 # =============================================================================
 ## convert MSG::Level into logging level 
 def setLogging ( output_level ) :
@@ -79,15 +79,26 @@ def setLogging ( output_level ) :
     elif INFO    <= output_level : logging.disable ( logging.INFO    - 1 )
     elif DEBUG   <= output_level : logging.disable ( logging.DEBUG   - 1 )
     elif VERBOSE <= output_level : logging.disable ( logging.VERBOSE - 1 )
-    
-## define standard logging names 
-logging.addLevelName ( logging.CRITICAL  , 'FATAL  '  )
-logging.addLevelName ( logging.WARNING   , 'WARNING'  )
-logging.addLevelName ( logging.DEBUG     , 'DEBUG  '  )
-logging.addLevelName ( logging.INFO      , 'INFO   '  )
-logging.addLevelName ( logging.ERROR     , 'ERROR  '  )
-logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
 
+# =============================================================================
+## define standard logging names
+logging_levels = { logging.CRITICAL : 'FATAL'   ,
+                   logging.WARNING  : 'WARNING' ,
+                   logging.DEBUG    : 'DEBUG  ' ,
+                   logging.INFO     : 'INFO   ' ,
+                   logging.ERROR    : 'ERROR  ' ,
+                   logging.VERBOSE  : 'VERBOSE' }
+for a in logging_levels : logging.addLevelName ( a ,  logging_levels[a]  )
+# =============================================================================
+logging_format      = '# %(name)-32s %(levelname)-7s %(message)s'
+logging_file_format = '%(asctime)s %(name)-32s %(levelname)-7s %(message)s'
+
+
+# =============================================================================
+## The basic configuration 
+logging.basicConfig (
+    level    = logging.INFO   ,
+    format   = logging_format )
 
 # =============================================================================
 ## get configured logger
@@ -95,35 +106,30 @@ logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
 #  logger1 = getLogger ( 'LOGGER1' )
 #  logger2 = getLogger ( 'LOGGER2' , level = logging.INFO )
 #  @endcode 
-def getLogger ( name                                                 ,
-                fmt    = '# %(name)-29s %(levelname)-7s %(message)s' ,
-                level  = logging.VERBOSE - 2                         ,
-                stream = None                                        ) :  
+def getLogger ( name   = 'ostap' ,
+                format = ''      ,
+                level  = None    ,
+                stream = None    ) :
+    
     """Get the proper logger
     >>> logger1 = getLogger ( 'LOGGER1' )
     >>> logger2 = getLogger ( 'LOGGER2' , level = logging.INFO )
     """
     #
     logger = logging.getLogger ( name )
-    logger.propagate =  False  ## ???
-    ##logger.propagate =  True
-    #
-    while logger.handlers :
-        logger.removeHandler ( logger.handlers[0] )
-    #
-    if not stream :
-        import sys
-        stream = sys.stdout
-        
-    lh  = logging.StreamHandler ( stream ) 
-    fmt = logging.Formatter     ( fmt    )
-    lh  . setFormatter          ( fmt    )
-    logger.addHandler           ( lh     ) 
-    #
-    logger.setLevel             ( level  )
+    logger.propagate = True  ## ???
+
+    ## if not logger.handlers :         
+    ##     lh  = logging.StreamHandler ( stream ) if stream else logging.StreamHandler ()            
+    ##     fmt = logging.Formatter     ( fmt    )
+    ##     lh  . setFormatter          ( fmt    )
+    ##     logger.addHandler           ( lh     )
+
+    ## redefine log-level if needed 
+    if level and level != logger.level :
+        logger.setLevel ( level  )
     #
     return logger
-
 
 # =============================================================================
 ## @class LogLevel
@@ -150,7 +156,7 @@ class LogLevel(object) :
     ## context manager: EXIT 
     def __exit__ ( self , *_ ) :        
         logging.disable ( self.old_level )
-
+        
 # =============================================================================
 #  Temporarily enable/disable certain logger levels
 #  @code
@@ -237,6 +243,7 @@ from ostap.logger.colorized import ( with_colors    ,
                                      attention      ,
                                      allright       ,
                                      infostr        ,
+                                     isatty         ,
                                      decolorize     )
 # =============================================================================
 __colored_logger = []
@@ -246,12 +253,8 @@ def reset_colors () :
     """Reset colorization of logging 
     >>> reset_colors()
     """
-    logging.addLevelName ( logging.CRITICAL  , 'FATAL  '  )
-    logging.addLevelName ( logging.WARNING   , 'WARNING'  )
-    logging.addLevelName ( logging.DEBUG     , 'DEBUG  '  )
-    logging.addLevelName ( logging.INFO      , 'INFO   '  )
-    logging.addLevelName ( logging.ERROR     , 'ERROR  '  )
-    logging.addLevelName ( logging.VERBOSE   , 'VERBOSE'  )
+    for a in logging_levels :
+        logging.addLevelName ( a ,  logging_levels [ a ] )
     #
     while __colored_logger :
         __colored_logger.pop()
@@ -290,7 +293,6 @@ def make_colors () :
 
     __colored_logger.append ( 1 ) 
     return with_colors() 
-
 
 # =============================================================================
 ## @class ColorLogging
@@ -396,16 +398,62 @@ def keepColor () :
     """
     return KeepColorLogging ()
 
+# =============================================================================
+# Actions!
+# =============================================================================
 
 ## reset colors
-## for ipython mode and TTY output activate colors 
-## if with_ipython() and isatty  () :
-from ostap.utils.basic import isatty
-if isatty  () :
-    make_colors()
-    
-## define default logging thresholds as 'INFO'
+if isatty  () : make_colors()
+
+## define the default logging thresholds as 'INFO'
 setLogging ( 3 )
+
+# =============================================================================
+# Log file?
+# =============================================================================
+log_file = os.getenv ( 'OSTAP_LOGFILE' , '' )
+if log_file : 
+
+    ## set buffering to be 1-line and decolorize the output   
+    class LogHandler(logging.FileHandler) :
+        def __init__(self, filename, mode='w', encoding=None, delay=0):
+            logging.FileHandler.__init__ ( self , filename , mode , encoding, delay ) 
+        def _open(self):
+            """
+            Open the current base file with the (original) mode and encoding.
+            Return the resulting stream.
+            """
+            stream = open(self.baseFilename, self.mode, buffering = 1 )
+            return stream
+        
+        def emit(self, record):
+            """Emit an ddecolorize the record
+            """
+            lname = logging_levels.get ( record.levelno , '' )
+            if not lname : lname = '%s' % record.levelno
+            record.levelname = lname
+            if with_colors () : record.msg = decolorize ( record.msg ) 
+            return logging.FileHandler.emit ( self , record ) 
+    
+    loglev = os.getenv ( 'OSTAP_LOGLEVEL' , '%s' % logging.INFO )
+    try :
+        loglev = int ( loglev )
+        if not loglev in logging_levels : loglev = logging.INFO 
+    except :
+        loglev = logging.INFO
+    log_handler = LogHandler ( log_file , mode = 'w' )
+    log_handler.setLevel ( loglev ) 
+    formatter   = logging.Formatter ( logging_file_format , "%Y-%m-%d %H:%M:%S" )
+    log_handler.setFormatter ( formatter   ) 
+    logging.root.addHandler  ( log_handler )
+
+if log_file :
+
+    logger = getLogger('ostap.logger.logger')
+    func   = lambda : logger.info ( 'Log-file is %s' %  log_file )
+    func () 
+    import atexit    
+    atexit.register ( func )
 
 # =============================================================================
 if __name__ == '__main__' :

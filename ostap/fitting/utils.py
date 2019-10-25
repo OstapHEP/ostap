@@ -377,16 +377,14 @@ class MakeVar ( object ) :
         
         for k , a in items_loop ( kwargs ) :
             
-            klow = k.lower ()
-            kup  = k.upper ()
+            klow = k.lower ().replace('_','')
+            kup  = k.upper ().replace('_','')
             
             ## skip "drawing" options 
             if   klow in drawing_options                            : continue 
             if   klow in ( 'draw'            ,
                            'drawoption'      ,
-                           'drawoptions'     ,
-                           'draw_option'     ,
-                           'draw_options'    ) : continue 
+                           'drawoptions'     ) : continue 
             
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
             
@@ -414,23 +412,15 @@ class MakeVar ( object ) :
                 _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
             elif kup in ( 'STRATEGY'         , 
                           'MINUITSTRATEGY'   ,
-                          'MINUIT_STRATEGY'  ) and isinstance ( a , integer_types ) and 0 <= a <= 2 : 
+                          'STRATEGYMINUIT'   ) and isinstance ( a , integer_types ) and 0 <= a <= 2 : 
                 _args.append ( ROOT.RooFit.Strategy (    a ) ) 
             elif kup in ( 'PRINTLEVEL'       ,
-                          'PRINT_LEVEL'      ,
                           'MINUITPRINT'      ,
-                          'MINUIT_PRINT'     ,
-                          'MINUITLEVEL'      ,
-                          'MINUIT_LEVEL'     ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
+                          'MINUITLEVEL'      ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
                 _args.append ( ROOT.RooFit.PrintLevel ( a ) ) 
             elif kup in ( 'PRINTEVALERRORS'  ,
-                          'PRINT_EVAL_ERRORS',
-                          'PRINTEVAL_ERRORS' ,
-                          'PRINT_EVALERRORS' ,
                           'PRINTERRORS'      ,
-                          'PRINT_ERRORS'     ,
-                          'ERRORSPRINT'      ,
-                          'ERRORS_PRINT'     ) and isinstance ( a , integer_types ) and -1 <= a :
+                          'ERRORSPRINT'      ) and isinstance ( a , integer_types ) and -1 <= a :
                 _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )                
             elif kup in ( 'TIMER'            ,
                           'TIMING'           ) and isinstance ( a , bool ) :
@@ -472,14 +462,11 @@ class MakeVar ( object ) :
                 
             elif kup in ( 'RANGE'            ,
                           'FITRANGE'         ,
-                          'FIT_RANGE'        ,
                           'RANGES'           ,
-                          'FITRANGES'        ,
-                          'FIT_RANGES'       ) and isinstance ( a , string_types ) :
+                          'FITRANGES'        ) and isinstance ( a , string_types ) :
                 _args.append   (  ROOT.RooFit.Range ( a ) )  
             elif kup in ( 'RANGE'            ,
-                          'FITRANGE'         ,
-                          'FIT_RANGE'        ) and isinstance ( a , list_types   ) \
+                          'FITRANGE'         ) and isinstance ( a , list_types   ) \
                  and isinstance ( a[0] ,  num_types ) \
                  and isinstance ( a[1] ,  num_types ) \
                  and a[0] < a[1]  : 
@@ -491,10 +478,9 @@ class MakeVar ( object ) :
             elif kup in  ( 'HESSE'    ,      ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.Hesse ( a )  )
             elif kup in  ( 'INITIALHESSE'    ,
-                           'INITIAL_HESSE'   ,
-                           'INIT_HESSE'      ,
-                           'HESSE_INIT'      ,
-                           'HESSE_INITIAL'   ) and isinstance ( a , bool ) :
+                           'INITHESSE'       ,
+                           'HESSEINIT'       ,
+                           'HESSEINITIAL'    ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.InitialHesse ( a )  )
             elif kup in ( 'OPTIMIZE'         ,
                           'OPTIMISE'         ) and isinstance ( a , integer_types  ) :
@@ -511,9 +497,7 @@ class MakeVar ( object ) :
             elif kup in ( 'OFFSET'           ) and isinstance ( a , bool           ) :
                 _args.append   (  ROOT.RooFit.Offset       ( a )  )
             elif kup in ( 'FITOPTIONS'       ,
-                          'FITOPTION'        ,
-                          'FIT_OPTIONS'      ,
-                          'FIT_OPTION'       ) and isinstance ( a , string_types ) :
+                          'FITOPTION'        ) and isinstance ( a , string_types ) :
                 _args.append   (  ROOT.RooFit.FitOptions   ( a )  )
                 
             elif kup in ( 'CONSTRAINT'       ,

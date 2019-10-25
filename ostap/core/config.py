@@ -45,7 +45,7 @@ type(config).__repr__ = _cp_str_
 config [ 'General'  ] = {
     'Quiet'     : str ( _config.quiet   ) ,
     'Verbose'   : str ( _config.verbose ) ,
-    'Parallel'  : 'PATHOS'
+    'Parallel'  : 'PATHOS'                ,
     }
 
 config [ 'Canvas'   ] = { 'Width'        :  '1000' , 'Height'       :  '800' ,

@@ -23,8 +23,27 @@ __all__     = (
     'set_with_colors'  , ## Enable/Disable colorization 
     )
 # =============================================================================
+import os, sys
+# =============================================================================
 # - is sys.stdout attached to terminal or not ?
-from ostap.utils.basic import isatty
+# from ostap.utils.basic import isatty
+def isatty ( stream = None ) :
+    """Is the stream is attached to terminal?
+    >>> stream = ...
+    >>> if isatty( stream ) : print('Teminal!')
+    >>> if isatty() : print('stdout is terminal!')
+    """
+    if not stream : stream = sys.stdout
+    #
+    try :
+        return stream.isatty()
+    except : pass 
+    #
+    try :
+        return os.isatty ( stream.fileno() ) 
+    except : pass
+    #
+    return False
 # =============================================================================
 ## global flag to indicate if we use colors 
 __with_colors__ = isatty ()   
@@ -96,7 +115,6 @@ def colored_string ( what               ,
     prefix = '\033[%sm' %  ( ';'.join ( k for k in keys ) )
 
     return '{prefix}{what}{reset}'.format ( prefix = prefix , what = what , reset = RESET_SEQ )
-
 
 
 # =============================================================================
