@@ -91,7 +91,7 @@ logging_levels = { logging.CRITICAL : 'FATAL'   ,
 for a in logging_levels : logging.addLevelName ( a ,  logging_levels[a]  )
 # =============================================================================
 logging_format      = '# %(name)-32s %(levelname)-7s %(message)s'
-logging_file_format = '%(asctime)s %(name)-32s %(levelname)-7s %(message)s'
+logging_file_format = '# %(asctime)s %(name)-32s %(levelname)-7s %(message)s'
 
 
 # =============================================================================
