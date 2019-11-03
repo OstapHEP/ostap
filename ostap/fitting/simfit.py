@@ -633,7 +633,7 @@ class SimFit ( MakeVar ) :
             _xv = cmp.xvar
 
             
-        sim_pdf     = PDF ( self.name , xvar = _xv )            
+        sim_pdf     = PDF ( self.name + '_Sim' , xvar = _xv )            
         sim_pdf.pdf = ROOT.RooSimultaneous ( 'Sim_' + self.name , title , self.sample )
         
         keys = self.categories.keys()
@@ -664,22 +664,25 @@ class SimFit ( MakeVar ) :
             cmp = self.categories [ key ] 
             if isinstance  ( cmp , PDF3 ) :
                 from ostap.fitting.fit3d import Generic3D_pdf                
-                dpdf = Generic3D_pdf ( sim_pdf.pdf ,
+                dpdf = Generic3D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
                                        cmp.yvar    ,
                                        cmp.zvar    ,
-                                       add_to_signals = False )
+                                       name           = sim_pdf.name + '_' + key , 
+                                       add_to_signals = False                    )
             elif isinstance  ( cmp , PDF2 ) :
                 from ostap.fitting.fit2d import Generic2D_pdf                                
-                dpdf = Generic2D_pdf ( sim_pdf.pdf ,
+                dpdf = Generic2D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
                                        cmp.yvar    ,
-                                       add_to_signals = False )
+                                       name           = sim_pdf.name + '_' + key , 
+                                       add_to_signals = False                    )
             elif isinstance  ( cmp , PDF  ) :
                 from ostap.fitting.basic import Generic1D_pdf   
-                dpdf = Generic1D_pdf ( sim_pdf.pdf ,
+                dpdf = Generic1D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
-                                       add_to_signals = False )
+                                       name           = sim_pdf.name + '_' + key , 
+                                       add_to_signals = False                    )
                 
             for c in cmp.signals :
                 if not c in dpdf.signals              : dpdf.signals             .add ( c )

@@ -368,6 +368,62 @@ namespace Ostap
       const double high  ) ;
     // ========================================================================
 
+    // ========================================================================
+    // Elliptic integrals 
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
+     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \phi }}\f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_F ( const double phi , const double k   ) ;
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
+     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \phi } d \psi \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_E ( const double phi , const double k   ) ;
+    // ========================================================================
+    /** Complete elliptic integral \f$ E(k) \f$  
+     *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_E ( const double k   ) ;
+    // ========================================================================
+    /** Complete elliptic integral \f$ K(k) \f$  
+     *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_K ( const double k   ) ;
+    // ========================================================================
+    /** difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
+     *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
+     *  where \f$ R_D(x,y,z)\f$ is a symmetric Carlson form 
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see http://dx.doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double elliptic_KmE ( const double k   ) ;    
+    // ========================================================================
+    /** Jacobi zeta function
+     *  \f[ K(k) Z( \beta , k ) = K(k) E(\beta, k ) - E(k) F(\beta,k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  http://functions.wolfram.com/EllipticIntegrals/JacobiZeta/introductions/IncompleteEllipticIntegrals/ShowAll.html
+     */
+    double elliptic_Z  ( const double beta  , const double k   ) ;
+    // ========================================================================
+    /** Product of Jacobi zeta function \f$ Z(\beta,k) \f$
+     *  and complete elliptic integral \f$ K(k) \f$
+     *  \f[ K(k) Z( \beta , k ) = \frac{k^2}{3} \sin \beta \cos \beta 
+     *   \sqrt{ 1 - k^2\sin^2\beta } R_J\left(0,1-k^2, 1 , 1-k^2\sin^2\beta\right)\f], 
+     *  where \f$ R_J(x,y,z,t)\f$ is a symmetric Carlson form  
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see http://dx.doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double elliptic_KZ ( const double beta  , const double k   ) ;
 
     // ========================================================================
     // clenshaw summation algorithms 

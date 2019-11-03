@@ -132,6 +132,93 @@ namespace Ostap
       // ======================================================================
     } ;  
     // ========================================================================
+    /** @class PhaseSpace3s
+     *  Symmetric form of 3-body phase space 
+     *  @see Davydychev, A and Delbourgo, R., 
+     *       "Three body phase space: Symmetrical treatments",
+     *        "{15th Biennial Congress of the Australian Institute of
+     *         Physics Sydney, Australia, July 8-11, 2002}",
+     *  @see http://arxiv.org/abs/hep-th/0209233
+     *
+     * three-body phase space, analytic symmetric expression via 
+     *  elliptic  integrals 
+     *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
+     *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
+     *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
+     *  @see Ostap::Kinematics::phasespace3     
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2019-10-31
+     */
+    class PhaseSpace3s
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from three masses
+       *  @param m1 the mass of the first  particle
+       *  @param m2 the mass of the second particle
+       *  @param m3 the mass of the third  particle
+       */
+      PhaseSpace3s ( const double         m1 = 0 ,
+                     const double         m2 = 1 ,
+                     const double         m3 = 2 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================      
+      /// evaluate 3-body phase space
+      double evaluate    ( const double x ) const ;
+      /// evaluate 3-body phase space
+      double operator () ( const double x ) const { return  evaluate ( x )  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      double m1 () const { return m_m1 ; }
+      double m2 () const { return m_m2 ; }
+      double m3 () const { return m_m3 ; }
+      // ======================================================================
+      double lowEdge () const { return m_m1 + m_m2 + m_m3 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between low and high limits
+      double integral ( const double low  ,
+                        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** three-body phase space, analytic symmetric expression via 
+       *  elliptic  integrals 
+       *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
+       *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
+       *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
+       *  @see Ostap::Kinematics::phasespace3
+       */
+      static double phasespace ( const double x  , 
+                                 const double m1 , 
+                                 const double m2 , 
+                                 const double m3 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag ()  const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the mass of the first particle
+      double         m_m1 ; // the mass of the first particle
+      /// the mass of the second particle
+      double         m_m2 ; // the mass of the second particle
+      /// the mass of the third particle
+      double         m_m3 ; // the mass of the third  particle
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace  {} ; // integration workspace
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class PhaseSpace3
      *  Function to represent three-body phase space
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
@@ -154,15 +241,41 @@ namespace Ostap
                     const double         m3 = 2 ,
                     const unsigned short l1 = 0 ,
                     const unsigned short l2 = 0 ) ;
-      /// deststructor
-      ~PhaseSpace3 () ;                                         // deststructor
+      /** constructor from three masses
+       *  @param l1 the angular momentum between 1st and 2nd particle
+       *  @param l2 the angular momentum between the pair and 3rd particle
+       */
+      PhaseSpace3 ( const PhaseSpace3s&  ps3    , 
+                    const unsigned short l1 = 0 ,
+                    const unsigned short l2 = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate 3-body phase space
-      double operator () ( const double x ) const ;
+      /** evaluate 3-body phase space
+       *  \f[ R_3 ( M ) = \frac{pi^2}{4M^2}\int_{m2+m3}^{M-m_1} \drac{ds_2}{s_2}
+       *   \lambda^{1/2}\left ( s_2 , M^2   , m_1^2\right) 
+       *   \lambda^{1/2}\left ( s_2 , m_2^2 , m_3^2\right) 
+       *  \f] 
+       *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+       *              London, New York, Sydney, Toronto, 1973, Eq. (V.2.17)
+       */
+      double evaluate    ( const double x ) const ;
+      // ======================================================================
+      /** evaluate 3-body phase space
+       *  \f[ R_3 ( M ) = \frac{pi^2}{4M^2}\int_{m2+m3}^{M-m_1} \drac{ds_2}{s_2}
+       *   \lambda^{1/2}\left ( s_2 , M^2   , m_1^2\right) 
+       *   \lambda^{1/2}\left ( s_2 , m_2^2 , m_3^2\right) 
+       *  \f] 
+       *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+       *              London, New York, Sydney, Toronto, 1973, Eq. (V.2.17)
+       */
+      double operator () ( const double x ) const { return evaluate  ( x ) ; }
       // ======================================================================
     public:
+      // ======================================================================
+      double m1 () const { return m_m1 ; }
+      double m2 () const { return m_m2 ; }
+      double m3 () const { return m_m3 ; }
       // ======================================================================
       double lowEdge () const { return m_m1 + m_m2 + m_m3 ; }
       // ======================================================================
@@ -179,7 +292,7 @@ namespace Ostap
       /// get the tag 
       std::size_t tag ()  const ;
       // ======================================================================
-    private:
+    public:
       // ======================================================================
       /// the mass of the first particle
       double         m_m1 ; // the mass of the first particle
@@ -191,11 +304,11 @@ namespace Ostap
       unsigned short m_l1 ; // the orbital momentum of the first pair
       /// the orbital momentum between the pair and the third particle
       unsigned short m_l2 ; // the orbital momentum between the pair and the third particle
-      // ======================================================================
+      // ======================================================================      
     private:
       // ======================================================================
       /// the temporary mass
-      mutable double m_tmp ; /// the temporary mass
+      mutable double m_tmp { 0 } ; /// the temporary mass
       // ======================================================================
     private:
       // ======================================================================

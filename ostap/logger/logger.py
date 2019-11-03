@@ -92,7 +92,7 @@ for a in logging_levels : logging.addLevelName ( a ,  logging_levels[a]  )
 # =============================================================================
 logging_format      = '# %(name)-32s %(levelname)-7s %(message)s'
 logging_file_format = '# %(asctime)s %(name)-32s %(levelname)-7s %(message)s'
-
+logging_date_format = "%Y-%m-%d %H:%M:%S" 
 
 # =============================================================================
 ## The basic configuration 
@@ -443,7 +443,7 @@ if log_file :
         loglev = logging.INFO
     log_handler = LogHandler ( log_file , mode = 'w' )
     log_handler.setLevel ( loglev ) 
-    formatter   = logging.Formatter ( logging_file_format , "%Y-%m-%d %H:%M:%S" )
+    formatter   = logging.Formatter ( logging_file_format , logging_date_format )
     log_handler.setFormatter ( formatter   ) 
     logging.root.addHandler  ( log_handler )
 

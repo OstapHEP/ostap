@@ -51,10 +51,10 @@ class PDF (MakeVar) :
     """Useful helper base class for implementation of various PDF-wrappers 
     """
     def __init__ ( self , name ,  xvar = None , special = False ) :
-
+            
         ## name is defined via base class MakeVar 
         self.name  = name ## name is defines via base class MakeVar 
-     
+
         self.__signals               = ROOT.RooArgList ()
         self.__backgrounds           = ROOT.RooArgList ()
         self.__components            = ROOT.RooArgList ()
@@ -104,6 +104,7 @@ class PDF (MakeVar) :
 
         self.config = { 'name' : self.name , 'xvar' : self.xvar ,  'special' : self.special }
 
+        
     ## conversion to string 
     def __str__ (  self ) :
         return '%s(%s,xvar=%s)' % ( self.__class__.__name__ , self.name , self.xvar.name )
@@ -149,7 +150,9 @@ class PDF (MakeVar) :
         assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
         if not self.special :
             assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
+
         self.__pdf = value
+
     @property
     def pdf_name ( self ) :
         """``pdf_name'' : get the name of the underlying RooAbsPdf"""

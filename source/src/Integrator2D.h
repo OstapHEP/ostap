@@ -7,7 +7,6 @@
 // STD&STL
 // ============================================================================
 #include <map>
-#include <iostream>
 // ============================================================================
 // Local 
 // ============================================================================
@@ -29,7 +28,7 @@ namespace Ostap
       /** @class Integrator2D  Integrator2D.h 
        *  Helper class to simplify operations with integration of 2D-functions 
        *  @see https://www.gnu.org/software/gsl/doc/html/integration.html
-       *  @author Vanya Belyaev Ivan.Belayev@itep.ru
+       *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
        *  @date   2018-09-21
        */
       template <class FUNCTION>

@@ -173,6 +173,9 @@ class MakeVar ( object ) :
     - creation of <code>ROOT.RooRealVar objects</code>
     - store newly created RooFit objects
     """
+    __pdf_names = set()
+    __var_names = set()
+    
     ## @attention ensure that important attributes are available even before __init__
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
@@ -206,7 +209,7 @@ class MakeVar ( object ) :
     def verbose ( self , message , *args , **kwargs ) :
         """Produce VERBOSE  message using the local logger"""
         return self.logger.verbose ( message , *args , **kwargs )
-    
+
     @property
     def aux_keep ( self ) :
         """``aux_keep'' -  the list of objects to be kept by this PDF"""
@@ -228,7 +231,9 @@ class MakeVar ( object ) :
         return self.__name if self.__name else '' 
     @name.setter
     def name ( self , value ) :
-        assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type(value) ) 
+        assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type ( value ) )
+        if value in self.__pdf_names : self.warning ( 'The name "%s" for PDF already defined!' % value )
+        self.__pdf_names.add ( value )     
         self.__name = value
 
     # =============================================================================
@@ -256,29 +261,31 @@ class MakeVar ( object ) :
         """
         # var = ( value )
         # var = ( min , max )
-        # var = ( value , min , max ) 
+        # var = ( value , min , max )
+
         if   isinstance   ( var , tuple ) :
-            assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name 
-            var = ROOT.RooRealVar ( name , comment , *var )
+            assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
+            var     = ROOT.RooRealVar ( self.var_name ( name ) , comment , *var )
 
         ## if only name is specified :
         if   isinstance  ( var , string_types ) and 2 <= len ( args ):
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            var = ROOT.RooRealVar( var , name + comment , *args )
+            var     = ROOT.RooRealVar( self.var_name ( var ) , name + comment , *args )
             
         # var = value 
         if isinstance   ( var , num_types ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            if   not    args       : var = ROOT.RooRealVar ( name , comment , var             )
-            elif 2 == len ( args ) : var = ROOT.RooRealVar ( name , comment , var , *args     )
-            elif 3 == len ( args ) : var = ROOT.RooRealVar ( name , comment , var , *args[1:] )
-        
+            if   not    args       : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
+            elif 2 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
+            elif 3 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
+                
         ## create the variable from parameters 
         if not isinstance ( var , ROOT.RooAbsReal ) : 
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            var = ROOT.RooRealVar ( name , comment , *args )
-            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
-        
+            var = ROOT.RooRealVar ( self.var_name ( name ) , comment , *args )
+            
+        self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+
         ## fix it, if needed
         if   isinstance ( fix , bool       ) : pass 
         elif isinstance ( fix , num_types  ) :
@@ -296,6 +303,15 @@ class MakeVar ( object ) :
 
         return var
 
+    # ==========================================================================
+    ## check the possible name  duplication
+    def var_name  ( self , name ) :
+        """Check the possible name duplication
+        """
+        if name in self.__var_names : self.warning ( 'The name "%s" for is already defined!' % name )
+        self.__var_names.add ( name )
+        return name
+    
     # =========================================================================
     ## create ROOT.RooFit.Binning from TAxis
     #  @see RooFit::Binning
