@@ -213,8 +213,8 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     ## The END of addTMVAResponse  fragment
     # =========================================================================
     
-    logger.info ('tree SIG: %s' %  tSignal )
-    logger.info ('tree BKG: %s' %  tBkg    )
+    logger.info ('tree SIG:\n%s' %  tSignal )
+    logger.info ('tree BKG:\n%s' %  tBkg    )
     
     for m in methods :
         
