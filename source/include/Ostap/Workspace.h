@@ -20,7 +20,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor
-      WorkSpace () ;
+      WorkSpace ( const std::size_t size  = 0 );
       /// (fictive) copy constructor
       WorkSpace ( const WorkSpace&  right );
       /// move constructor 
@@ -32,6 +32,15 @@ namespace Ostap
       // ======================================================================
       /// get the integration workspace
       void* workspace () const ;               // get the integration workspace
+      // ======================================================================
+      /// get the size of allocated workspace 
+      // ======================================================================
+      std::size_t size () const { return m_size ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// resize the workspace 
+      std::size_t resize  ( const std::size_t newsize ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -49,7 +58,10 @@ namespace Ostap
       /// the actual GSL-workspace
       // mutable char*  m_workspace ;  /// the actual GSL-workspace
       // char* here to please dictionary generator...
-      mutable char*  m_workspace ;  /// the actual GSL-workspace
+      mutable char* m_workspace  { nullptr } ; /// the actual GSL-workspace
+      // ======================================================================
+      /// size of the allocated workspace 
+      std::size_t   m_size       { 0 } ;   /// size of the allocated workspace 
       // ======================================================================
     } ;
     // ========================================================================

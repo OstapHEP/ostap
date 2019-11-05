@@ -23,13 +23,17 @@
 // ============================================================================
 // constructor
 // ============================================================================
-Ostap::Math::WorkSpace::WorkSpace () : m_workspace ( nullptr ){}
+Ostap::Math::WorkSpace::WorkSpace ( const std::size_t size ) 
+  : m_workspace ( nullptr )
+  , m_size      ( size )
+{}
 // ============================================================================
 // (fictive) copy constructor
 // ============================================================================
 Ostap::Math::WorkSpace::WorkSpace
 ( const Ostap::Math::WorkSpace& /* right */ )
   : m_workspace ( nullptr )
+  , m_size      ( 0       )
 {}
 // ============================================================================
 // (move constructor
@@ -37,8 +41,10 @@ Ostap::Math::WorkSpace::WorkSpace
 Ostap::Math::WorkSpace::WorkSpace
 (       Ostap::Math::WorkSpace&& right  )
   : m_workspace ( nullptr )
+  , m_size      ( 0       )
 { 
   std::swap ( m_workspace , right.m_workspace ) ; 
+  std::swap ( m_size      , right.m_size      ) ; 
 }
 // ============================================================================
 // destructor
@@ -58,8 +64,7 @@ Ostap::Math::WorkSpace::~WorkSpace ()
 void* Ostap::Math::WorkSpace::workspace () const
 {
   if ( nullptr == m_workspace ) 
-  { m_workspace = (char*) gsl_integration_workspace_alloc ( s_SIZE ) ; }
-  //
+  { m_workspace = (char*) gsl_integration_workspace_alloc ( 0 == m_size ? s_SIZE : m_size ) ; }
   return m_workspace ;
 }
 // ============================================================================
@@ -76,13 +81,36 @@ Ostap::Math::WorkSpace::operator=
 (       Ostap::Math::WorkSpace&& right ) 
 { 
   std::swap  ( m_workspace ,  right.m_workspace ) ;
+  std::swap  ( m_size      ,  right.m_size      ) ;
   return *this ;
 }
 // ============================================================================
 // swap
 // ============================================================================
 void Ostap::Math::WorkSpace::swap ( Ostap::Math::WorkSpace& right ) 
-{ std::swap  ( m_workspace ,  right.m_workspace ) ; }
+{ 
+  std::swap  ( m_workspace ,  right.m_workspace ) ;
+  std::swap  ( m_size      ,  right.m_size      ) ;
+}
+// ============================================================================
+// resize the workspace 
+// ============================================================================
+std::size_t Ostap::Math::WorkSpace::resize ( const std::size_t newsize ) 
+{
+  if      ( m_size  == newsize     ) { return m_size ; }
+  else if ( nullptr != m_workspace ) 
+  {
+    //
+    // free existing workspace:
+    //
+    gsl_integration_workspace * _ws = (gsl_integration_workspace*) m_workspace ;
+    m_workspace = nullptr ;
+    gsl_integration_workspace_free ( _ws );
+  }
+  //
+  m_size = newsize ;
+  return m_size ;
+}
 // ============================================================================
 
 

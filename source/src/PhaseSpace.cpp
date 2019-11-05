@@ -87,7 +87,7 @@ double  Ostap::Math::PhaseSpace2::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -288,7 +288,7 @@ double Ostap::Math::PhaseSpace3::evaluate  ( const double x ) const
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -386,7 +386,7 @@ double  Ostap::Math::PhaseSpace3::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -457,7 +457,7 @@ double Ostap::Math::PhaseSpace3s::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -569,7 +569,7 @@ double Ostap::Math::PhaseSpaceLeft::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -802,7 +802,7 @@ double  Ostap::Math::PhaseSpaceNL::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -882,7 +882,7 @@ double  Ostap::Math::PSDalitz::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -999,7 +999,7 @@ double  Ostap::Math::PhaseSpace23L::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //

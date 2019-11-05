@@ -1106,7 +1106,7 @@ double Ostap::Math::Bukin::integral
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1137,7 +1137,7 @@ double Ostap::Math::Bukin::integral () const
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message1          , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1151,7 +1151,7 @@ double Ostap::Math::Bukin::integral () const
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message2          , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1317,7 +1317,7 @@ double Ostap::Math::Novosibirsk::integral
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL :
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1365,7 +1365,7 @@ void Ostap::Math::Novosibirsk::integrate()
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message1          , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1379,7 +1379,7 @@ void Ostap::Math::Novosibirsk::integrate()
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message2          , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2102,7 +2102,7 @@ double Ostap::Math::Apolonios::integral
         workspace ( m_workspace ) ,    // workspace
         s_PRECISION         ,          // absolute precision
         s_PRECISION         ,          // relative precision
-        s_SIZE              ,          // size of workspace
+        m_workspace.size()              ,          // size of workspace
         s_message           , 
         __FILE__ , __LINE__ ) ;
     //  
@@ -2257,7 +2257,7 @@ double Ostap::Math::Apolonios2::integral
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2359,7 +2359,7 @@ double Ostap::Math::Atlas::integral ( const double low  ,
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -3473,7 +3473,7 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()   ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //

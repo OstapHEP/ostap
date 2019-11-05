@@ -753,8 +753,8 @@ double  Ostap::Math::BreitWignerBase::integral
       s_PRECISION         ,          // absolute precision
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL :
-      s_PRECISION       ,            // relative precision
-      s_SIZE              ,          // size of workspace
+      s_PRECISION         ,          // relative precision
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -790,7 +790,7 @@ double  Ostap::Math::BreitWignerBase::integral () const
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1278,11 +1278,11 @@ double  Ostap::Math::Flatte::integral
     ( &F , 
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION       ,            // absolute precision
+      s_PRECISION         ,          // absolute precision
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL :
-      s_PRECISION       ,            // relative precision
-      s_SIZE              ,          // size of workspace
+      s_PRECISION         ,          // relative precision
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1316,7 +1316,7 @@ double  Ostap::Math::Flatte::integral () const
       workspace ( m_workspace ) ,    // workspace      
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1591,7 +1591,7 @@ double  Ostap::Math::LASS::integral
       workspace ( m_workspace ) ,    // workspace      
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1850,7 +1850,7 @@ double  Ostap::Math::Bugg::integral
       workspace ( m_workspace ) ,    // workspace      
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2077,7 +2077,7 @@ double  Ostap::Math::Swanson::integral
       s_PRECISION         ,          // absolute precision
       ( x10  <= low  ) ? s_PRECISION_TAIL :
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2179,7 +2179,7 @@ double  Ostap::Math::Voigt::integral
       workspace ( m_workspace ) ,    // workspace      
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2513,7 +2513,7 @@ double  Ostap::Math::PseudoVoigt::integral
       workspace ( m_workspace ) ,    // workspace      
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2697,7 +2697,7 @@ double  Ostap::Math::BW23L::integral
       workspace ( m_workspace ) ,    // workspace      
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2817,8 +2817,8 @@ double  Ostap::Math::Flatte23L::integral
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
       s_PRECISION         ,          // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE              ,          // size of workspace
+      s_PRECISION         ,          // relative precision
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2997,8 +2997,8 @@ double  Ostap::Math::Gounaris23L::integral
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
       s_PRECISION         ,          // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE              ,          // size of workspace
+      s_PRECISION         ,          // relative precision
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -3123,8 +3123,8 @@ double  Ostap::Math::LASS23L::integral
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
       s_PRECISION         ,          // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE              ,          // size of workspace
+      s_PRECISION         ,          // relative precision
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -3241,8 +3241,8 @@ double  Ostap::Math::Bugg23L::integral
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
       s_PRECISION         ,          // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE              ,          // size of workspace
+      s_PRECISION         ,          // relative precision
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //

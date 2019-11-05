@@ -150,18 +150,6 @@ class RangeVar(object) :
 ## keep the list of local loggers  
 _loggers  = {}           
 # =============================================================================
-def val2str ( value , format = 'CONST_%s' ) :
-    #
-    result = format % value
-    result = result.replace ( '-' , '_negate_')
-    result = result.replace ( '.' , '_dot_'   )
-    result = result.replace ( '+' , '_plus_'  )
-    #
-    if ( not result ) or ( result[0] not in string.ascii_letters ) :
-        result = 'v_' + result
-    #
-    return result
-# ============================================================================
 ## @class MakeVar
 #  Helper class that allows implement several purely  technical methods:
 #   - creation of <code>ROOT.RooRealVar objects</code>
@@ -308,7 +296,7 @@ class MakeVar ( object ) :
     def var_name  ( self , name ) :
         """Check the possible name duplication
         """
-        if name in self.__var_names : self.warning ( 'The name "%s" for is already defined!' % name )
+        if name in self.__var_names : self.warning ( 'The variable name "%s" is already defined!' % name )
         self.__var_names.add ( name )
         return name
     
@@ -349,7 +337,7 @@ class MakeVar ( object ) :
         """Technical method to parse the constraints argument
         >>>  pdf.fiTo ( ..  , constraints = ... , ... )
         """
-
+        
         if   isinstance ( arg , ROOT.RooCmdArg   ) :
             return arg        
         elif isinstance ( arg , ROOT.RooArgSet   ) :
@@ -599,19 +587,13 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res   = float ( var1 ) * float ( var2 )
-            name  = name  if name   else val2str ( res ) 
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            res  = float ( var1 ) * float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
             return self.vars_multiply ( var1 , var2 , name , title )
         elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_multiply ( var1 , var2 , name , title )
         
         vnames = var1.name , var2.name 
@@ -620,8 +602,8 @@ class MakeVar ( object ) :
         title = title if title else '(%s) times (%s)' % vnames 
         
         formula = '(%s*%s)' % vnames
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        varlist = ROOT.RooArgList    ( var1 , var2  )
+        result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
         #
         self.aux_keep.append ( varlist )
         self.aux_keep.append ( result  )
@@ -653,19 +635,13 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res   = float ( var1 ) + float ( var2 )
-            name  = name  if name   else val2str ( res )
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            res  = float ( var1 ) + float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            var1 = ROOT.RooRealConstant.value ( var1 )                         
             return self.vars_add ( var1 , var2 , name , title )
-        elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+        elif f2 :
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_add ( var1 , var2 , name , title )
         
         vnames = var1.name , var2.name 
@@ -674,8 +650,8 @@ class MakeVar ( object ) :
         title = title if title else '(%s) plus (%s)' % vnames 
         
         formula = '(%s+%s)' % vnames
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        varlist = ROOT.RooArgList    ( var1 , var2 )
+        result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
         #
         self.aux_keep.append ( varlist )
         self.aux_keep.append ( result  )
@@ -707,19 +683,13 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res   = float ( var1 ) - float ( var2 )
-            name  = name  if name   else val2str ( res ) 
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            res  = float ( var1 ) - float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
             return self.vars_subtract ( var1 , var2 , name , title )
         elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_subtract ( var1 , var2 , name , title )
         
         vnames = var1.name , var2.name 
@@ -728,8 +698,8 @@ class MakeVar ( object ) :
         title = title if title else '(%s) minus (%s)' % vnames 
         
         formula = '(%s-%s)' % vnames
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        varlist = ROOT.RooArgList    ( var1 , var2 )
+        result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
         #
         self.aux_keep.append ( varlist )
         self.aux_keep.append ( result  )
@@ -762,18 +732,12 @@ class MakeVar ( object ) :
 
         if f1 and f2 :
             res   = float ( var1 ) / float ( var2 )
-            name  = name  if name   else val2str ( res ) 
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
             return self.vars_divide ( var1 , var2 , name , title )
-        elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+        elif f2 :
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_divide ( var1 , var2 , name , title )
         
         vnames = var1.name , var2.name 
@@ -782,8 +746,8 @@ class MakeVar ( object ) :
         title = title if title else '(%s) divide (%s)' % vnames 
         
         formula = '(%s/%s)' % vnames
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        varlist = ROOT.RooArgList    ( var1 , var2 )
+        result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula , varlist )
         #
         self.aux_keep.append ( varlist )
         self.aux_keep.append ( result  )
@@ -816,19 +780,13 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res   = float ( var1 ) /  ( float ( var2 ) + float ( var1 ) )
-            name  = name  if name   else val2str ( res ) 
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            res  = float ( var1 ) / ( float ( var2 ) + float ( var1 ) )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
             return self.vars_fraction ( var1 , var2 , name , title )
-        elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+        elif f2 :
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_fraction ( var1 , var2 , name , title )
         
         vnames = var1.name , var2.name 
@@ -838,7 +796,7 @@ class MakeVar ( object ) :
         
         formula = '(%s/(%s+%s))' %   ( var1.name , var1.name , var2.name )
         varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
+        result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
         #
         self.aux_keep.append ( varlist )
         self.aux_keep.append ( result  )
@@ -878,7 +836,7 @@ class MakeVar ( object ) :
         err = ROOT.RooFit.RooConst ( value.error () )
         
         # Gaussian constrains 
-        gauss = ROOT.RooGaussian ( name , title , var , val , err )
+        gauss = ROOT.RooGaussian ( sef.var_name ( name ) , title , var , val , err )
         
         # keep all the created technical stuff  
         self.aux_keep.append ( val   )
@@ -944,7 +902,6 @@ class MakeVar ( object ) :
         """
         assert isinstance ( value , VE ) and 0 < value.cov2() ,\
                "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
-
 
         fa = isinstance ( a , ROOT.RooAbsReal )
         fb = isinstance ( b , ROOT.RooAbsReal )

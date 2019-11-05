@@ -362,10 +362,16 @@ class PDF (MakeVar) :
         ## get config 
         conf = {}
         conf.update ( self.config ) 
-        
+
         ## modify the name if the name is in config  
-        if 'name' in conf : conf['name'] += '_copy'
-            
+        if 'name' in conf :
+            name_prefix = kwargs.pop ( 'name_prefix' , '' )
+            name_suffix = kwargs.pop ( 'name_suffix' , '' )
+            if name_prefix or name_suffix :
+                conf['name']  = name_prefix + conf [ 'name' ] + name_suffix
+            else :
+                conf['name'] += '_copy'
+                
         ## update (if needed)
         conf.update ( kwargs )
 
@@ -841,10 +847,16 @@ class PDF (MakeVar) :
 
             ## calculate chi2/ndf
             frame.chi2dnf = None 
-            if dataset :            
+            if dataset and not silent :             
                 pars          = self.pdf.getParameters ( dataset )
-                frame.chi2ndf = frame.chiSquare ( len ( pars ) )  
-                if not silent : self.info ('chi2/ndf is %s' % frame.chi2ndf )
+                frame.chi2ndf = frame.chiSquare ( len ( pars ) )
+                binw          = -1 
+                if nbins and isintance ( nbins , integer_types ) and 1 < nbins :
+                    if hasattr ( drawvar , 'xminmax' ) and drawvar.xminmax () :
+                        xmn , xmx =  drawvar.xminmax()
+                        binw = ( xmx - xmn ) / float ( nbins )
+                if 0 < binw : self.info ( 'chi2/ndf: %s, binwidth: %s' %  ( frame.chi2ndf , binw ) )
+                else        : self.info ( 'chi2/ndf: %s' %                  frame.chi2ndf          )
                 
             if not residual and not pull:
                 return frame
@@ -872,7 +884,7 @@ class PDF (MakeVar) :
                     pframe.SetXTitle ( '' )
                     pframe.SetYTitle ( '' )
                     pframe.SetZTitle ( '' )
-                
+
             return frame, rframe, pframe  
 
     # =========================================================================
@@ -2726,9 +2738,11 @@ class Generic1D_pdf(PDF) :
     """
     ## constructor 
     def __init__ ( self , pdf , xvar = None  ,
-                   name           = None  ,
+                   name           = ''    ,
                    special        = False ,
-                   add_to_signals = True  ) :
+                   add_to_signals = True  ,
+                   prefix         = ''    ,
+                   suffix         = ''    ) :
         """Wrapper for generic RooFit pdf        
         >>> raw_pdf = RooGaussian   ( ...     )
         >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
@@ -2736,7 +2750,7 @@ class Generic1D_pdf(PDF) :
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert pdf  and isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf'' must be ROOT.RooAbsReal"
         
-        name = name if name else pdf.GetName ()        
+        name = name if name else prefix + pdf.GetName () + suffix 
         ## initialize the base 
         PDF . __init__ ( self , name , xvar , special = special )
         ##
@@ -2758,25 +2772,32 @@ class Generic1D_pdf(PDF) :
             'xvar'           : self.xvar           ,
             'name'           : self.name           , 
             'special'        : self.special        , 
-            'add_to_signals' : self.add_to_signals , 
+            'add_to_signals' : self.add_to_signals ,
+            'prefix'         : prefix              ,
+            'suffix'         : suffix              ,            
             }
             
     @property
     def add_to_signals ( self ) :
-        """``add_to_signals'' : shodul PDF be added into list of signal components?"""
+        """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
         
     ## redefine the clone method, allowing only the name to be changed
     #  @attention redefinition of parameters and variables is disabled,
     #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar = None ) :
+    def clone ( self , pdf = None , xvar = None , **kwargs ) :
         """Redefine the clone method, allowing only the name to be changed
          - redefinition of parameters and variables is disabled,
          since it can't be done in a safe way          
         """
+        if pdf  and not  pdf is self.pdf  :
+            raise AttributeError("Generic1D_pdf can not be cloned with different `pdf''" )
         if xvar and not xvar is self.xvar :
             raise AttributeError("Generic1D_pdf can not be cloned with different ``xvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone ( self )
+        if 'special' in kwargs and self.special != kwargs['special'] :
+            raise AttributeError("Generic1D_pdf can not be cloned with different ``special''")
+            
+        return PDF.clone ( self , **kwargs )
     
 # =============================================================================
 ## @class Sum1D
@@ -3052,19 +3073,19 @@ class Fit1D (PDF) :
         if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone() 
         ## if bare RooFit pdf,  fit variable must be specified
         elif isinstance ( signal , ROOT.RooAbsPdf ) and xvar :
-            self.__signal = Generic1D_pdf (  signal , xvar )
+            self.__signal = Generic1D_pdf ( signal , xvar , prefix = 'S_' , suffix = suffix )
         else :
             raise AttributeError ( "Fit1D:Invalid type for ``signal'': %s/%s"  % (  signal , type( signal ) ) )
         
         if not name :
             name = '%s' % self.__signal.name 
-            if suffix : name += '_' + suffix
+            if suffix : name += '_' + suffix 
 
         ## Init base class
-        PDF.__init__ ( self , name + suffix , self.__signal.xvar )             
+        PDF.__init__ ( self , name , self.__signal.xvar )             
         
         ## create the background component 
-        self.__background = self.make_bkg ( background , 'Background' + suffix , self.xvar )
+        self.__background = self.make_bkg ( background , 'Bkg_' + self.name , self.xvar )
 
         ##  keep the lists of signals and backgrounds 
         self.signals     .add ( self.__signal     .pdf )
@@ -3074,9 +3095,9 @@ class Fit1D (PDF) :
         ## treat additional signals
         #        
         self.__more_signals       = [] 
-        for c in othersignals :
+        for i , c in enumerate ( othersignals ) :
             if   isinstance ( c , PDF            ) : cc = c 
-            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( c ,  self.xvar ) 
+            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( c ,  self.xvar , prefix = 'S%d_' % i , suffix = suffix ) 
             else :
                 self.error ('unknown signal component %s/%s, skip it!' % ( c , type ( c ) ) )
                 continue  
@@ -3086,9 +3107,9 @@ class Fit1D (PDF) :
         ## treat additional backgounds 
         #
         self.__more_backgrounds   = [] 
-        for c in otherbackgrounds :
+        for i, c in enumerate ( otherbackgrounds ) :
             if   isinstance ( c , PDF            ) : cc = c  
-            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( cs ,  self.xvar ) 
+            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( cs ,  self.xvar , prefix = 'B%d_' % i , suffix = suffix ) 
             else :
                 self.error ('unknown background component %s/%s, skip it!' % ( c , type ( c ) ) )
                 continue  
@@ -3098,9 +3119,9 @@ class Fit1D (PDF) :
         ## treat additional components
         #
         self.__more_components    = []
-        for c in others : 
+        for i , c in enumerate ( others ) : 
             if   isinstance ( c , PDF            ) : cc = c  
-            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( cs ,  self.xvar ) 
+            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( cs ,  self.xvar , prefix = 'C%d_' % i , suffix = suffix ) 
             else :
                 self.error ("unknown ``other''component %s/%s, skip it!" % ( c , type ( c ) ) )
                 continue  
@@ -3129,7 +3150,7 @@ class Fit1D (PDF) :
                                                 recursive = True      ,
                                                 fractions = fS        )
             ## new signal
-            self.__signal      = Generic1D_pdf   ( sig , self.xvar , 'SIGNAL_' + suffix )
+            self.__signal      = Generic1D_pdf   ( sig , self.xvar , prefix = 'SIGNAL_' , suffix = suffix )
             self.__all_signals = ROOT.RooArgList ( sig )
             self.__sigs        = sigs 
             self.__signal_fractions = fracs
@@ -3147,7 +3168,7 @@ class Fit1D (PDF) :
                                                 recursive = True          ,
                                                 fractions = fB            )
             ## new background
-            self.__background      = Generic1D_pdf   ( bkg , self.xvar , 'BACKGROUND_' + suffix )
+            self.__background      = Generic1D_pdf   ( bkg , self.xvar , prefix = 'BACKGROUND_' , suffix =  suffix )
             self.__all_backgrounds = ROOT.RooArgList ( bkg )
             self.__bkgs            = bkgs 
             self.__background_fractions = fracs 
@@ -3166,7 +3187,7 @@ class Fit1D (PDF) :
                                                 recursive = True     ,
                                                 fractions = fC       ) 
             ## save old background
-            self.__other          = Generic1D_pdf   ( cmp , self.xvar , 'COMPONENT_' + suffix )
+            self.__other          = Generic1D_pdf   ( cmp , self.xvar , prefix = 'COMPONENT_' , suffix = suffix )
             self.__all_components = ROOT.RooArgList ( cmp )
             self.__components_fractions = fracs 
             self.verbose('%2d components  are combined into single COMPONENT'    % len ( cmps ) )
@@ -3250,12 +3271,11 @@ class Fit1D (PDF) :
         #
         ## The final PDF
         #       
-        if   self.name       : title = "model(%s)"     % self.name
-        else                 : title = "model(Fit1D)"
+
+        pdfname  = "Fit1D_"    + self.name
+        pdftitle = "Fit1D(%s)" % self.name
+        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         
-        name     = name if name else ( 'model_' + self.name )
-        
-        pdfargs  = name , title , self.alist1 , self.alist2
         if not self.extended :
             pdfargs = pdfargs + ( True if recursive else False , ) ## RECURSIVE ? 
         self.pdf = ROOT.RooAddPdf ( *pdfargs )
@@ -3265,8 +3285,7 @@ class Fit1D (PDF) :
         else : 
             self.debug ( "non-extended model ``%s'' with %s/%s components"  % ( self.pdf.GetName() , len( self.alist1) , len(self.alist2) ) )
 
-
-        ## save the configurtaion
+        ## save the configuration
         self.config = {
             'signal'              : self.save_signal         ,
             'background'          : self.save_background     ,
