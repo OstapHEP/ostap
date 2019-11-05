@@ -23,7 +23,6 @@ configure_file (
   "${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h"
   )
 
-
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
 
