@@ -234,11 +234,8 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     ## The END of addTMVAResponse  fragment
     # =========================================================================
 
-
-    
     logger.info ('dataset SIG: %s' %  ds1 )
     logger.info ('dataset BKG: %s' %  ds2 )
-
 
 for m in methods :
 
