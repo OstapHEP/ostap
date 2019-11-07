@@ -10,12 +10,12 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels conda-forge
-  - conda create -q -n testenv python=3.6 ostaphep=1.4.3.0 nose
+  - conda create -q -n testenv python=3.6 ostaphep nose
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
   - pip install coverage coveralls
 
-script: nosetest -s -v -a '!slow' --with-coverage --cover-erase --cover-branches --cover-html --cover-html-dir=coverage --cover-package=ostap
+script: nosetests -s -v -a '!slow' --with-coverage --cover-erase --cover-branches --cover-html --cover-html-dir=coverage --cover-package=ostap
 
 after_success:
   - time coveralls
