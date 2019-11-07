@@ -15,9 +15,7 @@ install:
   - source activate testenv
   - pip install coverage coveralls
 
-script: nosetest -s -v -a '!slow' --with-coverage \
-		--cover-erase --cover-branches \
-		--cover-html --cover-html-dir=coverage --cover-package=ostap
+script: nosetest -s -v -a '!slow' --with-coverage --cover-erase --cover-branches --cover-html --cover-html-dir=coverage --cover-package=ostap
 
 after_success:
   - time coveralls
