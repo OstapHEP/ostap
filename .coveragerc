@@ -3,6 +3,7 @@
 [run]
 branch = True
 source = ostap
+include= */ostap/*
 [report]
 exclude_lines =
     # Enable the standard pragma
