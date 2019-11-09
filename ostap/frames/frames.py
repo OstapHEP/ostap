@@ -28,8 +28,11 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for ROOT::RDataFrame objects')
 # =============================================================================
-from   ostap.core.core    import cpp, Ostap 
-from   ostap.logger.utils import multicolumn
+from   ostap.core.core        import cpp, Ostap 
+from   ostap.core.ostap_types import integer_types 
+from   ostap.logger.utils     import multicolumn
+from   ostap.utils.basic      import terminal_size, isatty
+from   ostap.logger.colorized import allright
 # =============================================================================
 try : 
     DataFrame = ROOT.ROOT.RDataFrame
@@ -83,7 +86,42 @@ def _fr_len_ ( f ) :
     >>> print len(frame)
     """
     return f.Count().GetValue() 
+
+# =============================================================================
+## Draw (lazy) progress bar for the    DataFrame:
+#  @code
+#  f = DataFrame ( ... )
+#  p = f.ProgressBar  ( 1000 ) ## number of elements!
+#  ....
+#  @endcode 
+def _fr_progress_bar_ ( self          , 
+                        length        ,
+                        width  = None ,
+                        symbol = "#"  ) :
+    """ Draw (lazy) progress bar for the    DataFrame:
+    >>> f = DataFrame ( ... )
+    >>> p = f.ProgressBar  ( 1000 ) ## number of elements!
+    >>> ....
+    """
     
+    cnt = self.Count () 
+    if not isatty() : return cnt
+    
+    length = length if isinstance ( length , integer_types ) and  0 < length else len ( self )
+    width  = width  if isinstance ( width  , integer_types ) and 10 < width  else terminal_size()[1]
+    
+    if width < 10 : width = 10 
+    nchunks = width  - 9
+    csize   = length / nchunks 
+
+    left   = "[ "
+    right  = " ]"
+    symbol = allright ( symbol )
+
+    fun = Ostap.Utils.frame_progress ( csize , nchunks , symbol , ' ' , left , right )
+    cnt.OnPartialResultSlot  ( csize , fun )
+
+    return cnt
 
 # =============================================================================
 ## Get the effective entries in data frame
@@ -248,12 +286,15 @@ def report_print ( report , title  = '' , prefix = '' ) :
 # decorate 
 # ==============================================================================
 if not hasattr ( DataFrame , '__len__') : DataFrame.__len__ = _fr_len_
-DataFrame .__str__    = _fr_print_ 
-DataFrame .__repr__   = _fr_print_
+DataFrame .__str__     = _fr_print_ 
+DataFrame .__repr__    = _fr_print_
 
-DataFrame .nEff       = _fr_nEff_
-DataFrame .statVar    = _fr_statVar_
-DataFrame .statCov    = _fr_statCov_
+DataFrame .nEff        = _fr_nEff_
+DataFrame .statVar     = _fr_statVar_
+DataFrame .statCov     = _fr_statCov_
+DataFrame .ProgressBar = _fr_progress_bar_
+DataFrame .progress    = _fr_progress_bar_
+
 
 from ostap.stats.statvars import  data_decorate 
 data_decorate ( DataFrame )
@@ -274,6 +315,9 @@ _new_methods_       = (
     DataFrame.__str__          ,
     DataFrame.columns          , 
     DataFrame.branches         ,
+    #
+    DataFrame.ProgressBar      ,
+    DataFrame.progress         ,
     #
     DataFrame.draw             , 
     DataFrame.project          ,

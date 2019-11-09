@@ -56,6 +56,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Chi2Fit.cpp
                          src/Dalitz.cpp
                          src/DalitzIntegrator.cpp
+                         src/DataFrameUtils.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
                          src/Exception.cpp
