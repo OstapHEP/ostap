@@ -851,7 +851,7 @@ class PDF (MakeVar) :
                 pars          = self.pdf.getParameters ( dataset )
                 frame.chi2ndf = frame.chiSquare ( len ( pars ) )
                 binw          = -1 
-                if nbins and isintance ( nbins , integer_types ) and 1 < nbins :
+                if nbins and isinstance ( nbins , integer_types ) and 1 < nbins :
                     if hasattr ( drawvar , 'xminmax' ) and drawvar.xminmax () :
                         xmn , xmx =  drawvar.xminmax()
                         binw = ( xmx - xmn ) / float ( nbins )

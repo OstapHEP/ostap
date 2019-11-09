@@ -1892,7 +1892,7 @@ double Ostap::Math::Argus::cdf ( const double x ) const
   //
   const double y2 = 1 - y * y ;
   //
-  const double res =  Psi_ ( m_shape * y2 ) / Psi_( m_shape ) ;
+  const double res =  Psi_ ( m_shape * std::sqrt ( y2 )) / Psi_( m_shape ) ;
   return m_high > m_low ?  ( 1 - res ) : res ;
 }
 // ============================================================================
