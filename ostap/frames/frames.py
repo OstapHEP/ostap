@@ -110,8 +110,8 @@ def _fr_progress_bar_ ( self          ,
     length = length if isinstance ( length , integer_types ) and  0 < length else len ( self )
     width  = width  if isinstance ( width  , integer_types ) and 10 < width  else terminal_size()[1]
     
-    if width < 10 : width = 10 
-    nchunks = width  - 9
+    if width < 16 : width = 16 
+    nchunks = width - 14
     csize   = length / nchunks 
 
     left   = "[ "

@@ -73,7 +73,8 @@ Ostap::Utils::frame_progress
       for  ( unsigned short i = 0     ; i < istep    ; ++i ) { show += symbol ; } 
       for  ( unsigned short j = istep ; j < nchunks  ; ++j ) { show += blank  ; } 
       show += right ;
-      std::cout << show << std::right << std::setw  ( 3 ) << percent << "% " ;
+      show += " "   ;
+      std::cout << show << percent << "%" ;
     }
     //
     if ( istep == nchunks ) { std::cout << std::endl ; }
