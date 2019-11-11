@@ -312,7 +312,7 @@ def canvas_partition ( canvas                        ,
     if not 0 <  left_margin  < 1 :   left_margin = abs (   left_margin ) / wsx
     if not 0 < right_margin  < 1 :  right_margin = abs (  right_margin ) / wsx
     if not 0 < bottom_margin < 1 : bottom_margin = abs ( bottom_margin ) / wsy
-    if not 0 < top_margin    < 1 :    top_margin = abs ( bottom_margin ) / wsy    
+    if not 0 < top_margin    < 1 :    top_margin = abs (    top_margin ) / wsy    
     if not 0 < vSpacing      < 1 :      vSpacing = abs ( vSpacing )      / wsy
     if not 0 < hSpacing      < 1 :      hSpacing = abs ( hSpacing )      / wsx
 
@@ -440,7 +440,6 @@ ROOT.TCanvas.pads = property ( _cnv_pads_ , None , _cnv_del_pads_ )
 
 ROOT.TCanvas.partition = canvas_partition
 
-
 # ==============================================================================
 ## Split canvas in y-direction into non-equal pads,
 #  proportionally to <code>heights</code> 
@@ -453,7 +452,7 @@ def canvas_vsplit ( canvas                        ,
                     left_margin   = margin_left   , 
                     right_margin  = margin_right  , 
                     bottom_margin = margin_bottom , 
-                    top_margin    = margin_right  ,
+                    top_margin    = margin_top    ,
                     vSpacing      = 0.0           ) :
     """ Split canvas in y-direction into non-equal pads, proportionally to heights
     >>> canvas = ...
@@ -471,7 +470,7 @@ def canvas_vsplit ( canvas                        ,
     if not 0 <  left_margin  < 1 :   left_margin = abs (   left_margin ) / wsx
     if not 0 < right_margin  < 1 :  right_margin = abs (  right_margin ) / wsx
     if not 0 < bottom_margin < 1 : bottom_margin = abs ( bottom_margin ) / wsy
-    if not 0 < top_margin    < 1 :    top_margin = abs ( bottom_margin ) / wsy    
+    if not 0 < top_margin    < 1 :    top_margin = abs (    top_margin ) / wsy    
     if not 0 < vSpacing      < 1 :      vSpacing = abs (      vSpacing ) / wsy
 
     hSpacing = 0
@@ -570,7 +569,7 @@ def canvas_pull ( canvas                        ,
                   left_margin   = margin_left   , 
                   right_margin  = margin_right  , 
                   bottom_margin = margin_bottom , 
-                  top_margin    = margin_right  ,
+                  top_margin    = margin_top    ,
                   vSpacing      = 0.0           ) :
     """Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
     
@@ -580,10 +579,10 @@ def canvas_pull ( canvas                        ,
     """
     return canvas_vsplit ( canvas                        ,
                            heights       = ( 1 , ratio ) ,
-                           left_margin   = left_margin   ,
-                           right_margin  = right_margin  ,
+                           left_margin   =   left_margin ,
+                           right_margin  =  right_margin ,
                            bottom_margin = bottom_margin ,
-                           top_margin    = top_margin    ,
+                           top_margin    =    top_margin ,
                            vSpacing      = vSpacing      )
 
 ROOT.TCanvas.pull_partition = canvas_pull
@@ -596,7 +595,7 @@ ROOT.TCanvas.pull_partition = canvas_pull
 #  frames = ...
 #  draw_pads ( frames , pads , fontsize = 25 ) 
 #  @endcode 
-def draw_pads ( objects , pads , fontsize = 25 ) :
+def draw_pads ( objects , pads , fontsize = 25 , trim_left = False , trim_right = False ) :
     """Draw sequence of object on sequence of pads,
     - the label font size is adjusted to be uniform (in pixels)     
     >>> pads   = ...
@@ -633,6 +632,25 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
 
             ## redefine label size 
             axis.SetLabelSize ( fontsize  )
+
+        if  ( trim_left or trim_right ) and hasattr ( obj , 'GetXaxis' ) :
+            
+            axis  = obj.GetXaxis()
+            xmin  = axis.GetXmin()
+            xmax  = axis.GetXmax()
+            delta = xmax - xmin
+            
+            if   trim_left and isinstance ( trim_left , float ) :
+                xmin += xrim_left * delta
+            elif trim_left :
+                xmin += 0.001 * delta
+                
+            if   trim_right and isinstance ( trim_right , float ) :
+                xmax -= trim_right * delta
+            elif trim_right :
+                xmax -= 0.001 * delta 
+                
+            axis.SetLimits ( xmin , xmax )
 
         ## draw object on the pad 
         obj.draw ()
