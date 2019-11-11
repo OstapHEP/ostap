@@ -79,7 +79,7 @@ if   0 <      tmp_ < 1             : margin_top  = tmp_
 elif 0 < -1 * tmp_ < canvas_height : margin_top = abs ( 1.0 * tmp_ / canvas_w  )  
 
 
-tmp_    = OCC.canvas.get ( 'MarginLeft' , fallback = '%f' %  margin_Left  )
+tmp_    = OCC.canvas.get ( 'MarginLeft' , fallback = '%f' %  margin_left  )
 try               : tmp_  = float ( tmp_ ) 
 except ValueError : tmp_  = margin_left 
 if   0 <      tmp_ < 1            : margin_left = tmp_
