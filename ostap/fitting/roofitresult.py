@@ -19,7 +19,7 @@ __all__     = (
 # =============================================================================
 import ROOT
 from   ostap.core.core          import Ostap, VE, valid_pointer
-from   ostap.core.ostap_types   import string_types 
+from   ostap.core.ostap_types   import string_types , integer_types  
 import ostap.fitting.variables     
 import ostap.fitting.printable     
 # =============================================================================
@@ -376,7 +376,7 @@ def _rfr_results_( self , *vars ) :
 #  minuit.migrad() 
 #  @endcode
 #  @see RooMinimizer 
-def _rm_migrad_  ( self , tag = "" ) :
+def _rm_migrad_  ( self , refit = 0 , tag = "" ) :
     """Run MIGRAD for RooMinimizer
     - see ROOT.RooMinimizer 
     >>> pdf = ...
@@ -387,6 +387,12 @@ def _rm_migrad_  ( self , tag = "" ) :
     if 0 != status :
         from   ostap.fitting.utils import fit_status 
         logger.error ( "MIGRAD %s status %s"  % ( tag , fit_status ( status ) ) )
+        if   isinstance ( refit , integer_types ) and 0 < refit :
+            logger.info ( "MIGRAD %s: refit... "  %  tag )
+            return _rm_migrad_ ( self ,  refit - 1 , tag ) 
+        elif isinstance ( refit , bool          ) and     refit :
+            logger.info ( "MIGRAD %s: refit... "  %  tag )
+            return _rm_migrad_ ( self ,  False     , tag ) 
     return status 
 
 # =============================================================================
@@ -413,7 +419,6 @@ def _rm_minos_ ( self , *variables ) :
         return status
 
     aset = ROOT.RooArgSet()
-    
     res  = self.save()
     
     for v in variables :
@@ -422,7 +427,7 @@ def _rm_minos_ ( self , *variables ) :
             par = res.param ( v ) [ 1 ]
             if par : aset.add ( par )
         elif isinstance ( v , ROOT.RooAbsCollection ) or \
-             isinstance ( v ,  list_types           ) :
+             isinstance ( v , list_types            ) :
             for a in v :
                 if isinstance ( a , ROOT.RooAbsReal ) :
                     par = res.param ( a ) [ 1 ]
@@ -431,7 +436,7 @@ def _rm_minos_ ( self , *variables ) :
     del res
     
     if aset : status = self._old_minos_ ( aset ) 
-    else    : status = self._old_minos_ ( aset )
+    else    : status = self._old_minos_ (      )
     
     if 0 != status :
         from   ostap.fitting.utils import fit_status 

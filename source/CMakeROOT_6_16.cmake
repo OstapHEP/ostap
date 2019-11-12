@@ -112,6 +112,7 @@ add_library(ostap SHARED src/format.cpp
                          src/StatusCode.cpp
                          src/Tee.cpp
                          src/Tensors.cpp
+                         src/Topics.cpp
                          src/Tmva.cpp
                          src/UStat.cpp
                          src/Valid.cpp

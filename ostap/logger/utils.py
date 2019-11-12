@@ -43,7 +43,7 @@ __all__     = (
     ## convert ROOT Errors into C++/python exceptions 
     'rootException'      , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception', ## context manager to perform ROOT Error -> C++/Python exception
-    ##
+    ##                 
     'multicolumn'        , ## format the list of strings into multicolumn block
     )
 # =============================================================================
@@ -57,8 +57,8 @@ from   ostap.logger.logger import getLogger, logColor, logNoColor
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.utils' )
 else                       : logger = getLogger( __name__ )
 del getLogger 
-from   ostap.logger.logger import  logVerbose,  logDebug, logInfo, logWarning, logError
-from   ostap.utils.utils   import RootError2Exception, rootException 
+from   ostap.logger.logger import logVerbose,  logDebug, logInfo, logWarning, logError
+from   ostap.utils.utils   import RootError2Exception, rootException
 # =============================================================================
 ## @class MutePy
 #  Very simple context manager to suppress python printout 

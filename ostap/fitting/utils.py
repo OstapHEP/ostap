@@ -27,6 +27,10 @@ __all__     = (
     # 
     'numcpu'            , ## number of CPUs
     'ncpu'              , ## fuction to builf ROOT.RooFit.NumCPU
+    ## add/remove RooFit topic
+    'remove_topic'       , ## remove topic from RooMsgService
+    'add_topic'          , ## add    topic from RooMsgService
+    'suppress_topics'    , ## suppress topics from RooMsgService 
     #
     'Phases'            , ##  helper class for Ostap polynomial/PDFs
     'RooPolyBase'       , ##  helper class for RooFit polynomials
@@ -35,7 +39,7 @@ __all__     = (
 import ROOT, math, string
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
-from   ostap.core.core        import rootID, VE, items_loop
+from   ostap.core.core        import Ostap, rootID, VE, items_loop
 from   ostap.core.ostap_types import num_types, list_types, integer_types, string_types 
 from   ostap.logger.utils     import roo_silent
 from   sys                    import version_info as python_version 
@@ -1488,6 +1492,188 @@ def get_i ( what , i , default = None ) :
 
     return default
         
+# =============================================================================
+## consruct MsgTopic
+#  @see RooFit::MsgTopic
+#  @code
+#  topic = msgTopic ( ROOT.RooFit.Fitting ) 
+#  topic = msgTopic ( ROOT.RooFit.Fitting , ROOT.RooFit.Caching )
+#  topic = msgTopic ( 'Fitting' , 'Caching' )
+#  @endcode
+def msg_topic ( *topics ) :
+    """onsruct MsgTopic
+    >>> topic = msgTopic ( ROOT.RooFit.Fitting ) 
+    >>> topic = msgTopic ( ROOT.RooFit.Fitting , ROOT.RooFit.Caching )
+    >>> topic = msgTopic ( 'Fitting' , 'Caching' )
+    """
+    topic = 0
+    for i in  topics : 
+        if   isinstance ( i , integer_types )  : topic |= i
+        elif isinstance ( i , string_types  )  :
+            ii = i.lower() 
+            if   ii == 'generation'            : topic |=  ROOT.RooFit.Generation 
+            elif ii == 'minimization'          : topic |=  ROOT.RooFit.Minimization
+            elif ii == 'minization'            : topic |=  ROOT.RooFit.Minimization
+            elif ii == 'plotting'              : topic |=  ROOT.RooFit.Plotting
+            elif ii == 'fitting'               : topic |=  ROOT.RooFit.Fitting 
+            elif ii == 'integration'           : topic |=  ROOT.RooFit.Integration 
+            elif ii == 'linkstatemgmt'         : topic |=  ROOT.RooFit.LinkStateMgmt
+            elif ii == 'eval'                  : topic |=  ROOT.RooFit.Eval
+            elif ii == 'caching'               : topic |=  ROOT.RooFit.Caching
+            elif ii == 'optimization'          : topic |=  ROOT.RooFit.Optimization
+            elif ii == 'objecthandling'        : topic |=  ROOT.RooFit.ObjectHandling
+            elif ii == 'inputarguments'        : topic |=  ROOT.RooFit.InputArguments
+            elif ii == 'tracing'               : topic |=  ROOT.RooFit.Tracing
+            elif ii == 'contents'              : topic |=  ROOT.RooFit.Contents
+            elif ii == 'datahandling'          : topic |=  ROOT.RooFit.DataHandling
+            elif ii == 'numintegration'        : topic |=  ROOT.RooFit.NumIntegration
+            elif ii == 'numericintegration'    : topic |=  ROOT.RooFit.NumIntegration
+            elif ii == 'numericalintegration'  : topic |=  ROOT.RooFit.NumIntegration
+            elif ii == 'fastevaluations'       : topic |=  ROOT.RooFit.FastEvaluations
+            else : logger.error ( 'MsgTopic/1: unknown topic %s, skip' % i )
+        else : logger.error ( 'MsgTopic/2: unknown topic %s/%s, skip' % ( i , type ( i ) ) )
+        
+    return topic 
+    
+# =============================================================================
+# upgraded constructor for class Ostap::Utils::RemoveTopicsd
+# @code
+# with RemoveTopic ( [ 'Fitting' , 'Plotting' ] ) :
+#    ... do something ...
+# with RemoveTopic ( ROOT.RooFit.Plotting | ROOT.RooFit.Fitting ) :
+#    ... do something ...
+# @endcode
+# @see Ostap::Utils::AddTopic
+# @see Ostap::Utils::RemoveTopic
+def _rt_new_init_ ( self , topics , level = ROOT.RooFit.INFO , streams = -1  ) :
+    """ Upgraded constructor for class Ostap::Utils::RemoveTopics
+    >>> with RemoveTopic ( [ 'Fitting' , 'Plotting' ] ) :
+    ...    ... do something ...
+    >>> with RemoveTopic ( ROOT.RooFit.Plotting | ROOT.RooFit.Fitting ) :
+    ...    ... do something ...
+    - see Ostap::Utils::AddTopic
+    - see Ostap::Utils::RemoveTopic
+    """
+
+    if isinstance ( topics , integer_types ) and 0 < topics and topics <= 2**16 :
+        return self._old_init_ ( topics , level , streams )    
+    if isinstance ( topics , string_types  ) : topics = topics.split()
+    topic = msg_topic ( *topics )
+    return self._old_init_ ( topic , level , streams )
+
+if not hasattr ( Ostap.Utils.RemoveTopic , '_old_init_' ) :
+    Ostap.Utils.RemoveTopic._old_init_ = Ostap.Utils.RemoveTopic.__init__
+    Ostap.Utils.RemoveTopic.__init__   = _rt_new_init_
+    Ostap.Utils.RemoveTopic.__enter__  = lambda s : s
+    Ostap.Utils.RemoveTopic.__exit__   = lambda s,*_ : s.exit() 
+    
+# =============================================================================
+# upgraded constructor for class Ostap::Utils::AddTopic
+# @code
+# with AddTopic ( [ 'Fitting' , 'Plotting' ] ) :
+#    ... do something ...
+# with AddTopic ( ROOT.RooFit.Plotting | ROOT.RooFit.Fitting ) :
+#    ... do something ...
+# @endcode
+# @see Ostap::Utils::AddTopic
+# @see Ostap::Utils::RemoveTopic
+def _at_new_init_ ( self , topics , streams = -1  ) :
+    """ Upgraded constructor for class Ostap::Utils::AddTopics
+    >>> with RemoveTopic ( [ 'Fitting' , 'Plotting' ] ) :
+    ...    ... do something ...
+    >>> with RemoveTopic ( ROOT.RooFit.Plotting | ROOT.RooFit.Fitting ) :
+    ...    ... do something ...
+    - see Ostap::Utils::AddTopic
+    - see Ostap::Utils::RemoveTopic
+    """
+
+    if isinstance ( topics , integer_types ) and 0 < topics and topics <= 2**16 :
+        return self._old_init_ ( topics , streams )
+    
+    if isinstance ( topics , string_types  ) : topics = [ topics ]
+
+    topic = msg_topic ( *topics )
+    return self._old_init_ ( topic , streams )
+                
+if not hasattr (  Ostap.Utils.AddTopic , '_old_init_' ) :
+    Ostap.Utils.AddTopic._old_init_ = Ostap.Utils.AddTopic.__init__
+    Ostap.Utils.AddTopic.__init__   = _at_new_init_
+    Ostap.Utils.AddTopic.__enter__  = lambda s : s
+    Ostap.Utils.AddTopic.__exit__   = lambda s,*_ : s.exit() 
+    
+
+# ================================================================================
+## remove topic from Roofit message streams
+#  @see RooMsgService
+#  @code
+#  with remove_topic ( ROOT.RooFit.Fitting ) :
+#    ...
+#  with remove_topic ( ROOT.RooFit.Fitting | ROOT.RooFit.Plotting ) :
+#    ...
+#  with remove_topic ( [ 'Fitting' , 'Plotting' ] ) :
+#    ...
+#  @endcode
+#  @see Ostap::Utils::RemoveTopic
+#  @see Ostap::Utils::AddTopic
+def remove_topic ( topics , level = ROOT.RooFit.INFO , stream  = -1 ) :
+    """Remove topic from Roofit message streams
+    - see RooMsgService
+    >>> with remove_topic ( ROOT.RooFit.Fitting ) :
+    ...  ...
+    >>> with remove_topic ( ROOT.RooFit.Fitting | ROOT.RooFit.Plotting ) :
+    ... ...
+    >>> with remove_topic ( [ 'Fitting' , 'Plotting' ] ) :
+    ... ...
+    - see Ostap::Utils::RemoveTopic
+    - see Ostap::Utils::AddTopic
+    """
+    return Ostap.Utils.RemoveTopic ( topics , level , stream ) 
+
+
+# ================================================================================
+## add topic from RooFit message streams
+#  @see RooMsgService
+#  @code
+#  with add_topic ( ROOT.RooFit.Fitting ) :
+#    ...
+#  with add_topic ( ROOT.RooFit.Fitting | ROOT.RooFit.Plotting ) :
+#    ...
+#  with add_topic ( [ 'Fitting' , 'Plotting' ] ) :
+#    ...
+#  @endcode
+#  @see Ostap::Utils::RemoveTopic
+#  @see Ostap::Utils::AddTopic
+def add_topic ( topics , stream  = -1 ) :
+    """Add topic to RooFit message streams
+    - see RooMsgService
+    >>> with add_topic ( ROOT.RooFit.Fitting ) :
+    ...  ...
+    >>> with add_topic ( ROOT.RooFit.Fitting | ROOT.RooFit.Plotting ) :
+    ... ...
+    >>> with add_topic ( [ 'Fitting' , 'Plotting' ] ) :
+    ... ...
+    - see Ostap::Utils::RemoveTopic
+    - see Ostap::Utils::AddTopic
+    """
+    return Ostap.Utils.AddTopic ( topics , level , stream ) 
+
+
+# =============================================================================
+## suppress certain message topics
+#  @code
+#  suppress_topics ( 'Fitting'  , 'Caching' ) 
+#  @endcode 
+def suppress_topics ( *topics ) :
+    """suppress certain message topics
+    >>> suppress_topics ( 'Fitting'  , 'Caching' ) 
+    """
+    svc = ROOT.RooMsgService.instance()
+    svc.saveState () 
+    topic = msg_topic ( *topics ) 
+    num   = svc.numStreams()
+    for i in range ( num ) :
+        ok = Ostap.Utils.remove_topic ( i , topic ) 
+
 # =============================================================================
 if '__main__' == __name__ :
     

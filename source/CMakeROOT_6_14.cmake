@@ -137,6 +137,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Tee.cpp
                          src/Tensors.cpp
                          src/Tmva.cpp
+                         src/Topics.cpp
                          src/UStat.cpp
                          src/Valid.cpp
                          src/ValueWithError.cpp

@@ -1478,7 +1478,7 @@ class PDF (MakeVar) :
                 ## create MINUIT minimizer 
                 minuit = self.minuit ( nLL = nLL ,
                                        max_calls      = max_calls      ,
-                                       maX_iterations = max_iterations ,
+                                       max_iterations = max_iterations ,
                                        opt_const      = opt_const      ,
                                        strategy       =  strategy      )
 

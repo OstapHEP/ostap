@@ -1065,12 +1065,13 @@ class SimFit ( MakeVar ) :
     #  m.minos ( param )
     #  @endcode
     #  @see RooMinimizer
-    def minuit ( self , dataset   ,
-                 max_calls = -1   ,
-                 max_iter  = -1   , 
-                 optconst  = True , ## optimize const 
-                 strategy  = None ,
-                 args      =   () , **kwargs  ):
+    def minuit ( self , dataset        ,
+                 max_calls      = -1   ,
+                 max_iterations = -1   , 
+                 opt_const      = True , ## optimize const 
+                 strategy       = None ,
+                 nLL            = None , 
+                 args           =   () , **kwargs  ):
         """Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
@@ -1080,12 +1081,13 @@ class SimFit ( MakeVar ) :
         >>> m.minos ( param )
         - see ROOT.RooMinimizer
         """
-        return self.pdf.minuit ( dataset               ,
-                                 max_calls = max_calls ,
-                                 max_iter  = max_iter  ,
-                                 optconst  = optconst  ,
-                                 strategy  = strategy  ,
-                                 args      = args      , **kwargs )
+        return self.pdf.minuit ( dataset                         ,
+                                 max_calls      = max_calls      ,
+                                 max_iterations = max_iterations ,
+                                 opt_const      = opt_const      ,
+                                 strategy       = strategy       ,
+                                 nLL            = nLL            ,
+                                 args           = args           , **kwargs )
 
     
     # =========================================================================
