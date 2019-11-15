@@ -180,7 +180,7 @@ class Primes(object) :
 
         ## extend the list of primes if needed 
         if n > self.__last :
-            self.__primes = primes ( n )
+            self.__primes = primes ( 2 * n )
             self.__last   = n
 
         i = bisect.bisect_left ( self.__primes , n )

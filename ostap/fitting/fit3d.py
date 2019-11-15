@@ -389,13 +389,13 @@ class PDF3 (PDF2) :
     #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
     #  varset = ....
     #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , extended =  =   True )     
+    #  data   = model.generate ( 100000 , varset , sample =   True )     
     #  @endcode
     def generate ( self             ,
                    nEvents          ,
                    varset   = None  ,
-                   extended = False , 
                    binning  = {}    ,
+                   sample   = False , 
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
@@ -403,11 +403,17 @@ class PDF3 (PDF2) :
         
         >>> varset = ....
         >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , extended = True )
+        >>> data   = model.generate ( 100000 , varset , sample = True )
         """
+        nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
+        assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
+
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
-        if  extended :
-            args = args + ( ROOT.RooFit.Extended () , )
+
+        if binning is True :
+            args    = args + ( ROOT.AllBinned() , ) 
+            binning = {}
+
         if   not varset :
             varset = ROOT.RooArgSet( self.xvar , self.yvar , self.zvar )
         elif isinstance ( varset , ROOT.RooAbsReal ) :

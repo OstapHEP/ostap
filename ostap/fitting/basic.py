@@ -29,11 +29,13 @@ __all__     = (
 import ROOT, math,  random
 import ostap.fitting.roofit 
 import ostap.fitting.variables
+import ostap.fitting.roocollections 
 from   builtins                import range
 from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
 from   ostap.math.base         import iszero , frexp10 
 from   ostap.core.ostap_types  import ( is_good_number , is_integer , string_types , 
-                                        integer_types  , num_types  , list_types   ) 
+                                        integer_types  , num_types  , list_types   ,
+                                        dictlike_types ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , 
@@ -579,7 +581,10 @@ class PDF (MakeVar) :
         if   isinstance ( style , Styles     ) : pass
         elif isinstance ( style , Style      ) : style = Styles ( [ style ] )
         elif isinstance ( style , list_types ) : style = Styles (   style   )   
-                                  
+
+        if args :
+            self.error ( "___DRAW: " + str ( args ) )
+        
         for i , cmp in enumerate ( what ) :
 
             st         = style  ( i ) if callable  ( style ) else ()
@@ -641,7 +646,7 @@ class PDF (MakeVar) :
     #  @endcode
     #  Otherwise the default options,  defined in ostap.plotting.fit_draw module, are used 
     #  @see ostap.plotting.fit_draw
-    def draw ( self ,
+    def draw ( self                         ,
                dataset               = None ,
                nbins                 = 100  ,   ## Frame binning
                silent                = True ,   ## silent mode ?
@@ -699,7 +704,7 @@ class PDF (MakeVar) :
         #
         
         from ostap.plotting.style import useStyle 
-        
+
         #
         ## again the context
         # 
@@ -724,13 +729,12 @@ class PDF (MakeVar) :
                 data_options = data_options + ( ROOT.RooFit.Binning ( nbins ) , )
 
             if dataset :
-                command    = ROOT.RooLinkedList()
+                command  = ROOT.RooLinkedList()
                 for o in data_options : command.add ( o )
-                for a in args         : command.add ( a )
+                for a in args         : command.add ( o )
                 invisible = ROOT.RooFit.Invisible()  
                 command.add ( invisible ) 
                 dataset .plotOn ( frame , command )
-                del command
                 
             ## draw various ``background'' terms
             boptions     = self.draw_option ( 'background_options' , **kwargs ) 
@@ -738,12 +742,12 @@ class PDF (MakeVar) :
             self._draw( self.backgrounds , frame , boptions , bbstyle )
             kwargs.pop ( 'background_options' , () )
             kwargs.pop ( 'background_style'   , () )
-            
+
             ## draw combined ``background'' components 
             if self.combined_backgrounds :
                 drawit   = self.draw_option ( 'draw_combined_background'    , **kwargs )
                 doptions = self.draw_option ( 'combined_background_options' , **kwargs ) 
-                dstyle   = self.draw_option (   'combined_background_style' , **kwargs )
+                dstyle   = self.draw_option ( 'combined_background_style'   , **kwargs )
                 if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle , args )
                 
             kwargs.pop ( 'combined_background_options' , ()   )
@@ -752,7 +756,7 @@ class PDF (MakeVar) :
             
             ## ugly :-(
             ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
-            ct1bstyle    = self.draw_option (   'crossterm1_style' , **kwargs ) 
+            ct1bstyle    = self.draw_option ( 'crossterm1_style'   , **kwargs ) 
             if hasattr ( self , 'crossterms1' ) and self.crossterms1 : 
                 self._draw( self.crossterms1 , frame , ct1options , ct1bstyle , args )
             kwargs.pop ( 'crossterm1_options' , () )
@@ -760,15 +764,15 @@ class PDF (MakeVar) :
 
             ## ugly :-(
             ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs )
-            ct2bstyle    = self.draw_option (   'crossterm2_style' , **kwargs ) 
+            ct2bstyle    = self.draw_option ( 'crossterm2_style'   , **kwargs ) 
             if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
                 self._draw( self.crossterms2 , frame , ct2options , ct2bstyle , args )
             kwargs.pop ( 'crossterm2_options' , () )
             kwargs.pop ( 'crossterm2_style'   , () )
 
             ## draw ``other'' components
-            coptions     = self.draw_option (  'component_options' , **kwargs )
-            cbstyle      = self.draw_option (    'component_style' , **kwargs )
+            coptions     = self.draw_option ( 'component_options' , **kwargs )
+            cbstyle      = self.draw_option ( 'component_style'   , **kwargs )
             self._draw( self.components , frame , coptions , cbstyle , args )
             kwargs.pop ( 'component_options' , () )
             kwargs.pop ( 'component_style'   , () )
@@ -777,7 +781,7 @@ class PDF (MakeVar) :
             if self.combined_components :
                 drawit   = self.draw_option ( 'draw_combined_component'    , **kwargs )
                 doptions = self.draw_option ( 'combined_component_options' , **kwargs ) 
-                dstyle   = self.draw_option (   'combined_component_style' , **kwargs )
+                dstyle   = self.draw_option ( 'combined_component_style'   , **kwargs )
                 if drawit : self._draw ( self.combined_components , frame , doptions , dstyle , args )
                 
             kwargs.pop ( 'combined_component_options' , ()   )
@@ -1604,13 +1608,13 @@ class PDF (MakeVar) :
     #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
     #  varset = ....
     #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , extended = True )     
+    #  data   = model.generate ( 100000 , varset , sample = True )     
     #  @endcode
     def generate ( self             ,
                    nEvents          ,
                    varset   = None  ,
-                   extended = False ,
                    binning  = None  ,
+                   sample   = False , 
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
@@ -1618,11 +1622,18 @@ class PDF (MakeVar) :
         
         >>> varset = ....
         >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , extended =  =   True )
+        >>> data   = model.generate ( 100000 , varset , sample = True )
         """
+        nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
+        assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
+
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
-        if  extended :
-            args = args + ( ROOT.RooFit.Extended () , )
+
+        if   isinstance ( binning , integer_types ) and 0 < binning :
+            args    = args + ( ROOT.RooFit.AllBinned () , ) 
+        elif binning is True :
+            args    = args + ( ROOT.RooFit.AllBinned () , ) 
+            binning = {}
             
         if   not varset :
             varset = ROOT.RooArgSet ( self.xvar )
@@ -1637,12 +1648,13 @@ class PDF (MakeVar) :
 
         from ostap.fitting.variables import KeepBinning
 
+            
         with KeepBinning ( self.xvar ) : 
 
             if isinstance ( binning , dict ) :
                 binning = binning.get ( self.xvar.name , None )                 
             if binning : self.xvar.bins = binning
-                    
+            
             return self.pdf.generate (  varset , *args )
 
     # =========================================================================
@@ -2517,6 +2529,94 @@ class PDF (MakeVar) :
 
 
 
+    # =========================================================================
+    ## Load parameters from external dictionary <code>{ name : value }</code>
+    #  or sequence of <code>RooAbsReal</code> objects
+    #  @code
+    #  pdf     = ...
+    #  dataset = ...
+    #  params  = { 'A' : 10 , 'B' : ... }
+    #  pdf.load_params ( dataset , params ) 
+    #  params  = ( A , B , C , ... )
+    #  pdf.load_params ( dataset , params )  
+    #  @endcode 
+    def load_params ( self , dataset = None , params = {}  ) :
+        """Load parameters from external dictionary <code>{ name : value }</code>
+        #  or sequence of <code>RooAbsReal</code> objects
+        >>> pdf      = ...
+        >>> dataset = ... 
+        >>> params = { 'A' : 10 , 'B' : ... }
+        >>> pdf.load_params ( dataset , params ) 
+        >>> params = ( A , B , C , ... )
+        >>> pdf.load_params ( dataset , params )  
+        """
+        ## nothing to load 
+        if not params : return 
+        
+        ## get the list of the actual parameters 
+        pars = self.pdf.getParameters ( dataset )
+
+        table = [] 
+        if isinstance ( params , dictlike_types ) :
+            keys   = set () 
+            for key in params :
+                for p in pars :
+                    if not hasattr ( p  , 'setVal' ) : continue
+                    if p.name != key                 : continue
+                    
+                    v  = params[key]
+                    vv = float ( v  )
+                    pv = p.getVal ()   
+                    if vv != pv : 
+                        p.setVal   ( vv )
+                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        table.append ( item ) 
+                    keys.add ( key )
+
+            not_used = set ( params.keys() ) - keys 
+
+        ## list of objects 
+        else : 
+            keys = set()
+        
+            for i , pp in enumerate ( params ) :  
+                pp = _params [ 0 ]             
+                if not isinstance ( pp , ROOT.RooAbsReal ) : continue
+                for p in pars :
+                    if not hasattr ( p  , 'setVal' )       : continue
+                    if p.name != pp.name                   : continue
+                    
+                    vv = float ( pp )
+                    pv = p.getVal () 
+                    if vv != pv :
+                        p.setVal   ( vv )
+                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        table.append ( item ) 
+                    keys.add  ( i )
+
+            not_used = []
+            for i , pp in enumerate ( params ) :  
+                if i in keys : continue
+                not_used.add ( pp )
+
+        table.sort()
+        npars = len ( table )
+        
+        if npars :
+            
+            title = 'Parameters loaded: %s' % npars 
+            table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
+            import ostap.logger.table
+            table = ostap.logger.table.table ( table , title , prefix = "# " )
+            self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
+            
+        not_used = list ( not_used )
+        not_used.sort() 
+        if not_used :
+            self.warning ("Following keys are unused %s" % not_used ) 
+        
+        return 
+        
 # =============================================================================
 ##  helper utilities to imlement resolution models.
 # =============================================================================

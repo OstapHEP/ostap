@@ -34,6 +34,8 @@ __all__     = (
     #
     'Phases'            , ##  helper class for Ostap polynomial/PDFs
     'RooPolyBase'       , ##  helper class for RooFit polynomials
+    #
+    "NameDuplicates"    , ## allow/disallow name duplicates 
     )
 # =============================================================================
 import ROOT, math, string
@@ -43,6 +45,7 @@ from   ostap.core.core        import Ostap, rootID, VE, items_loop
 from   ostap.core.ostap_types import num_types, list_types, integer_types, string_types 
 from   ostap.logger.utils     import roo_silent
 from   sys                    import version_info as python_version 
+from   ostap.math.random_ext  import ve_gauss, poisson  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
@@ -151,6 +154,28 @@ class RangeVar(object) :
         self.var.setMax ( self.omax )
 
 # =============================================================================
+## @class NameDuplicates
+#  Are name duplicates allowed?
+#  @code
+#  if NameDuplicates.allowed()
+#  ...
+#  NameDuplicates.allow ( True ) 
+#  @endcode
+#  @attention allowing name duplication is a dangerous action!
+class NameDuplicates(object) :
+    """ Are name duplicates allowed?
+    >>> if NameDuplicates.allowed() : .... 
+    ...
+    >>> NameDuplicates.allow ( True )
+    - Attention:  allowing name duplication is a dangerous action!
+    """
+    __allowed = False
+    @classmethod
+    def allowed ( cls ) : return cls.__allowed
+    @classmethod
+    def allow   ( cls , allowed ) :
+        cls.__allowed = True if allowed else False 
+# =============================================================================
 ## keep the list of local loggers  
 _loggers  = {}           
 # =============================================================================
@@ -224,7 +249,8 @@ class MakeVar ( object ) :
     @name.setter
     def name ( self , value ) :
         assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type ( value ) )
-        if value in self.__pdf_names : self.warning ( 'The name "%s" for PDF already defined!' % value )
+        if value in self.__pdf_names and not NameDuplicates.allowed() :
+            self.warning ( 'The name "%s" for PDF already defined!' % value )
         self.__pdf_names.add ( value )     
         self.__name = value
 
@@ -300,7 +326,9 @@ class MakeVar ( object ) :
     def var_name  ( self , name ) :
         """Check the possible name duplication
         """
-        if name in self.__var_names : self.warning ( 'The variable name "%s" is already defined!' % name )
+        if name in self.__var_names and not NameDuplicates.allowed() :
+            self.warning ( 'The variable name "%s" is already defined!' % name )
+            
         self.__var_names.add ( name )
         return name
     
@@ -1045,6 +1073,32 @@ class MakeVar ( object ) :
         
         return result 
 
+    # =========================================================================
+    ## sample ``random'' positive number of events
+    #  @code
+    #  n =  pdf.gen_sample ( 10            ) ## get poissonian 
+    #  n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
+    #  @endcode
+    def gen_sample ( self , events ) :
+        """Sample ``random'' positive number of events
+        >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
+        >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
+        """
+        if   isinstance ( nevents , num_types ) and 0  < nevents :
+            return poisson ( nevents )
+        elif isinstance ( nevents , VE ) and \
+                 ( ( 0 <= nevents.cov2 () and 0 < nevents                       ) or 
+                   ( 0 <  nevents.cov2 () and 0 < nevents + 3 * nevents.error() ) ) :
+            for i in range ( 20000 ) :
+                n = int ( ve_gauss ( nEvents ) )
+                if 0 < n : return n 
+            else :
+                self.error ( "Can't generate positive number from %s" % events )
+                return
+            
+        self.error ( "Can't generate positive number from %s/%s" % ( events , type ( events ) ) )
+        return 
+    
 # =============================================================================
 ## simple convertor of 1D-histo to data set
 #  @code
@@ -1521,6 +1575,7 @@ def msg_topic ( *topics ) :
             elif ii == 'eval'                  : topic |=  ROOT.RooFit.Eval
             elif ii == 'caching'               : topic |=  ROOT.RooFit.Caching
             elif ii == 'optimization'          : topic |=  ROOT.RooFit.Optimization
+            elif ii == 'optimisation'          : topic |=  ROOT.RooFit.Optimization
             elif ii == 'objecthandling'        : topic |=  ROOT.RooFit.ObjectHandling
             elif ii == 'inputarguments'        : topic |=  ROOT.RooFit.InputArguments
             elif ii == 'tracing'               : topic |=  ROOT.RooFit.Tracing

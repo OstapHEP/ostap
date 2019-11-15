@@ -46,9 +46,9 @@ ostap_latex . SetTextColor  ( 1          )
 ostap_latex . SetTextSize   ( 0.04       )
 ostap_latex . SetTextAlign  ( 12         )
 # ==============================================================================
-margin_top    = 0.03
+margin_top    = 0.05
 margin_bottom = 0.12
-margin_left   = 0.10
+margin_left   = 0.12
 margin_right  = 0.05
 # ==============================================================================
 import ostap.core.config as OCC
@@ -71,13 +71,11 @@ except ValueError : tmp_  = margin_right
 if   0 <      tmp_ < 1            : margin_right = tmp_
 elif 0 < -1 * tmp_ < canvas_width : margin_right = abs ( 1.0 * tmp_ / canvas_width )
 ##
-
-tmp_    = OCC.canvas.get ( 'MarginTop'   , fallback = '%f'  % margin_top ) 
+tmp_    = OCC.canvas.get ( 'MarginBottom'   , fallback = '%f'  % margin_bottom ) 
 try               : tmp_  = float ( tmp_ ) 
-except ValueError : tmp_  = margin_top
-if   0 <      tmp_ < 1             : margin_top  = tmp_
-elif 0 < -1 * tmp_ < canvas_height : margin_top = abs ( 1.0 * tmp_ / canvas_w  )  
-
+except ValueError : tmp_  = margin_bottom
+if   0 <      tmp_ < 1             : margin_bottom = tmp_
+elif 0 < -1 * tmp_ < canvas_height : margin_bottom = abs ( 1.0 * tmp_ / canvas_height )  
 
 tmp_    = OCC.canvas.get ( 'MarginLeft' , fallback = '%f' %  margin_left  )
 try               : tmp_  = float ( tmp_ ) 
@@ -103,7 +101,7 @@ logger.verbose ( '  margin_right  : %s ' % margin_right  )
 
 # ==============================================================================
 ## @class StyleStore
-#  Store for all created/cofigures styles
+#  Store for all created/configured styles
 class StyleStore(object) :
     """Store for all created/cofigures styles
     """

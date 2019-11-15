@@ -215,8 +215,8 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         return 1
 
 # =============================================================================
-_maxv =  0.95 * sys.float_info.max
-_minv = -0.95 * sys.float_info.max
+_maxv =  0.99 * sys.float_info.max
+_minv = -0.99 * sys.float_info.max
 # =============================================================================
 ## @class Variable
 #  Helper   structure to manage/keep/create the variable for   SelectorWithVars

@@ -385,14 +385,15 @@ def _rm_migrad_  ( self , refit = 0 , tag = "" ) :
     """
     status = self._old_migrad_()
     if 0 != status :
-        from   ostap.fitting.utils import fit_status 
-        logger.error ( "MIGRAD %s status %s"  % ( tag , fit_status ( status ) ) )
+        from   ostap.fitting.utils import fit_status
+        message = "MIGRAD %s status %s"  % ( tag , fit_status ( status ) )
         if   isinstance ( refit , integer_types ) and 0 < refit :
-            logger.info ( "MIGRAD %s: refit... "  %  tag )
+            logger.error ( message +  ', refit... ')
             return _rm_migrad_ ( self ,  refit - 1 , tag ) 
         elif isinstance ( refit , bool          ) and     refit :
-            logger.info ( "MIGRAD %s: refit... "  %  tag )
-            return _rm_migrad_ ( self ,  False     , tag ) 
+            logger.error ( message +  ', refit... ')
+            return _rm_migrad_ ( self ,  False     , tag )
+        logger.error ( message )        
     return status 
 
 # =============================================================================

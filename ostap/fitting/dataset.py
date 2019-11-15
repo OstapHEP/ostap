@@ -23,7 +23,7 @@ __all__     = (
     'ds_project' , ## project variables from RooDataSet to histogram 
     )
 # =============================================================================
-import ROOT, random, math
+import ROOT, random, math, sys 
 from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
@@ -41,6 +41,10 @@ logger.debug( 'Some useful decorations for RooAbsData object')
 # =============================================================================
 from ostap.logger.colorized import allright,  attention
 _new_methods_ = []
+# =============================================================================
+_maxv =  0.99 * sys.float_info.max
+_minv = -0.99 * sys.float_info.max
+# =============================================================================
 
 # =============================================================================
 ## iterator for RooAbsData
@@ -702,6 +706,7 @@ _new_methods_ += [
 
 # =============================================================================
 ROOT.RooDataSet.draw         = ds_draw
+ROOT.RooAbsData.draw         = ds_draw
 ROOT.RooDataSet.project      = ds_project
 ROOT.RooDataSet .__getattr__ = _ds_getattr_
 ROOT.RooDataHist.__getattr__ = _ds_getattr_
@@ -709,8 +714,9 @@ ROOT.RooDataHist.__getattr__ = _ds_getattr_
 ROOT.RooDataHist.__len__    = lambda s : s.numEntries() 
 
 _new_methods_ += [
-    ROOT.RooDataSet.draw      ,
-    ROOT.RooDataSet.project   ,
+    ROOT.RooDataSet.draw    ,
+    ROOT.RooAbsData.draw    ,
+    ROOT.RooDataSet.project ,
     ]
 
 # =============================================================================
@@ -956,13 +962,33 @@ def _rds_makeWeighted_ ( dataset , wvarname , varset = None , cuts = '' , vname 
                              cuts               ,
                              wvarname           )
 
-# =============================================================================
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
+
+# =============================================================================
+## ``Unweight'' weighted  dataset
+#  @code
+#  wdata = ...
+#  data  = wdata.unweight() 
+#  @endcode
+def _rds_unWeighted_ ( dataset , weight = '' ) :
+    """``Unweight'' weighted  dataset
+    >>> wdata = ...
+    >>> data  = wdata.unweight() 
+    """
+    if not dataset.isWeighted() :
+        logger.error ("unweight: dataset is not weighted!") 
+        return None, ''
+    
+    ds , w = Ostap.Utils.unweight (  dataset , weight )  
+    return ds , w 
+
+# =============================================================================
+ROOT.RooDataSet.unWeighted = _rds_unWeighted_
 
 _new_methods_ += [
     ROOT.RooDataSet .makeWeighted ,
+    ROOT.RooDataSet .unWeighted   ,
     ]
-
 # =============================================================================
 
 
@@ -1525,7 +1551,9 @@ _new_methods_ += [
     ROOT.RooDataSet.symmetrize , 
     ]
 
+
 # =============================================================================
+
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.RooAbsData )
 

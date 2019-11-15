@@ -375,6 +375,20 @@ def _rrv_rpow_ ( s , o ) :
 
 
 # ============================================================================
+def _rrv_iadd_ ( s , o ) :
+    s.setVal ( s.getVal() + float ( o ) )
+    return s
+def _rrv_imul_ ( s , o ) :
+    s.setVal ( s.getVal() * float ( o ) )
+    return s
+def _rrv_isub_ ( s , o ) :
+    s.setVal ( s.getVal() - float ( o ) )
+    return s
+def _rrv_idiv_ ( s , o ) :
+    s.setVal ( s.getVal() / float ( o ) )
+    return s
+
+# ============================================================================
 ROOT.RooRealVar . __add__   = _rrv_add_
 ROOT.RooRealVar . __sub__   = _rrv_sub_
 ROOT.RooRealVar . __div__   = _rrv_div_
@@ -387,18 +401,26 @@ ROOT.RooRealVar . __rdiv__  = _rrv_rdiv_
 ROOT.RooRealVar . __rmul__  = _rrv_rmul_
 ROOT.RooRealVar . __rpow__  = _rrv_rpow_
 
+ROOT.RooRealVar . __iadd__  = _rrv_iadd_
+ROOT.RooRealVar . __isub__  = _rrv_isub_
+ROOT.RooRealVar . __idiv__  = _rrv_idiv_
+
 
 _new_methods_ += [
-    ROOT.RooRealVar.__add__  , 
-    ROOT.RooRealVar.__sub__  , 
-    ROOT.RooRealVar.__div__  , 
-    ROOT.RooRealVar.__mul__  , 
-    ROOT.RooRealVar.__pow__  , 
-    ROOT.RooRealVar.__radd__ , 
-    ROOT.RooRealVar.__rsub__ , 
-    ROOT.RooRealVar.__rdiv__ , 
-    ROOT.RooRealVar.__rmul__ , 
-    ROOT.RooRealVar.__rpow__ , 
+    ROOT.RooRealVar.__add__   , 
+    ROOT.RooRealVar.__sub__   , 
+    ROOT.RooRealVar.__div__   , 
+    ROOT.RooRealVar.__mul__   , 
+    ROOT.RooRealVar.__pow__   , 
+    ROOT.RooRealVar.__radd__  , 
+    ROOT.RooRealVar.__rsub__  , 
+    ROOT.RooRealVar.__rdiv__  , 
+    ROOT.RooRealVar.__rmul__  , 
+    ROOT.RooRealVar.__rpow__  ,
+    #
+    ROOT.RooRealVar.__iadd__  , 
+    ROOT.RooRealVar.__isub__  , 
+    ROOT.RooRealVar.__idiv__  , 
     ]
 
 # =============================================================================
@@ -1013,14 +1035,15 @@ class KeepBinning(object):
         return self
     
     def __exit__  ( self , *_ ) :
-        self.__var.setBinning ( self.__bins )
+        ## self.__var.setBinning ( self.__bins )
+        if self.__bins : self.__var.bins = self.__bins
     
     @property
     def bins ( self ) :
         """``bins'' : the binning scheme"""
 
 # =============================================================================
-## set the bining scheme 
+## set the binning scheme 
 def _rrv_setbins_ ( self , bins ) :
     """Set the binnning scheme"""
 
@@ -1040,8 +1063,8 @@ def _rrv_setbins_ ( self , bins ) :
             name = bins [0  ]
         
     if   bins and isinstance ( bins , ROOT.RooAbsBinning ) :
-        if name : self.setBining ( bins , name )
-        else    : self.setBining ( bins )
+        if name : self.setBinning ( bins , name )
+        else    : self.setBinning ( bins )
         return
 
     elif isinstance  ( bins , integer_types ) and 0 < bins :
@@ -1077,9 +1100,9 @@ def _rrv_setbins_ ( self , bins ) :
             return 
             
         elif isinstance  ( bins[0] , num_types       )                       and \
-             isinstance  ( bins[1] , num_types       ) and bins[0] < bins[2] and \
+             isinstance  ( bins[1] , num_types       ) and bins[0] < bins[1] and \
              isinstance  ( bins[2] , integer_types   ) and 0 < nbins[2]      :
-            
+
             low , high , n = bins 
             bs = ROOT.RooUniformBinning ( low , high , n )
             if name : self.setBinning ( bs  , name )
@@ -1124,7 +1147,7 @@ def _rrv_setbins_ ( self , bins ) :
 
         from array import array
         a  = array  ( 'd' , bins )
-        bs = ROOT.RooBinning ( len  ( bins ) -1 , a )
+        bs = ROOT.RooBinning ( len  ( bins ) - 1 , a )
         if name : self.setBinning ( bs  , name )
         else    : self.setBinning ( bs         )
         return
@@ -1155,13 +1178,41 @@ _new_methods_ += [
     ROOT.RooRealVar. bins ,
     ]
 
+
+ROOT.RooRealVar.getValue = ROOT.RooRealVar.getVal
+ROOT.RooRealVar.setValue = ROOT.RooRealVar.setVal
+
+
+_new_methods_ += [
+    ROOT.RooRealVar.getValue , 
+    ROOT.RooRealVar.setValue , 
+    ]
+
+
+# =============================================================================
+## printout for RooUniformBinning
+def _rub_str_ ( bins ) :
+    """Printout for RooUniformBinning"""
+    l = bins. lowBound ()
+    h = bins.highBound ()
+    n = bins.numBoundaries () - 1
+    x = bins.GetName()
+    if not x : return "RooUniformBinning(%s,%s,%d)" % ( l , h , n )
+    return "RooUniformBinning(%s,%s,%d,'%s')" % ( l , h , n , x )
+    
+ROOT.RooUniformBinning.__str__  = _rub_str_
+ROOT.RooUniformBinning.__repr__ = _rub_str_
+
+
+
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.RooRealVar       ,
-    ROOT.RooConstVar      ,
-    ROOT.RooFormulaVar    ,
-    ROOT.RooAbsReal       ,
-    ROOT.RooAbsRealLValue
+    ROOT.RooRealVar        ,
+    ROOT.RooConstVar       ,
+    ROOT.RooFormulaVar     ,
+    ROOT.RooAbsReal        ,
+    ROOT.RooAbsRealLValue  ,
+    ROOT.RooUniformBinning
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 

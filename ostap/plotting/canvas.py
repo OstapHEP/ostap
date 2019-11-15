@@ -595,7 +595,11 @@ ROOT.TCanvas.pull_partition = canvas_pull
 #  frames = ...
 #  draw_pads ( frames , pads , fontsize = 25 ) 
 #  @endcode 
-def draw_pads ( objects , pads , fontsize = 25 , trim_left = False , trim_right = False ) :
+def draw_pads ( objects            ,
+                pads               ,
+                fontsize   = 36    ,
+                trim_left  = False ,
+                trim_right = False ) :
     """Draw sequence of object on sequence of pads,
     - the label font size is adjusted to be uniform (in pixels)     
     >>> pads   = ...
@@ -641,7 +645,7 @@ def draw_pads ( objects , pads , fontsize = 25 , trim_left = False , trim_right 
             delta = xmax - xmin
             
             if   trim_left and isinstance ( trim_left , float ) :
-                xmin += xrim_left * delta
+                xmin += trim_left * delta
             elif trim_left :
                 xmin += 0.001 * delta
                 

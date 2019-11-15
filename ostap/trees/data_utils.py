@@ -120,12 +120,17 @@ class Files(object):
 
         if not self.silent :
             logger.info ('Loaded: %s' % self )
-            
+
+    ## append the file to the list of the files 
+    def _append_to_files (  self , f ) :
+        """Append the file to the list of the files"""
+        self.__files.append ( f )
+        
     @property 
     def files     ( self ) :
         """``files'' : the list of files"""
         return tuple ( self.__files    )
-    
+
     @property
     def patterns  ( self ) :
         """``patterns'' : the list of patterns"""
@@ -900,7 +905,7 @@ class Data2(Data):
         if not isinstance ( other , Data2 ) : return NotImplemented        
         return self.add_data ( other )    
 
-    ## merge two sets togather
+    ## merge two sets together
     def add_data ( self , other ) :
         """ Merge two datasets
         """
@@ -923,11 +928,11 @@ class Data2(Data):
         for f in other.files :
             if not f in self.files : 
                 self.chain1. Add   ( f )
-                self.files.append  ( f ) 
+                self._append_to_files ( f ) 
         for f in other.files2 :
             if not f in self.files2 : 
                 self.chain2. Add   ( f )
-                self.files2.append ( f ) 
+                self.__files2.append ( f ) 
         return self 
 
     ## get an intersection of two datasets 

@@ -668,21 +668,21 @@ class SimFit ( MakeVar ) :
                                        cmp.xvar    ,
                                        cmp.yvar    ,
                                        cmp.zvar    ,
-                                       name           = sim_pdf.name + '_' + key , 
-                                       add_to_signals = False                    )
+                                       name           = sim_pdf.name + '_draw_' + key , 
+                                       add_to_signals = False )
             elif isinstance  ( cmp , PDF2 ) :
                 from ostap.fitting.fit2d import Generic2D_pdf                                
                 dpdf = Generic2D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
                                        cmp.yvar    ,
-                                       name           = sim_pdf.name + '_' + key , 
-                                       add_to_signals = False                    )
+                                       name           = sim_pdf.name + '_draw_' + key , 
+                                       add_to_signals = False )
             elif isinstance  ( cmp , PDF  ) :
                 from ostap.fitting.basic import Generic1D_pdf   
                 dpdf = Generic1D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
-                                       name           = sim_pdf.name + '_' + key , 
-                                       add_to_signals = False                    )
+                                       name           = sim_pdf.name + '_draw_' + key , 
+                                       add_to_signals = False  )
                 
             for c in cmp.signals :
                 if not c in dpdf.signals              : dpdf.signals             .add ( c )
@@ -835,6 +835,7 @@ class SimFit ( MakeVar ) :
                dataset        ,  ## must be specified!
                nbins   =  100 ,
                silent  = True ,
+               args    = ()   , 
                **kwargs       ) :
         """
         Draw the PDF&data for the given category
@@ -843,7 +844,7 @@ class SimFit ( MakeVar ) :
         """
         dvar = None
         if   isinstance ( category , ( tuple , list ) ) and 2 == len ( category ) :
-            category, dvar = category 
+            category , dvar = category 
         elif isinstance ( category , str ) :
             category , _ , dvar = category.partition('/')
             
@@ -853,7 +854,7 @@ class SimFit ( MakeVar ) :
                 dvar = ivar 
             except ValueError :
                 pass
-            
+
         assert category    in self.samples ,\
                'Category %s is not in %s' % ( category , self.samples )
         assert self.sample in dataset      ,\
@@ -862,35 +863,26 @@ class SimFit ( MakeVar ) :
         ## 
         sname = self.sample.GetName() 
         dcut  = ROOT.RooFit.Cut ( "%s==%s::%s"  % ( sname , sname , category ) )
-        
-        data_options = self.draw_option ( 'data_options' , **kwargs ) +  ( dcut , ) 
+
+        kwargs [ 'data_options' ] = self.draw_option ( 'data_options' , **kwargs ) +  ( dcut , )
         
         self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
+
         _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  ) 
         _slice = ROOT.RooFit.Slice      ( self.sample    , category )
+        for key in  ( 'total_fit_options'           ,
+                      #
+                      'signal_options'              ,
+                      'background_options'          ,
+                      'component_options'           ,
+                      'crossterm1_options'          ,
+                      'crossterm2_options'          ,
+                      #
+                      'combined_signal_options'     ,
+                      'combined_background_options' ,
+                      'combined_component_options'  ) :
 
-        bkgoptions   = self.draw_option ( 'background_options' , **kwargs ) + ( _slice , _proj )
-        ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs ) + ( _slice , _proj )
-        ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs ) + ( _slice , _proj )        
-        cmpoptions   = self.draw_option (  'component_options' , **kwargs ) + ( _slice , _proj )
-        sigoptions   = self.draw_option (     'signal_options' , **kwargs ) + ( _slice , _proj )
-        totoptions   = self.draw_option (  'total_fit_options' , **kwargs ) + ( _slice , _proj )
-        
-        cbkgoptions  = self.draw_option ( 'combined_background_options' , **kwargs ) + ( _slice , _proj )
-        csigoptions  = self.draw_option ( 'combined_signal_options'     , **kwargs ) + ( _slice , _proj )
-        ccmpoptions  = self.draw_option ( 'combined_component_options'  , **kwargs ) + ( _slice , _proj )
-
-        kwargs [ 'data_options'       ] = data_options
-        kwargs [ 'signal_options'     ] = sigoptions 
-        kwargs [ 'background_options' ] = bkgoptions 
-        kwargs [ 'crossterm1_options' ] = ct1options 
-        kwargs [ 'crossterm2_options' ] = ct2options
-        kwargs [ 'component_options'  ] = cmpoptions 
-        kwargs [ 'total_fit_options'  ] = totoptions 
-
-        kwargs [ 'combined_background_options' ] = cbkgoptions 
-        kwargs [ 'combined_component_options'  ] = ccmpoptions 
-        kwargs [ 'combined_signal_options'     ] = csigoptions 
+            kwargs [ key ] = self.draw_option ( key , **kwargs ) + ( _slice , _proj ) 
         
         from ostap.fitting.roocollections import KeepArgs
 
@@ -910,18 +902,21 @@ class SimFit ( MakeVar ) :
 
             if   isinstance ( draw_pdf , PDF3 ) :
 
-                if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) : 
+                if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) :    
                     return draw_pdf.draw3 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 elif 2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) : 
                     return draw_pdf.draw2 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
                     return draw_pdf.draw1 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 else :
                     self.error('Unknown ``dvar'' for 3D-draw pdf!')
                     return None
@@ -931,11 +926,13 @@ class SimFit ( MakeVar ) :
                 if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
                     return draw_pdf.draw2 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
                     return draw_pdf.draw1 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 else :
                     self.error('Unknown ``dvar'' for 2D-draw pdf! %s' %  dvar )
                     return None 
@@ -944,7 +941,8 @@ class SimFit ( MakeVar ) :
                 
                 return draw_pdf.draw ( dataset = dataset ,
                                        nbins   = nbins   ,
-                                       silent  = silent  , **kwargs )
+                                       silent  = silent  ,
+                                       args    = args    , **kwargs )
             
     # =========================================================================
     ## create NLL
@@ -1097,14 +1095,14 @@ class SimFit ( MakeVar ) :
     #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
     #  varset = ....
     #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , extended = True )     
+    #  data   = model.generate ( 100000 , varset , sample = True )     
     #  @endcode
     def generate ( self                  , 
                    nEvents               , 
                    varset        = None  ,
-                   extended      = False ,
                    args          = ()    ,
                    binning       = {}    ,
+                   sample        = False , 
                    category_args = {}    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
@@ -1112,7 +1110,7 @@ class SimFit ( MakeVar ) :
         
         >>> varset = ....
         >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , extended =  =   True )
+        >>> data   = model.generate ( 100000 , varset , sample = True )
         """
 
         labels = self.sample.labels()
@@ -1122,6 +1120,8 @@ class SimFit ( MakeVar ) :
         vars   = ROOT.RooArgSet()
         data   = {}
 
+        weight = None
+        wvar   = None
         ## generate all categories separately:        
         for l , n in zip ( labels , nEvents ) :
             
@@ -1133,18 +1133,50 @@ class SimFit ( MakeVar ) :
             pdf   = self.categories [ l ]
             ds    = pdf.generate ( n                   ,
                                    varset   = varset   ,
-                                   extended = extended ,
                                    binning  = binning  ,
+                                   sample   = sample   ,
                                    args     = cargs    )
-            
-            data [ l ]  = ds 
-            vars       |= ds.varset()                 
 
-        ## combine generated datasets 
+            if ds.isWeighted() :
+                ds , weight  = ds.unWeighted ()
+                if weight : wvar = getattr ( ds , weight )
+                
+            data [ l ]  = ds
+            for v in ds.varset() :
+                if not v in vars : vars.add ( v ) 
+                ## vars       |= ds.varset()                 
+
+        ## combine generated datasets
+        args = () if not weight else ( ROOT.RooFit.WeightVar ( weight ) , )
         return combined_data ( self.sample ,
                                vars        , 
-                               data        )
+                               data        ,
+                               args = args )
     
+
+    # =========================================================================
+    ## Load parameters from external dictionary <code>{ name : value }</code>
+    #  or sequence of <code>RooAbsReal</code> objects
+    #  @code
+    #  pdf     = ...
+    #  dataset = ...
+    #  params  = { 'A' : 10 , 'B' : ... }
+    #  pdf.load_params ( dataset , params ) 
+    #  params  = ( A , B , C , ... )
+    #  pdf.load_params ( dataset , params )  
+    #  @endcode 
+    def load_params ( self , dataset = None , params = {}  ) :
+        """Load parameters from external dictionary <code>{ name : value }</code>
+        #  or sequence of <code>RooAbsReal</code> objects
+        >>> pdf      = ...
+        >>> dataset = ... 
+        >>> params = { 'A' : 10 , 'B' : ... }
+        >>> pdf.load_params ( dataset , params ) 
+        >>> params = ( A , B , C , ... )
+        >>> pdf.load_params ( dataset , params )  
+        """
+        ## nothing to load 
+        return self.pdf.load_params ( dataset , params )
                                 
 # =============================================================================
 _decorated_classes_  = (

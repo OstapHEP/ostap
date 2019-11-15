@@ -197,7 +197,7 @@ class PDF2 (PDF) :
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
             with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range[0] , in_range[1] )
             in_range = 'aux_rng2'
-            
+
         return self.draw ( drawvar  = self.xvar , 
                            dataset  = dataset   ,
                            nbins    = nbins     ,
@@ -292,54 +292,47 @@ class PDF2 (PDF) :
         """
         Make 1D-plot:
         """
-        
+
         if   drawvar in ( 'x'  , 'X' , '1' , 1 , self.xvar.name ) : drawvar = self.xvar
         elif drawvar in ( 'y'  , 'Y' , '2' , 2 , self.yvar.name ) : drawvar = self.yvar
 
-        #
+        # 
         ## special case:  do we need it? 
         #
 
         if drawvar is None : return self.draw_H2D( dataset , nbins , ybins )
-        
-        
-        ## copy arguments:
-        args = kwargs.copy ()
+                
+        newargs = kwargs.copy ()
         
         if in_range and isinstance ( in_range , list_types ) and 2 == len ( in_range ) :
             low  = in_range[0]
             high = in_range[1]
-            if isinstance ( low , num_types ) and isinstancee ( high , num_types ) and low  < high : 
+            if isinstance ( low , num_types ) and isinstancee ( high , num_types ) and low < high : 
                 with rooSilent ( 3 ) : drawvar.setRange ( 'aux_range' , low , high )
                 in_range = 'aux_range'
     
-        if in_range and not isinstance ( in_range , list_types ) : in_range = in_range ,  
+        if in_range and not isinstance ( in_range , list_types ) :
+            in_range = in_range ,
+            
         if in_range :
-            data_options        = self.draw_option (       'data_options' , **args )
-            background_options  = self.draw_option ( 'background_options' , **args )
-            signal_options      = self.draw_option (     'signal_options' , **args )
-            component_options   = self.draw_option (  'component_options' , **args )
-            crossterm1_options  = self.draw_option ( 'crossterm1_options' , **args )
-            crossterm2_options  = self.draw_option ( 'crossterm2_options' , **args )
-            total_fit_options   = self.draw_option (  'total_fit_options' , **args )
-
-            for i in in_range :
-                data_options       += ROOT.RooFit.CutRange        ( i ) , 
-                signal_options     += ROOT.RooFit.ProjectionRange ( i ) , 
-                background_options += ROOT.RooFit.ProjectionRange ( i ) , 
-                component_options  += ROOT.RooFit.ProjectionRange ( i ) , 
-                crossterm1_options += ROOT.RooFit.ProjectionRange ( i ) , 
-                crossterm2_options += ROOT.RooFit.ProjectionRange ( i ) , 
-                total_fit_options  += ROOT.RooFit.ProjectionRange ( i ) , 
+            options_cut     = tuple ( [  ROOT.RooFit.CutRange        ( i ) for i in in_range ] )
+            newargs [ 'data_options' ] = self.draw_option ( 'data_options' , **newargs ) + options_cut
             
-            args [       'data_options' ] =       data_options
-            args [     'signal_options' ] =     signal_options
-            args [ 'background_options' ] = background_options
-            args [  'component_options' ] =  component_options
-            args [ 'crossterm1_options' ] = crossterm1_options
-            args [ 'crossterm2_options' ] = crossterm2_options
-            args [  'total_fit_options' ] =  total_fit_options
-            
+        if in_range : 
+            options_project = tuple ( [  ROOT.RooFit.ProjectionRange ( i ) for i in in_range ] )
+            for key in  ( 'total_fit_options'           ,
+                          #
+                          'signal_options'              ,
+                          'background_options'          ,
+                          'component_options'           ,
+                          'crossterm1_options'          ,
+                          'crossterm2_options'          ,
+                          #
+                          'combined_signal_options'     ,
+                          'combined_background_options' ,
+                          'combined_component_options'  ) :
+                newargs [ key ] =  self.draw_option ( key , **newargs ) + options_project
+                
         #
         ## redefine the drawing variable:
         # 
@@ -352,7 +345,7 @@ class PDF2 (PDF) :
                             dataset         ,
                             nbins  = nbins  ,
                             silent = silent ,
-                            aargs  = args   , **args )
+                            args   = args   , **newargs )
 
         self.draw_var = None
         return result 
@@ -418,13 +411,13 @@ class PDF2 (PDF) :
     #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
     #  varset = ....
     #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , extended = True )     
+    #  data   = model.generate ( 100000 , varset , sample = True )     
     #  @endcode
     def generate ( self             ,  
                    nEvents          ,
                    varset   = None  ,
-                   extended = False ,
                    binning  = {}    ,
+                   sample   = False , 
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
@@ -434,9 +427,15 @@ class PDF2 (PDF) :
         >>> data   = model.generate ( 100000 , varset )
         >>> data   = model.generate ( 100000 , varset , extended =  =   True )
         """
+        nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
+        assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
+        
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
-        if  extended :
-            args = args + ( ROOT.RooFit.Extended () , )
+        
+        if binning is True :
+            args    = args + ( ROOT.AllBinned() , ) 
+            binning = {}
+
         if   not varset :
             varset = ROOT.RooArgSet( self.xvar , self.yvar )
         elif isinstance ( varset , ROOT.RooAbsReal ) :
