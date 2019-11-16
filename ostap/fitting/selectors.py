@@ -1413,8 +1413,10 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
             import ostap.frames.frames
             
             total  = len ( self )
-            
+
             frame  = Ostap.DataFrame ( self , enable = True )
+            if not silent :
+                pb = frame.ProgressBar ( len ( self ) )
             
             vars   = list ( selector.variables )
             tvars  = [ v for v in vars if     v.trivial ] ## trivial vars 

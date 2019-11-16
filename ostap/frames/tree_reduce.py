@@ -64,6 +64,9 @@ class ReduceTree(CleanUp):
         frame  = DataFrame ( chain )
         report = None
 
+        if not  silent :
+            pbar = frame.ProgressBar ( len (  chain ) )
+            
         nvars = [] 
         ## new variables 
         for nv in new_vars :

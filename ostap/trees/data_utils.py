@@ -722,7 +722,10 @@ class Data(Files):
     def frame ( self ) :
         """Get the DataFrame for the chain"""
         from   ostap.frames.frames import DataFrame
-        return DataFrame ( self.chain )
+        f = DataFrame ( self.chain )
+        if not self.filent:
+            pb = f.ProgressBar ( len ( self.chain ) )
+        return f 
     
 # =============================================================================
 ## @class Data2
@@ -1078,7 +1081,10 @@ class Data2(Data):
     def frame2 ( self ) :
         """Get the DataFrame for the chain"""
         from   ostap.frames.frames import DataFrame
-        return DataFrame ( self.chain2 )
+        f = DataFrame ( self.chain2 )
+        if not self.silent :
+            pb = f.ProgressBar ( len ( self.chain2 ) ) 
+        return f
     
 # =============================================================================
 
