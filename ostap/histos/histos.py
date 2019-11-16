@@ -737,7 +737,6 @@ def _h1_call_ ( h1                    ,
         tx = interpolate
     elif not interpolate :
         tx  = 0
-
         
     ## use C++ function for fast interpolation 
     result = _interpolate_1D_ ( h1 , x , tx , edges , extrapolate , density )
@@ -778,7 +777,7 @@ class Histo1DFun (object) :
             }
     ##  the only one imporant method
     def __call__ ( x ) :
-        return self.__histo ( x , **self.__confif )
+        return self.__histo ( x , **self.__config )
     @property
     def histo ( self )  :
         """``histo'': the  histogram itself"""
@@ -1369,7 +1368,7 @@ class Histo2DFun (object) :
             }
     ##  the only one imporant method
     def __call__ ( x , y ) :
-        return self.__histo ( x , y , **self.__confif )
+        return self.__histo ( x , y , **self.__config )
     @property
     def histo ( self )  :
         """``histo'': the  histogram itself"""
@@ -1477,7 +1476,7 @@ class Histo3DFun (object) :
             }
     ##  the only one imporant method
     def __call__ ( x , y , z ) :
-        return self.__histo ( x , y , z , **self.__confif )
+        return self.__histo ( x , y , z , **self.__config )
     @property
     def histo ( self )  :
         """``histo'': the  histogram itself"""

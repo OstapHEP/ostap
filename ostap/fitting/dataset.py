@@ -1248,7 +1248,12 @@ _new_methods_ += [
 
 
 # ==============================================================================
-def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**62 ) :
+def _ds_table_0_ ( dataset        ,
+                   variables = [] ,
+                   cuts      = '' ,
+                   first     = 0  ,
+                   last      = 2**62 ,
+                   prefix    =  '' ) :
     """Print data set as table
     """
     varset = dataset.get()
@@ -1447,7 +1452,7 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
         table_data.append ( tuple ( cols ) ) 
 
     import ostap.logger.table as T
-    t  = T.table ( table_data , title )
+    t  = T.table ( table_data , title , prefix =  prefix )
     w  = T.table_width ( t ) 
     return t , w 
 
@@ -1457,12 +1462,12 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
 #  dataset = ...
 #  print dataset.table() 
 #  @endcode
-def _ds_table_ (  dataset ,  variables = [] ) :
+def _ds_table_ (  dataset ,  variables = [] , prefix = '' ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _ds_table_0_ ( dataset ,  variables )[0]
+    return _ds_table_0_ ( dataset ,  variables , prefix = prefix )[0]
 
 # =============================================================================
 ##  print DataSet
