@@ -25,7 +25,6 @@ if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
   set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
 endif ( )
 
-
 add_subdirectory(source)
 add_subdirectory(ostap)
 add_subdirectory(examples)
@@ -47,3 +46,4 @@ set (CPACK_PACKAGE_VERSION_PATCH "${OSTAP_VERSION_PATCH}")
 set (CPACK_PACKAGE_VERSION_TWEAK "${OSTAP_VERSION_TWEAK}")
 set (CPACK_PACKAGE_ICON           ${CMAKE_CURRENT_SOURCE_DIR}/docs/ostap.jpg )
 include (CPack)
+
