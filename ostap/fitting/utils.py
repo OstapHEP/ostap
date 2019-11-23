@@ -738,7 +738,7 @@ class MakeVar ( object ) :
         elif f2 and 0 == var2  : return var1                             ## SHORTCUT 
 
         var3 = self.vars_multiply ( -1 , var2 )
-        return self.vars_add ( va1 , var2 , name ,  title ) 
+        return self.vars_add ( var1 , var2 , name ,  title ) 
             
     # =============================================================================
     ## construct (on-flight) variable for the ratio of
