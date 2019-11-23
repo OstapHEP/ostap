@@ -340,6 +340,32 @@ def _rfr_fraction_ ( self , var1 , var2 ) :
     if _av1 > _av2 : return 1 / ( 1 + self.ratio ( var2 , var1 ) )
     return 1.0 - self.fraction ( var2 , var1 ) 
 
+# ===========================================================================
+## get correct estimate of asymmetry of two variables (v1-v2)/(v1+v2)
+#  taking into account correlations
+#  @code
+#  >>> r = ...
+#  >>> print r.asymmetry( 'A' , 'B' ) ## (A-B)/(A+B)
+#  @endcode
+#  @see Gaudi:Math::divide
+def _rfr_asymmetry_ ( self , var1 , var2 ) :
+    """Get correct estimate of asymmetry of two variables, (v1-v2)/(v1+v2)
+    taking into account correlations
+    >>> r = ...
+    >>> print r.asymmetry( 'A' , 'B' ) ##   (A-B)/(A+B)
+    """
+    if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1]
+    if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]
+    ##
+    _av1 = abs ( var1.value.value() ) 
+    _av2 = abs ( var2.value.value() )
+    _one = VE  ( 1 , 0 )
+
+    if _av1 < _av2 :
+        return      self.ratio ( var1 , var2 ) . asym ( _one )
+    else : 
+        return -1 * self.ratio ( var2 , var1 ) . asym ( _one )
+    
 # ============================================================================
 ## get the required results in form of SVectorWithError object
 #  @code
@@ -368,6 +394,7 @@ def _rfr_results_( self , *vars ) :
             _r.cov2()[_i1,_i2] = _c12 
     return _r 
 
+
 # =============================================================================
 ## Run MIGRAD for RooMinimizer object
 #  @code
@@ -376,7 +403,7 @@ def _rfr_results_( self , *vars ) :
 #  minuit.migrad() 
 #  @endcode
 #  @see RooMinimizer 
-def _rm_migrad_  ( self , refit = 0 , tag = "" ) :
+def _rm_migrad_  ( self , refit = 0 , tag = "" , minos = () ) :
     """Run MIGRAD for RooMinimizer
     - see ROOT.RooMinimizer 
     >>> pdf = ...
@@ -394,6 +421,10 @@ def _rm_migrad_  ( self , refit = 0 , tag = "" ) :
             logger.error ( message +  ', refit... ')
             return _rm_migrad_ ( self ,  False     , tag )
         logger.error ( message )        
+    elif minos :        
+        return self.minos ( *minos ) 
+        
+        
     return status 
 
 # =============================================================================

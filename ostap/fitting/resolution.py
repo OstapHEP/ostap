@@ -54,7 +54,8 @@ class ResoGauss(RESOLUTION) :
     def __init__ ( self         ,
                    name         ,   ## the  name 
                    xvar         ,   ## the variable 
-                   sigma        ,   ## the first sigma 
+                   sigma        ,   ## the first sigma
+                   fudge = 1    ,   ## fudge-factor 
                    mean  = None ) : ## mean-value
         
         if mean is None : mean = ROOT.RooConstVar(
@@ -64,27 +65,32 @@ class ResoGauss(RESOLUTION) :
         ## initialize the base
         super(ResoGauss,self).__init__( name  = name  ,
                                         xvar  = xvar  ,
-                                        sigma = sigma ,
-                                        mean  = mean  )
-        
-        ## build gaussian resolution model 
+                                        sigma = sigma ,                                     
+                                        mean  = mean  ,
+                                        fudge = fudge )
+
+        #
+        ## build gaussian resolution model
+        #
         # self.gauss = ROOT.RooGaussModel(
         self.gauss = ROOT.RooGaussian (
             'ResoGauss_%s'  + name ,
             'ResoGauss(%s)' % name ,
-            self.xvar            ,
-            self.mean            , 
-            self.sigma           )
+            self.xvar              ,
+            self.mean              , 
+            self.sigma_corr        ) ## ATTENTION!
         
         self.pdf = self.gauss
 
         ##  save   the configuration
         self.config = {
-            'name'  : self.name ,
-            'xvar'  : self.xvar ,
-            'mean'  : self.mean ,
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mean'  : self.mean  ,
             'sigma' : self.sigma ,
+            'fudge' : self.fudge ,
             }
+        
 
 models.add ( ResoGauss ) 
 # =============================================================================
@@ -102,6 +108,7 @@ class ResoGauss2(RESOLUTION) :
                    sigma           ,   ## the core sigma
                    scale    = 1.2  ,   ## sigma2/sigma1 ratio 
                    fraction = 0.5  ,   ## fraction of
+                   fudge    = 1    ,   ## fudge-factor 
                    mean     = None ) : ## the mean value
         
         if mean is None : mean = ROOT.RooConstVar(
@@ -111,7 +118,8 @@ class ResoGauss2(RESOLUTION) :
         super(ResoGauss2,self). __init__ ( name  = name  ,
                                            xvar  = xvar  ,
                                            sigma = sigma ,
-                                           mean  = mean  )
+                                           mean  = mean  ,
+                                           fudge = fudge )
         ## fraction of sigma1-component 
         self.__fraction = self.make_var (
             fraction                   , 
@@ -123,14 +131,17 @@ class ResoGauss2(RESOLUTION) :
             scale ,
             'SigmaScale_'       + name ,
             'SigmaScale(%s)'    % name , scale    , 1 , 10 ) 
-        
+
+        #
+        ## build resolution model
+        # 
         self.pdf = Ostap.Models.DoubleGauss (
             "Reso2Gauss_"       + name ,
             "Reso2Gauss(%s)"    % name ,
-            self.xvar     ,
-            self.sigma    ,
-            self.fraction ,
-            self.scale    ,
+            self.xvar       ,
+            self.sigma_corr , ## ATTENTION! 
+            self.fraction   ,
+            self.scale      ,
             self.mean    
             )
         
@@ -142,6 +153,7 @@ class ResoGauss2(RESOLUTION) :
             'sigma'    : self.sigma    ,
             'scale'    : self.scale    ,
             'fraction' : self.fraction ,
+            'fudge'    : self.fudge    ,
             }
 
     @property
@@ -179,6 +191,7 @@ class ResoApo2(RESOLUTION) :
                    xvar         ,   ## the variable 
                    sigma        ,   ## the sigma
                    beta  = 1    ,   ## beta parameter 
+                   fudge = 1    ,   ## fudge-factor 
                    mean  = None ) : ## the mean value 
 
         if mean is None :  mean = ROOT.RooConstVar(
@@ -189,21 +202,25 @@ class ResoApo2(RESOLUTION) :
         super(ResoApo2,self).__init__ ( name  = name  ,
                                         xvar  = xvar  ,
                                         sigma = sigma ,
-                                        mean  = mean  )
+                                        mean  = mean  ,
+                                        fudge = fudge )
+        
         self.__beta    = self.make_var (
             beta ,
             'ResoBeta_%s'  % name  ,
             'ResoBeta(%s)' % name  , beta , 0.0001 , 10000 )
-        
+
+        #
         ## build resolution model
+        #
         self.apo2  = Ostap.Models.Apolonios2 (
-            "ResoApolonious_"   + name ,
+            "ResoApolonios_"    + name ,
             "ResoApolonios(%s)" % name ,
-            self.xvar   ,
-            self.mean   ,
-            self.sigma  ,
-            self.sigma  ,
-            self.beta   ) 
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr ,
+            self.sigma      ,
+            self.beta       ) 
 
         self.pdf = self.apo2
 
@@ -214,6 +231,7 @@ class ResoApo2(RESOLUTION) :
             'mean'     : self.mean     ,
             'sigma'    : self.sigma    ,
             'beta'     : self.beta     ,
+            'fudge'    : self.fudge    ,
             }
         
     @property
@@ -240,6 +258,7 @@ class ResoCB2(RESOLUTION) :
                    sigma        ,   ## core r esolution
                    alpha = 1.5  ,   ## alpha  
                    n     = 5    ,   ## power-law exponent
+                   fudge = 1    ,   ## fudge-factor 
                    mean  = None ) : ## the mean value
 
         if mean is None : mean = ROOT.RooConstVar(
@@ -250,7 +269,8 @@ class ResoCB2(RESOLUTION) :
         super(ResoCB2,self).__init__ ( name  = name  ,
                                        xvar  = xvar  ,
                                        sigma = sigma ,
-                                       mean  = mean  )
+                                       mean  = mean  ,
+                                       fudge = fudge )
         
         self.__alpha = self.make_var (
             alpha                  ,
@@ -268,7 +288,7 @@ class ResoCB2(RESOLUTION) :
             'ResoCB2(%s' % name ,
             self.xvar           ,
             self.mean           , 
-            self.sigma          ,
+            self.sigma_corr     , ## ATTENTION!
             self.alpha          ,
             self.n              ,
             self.alpha          ,
@@ -284,7 +304,8 @@ class ResoCB2(RESOLUTION) :
             'mean'     : self.mean  ,
             'sigma'    : self.sigma ,
             'alpha'    : self.alpha ,
-            'n'        : self.n      ,
+            'n'        : self.n     ,
+            'fudge'    : self.fudge ,
             }
 
     @property
@@ -320,12 +341,13 @@ class ResoStudentT(RESOLUTION) :
     """Student-T model for the resolution
     - see http://en.wikipedia.org/wiki/Student%27s_t-distribution
     """
-    def __init__ ( self        ,
-                   name        , ## the name 
-                   xvar        , ## the variable
-                   sigma       , ## the sigma
-                   n           , ## N-parameter
-                   mean = None ) :
+    def __init__ ( self         ,
+                   name         , ## the name 
+                   xvar         , ## the variable
+                   sigma        , ## the sigma
+                   n            , ## N-parameter
+                   fudge = 1    , ## fudge parameter 
+                   mean  = None ) :
         
         if mean is None : mean = ROOT.RooConstVar(
             'mean_%s'  % name ,
@@ -335,7 +357,8 @@ class ResoStudentT(RESOLUTION) :
         super(ResoStudentT,self).__init__ ( name  = name  ,
                                             xvar  = xvar  ,
                                             sigma = sigma ,
-                                            mean  = mean  )
+                                            mean  = mean  ,
+                                            fudge = fudge )
         
         self.__n     = self.make_var (
             n                      ,
@@ -348,10 +371,10 @@ class ResoStudentT(RESOLUTION) :
         self.pdf = Ostap.Models.StudentT (
             "ResoStT_"    + name ,
             "ResoStT(%s)" % name ,
-            self.xvar   ,
-            self.mean   ,
-            self.sigma  ,
-            self.n      )
+            self.xvar       , 
+            self.mean       ,
+            self.sigma_corr , ## ATTENTION!
+            self.n          )
         
         ##  save   the configuration
         self.config = {
@@ -359,7 +382,9 @@ class ResoStudentT(RESOLUTION) :
             'xvar'     : self.xvar  ,
             'sigma'    : self.sigma ,
             'n'        : self.n     ,
-            'mean'     : self.mean  }
+            'mean'     : self.mean  ,
+            'fudge'    : self.fudge ,
+            }
         
     @property
     def n ( self  ) :
@@ -369,7 +394,7 @@ class ResoStudentT(RESOLUTION) :
     @n.setter
     def n ( self , value ) :
         value = float ( value )
-        assert 1.e-6 <= value , "``n'' must be positive!"
+        assert 1.e-5 <= value , "``n'' must be positive!"
         self.__n.setVal ( value )
 
 models.add ( ResoStudentT )
@@ -387,11 +412,12 @@ class ResoSech(RESOLUTION) :
     - leptokurtic 
     - see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
     """
-    def __init__ ( self        ,
-                   name        , ## the name 
-                   xvar        , ## the variable
-                   sigma       , ## the sigma
-                   mean = None ) :
+    def __init__ ( self         ,
+                   name         , ## the name 
+                   xvar         , ## the variable
+                   sigma        , ## the sigma
+                   fudge = 1    , ## fudge-factor 
+                   mean  = None ) :
         
         if mean is None : mean = ROOT.RooConstVar(
             'mean_%s'  % name ,
@@ -401,23 +427,27 @@ class ResoSech(RESOLUTION) :
         super(ResoSech,self).__init__ ( name  = name  ,
                                         xvar  = xvar  ,
                                         sigma = sigma ,
-                                        mean  = mean  )
-        
+                                        mean  = mean  ,
+                                        fudge = fudge )
+
+        #
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Sech (
             "ResoSech_"    + name ,
             "ResoSech(%s)" % name ,
-            self.xvar   ,
-            self.mean   ,
-            self.sigma  )
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr )  ## ATTENTION!
         
         ##  save   the configuration
         self.config = {
             'name'     : self.name  ,
             'xvar'     : self.xvar  ,
             'sigma'    : self.sigma ,
-            'mean'     : self.mean  }
+            'mean'     : self.mean  ,
+            'fudge'    : self.fudge
+            }
         
 models.add ( ResoSech )
 # =============================================================================

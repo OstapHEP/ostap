@@ -9,6 +9,7 @@
   <class pattern    = "Ostap::Models::*"          />
   <class pattern    = "Ostap::Functions::*"       />
   <class pattern    = "Ostap::Kinematics::*"      />
+  <class pattern    = "Ostap::MoreRooFit:*"       />
 
   <function pattern = "Ostap::Math::*"            />
   <function pattern = "Ostap::Utils::*"           />

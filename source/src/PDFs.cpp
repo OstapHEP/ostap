@@ -5958,7 +5958,7 @@ Double_t Ostap::Models::Sech::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars () ;
-  return m_sech.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
+  return m_sech.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
 

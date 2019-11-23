@@ -1161,7 +1161,7 @@ class PDF (MakeVar) :
         fargs = []
         ##
         bins  = kwargs.pop ( 'nbins' , 200 )
-        if bins   : fargs.append ( ROOT.RooFit.Bins      ( bins  ) ) 
+        if bins   : fargs.append ( ROOT.RooFit.Bins      ( bins  ) )
         ## 
         rng   = kwargs.pop ( 'range' , None )
         if rng    : fargs.append ( ROOT.RooFit.Range     ( *rng  ) ) 
@@ -1197,9 +1197,12 @@ class PDF (MakeVar) :
             avar    = ROOT.RooArgSet    (  var ) 
             profile = nll.createProfile ( avar )
             result  = profile
-            
+
+        self.debug ( 'draw_nll: frame  args: %s'% list ( fargs ) )
         ## prepare the frame & plot 
         frame = var.frame ( *fargs )
+        
+        self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
         result.plotOn ( frame , *largs  )
 
         import ostap.histos.graphs
@@ -1209,7 +1212,7 @@ class PDF (MakeVar) :
             vmn , vmx = var.minmax()
             graph   = frame.getObject ( 0 )
             if graph.remove ( remove = lambda x,y : not vmn <= x <= vmx ) :
-                logger.info ('draw_nll: remove drawing artefacts  at the first and the last points' ) 
+                logger.debug ('draw_nll: remove drawing artefacts  at the first and the last points' ) 
                                         
         ## scale it if needed
         if 1 != sf :
@@ -1271,7 +1274,6 @@ class PDF (MakeVar) :
         if not clone : kwargs['optimize'] = False 
 
         opts = self.parse_args ( dataset , *args , **kwargs )
-        if not silent and opts : self.info ('nll options: %s ' % list ( opts ) )
 
         ## skip some artifacts from MakeVars.parse_args 
         ok = []
@@ -1281,13 +1283,13 @@ class PDF (MakeVar) :
             if o.name == 'PrintEvalErrors' : continue
             ok.append ( o )
             
-        opts = tuple ( ok )
-        
+        opts = tuple ( ok )        
         if not silent and opts : self.info ('NLL options: %s ' % list ( opts ) )
         
         ## get s-Factor 
         sf   = dataset.sFactor() 
 
+        self.debug ( 'nll: createNLL args: %s'% list ( opts ) )            
         return self.pdf.createNLL ( dataset , *opts ) , sf 
 
     # ========================================================================
@@ -1777,10 +1779,13 @@ class PDF (MakeVar) :
         """
         pdf         = self.pdf
         xmin , xmax = self.xminmax()
+
+        xmin = kwargs.pop ( 'xmin' , xmin )
+        xmax = kwargs.pop ( 'xmax' , xmax )
         
         if self.tricks and hasattr ( pdf , 'function' ) :    
             fun = pdf.function()
-            if   hasattr ( pdf  , 'setPars'   ) : pdf.setPars()             
+            if   hasattr  ( pdf , 'setPars'   ) : pdf.setPars()             
         else :
             fun = PDF_fun ( pdf , self.xvar , xmin , xmax )
             
@@ -1788,7 +1793,7 @@ class PDF (MakeVar) :
         
     # ========================================================================
     ## get the effective RMS 
-    def rms ( self ) :
+    def rms ( self , **kwargs ) :
         """Get the effective RMS
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
@@ -1807,11 +1812,11 @@ class PDF (MakeVar) :
             elif hasattr ( fun , 'dispersion' ) : return fun.dispersion ()**0.5 
             
         from ostap.stats.moments import rms as _rms
-        return  self._get_stat_ ( _rms )
+        return  self._get_stat_ ( _rms , **kwargs )
 
     # ========================================================================
     ## get the effective Full Width at Half Maximum
-    def fwhm ( self ) :
+    def fwhm ( self , **kwargs ) :
         """Get the effective Full Width at  Half Maximum
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
@@ -1819,12 +1824,12 @@ class PDF (MakeVar) :
         """
         ## use generic machinery 
         from ostap.stats.moments import width as _width
-        w = self._get_stat_ ( _width )
+        w = self._get_stat_ ( _width , **kwargs )
         return w[1]-w[0]
 
     # =========================================================================
     ## get the effective Skewness
-    def skewness ( self ) :
+    def skewness ( self , **kwargs ) :
         """Get the effective Skewness
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
@@ -1832,11 +1837,11 @@ class PDF (MakeVar) :
         """
         ## use generic machinery 
         from ostap.stats.moments import skewness as _skewness
-        return self._get_stat_ ( _skewness )
+        return self._get_stat_ ( _skewness , **kwargs )
 
     # =========================================================================
     ## get the effective Kurtosis
-    def kurtosis ( self ) :
+    def kurtosis ( self , **kwargs ) :
         """Get the effective Kurtosis
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
@@ -1844,44 +1849,44 @@ class PDF (MakeVar) :
         """
         ## use generic machinery 
         from ostap.stats.moments import kurtosis as _kurtosis
-        return self._get_stat_ ( _kurtosis )
+        return self._get_stat_ ( _kurtosis , **kwargs )
 
     # =========================================================================
     ## get the effective mode 
-    def mode ( self ) :
+    def mode ( self , *kwargs ) :
         """Get the effective mode
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print 'MODE: %s ' % pdf.mode()
         """
         from ostap.stats.moments import mode as _mode
-        return self._get_stat_ ( _mode )
+        return self._get_stat_ ( _mode , **kwargs )
 
     # =========================================================================
     ## get the effective median
-    def median ( self ) :
+    def median ( self , **kwargs ) :
         """Get the effective median
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print 'MEDIAN: %s ' % pdf.median()
         """
         from ostap.stats.moments import median as _median
-        return self._gets_stat_ ( _median )
+        return self._gets_stat_ ( _median , **kwargs )
 
     # =========================================================================
     ## get the effective mean
-    def get_mean ( self ) :
+    def get_mean ( self , **kwargs ) :
         """Get the effective Mean
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print 'MEAN: %s ' % pdf.get_mean()
         """
         from ostap.stats.moments import mean as _mean
-        return self._get_stat_ ( _mean )
+        return self._get_stat_ ( _mean , **kwargs )
     
     # =========================================================================
     ## get the effective moment for the distribution
-    def moment ( self , N ) :
+    def moment ( self , N , **kwargs ) :
         """Get the effective moment
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
@@ -1889,51 +1894,51 @@ class PDF (MakeVar) :
         """
         ## use generic machinery 
         from ostap.stats.moments import moment as _moment
-        return self._get_stat_ ( _moment , N ) 
+        return self._get_stat_ ( _moment , N , **kwargs ) 
     
     # =========================================================================
     ## get the effective central moment for the distribution
-    def central_moment ( self , N ) :
+    def central_moment ( self , N , **kwargs ) :
         """Get the effective central moment
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print 'MOMENT: %s ' % pdf.moment( 10 )
         """
         from ostap.stats.moments import central_moment as _moment
-        return self._get_stat_ ( _moment , N ) 
+        return self._get_stat_ ( _moment , N , **kwargs ) 
 
     # =========================================================================
     ## get the effective quantile 
-    def quantile ( self , prob  ) :
+    def quantile ( self , prob  , **kwargs ) :
         """Get the effective quantile
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print 'QUANTILE: %s ' % pdf.quantile ( 0.10 )
         """
         from ostap.stats.moments import quantile as _quantile
-        return self._get_stat_ ( quantile , prob ) 
+        return self._get_stat_ ( quantile , prob , **kwargs ) 
 
     # =========================================================================
     ## get the symmetric confidence interval 
-    def cl_symm ( self , prob , x0 =  None ) :
+    def cl_symm ( self , prob , x0 =  None , **kwargs ) :
         """Get the symmetric confidence interval 
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print 'CL :  ',  pdf.cl_symm ( 0.10 )
         """
         from ostap.stats.moments import cl_symm as _cl
-        return self._get_sstat_ ( _cl , prob , x0 ) 
+        return self._get_stat_ ( _cl , prob , x0 , **kwargs ) 
 
     # =========================================================================
     ## get the asymmetric confidence interval 
-    def cl_asymm ( self , prob ) :
+    def cl_asymm ( self , prob , **kwargs ) :
         """Get the asymmetric confidence interval 
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print 'CL :  ',  pdf.cl_asymm ( 0.10 )
         """
         from ostap.stats.moments import cl_asymm as _cl
-        return self._get_sstat_ ( _cl , prob )
+        return self._get_stat_ ( _cl , prob , **kwargs )
     
     # =========================================================================
     ## get the integral between xmin and xmax 
@@ -2527,8 +2532,6 @@ class PDF (MakeVar) :
                           xvar   = xvar        ,
                           logger = self.logger , **kwargs ) 
 
-
-
     # =========================================================================
     ## Load parameters from external dictionary <code>{ name : value }</code>
     #  or sequence of <code>RooAbsReal</code> objects
@@ -2616,6 +2619,30 @@ class PDF (MakeVar) :
             self.warning ("Following keys are unused %s" % not_used ) 
         
         return 
+
+    # =========================================================================
+    ## get all parameters/variables in form of dictionary
+    #  @code
+    #  pdf    = ...
+    #  params = pdf.params ( dataset ) 
+    #  @endcode
+    def params ( self , dataset = None ) :
+        """ Get all parameters/varibales in form of dictionary
+        >>> pdf    = ...
+        >>> params = pdf.params ( dataset ) 
+        """
+        
+        ## get the list of the actual parameters 
+        pars = self.pdf.getParameters ( dataset )
+
+        tmp    = {}
+        for p in pars : tmp[p.name] = p.value
+        keys   = tmp.keys()
+        result = {} 
+        for key in sorted ( keys ) : result [ key ] = tmp [ key ] 
+            
+        return result 
+
         
 # =============================================================================
 ##  helper utilities to imlement resolution models.
@@ -2768,29 +2795,96 @@ class MASS(PDF) :
 # =============================================================================
 ## @class RESOLUTION
 #  helper base class  to parameterize the resolution
+#  - It allows setting of the <code>mean</code> to zero,
+#  - It containg "fudge-factor" for the resolution parameter <code>sigma</code>
+#  - It simplify creation of the soft/gaussian constraint for the "fudge-factor"
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2017-07-13
 class RESOLUTION(MASS) :
     """Helper base class  to parameterize the resolution
+    - It allows setting of the ``mean'' to zero,
+    - It containg ``fudge-factor'' for the resolution parameter ``sigma''
+    - It simplify creation of the soft/gaussian constraint for the ``fudge-factor''    
     """
+    ## constructor
+    #  @param name   the name of PDF
+    #  @param xvar   the variable/observable
+    #  @param sigma  sigma/resoltuion parameter 
+    #  @param mean   "mean"-variable
+    #  @param fudge  "fudge-factor" to be aplied to sigma
     def __init__ ( self            ,
                    name            ,
                    xvar     = None ,
                    sigma    = None , 
-                   mean     = None ) : 
+                   mean     = None ,
+                   fudge    = 1.0  ) :
+        
         with Resolution() :
             super(RESOLUTION,self).__init__ ( name  = name  ,
                                               xvar  = xvar  ,
                                               sigma = sigma ,
                                               mean  = mean  )
+            
+        self.__fudge            = fudge
+        
+        self.__fudge_constraint = None
+        
+        if isinstance ( fudge , VE ) :
+            
+            assert 0 < fudge.value() and 0 < fudge.cov2(),\
+                   "Invalid value for ``fudge-factor'': %s" % s 
+            
+            value  = fudge.value()
+            error  = fudge.error()
+            vmin   = max ( 0 , value - 5 * error )
+            vmax   =           value + 5 * error
+            
+            ## make fudge-factor to be a variable 
+            self.__fudge = self.make_var ( value ,
+                                           'fudge_factor_%s'  % self.name ,
+                                           'fudge_factor(%s)' % self.name ,
+                                           None                           ,
+                                           value , vmin , vmax            )
+            
+            ## create soft/gaussian constraint for fudge-factor
+            self.__fudge_constraint = self.soft_constraint (
+                self.fudge ,
+                fudge      ,
+                name  = 'Fudge_constraint_%s'  % self.name ,
+                title = 'Fudge_constraint(%s)' % self.name )
+
+        if isinstance ( self.fudge , num_types ) and 1 == fudge : 
+            ## corrected sigma is trivial 
+            self.__sigma_corr   =    self.sigma
+        else : 
+            ## create the corrected sigma 
+            self.__sigma_corr = self.vars_multiply ( self.sigma ,
+                                                     self.fudge ,
+                                                     'Corrected_%s' % self.sigma.name )
+            
         ## save the configuration
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
             'mean'  : self.mean  ,
-            'sigma' : self.sigma
+            'sigma' : self.sigma ,
+            'fudge' : self.fudge ,
             }
-            
+
+    @property 
+    def fudge ( self ) :
+        """``fudge'' : fudge factor for resolution"""
+        return self.__fudge
+    @property 
+    def fudge_constraint ( self ) :
+        """``fudge_constraint'' : constraint for fudge factor for the resolution"""
+        return self.__fudge_constraint
+    @property 
+    def sigma_corr ( self ) :
+        """``sigma_corr'' : the corrected sigma parameter: sigma*fudge """
+        return self.__sigma_corr
+
+    
 # =============================================================================
 ## @class Flat1D
 #  The most trivial 1D-model - constant

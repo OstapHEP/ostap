@@ -196,9 +196,6 @@ namespace Ostap
       std::unique_ptr<Ostap::Math::BreitWigner> m_bw{}  ; // the actual function
       // ======================================================================
     } ;
-
-
-
     // ========================================================================
     /** @class BreitWignerMC
      *  @see Ostap::Math::BreitWignerMC
