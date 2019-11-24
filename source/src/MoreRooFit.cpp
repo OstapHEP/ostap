@@ -87,34 +87,72 @@ Double_t Ostap::MoreRooFit::Subtraction::analyticalIntegral
   }
   assert(cache!=0);
   
-  // loop over cache, and sum...
-  double result = 0   ;
-  bool   first  = true ;
-  for (auto I : cache->_I) 
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,18,0)
   {
-    //
-    const double tmp =  static_cast<const RooAbsReal*>(I)->getVal();
-    if ( first ) { result += tmp ; first = false ; }
-    else         { result -= tmp ;                 }
-    //
+    // loop over cache, and sum...
+    std::unique_ptr<TIterator> iter( cache->_I.createIterator() );
+    RooAbsReal *I;
+    double result(0);
+    bool   first = true  ;
+    while ( ( I=(RooAbsReal*)iter->Next() ) != 0 ) 
+    { 
+      if ( first )  { result += I->getVal() ; first = false ; }
+      else          { result -= I->getVal() ; }
+      
+    }
+    return result;
   }
-  return result;
+#else
+  {
+    // loop over cache, and sum...
+    double result = 0   ;
+    bool   first  = true ;
+    for (auto I : cache->_I) 
+    {
+      //
+      const double tmp =  static_cast<const RooAbsReal*>(I)->getVal();
+      if ( first ) { result += tmp ; first = false ; }
+      else         { result -= tmp ;                 }
+      //
+    }
+    return result;
+  }
+#endif 
 }
 // ============================================================================
 Double_t Ostap::MoreRooFit::Subtraction::evaluate() const
 {
-  Double_t result = 0 ;
-  const RooArgSet* nset = _set.nset() ;
-  //
-  bool first = true ;
-  for ( const auto arg : _set) 
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,18,0)
   {
-    const auto comp = static_cast<RooAbsReal*>(arg);
-    const Double_t tmp = comp->getVal(nset);
-    if ( first ) { result += tmp ;  first = false ; }
-    else         { result -= tmp ;                  }
+    Double_t sum(0);
+    bool first = true ;
+    const RooArgSet* nset = _set.nset() ;
+    RooFIter setIter = _set.fwdIterator() ;
+    RooAbsReal* comp ;
+    while((comp=(RooAbsReal*)setIter.next())) 
+    {
+      Double_t tmp = comp->getVal(nset) ;
+      if ( first ) { sum += tmp ; first = false ; }
+      else         { sum -= tmp ; }
+    }
+    return sum ;
   }
+#else 
+  {
+    Double_t result = 0 ;
+    const RooArgSet* nset = _set.nset() ;
+    //
+    bool first = true ;
+    for ( const auto arg : _set) 
+    {
+      const auto comp = static_cast<RooAbsReal*>(arg);
+      const Double_t tmp = comp->getVal(nset);
+      if ( first ) { result += tmp ;  first = false ; }
+      else         { result -= tmp ;                  }
+    }
   return result ;
+  }
+#endif 
 }
 // ============================================================================
 
