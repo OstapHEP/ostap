@@ -499,7 +499,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
-        row = allright ( '*' + p ) , n , '  ' + s 
+        row = allright ( p ) , n , '  ' + s 
         crows.append ( row ) 
 
     frows = [] 
