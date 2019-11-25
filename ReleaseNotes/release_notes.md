@@ -1,3 +1,4 @@
+# v1.4.4.2
 
 ## New  features: 
 
@@ -50,7 +51,7 @@
  1. improve printout of trees and datasets
  1. more improvements in tables&colorization
  1. improve reweighting machinery
- 1. add 2D and 3D  moments for the historgams
+ 1. add 2D and 3D  moments for the histograms
  1. improve 2D histos comparison functions
  1. improve progress bar
  1. fix addition of new brnaches to `TTree/TChain` and whole `IFuncTree` machinery
