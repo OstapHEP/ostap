@@ -1,5 +1,5 @@
 
-# New  features: 
+## New  features: 
 
   1. `table` function for `RooFitResult`: print object in a form of nice table 
   1. `ostap.logger.utils`  set of minor functions for nice printout 
@@ -8,19 +8,19 @@
       - `pretty_2ve`   : print float with asymmetric errors 
   1. `ostap.logger.table`  : add function `align_column` to aling the column for a given table
  
-# Bug fixes: 
+## Bug fixes: 
 
 
-## v1.4.4.1
+# v1.4.4.1
 
-# Bug fixes 
+## Bug fixes 
  
   1. Fix for "old" ROOT version in `MoreRooFit.cpp`
 
 
-## v1.4.4.0 
+# v1.4.4.0 
 
-# New features 
+## New features 
 
  1. Redesign all *shelve-like data bases:
     - add abstract base class
@@ -99,7 +99,7 @@
        during the processing of large frames.
  1. Add context manager to remove/add certain topics to `RooMsgService`
 
-# Bug fixes 
+## Bug fixes 
 
  1. `PDF.draw_nll` : fix bug for the weighted datasets
  1. Few  fixes in `Dalitz`, epsecially for  drawing it
