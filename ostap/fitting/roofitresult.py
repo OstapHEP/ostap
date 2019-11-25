@@ -494,8 +494,8 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     for p in pars_all :
         if p in pars_float : continue 
         v , a = pars_all [ p ]
-        v = v.value
-        s , n =  pretty_float ( v )
+
+        s , n = pretty_ve  ( v ) 
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
