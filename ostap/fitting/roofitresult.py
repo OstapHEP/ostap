@@ -21,7 +21,9 @@ import ROOT
 from   ostap.core.core          import Ostap, VE, valid_pointer
 from   ostap.core.ostap_types   import string_types , integer_types  
 import ostap.fitting.variables     
-import ostap.fitting.printable     
+import ostap.fitting.printable
+from   ostap.logger.colorized   import allright, attention
+from   ostap.logger.utils       import pretty_float, pretty_ve, pretty_2ve 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roofitresult' )
@@ -158,6 +160,43 @@ def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
             m [i,j] = cm(i,j)
             
     return m  
+
+# =============================================================================
+## get the covariance matrix 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _rfr_covmatrix_  ( self ) :
+    """Get covariance ( matrix 
+    >>> result = ...
+    >>> cov = results.covmatrix()
+    >>> print corr
+    """
+        
+    cm = self.covarianceMatrix ()
+    N  = cm.GetNrows()
+
+    import ostap.math.linalg 
+    m  = Ostap.Math.SymMatrix ( N )()
+
+    for i in range ( N ) :
+        for j in  range ( i , N ) :
+            m [i,j] = cm(i,j)
+            
+    return m  
+
+# ==============================================================================
+## Get vector of eigenvalues for the covariance matrix
+#  @code
+#  result = ...
+#  eigenvalues =  result.cov_eigenvalues() 
+#  @endcode 
+def _rfr_eigenvalues_ ( self , sorted = True ) :
+    """Get vector of eigenvalues for the covarinace matrix
+    >>> result = ...
+    >>> eigenvalues =  result.cov_eigenvalues() 
+    """
+    cm = _rfr_covmatrix_ ( self )
+    return Ostap.Math.EigenSystems.eigenValues ( cm , sorted )
 
 # =============================================================================
 ## get the covariance (sub) matrix 
@@ -396,6 +435,106 @@ def _rfr_results_( self , *vars ) :
 
 
 # =============================================================================
+## print <code>RooFitResult</code> as a table
+#  @code
+#  result = ...
+#  result.table() 
+#  @endcode 
+def _rfr_table_ ( r , title = '' , prefix = '' ) :
+    """ print RooFitResult  as a table
+    >>> result = ...
+    >>> result.table() 
+    """
+
+    from  ostap.fitting.utils    import fit_status, cov_qual
+    rows = [] 
+    if r.status() :
+        row = attention ( ' Status' )  , '' , attention ( fit_status ( r.status() ) )
+        rows.append ( row )
+        
+    s , n = pretty_float ( r.minNll() )
+    if n : n = '[10^%+d]' % n
+    else : n = '' 
+
+    rows.append ( ( "Minimized FCN/NLL value"    , n , '  ' + s ) )
+
+    s , n = pretty_float ( r.edm () )
+    if n : n = '[10^%+d]' % n
+    else : n = '' 
+    
+    rows.append ( ( 'Estimated distance to minimum' , n , '  ' + s ) )
+    
+    cq = r.covQual()
+    cn = '' 
+    if  -1 == cq :
+        cn = cov_qual  ( cq ) 
+    elif 3 == cq :
+        cn = allright  ( cov_qual ( cq ) )
+    elif cq in (  0 , 1 , 2 ) :
+        cn = attention ( cov_qual ( cq ) )
+    else :
+        cn = cov_qual  ( cq ) 
+        
+    rows.append ( ( 'Covariance matrix quality'     , '' , '  ' + cn ) )
+    
+
+    for i in  range ( r.numStatusHistory() ) :
+        label =  r.statusLabelHistory ( i )
+        code  =  r.statusCodeHistory  ( i )
+        row   =  'Status: %s '% label   , '' ,             '   %d' % code             
+        if code : row = attention  ( row [ 0 ] ) , row [ 1 ] , attention ( row [ 1 ] )
+        rows.append ( row )
+
+    rows = [ ( '', 'Unit', 'Value' ) ] + rows
+
+    pars_all   = r.params ( float_only = False )
+    pars_float = r.params ( float_only = True  )
+
+    crows = [] 
+    for p in pars_all :
+        if p in pars_float : continue 
+        v , a = pars_all [ p ]
+        v = v.value
+        s , n =  pretty_float ( v )
+
+        if n : n = '[10^%+d]' % n
+        else : n = '' 
+        row = allright ( '*' + p ) , n , '  ' + s 
+        crows.append ( row ) 
+
+    frows = [] 
+    for p in pars_float :
+        v , a = pars_float [ p ]
+
+        if not a.hasAsymError() :
+            s , n = pretty_ve  ( v ) 
+        else :
+            s , n = pretty_2ve (  a.getVal() , a.getAsymErrorHi() , a.getAsymErrorLo() )
+
+        if n : n = '[10^%+d]' % n
+        else : n = '' 
+
+        row = allright  ( p ) , n , s 
+        frows.append ( row ) 
+
+    crows.sort()
+    frows.sort()
+
+    all = rows + crows + frows
+
+    import ostap.logger.table as T
+
+    all = T.align_column ( all , 0 , 'left' )
+    all = T.align_column ( all , 1 , 'left' )
+    all = T.align_column ( all , 2 , 'left' )
+
+    if title : 
+        return T.table ( all , title = title         , prefix = prefix )
+    else     :
+        return T.table ( all , title = r.GetTitle()  , prefix = prefix )
+
+
+# =============================================================================
 ## Run MIGRAD for RooMinimizer object
 #  @code
 #  pdf = ...
@@ -491,59 +630,65 @@ if not hasattr ( ROOT.RooMinimizer , '_old_minos_' ) :
     
 # =============================================================================
 ## some decoration over RooFitResult
-ROOT.RooFitResult . __repr__    = _rfr_print_
-ROOT.RooFitResult . __str__     = _rfr_print_
-ROOT.RooFitResult . __call__    = _rfr_param_
-ROOT.RooFitResult . __getattr__ = _rfr_getattr_ 
-ROOT.RooFitResult . __iter__    = _rfr_iter_
-ROOT.RooFitResult . iteritems   = _rfr_iteritems_
-ROOT.RooFitResult . parameters  = _rfr_params_
-ROOT.RooFitResult . params      = _rfr_params_
-ROOT.RooFitResult . param       = _rfr_param_
-ROOT.RooFitResult . parameter   = _rfr_param_
-ROOT.RooFitResult . corr        = _rfr_corr_
-ROOT.RooFitResult . cor         = _rfr_corr_
-ROOT.RooFitResult . cov         = _rfr_cov_
-ROOT.RooFitResult . covariance  = _rfr_cov_
-ROOT.RooFitResult . cov_matrix  = _rfr_cov_matrix_
-ROOT.RooFitResult . parValue    = lambda s,n : s.parameter(n)[0]
-ROOT.RooFitResult . sum         = _rfr_sum_
-ROOT.RooFitResult . plus        = _rfr_sum_
-ROOT.RooFitResult . multiply    = _rfr_multiply_
-ROOT.RooFitResult . product     = _rfr_multiply_
-ROOT.RooFitResult . subtract    = _rfr_subtract_
-ROOT.RooFitResult . minus       = _rfr_subtract_
-ROOT.RooFitResult . divide      = _rfr_divide_
-ROOT.RooFitResult . ratio       = _rfr_divide_
-ROOT.RooFitResult . fraction    = _rfr_fraction_
-ROOT.RooFitResult . results     = _rfr_results_
+ROOT.RooFitResult . __repr__        = _rfr_print_
+ROOT.RooFitResult . __str__         = _rfr_print_
+ROOT.RooFitResult . __call__        = _rfr_param_
+ROOT.RooFitResult . __getattr__     = _rfr_getattr_ 
+ROOT.RooFitResult . __iter__        = _rfr_iter_
+ROOT.RooFitResult . iteritems       = _rfr_iteritems_
+ROOT.RooFitResult . parameters      = _rfr_params_
+ROOT.RooFitResult . params          = _rfr_params_
+ROOT.RooFitResult . param           = _rfr_param_
+ROOT.RooFitResult . parameter       = _rfr_param_
+ROOT.RooFitResult . corr            = _rfr_corr_
+ROOT.RooFitResult . cor             = _rfr_corr_
+ROOT.RooFitResult . cov             = _rfr_cov_
+ROOT.RooFitResult . covariance      = _rfr_cov_
+ROOT.RooFitResult . cov_matrix      = _rfr_cov_matrix_
+ROOT.RooFitResult . covmatrix       = _rfr_covmatrix_
+ROOT.RooFitResult . parValue        = lambda s,n : s.parameter(n)[0]
+ROOT.RooFitResult . sum             = _rfr_sum_
+ROOT.RooFitResult . plus            = _rfr_sum_
+ROOT.RooFitResult . multiply        = _rfr_multiply_
+ROOT.RooFitResult . product         = _rfr_multiply_
+ROOT.RooFitResult . subtract        = _rfr_subtract_
+ROOT.RooFitResult . minus           = _rfr_subtract_
+ROOT.RooFitResult . divide          = _rfr_divide_
+ROOT.RooFitResult . ratio           = _rfr_divide_
+ROOT.RooFitResult . fraction        = _rfr_fraction_
+ROOT.RooFitResult . results         = _rfr_results_
+ROOT.RooFitResult . cov_eigenvalues = _rfr_eigenvalues_
+ROOT.RooFitResult . table            = _rfr_table_
 
 _new_methods_ += [
-    ROOT.RooFitResult . __repr__    ,
-    ROOT.RooFitResult . __str__     ,
-    ROOT.RooFitResult . __call__    ,
-    ROOT.RooFitResult . __getattr__ ,
-    ROOT.RooFitResult . __iter__    ,
-    ROOT.RooFitResult . iteritems   ,
-    ROOT.RooFitResult . parameters  ,
-    ROOT.RooFitResult . params      ,
-    ROOT.RooFitResult . param       ,
-    ROOT.RooFitResult . parameter   ,
-    ROOT.RooFitResult . corr        ,
-    ROOT.RooFitResult . cor         ,
-    ROOT.RooFitResult . cov         ,
-    ROOT.RooFitResult . covariance  ,
-    ROOT.RooFitResult . parValue    ,
-    ROOT.RooFitResult . sum         ,
-    ROOT.RooFitResult . plus        ,
-    ROOT.RooFitResult . multiply    ,
-    ROOT.RooFitResult . product     ,
-    ROOT.RooFitResult . subtract    ,
-    ROOT.RooFitResult . minus       ,
-    ROOT.RooFitResult . divide      ,
-    ROOT.RooFitResult . ratio       ,
-    ROOT.RooFitResult . fraction    ,
-    ROOT.RooFitResult . results     ,
+    ROOT.RooFitResult . __repr__         ,
+    ROOT.RooFitResult . __str__          ,
+    ROOT.RooFitResult . __call__         ,
+    ROOT.RooFitResult . __getattr__      ,
+    ROOT.RooFitResult . __iter__         ,
+    ROOT.RooFitResult . iteritems        ,
+    ROOT.RooFitResult . parameters       ,
+    ROOT.RooFitResult . params           ,
+    ROOT.RooFitResult . param            ,
+    ROOT.RooFitResult . parameter        ,
+    ROOT.RooFitResult . corr             ,
+    ROOT.RooFitResult . cor              ,
+    ROOT.RooFitResult . cov              ,
+    ROOT.RooFitResult . covariance       ,
+    ROOT.RooFitResult . parValue         ,
+    ROOT.RooFitResult . sum              ,
+    ROOT.RooFitResult . plus             ,
+    ROOT.RooFitResult . multiply         ,
+    ROOT.RooFitResult . product          ,
+    ROOT.RooFitResult . subtract         ,
+    ROOT.RooFitResult . minus            ,
+    ROOT.RooFitResult . divide           ,
+    ROOT.RooFitResult . ratio            ,
+    ROOT.RooFitResult . fraction         ,
+    ROOT.RooFitResult . results          ,
+    ROOT.RooFitResult . table            ,
+    ROOT.RooFitResult . cov_eigenvalues  ,
+    ROOT.RooFitResult . covmatrix        ,
     ]
 
 # =============================================================================

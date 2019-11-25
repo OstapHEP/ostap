@@ -58,7 +58,7 @@ else                       : logger = getLogger ( __name__              )
 # - status =  2 : full matrix but forced pos def
 # - status =  3 : full accurate matrix
 _cov_qual_ = {
-    -1 :  '-1/not available (inversion failed or Hesse failed)' ,
+    -1 :  '-1/not available (inversion failed or Hesse failed or externally provided)' ,
     0  :  ' 0/available but not positive defined',
     1  :  ' 1/covariance only approximate',
     2  :  ' 2/full matrix but forced pos def',
