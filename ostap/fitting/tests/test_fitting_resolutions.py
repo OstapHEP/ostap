@@ -50,7 +50,7 @@ for i in range(0,10000) :
     mass.setVal  ( m2.gauss () )
     dataset0.add ( varset0     )
     
-logger.info ('DATASET %s' % dataset0 )
+logger.info ('DATASET\n%s' % dataset0.table ( prefix = "# " ) ) 
 
 models = set() 
 
@@ -74,8 +74,8 @@ def test_gauss () :
         print(result)
     else :     
         logger.info ( 'ResoGauss:  RMS         %s ' % reso_gauss.rms    () )  
-        logger.info ( 'ResoGauss:  FWHM        %s ' % reso_gauss.fwhm   () )  
-        logger.info ( 'ResoGauss:  Resolution: %s ' % result.sigma_G1.ve() )  
+        logger.info ( 'ResoGauss:  FWHM        %s ' % reso_gauss.fwhm   () )
+        logger.info ( "ResoGauss: fit results\n%s" % result.table ( title = 'Gaussian resolution model' , prefix = '# ' ) )
 
     models.add ( reso_gauss )
     
@@ -100,20 +100,18 @@ def test_2gauss () :
         print(result)
     else :     
         logger.info ( 'ResoGauss2: RMS        %s ' % reso_2gauss.rms          () )  
-        logger.info ( 'ResoGauss2: FWHM       %s ' % reso_2gauss.fwhm         () )  
-        logger.info ( 'ResoGauss2: Resolution %s ' % result.sigma_G2       .ve() )  
-        logger.info ( 'ResoGauss2: Scale      %s ' % result.SigmaScale_G2  .ve() )  
-        logger.info ( 'ResoGauss2: Fraction   %s ' % result.CoreFraction_G2.ve() )  
+        logger.info ( 'ResoGauss2: FWHM       %s ' % reso_2gauss.fwhm         () )
+        logger.info ( "ResoGauss2: fit results\n%s" % result.table ( title = 'double-Gaussian resolution model' , prefix = '# ' ) )
         
     models.add ( reso_2gauss )
 
         
 # =============================================================================
-## Symmetric Apolonious
+## Symmetric Apollonios
 # =============================================================================
 def test_apo2 () :
     
-    logger.info ('Test ResoApo2:  symmetric Apolonios resolution model' )
+    logger.info ('Test ResoApo2:  symmetric Apollonios resolution model' )
     from   ostap.fitting.resolution import ResoApo2
     reso_apo2 = ResoApo2( 'A2' , mass ,  0.1 )
     reso_apo2.sigma .release()
@@ -129,9 +127,8 @@ def test_apo2 () :
         print(result)
     else :     
         logger.info ( 'ResoApo2:   RMS        %s ' % reso_apo2.rms          () )  
-        logger.info ( 'ResoApo2:   FWHM       %s ' % reso_apo2.fwhm         () )  
-        logger.info ( 'ResoApo2:   Resolution %s ' % result.sigma_A2     .ve() )  
-        logger.info ( 'ResoApo2:   Beta       %s ' % result.ResoBeta_A2  .ve() )  
+        logger.info ( 'ResoApo2:   FWHM       %s ' % reso_apo2.fwhm         () )
+        logger.info ( "ResoApo2:   fit results\n%s" % result.table ( title = 'symmetric Apollonios resolution model' , prefix = '# ' ) )
     
     models.add ( reso_apo2)
 
@@ -158,12 +155,62 @@ def test_cb2 () :
         print(result)
     else :     
         logger.info ( 'ResoCB2:    RMS        %s ' % reso_cb2.rms           () )  
-        logger.info ( 'ResoCB2:    FWHM       %s ' % reso_cb2.fwhm          () )  
-        logger.info ( 'ResoCB2:    Resolution %s ' % result.sigma_CB     .ve() )  
-        logger.info ( 'ResoCB2:    Alpha      %s ' % result.ResoAlpha_CB .ve() )  
-        logger.info ( 'ResoCB2:    N          %s ' % result.ResoN_CB     .ve() )  
+        logger.info ( 'ResoCB2:    FWHM       %s ' % reso_cb2.fwhm          () )
+        logger.info ( "ResoCB2:    fit results\n%s" % result.table ( title = 'symmetric double-sided Crystal Ball resolution model' , prefix = '# ' ) )
         
     models.add ( reso_cb2)
+
+
+# =============================================================================
+## Hyperbolic secant 
+# =============================================================================
+def test_sech () :
+    
+    logger.info ('Test ResoSech: hyperbolic secant resolution model' )
+    from   ostap.fitting.resolution import ResoSech
+    reso_sech = ResoSech ( 'Sech' , mass ,  0.1 )
+    reso_sech.sigma .release()
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso_sech. fitTo ( dataset0 )
+        result, frame = reso_sech. fitTo ( dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoSech:   RMS        %s ' % reso_sech.rms          () )  
+        logger.info ( 'ResoSech:   FWHM       %s ' % reso_sech.fwhm         () )
+        logger.info ( "ResoSech:   fit results\n%s" % result.table ( title = 'hyperbolic secant/sech resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso_sech )
+
+# =============================================================================
+## Bukin
+# =============================================================================
+def test_bukin () :
+    
+    logger.info ('Test ResoBukin: Bukin resolution model' )
+    from   ostap.fitting.resolution import ResoBukin
+    reso_bukin = ResoBukin ( 'Bukin' , mass ,  0.1 ,rho = (0, 0 , 10 ) )
+    reso_bukin.sigma .release()
+    reso_bukin.rho   .release()
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso_bukin. fitTo ( dataset0 )
+        result, frame = reso_bukin. fitTo ( dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoBukin:  RMS        %s ' % reso_bukin.rms          () )  
+        logger.info ( 'ResoBukin:  FWHM       %s ' % reso_bukin.fwhm         () )
+        logger.info ( "ResoBukin: fit results\n%s" % result.table ( title = 'symmetric Bukin resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso_bukin )
 
 
 # =============================================================================
@@ -184,8 +231,10 @@ if '__main__' == __name__ :
 
     test_gauss  () ## single Gaussian resolution model
     test_2gauss () ## double Gaussian resolution model
-    test_apo2   () ## double Gaussian resolution model
-    test_cb2    () ## double Gaussian resolution model
+    test_apo2   () ## symmetric Apollonios resoltuion model
+    test_cb2    () ## double-sided Crystal Ball resoltuion model
+    test_sech   () ## hyperbolic secant resolution model
+    test_bukin  () ## Bukin resolution model
     
     ## check finally that everything is serializeable:
     test_db ()          

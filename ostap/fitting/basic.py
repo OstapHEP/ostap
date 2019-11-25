@@ -1825,8 +1825,26 @@ class PDF (MakeVar) :
         ## use generic machinery 
         from ostap.stats.moments import width as _width
         w = self._get_stat_ ( _width , **kwargs )
-        return w[1]-w[0]
+        return  w [ 1 ] - w [ 0 ]
 
+    # ========================================================================
+    ## Get the effective midpoint/location:
+    #  a mid point of an interval \f$ [x_{low}, x_{high}]\f$,
+    #  \f$ x_{mid} = \frac{ x_{low} + x_{high}}{2}\f$, where  
+    #  where \f$ f(x_{low}) = f(x_{high}) = \frac{f_{max}(x)}{2} \f$ 
+    # (the same points are used for FWHM)
+    def mid_point ( self , **kwargs ) :
+        """Get the effective midpoint/location:
+        - a mid point of an interval  x_low, x_high
+        x_mid = (x_low + x_high)/2 {2},
+        where  f(x_low) = f(x_high) = f_{max}(x)
+        - the same points are used for FWHM
+        """
+        ## use generic machinery 
+        from ostap.stats.moments import width as _width
+        w = self._get_stat_ ( _width , **kwargs )
+        return 0.5 * ( w [ 1 ] + w [ 0 ] )
+    
     # =========================================================================
     ## get the effective Skewness
     def skewness ( self , **kwargs ) :
@@ -1853,7 +1871,7 @@ class PDF (MakeVar) :
 
     # =========================================================================
     ## get the effective mode 
-    def mode ( self , *kwargs ) :
+    def mode ( self , **kwargs ) :
         """Get the effective mode
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )

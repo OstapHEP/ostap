@@ -1949,7 +1949,7 @@ std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const
  *  @param b     b-parameter 
  */
 // ============================================================================
-Ostap::Math::Apolonios::Apolonios
+Ostap::Math::Apollonios::Apollonios
 ( const double m0    ,
   const double sigma ,
   const double alpha ,
@@ -1977,9 +1977,9 @@ Ostap::Math::Apolonios::Apolonios
 // ============================================================================
 // destructor
 // ============================================================================
-Ostap::Math::Apolonios::~Apolonios(){}
+Ostap::Math::Apollonios::~Apollonios(){}
 // ============================================================================
-bool  Ostap::Math::Apolonios::setM0 ( const double value )
+bool  Ostap::Math::Apollonios::setM0 ( const double value )
 {
   //
   if ( s_equal ( value , m_m0 ) ) { return false ; }
@@ -1989,7 +1989,7 @@ bool  Ostap::Math::Apolonios::setM0 ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios::setSigma ( const double value )
+bool Ostap::Math::Apollonios::setSigma ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigma ) ) { return false ; }
@@ -1999,7 +1999,7 @@ bool Ostap::Math::Apolonios::setSigma ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios::setAlpha  ( const double value )
+bool Ostap::Math::Apollonios::setAlpha  ( const double value )
 {
   //
   if ( s_equal ( value , m_alpha ) ) { return false ; }
@@ -2011,7 +2011,7 @@ bool Ostap::Math::Apolonios::setAlpha  ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios::setN      ( const double value )
+bool Ostap::Math::Apollonios::setN      ( const double value )
 {
   const double value_ = std::fabs ( value );
   if ( s_equal ( value_ , m_n     ) ) { return false ; }
@@ -2022,7 +2022,7 @@ bool Ostap::Math::Apolonios::setN      ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios::setB  ( const double value )
+bool Ostap::Math::Apollonios::setB  ( const double value )
 {
   //
   const double value_ = std::abs ( value );
@@ -2038,9 +2038,9 @@ bool Ostap::Math::Apolonios::setB  ( const double value )
   return true ;
 }
 // ============================================================================
-//  evaluate Apolonios' function
+//  evaluate Apollonios' function
 // ============================================================================
-double Ostap::Math::Apolonios::pdf ( const double x ) const
+double Ostap::Math::Apollonios::pdf ( const double x ) const
 {
   //
   const double dx    = ( x - m_m0 ) / m_sigma ;
@@ -2060,7 +2060,7 @@ double Ostap::Math::Apolonios::pdf ( const double x ) const
 // ============================================================================
 // get the integral between low and high
 // ============================================================================
-double Ostap::Math::Apolonios::integral
+double Ostap::Math::Apollonios::integral
 ( const double low ,
   const double high ) const
 {
@@ -2088,8 +2088,8 @@ double Ostap::Math::Apolonios::integral
     //
     // use GSL to evaluate the integral
     //
-    static const Ostap::Math::GSL::Integrator1D<Apolonios> s_integrator {} ;
-    static char s_message[] = "Integral(Apolonios)" ;
+    static const Ostap::Math::GSL::Integrator1D<Apollonios> s_integrator {} ;
+    static char s_message[] = "Integral(Apollonios)" ;
     //
     const auto F = s_integrator.make_function ( this ) ;
     int    ierror   =  0 ;
@@ -2123,7 +2123,7 @@ double Ostap::Math::Apolonios::integral
 // ============================================================================
 // get the tag 
 // ============================================================================
-std::size_t Ostap::Math::Apolonios::tag () const 
+std::size_t Ostap::Math::Apollonios::tag () const 
 { return std::hash_combine ( m_m0      , m_sigma , 
                              m_alpha   , m_n     , m_b ) ; }
 // ============================================================================
@@ -2138,7 +2138,7 @@ std::size_t Ostap::Math::Apolonios::tag () const
  *  @param b     b-parameter 
  */
 // ============================================================================
-Ostap::Math::Apolonios2::Apolonios2
+Ostap::Math::Apollonios2::Apollonios2
 ( const double m0     ,
   const double sigmaL ,
   const double sigmaR ,
@@ -2159,9 +2159,9 @@ Ostap::Math::Apolonios2::Apolonios2
 // ============================================================================
 // destructor
 // ============================================================================
-Ostap::Math::Apolonios2::~Apolonios2(){}
+Ostap::Math::Apollonios2::~Apollonios2(){}
 // ============================================================================
-bool  Ostap::Math::Apolonios2::setM0 ( const double value )
+bool  Ostap::Math::Apollonios2::setM0 ( const double value )
 {
   //
   if ( s_equal ( value , m_m0 ) ) { return false ; }
@@ -2171,7 +2171,7 @@ bool  Ostap::Math::Apolonios2::setM0 ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios2::setSigmaL ( const double value )
+bool Ostap::Math::Apollonios2::setSigmaL ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigmaL ) ) { return false ; }
@@ -2181,7 +2181,7 @@ bool Ostap::Math::Apolonios2::setSigmaL ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios2::setSigmaR ( const double value )
+bool Ostap::Math::Apollonios2::setSigmaR ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigmaR ) ) { return false ; }
@@ -2191,7 +2191,7 @@ bool Ostap::Math::Apolonios2::setSigmaR ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios2::setBeta ( const double value )
+bool Ostap::Math::Apollonios2::setBeta ( const double value )
 {
   //
   const double value_ = std::abs ( value );
@@ -2205,9 +2205,9 @@ bool Ostap::Math::Apolonios2::setBeta ( const double value )
   return true ;
 }
 // ============================================================================
-//  evaluate Apolonios' function
+//  evaluate Apollonios' function
 // ============================================================================
-double Ostap::Math::Apolonios2::pdf ( const double x ) const
+double Ostap::Math::Apollonios2::pdf ( const double x ) const
 {
   //
   const double dx = 
@@ -2222,7 +2222,7 @@ double Ostap::Math::Apolonios2::pdf ( const double x ) const
 // ============================================================================
 // get the integral between low and high
 // ============================================================================
-double Ostap::Math::Apolonios2::integral
+double Ostap::Math::Apollonios2::integral
 ( const double low ,
   const double high ) const
 {
@@ -2243,8 +2243,8 @@ double Ostap::Math::Apolonios2::integral
   //
   // use GSL to evaluate the integral
   //
-  static const Ostap::Math::GSL::Integrator1D<Apolonios2> s_integrator {} ;
-  static char s_message[] = "Integral(Apolonios2)" ;
+  static const Ostap::Math::GSL::Integrator1D<Apollonios2> s_integrator {} ;
+  static char s_message[] = "Integral(Apollonios2)" ;
   //
   const auto F = s_integrator.make_function ( this ) ;
   int    ierror   =  0 ;
@@ -2266,7 +2266,7 @@ double Ostap::Math::Apolonios2::integral
 // ============================================================================
 // get the tag 
 // ============================================================================
-std::size_t Ostap::Math::Apolonios2::tag () const 
+std::size_t Ostap::Math::Apollonios2::tag () const 
 { return std::hash_combine ( m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; }
 // ============================================================================
 

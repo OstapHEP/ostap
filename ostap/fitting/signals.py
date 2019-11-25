@@ -26,8 +26,8 @@ Empricial PDFs to describe narrow peaks
   - right-side Crystal Ball
   - double-side Crystal Ball
   - Needham function for J/psi, psi' and Y peaks
-  - Apolonios
-  - Apolonios2 (bifurcated Apolonious)
+  - Apollonios
+  - Apollonios2 (bifurcated Apollonios)
   - bifurcated Gauissian
   - double     Gauissian
   - generalized normal v1 
@@ -75,8 +75,8 @@ __all__ = (
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
     'Needham_pdf'            , ## Needham function for J/psi or Y fits 
-    'Apolonios_pdf'          , ## Apolonios function         
-    'Apolonios2_pdf'         , ## Apolonios function         
+    'Apollonios_pdf'          , ## Apollonios function         
+    'Apollonios2_pdf'         , ## Apollonios function         
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
@@ -538,17 +538,17 @@ class Needham_pdf(MASS) :
             
 models.append ( Needham_pdf )    
 # =============================================================================
-## @class Apolonios_pdf
-#  simple wrapper over Apolonios PDF 
-#  @see Ostap::Models::Apolonios 
+## @class Apollonios_pdf
+#  simple wrapper over Apollonios PDF 
+#  @see Ostap::Models::Apollonios 
 #  The function is proposed by Diego Martinez Santos 
 #  @see http://arxiv.org/abs/1312.5000
 #  Here a bit modified version is used with redefined parameter <code>n</code>
 #  to be coherent with local definitions of Crystal Ball
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Apolonios_pdf(MASS) :
-    """Apolonios function
+class Apollonios_pdf(MASS) :
+    """Apollonios function
     http://arxiv.org/abs/1312.5000
     
     The function is proposed by Diego Martinez Santos 
@@ -595,9 +595,9 @@ class Apolonios_pdf(MASS) :
         #
         ## finally build PDF
         #
-        self.pdf  = Ostap.Models.Apolonios (
-            "apolo_"        + name ,
-            "Apolonios(%s)" % name ,
+        self.pdf  = Ostap.Models.Apollonios (
+            "apollo_"        + name ,
+            "Apollonios(%s)" % name ,
             self.xvar   ,
             self.mean   ,
             self.sigma  ,
@@ -616,23 +616,9 @@ class Apolonios_pdf(MASS) :
             'b'      : self.b     ,
             }
         
-
-    ## make a clone of this PDF    
-    def clone ( self , name  = '' , xvar = None ) :
-        """Make a ``clone''  of this PDF
-        >>> sig1 = ...
-        >>> sig2 = sig1.clone ( xvar = yvar ) 
-        """
-        return Apolonious_pdf ( name if name else self.name + '_copy'  ,
-                                xvar if xvar else self.xvar            ,
-                                self.mean  , 
-                                self.sigma ,
-                                self.alpha ,
-                                self.n     ,
-                                self.b     )
     @property
     def alpha ( self ) :
-        """``alpha''-parameter for Apolonious tail"""
+        """``alpha''-parameter for Apollonios tail"""
         return self.__alpha
     @alpha.setter
     def alpha ( self, value ) :
@@ -642,7 +628,7 @@ class Apolonios_pdf(MASS) :
     
     @property
     def n ( self ) :
-        """``n''-parameter for Apolonios tail"""
+        """``n''-parameter for Apollonios tail"""
         return self.__n
     @n.setter
     def n ( self, value ) :
@@ -652,7 +638,7 @@ class Apolonios_pdf(MASS) :
 
     @property
     def b ( self ) :
-        """``b''-parameter for Apolonios function"""
+        """``b''-parameter for Apollonios function"""
         return self.__b
     @b.setter
     def b ( self, value ) :
@@ -661,10 +647,10 @@ class Apolonios_pdf(MASS) :
         self.__b.setVal ( value )
 
 
-models.append ( Apolonios_pdf )    
+models.append ( Apollonios_pdf )    
 # =============================================================================
-## @class Apolonios2_pdf
-#  "Bifurcated Apolonious"
+## @class Apollonios2_pdf
+#  "Bifurcated Apollonios"
 #  Gaussian with exponential (asymmetrical) tails
 #
 #  A convinient reparameterization is applied to keep reduce 
@@ -680,11 +666,11 @@ models.append ( Apolonios_pdf )
 #          \right.\f]
 #  Large betas corresponds to gaussian 
 #      
-#  @see Ostap::Models::Apolonios2 
+#  @see Ostap::Models::Apollonios2 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-20
-class Apolonios2_pdf(MASS) :
-    """Bifurcated Apolonious:
+class Apollonios2_pdf(MASS) :
+    """Bifurcated Apollonios:
     Gaussian with exponential (asymmetrical) tails
     
     f(x; mu, sigma_l, sigma_r, beta) ~ exp( |beta|(|\beta| - sqrt( beta^2+( delta x)^2 ))      
@@ -741,9 +727,9 @@ class Apolonios2_pdf(MASS) :
         #
         ## finally build PDF
         #
-        self.pdf  = Ostap.Models.Apolonios2 (
-            "apolo2_"        + name ,
-            "Apolonios2(%s)" % name ,
+        self.pdf  = Ostap.Models.Apollonios2 (
+            "apollo2_"        + name ,
+            "Apollonios2(%s)" % name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
@@ -762,7 +748,7 @@ class Apolonios2_pdf(MASS) :
 
     @property
     def asym ( self ) :
-        """``asymmetry''-parameter for Apolonious-2 function"""
+        """``asymmetry''-parameter for Apollonios2 function"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
@@ -772,7 +758,7 @@ class Apolonios2_pdf(MASS) :
 
     @property
     def beta ( self ) :
-        """``beta''-parameter for Apolonious-2 function"""
+        """``beta''-parameter for Apollonios-2 function"""
         return self.__beta
     @beta.setter
     def beta ( self, value ) :
@@ -782,17 +768,17 @@ class Apolonios2_pdf(MASS) :
 
     @property
     def sigmaL ( self ) :
-        """(left)sigma-parameter for Apolonious-2 function"""
+        """(left)sigma-parameter for Apollonios-2 function"""
         return self.__sigmaL
     
     @property
     def sigmaR ( self ) :
-        """(right)sigma-parameter for Apolonious-2 function"""
+        """(right)sigma-parameter for Apollonios2 function"""
         return self.__sigmaR
 
     
 
-models.append ( Apolonios2_pdf )    
+models.append ( Apollonios2_pdf )    
 # =============================================================================
 ## @class BifurcatedGauss_pdf
 #  simple wrapper over bifurcated-gaussian

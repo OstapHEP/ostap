@@ -1,3 +1,19 @@
+## New features:
+
+  1. New function `mid_point` is added to `PDF`-base class, 
+     defined as 0.5*(x_low + x_high), where f(x_low)=f(x_high)=0.5 * f_max.
+     x_low and x_high  are the same points used for evaluation of FWHM.
+     It characterises the location of the peak, similar to `mode`, `median`,
+     `get_mean` and other related functions 
+  1. Add `ResoBukin` -  symmetric resolution function based on Bukin-pdf. 
+  1. Update `tests_fitting_resolutions.py` 
+
+
+## Bug fixes:  
+
+  1. MASSIVE RENAME/FIX:  Apolonios -> Apollonios
+
+
 # v1.4.4.2
 
 ## New  features: 

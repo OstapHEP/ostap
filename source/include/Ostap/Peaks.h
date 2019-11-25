@@ -1107,7 +1107,7 @@ namespace Ostap
     } ;
 
     // ========================================================================
-    /** @class Apolonios
+    /** @class Apollonios
      *  A modified gaussian with power-law tail on right side
      *  and an exponential tail on low-side
      *
@@ -1133,7 +1133,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
      */
-    class  Apolonios
+    class  Apollonios
     {
     public:
       // ======================================================================
@@ -1144,20 +1144,20 @@ namespace Ostap
        *  @param n      n        parameter (equal for N-1 for "standard" definition)
        *  @param b      b        parameter
        */
-      Apolonios
+      Apollonios
       ( const double m0    = 0 ,
         const double sigma = 1 ,
         const double alpha = 2 ,
         const double n     = 1 ,
         const double b     = 1 ) ;
       /// destructor
-      ~Apolonios () ;
+      ~Apollonios () ;
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate Apolonios's function
+      /// evaluate Apollonios's function
       double pdf        ( const double x ) const ;
-      /// evaluate Apolonios's function
+      /// evaluate Apollonios's function
       double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors
@@ -1216,8 +1216,8 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Apolonios2
-     *  "Bifurcated Apolonios"
+    /** @class Apollonios2
+     *  "Bifurcated Apollonios"
      *  A modified gaussian with asymmetric exponential tails on both sides
      *
      *  A convinient reparameterization is applied to keep reduce
@@ -1240,7 +1240,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
      */
-    class  Apolonios2 
+    class  Apollonios2 
     {
     public:
       // ======================================================================
@@ -1250,19 +1250,19 @@ namespace Ostap
        *  @param alphaR  alphaR    parameter
        *  @param beta    beta      parameter
        */
-      Apolonios2
+      Apollonios2
         ( const double m0      = 0   ,
           const double sigmaL  = 1   ,
           const double alphaR  = 1   ,
           const double beta    = 100 ) ;  // large beta correponds to gaussian
       /// destructor
-      ~Apolonios2 () ;
+      ~Apollonios2 () ;
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate Apolonios2's function
+      /// evaluate Apollonios2's function
       double pdf        ( const double x ) const ;
-      /// evaluate Apolonios2's function
+      /// evaluate Apollonios2's function
       double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors

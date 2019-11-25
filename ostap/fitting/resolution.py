@@ -5,8 +5,9 @@
 #  Set of useful resolution models:
 #  - single Gaussian                     (gaussian   tails)
 #  - double Gaussian                     (gaussian   tails)
-#  - symmetric Apolonious                (exponenial tails)
+#  - symmetric Apollonios                (exponenial tails)
 #  - Sech/hyperbolic  secant             (exponenial tails)
+#  - Bukin                               (exponential or gaussian tails)
 #  - symmetric double-sided Crystal Ball (power-law  tails)
 #  - symmetric Student-T                 (power-law  tails)
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
@@ -15,9 +16,10 @@
 """Set of useful resolution models:
 - single Gaussian                     (gaussian   tails)
 - double Gaussian                     (gaussian   tails)
-- symmetric Apolonious                (exponenial tails)
-- Sech/hyperbolic  secant             (exponenial tails)
-- symmetric double-sided Crystal Ball (power-law  tails)
+- symmetric Apollonios                (exponenial tails)
+- Sech/hyperbolic  secant             (exponenial tails)-
+- Bukin                               (exponential or gaussian tails)
+- Symmetric double-sided Crystal Ball (power-law  tails)
 - Student-T                           (power-law  tails)
 """
 # =============================================================================
@@ -28,10 +30,11 @@ __all__     = (
     ##
     'ResoGauss'     , ## simple single-Gaussian resolution model,
     'ResoGauss2'    , ## double-Gaussian resolutin model,
-    'ResoApo2'      , ## symmetric Apolonios resolution model,
+    'ResoApo2'      , ## symmetric Apollonios resolution model,
     'ResoCB2'       , ## symmetric double-sided Crystal Ball resolution model,
     'ResoStudentT'  , ## Student-T resolution model,
-    'ResoSech'      , ## Sech/hyperbolic secant  resolution model 
+    'ResoSech'      , ## Sech/hyperbolic secant  resolution model
+    'ResoBukin'     , ## Bukin resolution model
     )
 # =============================================================================
 import ROOT
@@ -95,7 +98,11 @@ class ResoGauss(RESOLUTION) :
 models.add ( ResoGauss ) 
 # =============================================================================
 ## @class ResoGauss2
-#  Double Gaussian model for  resoltuion
+#  Double Gaussian model for  resolution.
+#  Parameters: 
+#  - sigma of core Gaussian
+#  - ratio of wide/core widths
+#  - fraction of core(narrow) component
 class ResoGauss2(RESOLUTION) :
     """Double-gaussian resolution model
     - sigma of core Gaussian
@@ -182,9 +189,17 @@ class ResoGauss2(RESOLUTION) :
 models.add ( ResoGauss2 ) 
 # =============================================================================
 ## @class ResoApo2
-#  Symmetrical  Apolonios  model for resolution
+#  Symmetrical  Apollonios  model for resolution
+#   - Gaussian core 
+#   - exponential tails
+#  @see Ostap::Models::Apollonios2 
+#  @see Ostap::Math::Apollonios2 
 class ResoApo2(RESOLUTION) :
-    """Symmetric variant of Apolonios model for the resolution function
+    """Symmetric variant of Apollonios model for the resolution function
+    - Gaussian core 
+    - exponential tails
+    see Ostap.Models.Apollonios2 
+    see Ostap.Math.Apollonios2 
     """
     def __init__ ( self         ,
                    name         ,   ## the  name 
@@ -213,9 +228,9 @@ class ResoApo2(RESOLUTION) :
         #
         ## build resolution model
         #
-        self.apo2  = Ostap.Models.Apolonios2 (
-            "ResoApolonios_"    + name ,
-            "ResoApolonios(%s)" % name ,
+        self.apo2  = Ostap.Models.Apollonios2 (
+            "ResoApollonios_"    + name ,
+            "ResoApollonios(%s)" % name ,
             self.xvar       ,
             self.mean       ,
             self.sigma_corr ,
@@ -236,7 +251,7 @@ class ResoApo2(RESOLUTION) :
         
     @property
     def beta ( self  ) :
-        """``beta'' parameter for Apolonious resolution function"""
+        """``beta'' parameter for symmetric Apollonios resolution function"""
         return self.__beta
     @beta.setter
     def beta ( self , value ) :
@@ -249,8 +264,16 @@ models.add ( ResoApo2 )
 # =============================================================================
 ## @class ResoCB2
 #  Symmetrical double-sided Crystal Ball model for resolution
+#   - Gaussian core 
+#   - power-law tails
+#  @see Ostap::Math::CrystalBallDS
+#  @see Ostap::Models::CrystalBallDS
 class ResoCB2(RESOLUTION) :
     """Symmetric double-sided Crystal Ball model for resolution
+    - Gaussian core 
+    - power-law tails
+    see Ostap.Math.CrystalBallDS
+    see Ostap.Models.CrystalBallDS
     """
     def __init__ ( self         , 
                    name         ,   ## the  name 
@@ -334,12 +357,16 @@ models.add ( ResoCB2 )
 # =============================================================================
 ## @class ResoStudentT
 #  (symmetric) Student-T model for the resolution
+#   - power-law tails 
 #  @see Ostap::Models::StudentT
 #  @see Ostap::Math::StudentT
 #  @see http://en.wikipedia.org/wiki/Student%27s_t-distribution
 class ResoStudentT(RESOLUTION) :
     """Student-T model for the resolution
+    - power-law tails 
     - see http://en.wikipedia.org/wiki/Student%27s_t-distribution
+    see Ostap.Models.StudentT
+    see Ostap.Math.StudentT    
     """
     def __init__ ( self         ,
                    name         , ## the name 
@@ -403,14 +430,19 @@ models.add ( ResoStudentT )
 # =============================================================================
 ## @class ResoSech
 #  Sech/hyperbolic  secant model for the resolution: exponential tails, leptokurtic
+#   - Gaussian-like core
+#   - exponential tails 
 #  @see Ostap::Models::Sech 
 #  @see Ostap::Math::Sech 
 #  @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
 class ResoSech(RESOLUTION) :
     """Sech/hyperbolic secant  for the resolution:
-    - exponential tails
+    - Gaussian-like core
+    - exponential tails 
     - leptokurtic 
     - see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+    see Ostap.Models.Sech 
+    see Ostap.Math.Sech 
     """
     def __init__ ( self         ,
                    name         , ## the name 
@@ -450,6 +482,80 @@ class ResoSech(RESOLUTION) :
             }
         
 models.add ( ResoSech )
+
+# =============================================================================
+## @class ResoBukin
+#  Resolution function, described as symmetric Bukin's function
+#   - Gaussian-like core
+#   - exponential or Gaussian tails 
+#  @see Ostap::Models::Bukin
+#  @see Ostap::Math::Bukin
+class ResoBukin (RESOLUTION) :
+    """Resolution function, described as symmetric Bukin's function
+    - Gaussian-like core
+    - exponential or Gaussian tails 
+    see Ostap::Models::Bukin
+    see Ostap::Math::Bukin
+    """
+    def __init__ ( self         ,
+                   name         , ## the name 
+                   xvar         , ## the variable
+                   sigma        , ## the sigma
+                   rho   = 0    , ## the rho-parameter 
+                   fudge = 1    , ## fudge-factor 
+                   mean  = None ) :
+        
+        if mean is None : mean = ROOT.RooConstVar(
+            'mean_%s'  % name ,
+            'mean(%s)' % name , 0 )
+        
+        ## initialize the base 
+        super(ResoBukin,self).__init__ ( name  = name  ,
+                                         xvar  = xvar  ,
+                                         sigma = sigma ,
+                                         mean  = mean  ,
+                                         fudge = fudge )
+        
+        ## parameter xi is zero! 
+        self.__xi = ROOT.RooRealConstant.value ( 0 ) 
+        
+        ## rho 
+        self.__rho = self.make_var ( rho               ,
+                                     "rho_%s"   % name ,
+                                     "#rho(%s)" % name , rho , 0 , 0 , 15 )        
+        
+        # 
+        ## create PDF
+        # 
+        self.pdf = Ostap.Models.Bukin (
+            "ResoBukin_"    + name ,
+            "ResoBukin(%s)" % name ,
+            self.xvar  ,
+            self.mean  ,
+            self.sigma ,
+            self.xi    ,
+            self.rho   ,
+            self.rho   )
+
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'sigma'    : self.sigma ,
+            'mean'     : self.mean  ,
+            'who'      : self.rho   ,
+            'fudge'    : self.fudge
+            }
+
+    @property
+    def xi ( self ) :
+        """``xi''-parameter (asymmetry) for Bukin function"""
+        return self.__xi    
+    @property
+    def rho ( self ) :
+        """``rho''-parameter (tail) for Bukin function"""
+        return self.__rho
+
 # =============================================================================
 if '__main__' == __name__ :
     

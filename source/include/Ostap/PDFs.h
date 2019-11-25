@@ -47,7 +47,7 @@ namespace Ostap
    *  - double-sided Crystal Ball
    *  - Needham: Crystal Ball with \f$\alpha(\sigma)\f$
    *  - Apolonios
-   *  - Apolonios2 (bifurcated apolonious)
+   *  - Apollonios2 (bifurcated apolonious)
    *  - Bifurcated Gauissian
    *  - Generalized Gaussian v1
    *  - Generalized Gaussian v2
@@ -1364,7 +1364,7 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Apolonios
+    /** @class Apollonios
      *  A modified gaussian with power-law tail on rigth ride and exponential
      *  tail on low-side
      *  The function is proposed by Diego Martinez Santos
@@ -1372,22 +1372,22 @@ namespace Ostap
      *  Here a bit modified version is used with redefined parameter <code>n</code>
      *  to be coherent with local definitions of Crystal Ball
      *
-     *  @see Ostap::Math::Apolonios
+     *  @see Ostap::Math::Apollonios
      *  @author Vanya BELYAEV Ivane.BElyaev@itep.ru
      *  @date 2013-12-01
      */
     // ========================================================================
-    class  Apolonios : public RooAbsPdf
+    class  Apollonios : public RooAbsPdf
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDef(Ostap::Models::Apolonios, 1) ;
+      ClassDef(Ostap::Models::Apollonios, 1) ;
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from all parameters
-      Apolonios
+      Apollonios
       ( const char*          name      ,
         const char*          title     ,
         RooAbsReal&          x         ,
@@ -1397,16 +1397,16 @@ namespace Ostap
         RooAbsReal&          n         ,
         RooAbsReal&          b         ) ;
       /// "copy" constructor
-      Apolonios  ( const Apolonios& right , const char* name = 0  ) ;
+      Apollonios  ( const Apollonios& right , const char* name = 0  ) ;
       /// virtual destructor
-      virtual ~Apolonios () ;
+      virtual ~Apollonios () ;
       /// clone
-      Apolonios* clone ( const char* name ) const override;
+      Apollonios* clone ( const char* name ) const override;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
       // fake default contructor, needed just for proper (de)serialization
-      Apolonios () {} ;
+      Apollonios () {} ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1431,7 +1431,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Apolonios& function() const { return m_apo ; }
+      const Ostap::Math::Apollonios& function() const { return m_apo ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -1445,30 +1445,30 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Apolonios m_apo ;                // the function
+      mutable Ostap::Math::Apollonios m_apo ;                // the function
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Apolonios2
+    /** @class Apollonios2
      *  A modified gaussian with exponential
      *  tails on low-side
      *
-     *  @see Ostap::Math::Apolonios2
+     *  @see Ostap::Math::Apollonios2
      *  @author Vanya BELYAEV Ivane.BElyaev@itep.ru
      *  @date 2013-12-01
      */
     // ========================================================================
-    class  Apolonios2 : public RooAbsPdf
+    class  Apollonios2 : public RooAbsPdf
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDef(Ostap::Models::Apolonios2, 1) ;
+      ClassDef(Ostap::Models::Apollonios2, 1) ;
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from all parameters
-      Apolonios2
+      Apollonios2
       ( const char*          name      ,
         const char*          title     ,
         RooAbsReal&          x         ,
@@ -1477,16 +1477,16 @@ namespace Ostap
         RooAbsReal&          sigmaR    ,
         RooAbsReal&          beta      ) ;
       /// "copy" constructor
-      Apolonios2  ( const Apolonios2& right , const char* name = 0  ) ;
+      Apollonios2  ( const Apollonios2& right , const char* name = 0  ) ;
       /// virtual destructor
-      virtual ~Apolonios2 () ;
+      virtual ~Apollonios2 () ;
       /// clone
-      Apolonios2* clone ( const char* name ) const override;
+      Apollonios2* clone ( const char* name ) const override;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
       // fake default contructor, needed just for proper (de)serialization
-      Apolonios2 () {} ;
+      Apollonios2 () {} ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1511,7 +1511,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Apolonios2& function() const { return m_apo2 ; }
+      const Ostap::Math::Apollonios2& function() const { return m_apo2 ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -1524,7 +1524,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Apolonios2 m_apo2 ;                // the function
+      mutable Ostap::Math::Apollonios2 m_apo2 ;                // the function
       // ======================================================================
     } ;
     // ========================================================================

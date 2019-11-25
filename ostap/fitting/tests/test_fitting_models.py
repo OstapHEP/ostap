@@ -231,13 +231,13 @@ def test_needham() :
 
 
 # ==========================================================================
-## Apolonios
+## Apollonios
 # ==========================================================================
-def test_apolonios () :
+def test_apollonios () :
     
-    logger.info ('Test Apolonios_pdf: Modified gaussian with power-law and exponential tails' ) 
-    model_apolonios = Models.Fit1D (
-        signal = Models.Apolonios_pdf ( name  = 'APO', 
+    logger.info ('Test Apollonios_pdf: Modified gaussian with power-law and exponential tails' ) 
+    model_apollonios = Models.Fit1D (
+        signal = Models.Apollonios_pdf ( name  = 'APO', 
                                         xvar  = mass ,
                                         mean  = signal_gauss.mean    ,
                                         sigma = signal_gauss.sigma ,
@@ -247,12 +247,12 @@ def test_apolonios () :
         background = Models.Bkg_pdf ('BkgAPO', xvar = mass , power = 0 )
         )
     
-    model_apolonios.S.setVal(5000)
-    model_apolonios.B.setVal( 500)
+    model_apollonios.S.setVal(5000)
+    model_apollonios.B.setVal( 500)
     
     with rooSilent() : 
-        result, frame = model_apolonios. fitTo ( dataset0 )
-        result, frame = model_apolonios. fitTo ( dataset0 )
+        result, frame = model_apollonios. fitTo ( dataset0 )
+        result, frame = model_apollonios. fitTo ( dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -262,16 +262,16 @@ def test_apolonios () :
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
 
         
-    models.add ( model_apolonios )
+    models.add ( model_apollonios )
 
 # ==========================================================================
-## Apolonios2
+## Apollonios2
 # ==========================================================================
-def test_apolonios2() :
+def test_apollonios2() :
     
-    logger.info ('Test Apolonios2_pdf: modified Gaussian with exponential tails' ) 
-    model_apolonios2 = Models.Fit1D (
-        signal = Models.Apolonios2_pdf ( name = 'AP2' , 
+    logger.info ('Test Apollonios2_pdf: modified Gaussian with exponential tails' ) 
+    model_apollonios2 = Models.Fit1D (
+        signal = Models.Apollonios2_pdf ( name = 'AP2' , 
                                          xvar      = mass ,
                                          mean      = signal_gauss.mean  ,
                                          sigma     = signal_gauss.sigma ,
@@ -280,15 +280,15 @@ def test_apolonios2() :
         background = Models.Bkg_pdf ('BkgAPO2', xvar = mass , power = 0 )
         )
     
-    model_apolonios2.signal.mean.fix( m.value() )    
-    model_apolonios2.S.value  = 5000
-    model_apolonios2.B.value  =  500
-    model_apolonios2.signal.sigma.release() 
+    model_apollonios2.signal.mean.fix( m.value() )    
+    model_apollonios2.S.value  = 5000
+    model_apollonios2.B.value  =  500
+    model_apollonios2.signal.sigma.release() 
     
     with rooSilent() :
-        result, frame = model_apolonios2. fitTo ( dataset0 )
-        model_apolonios2.signal.asym.release ()
-        result, frame = model_apolonios2. fitTo ( dataset0 )
+        result, frame = model_apollonios2. fitTo ( dataset0 )
+        model_apollonios2.signal.asym.release ()
+        result, frame = model_apollonios2. fitTo ( dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -298,7 +298,7 @@ def test_apolonios2() :
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
 
         
-    models.add ( model_apolonios2 )
+    models.add ( model_apollonios2 )
 
 
 # =============================================================================
@@ -1035,8 +1035,8 @@ if '__main__' == __name__ :
     test_crystalball_RS () ## right-side Crystal Ball                   + background  
     test_crystalball_DS () ## double side Crystal Ball                  + background 
     test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
-    test_apolonios      () ## Apolonios function                        + background 
-    test_apolonios2     () ## modified Apolonios function               + background 
+    test_apollonios     () ## Apollonios function                       + background 
+    test_apollonios2    () ## modified Apollonios function              + background 
     test_bifurcated     () ## bifurcated Gaussian function              + background 
     test_2gauss         () ## double     Gaussian function              + background 
     test_gengauss_v1    () ## generalized Gaussian function V1          + background 

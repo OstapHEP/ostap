@@ -26,8 +26,8 @@ Empricial PDFs to describe narrow peaks :
   - right-side Crystal Ball
   - double-side Crystal Ball
   - Needham function for J/psi, psi' and Y peaks
-  - Apolonios
-  - Apolonios2 (bifurcated Apolonios)
+  - Apollonios
+  - Apollonios2 (bifurcated Apollonios)
   - bifurcated Gauissian
   - double     Gauissian
   - generalized normal v1 
@@ -81,8 +81,8 @@ __all__ = (
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
     'Needham_pdf'            , ## Needham function for J/psi or Y (CB function with alpha=alpha(sigma))
-    'Apolonios_pdf'          , ## Apolonios function         
-    'Apolonios2_pdf'         , ## Apolonios function         
+    'Apollonios_pdf'         , ## Apollonios function         
+    'Apollonios2_pdf'        , ## Apollonios function         
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  

@@ -1697,9 +1697,9 @@ double Ostap::Models::Needham::alpha   () const
 
 
 // ============================================================================
-// Apolonios
+// Apollonios
 // ============================================================================
-Ostap::Models::Apolonios::Apolonios
+Ostap::Models::Apollonios::Apollonios
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
@@ -1726,8 +1726,8 @@ Ostap::Models::Apolonios::Apolonios
 // ============================================================================
 // copy constructor 
 // ============================================================================
-Ostap::Models::Apolonios::Apolonios
-( const Ostap::Models::Apolonios& right , 
+Ostap::Models::Apollonios::Apollonios
+( const Ostap::Models::Apollonios& right , 
   const char*                        name  ) 
   : RooAbsPdf ( right , name ) 
 //
@@ -1745,15 +1745,15 @@ Ostap::Models::Apolonios::Apolonios
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Models::Apolonios::~Apolonios (){}
+Ostap::Models::Apollonios::~Apollonios (){}
 // ============================================================================
 // clone 
 // ============================================================================
-Ostap::Models::Apolonios*
-Ostap::Models::Apolonios::clone ( const char* name ) const 
-{ return new Ostap::Models::Apolonios ( *this , name ) ; }
+Ostap::Models::Apollonios*
+Ostap::Models::Apollonios::clone ( const char* name ) const 
+{ return new Ostap::Models::Apollonios ( *this , name ) ; }
 // ============================================================================
-void Ostap::Models::Apolonios::setPars () const 
+void Ostap::Models::Apollonios::setPars () const 
 {
   //
   m_apo.setM0      ( m_m0     ) ;
@@ -1766,7 +1766,7 @@ void Ostap::Models::Apolonios::setPars () const
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
-Double_t Ostap::Models::Apolonios::evaluate() const 
+Double_t Ostap::Models::Apollonios::evaluate() const 
 {
   //
   setPars () ;
@@ -1774,7 +1774,7 @@ Double_t Ostap::Models::Apolonios::evaluate() const
   return m_apo ( m_x ) ;
 }
 // ============================================================================
-Int_t Ostap::Models::Apolonios::getAnalyticalIntegral
+Int_t Ostap::Models::Apollonios::getAnalyticalIntegral
 ( RooArgSet&     allVars      , 
   RooArgSet&     analVars     ,
   const char* /* rangename */ ) const 
@@ -1783,7 +1783,7 @@ Int_t Ostap::Models::Apolonios::getAnalyticalIntegral
   return 0 ;
 }
 // ============================================================================
-Double_t Ostap::Models::Apolonios::analyticalIntegral 
+Double_t Ostap::Models::Apollonios::analyticalIntegral 
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
@@ -1798,9 +1798,9 @@ Double_t Ostap::Models::Apolonios::analyticalIntegral
 
 
 // ============================================================================
-// Apolonios2
+// Apollonios2
 // ============================================================================
-Ostap::Models::Apolonios2::Apolonios2
+Ostap::Models::Apollonios2::Apollonios2
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
@@ -1825,8 +1825,8 @@ Ostap::Models::Apolonios2::Apolonios2
 // ============================================================================
 // copy constructor 
 // ============================================================================
-Ostap::Models::Apolonios2::Apolonios2
-( const Ostap::Models::Apolonios2& right , 
+Ostap::Models::Apollonios2::Apollonios2
+( const Ostap::Models::Apollonios2& right , 
   const char*                        name  ) 
   : RooAbsPdf ( right , name ) 
 //
@@ -1843,15 +1843,15 @@ Ostap::Models::Apolonios2::Apolonios2
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Models::Apolonios2::~Apolonios2 (){}
+Ostap::Models::Apollonios2::~Apollonios2 (){}
 // ============================================================================
 // clone 
 // ============================================================================
-Ostap::Models::Apolonios2*
-Ostap::Models::Apolonios2::clone ( const char* name ) const 
-{ return new Ostap::Models::Apolonios2 ( *this , name ) ; }
+Ostap::Models::Apollonios2*
+Ostap::Models::Apollonios2::clone ( const char* name ) const 
+{ return new Ostap::Models::Apollonios2 ( *this , name ) ; }
 // ============================================================================
-void Ostap::Models::Apolonios2::setPars () const 
+void Ostap::Models::Apollonios2::setPars () const 
 {
   //
   m_apo2.setM0      ( m_m0     ) ;
@@ -1863,7 +1863,7 @@ void Ostap::Models::Apolonios2::setPars () const
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
-Double_t Ostap::Models::Apolonios2::evaluate() const 
+Double_t Ostap::Models::Apollonios2::evaluate() const 
 {
   //
   setPars () ;
@@ -1871,7 +1871,7 @@ Double_t Ostap::Models::Apolonios2::evaluate() const
   return m_apo2 ( m_x ) ;
 }
 // ============================================================================
-Int_t Ostap::Models::Apolonios2::getAnalyticalIntegral
+Int_t Ostap::Models::Apollonios2::getAnalyticalIntegral
 ( RooArgSet&     allVars      , 
   RooArgSet&     analVars     ,
   const char* /* rangename */ ) const 
@@ -1880,7 +1880,7 @@ Int_t Ostap::Models::Apolonios2::getAnalyticalIntegral
   return 0 ;
 }
 // ============================================================================
-Double_t Ostap::Models::Apolonios2::analyticalIntegral 
+Double_t Ostap::Models::Apollonios2::analyticalIntegral 
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
@@ -7163,8 +7163,8 @@ ClassImp(Ostap::Models::CrystalBall        )
 ClassImp(Ostap::Models::CrystalBallRS      ) 
 ClassImp(Ostap::Models::CrystalBallDS      ) 
 ClassImp(Ostap::Models::Needham            ) 
-ClassImp(Ostap::Models::Apolonios          ) 
-ClassImp(Ostap::Models::Apolonios2         ) 
+ClassImp(Ostap::Models::Apollonios         ) 
+ClassImp(Ostap::Models::Apollonios2        ) 
 ClassImp(Ostap::Models::BifurcatedGauss    ) 
 ClassImp(Ostap::Models::GenGaussV1         ) 
 ClassImp(Ostap::Models::GenGaussV2         ) 
