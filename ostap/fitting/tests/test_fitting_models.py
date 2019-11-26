@@ -50,7 +50,7 @@ for i in range(0,500) :
     mass.value = random.uniform ( mmin , mmax ) 
     dataset0.add ( varset0   )
 
-logger.info ('DATASET %s' % dataset0 )
+logger.info ('DATASET\n%s' % dataset0 )
 
 models = set() 
 
@@ -74,8 +74,10 @@ def test_gauss() :
     result = signal_gauss . fitTo ( dataset0 , silent = True )
     
     ## construct composite model: signal + background 
-    model_gauss = Models.Fit1D( signal     = signal_gauss ,
-                                background = Models.Bkg_pdf ('BkgGauss', xvar = mass , power = 0 ) )
+    model_gauss = Models.Fit1D(
+        signal     = signal_gauss ,
+        background = Models.Bkg_pdf ('BkgGauss', xvar = mass , power = 0 ) ,
+        )
     model_gauss.background.tau.fix(0)
     
     with rooSilent() : 
@@ -88,7 +90,8 @@ def test_gauss() :
     else :     
         logger.info( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) )
         logger.info( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-
+        logger.info( 'Simple Gaussian model\n%s' % result.table ( prefix = "# " ) )
+        
     models.add ( model_gauss )
     signal_gauss.mean.fix ( m.value() )
 
@@ -107,8 +110,9 @@ def test_crystalball () :
                                               n     = (3,1,9)  , ## tail parameter 
                                               sigma = signal_gauss.sigma ,   ## reuse sigma from gauss
                                               mean  = signal_gauss.mean  ) , ## reuse mean  from gauss 
-        background = Models.Bkg_pdf ('BkgCB', xvar = mass , power = 0 )
-        ) 
+        background = Models.Bkg_pdf ('BkgCB', xvar = mass , power = 0 ) ,
+        )
+    
     model_cb.signal.n.fix(8) 
     with rooSilent() : 
         result, frame = model_cb. fitTo ( dataset0 )
@@ -123,7 +127,8 @@ def test_crystalball () :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
         logger.info ( 'Alpha  & n          are: %-28s & %-28s ' % ( result ( model_cb.signal.alpha ) [ 0 ] , result ( model_cb.signal.n ) [ 0 ] ) )
-        
+        logger.info ( 'Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
+
     models.add ( model_cb )
                       
 
@@ -139,7 +144,7 @@ def test_crystalball_RS () :
                                             alpha = (1.5, 0.5 , 3.0)   ,
                                             n     = (5,1,10)           , 
                                             mean  = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBRS', xvar = mass , power = 0 )
+        background = Models.Bkg_pdf ('BkgCBRS', xvar = mass , power = 0 ) , 
         )
     
     model_cbrs.S.value  = 5000
@@ -157,6 +162,7 @@ def test_crystalball_RS () :
     else : 
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
+        logger.info ( 'right-side Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_cbrs  )
 
@@ -196,6 +202,7 @@ def test_crystalball_DS () :
     else :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
+        logger.info ( 'double-sided Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_cbds  )
 
@@ -226,6 +233,7 @@ def test_needham() :
     else : 
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
+        logger.info ( 'Needham function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_matt  )
 
@@ -260,6 +268,7 @@ def test_apollonios () :
     else : 
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
+        logger.info ( 'Apollonios function\n%s' % result.table ( prefix = "# " ) ) 
 
         
     models.add ( model_apollonios )
@@ -296,6 +305,7 @@ def test_apollonios2() :
     else : 
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
+        logger.info ( 'Apollonios2 function\n%s' % result.table ( prefix = "# " ) ) 
 
         
     models.add ( model_apollonios2 )
@@ -330,6 +340,7 @@ def test_bifurcated () :
     else :     
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
+        logger.info ( 'Bifurcated Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_bifurcated  )
 
@@ -365,6 +376,7 @@ def test_2gauss () :
     else :     
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
+        logger.info ( 'double Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_2gauss  )
 
@@ -397,6 +409,7 @@ def test_gengauss_v1 () :
         print(result)
     else :     
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'generalized Gaussian(v1) function\n%s' % result.table ( prefix = "# " ) ) 
         
 
     models.add ( model_gauss_gv1  )
@@ -434,6 +447,7 @@ def test_gengauss_v2 () :
         print(result)
     else :     
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'generalized Gaussian(v2) function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_gauss_gv2  )
 
@@ -461,6 +475,7 @@ def test_skewgauss() :
         print(result)
     else :     
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'skew Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_gauss_skew  )
 
@@ -537,6 +552,7 @@ def test_bukin() :
     else :     
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
+        logger.info ( 'Bukin function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_bukin  )
 
@@ -605,6 +621,7 @@ def test_bifstudentT():
         logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  )[0] )
         logger.info ( 'n(L)                 is: %-28s ' %  result ( signal.nL    )[0] )
         logger.info ( 'n(R)                 is: %-28s ' %  result ( signal.nR    )[0] )
+        logger.info ( "Bifurkated Student's t-function\n%s" % result.table ( prefix = "# " ) ) 
         
     models.add ( model )
 
@@ -647,6 +664,7 @@ def test_sinhasinh() :
         logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma   )[0] )
         logger.info ( 'Epsilon              is: %-28s ' %  result ( signal.epsilon )[0] )
         logger.info ( 'delta                is: %-28s ' %  result ( signal.delta   )[0] )
+        logger.info ( "SinhAsinh function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -684,6 +702,7 @@ def test_johnsonSU () :
         logger.info ( 'Lambda               is: %-28s ' %  result ( signal.lambd  )[0] )
         logger.info ( 'Delta                is: %-28s ' %  result ( signal.delta  )[0] )
         logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  )[0] )
+        logger.info ( "Johnson-SU function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -717,6 +736,7 @@ def test_atlas () :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
+        logger.info ( "ATLAS function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -750,8 +770,46 @@ def test_sech() :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-
+        logger.info ( "Hyperbolic secant/sech function\n%s" % result.table ( prefix = "# " ) )
+        
     models.add ( model )
+
+# =============================================================================
+## Test  LOSEV
+# =============================================================================
+def test_losev() :
+    
+    logger.info("Test  Losev: asymmetric hyperbilic secant distribution")
+    model = Models.Fit1D (
+        signal = Models.Losev_pdf( 'LOSEV'                  ,
+                                   xvar = mass              , 
+                                   mean = signal_gauss.mean ) ,
+        background = Models.Bkg_pdf ('BkgLOSEV', xvar = mass , power = 0 )) 
+    
+    signal = model.signal
+    model.S.setVal(5000)
+    model.B.setVal( 500)
+    
+    with rooSilent() : 
+        result,f  = model.fitTo ( dataset0 )  
+        result,f  = model.fitTo ( dataset0 )  
+        signal.mean  .release()
+        signal.alpha .release()
+        signal.beta  .release()
+        result,f  = model.fitTo ( dataset0 )  
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
+        print(result)
+    else :
+        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
+        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
+        logger.info ( 'Alpha                is: %-28s ' %  result ( signal.alpha )[0] )
+        logger.info ( 'Beta                 is: %-28s ' %  result ( signal.beta  )[0] )
+        logger.info ( "Asymmetric hyperbolic secant/Losev distribution\n%s" % result.table ( prefix = "# " ) )
+        
+    models.add ( model )
+
 
 # =============================================================================
 ## Test  LOGISTIC
@@ -783,6 +841,7 @@ def test_logistic () :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
+        logger.info ( "Logistic distribution\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 # =============================================================================
@@ -820,6 +879,7 @@ def test_voigt () :
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
         logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
+        logger.info ( "Voigt function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -859,6 +919,7 @@ def test_pvoigt () :
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
         logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
+        logger.info ( "pseudo-Voigt function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -907,6 +968,7 @@ def test_bw () :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
+        logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -942,6 +1004,7 @@ def test_slash():
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Scale                is: %-28s ' %  result ( signal.scale )[0] )
+        logger.info ( "Slash function\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -977,6 +1040,7 @@ def test_laplace():
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Slope                is: %-28s ' %  result ( signal.slope )[0] )
         logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  )[0] )
+        logger.info ( "asymmetric Laplace function\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -1010,6 +1074,7 @@ def test_rasingcosine () :
         logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
         logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
         logger.info ( 'Scale                is: %-28s ' %  result ( signal.scale )[0] )
+        logger.info ( "Raising cosine function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -1050,6 +1115,7 @@ if '__main__' == __name__ :
     test_johnsonSU      () ## Johnson-SU distribution                   + background 
     test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
     test_sech           () ## Sech (1/cosh)  distribution               + background 
+    test_losev          () ## Asymmetric hyperbilic secant distribution + background 
     test_logistic       () ## Logistic distribution                     + background 
     test_voigt          () ## Voigt profile                             + background 
     test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 

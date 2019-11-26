@@ -481,9 +481,9 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     for i in  range ( r.numStatusHistory() ) :
         label =  r.statusLabelHistory ( i )
         code  =  r.statusCodeHistory  ( i )
-        row   =  'Status: %s '% label   , '' ,             '   %d' % code             
-        if code : row = attention  ( row [ 0 ] ) , row [ 1 ] , attention ( row [ 1 ] )
-        else    : row =              row [ 0 ]   , row [ 1 ] , allright  ( row [ 1 ] )
+        row   =  'Status: %s '% label   , '' ,             '%d' % code             
+        if code : row = attention  ( row [ 0 ] ) , row [ 1 ] , '   ' + attention ( row [ 2 ] )
+        else    : row =              row [ 0 ]   , row [ 1 ] , '   ' + allright  ( row [ 2 ] )
         rows.append ( row )
 
     rows = [ ( '', 'Unit', 'Value' ) ] + rows

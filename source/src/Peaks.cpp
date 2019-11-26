@@ -2322,8 +2322,9 @@ double Ostap::Math::Atlas::pdf        ( const double x ) const
   return std::exp ( -0.5 * x2 ) / ( s_ATLAS * m_sigma )  ;
 }
 // ============================================================================
-double Ostap::Math::Atlas::integral ( const double low  ,
-                                      const double high ) const 
+double Ostap::Math::Atlas::integral
+( const double low  ,
+  const double high ) const 
 {
   //
   if      ( s_equal ( low ,high ) ) { return 0 ; }
@@ -2458,7 +2459,120 @@ std::size_t Ostap::Math::Sech::tag () const
 { return std::hash_combine ( m_mean , m_sigma ) ; }
 // ============================================================================
 
-
+// ============================================================================
+/*  constructor with all parameters
+ *  @param mean  \f$\mu\f$-parameter 
+ *  @param alpha \f$\alpha\f$-parameter 
+ *  @param beta  \f$\beta\f$-parameter 
+ */
+// ============================================================================
+Ostap::Math::Losev::Losev
+( const double mu    , 
+  const double alpha , 
+  const double beta  ) 
+  : m_mu        ( mu                 ) 
+  , m_alpha     ( std::abs ( alpha ) ) 
+  , m_beta      ( std::abs ( beta  ) ) 
+  , m_norm      ( -1 )
+  , m_workspace () 
+{}
+// ============================================================================
+bool Ostap::Math::Losev::setMu ( const double value ) 
+{
+  if ( s_equal ( value , m_mu  ) ) { return false ; }
+  m_mu  = value ;
+  return true ;
+}
+// =============================================================================
+bool Ostap::Math::Losev::setAlpha ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_alpha  ) ) { return false ; }
+  m_alpha  = v  ;
+  m_norm   = -1 ;
+  return true ;
+}
+// =============================================================================
+bool Ostap::Math::Losev::setBeta ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_beta  ) ) { return false ; }
+  m_beta   = v  ;
+  m_norm   = -1 ;
+  return true ;
+}
+// =============================================================================
+// the mode of the distribution 
+// =============================================================================
+double Ostap::Math::Losev::mode () const 
+{ return m_mu + std::log ( m_alpha / m_beta ) / ( m_alpha + m_beta ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Losev::tag () const 
+{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
+// =============================================================================
+// evaluate the function 
+// =============================================================================
+double Ostap::Math::Losev::pdf ( const double x ) const 
+{
+  if ( m_norm <= 0 ) 
+  {
+    const double sumab = m_alpha + m_beta ;
+    m_norm = sumab * std::sin ( M_PI * m_beta / sumab ) / M_PI ;
+  }
+  //
+  const double dx = x - m_mu ;
+  return 0 <= dx  ? 
+    m_norm * std::exp ( -m_beta  * dx ) / ( 1 + std::exp  ( - ( m_alpha + m_beta ) * dx ) ) :
+    m_norm * std::exp (  m_alpha * dx ) / ( 1 + std::exp  (   ( m_alpha + m_beta ) * dx ) ) ;  
+}
+// ============================================================================
+/*  get the integral between low and high values 
+ *  \f$ \int_{low}^{high}f(x) dx\f$
+ */
+// ============================================================================
+double Ostap::Math::Losev::integral 
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low ,high ) ) { return 0 ; }
+  else if ( low > high            ) { return -integral ( high , low ) ; }
+  //  
+  // split 
+  const double left  = m_mu - 6 * m_alpha;  
+  if ( low < left && left < high ) 
+  { return integral ( low , left ) + integral ( left   , high ) ; }
+  //
+  const double right = m_mu + 6 * m_beta ;  
+  if ( low < right && right < high ) 
+  { return integral ( low , right ) + integral ( right , high ) ; }
+  //
+  const bool in_tail = ( high <= left || low >= right ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Losev> s_integrator {} ;
+  static char s_message[] = "Integral(Losev)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag () , 
+      &F     , 
+      low    , high  ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      m_workspace.size()              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
 // ============================================================================
 // Logistic
 // ============================================================================
@@ -2542,6 +2656,10 @@ double Ostap::Math::Logistic::quantile ( const double p ) const
 std::size_t Ostap::Math::Logistic::tag () const 
 { return std::hash_combine ( m_mean , m_sigma ) ; }
 // ============================================================================
+
+
+
+
 
 
 
@@ -3039,6 +3157,8 @@ double Ostap::Math::JohnsonSU::integral
 std::size_t Ostap::Math::JohnsonSU::tag () const 
 { return std::hash_combine ( m_xi , m_lambda , m_delta , m_gamma ) ; }
 // ============================================================================
+
+
 
 
 

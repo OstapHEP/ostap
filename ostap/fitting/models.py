@@ -44,6 +44,7 @@ Empricial PDFs to describe narrow peaks :
   - Q-Gaussian shape
   - Asymmetric Laplace shape
   - Sech  shape
+  - Losev  shape
   - Logistic, aka ``sech-squared'' shape
   
 PDF to describe ``wide'' peaks : 
@@ -99,6 +100,7 @@ __all__ = (
     'QGaussian_pdf'          , ## Q-gaussian distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
+    'Losev_pdf'              , ## asymmetric hyperbolic secant distribution
     'Logistic_pdf'           , ## Logistic aka ``sech-squared'' PDF
     #
     ## specializations:

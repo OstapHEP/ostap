@@ -7,12 +7,17 @@
      `get_mean` and other related functions 
   1. Add `ResoBukin` -  symmetric resolution function based on Bukin-pdf. 
   1. Update `tests_fitting_resolutions.py` 
+  1. Add `Losev`-function&pdf - a kind of asymmetric hyperbolis secant function
+     - `Ostap::Math::Losev`
+     - `Ostap::Models::Losev`
+     - `ostap.fitting.signals.Losev_pdf`
+  1. tune `RooFitResult.table` printout method
+  1. update some fitting examples  
 
 
 ## Bug fixes:  
 
   1. MASSIVE RENAME/FIX:  Apolonios -> Apollonios
-
 
 # v1.4.4.2
 

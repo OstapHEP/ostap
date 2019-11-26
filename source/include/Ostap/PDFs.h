@@ -4326,6 +4326,92 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Losev
+     *  Asymmetric variant of hyperbolic secant distribution
+     *  \f[ f(x;\mu,\alpha,\beta) \equiv 
+     *   \frac{A}{\mathrm{e}^{-\left|\alpha\right| (x-\mu)} + 
+     *                         \mathrm{e}^{\left|\beta\right|(x-mu)}}, \f]
+     *  where \f$ A = \frac{\left|\alpha\right|+\left|\beta\right|}{\pi}
+     *  \sin \frac{\pi\left| \beta\right| }{\left|\alpha\right|+\left|\beta\right|}\f$ 
+     *  - Leptokurtic distribution with exponential tails 
+     *  @see Losev, A., "A new lineshape for fitting x‐ray photoelectron peaks", 
+     *           Surf. Interface Anal., 14: 845-849. doi:10.1002/sia.740141207
+     *  @see  https://doi.org/10.1002/sia.740141207
+     *  @see  https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-11-25
+     *  @see Ostap::Math::Losev
+     */
+    class  Losev : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::Losev, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Losev
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           mu        ,
+        RooAbsReal&           alpha     ,
+        RooAbsReal&           beta      ) ;
+      /// "copy constructor"
+      Losev
+      ( const Losev&          right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~Losev () ;
+      /// clone
+      Losev* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Losev () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Losev& function() const { return m_losev ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        ;
+      RooRealProxy m_mu       ;
+      RooRealProxy m_alpha    ;
+      RooRealProxy m_beta     ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Losev m_losev ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Logistic
      *  aka "Sech-square"
      *  \f[ f(x;\mu;s) = \frac{1}{4s}sech^2\left(\frac{x-\mu}{2s}\right)\f]

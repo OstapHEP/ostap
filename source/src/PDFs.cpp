@@ -5964,6 +5964,97 @@ Double_t Ostap::Models::Sech::analyticalIntegral
 
 
 
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Losev::Losev
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          mu     ,
+  RooAbsReal&          alpha  ,
+  RooAbsReal&          beta   )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x      ( "x"      , "Observable"  , this , x      ) 
+  , m_mu     ( "mu"     , "location"    , this , mu     ) 
+  , m_alpha  ( "alpha"  , "left-slope"  , this , alpha  ) 
+  , m_beta   ( "beta"   , "right-slope" , this , beta   ) 
+    //
+  , m_losev  ( 0 , 1 , 1 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Losev::Losev
+( const Ostap::Models::Losev&  right ,
+  const char*                     name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "x"      , this , right.m_x      ) 
+  , m_mu     ( "mu"     , this , right.m_mu     )
+  , m_alpha  ( "alpha"  , this , right.m_alpha  )
+  , m_beta   ( "beta"   , this , right.m_beta   )
+    //
+  , m_losev  (                   right.m_losev  ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Losev::~Losev () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Losev*
+Ostap::Models::Losev::clone( const char* name ) const 
+{ return new Ostap::Models::Losev( *this , name) ; }
+// ============================================================================
+void Ostap::Models::Losev::setPars () const 
+{
+  //
+  m_losev.setMu    ( m_mu    ) ;
+  m_losev.setAlpha ( m_alpha ) ;
+  m_losev.setBeta  ( m_beta  ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Losev::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_losev ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Losev::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Losev::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_losev.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -7200,6 +7291,7 @@ ClassImp(Ostap::Models::SinhAsinh          )
 ClassImp(Ostap::Models::JohnsonSU          ) 
 ClassImp(Ostap::Models::Atlas              ) 
 ClassImp(Ostap::Models::Sech               ) 
+ClassImp(Ostap::Models::Losev              ) 
 ClassImp(Ostap::Models::Logistic           ) 
 ClassImp(Ostap::Models::Argus              ) 
 ClassImp(Ostap::Models::Slash              ) 

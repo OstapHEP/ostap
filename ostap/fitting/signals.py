@@ -42,6 +42,7 @@ Empricial PDFs to describe narrow peaks
   - Slash_pdf
   - AsymmetricLaplace_pdf  
   - Sech_pdf   
+  - Losev_pdf   
   - Logistic_pdf   
   - RaisingCosine_pdf
   - QGaussian_pdf
@@ -92,7 +93,8 @@ __all__ = (
     'RaisingCosine_pdf'      , ## Raising  Cosine distribution
     'QGaussian_pdf'          , ## Q-gaussian distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
-    'Sech_pdf'               , ## hyperboilic secant  (inverse-cosh) 
+    'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
+    'Losev_pdf'              , ## asymmetric hyperbolic secant
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
     #
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
@@ -2217,6 +2219,121 @@ class Sech_pdf(MASS) :
     
 models.append ( Sech_pdf )      
 
+#==============================================================================
+## @class Losev_pdf
+#  Asymmetric variant of hyperbolic secant distribution
+#   \f[ f(x;\mu,\alpha,\beta) \equiv 
+#      \frac{A}{\mathrm{e}^{-\left|\alpha\right| (x-\mu)} + 
+#                           \mathrm{e}^{\left|\beta\right|(x-mu)}}, \f]
+#  where \f$ A = \frac{\left|\alpha\right|+\left|\beta\right|}{\pi}
+#  \sin \frac{\pi\left| \beta\right| }{\left|\alpha\right|+\left|\beta\right|}\f$ 
+#   - Leptokurtic distribution with exponential tails 
+#   @see Losev, A., "A new lineshape for fitting x‐ray photoelectron peaks", 
+#           Surf. Interface Anal., 14: 845-849. doi:10.1002/sia.740141207
+#   @see  https://doi.org/10.1002/sia.740141207
+#   @see  https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+#   @see Ostap::Models::Losev 
+#   @see Ostap::Math::Losev 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2019-11-026
+class Losev_pdf(MASS) :
+    """ Asymmetric variant of hyperbolic secant distribution
+    - Leptokurtic distribution with exponential tails
+    see Losev, A., ``A new lineshape for fitting x‐ray photoelectron peaks'', 
+    Surf. Interface Anal., 14: 845-849. doi:10.1002/sia.740141207
+    see https://doi.org/10.1002/sia.740141207
+    see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+    see Ostap::Models::Losev 
+    see Ostap::Math::Losev 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean      = None ,   ## related to mean/location  
+                   alpha     = None ,   ## left tail 
+                   beta      = None ) : ## rigth tail
+        
+        #
+        ## initialize the base
+        #
+        
+        MASS.__init__  ( self , name , xvar , mean , None )
+
+        ## rename if possible 
+        if mean is not self.mean :
+            sname  = self.mean.GetName  ()
+            stitle = self.mean.GetTitle ()
+            gname  = sname .replace ( 'mean' , 'mu_%s' % self.name  )
+            gtitle = stitle.replace ( 'mean' , 'mu'                 )
+            self.mean.SetName  ( gname  ) 
+            self.mean.SetTitle ( gtitle )
+
+        ## left tail 
+        self.__alpha = self.make_var ( alpha ,
+                                       'alpha_%s'           % name ,
+                                       '#alpha_{Losev}(%s)' % name , alpha ,
+                                       1.0 , 1.e-3 , 1000 )
+
+        ## right tail 
+        self.__beta  = self.make_var ( beta   ,
+                                       'beta_%s'            % name ,
+                                       '#beta_{Losev}(%s)'  % name , beta  ,
+                                       1.0 , 1.e-3 , 1000 )
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Losev (
+            "losev_"    + name ,
+            "Losev(%s)" % name ,
+            self.xvar      ,
+            self.mean      ,
+            self.alpha     ,
+            self.beta      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'alpha'     : self.alpha ,
+            'beta'      : self.beta  ,
+            }
+        
+    @property
+    def mu ( self ) :
+        """``mu''- location parameter for Losev distribution (same as ``mean'')
+        """
+        return self.mean
+    @mu.setter 
+    def mu ( self , value ) :
+        self.mean = value 
+
+    @property
+    def alpha ( self ) :
+        """`alpha''- parameter for Losev distribution (left tail)
+        """
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0 < value , "``alpha'' must be positive!"
+        self.__alpha.setVal ( value )
+
+    @property
+    def beta ( self ) :
+        """`beta''- parameter for Losev distribution (right tail)
+        """
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        value = float ( value )
+        assert 0 < value , "``beta'' must be positive!"
+        self.__beta.setVal ( value )
+
+
+    
+models.append ( Losev_pdf )      
+
 # =============================================================================
 ## @class Logistic_pdf
 #  Logistic, aka "sech-square" PDF
@@ -2536,7 +2653,7 @@ class PseudoVoigt_pdf(Voigt_pdf) :
     
     Parameters
     - mean  : location 
-    - gamma : gamma for breight-wigner pole
+    - gamma : gamma for Breight-Wigner pole
     - sigma : resolution parameter for gaussian 
     """
     def __init__ ( self             ,
