@@ -502,7 +502,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
-        row = allright ( p ) , n , '  ' + s 
+        row = p , n , '  ' + s 
         crows.append ( row ) 
 
     ## floating parameters 
@@ -518,7 +518,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         if n : n = '[10^%+d]' % n
         else : n = '' 
 
-        row = allright  ( p ) , n , s 
+        row = p , n , s 
         frows.append ( row ) 
 
     crows.sort()
@@ -531,6 +531,12 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     all = T.align_column ( all , 0 , 'left' )
     all = T.align_column ( all , 1 , 'left' )
     all = T.align_column ( all , 2 , 'left' )
+
+    for l in range ( len ( rows ) , len ( all ) ) :
+        line = all [ l ]
+        line = list ( line ) 
+        line [ 0 ] = allright ( line[0] )
+        all  [ l ] = tuple ( line  ) 
 
     if title : 
         return T.table ( all , title = title         , prefix = prefix )
