@@ -483,6 +483,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         code  =  r.statusCodeHistory  ( i )
         row   =  'Status: %s '% label   , '' ,             '   %d' % code             
         if code : row = attention  ( row [ 0 ] ) , row [ 1 ] , attention ( row [ 1 ] )
+        else    : row =              row [ 0 ]   , row [ 1 ] , allright  ( row [ 1 ] )
         rows.append ( row )
 
     rows = [ ( '', 'Unit', 'Value' ) ] + rows
@@ -490,6 +491,8 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     pars_all   = r.params ( float_only = False )
     pars_float = r.params ( float_only = True  )
 
+
+    ## constant/fix parameters 
     crows = [] 
     for p in pars_all :
         if p in pars_float : continue 
@@ -502,6 +505,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         row = allright ( p ) , n , '  ' + s 
         crows.append ( row ) 
 
+    ## floating parameters 
     frows = [] 
     for p in pars_float :
         v , a = pars_float [ p ]
