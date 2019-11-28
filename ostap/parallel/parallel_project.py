@@ -216,7 +216,7 @@ def  tproject ( tree                 ,   ## the tree
     """
 
     from ostap.trees.trees import Tree
-    ch    = Tree ( tree , first = first , nevents = nevents )
+    ch    = Tree ( tree , first = first , nevents = nentries )
     
     task  = ProjectTask            ( histo , what , cuts )
     wmgr  = WorkManager            ( silent     = silent       )
