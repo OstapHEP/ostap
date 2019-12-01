@@ -482,8 +482,10 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         label =  r.statusLabelHistory ( i )
         code  =  r.statusCodeHistory  ( i )
         row   =  'Status: %s '% label   , '' ,             '%d' % code             
-        if code : row = attention  ( row [ 0 ] ) , row [ 1 ] , '   ' + attention ( row [ 2 ] )
-        else    : row =              row [ 0 ]   , row [ 1 ] , '   ' + allright  ( row [ 2 ] )
+        if not code in ( 0 , -1 ) :
+            row = attention  ( row [ 0 ] ) , row [ 1 ] , '   ' + attention ( row [ 2 ] )
+        else    :
+            row =              row [ 0 ]   , row [ 1 ] , '   ' + allright  ( row [ 2 ] )
         rows.append ( row )
 
     rows = [ ( '', 'Unit', 'Value' ) ] + rows

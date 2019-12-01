@@ -1177,7 +1177,47 @@ class SimFit ( MakeVar ) :
         """
         ## nothing to load 
         return self.pdf.load_params ( dataset , params )
-                                
+
+    
+    # =========================================================================
+    ## get all parameters/variables in form of dictionary
+    #  @code
+    #  pdf    = ...
+    #  params = pdf.parameters ( dataset ) 
+    #  @endcode
+    def parameters ( self , dataset = None ) :
+        """ Get all parameters/varibales in form of dictionary
+        >>> pdf    = ...
+        >>> params = pdf.parameters ( dataset ) 
+        """
+        return self.pdf.parameters ( dataset )
+    
+    # ========================================================================
+    ## get the parameter value by name
+    #  @code
+    #  pdf = ...
+    #  p   = pdf.parameter  ( 'A' )
+    #  @endcode
+    def parameter ( self , param , dataset = None ) :
+        """Get the parameter value by name
+        >>> pdf = ...
+        >>> p   = pdf.parameter  ( 'A' )
+        """
+        return self.pdf.parameter ( param , dataset )
+
+    # ==========================================================================
+    ## get parameter by name 
+    #  @code
+    #  pdf = ...
+    #  a   = pdf['A']
+    #  @endcode
+    def __getitem__ ( self , param ) :
+        """Get parameter by name 
+        >>> pdf = ...
+        >>> a   = pdf['A']
+        """
+        return self.pdf.__getitem__ ( param )
+
 # =============================================================================
 _decorated_classes_  = (
     ROOT.RooCategory , 

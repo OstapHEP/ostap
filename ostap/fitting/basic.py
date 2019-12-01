@@ -2623,8 +2623,7 @@ class PDF (MakeVar) :
         table.sort()
         npars = len ( table )
         
-        if npars :
-            
+        if npars :            
             title = 'Parameters loaded: %s' % npars 
             table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
             import ostap.logger.table
@@ -2642,12 +2641,12 @@ class PDF (MakeVar) :
     ## get all parameters/variables in form of dictionary
     #  @code
     #  pdf    = ...
-    #  params = pdf.params ( dataset ) 
+    #  params = pdf.parameters ( dataset ) 
     #  @endcode
-    def params ( self , dataset = None ) :
+    def parameters ( self , dataset = None ) :
         """ Get all parameters/varibales in form of dictionary
         >>> pdf    = ...
-        >>> params = pdf.params ( dataset ) 
+        >>> params = pdf.parameters ( dataset ) 
         """
         
         ## get the list of the actual parameters 
@@ -2661,6 +2660,42 @@ class PDF (MakeVar) :
             
         return result 
 
+    # ========================================================================
+    ## get the parameter value by name
+    #  @code
+    #  pdf = ...
+    #  p   = pdf.parameter  ( 'A' )
+    #  @endcode
+    def parameter ( self , param , dataset = None ) :
+        """Get the parameter value by name
+        >>> pdf = ...
+        >>> p   = pdf.parameter  ( 'A' )
+        """
+        ## get the list of the actual parameters 
+        pars = self.pdf.getParameters ( dataset )
+
+        for p in pars :
+            if p.name == param : return p
+            
+        self.error ( "No parameter %s defined" % param )
+        raise KeyError ( "No parameter %s defined" % param )
+
+    # ==========================================================================
+    ## get parameter by name 
+    #  @code
+    #  pdf = ...
+    #  a   = pdf['A']
+    #  @endcode
+    def __getitem__ ( self , param ) :
+        """Get parameter by name 
+        >>> pdf = ...
+        >>> a   = pdf['A']
+        """
+        ## get the list of the actual parameters 
+        pars = self.pdf.getParameters ( None )
+        for p in pars :
+            if p.name == param : return p
+        raise KeyError ( "No parameter %s defined" % param )
         
 # =============================================================================
 ##  helper utilities to imlement resolution models.

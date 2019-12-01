@@ -1,5 +1,10 @@
 ## New features:
 
+  1. Add new functions:
+       - `parameters`
+       - `parameter` ( and shortcut as `__getitem__` )
+     for the base class `PDF` to allow "easy" access to the values of 
+     parameters by name, e.g.  `a = pdf['A']` or `a = pdf.parameter('A')`
   1. New function `mid_point` is added to `PDF`-base class, 
      defined as 0.5*(x_low + x_high), where f(x_low)=f(x_high)=0.5 * f_max.
      x_low and x_high  are the same points used for evaluation of FWHM.
@@ -7,17 +12,18 @@
      `get_mean` and other related functions 
   1. Add `ResoBukin` -  symmetric resolution function based on Bukin-pdf. 
   1. Update `tests_fitting_resolutions.py` 
-  1. Add `Losev`-function&pdf - a kind of asymmetric hyperbolis secant function
+  1. Add `Losev`-function&pdf - a kind of asymmetric hyperbolic secant function
      - `Ostap::Math::Losev`
      - `Ostap::Models::Losev`
      - `ostap.fitting.signals.Losev_pdf`
   1. tune `RooFitResult.table` printout method
   1. update some fitting examples  
-
+      
 
 ## Bug fixes:  
 
   1. MASSIVE RENAME/FIX:  Apolonios -> Apollonios
+  1. Fix bug in `ResoBukin`-resolution function
 
 # v1.4.4.2
 

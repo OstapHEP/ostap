@@ -530,12 +530,12 @@ class ResoBukin (RESOLUTION) :
         self.pdf = Ostap.Models.Bukin (
             "ResoBukin_"    + name ,
             "ResoBukin(%s)" % name ,
-            self.xvar  ,
-            self.mean  ,
-            self.sigma ,
-            self.xi    ,
-            self.rho   ,
-            self.rho   )
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr , ## ATTENTION!
+            self.xi         ,
+            self.rho        ,
+            self.rho        )
 
         ##  save   the configuration
         self.config = {
