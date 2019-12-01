@@ -1028,7 +1028,8 @@ class KeepBinning(object):
     ...     vars.setBins ( 10 )
     """
     def __init__  ( self , var ) :
-        self.__var = var
+        self.__var  = var
+        slef.__bins = None
         
     def __enter__ ( self ) :
         self.__bins = self.__var.getBinning()
@@ -1041,7 +1042,8 @@ class KeepBinning(object):
     @property
     def bins ( self ) :
         """``bins'' : the binning scheme"""
-
+        return self.__bins
+    
 # =============================================================================
 ## set the binning scheme 
 def _rrv_setbins_ ( self , bins ) :
