@@ -1029,7 +1029,7 @@ class KeepBinning(object):
     """
     def __init__  ( self , var ) :
         self.__var  = var
-        slef.__bins = None
+        self.__bins = None
         
     def __enter__ ( self ) :
         self.__bins = self.__var.getBinning()

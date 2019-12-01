@@ -1139,9 +1139,9 @@ class PDF (MakeVar) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
-                hdataset        = self.histo_data.dset
-                kwargs['ncpu']  = 2   
+                self.histo_data   = H1D_dset ( dataset , self.xvar , density , silent )
+                hdataset          = self.histo_data.dset
+                kwargs [ 'ncpu' ] = 2   
                 return self.draw_nll ( var     = var      ,
                                        dataset = hdataset ,
                                        profile = profile  ,
@@ -1160,7 +1160,7 @@ class PDF (MakeVar) :
         ##
         fargs = []
         ##
-        bins  = kwargs.pop ( 'nbins' , 200 )
+        bins  = kwargs.pop ( 'nbins' , 25 if profile else 200 )
         if bins   : fargs.append ( ROOT.RooFit.Bins      ( bins  ) )
         ## 
         rng   = kwargs.pop ( 'range' , None )
@@ -1198,44 +1198,51 @@ class PDF (MakeVar) :
             profile = nll.createProfile ( avar )
             result  = profile
 
-        self.debug ( 'draw_nll: frame  args: %s'% list ( fargs ) )
-        ## prepare the frame & plot 
-        frame = var.frame ( *fargs )
+        from ostap.fitting.variables import KeepBinning
         
-        self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
-        result.plotOn ( frame , *largs  )
+        with KeepBinning ( var ) :
 
-        import ostap.histos.graphs
-
-        ## remove a bit strange drawing artefacts (the first and the last points )
-        if var.minmax() :
-            vmn , vmx = var.minmax()
-            graph   = frame.getObject ( 0 )
-            if graph.remove ( remove = lambda x,y : not vmn <= x <= vmx ) :
-                logger.debug ('draw_nll: remove drawing artefacts  at the first and the last points' ) 
+            if bins :
+                var.bins = bins
+            
+            self.debug ( 'draw_nll: frame  args: %s'% list ( fargs ) )
+            ## prepare the frame & plot 
+            frame = var.frame ( *fargs )
+            
+            self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
+            result.plotOn ( frame , *largs  )
+            
+            import ostap.histos.graphs
+            
+            ## remove a bit strange drawing artefacts (the first and the last points )
+            if var.minmax() :
+                vmn , vmx = var.minmax()
+                graph   = frame.getObject ( 0 )
+                if graph.remove ( remove = lambda x,y : not vmn <= x <= vmx ) :
+                    logger.debug ('draw_nll: remove drawing artefacts  at the first and the last points' ) 
                                         
-        ## scale it if needed
-        if 1 != sf :
-            logger.info ('draw_nll: apply scale factor of %s due to dataset weights' % sf )
-            graph  = frame.getObject ( 0 )
-            graph *= sf 
-        
-        gr      = frame.getObject ( 0 )
-        mn , mx = gr.minmax()
-        m  , e  = frexp10 ( mx )
-        m *= 10
-        e -= 1
-        mx  = math.floor ( m ) + 1
-        mx *= 10**e 
-        
-        frame.SetMinimum ( 0  )
-        frame.SetMaximum ( mx )
-
-        if not kwargs.get('draw_axis_title' , False ) : 
-            frame.SetXTitle  ( '' )
-            frame.SetYTitle  ( '' )
-            frame.SetZTitle  ( '' )
-
+            ## scale it if needed
+            if 1 != sf :
+                logger.info ('draw_nll: apply scale factor of %s due to dataset weights' % sf )
+                graph  = frame.getObject ( 0 )
+                graph *= sf 
+                
+            gr      = frame.getObject ( 0 )
+            mn , mx = gr.minmax()
+            m  , e  = frexp10 ( mx )
+            m *= 10
+            e -= 1
+            mx  = math.floor ( m ) + 1
+            mx *= 10**e 
+            
+            frame.SetMinimum ( 0  )
+            frame.SetMaximum ( mx )
+            
+            if not kwargs.get('draw_axis_title' , False ) : 
+                frame.SetXTitle  ( '' )
+                frame.SetYTitle  ( '' )
+                frame.SetZTitle  ( '' )
+                
         
 
         ## draw it! 

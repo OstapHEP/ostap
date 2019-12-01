@@ -30,7 +30,7 @@ has very attractive functionality and solve the issues with pickling
 @see https://github.com/uqfoundation/pathos
 
 """
-# ========================================_====================================
+# =============================================================================
 __version__ = '$Revision$'
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
