@@ -40,7 +40,7 @@ class AddChopping(Task) :
         self.__output = ()
         
     def initialize_local  ( self ) : self.__output = () 
-    def process           ( self , trees ) :
+    def process           ( self , jobid , trees ) :
 
         import ostap.trees.trees
         from   ostap.tools.chopping  import addChoppingResponse as add_response 
@@ -79,7 +79,7 @@ class AddChopping(Task) :
 class ChopperTraining(Task) :
     def __init__          ( self ) : self.__output = ()
     def initialize_local  ( self ) : self.__output = () 
-    def process           ( self , params ) :
+    def process           ( self , jobid , params ) :
         
         import ROOT, ostap.tools.tmva        
         category , chopper = params

@@ -36,9 +36,9 @@ class AddBranch(Task) :
         self.function    = function 
         self.__output    = ()
     
-    def initialize_local  ( self ) : self.__output = () 
-    def initialize_remote ( self ) : self.__output = () 
-    def process           ( self , tree ) :
+    def initialize_local  ( self )                : self.__output = () 
+    def initialize_remote ( self , jobid = -1   ) : self.__output = () 
+    def process           ( self , jobid , tree ) :
 
         import ostap.trees.trees
 
@@ -91,11 +91,11 @@ def add_new_branch ( chain , branch_name , function , verbose = True ) :
     ch       = Chain ( chain ) 
     branches = set   ( chain.branches() )
     
-    task  = AddBranch   ( branch_name ,  function  )
-    wmgr  = WorkManager ( silent = not verbose  )
-    trees = ch.split    ( max_files = 1  )
+    task     = AddBranch   ( branch_name ,  function  )
+    wmgr     = WorkManager ( silent = not verbose  )
+    trees    = ch.split    ( max_files = 1  )
     
-    wmgr.process( task , trees )
+    wmgr.process ( task , trees )
     
     nc = ROOT.TChain ( chain.name )
     for f in ch.files :  nc.Add ( f )

@@ -1,3 +1,5 @@
+# v1.4.5.0
+
 ## New features:
 
   1. Add new functions:
@@ -18,12 +20,28 @@
      - `ostap.fitting.signals.Losev_pdf`
   1. tune `RooFitResult.table` printout method
   1. update some fitting examples  
-      
+  1. add option/property  `directory` for `ostap.parallel.task.Task` to indicate 
+      the directory where the job needs to be executed       
+  1. add option/property  `environment` for `ostap.parallel.task.Task` to 
+      setup   additional environmental variables (if needed)  
+  1. Add  argument `keys`  for the method `clone` for all databases, allowng to 
+     copy only certain keys into cloned database. (Default: copy all keys) 
+  1. add `json`, `gif` and `jpg` output formats for  default `canvas >> 'aaa'` operator
+  1. add `hadd` method for `ostap.trees.data_utils.Files` to merge ROOT file via `hadd` script
+
+
+## Backward incompatible changes
+
+  1. MASSIVE RENAME/FIX:  Apolonios -> Apollonios
+  1. Add `jobid` argument for `Task.process`
+      - All existing tasks are updated properly 
+      - All new functions and tasks must take this argument into account!
+
 
 ## Bug fixes:  
 
-  1. MASSIVE RENAME/FIX:  Apolonios -> Apollonios
-  1. Fix bug in `ResoBukin`-resolution function
+  1. Fix minor bug in `ResoBukin`-resolution function
+
 
 # v1.4.4.2
 

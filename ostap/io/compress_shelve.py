@@ -496,7 +496,7 @@ class CompressShelf(shelve.Shelf,object):
     #  ndb = db.clone ( 'new_file.db' )
     #  @endcode
     @abc.abstractmethod
-    def clone ( self , filename ) :
+    def clone ( self , filename , keys = () ) :
         """ Clone the database into new one
         >>> old_db = ...
         >>> new_db = new_db.clone ( 'new_file.db' )

@@ -177,6 +177,31 @@ class RootOnlyShelf(shelve.Shelf):
             rfile = ROOT.TFile.Open ( filename   , open_mode ( mode ) , *args  )
             shelve.Shelf.__init__ ( self , rfile , writeback )
 
+
+    # =========================================================================
+    ## clone the database into new one
+    #  @code
+    #  db  = ...
+    #  ndb = db.clone ( 'new_file.db' )
+    #  @endcode
+    def clone ( self , new_name , keys = () ) :
+        """ Clone the database into new one
+        >>> old_db = ...
+        >>> new_db = new_db.clone ( 'new_file.db' )
+        """
+        new_db = RootOnlyShelf ( new_name                         ,
+                                 mode        =  'c'               ,
+                                 writeback   = self.writeback     )
+        ## copy the content
+        if keys :
+            for key in self.keys () :
+                if key in keys      : new_db [ key ] = self [ key ]
+        else : 
+            for key in self.keys () : new_db [ key ] = self [ key ]
+         
+        new_db.sync ()  
+        return new_db 
+
     @property
     def filename    ( self       ) :
         """``filename'' : the file name for root-database"""
@@ -315,7 +340,7 @@ class RootShelf(RootOnlyShelf):
     #  db  = ...
     #  ndb = db.clone ( 'new_file.db' )
     #  @endcode
-    def clone ( self , new_name ) :
+    def clone ( self , new_name , keys = () ) :
         """ Clone the database into new one
         >>> old_db = ...
         >>> new_db = new_db.clone ( 'new_file.db' )
@@ -325,9 +350,13 @@ class RootShelf(RootOnlyShelf):
                              protocol    = self.protocol      ,
                              compress    = self.compresslevel )
         
-        ## copy the content 
-        for key in self.keys() : new_db [ key ] = self [ key ]
-        
+        ## copy the content
+        if keys :
+            for key in self.keys() :
+                if key in keys     : new_db [ key ] = self [ key ]
+        else : 
+            for key in self.keys() : new_db [ key ] = self [ key ]
+         
         new_db.sync ()  
         return new_db 
 

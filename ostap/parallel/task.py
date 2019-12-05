@@ -68,6 +68,8 @@ class Task ( object ) :
     - finalize.
     """
     __metaclass__ = abc.ABCMeta
+    __directory   = None
+    __environment = {}
     
     ## Local initialization:  invoked once on localhost for master task
     def initialize_local  ( self )          :
@@ -75,7 +77,7 @@ class Task ( object ) :
         pass
     
     ## Remote initialization: invoked for each slave task on remote host
-    def initialize_remote ( self )          :
+    def initialize_remote ( self , jobid = -1 )  :
         """Remote initialization: invoked for each slave task on remote host
         -  default: use the same as ``local initialization''
         """
@@ -87,15 +89,16 @@ class Task ( object ) :
         pass
     
     ## Process the (slave) task on remote host
-    #  @attention must return the results
+    #  @attention must return the result
+    #  @param jobid jobid 
     @abc.abstractmethod 
-    def process           ( self , item   ) :
+    def process           ( self , jobid , *params ) :
         """Process the (slave) task on remote host
         - It must return the results!
         """
         return None 
 
-    ## Collect and merge the resutls (invoked at local host)
+    ## Collect and merge the results (invoked at local host)
     @abc.abstractmethod 
     def merge_results     ( self , result ) :
         """Collect and merge the results (invoked at local host)"""
@@ -107,35 +110,67 @@ class Task ( object ) :
         """Get the final merged task results"""
         return None 
 
-    ## shortcut of <code>process</code> method 
-    def __call__          ( self , item   ) :
+    ## shortcut of <code>process</code> method
+    #  @param jobid jobid 
+    #  @param item  item 
+    def __call__          ( self , jobid , *params ) :
         """Shortcut of process method"""
-        return self.process ( item ) 
+        return self.process ( jobid , *params ) 
 
+    @property
+    def output  ( self ) :
+        """``output'' : get a task output"""
+        return self.results()
 
+    @property
+    def directory ( self ) :
+        """``Directory'' : directory where job starts"""
+        return self.__directory
+    
+    @directory.setter 
+    def directory ( self , value ) :
+        self.__directory = value 
+
+    @property
+    def environment ( self ) :
+        """``envoronment'' : additional  environmment for the job"""
+        return self.__environment
+    
+    @environment.setter 
+    def environment ( self , value ) :
+        self.__environment = value 
+            
 # =============================================================================
 ## @class GenericTask
 #  Generic ``temlated'' task for Parallel processing  
 #    One needs to  define three functions/functors:
-#    - processor   :<code>        output = processor   ( item )               </code>
+#    - processor   :<code>        output = processor ( jobid , item )         </code>
 #    - merger      :<code>updated_output = merger ( old_output , new_output ) </code>
 #    - initializer :<code>        output = initializer (      )               </code> 
+#    - environment : additional environment for the job 
 class GenericTask(Task) :
     """Generic ``temlated'' task for parallel processing.
     One needs to  define three functions/functors:
-    - processor   :         output = processor   ( item ) 
+    - processor   :         output = processor   ( jobid , item ) 
     - merger      : updated_output = merger ( old_output , new_output )
     - initializer :         output = initializer (      )  
+    - initializer :         output = initializer (      )
+    - directory   : change to this directory  (if it exists)
+    - environment : additional environment for the job 
     """
     # =========================================================================
     def __init__ ( self                ,
                    processor           ,
                    merger      = None  ,
-                   initializer = tuple ) :
+                   initializer = tuple ,
+                   directory   = None  ,
+                   environment = {}    ) :
         """Generic task for parallel processing. One needs to  define three functions/functors
-        - processor   :         output = processor   ( item ) 
+        - processor   :         output = processor   ( jobid , item ) 
         - merger      : updated_output = merger      ( old_output , new_output )
         - initializer :         output = initializer (      )  
+        - directory   : change to this directory  (if it exists) 
+        - environment : additional environment for the job 
         """
 
         if not merger :
@@ -146,6 +181,8 @@ class GenericTask(Task) :
         self.__merger      = merger
         self.__initializer = initializer
         self.__output      = None 
+        self.directory     = directory
+        self.environment   = environment
         
     # =========================================================================
     ## local initialization (executed once in parent process)
@@ -155,9 +192,9 @@ class GenericTask(Task) :
         
     # =========================================================================
     ## the actual processing of the single item 
-    def process  ( self , item ) :
+    def process  ( self , jobid , *params ) :
         """The actual processing of the single item"""
-        return self.processor ( item )
+        return self.processor ( jobid , *params )
         
     # =========================================================================
     ## merge results 
@@ -190,7 +227,7 @@ class GenericTask(Task) :
         - Signature: output = initializer() 
         """
         return self.__initializer
-
+    
 # =============================================================================
 ## @class Statistics
 #  helper class to collect statistics 
@@ -219,7 +256,7 @@ class Statistics(object):
     
     @property 
     def host ( self  ) :
-        """``host'' :  the host where the jobs executed"""
+        """``host'' :  the host where the job executed"""
         return self.__host
 
     def __repr__  ( self ) :
@@ -312,29 +349,27 @@ class StatMerger(object) :
                 
                 if   h1     : suffix  = ' %02d:%02d:%02ds'    % ( h1 , m1 , s1 )
                 elif m1     : suffix  = ' %02d:%02ds'         % (      m1 , s1 )
-                else        : suffix  = ' %02ds'              %             s1 
+                else        : suffix  = ' %2ds'               %             s1 
                 
                 if   h2     : suffix += ' vs %02d:%02d:%02ds' % ( h2 , m2 , s2 )
                 elif m2     : suffix += ' vs %02d:%02ds'      % (      m2 , s2 )
-                else        : suffix += ' vs %02ds'           %             s2 
+                else        : suffix += ' vs %2ds'            %             s2 
                 
                 gain = float ( sumtime ) / cputime
                 suffix += ' (Gain: %.1f)'   % gain
 
                 
-        for line in self.__str__  ( prefix , suffix ).replace('\n#','\n').split('\n') : logger.info ( line ) 
+        title = prefix + 'Job execution statistics' + suffix
+        logger.info ( title + "\n%s" % self.table ( title = title , prefix = "# " ) )
                 
-    ## standard printout 
-    def __str__  ( self , prefix = '' , suffix = '' ) :
+    ## standard printout as table 
+    def table  ( self , title = 'Jobs execution statistics' , prefix = '' ) :
 
-        text = [] 
-        text.append ( '%sJob execution statistics:%s'% ( prefix , suffix ) )
-        text.append ( ' #jobs |   %   | total time |  time/job  | job server' )        
-        fmt1 = '%6d | %5.1f | %10.4g | %10.4g | %-s'
-        fmt0 = '%6d |       |            |            | %-s'
-        njobs = self.njobs
+        text =  [ (' #jobs ' , '%' , ' total  time' , 'time/job' , 'job server') ]
         
-        keys  = self.__merged.keys() 
+        njobs = self.njobs        
+        keys  = self.__merged.keys()
+        
         for host in sorted ( keys ) :
             se   = self.__merged [ host ]
             nj   = se.njobs
@@ -343,11 +378,22 @@ class StatMerger(object) :
             mean = time / nj if 1 <= nj else 0.0
             
             if 1 <= nj :
-                text.append ( fmt1 % ( nj , 100. * nj / njobs , time , mean , host ) )
+                line = ( "%6d "     % nj                    ,
+                         " %5.1f "  % ( 100. * nj / njobs ) ,
+                         " %10.4g " % time ,
+                         " %10.4g " % mean ,
+                         " %-s"     % host )
             else :
-                text.append ( fmt0 % ( nj , host ) )
-                                            
-        return '\n# '.join  ( text ) 
+                line = "%6d "% nj , '', '' , '' , " %-s" % host
+
+            text.append ( line )
+            
+        import ostap.logger.table as T
+        return T.table ( text , title = title , prefix = prefix )
+
+    ## standard printout 
+    def __str__  ( self ) :
+        return self.table  ( title = "Job execution statistics" )
 
     @property 
     def njobs ( self ) :
@@ -435,24 +481,43 @@ class TaskMerger(object) :
         return self.__result
     
 # =============================================================================
-## helper function to execute the task and collect stattistic
+## helper function to execute the task and collect statistic
 #  (unfornately due to limitation of <code>parallel python</code> one cannot
 #  use decorators here :-(
+#  @see Task 
 def task_executor ( item ) :
     """Helper function to execute the task and collect job execution statistic
-    - unfornately due to limitation of ``parallel python'' one cannot
+    - unfortunately due to limitation of ``parallel python'' one cannot
     use python decorators here :-(
+    - see Task 
     """
-
+    
     ## unpack
-    task = item [ 0  ] 
-    args = item [ 1: ] 
+    task  = item [ 0  ]
+    jobid = item [ 1  ] 
+    args  = item [ 2: ] 
+
+    import os
+
+    ## change the current working directory 
+    import os 
+    if task.directory and \
+           os.path.exists ( task.directory ) and \
+           os.path.isdir  ( task.directory ) :
+        
+        logger.debug ( 'Task %s: change the current directory to %s' %  ( jobid , task.directory ) )
+        os.chdir ( task.directory ) 
+
+    ## modify/update environment variables, if needed 
+    for k, v in  task.environment :
+        logger.debug ( 'Task %s: modify the environment variable %s : %s ' % ( jobid , k , v ) )
+        os.environ [ k ] =  v
 
     ## perform remote  inialization (if needed) 
-    task.initialize_remote() 
+    task.initialize_remote ( jobid ) 
         
     with Statistics ()  as stat :    
-        result = task.process ( *args ) 
+        result = task.process ( jobid , *args ) 
         return result , stat
 
 # =============================================================================
@@ -466,11 +531,12 @@ def func_executor ( item ) :
     """
 
     ## unpack
-    fun  = item [ 0  ] 
-    args = item [ 1: ] 
+    fun   = item [ 0  ]
+    jobid = item [ 1  ] 
+    args  = item [ 2: ] 
     
     with Statistics ()  as stat :
-        return fun ( *args ) , stat 
+        return fun ( jobid , *args ) , stat 
     
 # =============================================================================
 if '__main__' == __name__ :

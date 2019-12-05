@@ -409,18 +409,39 @@ class Files(object):
     def __nonzero__ ( self ) : return bool ( self.files )
     def __len__     ( self ) : return len  ( self.files )
 
-    ## ## copy the all files into certain directory with the certain pattern
-    ## def copy_files ( self , directory = '.' , pattern = None ) :
 
-    ##     copied = []
-    ##     for i , f in enumerate ( self.files ) :
-    ##         head, tail = os.path.split ( f ) 
-            
-            
-            
-            
+    ## merge all files using <code>hadd</code> script from ROOT
+    #  @param output  name of the output merged file, if None,
+    #                 the temporary name will be generated,
+    #                 that will be deleted at the end of the session
+    #  @param opts   options for command <code>hadd</code>
+    #  @return the name of the merged file 
+    def hadd ( self , output = None , opts = "-ff" ) :
+        """<erge all files using <code>hadd</code> script from ROOT
+        - `output`  name of the output merged file
+        - `opts`   options for command <code>hadd</code>
+        It returns the name of the merged file
         
+        If no output file name is specified, the temporary name
+        will be generate and the temporary file will be deleted
+        at the end of the session
+        """
+        if not output :
+            import ostap.utils.cleanup as CU
+            output = CU.tempfile ( suffix = '.root' )
+            
+
+        import subprocess
         
+        args    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in self.files ]
+        subprocess.check_call ( args )
+        
+        if os.path.exists ( output ) and os.path.isfile ( output ) :
+            return output 
+        
+        raise IOError ( "The output file %s does not exist!" % output )
+
+
 # =============================================================================
 ## @class Data
 #  Simple utility to access to certain chain in the set of ROOT-files

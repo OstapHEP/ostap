@@ -74,19 +74,20 @@ all_extensions = (
     'cxx'  , 'c'    , 
     'jpg'  , 'jpeg' , 'svg' , 
     'root' , 'xml'  , 'xpm' , 
-    'tiff' , 'tex' 
+    'tiff' , 'tex'  ,
+    'json'
     )
 
 # =============================================================================
 ## define simplified print for TCanvas 
-def _cnv_print_ ( cnv , fname , exts = ( 'pdf' , 'png' , 'eps', 'C' ) ) :
+def _cnv_print_ ( cnv , fname , exts = ( 'pdf' , 'png' , 'eps', 'C' , 'jpg' , 'gif' , 'json') ) :
     """A bit simplified version for TCanvas print
     >>> canvas.print ( 'fig' )    
     """
     #
     cnv.Update () 
     from ostap.logger.utils import rootWarning 
-    n,d,e = fname.rpartition('.')
+    n , d , e = fname.rpartition('.')
     if d and e.lower() in all_extensions : 
         with rootWarning () :
             cnv.Update   () 

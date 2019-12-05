@@ -50,7 +50,7 @@ class  ReduceTask(Task) :
     def initialize_local   ( self ) : self.__output = () 
 
     ## the actual processing 
-    def process ( self , item ) :
+    def process ( self , jobid , item ) :
 
         import ROOT
         import ostap.core.pyrouts            

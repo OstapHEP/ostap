@@ -49,7 +49,8 @@ from   builtins         import range
 # PATHOS components 
 # =============================================================================
 import dill 
-import ppft 
+import ppft
+import multiprocess 
 import pathos.core              as PC
 import pathos.secure            as PS
 import pathos.multiprocessing
@@ -102,7 +103,8 @@ class WorkManager ( object ) :
             
         self.__ppservers = ()
         self.__locals    = ()
-
+        self.__pool      = ()
+        
         import socket
         local_host = socket.getfqdn ().lower()  
  
@@ -123,23 +125,24 @@ class WorkManager ( object ) :
             environment = kwargs.pop ( 'environment' , ''   )
             script      = kwargs.pop ( 'script'      , None )
             profile     = kwargs.pop ( 'profile'     , None ) 
-            secret      = kwargs.pop ( 'secret'      , ''   )
+            secret      = kwargs.pop ( 'secret'      , None )
             timeout     = kwargs.pop ( 'timeout'     , 7200 )
             
             if script :
                 assert os.path.exists ( script ) and os.path.isfile ( script ) ,\
                        'WorkManager: no script %s is found' % script
                 
-            if not secret :
+            if secret is None :
                 from ostap.utils.utils import gen_password 
                 secret = gen_password ( 16 )
-                
+
             ppsrvs = [ ppServer ( remote                    ,
                                   environment = environment ,
                                   script      = script      ,
                                   profile     = profile     ,
                                   secret      = secret      ,
-                                  timeout     = timeout     ) for remote in ppservers ]
+                                  timeout     = timeout     ,
+                                  silent      = silent      ) for remote in ppservers ]
             
             ppbad  = [ p for p in ppsrvs if not p.pid ]
             ppgood = [ p for p in ppsrvs if     p.pid ]
@@ -155,11 +158,12 @@ class WorkManager ( object ) :
             ##    self.ncpus = max  ( 0 , self.ncpus - 2 )
             
             ## some trick to setup the password.
-            ## unfortunately ParallelPool interface does not allow it :-( 
-            import pathos.parallel as PP
-            _ds = PP.pp.Server.default_secret 
-            PP.pp.Server.default_secret = secret 
-            
+            ## unfortunately ParallelPool interface does not allow it :-(
+            if secret : 
+                import pathos.parallel as PP
+                _ds = PP.pp.Server.default_secret 
+                PP.pp.Server.default_secret = secret 
+                
             from pathos.pools import ParallelPool 
             self.__pool      = ParallelPool ( ncpus = self.ncpus , servers = self.locals  )
 
@@ -217,6 +221,8 @@ class WorkManager ( object ) :
         del self.__ppservers 
         del self.__locals 
         
+
+
     # =========================================================================
     ## process callable object or Task :
     #  - process <code>Task</code>:
@@ -228,7 +234,7 @@ class WorkManager ( object ) :
     #  @endcode
     #  -  process callable object 
     #  @code
-    #  def my_fun ( x ) :
+    #  def my_fun ( jobid , x ) :
     #      return x**2 
     #  wm = WorkManager ( ... )
     #  items = range ( 10 )
@@ -249,7 +255,7 @@ class WorkManager ( object ) :
         
         -  process callable object
         
-        >>> def my_fun ( x ) : return x**2 
+        >>> def my_fun ( jobid , x ) : return x**2 
         >>> wm = WorkManager ( ... )
         >>> items = range ( 10 )
         >>> result1 =  wm.process ( my_fun , items , merger = TaskMerger ( lambda  a,b : a+[b] , init = [] ) )
@@ -301,8 +307,8 @@ class WorkManager ( object ) :
                 
                 chunk = chunks.pop() 
                 
-                from itertools      import repeat
-                jobs_args = zip ( repeat ( task ) , chunk )
+                from itertools import repeat , count 
+                jobs_args = zip ( repeat ( task ) , count () , chunk )
 
                 self.pool.restart ( True )
                 jobs      = self.pool.uimap ( func_executor , jobs_args  )
@@ -351,8 +357,8 @@ class WorkManager ( object ) :
                 
                 chunk = chunks.pop() 
                 
-                from itertools      import repeat
-                jobs_args = zip ( repeat ( task ) , chunk )
+                from itertools import repeat , count 
+                jobs_args = zip ( repeat ( task ) , count () , chunk )
 
                 self.pool.restart ( True )
                 jobs      = self.pool.uimap ( task_executor , jobs_args  )
@@ -444,7 +450,11 @@ class ppServer(object) :
                    script      = None ,
                    profile     = None ,
                    secret      = None ,
-                   timeout     =   -1 ) :
+                   timeout     =   -1 ,
+                   silent      = True ) :
+
+        self.__session = None
+        self.__pid     = 0
         
         ## split user@remote
         remote_user , at , remote = remote.rpartition('@')
@@ -580,7 +590,6 @@ class ppServer(object) :
         if r : logger.error ('SERVER:response from %s : %s' % ( self.session , r ) )
 
 
-        self.__pid = None
         for i in range ( 15 ) :
             try :
                 import time 
@@ -588,7 +597,7 @@ class ppServer(object) :
                 self.__pid = PC.getpid ( pattern , self.remote_host )
                 logger.verbose ('PID for remote ppserver is %s:%d' % ( self.remote_host , self.__pid ) )
             except OSError : pass
-            if self.__pid  : break 
+            if self.__pid > 0 : break 
         else :
             logger.warning ('Cannot acquire PID for remote ppserver at %s:%s' % ( self.remote_host , self.remote_port ) )
 
@@ -598,6 +607,9 @@ class ppServer(object) :
         logger.debug   ( "%s" % self )
         logger.verbose ( command     )
 
+        if not silent : 
+            logger.info ( 'Tunnel: %6d -> %s:%s pid:%-6d' % ( self.local_port , self.remote_host , self.remote_port , self.pid ) )
+            
     def start ( self ) : return self
     def end   ( self ) :
 

@@ -288,7 +288,7 @@ class Bz2Shelf(CompressShelf):
     #  db  = ...
     #  ndb = db.clone ( 'new_file.db' )
     #  @endcode
-    def clone ( self , new_name ) :
+    def clone ( self , new_name , keys = () ) :
         """ Clone the database into new one
         >>> old_db = ...
         >>> new_db = new_db.clone ( 'new_file.db' )
@@ -301,9 +301,13 @@ class Bz2Shelf(CompressShelf):
                             silent      = self.silent        ,
                             keyencoding = self.keyencoding   )
         
-        ## copy the content 
-        for key in self.keys() : new_db [ key ] = self [ key ]
-        
+        ## copy the content
+        if keys :
+            for key in self.keys() :
+                if key in keys     : new_db [ key ] = self [ key ]
+        else : 
+            for key in self.keys() : new_db [ key ] = self [ key ]
+            
         new_db.sync ()  
         return new_db 
                          

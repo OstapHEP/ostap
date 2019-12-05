@@ -20,14 +20,14 @@ from ostap.logger.logger      import getLogger
 from ostap.parallel.task      import Task, Statistics ,  StatMerger 
 logger  = getLogger('ostap.parallel.mp_gaudi')
 
-def _prefunction( f, task, item) :
-    return f((task,item))
-def _ppfunction( args ) :
+def _prefunction( f, task , jobid , item) :
+    return f( ( task , jobid , item ) )
+def _ppfunction ( args ) :
     #--- Unpack arguments
-    task, item = args
+    task, jobid , item = args
     with Statistics() as stat : 
-        task.initialize_remote()
-        result = task.process(item)
+        task.initialize_remote ( jobid )
+        result = task.process  ( jobid , item )
         stat.stop()
         return result , stat
 
@@ -57,7 +57,8 @@ class WorkManager(object) :
         # --- Schedule all the jobs ....
             
         start = time.time()
-        jobs  = self.pool.map_async(_ppfunction, zip([task for i in items] , items ))
+        from itertools import repeat , count 
+        jobs  = self.pool.map_async ( _ppfunction, zip( repeat ( task ) , count () , items ))
             
         with ProgressBar ( max_value = len ( items ) , description = "# Job execution:" ,  silent = self.silent ) as bar :              
             for result, stat in  jobs.get(timeout) :

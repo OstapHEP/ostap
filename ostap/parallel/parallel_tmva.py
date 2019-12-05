@@ -40,7 +40,7 @@ class AddTMVA(Task) :
         self.__output = ()
         
     def initialize_local  ( self )         : self.__output = () 
-    def process           ( self , trees ) :
+    def process           ( self , jobid , trees ) :
         
         import ostap.trees.trees
         from   ostap.tools.tmva  import addTMVAResponse  as add_response       

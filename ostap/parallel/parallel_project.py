@@ -56,7 +56,7 @@ class ProjectTask(Task) :
         self.__output = 0, self.histo.clone()
     
     ## remote initialization (executed for each sub-processs)
-    def initialize_remote  ( self ) :
+    def initialize_remote  ( self , jobid = -1 ) :
         """Remote initialization (executed for each sub-processs
         """
         import ROOT,ostap.core.pyrouts
@@ -73,7 +73,7 @@ class ProjectTask(Task) :
     #  - the selection/weighting criteria 
     #  - the first entry in tree to process
     #  - number of entries to process
-    def process ( self , item ) :
+    def process ( self , jobid , item ) :
         """The actual processing
         ``params'' is assumed to be a tuple-like entity:
         - the file name
@@ -95,7 +95,7 @@ class ProjectTask(Task) :
         nevents  = item.nevents
 
         ## Create the output histogram   NB! (why here???) 
-        self.output = 0 , self.histo.Clone()
+        self.__output = 0 , self.histo.Clone()
         
         ## use the regular projection  
         from ostap.trees.trees import _tt_project_ 
@@ -111,7 +111,7 @@ class ProjectTask(Task) :
     def merge_results ( self , result ) :
         filtered    = self.__output[0] + result[0] 
         self.__output[1].Add ( result[1] )
-        self.output = filtered, self.__output[1]
+        self.__output = filtered, self.__output[1]
         result[1].Delete () 
 
     ## get the results 
@@ -153,12 +153,12 @@ def  cproject ( chain                ,
     from ostap.trees.trees import Chain
     ch    = Chain ( chain , first = first , nevents = nentries )
     
-    task  = ProjectTask            ( histo , what , cuts )
-    wmgr  = WorkManager   ( silent = silent )
-    wmgr.process ( task  , ch.split  ( chunk_size  = chunk_size , max_files = max_files ) )
+    task  = ProjectTask ( histo , what , cuts )
+    wmgr  = WorkManager ( silent = silent )
+    wmgr.process ( task , ch.split ( chunk_size = chunk_size , max_files = max_files ) )
 
     ## unpack results 
-    _f , _h = task.results ()
+    _f , _h    = task.results ()
     filtered   = _f
     histo     += _h
     del _h 
