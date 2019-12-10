@@ -80,7 +80,7 @@ fit_draw = config [ 'Fit Draw' ]
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.core.config' )
-else                       : logger = getLogger ( __name__     )
+else                       : logger = getLogger ( __name__  )
 # =============================================================================
 import logging
 logging.disable ( ( logging.WARNING - 1 ) if quiet   else

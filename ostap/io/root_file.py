@@ -831,7 +831,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
     
 # =============================================================================
 # The END 

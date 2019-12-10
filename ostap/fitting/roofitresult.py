@@ -67,6 +67,27 @@ def _rfr_params_ (self , float_only = True ) :
             
     return pars_
 
+# ==============================================================================
+## get numerical values of all parameters as simple dictionary
+#  @code
+#  result = ...
+#  dct = results.dct_params() 
+#  @endcode
+def _rfr_dct_params_ ( self ) :
+    """Get numerical values of all parameters as simple dictionary
+    >>> result = ...
+    >>> dct = results.dct_params() 
+    """
+    pars_ = {}
+
+    for p in self.floatParsFinal(): 
+        pars_ [ p.GetName () ] = p.as_VE()
+        
+    for p in self.constPars() : 
+        pars_ [ p.GetName () ] = p.getValue() 
+
+    return pars_ 
+    
 # =============================================================================
 ## get parameter by name  from RooFitResult
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -648,6 +669,7 @@ ROOT.RooFitResult . __call__        = _rfr_param_
 ROOT.RooFitResult . __getattr__     = _rfr_getattr_ 
 ROOT.RooFitResult . __iter__        = _rfr_iter_
 ROOT.RooFitResult . iteritems       = _rfr_iteritems_
+ROOT.RooFitResult . dct_params      = _rfr_dct_params_
 ROOT.RooFitResult . parameters      = _rfr_params_
 ROOT.RooFitResult . params          = _rfr_params_
 ROOT.RooFitResult . param           = _rfr_param_
