@@ -4,12 +4,11 @@
 
  1. Add new method `dct_params` for `ROOT.RooFitResult`, that gets a dictionary of all parameter values 
  
-
 ## Backward incompatible changes
 
 ## Bug fixes:  
 
-  1. Minot fix in `Files.hadd` 
+  1. Minor fix in `Files.hadd` 
 
 
 # v1.4.5.0
