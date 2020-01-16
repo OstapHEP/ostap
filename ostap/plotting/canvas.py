@@ -129,7 +129,7 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
                 
         elif files and el in ( 'zip' , ) : 
             import zipfile
-            with zipfile.open ( fname , "w" ) as output :
+            with zipfile.ZipFile( fname , "w"  ) as output :
                 for f in files : output.write ( f )
 
         for f in files :
