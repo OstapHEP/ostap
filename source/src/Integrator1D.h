@@ -86,7 +86,8 @@ namespace Ostap
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+          const unsigned long        line       = 0       ,       // line number 
+          const int                  rule       = GSL_INTEG_GAUSS51 ) const // integration rule 
         {
           // setup GSL 
           Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -102,7 +103,7 @@ namespace Ostap
               aprecision         ,   // absolute precision
               rprecision         ,   // relative precision
               limit              ,   // maximum number of subintervals
-              GSL_INTEG_GAUSS51  ,   // integration rule
+              rule               ,   // integration rule
               workspace          ,   // workspace
               &result            ,   // the result
               &error             ) ; // the error in result
@@ -193,13 +194,14 @@ namespace Ostap
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+          const unsigned long        line       = 0       ,       // line number 
+          const int                  rule       = GSL_INTEG_GAUSS51 ) const // integration rule 
         {
           // ==================================================================
           const std::size_t key = std::hash_combine 
             ( tag , func->params , xlow , xhigh ,  
               aprecision , rprecision , 
-              limit      , reason , file , line ) ;
+              limit      , reason , file , line , rule ) ;
           // ==================================================================
           { // look into the cache ============================================
             CACHE::Lock lock { s_cache.mutex() } ;
@@ -208,13 +210,13 @@ namespace Ostap
             // ================================================================
           } // ================================================================
           // ==================================================================
-          // perform numerical inntegration using GSL 
+          // perform numerical integration using GSL 
           Result result = gaq_integrate ( func ,
                                           xlow ,  xhigh , 
                                           workspace     , 
                                           aprecision    , rprecision  ,
                                           limit         , 
-                                          reason        , file , line ) ;
+                                          reason        , file , line , rule ) ;
           // ==================================================================
           { // update the cache ===============================================
             CACHE::Lock lock  { s_cache.mutex() } ;
@@ -346,7 +348,7 @@ namespace Ostap
       Integrator1D<FUNCTION>::s_cache = Integrator1D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator1D<FUNCTION>::s_CACHESIZE = 1000 ;
+      const unsigned int Integrator1D<FUNCTION>::s_CACHESIZE = 5000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL
     // ========================================================================

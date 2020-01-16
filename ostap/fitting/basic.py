@@ -2558,8 +2558,10 @@ class PDF (MakeVar) :
                           logger = self.logger , **kwargs ) 
 
     # =========================================================================
-    ## Load parameters from external dictionary <code>{ name : value }</code>
-    #  or sequence of <code>RooAbsReal</code> objects
+    ## Load parameters from:
+    #    - external dictionary <code>{ name : value }</code>
+    #    - sequence of <code>RooAbsReal</code> object
+    #    - <code>ROOT.RooFitResult</code> object 
     #  @code
     #  pdf     = ...
     #  dataset = ...
@@ -2568,9 +2570,12 @@ class PDF (MakeVar) :
     #  params  = ( A , B , C , ... )
     #  pdf.load_params ( dataset , params )  
     #  @endcode 
-    def load_params ( self , dataset = None , params = {}  ) :
-        """Load parameters from external dictionary <code>{ name : value }</code>
-        #  or sequence of <code>RooAbsReal</code> objects
+    def load_params ( self , dataset = None , params = {} , silent = False  ) :
+        """Load parameters from
+        - external dictionary `{ name : value }`
+        - sequence of `RooAbsReal` objects
+        - `RooFitResult` object
+        
         >>> pdf      = ...
         >>> dataset = ... 
         >>> params = { 'A' : 10 , 'B' : ... }
@@ -2580,6 +2585,9 @@ class PDF (MakeVar) :
         """
         ## nothing to load 
         if not params : return 
+
+        if isinstance ( params , ROOT.RooFitResult ) :
+            params = params.dct_params () 
         
         ## get the list of the actual parameters 
         pars = self.pdf.getParameters ( dataset )
@@ -2604,11 +2612,10 @@ class PDF (MakeVar) :
             not_used = set ( params.keys() ) - keys 
 
         ## list of objects 
-        else : 
-            keys = set()
-        
+        else :
+            
+            keys = set()        
             for i , pp in enumerate ( params ) :  
-                pp = _params [ 0 ]             
                 if not isinstance ( pp , ROOT.RooAbsReal ) : continue
                 for p in pars :
                     if not hasattr ( p  , 'setVal' )       : continue
@@ -2625,22 +2632,25 @@ class PDF (MakeVar) :
             not_used = []
             for i , pp in enumerate ( params ) :  
                 if i in keys : continue
-                not_used.add ( pp )
+                not_used.append ( pp )
 
-        table.sort()
-        npars = len ( table )
-        
-        if npars :            
-            title = 'Parameters loaded: %s' % npars 
-            table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
-            import ostap.logger.table
-            table = ostap.logger.table.table ( table , title , prefix = "# " )
+        if not silent :
+            
+            table.sort()
+            npars = len ( table )
+            
+            if npars :            
+                title = 'Parameters loaded: %s' % npars 
+                table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
+                import ostap.logger.table
+                table = ostap.logger.table.table ( table , title , prefix = "# " )
+                
             self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
             
-        not_used = list ( not_used )
-        not_used.sort() 
-        if not_used :
-            self.warning ("Following keys are unused %s" % not_used ) 
+            not_used = list ( not_used )
+            not_used.sort() 
+            if not_used :
+                self.warning ("Following keys are unused %s" % not_used ) 
         
         return 
 

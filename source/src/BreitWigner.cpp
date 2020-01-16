@@ -12,6 +12,7 @@
 #include "Ostap/BreitWigner.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Kinematics.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -96,13 +97,15 @@ namespace
     const Ostap::Math::FormFactor* F = 0 )
   {
     //
-    if ( x > m1 + m2 && m0 > m1 + m2 ) { return gamma_run ( gam0  , 
-                                                            x     , 
-                                                            m1    , 
-                                                            m2    , 
-                                                            m0    , 
-                                                            L     , 
-                                                            F     ) ; }
+    if  ( m0 <= m1 + m2 ) { return 0 ; }
+    //
+    if ( x >= m1 + m2 && m0 >= m1 + m2 ) { return gamma_run ( gam0  , 
+                                                              x     , 
+                                                              m1    , 
+                                                              m2    , 
+                                                              m0    , 
+                                                              L     , 
+                                                              F     ) ; }
     //
     if ( s_equal ( x , m0 ) ) { return gam0 ; }
     //
@@ -530,6 +533,40 @@ bool Ostap::Math::Channel::setGamma0 ( const double value )
   return true ;
 }
 // ============================================================================
+// set new m1 
+// ============================================================================
+bool Ostap::Math::Channel::setM1 ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_m1 ) ) { return false ; } // RETURN
+  m_m1  = v ;
+  return true ;
+}
+// ============================================================================
+// set new m2 
+// ============================================================================
+bool Ostap::Math::Channel::setM2 ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_m2 ) ) { return false ; } // RETURN
+  m_m2  = v ;
+  return true ;
+}
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::Channel::tag() const
+{ 
+  //
+  std::size_t seed =   0 ;
+  std::hash_combine ( seed , m_gamma0 ) ;
+  std::hash_combine ( seed , m_m1     ) ;
+  std::hash_combine ( seed , m_m2     ) ;
+  std::hash_combine ( seed , m_L      ) ;
+  //
+  return seed ;
+}
+// ============================================================================
 /* get the mass-dependent width 
  *  \f[ \Gamma(m) \equiv \Gamma_0 
  *     \left( \frac{q(m)}{q(m_0)} \right)^2L+1}
@@ -559,7 +596,7 @@ Ostap::Math::Channel::gamma
 { return gamma_run_complex ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
 // ============================================================================
 /*  get the value of formfactor for the given mass and pole position
- *  @param mass rinning mass 
+ *  @param mass running mass 
  *  @param m0   pole position 
  *  @return the value of formfactor for  given mass and pole position
  */
@@ -592,7 +629,7 @@ Ostap::Math::BreitWignerBase::BreitWignerBase
   const Ostap::Math::Channel& channel ) 
   : m_m0         ( std::abs ( m0 ) ) 
   , m_channels   ( 1  , channel    )
-  , m_workspace  ()
+  , m_workspace  ( 10000 )
     //
 {}
 // ============================================================================
@@ -619,6 +656,16 @@ Ostap::Math::BreitWignerBase::amplitude
   return std::sqrt ( m0 () * gamma0 () ) * breit_amp ( x , m0() , g ) ;
 }
 // ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::BreitWignerBase::tag() const
+{ 
+  std::size_t seed =   0 ;
+  for ( const auto&c : m_channels ) { std::hash_combine ( seed , c.tag() ) ; }
+  std::hash_combine ( seed , m_m0 ) ;
+  return seed ;
+}
+// ============================================================================
 /*  calculate the Breit-Wigner shape
  *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}
  *     { (\omega_0^2-\omega^2)^2-\omega_0^2\Gammma^2(\omega)-}\f$
@@ -627,12 +674,13 @@ Ostap::Math::BreitWignerBase::amplitude
 double Ostap::Math::BreitWignerBase::breit_wigner 
 ( const double x ) const
 {
-  if ( x < threshold () ) { return 0 ; }
+  if ( x <= threshold () ) { return 0 ; }
   // get the partial width  for the first channel 
   const double g0 = m_channels.front().gamma0 () ;
-
-  // choose normalization point: 
-  const double mm = m_m0 <= threshold() ? ( threshold () + 0.5 * g0 ) : m_m0 ;
+  
+  // choose normalization point:
+  const double mm = threshold () + g0 ;
+  
   // actually it is real (both values are above threshold) 
   const double g  = m_channels.front().gamma ( x , mm ).real() ;
   if ( 0 >= g ) { return 0 ; }
@@ -643,6 +691,7 @@ double Ostap::Math::BreitWignerBase::breit_wigner
   const double gamma_scale = 1.0 / g0 ;
   // 
   return 2 * x * std::norm ( a ) * g * gamma_scale / M_PI  ;
+  //
 }
 // ============================================================================
 /*  calculate the Breit-Wigner shape
@@ -708,35 +757,44 @@ double  Ostap::Math::BreitWignerBase::integral
   // split into reasonable sub intervals
   //
   const double g0 = gamma0 () ;
-  //
-  const double x1     = m_m0 - 10 * g0  ;
-  const double x2     = m_m0 + 10 * g0  ;
-  const double x_low  = std::min ( x1 , x2 ) ;
-  const double x_high = std::max ( x1 , x2 ) ;
-  //
-  if ( low < x_low  && x_low < high )
+  if ( 0 < g0 ) 
   {
-    return
-      integral (   low , x_low  ) +
-      integral ( x_low ,   high ) ;
+    //
+    for ( unsigned short i = 1 ; i < 6 ; ++i ) 
+    {
+      const double x1 = m_m0 + i * g0 ;
+      if ( low < x1 && x1 < high ) 
+      { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+      //
+      const double x2 = m_m0 - i * g0 ;
+      if ( low < x2 && x2 < high ) 
+      { return integral ( low , x2 ) + integral ( x2 , high ) ; } 
+    }
   }
-  if ( low <  x_high && x_high < high )
-  {
-    return
-      integral (   low  , x_high  ) +
-      integral ( x_high ,   high  ) ;
-  }
+  //
+  if (  low < m_m0 && m_m0 < high ) 
+  { return integral ( low , m_m0 ) + integral ( m_m0 , high ) ; }
   //
   // split, if interval too large
   //
   const double width = std::max ( g0 , 0.0 ) ;
-  if ( 0 < width &&  3 * width < high - low  )
+  if ( 0 < width && 10 * width < high - low  )
   {
     return
       integral ( low                   , 0.5 *  ( high + low ) ) +
       integral ( 0.5 *  ( high + low ) ,          high         ) ;
   }
   //
+  //  where the tails start?
+  //
+  const double x_low  = m_m0 - 5 * g0 ;
+  const double x_high = m_m0 + 6 * g0 ;
+  //
+  if ( low < x_low  && x_low  < high ) 
+  { return integral ( low , x_low  ) + integral ( x_low  , high ) ; }
+  if ( low < x_high && x_high < high ) 
+  { return integral ( low , x_high ) + integral ( x_high , high ) ; }
+  
   // use GSL to evaluate the integral
   //
   static const Ostap::Math::GSL::Integrator1D<BreitWignerBase> s_integrator {} ;
@@ -746,17 +804,19 @@ double  Ostap::Math::BreitWignerBase::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag () , 
+      &F     , 
+      low    , high       ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
+      s_PRECISION * 10    ,          // absolute precision
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL :
-      s_PRECISION         ,          // relative precision
+      s_PRECISION * 10    ,          // relative precision
       m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
+      s_message           ,          // message  
+      __FILE__ , __LINE__ ,          // file&line 
+      GSL_INTEG_GAUSS61   ) ;        // integration rule 
   //
   return result ;
 }
@@ -784,8 +844,9 @@ double  Ostap::Math::BreitWignerBase::integral () const
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate
-    ( &F , 
+  std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate_with_cache 
+    ( tag () , 
+      &F     , 
       x_high              ,          // low edge
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
@@ -1083,6 +1144,9 @@ double Ostap::Math::Rho0FromEtaPrime::operator() ( const double x ) const
   return rho * Ostap::Math::POW ( 2 * k_gamma / m_eta_prime , 3 ) * 20 ;
   //
 }
+// ============================================================================
+
+
 // ============================================================================
 //               Flatte
 // ============================================================================
@@ -3243,8 +3307,8 @@ double  Ostap::Math::Bugg23L::integral
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
       m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
+      s_message           ,          // message 
+      __FILE__ , __LINE__ ) ;        // file and line  
   //
   return result ;
 }

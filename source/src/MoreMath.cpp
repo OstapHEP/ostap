@@ -1261,8 +1261,8 @@ Ostap::Math::barrier_g
   const unsigned int l ) 
 {
   //
-  if      ( 0 == l ) {  return                        1 ; }
-  else if ( 1 == l ) {  return std::sqrt (  1 + x * x ) ; }
+  if      ( 0 == l ) {  return                        1        ; }
+  else if ( 1 == l ) {  return std::complex<double> ( 1 , -x ) ; }
   //
   // real part 
   const long double re_g = Ostap::Math::Clenshaw::term 

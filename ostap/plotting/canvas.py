@@ -74,32 +74,77 @@ all_extensions = (
     'cxx'  , 'c'    , 
     'jpg'  , 'jpeg' , 'svg' , 
     'root' , 'xml'  , 'xpm' , 
-    'tiff' , 'tex'  ,
+    'tiff' , 'tex'  , 
     'json'
     )
 
 # =============================================================================
-## define simplified print for TCanvas 
-def _cnv_print_ ( cnv , fname , exts = ( 'pdf' , 'png' , 'eps', 'C' , 'jpg' , 'gif' , 'json') ) :
+## Define simplified print for TCanvas
+#  Alows to create several output file types  at once
+#  - if extension is equal to <code>tar</code> or <code>tgz</code>,
+#    (gzipped) tar-files is created
+#  - if extension is equal to <code>zip</code>, zip-archive is created
+#  @code
+#  canvas.print_ ( 'A' ) ## 
+#  canvas.save   ( 'A' ) ## ditto 
+#  canvas >> 'A'         ## ditto
+#  @endcode 
+def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
+                                         'jpg'  , 'gif' , 'json' , 'svg' ) ) :
     """A bit simplified version for TCanvas print
-    >>> canvas.print ( 'fig' )    
+    It Alows to create several output file types  at once
+    - if extension is equal to `tar` or `tgz`, single (gzipped) tar-files is created
+    - if extension is equal to `zip`, single zip-archive is created 
+    >>> canvas.print_ ( 'A' )
+    >>> canvas.save   ( 'A' ) ## ditto
+    >>> canvas >> 'fig'       ## ditto
     """
     #
     cnv.Update () 
     from ostap.logger.utils import rootWarning 
     n , d , e = fname.rpartition('.')
-    if d and e.lower() in all_extensions : 
+    el = e.lower() 
+    if n and d and el in all_extensions : 
         with rootWarning () :
             cnv.Update   () 
             cnv.Print    ( fname )
             logger.debug ( 'Canvas --> %s' % fname )
             return cnv
         
+    if n and d and el in ( 'tgz' , 'tar' , 'zip' ) :
+        
+        files = [] 
+        for ext in exts :
+            with rootWarning () :
+                name = n + '.' + ext
+                cnv.Print    ( name )
+                logger.debug ( 'Canvas --> %s' % name )
+                if os.path.exists ( name ) and os.path.isfile ( name ) : 
+                    files.append ( name )
+                    
+        if   files and el in ( 'tgz' , 'tar' ) : 
+            import tarfile
+            with tarfile.open ( fname , "w:gz" ) as output :
+                for f in files : output.add   ( f )
+                
+        elif files and el in ( 'zip' , ) : 
+            import zipfile
+            with zipfile.open ( fname , "w" ) as output :
+                for f in files : output.write ( f )
+
+        for f in files :
+            try :
+                os.remove ( f )
+            except OSError :
+                pass
+
+        return cnv
+    
     for ext in exts :
         with rootWarning () :
             name = fname + '.' + ext
-            cnv.Print   ( name )
-            logger.debug('Canvas --> %s' % name )
+            cnv.Print    (  name )
+            logger.debug ( 'Canvas --> %s' % name )
             
     return cnv 
 
@@ -114,6 +159,7 @@ def _cnv_rshift_ ( cnv , fname ) :
     """
     return _cnv_print_ ( cnv , fname )
 
+ROOT.TVirtualPad.save       = _cnv_print_
 ROOT.TVirtualPad.print_     = _cnv_print_
 ROOT.TVirtualPad.__rshift__ = _cnv_rshift_
 

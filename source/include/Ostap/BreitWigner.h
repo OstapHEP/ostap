@@ -126,22 +126,26 @@ namespace Ostap
     public: // trivial accessors  
       // ======================================================================
       /// get the gamma 
-      double            gamma0     () const { return m_gamma0 ; }
+      double            gamma0     () const { return m_gamma0           ; }
       /// get the mass of the 1st daughter 
-      double            m1         () const { return m_m1     ; }
+      double            m1         () const { return m_m1               ; }
       /// get the mass of the 2nd daughter 
-      double            m2         () const { return m_m2     ; }
+      double            m2         () const { return m_m2               ; }
       /// get the oribital momentum 
-      unsigned short    L          () const { return m_L      ; }        
+      unsigned short    L          () const { return m_L                ; }        
       /// get the formfactor 
       const FormFactor* formfactor () const { return m_formfactor.get() ; }
       //// get the threshold 
-      double            threshold  () const { return m_m1 + m_m2 ; }
+      double            threshold  () const { return m_m1 + m_m2        ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
       /// set new width 
       bool  setGamma0 ( const double value ) ;
+      /// set new m1 
+      bool  setM1     ( const double value ) ;
+      /// set new m2 
+      bool  setM2     ( const double value ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -157,7 +161,7 @@ namespace Ostap
        *  @see Ostap::Math::FormFactor
        *  @see Ostap::Math::BreitWigner::Channel::gamma 
        *  @param mass the running mass
-       *  @param m0   the pole posiiton 
+       *  @param m0   the pole position 
        *  @return mass-dependent width 
        */
       std::complex<double> gamma ( const double mass , 
@@ -170,6 +174,11 @@ namespace Ostap
        */
       double formfactor ( const double mass ,  
                           const double m0   ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // unique tag
+      std::size_t tag() const ; // unique tag
       // ======================================================================
     public: // print it 
       // ======================================================================
@@ -289,6 +298,10 @@ namespace Ostap
       double integral ( const double low  ,
                         const double high ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      std::size_t tag() const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the mass
@@ -296,7 +309,7 @@ namespace Ostap
       // ======================================================================
     protected:
       ///  the channel(s) 
-      std::vector<Channel> m_channels ; // the channel(s)
+      mutable std::vector<Channel> m_channels ; // the channel(s)
       // ======================================================================
     private:
       // ======================================================================
@@ -361,7 +374,7 @@ namespace Ostap
                     const double         m2    ,
                     const unsigned short L     ,
                     const FormFactor&    F     ) ;
-      /// constrcuctor from the channel 
+      /// constructor from the channel 
       BreitWigner ( const double         m0       ,
                     const Channel&       channel ) ;
       /// copy constructor
@@ -455,7 +468,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Rho0FromEtaPrime
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
     class Rho0FromEtaPrime : public Ostap::Math::Rho0
