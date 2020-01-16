@@ -3,6 +3,12 @@
 ## New features:
 
  1. Add new method `dct_params` for `ROOT.RooFitResult`, that gets a dictionary of all parameter values 
+ 1. `plotting/canvas.py`: Add option to save the canvas congent in tar/tgz/zip-archives:
+   ```
+   canvas >> 'test.zip'
+   canvas >> 'test.tar'
+   canvas >> 'test.tgz'
+   ```
  
 ## Backward incompatible changes
 
