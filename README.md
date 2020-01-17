@@ -54,9 +54,9 @@ At lxplus/7 you can do it with several LCG  versions  (94,95). Check on which pl
     LbLogin -c x86_64-centos7-gcc8-opt
     source /cvmfs/sft.cern.ch/lcg/views/LCG_95/${CMTCONFIG}/setup.sh
 
-After setting the enviroments clone the latest released version and build Ostap package 
+After setting the enviroments clone  and build Ostap package 
 
-    git clone —-branch <latest tag> git://github.com/OstapHEP/ostap.git
+    git clone  git://github.com/OstapHEP/ostap.git
     cd ostap
     mkdir build
     cd build
