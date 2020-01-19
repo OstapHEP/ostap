@@ -17,9 +17,11 @@ __date__    = "2011-06-07"
 __all__     = (
     ) 
 # =============================================================================
+from   builtins import range 
 import ROOT
-from   ostap.core.core          import Ostap, VE, valid_pointer
-from   ostap.core.ostap_types   import string_types , integer_types  
+from   ostap.core.core          import Ostap, VE, valid_pointer, iszero
+from   ostap.core.ostap_types   import string_types , integer_types
+import ostap.math.linalg      
 import ostap.fitting.variables     
 import ostap.fitting.printable
 from   ostap.logger.colorized   import allright, attention
@@ -277,8 +279,8 @@ def _rfr_sum_ ( self , var1 , var2 , *vars ) :
     """
     allvars = ( var1 , var2 ) + vars 
     n       = len ( allvars ) 
-    s  = 0
-    c2 = 0
+    s  = 0.0
+    c2 = 0.0
     for i in range ( n ) :
         vi = allvars [ i ]
         if isinstance ( vi , str ) : vi = self.param ( vi ) [1]        
@@ -288,11 +290,11 @@ def _rfr_sum_ ( self , var1 , var2 , *vars ) :
         vc  = v.cov2() 
         if 0 >= vc or vi in self.constPars() : continue        
         c2 += vc 
-        for j in range ( i + 1 , n ) :
+        for j in range ( i ) :
             vj  = allvars [ j ]
             if isinstance ( vj , str ) : vj = self.param ( vj ) [1]
             if vj in self.constPars()  : continue        
-            c2 += 2 * self.correlation ( vi , vj ) 
+            c2 += 2 * self.covariance ( vi , vj ) 
             
     return VE ( s , c2 ) 
  
@@ -326,14 +328,14 @@ def _rfr_multiply_ ( self , var1 ,  var2 , *vars ) :
         vc  = v.cov2()
         if 0 >= vc or vi in self.constPars() : continue        
         c2 += vc / ( vv * vv )        
-        for j in range ( i + 1 , n ) :            
+        for j in range ( i  ) :            
             vj  = allvars [ j ]
             if isinstance ( vj , str ) : vj = self.param( vj )[1]
             if vj in self.constPars()  : continue        
             w   = vj . value
             w   = VE ( w ) 
             ww  = w.value() 
-            c2 += 2 * self.correlation ( vi , vj ) / ( vv * ww ) 
+            c2 += 2 * self.covariance ( vi , vj ) / ( vv * ww ) 
             
     return  VE ( m , c2 * m * m ) 
     
@@ -397,7 +399,7 @@ def _rfr_fraction_ ( self , var1 , var2 ) :
     if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]    
     _av1  = abs ( var1.value.value() ) 
     _av2  = abs ( var2.value.value() ) 
-    if _av1 > _av2 : return 1 / ( 1 + self.ratio ( var2 , var1 ) )
+    if _av1 >= _av2 : return 1 / ( 1 + self.ratio ( var2 , var1 ) )
     return 1.0 - self.fraction ( var2 , var1 ) 
 
 # ===========================================================================
@@ -421,11 +423,12 @@ def _rfr_asymmetry_ ( self , var1 , var2 ) :
     _av2 = abs ( var2.value.value() )
     _one = VE  ( 1 , 0 )
 
-    if _av1 < _av2 :
+    if _av1 <= _av2 :
         return      self.ratio ( var1 , var2 ) . asym ( _one )
     else : 
         return -1 * self.ratio ( var2 , var1 ) . asym ( _one )
-    
+
+
 # ============================================================================
 ## get the required results in form of SVectorWithError object
 #  @code
@@ -450,11 +453,31 @@ def _rfr_results_( self , *vars ) :
         _r.cov2()[_i1,_i1] = _vv.cov2() 
         for _i2 in range ( _i1 + 1 , _n ) :
             _v2  = vars[_i2]
-            _c12 = self.cov ( _v1 , _v2 )(0,1) 
+            _c12 = self.cov ( _v1 , _v2 ) 
             _r.cov2()[_i1,_i2] = _c12 
     return _r 
 
-
+# =============================================================================
+## evaluate the certain  function/expression for the fit   result
+# @code
+# func = lambda x , y , z : x*x+y*y+z*z
+# res = ... # RooFitResult object
+# val = re.evaluate ( func , ( 'x' , 'y' , 'z' ) ) 
+# @endcode
+def _rfr_evaluate_ ( self , func , args , partial = () ) :
+    """Evaluate the certain  function/expression for the fit   result
+    >>> func = lambda x , y , z : x*x+y*y+z*z
+    >>> res = ... # RooFitResult object
+    >>> val = re.evaluate ( func , ( 'x' , 'y' , 'z' ) ) 
+    """
+    res   = _rfr_results_ ( self , *args )
+    val   = res.value()
+    cov2  = res.cov2 ()
+    N     = len ( val ) 
+    from ostap.math.derivative import EvalNVEcov
+    func2 = EvalNVEcov ( func , N = N , partial = partial )
+    return func2 ( args = val , cov2 = cov2 )
+    
 # =============================================================================
 ## print <code>RooFitResult</code> as a table
 #  @code
@@ -691,6 +714,7 @@ ROOT.RooFitResult . divide          = _rfr_divide_
 ROOT.RooFitResult . ratio           = _rfr_divide_
 ROOT.RooFitResult . fraction        = _rfr_fraction_
 ROOT.RooFitResult . results         = _rfr_results_
+ROOT.RooFitResult . evaluate        = _rfr_evaluate_ 
 ROOT.RooFitResult . cov_eigenvalues = _rfr_eigenvalues_
 ROOT.RooFitResult . table            = _rfr_table_
 
@@ -720,6 +744,7 @@ _new_methods_ += [
     ROOT.RooFitResult . ratio            ,
     ROOT.RooFitResult . fraction         ,
     ROOT.RooFitResult . results          ,
+    ROOT.RooFitResult . evaluate         ,
     ROOT.RooFitResult . table            ,
     ROOT.RooFitResult . cov_eigenvalues  ,
     ROOT.RooFitResult . covmatrix        ,

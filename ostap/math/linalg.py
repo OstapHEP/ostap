@@ -20,6 +20,7 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
+from   builtins import range 
 import ROOT, cppyy 
 # =============================================================================
 # logging 

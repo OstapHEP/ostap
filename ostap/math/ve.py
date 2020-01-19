@@ -82,6 +82,7 @@ Ostap.Math.SVector3WithError = Ostap.Math.SVectorWithError(3,'double')
 Ostap.Math.SVector4WithError = Ostap.Math.SVectorWithError(4,'double')
 Ostap.Math.SVector5WithError = Ostap.Math.SVectorWithError(5,'double')
 Ostap.Math.SVector6WithError = Ostap.Math.SVectorWithError(6,'double')
+Ostap.Math.SVector7WithError = Ostap.Math.SVectorWithError(7,'double')
 Ostap.Math.SVector8WithError = Ostap.Math.SVectorWithError(8,'double')
 
 Ostap.Math.SVector2WithError  . __len__ = lambda s : 2 
@@ -89,6 +90,7 @@ Ostap.Math.SVector3WithError  . __len__ = lambda s : 3
 Ostap.Math.SVector4WithError  . __len__ = lambda s : 4 
 Ostap.Math.SVector5WithError  . __len__ = lambda s : 5 
 Ostap.Math.SVector6WithError  . __len__ = lambda s : 6 
+Ostap.Math.SVector7WithError  . __len__ = lambda s : 7 
 Ostap.Math.SVector8WithError  . __len__ = lambda s : 8 
 
 for t in ( Ostap.Math.ValueWithError         ,
@@ -100,6 +102,7 @@ for t in ( Ostap.Math.ValueWithError         ,
            Ostap.Math.SVector4WithError      ,
            Ostap.Math.SVector5WithError      ,
            Ostap.Math.SVector6WithError      ,
+           Ostap.Math.SVector7WithError      ,
            Ostap.Math.SVector8WithError      ) :
     if not hasattr ( t , '_new_str_' ) :
         t._new_str_ = t.toString

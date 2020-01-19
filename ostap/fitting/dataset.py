@@ -1457,7 +1457,7 @@ def _ds_table_0_ ( dataset        ,
     return t , w 
 
 # ==============================================================================
-## print dataset in  a form of the table
+## print dataset in a form of the table
 #  @code
 #  dataset = ...
 #  print dataset.table() 

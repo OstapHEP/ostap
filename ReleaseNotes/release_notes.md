@@ -9,7 +9,31 @@
    canvas >> 'test.tar'
    canvas >> 'test.tgz'
    ```
- 
+ 1. `ostap/fitting/toys.py`  new module with simple functions to perform `fitting toys`
+```
+pdf = ...
+results , stats = make_toys ( pdf      ,           ## PDF  to use 
+                  1000                 ,           ## number of toys 
+                  [ 'mass' ]           ,           ## varibales in dataset 
+                  { 'nEvents' : 5000 } ,           ## configuration of pdf.generate
+                  { 'ncpus'   : 2    } ,           ## configuration of pdf.fitTo
+                  { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
+                 )
+``` 
+  1. `ostap/parallel/parallel_toys.py`  a version of fnuctoion above for the 
+      parallel execution via multiprocessing and/or parallel python)
+  1. add method `evaluate` for `ROOT.RooFitResult` to evaluate the arbintrary function of 
+     fit-parameters with uncertaionties
+```
+res = ... ## ROOT.RooFitResult object
+fun = lambda x,y,z :  x*x+y*y+z*z 
+val = res.evaluate ( fun , ('x' , 'y' , 'z') ) 
+```
+  1. add `EvalNVEcov` and `EvalNVEcor` evaluators into `ostap.math.derivative` module. 
+     These objects evalaute the value of function of N-argument taking into account 
+     the uncertainties and correlations 
+
+
 ## Backward incompatible changes
 
 ## Bug fixes:  

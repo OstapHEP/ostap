@@ -45,11 +45,14 @@ __all__     = (
     'EvalVE'            , ## evaluate the function taking argument's uncertainty 
     'Eval2VE'           , ## evaluate 2-argument function with argument's uncertainties
     'EvalNVE'           , ## evaluate N-argument function with argument's uncertainties
+    'EvalNVEcov'        , ## evaluate N-argument function with argument's uncertainties
+    'EvalNVEcor'        , ## evaluate N-argument function with argument's uncertainties
     ##
-    'complex_derivative',  ## evaluiate a complex derivatibe for analytical funtion
-    'ComplexDerivative' ,  ## evaluiate a complex derivatibe for analytical funtion (as object) 
+    'complex_derivative', ## evaluiate a complex derivatibe for analytical funtion
+    'ComplexDerivative' , ## evaluiate a complex derivatibe for analytical funtion (as object) 
     ) 
 # =============================================================================
+from   builtins import range 
 import ROOT, math
 # =============================================================================
 # logging 
@@ -611,11 +614,11 @@ class EvalVE(object) :
         
 # ===================================================================================
 ## @class EvalNVE
-#  Calculate the value of scalar function of N-arguments,
-#  taking into account the argument uncertainties
+#  Calculate the value of scalar function of N (non-correlated) arguments,
+#  taking into account the argument uncertainties.
 #  @code
 #  fun2   = lambda x , y : x**2+y**2 
-#  fun2e  = EvalNVE( 2 , func )e
+#  fun2e  = EvalNVE ( 2 , func )
 #  x , y  = ...
 #  result = fun2e (  
 #  @endcode
@@ -635,9 +638,10 @@ class  EvalNVE(object) :
     def __init__ ( self , N , func , partial = () , name = '' ) :
         """
         """
-        assert is_integer ( N )  and 1 < N, 'Invalid N=%s' % N
-        assert callable   ( func ) , 'Invalid func %s/%s' % ( func , type ( func ) )
-
+        assert is_integer ( N )  and 1 < N , 'Invalid "N"=%s'       % N
+        assert callable   ( func )         , 'Invalid "func" %s/%s' % ( func , type ( func ) )
+        assert ( not partial ) or len ( partial ) == N, 'Invalid "partial"'
+        
         self.__func = func
         self.__N    = N
         
@@ -656,7 +660,6 @@ class  EvalNVE(object) :
             self.__name__ = func.__name__
         else       : self.__name__ = 'EvalNVE'
 
-
     @property 
     def func    ( self ) :
         """The original function"""
@@ -665,7 +668,11 @@ class  EvalNVE(object) :
     def partial ( self ) :
         """Get tuple of partial derivatives (functions)"""
         return self.__partial
-
+    @property
+    def N       ( self ) :
+        """N -    number of arguments"""
+        return self.__N
+    
     ## printout 
     def __str__ ( self ) : return str ( self.__name__ )
     __repr__ = __str__
@@ -678,7 +685,7 @@ class  EvalNVE(object) :
         xx = [ VE(i).value()        for i in x           ]
         gr = [ self.partial[i](*xx) for i in range ( n ) ]
         
-        return tuple ( _g ) 
+        return tuple ( gr ) 
 
     ## the main method 
     def __call__ ( self , *x ) :
@@ -707,8 +714,9 @@ class  EvalNVE(object) :
             
             cov2 += c2 * df**2 
 
-        return VE( value , cov2 ) 
+        return VE ( value , cov2 ) 
                 
+
                    
 # ===================================================================================
 ## @class Eval2VE
@@ -828,6 +836,172 @@ class Eval2VE(EvalNVE) :
             
         return VE ( val , cov2 )
     
+# =============================================================================
+
+
+# =============================================================================
+# @class EvalNVEcov
+# Calcualte the value of the scalar function of N (scalar) arguments
+# with the given covariance matrix
+# @code
+# fun2   = lambda x , y : ...
+# fun2e  = EvalNVEcov ( fun2 , 2 )
+# cov2   = ... # covariance matrix:
+# result = fun2e ( (1,5) , cov2 ) ##   
+# @endcode 
+class EvalNVEcov(EvalNVE) :
+    """Calcualte the value of the scalar function of N (scalar) arguments 
+    with the given NxN covariance matrix
+    
+    >>> fun2   = lambda x , y : ...
+    >>> fun2e  = EvalNVEcov ( fun2 , 2 )
+    >>> cov2   = ... # 2x2 symmetric covariance matrix
+    >>> result = fun2e ( (1,5) , cov2 ) ##   
+
+    """
+    def __init__ ( self , func , N , partial = () , name = '' , cov2getter = None ) :
+        
+        EvalNVE.__init__ ( self , func = func , N = N , partial = partial , name = name  )
+        if cov2getter is None :
+            from ostap.math.linalg import  matrix as get_cov2
+            cov2getter = get_cov2 
+        self.__cov2 = cov2getter 
+
+    def __call__ ( self , args , cov2 = None ) :
+        """Calcualte the value of the scalar function of N (scalar) arguments 
+        with the given NxN covariance matrix
+        
+        >>> fun2   = lambda x , y : ...
+        >>> fun2e  = EvalNVEcov ( fun2 , 2 )
+        >>> cov2   = ... # 2x2 symmetric covariance matrix
+        >>> result = fun2e ( (1,5) , cov2 ) ##   
+        
+        """
+        
+        n = self.N 
+        assert len ( args ) == n , 'Invalid argument size'
+
+        ## get value of the function 
+        val = float ( self.func ( *args ) ) 
+        
+        ## no covariance matrix is specified ?
+        if not cov2 : return val
+        
+        c2 = 0
+        g  = n * [ 0 ] ## gradient 
+        
+        for i in range ( n ) :
+
+            di    = self.partial[i] ( *args )
+            if iszero ( di ) : continue
+            
+            g [i] = di  
+
+            cii   = self.__cov2 ( cov2 , i , i )
+            c2   += di * di * cii
+            
+            for j in range ( i ) : 
+
+                dj   = g [ j ]
+                if iszero ( dj ) : continue
+                
+                cij  =     self.__cov2 ( cov2 , i , j ) 
+                c2  += 2 * di * dj * cij 
+
+        return VE ( val , c2 ) 
+
+
+# =============================================================================
+# @class EvalNVEcor
+# Calcualte the value of the scalar function of N arguments
+# with uncrtainties and correlations 
+# @code
+# fun2   = lambda x , y : ...
+# fun2e  = EvalNVEcor ( fun2 , 2 )
+# cor    = ... # correlation matrix
+# x      = ... # 
+# y      = ... 
+# result = fun2e ( ( x,y) , cor ) ##   
+# @endcode 
+class EvalNVEcor(EvalNVEcov) :
+    """Calcualte the value of the scalar function of N arguments
+    with uncertainties and correlations 
+    
+    >>> fun2   = lambda x , y : ...
+    >>> fun2e  = EvalNVEcor ( fun2 , 2 )
+    >>> cor    = ... # 2x2 symmetric correlation matrix
+    >>> x      = ...
+    >>> y      = ...    
+    >>> result = fun2e ( (x,y) , cor ) ##   
+
+    """
+    def __init__ ( self , func , N , partial = () , name = '' , corrgetter = None  ) :
+        
+        EvalNVEcov.__init__ ( self , func =  func , N = N , partial = partial , name = name  , cov2getter = corrgetter )
+        if corrgetter is None :
+            from ostap.math.linalg import matrix as get_corr
+            corrgetter = get_corr 
+        self.__corr = corrgetter 
+
+    def __call__ ( self , args , cor = None ) :
+        """Calcualte the value of the scalar function of N arguments
+        with uncertainties and correlations 
+        
+        >>> fun2   = lambda x , y : ...
+        >>> fun2e  = EvalNVEcor ( fun2 , 2 )
+        >>> cor    = ... # 2x2 symmetric correlation matrix
+        >>> x      = ...
+        >>> y      = ...    
+        >>> result = fun2e ( (x,y) , cor ) ##           
+        """
+        n = self.N 
+        assert len ( args ) == n , 'Invalid argument size'
+
+        ## get value of the function 
+        val = self.func ( *args )
+        
+        c2  = 0
+        
+        x   = n * [ 0 ]  ## argument 
+        g   = n * [ 0 ]  ## gradient 
+        
+        for i in range ( n ) :
+
+            xi    = VE ( args[i] )
+            x [i] = x 
+            
+            ci    = xi.cov2()
+            if ci < 0  or iszero ( ci ) : continue
+            
+            di    = self.partial[i] ( *args )
+            if iszero ( di )            : continue
+            
+            ei    = xi.error() 
+
+            g [i] = di  
+            e [i] = ei
+            
+            ## diagonal correlation coefficients are assumed to be 1 and ignored! 
+            c2   += ci * di * di
+            
+            for j in range ( i ) : 
+
+                xj   = x  [ j ]
+                cj   = xj.cov2 () 
+                if cj < 0  or iszero ( cj ) : continue
+                dj   = d  [ j ]
+                if iszero ( dj )            : continue                
+                ej   = e  [ j ]
+
+                rij  =  self.__corr ( cor , i , j ) if cor else 0 
+                assert -1 <= rij <= 1 or isequal ( abs ( rij ) , 1 ) ,\
+                       'Invalid correlaation coefficient (%d,%d)=%s ' % ( i , j , rij )
+                
+                c2  += 2.0 * di * dj * rij * ei * ej 
+                
+        return VE ( val , c2 ) 
+
+
 # =============================================================================
 ## Calcualte the  derivative from analytical function \f$ \frac{{\mathrm{d}} f }{{\mathrm{d}} z }\f$.
 #  The function is assumed to be analytical (Cauchy-Riemann conditions are valid).
@@ -1032,7 +1206,8 @@ if '__main__' == __name__ :
             logger.info ( '  eval2_1(x,y,%+2d)=%-17s eval2_3(x,y,%+2d)=%-17s ' % ( c , eval2_1 ( x, y ) ,
                                                                                    c , eval2_2 ( x, y ) ) ) 
     logger.info ( 80*'*' ) 
-    
+
+
 # =============================================================================
 # The END 
 # =============================================================================
