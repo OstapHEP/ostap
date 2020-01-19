@@ -21,7 +21,7 @@
  *  @see http://en.wikipedia.org/wiki/Bernstein_polynomial
  *  @see  Rida Farouki, ``The Bernstein polynomial basis: A centennial retrospective'', 
  *        Computer Aided Geometric Design, 29 (2012) 379. 
- *  @see http://dx.doi.org/10.1016/j.cagd.2012.03.001
+ *  @see https://doi.org/10.1016/j.cagd.2012.03.001
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */

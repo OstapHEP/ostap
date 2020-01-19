@@ -1305,7 +1305,7 @@ models.append ( SkewGauss_pdf )
 #  - for rho_{l,r}=0 left/right tails are exponential.
 #  - for large asymmetry parameter function has weird shape
 #
-#  @see http://dx.doi.org/10.1007/JHEP06(2012)141     
+#  @see https://doi.org/10.1007/JHEP06(2012)141     
 #  @see Ostap::Math::Bukin
 #  @see Analusis::Models::Bukin
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
@@ -1316,7 +1316,7 @@ class Bukin_pdf(MASS) :
     - exponential (optionally gaussian) asymmetrical tails
     see http://journals.aps.org/prd/abstract/10.1103/PhysRevD.84.112007
     see http://arxiv.org/abs/1107.5751
-    see http://dx.doi.org/10.1007/JHEP06(2012)141     
+    see https://doi.org/10.1007/JHEP06(2012)141     
     Here small reparameterization is applied to achieve more stable fits.
     
     It is very well suitable to describe high statistic charm meson peaks,
@@ -2637,7 +2637,7 @@ models.append ( Voigt_pdf )
 #       "Extended pseudo-Voigt function for approximating the Voigt profile"
 #       J. Appl. Cryst. (2000). 33, 1311-1316
 #  @see doi:10.1107/S0021889800010219
-#  @see http://dx.doi.org/10.1107/S0021889800010219
+#  @see https://doi.org/10.1107/S0021889800010219
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-06-15
 class PseudoVoigt_pdf(Voigt_pdf) :
@@ -2649,7 +2649,7 @@ class PseudoVoigt_pdf(Voigt_pdf) :
     ``Extended pseudo-Voigt function for approximating the Voigt profile''
     J. Appl. Cryst. (2000). 33, 1311-1316
     - see doi:10.1107/S0021889800010219
-    - see http://dx.doi.org/10.1107/S0021889800010219
+    - see https://doi.org/10.1107/S0021889800010219
     
     Parameters
     - mean  : location 
@@ -3467,7 +3467,7 @@ models.append ( LASS_pdf )
 # =============================================================================
 ## @class Bugg_pdf
 #  The parameterization of sigma pole by B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
-#  @see http://dx.doi.org/10.1103/PhysRevD.48.R3948
+#  @see https://doi.org/10.1103/PhysRevD.48.R3948
 #  @see Ostap::Models::Bugg
 #  @see Ostap::Math::Bugg
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3475,7 +3475,7 @@ models.append ( LASS_pdf )
 class Bugg_pdf(MASS) :
     """ The parameterization of sigma pole by
     B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
-    http://dx.doi.org/10.1103/PhysRevD.48.R3948
+    https://doi.org/10.1103/PhysRevD.48.R3948
     """
     def __init__ ( self           ,
                    name           ,
