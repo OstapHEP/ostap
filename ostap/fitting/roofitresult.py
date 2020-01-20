@@ -250,6 +250,8 @@ def _rfr_max_cor_ ( self , v ) :
     pars = self.floatParsFinal()
     assert v in pars, 'Unknown variable %s' % v
 
+    if 1 == len ( pars ) : return 0 , '' 
+    
     rmax = None
     pmax = None 
     for p in pars :
@@ -553,6 +555,10 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
             row =              row [ 0 ]   , row [ 1 ] , '   ' + allright  ( row [ 2 ] ) , ''
         rows.append ( row )
 
+    nbadnll = r.numInvalidNLL()
+    if 0 < nbadnll :
+        rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
+
     rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation') ] + rows
 
     pars_all   = r.params ( float_only = False )
@@ -586,8 +592,11 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         else : n = '' 
 
         mxr , mxv = r.max_cor    ( p )
-        gc        = r.globalCorr ( p ) 
-        row = p , n , s , '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
+        gc        = r.globalCorr ( p )
+        cc        = '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
+        if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
+            
+        row = p , n , s , cc
         frows.append ( row ) 
 
     crows.sort()
