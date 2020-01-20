@@ -32,15 +32,24 @@ val = res.evaluate ( fun , ('x' , 'y' , 'z') )
   1. add `EvalNVEcov` and `EvalNVEcor` evaluators into `ostap.math.derivative` module. 
      These objects evalaute the value of function of N-argument taking into account 
      the uncertainties and correlations 
-
+  1. add method  `max_cor` to `ROOT.RooFitResult` to obtain the maximal correlation coefficient
+```
+res = ...  ## ROOT.RooFitResult
+coefficient , variable = res.max_cor ( 'X' ) ## get the maximal correlation
+```
+  1. add the column `Global/max correlation` for the table form of `ROOT.RooFitResult`
+  1. add `ncpus` argument to `ostap.parallel.parallel_toys.parallel_toys`
 
 ## Backward incompatible changes
 
 ## Bug fixes:  
 
   1. Minor fix in `Files.hadd` 
-
-
+  1. Couple of minor fixes in 
+      - `ROOT.RooFitResult.sum`
+      - `ROOT.RooFitResult.multiply`
+  1. Couple of minor fixes in `ostap.math.derivative`
+  
 # v1.4.5.0
 
 ## New features:

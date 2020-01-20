@@ -109,7 +109,7 @@ class WorkManager ( object ) :
         local_host = socket.getfqdn ().lower()  
  
         from ostap.core.ostap_types    import string_types 
-        if isinstance ( ppservers , string_types ) and ppservers.lower() in ( 'config' , 'auto' ) : 
+        if isinstance ( ppservers , string_types ) and ppservers.lower() in ( 'config' , 'auto' , '*' ) : 
             from ostap.parallel.utils import get_ppservers
             ppservers = get_ppservers ( local_host )
 

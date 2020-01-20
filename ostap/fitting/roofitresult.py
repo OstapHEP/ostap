@@ -19,7 +19,7 @@ __all__     = (
 # =============================================================================
 from   builtins import range 
 import ROOT
-from   ostap.core.core          import Ostap, VE, valid_pointer, iszero
+from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 import ostap.math.linalg      
 import ostap.fitting.variables     
@@ -32,18 +32,6 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roofitresult' )
 else                       : logger = getLogger ( __name__                     )
 # =============================================================================        
 _new_methods_ = []
-
-# =============================================================================
-## ``easy'' print of RooFitResult
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _rfr_print_ ( self , opts = 'v' ) :
-    """Easy print of RooFitResult
-    >>> result = ...
-    >>> print result    
-    """
-    if not valid_pointer ( self ) : return 'Invalid RooFitResult'
-    return self.print_multiline ( content = 1 , verbose = True )
 
 # =============================================================================
 ## get parameters from RooFitResult
@@ -244,6 +232,39 @@ def _rfr_cov_  ( self , var1 , var2 ) :
     # 
     return v1 * v2 * r 
 
+# ===============================================================================
+## find a maximal correlation coefficient for the given variable
+#  @code
+#  result = ...
+#  coefficient , variable = result.max_cor ( 'x' ) 
+#  @endcode
+def _rfr_max_cor_ ( self , v ) :
+    """ Find a maximal correlation coefficient for the given variable
+    >>> result = ...
+    >>> coefficient , variable = result.max_cor ( 'x' ) 
+    """
+    
+    if isinstance ( v ,  str ) : v = self.param ( v )[1]
+    if v in self.constPars() : return 0 , ''
+    
+    pars = self.floatParsFinal()
+    assert v in pars, 'Unknown variable %s' % v
+
+    rmax = None
+    pmax = None 
+    for p in pars :
+        if v is p : continue
+        r =  self.correlation ( v , p )
+        assert -1 <= r <= 1 or isequal ( abs ( r ) , 1 ) ,\
+               'Invalid correlation coefficient for (%s,%s):%s' % ( v.name , p.name , r )
+        
+        if ( rmax is None ) or ( pmax is None ) or abs ( r ) > abs ( rmax ) :
+            rmax = r
+            pmax = p.name
+            
+    return rmax , pmax 
+
+    
 # ===============================================================================
 ## get fit-parameter as attribute
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -493,20 +514,20 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     from  ostap.fitting.utils    import fit_status, cov_qual
     rows = [] 
     if r.status() :
-        row = attention ( ' Status' )  , '' , attention ( fit_status ( r.status() ) )
+        row = attention ( ' Status' )  , '' , attention ( fit_status ( r.status() ) ) , '' 
         rows.append ( row )
         
     s , n = pretty_float ( r.minNll() )
     if n : n = '[10^%+d]' % n
     else : n = '' 
 
-    rows.append ( ( "Minimized FCN/NLL value"    , n , '  ' + s ) )
+    rows.append ( ( "Minimized FCN/NLL value"    , n , '  ' + s , '' ) )
 
     s , n = pretty_float ( r.edm () )
     if n : n = '[10^%+d]' % n
     else : n = '' 
     
-    rows.append ( ( 'Estimated distance to minimum' , n , '  ' + s ) )
+    rows.append ( ( 'Estimated distance to minimum' , n , '  ' + s , '' ) )
     
     cq = r.covQual()
     cn = '' 
@@ -519,7 +540,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     else :
         cn = cov_qual  ( cq ) 
         
-    rows.append ( ( 'Covariance matrix quality'     , '' , '  ' + cn ) )
+    rows.append ( ( 'Covariance matrix quality'     , '' , '  ' + cn , '' ) )
     
 
     for i in  range ( r.numStatusHistory() ) :
@@ -527,12 +548,12 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         code  =  r.statusCodeHistory  ( i )
         row   =  'Status: %s '% label   , '' ,             '%d' % code             
         if not code in ( 0 , -1 ) :
-            row = attention  ( row [ 0 ] ) , row [ 1 ] , '   ' + attention ( row [ 2 ] )
+            row = attention  ( row [ 0 ] ) , row [ 1 ] , '   ' + attention ( row [ 2 ] ) , '' 
         else    :
-            row =              row [ 0 ]   , row [ 1 ] , '   ' + allright  ( row [ 2 ] )
+            row =              row [ 0 ]   , row [ 1 ] , '   ' + allright  ( row [ 2 ] ) , ''
         rows.append ( row )
 
-    rows = [ ( '', 'Unit', 'Value' ) ] + rows
+    rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation') ] + rows
 
     pars_all   = r.params ( float_only = False )
     pars_float = r.params ( float_only = True  )
@@ -548,7 +569,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
-        row = p , n , '  ' + s 
+        row = p , n , '  ' + s , ''  
         crows.append ( row ) 
 
     ## floating parameters 
@@ -564,7 +585,9 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         if n : n = '[10^%+d]' % n
         else : n = '' 
 
-        row = p , n , s 
+        mxr , mxv = r.max_cor    ( p )
+        gc        = r.globalCorr ( p ) 
+        row = p , n , s , '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
         frows.append ( row ) 
 
     crows.sort()
@@ -577,6 +600,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     all = T.align_column ( all , 0 , 'left' )
     all = T.align_column ( all , 1 , 'left' )
     all = T.align_column ( all , 2 , 'left' )
+    all = T.align_column ( all , 3 , 'left' )
 
     for l in range ( len ( rows ) , len ( all ) ) :
         line = all [ l ]
@@ -588,6 +612,36 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         return T.table ( all , title = title         , prefix = prefix )
     else     :
         return T.table ( all , title = r.GetTitle()  , prefix = prefix )
+
+
+
+# =============================================================================
+## ``easy'' print of RooFitResult
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _rfr_print_ ( self , opts = 'v' ) :
+    """Easy print of RooFitResult
+    >>> result = ...
+    >>> print result    
+    """
+    if not valid_pointer ( self ) : return 'Invalid RooFitResult'
+
+    ## 1. try to use table print 
+    table = _rfr_table_ ( self )
+    lmax  = -1
+    from ostap.utils.basic      import terminal_size 
+    _ , width = terminal_size()
+    
+    from ostap.logger.colorized import decolorize 
+    for row in table :
+        lmax = max ( lmax , len ( decolorize ( row ) ) )
+        if width < lmax : break
+
+    ## if the table is narrow enough, print it 
+    if 10 < lmax and lmax < width : return table 
+
+    ## otherwise use natibe RooFit print 
+    return self.print_multiline ( content = 1 , verbose = True )
 
 
 # =============================================================================
@@ -699,6 +753,8 @@ ROOT.RooFitResult . param           = _rfr_param_
 ROOT.RooFitResult . parameter       = _rfr_param_
 ROOT.RooFitResult . corr            = _rfr_corr_
 ROOT.RooFitResult . cor             = _rfr_corr_
+ROOT.RooFitResult . max_cor         = _rfr_max_cor_
+ROOT.RooFitResult . max_corr        = _rfr_max_cor_
 ROOT.RooFitResult . cov             = _rfr_cov_
 ROOT.RooFitResult . covariance      = _rfr_cov_
 ROOT.RooFitResult . cov_matrix      = _rfr_cov_matrix_
@@ -731,6 +787,8 @@ _new_methods_ += [
     ROOT.RooFitResult . parameter        ,
     ROOT.RooFitResult . corr             ,
     ROOT.RooFitResult . cor              ,
+    ROOT.RooFitResult . max_cor          ,
+    ROOT.RooFitResult . max_corr         ,
     ROOT.RooFitResult . cov              ,
     ROOT.RooFitResult . covariance       ,
     ROOT.RooFitResult . parValue         ,
