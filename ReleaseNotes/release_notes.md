@@ -1,5 +1,7 @@
 
 
+# v1.4.6.0
+
 ## New features:
 
  1. Add new method `dct_params` for `ROOT.RooFitResult`, that gets a dictionary of all parameter values 
