@@ -11,7 +11,7 @@
    canvas >> 'test.tar'
    canvas >> 'test.tgz'
    ```
- 1. `ostap/fitting/toys.py`  new module with simple functions to perform `fitting toys`
+ 1. `ostap/fitting/toys.py`  new module with simple functions to perform fitting toys
 ```
 pdf = ...
 results , stats = make_toys ( pdf      ,           ## PDF  to use 
@@ -22,8 +22,8 @@ results , stats = make_toys ( pdf      ,           ## PDF  to use
                   { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
                  )
 ``` 
-  1. `ostap/parallel/parallel_toys.py`  a version of fnuctoion above for the 
-      parallel execution via multiprocessing and/or parallel python)
+  1. `ostap/parallel/parallel_toys.py`  a version of the function above for the 
+      parallel execution via multiprocessing and/or parallel python
   1. add method `evaluate` for `ROOT.RooFitResult` to evaluate the arbintrary function of 
      fit-parameters with uncertaionties
 ```
@@ -32,8 +32,8 @@ fun = lambda x,y,z :  x*x+y*y+z*z
 val = res.evaluate ( fun , ('x' , 'y' , 'z') ) 
 ```
   1. add `EvalNVEcov` and `EvalNVEcor` evaluators into `ostap.math.derivative` module. 
-     These objects evalaute the value of function of N-argument taking into account 
-     the uncertainties and correlations 
+     These objects evaluate the value of N-argument function taking into account 
+     the uncertainties and/or correlations 
   1. add method  `max_cor` to `ROOT.RooFitResult` to obtain the maximal correlation coefficient
 ```
 res = ...  ## ROOT.RooFitResult
