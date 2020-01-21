@@ -400,7 +400,7 @@ namespace Ostap
      *  where \f$ R_D(x,y,z)\f$ is a symmetric Carlson form 
      *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
      *                Numerical Algorithms, 10, 1995,  13
-     *  @see http://dx.doi.org/10.1007/BF02198293
+     *  @see https://doi.org/10.1007/BF02198293
      *  @see https://arxiv.org/abs/math/9409227
      */
     double elliptic_KmE ( const double k   ) ;    
@@ -420,7 +420,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
      *                Numerical Algorithms, 10, 1995,  13
-     *  @see http://dx.doi.org/10.1007/BF02198293
+     *  @see https://doi.org/10.1007/BF02198293
      *  @see https://arxiv.org/abs/math/9409227
      */
     double elliptic_KZ ( const double beta  , const double k   ) ;

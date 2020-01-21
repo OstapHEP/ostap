@@ -1833,7 +1833,7 @@ namespace Ostap
     /** @class Bukin
      *  "Bukin"-function, aka "Modified Novosibirsk function"
      *  @see http://arxiv.org/abs/1107.5751
-     *  @see http://dx.doi.org/10.1007/JHEP06(2012)141
+     *  @see https://doi.org/10.1007/JHEP06(2012)141
      *  @see Ostap::Math::Bukin
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-12-05

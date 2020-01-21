@@ -1498,7 +1498,7 @@ namespace Ostap
      *  Boehm's algorithm is used 
      *  @see W.Boehm, ``Inserting new knots into B-spline curves'',
      *       Computer-Aided Design, 12, no.4, (1980) 199 
-     *  @see http://dx.doi.org/10.1016/0010-4485(80)90154-2
+     *  @see https://doi.org/10.1016/0010-4485(80)90154-2
      *  @see http://www.sciencedirect.com/science/article/pii/0010448580901542
      *  @param x     (INPUT)  position of new knot 
      *  @param knots (UPDATE) vector of knots 

@@ -2310,7 +2310,7 @@ double Ostap::Math::Voigt::fwhm   () const
 // "Extended pseudo-Voigt function for approximating the Voigt profile"
 // J. Appl. Cryst. (2000). 33, 1311-1316
 // doi:10.1107/S0021889800010219
-// http://dx.doi.org/10.1107/S0021889800010219
+// https://doi.org/10.1107/S0021889800010219
 // ============================================================================
 // constructor  from all parameters
 // ============================================================================

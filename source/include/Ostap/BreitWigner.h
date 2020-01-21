@@ -893,7 +893,7 @@ namespace Ostap
      *       "Extended pseudo-Voigt function for approximating the Voigt profile"
      *       J. Appl. Cryst. (2000). 33, 1311-1316
      *  @see doi:10.1107/S0021889800010219
-     *  @see http://dx.doi.org/10.1107/S0021889800010219
+     *  @see https://doi.org/10.1107/S0021889800010219
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-06-13
      */

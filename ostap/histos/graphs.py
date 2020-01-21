@@ -2632,7 +2632,7 @@ ROOT.TMultiGraph.T         = _grae_transpose_
 #  >>> spline = histo.(p,i,d)spline( .... )
 #  >>> graph  = histo.lw_graph ( spline[2] ) 
 #  @endcode 
-#  @see http://dx.doi.org/10.1016/0168-9002(94)01112-5
+#  @see https://doi.org/10.1016/0168-9002(94)01112-5
 #  @author  Vanya BELYAEV  Ivan.Belyaev@itep.ru
 #  @date    2014-12-08
 def _lw_graph_ ( histo , func ) :
@@ -2744,7 +2744,7 @@ ROOT.TH1F.lw_graph = _lw_graph_
 #  >>> spline = histo.(p,i,d)spline( .... )
 #  >>> graph  = lw_graph ( histo ,  spline[2] ) 
 #  @endcode 
-#  @see http://dx.doi.org/10.1016/0168-9002(94)01112-5
+#  @see https://doi.org/10.1016/0168-9002(94)01112-5
 #  @author  Vanya BELYAEV  Ivan.Belyaev@itep.ru
 #  @date    2014-12-08
 def lw_graph ( histo , func ) :

@@ -562,7 +562,7 @@ namespace Ostap
      *  for description of asymmetric peaks with the exponential tails
      *
      *  @see http://arxiv.org/abs/1107.5751
-     *  @see http://dx.doi.org/10.1007/JHEP06(2012)141
+     *  @see https://doi.org/10.1007/JHEP06(2012)141
      *  @date 2011-04-19
      */
     class  Bukin 
