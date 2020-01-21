@@ -64,7 +64,6 @@ def color_rgba ( c ) :
     """
     return c.GetRed() , c.GetGreen() , c.GetBlue(), c.GetAlpha() 
 
-
 # =============================================================================
 ## get HLS for the color
 #  @code
@@ -85,9 +84,29 @@ def color_hls ( c ) :
     return c.GetHue() , c.GetLight() , c.GetSaturation()
 
 
-ROOT.TColor.rgb  = color_rgb
-ROOT.TColor.rgba = color_rgba
-ROOT.TColor.hls  = color_hls
+ROOT.TColor.rgb       = color_rgb
+ROOT.TColor.rgba      = color_rgba
+ROOT.TColor.hls       = color_hls
+
+# =============================================================================
+# gefine the color for latex <code>xcolor</code>
+def color_rgb_latex ( c , name ) :
+    """Define the color for latex <code>xcolor</code>
+    """
+    r , g , b = c.rgb() 
+    return "\\definecolor{%s}[rgb]{%5.3f,%5.3f.%5.3f}" % ( name , r , g , b )
+
+# =============================================================================
+# gefine the color for latex <code>xcolor</code>
+def color_hls_latex ( c , name ) :
+    """Define the color for latex <code>xcolor</code>
+    """
+    h , l , s = c.hls() 
+    return "\\definecolor{%s}[hls]{%d,%5.3f.%5.3f}" % ( name , int ( h )  , l , s )
+
+
+ROOT.TColor.rgb_latex = color_rgb_latex
+ROOT.TColor.hls_latex = color_hls_latex
 
 # =============================================================================
 _decorated_classes_  = (
@@ -95,9 +114,11 @@ _decorated_classes_  = (
     )
 
 _new_methods_        = (
-    ROOT.TColor.rgb  , 
-    ROOT.TColor.rgba , 
-    ROOT.TColor.hls  , 
+    ROOT.TColor.rgb       , 
+    ROOT.TColor.rgba      , 
+    ROOT.TColor.hls       , 
+    ROOT.TColor.rgb_latex , 
+    ROOT.TColor.hls_latex , 
     )
 # =============================================================================
 if '__main__' == __name__ :
