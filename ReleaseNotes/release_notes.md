@@ -1,5 +1,14 @@
+## New features:
+  1. Slight improvements in `ostap.fittig.minuit`
+  1. add new test for `ROOT.TMiniut` decorations :  `test_fitting_minuit`
 
+## Backward incompatible changes
 
+## Bug fixes:  
+
+  1. Tiny fix in `ROOT.TMinuit.cor`
+  1. Tiny fix in `ROOT.TMinuit.cov`
+ 
 # v1.4.6.0
 
 ## New features:
