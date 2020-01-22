@@ -133,6 +133,17 @@ The  variable is called *trivial* if
  - it directly refers to the scalar item in `ROOT.TTree`
  - `accessor` function for `Variable` class is a valid `TTreeFormula/RooFormulaVar` expression
 
+```python
+## the list of trivial variables 
+variables = [  
+    'mfit_Lbs_cc'                   ,
+    'pt23'                          ,
+    Variable ( 'tmva_3_Lb_BDTG_response' , '' , -0.5 , 0.5 ) ,
+    ( 'm12cc', '', 0,      7 ),
+    Variable ( 'aaa' , '' , -0.5 , 0.5 , 'a*b/c+sin(d) )' ) 
+    ]
+```
+
 If all variables are  *trivial* and not global python cuts are defined,  very agressive optimization is applied, that, in particular, can include the intermediate 
 operations with `ROOT.RDataFrame.Define`, `ROOT.RDataFrame.Filter` and `ROOT.RDataFrame.Snapshot`.
 
