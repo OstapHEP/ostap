@@ -15,7 +15,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
-import ROOT
+import ROOT, ctypes 
+from   sys                    import version_info as python_version
 from   ostap.core.core        import cpp, VE
 from   ostap.core.ostap_types import integer_types, string_types 
 # =============================================================================
@@ -79,21 +80,24 @@ def _mn_iter_ ( self ) :
 ROOT.TMinuit . __iter__ = _mn_iter_
 
 # =============================================================================
+## Simple wrapper for <code>ROOT.TMinuit.mnexcm</code> function
+## @see TMinuit::mnexcm
 ## excute MINUIT command
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-04-01
 def _mn_exec_ ( self , command , *args ) :
     """Execute MINUIT  command
+    Simple wrapper for ROOT.TMinuit.mnexcm function
+    - see ROOT.TMinuit.mnexcm    
     """
-    if not args :
-        args = 0, 
-        ## logger.warning ( 'TMinuit::execute: empty vector replaced with  %s ' % args ) 
-
+    if not  args : args = 0 ,
+    
     from array import array
     arglist = array ( 'd' , [ i for i in args ]  )
-    ierr    = ROOT.Long   ( 0 )
-    #        
-    self.mnexcm ( command , arglist , len(arglist) , ierr )
+    #
+    ierr = ctypes.c_int ( 0 ) if 3 <= python_version.major else ROOT.Long ( 0 )  
+    ##
+    self.mnexcm ( command , arglist , len ( arglist ) , ierr )
     #
     return ierr
 
@@ -229,8 +233,10 @@ def _mn_add_par_ ( self    , name      ,
     starts  = array ( 'd' , 1 * [ start ] )
     steps   = array ( 'd' , 1 * [ step  ] )
     #
-    ipar    = len ( self ) 
-    ierr    = ROOT.Long   ( 0 )
+    ipar    = len         ( self )
+    ##
+    ierr = ctypes.c_int ( 0 ) if 3 <= python_version.major else ROOT.Long ( 0 ) 
+    ##
     self.mnparm ( ipar , name ,  start , step , low , high , ierr )
     #
     return ierr 
