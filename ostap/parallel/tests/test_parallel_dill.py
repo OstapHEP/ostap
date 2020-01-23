@@ -49,13 +49,13 @@ def test_dill () :
     try : 
         p = pickle.dumps  ( h )
         logger.info  ("Histogram is successfully serialized using pickle!")
-    except PickleError :
+    except :
         logger.error ("Histogram cannot be serialized using pickle!")
         
     try : 
         d = dill  .dumps  ( h ) 
         logger.info  ("Histogram is successfully serialized using dill!")
-    except PickleError :
+    except :
         logger.error ("Histogram cannot be serialized using dill!")
 
 
