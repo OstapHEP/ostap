@@ -12,7 +12,8 @@
 
   1. Tiny fix in `ROOT.TMinuit.cor`
   1. Tiny fix in `ROOT.TMinuit.cov`
- 
+  1. more fixes in `ostap/fitting/minuit.py`
+
 # v1.4.6.0
 
 ## New features:

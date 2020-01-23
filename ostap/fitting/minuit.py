@@ -28,7 +28,7 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for (T)Minuit functions')
 # =============================================================================
-partypes = integer_types + (ROOT.Long,)
+partypes = integer_types
 # =============================================================================
 ## get the parameter from Minuit 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -43,11 +43,16 @@ def _mn_par_ ( self , i ) :
     """
     if not i in self : raise IndexError
     #
-    ip  = ROOT.Long   ( i )
-    val = ROOT.Double ( 0 )
-    err = ROOT.Double ( 0 )
+    ## val = ROOT.Double ( 0 )
+    ## err = ROOT.Double ( 0 )
+    ##
+    val = ctypes.c_double ( 0 )  
+    err = ctypes.c_double ( 0 ) 
     #
-    res = self.GetParameter ( ip , val , err )
+    res = self.GetParameter ( i , val , err )
+    #
+    val = float ( val.value )
+    err = float ( err.value )
     #
     return VE ( val , err*err )
 
@@ -95,11 +100,11 @@ def _mn_exec_ ( self , command , *args ) :
     from array import array
     arglist = array ( 'd' , [ i for i in args ]  )
     #
-    ierr = ctypes.c_int ( 0 ) if 3 <= python_version.major else ROOT.Long ( 0 )  
+    ierr = ctypes.c_int ( 0 ) 
     ##
     self.mnexcm ( command , arglist , len ( arglist ) , ierr )
     #
-    return ierr
+    return int ( ierr.value )
 
 _mn_exec_ . __doc__  += '\n' + ROOT.TMinuit.mnexcm . __doc__
 
@@ -129,12 +134,11 @@ def _mn_set_par_ ( self , i , val , fix = False ) :
     """
     if not i in self : raise IndexError
     #
-    ip = ROOT.Long ( i )
     if hasattr ( val , 'value' ) : val = val.value()
     #
     ierr =  _mn_exec_ ( self , "SET PAR" , i + 1 , val )
     #
-    if fix : self.FixParameter ( ROOT.Long ( ip ) ) 
+    if fix : self.FixParameter ( i ) 
     #
     return ierr 
 
@@ -235,11 +239,11 @@ def _mn_add_par_ ( self    , name      ,
     #
     ipar    = len         ( self )
     ##
-    ierr = ctypes.c_int ( 0 ) if 3 <= python_version.major else ROOT.Long ( 0 ) 
+    ierr = ctypes.c_int ( 0 ) 
     ##
     self.mnparm ( ipar , name ,  start , step , low , high , ierr )
     #
-    return ierr 
+    return int ( ierr.value )
 
 ROOT.TMinuit . addpar = _mn_add_par_
 ROOT.TMinuit . addPar = _mn_add_par_
@@ -325,21 +329,26 @@ def _mn_stat_  ( self ) :
     *
     
     """
-    fmin    = ROOT.Double ( )
-    fedm    = ROOT.Double ( )
-    errdef  = ROOT.Double ( )
-    npari   = ROOT.Long   (1)
-    nparx   = ROOT.Long   (2)
-    istat   = ROOT.Long   (0)
+    # fmin    = ROOT.Double ( )
+    # fedm    = ROOT.Double ( )
+    # errdef  = ROOT.Double ( )
+    
+    fmin    = ctypes.c_double () 
+    fedm    = ctypes.c_double ()
+    errdef  = ctypes.c_double () 
+    
+    npari   = ctypes.c_int ( 1 )
+    nparx   = ctypes.c_int ( 2 )
+    istat   = ctypes.c_int ( 0 )
     #
     self . mnstat( fmin, fedm, errdef, npari , nparx , istat )
     #
-    return { 'FMIN'   : float( fmin   ) ,
-             'FEDM'   : float( fmin   ) ,
-             'ERRDEF' : float( errdef ) ,
-             'NPARI'  : int  ( npari  ) ,
-             'NPARX'  : int  ( nparx  ) ,
-             'ISTAT'  : int  ( nparx  ) } 
+    return { 'FMIN'   : float( fmin   . value ) ,
+             'FEDM'   : float( fmin   . value ) ,
+             'ERRDEF' : float( errdef . value ) ,
+             'NPARI'  : int  ( npari  . value ) ,
+             'NPARX'  : int  ( nparx  . value ) ,
+             'ISTAT'  : int  ( istat  . value ) } 
 
 _mn_stat_ . __doc__  += '\n' + ROOT.TMinuit.mnstat . __doc__
 
