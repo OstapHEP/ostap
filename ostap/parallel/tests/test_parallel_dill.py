@@ -37,12 +37,15 @@ except ImportError :
 def test_dill () :
 
     h = ROOT.TH1D()
-
-    logger.info ( "Python/dill/ROOT version: %s;%s;%s" % ( ( sys.version_info.major,
-                                                             sys.version_info.minor  ,
-                                                             sys.version_info.micro ) ,  
-                                                           dill.__version__ ,
-                                                           ROOT.gROOT.GetVersion() ) )
+    
+    logger.info ( "Python version: %s.%s.%s" % ( sys.version_info.major ,
+                                                 sys.version_info.minor ,
+                                                 sys.version_info.micro ) )
+    logger.info ( "ROOT   version: %s"       % ROOT.gROOT.GetVersion()  )
+    
+    if dill and dill.__version__ : 
+        logger.info ( "dill   version: %s"       % dill.__version__      )
+        
     try : 
         p = pickle.dumps  ( h )
         logger.info  ("Histogram is successfully serialized using pickle!")
