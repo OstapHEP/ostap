@@ -5,6 +5,10 @@
   1. allow `pathos` to be used for paralellization for python version > 3.6  
   1. add test `test_parallel_dill` to check the the problem with combniation 
      of different versions of `ROOT` , `dill` and `python`.    
+  1. improve `ostap.fitting.toys`
+  1. improve `ostap.parallel.parallel_toys`
+  1. add `test_fitting_toys`
+  1. add `test_parallel_toys`
 
 ## Backward incompatible changes
 
@@ -13,6 +17,7 @@
   1. Tiny fix in `ROOT.TMinuit.cor`
   1. Tiny fix in `ROOT.TMinuit.cov`
   1. more fixes in `ostap/fitting/minuit.py`
+  1. small fixes in `ostap/fitting/toys.py`
 
 # v1.4.6.0
 

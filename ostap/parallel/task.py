@@ -133,7 +133,7 @@ class Task ( object ) :
 
     @property
     def environment ( self ) :
-        """``envoronment'' : additional  environmment for the job"""
+        """``environment'' : additional environment for the job"""
         return self.__environment
     
     @environment.setter 
@@ -165,7 +165,7 @@ class GenericTask(Task) :
                    initializer = tuple ,
                    directory   = None  ,
                    environment = {}    ) :
-        """Generic task for parallel processing. One needs to  define three functions/functors
+        """Generic task for parallel processing. One needs to define three functions/functors
         - processor   :         output = processor   ( jobid , item ) 
         - merger      : updated_output = merger      ( old_output , new_output )
         - initializer :         output = initializer (      )  

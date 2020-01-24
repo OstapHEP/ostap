@@ -16,8 +16,10 @@ __author__  = 'Vanya BELYAEV  Ivan.Belyaev@itep.ru'
 __date__    = "2020-01-18"
 __version__ = '$Revision$'
 __all__     = (
-    "make_toys"  , ## run fitting toys (the same PDF to generate and fit)
-    "make_toys2" , ## run fitting toys (separate models to generate and fit)
+    "make_toys"      , ## run fitting toys (the same PDF to generate and fit)
+    "make_toys2"     , ## run fitting toys (separate models to generate and fit)
+    "vars_transform" , ## helper fnuction to transform the variables
+    "print_stats"    , ## print statistics of toys 
     )
 # =============================================================================
 from   builtins          import range
@@ -31,37 +33,91 @@ else                       : logger = getLogger( __name__             )
 # =============================================================================
 logger.debug ( 'Utilities to run fitting toys')
 # ==============================================================================
+## Technical transformation  to the dictionaty :  { 'name' : float_value }
+def vars_transform ( vars ) :
+    """Technical transformation to the dictionary :  `{ 'name' : float_value }`
+    """
+    
+    from   ostap.core.ostap_types     import dictlike_types
+    import ostap.fitting.roofitresult
+    import ostap.fitting.variables 
+    
+    result = {}
+    if isinstance   ( vars , ROOT.RooFitResult ) :
+        rs = vars.dct_parsms ()
+        for p in  rs  : result [ p ] = float ( rs   [ p ] )
+    elif isinstance ( vars , dictlike_types ) :
+        for p in vars : result [ p ] = float ( vars [ p ] ) 
+    else :
+        for p in vars :
+            result [ p.GetName()  ] = float ( p )
+            
+    return result
+# =============================================================================
+## print statistics of pseudoexperiments
+def print_stats (  stats , ntoys = '???' ) :
+    """print statistics of pseudoexperiments
+    """
+    
+    table = [ ( '' , '#', 'mean' , 'rms' , '%11s / %-11s' % ( 'min' , 'max' ) ) ] 
+    keys = stats.keys()
+    keys = sorted ( keys )
+
+    def make_row ( c ) :
+        n      = "{:^11}".format ( c.nEntries() )
+        mean   = c.mean ()
+        mean   = "%+11.4g +- %-11.4g" % ( mean.value() , mean.error() )
+        rms    = "%-11.4g"            % c.rms ()
+        minmax = "%+11.4g / %-+11.4g" % ( c.min() , c.max () ) 
+        return p , n , mean , rms  , minmax 
+        
+    
+    for p in sorted ( stats )  :
+        if    p.startswith('pull:') : continue  
+        c      = stats [ p ]
+        table.append (  make_row ( c )  )
+        
+    for p in sorted ( stats )  :
+        if not p.startswith('pull:') : continue  
+        c      = stats [ p ]
+        table.append (  make_row ( c )  )
+        
+    import ostap.logger.table as Table
+    table = Table.table ( table , title = "Results of %s toys" % ntoys , prefix = "# " )
+    logger.info ( 'Results of %s toys:\n%s' % ( ntoys , table ) ) 
+    
+# ==============================================================================
 ## make <code>ntoys</code> pseudoexperiments
 #
 #  For each experiment
 #  - generate dataset using <code>pdf</code> with variables specified
-#    in <code>data</code> and configuration specified via<code>toy_config</code>
+#    in <code>data</code> and configuration specified via<code>gen_config</code>
 #    for each generation the parameters of <code>pdf</code> are reset
 #    for their initial values and values from <code>init_pars</code>
 #  - fit generated dataset  with <code>pdf</code> using configuration
 #    specified via  <code>fit_config</code>
 #
-# @code
-# pdf = ...
-# results , stats = make_toys ( pdf    ,           ## PDF  to use 
-#                 1000                 ,           ## number of toys 
-#                 [ 'mass' ]           ,           ## varianles in dataset 
-#                 { 'nEvents' : 5000 } ,           ## configuration of <code>pdf.generate</code>
-#                 { 'ncpus'   : 2    } ,           ## configuration of <code>pdf.fitTo</code>
-#                 { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
-#                )
-# @endcode
+#  @code
+#  pdf = ...
+#  results , stats = make_toys ( pdf   ,   ## PDF  to use 
+#     nToys      = 1000        ,           ## Number of pseudoexperiments 
+#     data       = [ 'mass' ]  ,           ## variables in dataset 
+#     gen_config = { 'nEvents' : 5000 } ,  ## configuration of <code>pdf.generate</code>
+#     fit_config = { 'ncpus'   : 2    } ,  ## configuration of <code>pdf.fitTo</code>
+#     init_pars  = { 'mean' : 0.0 , 'sigma' : 1.0 } ) ## parameters to use for generation 
+#  @endcode 
 #
 # Derived parameters can be also   retrived via <code>more_vars</code> argument:
 # @code
-# more_vars = { 'Ratio' : ( lambda x,y : x/y , ('x','y') ) }
+# ratio     = lambda res,pdf : res.ratio('x','y')
+# more_vars = { 'Ratio' : ratio }
 #  r,  s = make_toys ( .... , more_vars = more_vars , ... ) 
-# @code
+# @endcode
 #
 # @param pdf        PDF to be used for generation and fitting
 # @param nToys      number    of pseudoexperiments to generate
 # @param data       variable list of variables to be used for dataset generation
-# @param toy_config configuration of <code>pdf.generate</code>
+# @param gen_config configuration of <code>pdf.generate</code>
 # @param fit_config configuration of <code>pdf.fitTo</code>
 # @param init_pars  redefine these parameters for each pseudoexperiment
 # @param more_vars  calculate more variables form fit-result 
@@ -70,18 +126,18 @@ logger.debug ( 'Utilities to run fitting toys')
 def make_toys ( pdf                ,
                 nToys              , 
                 data               , ## template for dataset/variables 
-                toy_config         , ## parameters for <code>pdf.generate</code>   
+                gen_config         , ## parameters for <code>pdf.generate</code>   
                 fit_config = {}    , ## parameters for <code>pdf.fitTo</code>
                 init_pars  = {}    ,
                 more_vars  = {}    , 
                 silent     = True  ,
-                progress   = False ) :
+                progress   = True  ) :
     """Make `ntoys` pseudoexperiments
     
     For each experiment:
 
     1. generate dataset using `pdf` with variables specified
-    in `data` and configuration specified via `toy_config`
+    in `data` and configuration specified via `gen_config`
     for each generation the parameters of `pdf` are reset
     for their initial values and valeus from `init_pars`
     
@@ -91,9 +147,10 @@ def make_toys ( pdf                ,
     - pdf        PDF to be used for generation and fitting
     - nToys      number    of pseudoexperiments to generate
     - data       variable list of variables to be used for dataset generation
-    - toy_config configuration of <code>pdf.generate</code>
+    - gen_config configuration of <code>pdf.generate</code>
     - fit_config configuration of <code>pdf.fitTo</code>
     - init_pars  redefine these parameters for each pseudoexperiment
+    - more_vars  dictionary of functions to define the additional results 
     - silent     silent toys?
     - progress   show progress bar? 
     
@@ -109,7 +166,8 @@ def make_toys ( pdf                ,
     ...                )
 
     Derived parameters can be also retrived via <code>more_vars</code> argument:
-    >>> more_vars = { 'Ratio' : ( lambda x,y : x/y , ('x','y') ) }
+    >>> ratio    = lambda res,pdf : res.ratio('x','y') 
+    >>> more_vars = { 'Ratio' : ratio }
     >>> r,  s = make_toys ( .... , more_vars = more_vars , ... ) 
 
     """
@@ -119,8 +177,8 @@ def make_toys ( pdf                ,
     assert isinstance ( nToys , integer_types ) and 0 < nToys,\
            'Invalid "nToys" argument %s/%s' % ( nToys , type ( nToys ) )
     
-    assert toy_config and 'nEvents' in toy_config,\
-           'Number of events per toy must be specified via "toy_config" %s' % toy_config
+    assert gen_config and 'nEvents' in gen_config,\
+           'Number of events per toy must be specified via "gen_config" %s' % gen_config
     
     import ostap.fitting.roofit
     import ostap.fitting.dataset
@@ -131,8 +189,7 @@ def make_toys ( pdf                ,
     params = pdf.pdf.getParameters ( None )
     varset = ROOT.RooArgSet() 
     
-    if   isinstance ( data , ROOT.RooArgSet  ) : pass 
-    elif isinstance ( data , ROOT.RooAbsData ) : varset = data.varset() 
+    if isinstance ( data , ROOT.RooAbsData       ) : varset = data.varset() 
     else :
         for v in data :
             if   isinstance ( v , ROOT.RooAbsArg ) :
@@ -142,25 +199,16 @@ def make_toys ( pdf                ,
             else :
                 raise TypeError('Invalid variable %s/%s' % ( v , type ( v ) ) )
 
-    fix_pars = {}
-    for v in params : fix_pars [ v.name ] = float ( v ) 
 
-    fix_init = {}
-    if   isinstance ( init_pars , ROOT.RooFitResult ) :
-        ps = init_pars.dct_params()
-        for p in ps        : fix_init [ p      ] = float ( ps        [ p ] )
-    elif isinstance ( init_pars , dict ) :
-        for p in init_pars : fix_init [ p      ] = float ( init_pars [ p ] )
-    else :
-        for p in init_pars : fix_init [ p.name ] = float ( p )
+    fix_pars = vars_transform ( params    ) 
+    fix_init = vars_transform ( init_pars ) 
 
     pdf.load_params ( None , fix_pars , silent = silent )
     pdf.load_params ( None , fix_init , silent = silent )
 
     ## save all initial parameters (needed fot the final statistics)
     params  = pdf.pdf.getParameters ( None )
-    fix_all = {}
-    for p in params : fix_all [ p.name ] = float ( p )
+    fix_all = vars_transform  ( params ) 
     
     fitcnf = {}
     fitcnf.update ( fit_config )
@@ -178,7 +226,7 @@ def make_toys ( pdf                ,
         pdf.load_params ( None , init_pars , silent = silent )
 
         ## 2. generate dataset!  
-        dataset = pdf.generate ( varset = varset , **toy_config )  
+        dataset = pdf.generate ( varset = varset , **gen_config )  
         if not silent :
             logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
         
@@ -196,7 +244,8 @@ def make_toys ( pdf                ,
             results [ i ].append ( rpf[i][0] ) 
 
         for v in more_vars :
-            results [v] .append ( r.evaluate ( *more_vars[v] ) )
+            func  = more_vars[v] 
+            results [v] .append ( func ( rpf , pdf ) )
             
         dataset.clear()
         del dataset
@@ -214,7 +263,9 @@ def make_toys ( pdf                ,
             stats     [ par             ] +=   v0
             if not mvar : 
                 stats [ 'pull:%s' % par ] += ( v0 - a0 ) / v.error()
-                
+
+    if progress or not silent : print_stats ( stats , nToys )
+    
     return results, stats 
 
 # =============================================================================
@@ -222,28 +273,38 @@ def make_toys ( pdf                ,
 #
 #  For each experiment
 #  - generate dataset using <code>pdf</code> with variables specified
-#    in <code>data</code> and configuration specified via<code>toy_config</code>
+#    in <code>data</code> and configuration specified via<code>gen_config</code>
 #    for each generation the parameters of <code>pdf</code> are reset
 #    for their initial values and values from <code>init_pars</code>
 #  - fit generated dataset  with <code>pdf</code> using configuration
 #    specified via  <code>fit_config</code>
 #
 # @code
-# pdf = ...
-# results , stats = make_toys ( pdf    ,           ## PDF  to use 
-#                 1000                 ,           ## number of toys 
-#                 [ 'mass' ]           ,           ## varianles in dataset 
-#                 { 'nEvents' : 5000 } ,           ## configuration of <code>pdf.generate</code>
-#                 { 'ncpus'   : 2    } ,           ## configuration of <code>pdf.fitTo</code>
-#                 { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
-#                )
+# gen_pdf = ... ## PDF  to use to generate pseudoexperiments 
+# fit_pdf = ... ## PDF  to use to fit  pseudoexperiments 
+# results , stats = make_toys2(
+#     gen_pdf    = gen_pdf    , ## PDF  to use to generate pseudoexperiments 
+#     fit_pdf    = fit_pdf    , ## PDF  to use to fit  pseudoexperiments 
+#     nToys      = 1000       , ## number of pseudoexperiments 
+#     data       = [ 'mass' ] ,           ## variables in dataset 
+#     gen_config = { 'nEvents' : 5000 } , ## configuration of <code>pdf.generate</code>
+#     fit_config = { 'ncpus'   : 2    } , ## configuration of <code>pdf.fitTo</code>
+#     gen_pars   = { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
+#     )
 # @endcode
+#
+# Derived parameters can be also   retrived via <code>more_vars</code> argument:
+# @code
+# ratio     = lambda res,pdf : res.ratio('x','y')
+# more_vars = { 'Ratio' : ratio }
+#  r,  s = make_toys2 ( .... , more_vars = more_vars , ... ) 
+# @code
 #
 # @param gen_pdf    PDF to be used for generation 
 # @param fit_pdf    PDF to be used for fitting
 # @param nToys      number    of pseudoexperiments to generate
 # @param data       variable list of variables to be used for dataset generation
-# @param toy_config configuration of <code>pdf.generate</code>
+# @param gen_config configuration of <code>pdf.generate</code>
 # @param fit_config configuration of <code>pdf.fitTo</code>
 # @param gen_pars   redefine these parameters for each pseudoexperiment
 # @param fit_pars   redefine these parameters for each pseudoexperiment
@@ -253,18 +314,19 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
                  fit_pdf            , ## pdf to fit  
                  nToys              , ## number of pseudoexperiments 
                  data               , ## template for dataset/variables 
-                 toy_config         , ## parameters for <code>pdf.generate</code>   
+                 gen_config         , ## parameters for <code>pdf.generate</code>   
                  fit_config = {}    , ## parameters for <code>pdf.fitTo</code>
                  gen_pars   = {}    , ## gen-parameters to reset/use 
-                 fit_pars   = {}    , ## fit-parameters to reset/use 
+                 fit_pars   = {}    , ## fit-parameters to reset/use
+                 more_vars  = {}    , ## additional  results to be calculated  
                  silent     = True  ,
-                 progress   = False ) :
+                 progress   = True  ) :
     """Make `ntoys` pseudoexperiments
     
     For each experiment:
 
     1. generate dataset using `pdf` with variables specified
-    in `data` and configuration specified via `toy_config`
+    in `data` and configuration specified via `gen_config`
     for each generation the parameters of `pdf` are reset
     for their initial values and valeus from `init_pars`
     
@@ -274,7 +336,7 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     - pdf        PDF to be used for generation and fitting
     - nToys      number    of pseudoexperiments to generate
     - data       variable list of variables to be used for dataset generation
-    - toy_config configuration of <code>pdf.generate</code>
+    - gen_config configuration of <code>pdf.generate</code>
     - fit_config configuration of <code>pdf.fitTo</code>
     - gen_pars   redefine these parameters for generation of each pseudoexperiment
     - fit_pars   redefine these parameters for fit of each pseudoexperiment
@@ -298,8 +360,8 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     assert isinstance ( nToys , integer_types ) and 0 < nToys,\
            'Invalid "nToys" argument %s/%s' % ( nToys , type ( nToys ) )
     
-    assert toy_config and 'nEvents' in toy_config,\
-           'Number of events per toy must be specified via "toy_config" %s' % toy_config
+    assert gen_config and 'nEvents' in gen_config,\
+           'Number of events per toy must be specified via "gen_config" %s' % gen_config
     
     import ostap.fitting.roofit
     import ostap.fitting.dataset
@@ -310,8 +372,7 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     gparams = gen_pdf.pdf.getParameters ( None )
     varset  = ROOT.RooArgSet() 
     
-    if   isinstance ( data , ROOT.RooArgSet  ) : pass 
-    elif isinstance ( data , ROOT.RooAbsData ) : varset = data.varset() 
+    if isinstance ( data , ROOT.RooAbsData ) : varset = data.varset() 
     else :
         for v in data :
             if   isinstance ( v , ROOT.RooAbsArg ) :
@@ -323,38 +384,18 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
 
     ## parameters for generation
             
-    fix_gen_init = {}
-    for v in gparams : fix_gen_init [ v.name ] = float ( v ) 
-
-    fix_gen_pars = {}
-    if   isinstance ( gen_pars , ROOT.RooFitResult ) :
-        ps = gen_pars.dct_params()
-        for p in ps       : fix_gen_pars [ p      ] = float ( ps       [ p ] )
-    elif isinstance ( gen_pars , dict ) :
-        for p in gen_pars : fix_gen_pars [ p      ] = float ( gen_pars [ p ] )
-    else :
-        for p in gen_pars : fix_gen_pars [ p.name ] = float ( p )
-
+    fix_gen_init = vars_transform ( gparams  ) 
+    fix_gen_pars = vars_transform ( gen_pars )
     
     ## parameters for fitting 
 
-    fix_fit_init = {}
     fparams = fit_pdf.pdf.getParameters ( None )
-    for v in fparams : fix_fit_init [ v.name ] = float ( v ) 
-    
-    fix_fit_pars = {}
-    if   isinstance ( fit_pars , ROOT.RooFitResult ) :
-        ps = fit_pars.dct_params()
-        for p in ps       : fix_fit_pars [ p      ] = float ( ps       [ p ] )
-    elif isinstance ( gen_pars , dict ) :
-        for p in fit_pars : fix_fit_pars [ p      ] = float ( fit_pars [ p ] )
-    else :
-        for p in fit_pars : fix_gfit_pars [ p.name ] = float ( p )
+    fix_fit_init = vars_transform ( fparams  )     
+    fix_fit_pars = vars_transform ( fit_pars )
     
     fitcnf = {}
     fitcnf.update ( fit_config )
     if not 'silent' in fitcnf : fitcnf [ 'silent' ] = silent
-
 
     from collections import defaultdict 
     results = defaultdict(list) 
@@ -368,7 +409,7 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
         gen_pdf.load_params ( None , fix_gen_pars , silent = silent )
 
         ## 2. generate dataset!
-        dataset = gen_pdf.generate ( varset = varset , **toy_config )  
+        dataset = gen_pdf.generate ( varset = varset , **gen_config )  
         if not silent :
             logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
 
@@ -389,6 +430,10 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
         for i in rpf : 
             results [ i ].append ( rpf[i][0] ) 
 
+        for v in more_vars :
+            func  = more_vars[v] 
+            results [ v ] .append ( func ( rpf , fit_pdf ) )
+
         dataset.clear()
         del dataset
         
@@ -402,6 +447,8 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
             v0 = float ( v )         
             stats [ par ] += v0 
             
+    if progress or not silent : print_stats ( stats , nToys )
+
     return results, stats 
 
 
