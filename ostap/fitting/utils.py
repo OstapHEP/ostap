@@ -1152,7 +1152,7 @@ class MakeVar ( object ) :
     #  n =  pdf.gen_sample ( 10            ) ## get poissonian 
     #  n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
     #  @endcode
-    def gen_sample ( self , events ) :
+    def gen_sample ( self , nevents ) :
         """Sample ``random'' positive number of events
         >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff

@@ -98,7 +98,8 @@ except ImportError :
     def _poisson_ ( self , mu ) :
         mu = float ( mu ) 
         if _MAX <= mu :
-            r = _gauss ( mu , _sqrt( mu ) ) 
+            r = self.gauss ( mu , _sqrt( mu ) )
+            while r < 0 : r = self.gauss ( mu , _sqrt( mu ) )
             return max ( _round ( r ) , 0 )
         x  = 0
         p  = _exp ( -mu )

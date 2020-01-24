@@ -245,7 +245,7 @@ def make_toys ( pdf                ,
 
         for v in more_vars :
             func  = more_vars[v] 
-            results [v] .append ( func ( rpf , pdf ) )
+            results [v] .append ( func ( r , pdf ) )
             
         dataset.clear()
         del dataset
@@ -432,7 +432,7 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
 
         for v in more_vars :
             func  = more_vars[v] 
-            results [ v ] .append ( func ( rpf , fit_pdf ) )
+            results [ v ] .append ( func ( r , fit_pdf ) )
 
         dataset.clear()
         del dataset

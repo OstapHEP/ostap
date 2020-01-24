@@ -477,14 +477,14 @@ class PDF (MakeVar) :
             return None , None
         
         st = result.status()
-        if 0 != st and silent :
-            self.warning ( 'fitTo: status is %s. Refit in non-silent regime ' % fit_status ( st ) )
-            return self.fitTo ( dataset ,
-                                draw   = draw  ,
-                                nbins  = nbins ,
-                                silent = False ,
-                                refit  = refit ,
-                                args   = args  , **kwargs )
+        ## if 0 != st and silent :
+        ##     self.warning ( 'fitTo: status is %s. Refit in non-silent regime ' % fit_status ( st ) )
+        ##     return self.fitTo ( dataset ,
+        ##                         draw   = draw  ,
+        ##                         nbins  = nbins ,
+        ##                         silent = False ,
+        ##                         refit  = refit ,
+        ##                         args   = args  , **kwargs )
         
         for_refit = False
         if 0 != st   :

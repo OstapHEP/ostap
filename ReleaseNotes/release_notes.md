@@ -9,7 +9,8 @@
   1. improve `ostap.parallel.parallel_toys`
   1. add `test_fitting_toys`
   1. add `test_parallel_toys`
-
+  1. add examples/tests for evaluation of significance with toys
+ 
 ## Backward incompatible changes
 
 ## Bug fixes:  
@@ -18,6 +19,7 @@
   1. Tiny fix in `ROOT.TMinuit.cov`
   1. more fixes in `ostap/fitting/minuit.py`
   1. small fixes in `ostap/fitting/toys.py`
+  1. tiny fix in `ostap/math/random_ext.py`
 
 # v1.4.6.0
 
