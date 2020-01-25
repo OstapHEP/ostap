@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-DIR="build"
+DIR="LCG_${LCG_VERSION}"
 [ ! -d "$DIR" ] && mkdir -p "$DIR"
-cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=./${CMTCONFIG}/${LCG_VERSION}/ && make -j12 && make install
+cd $DIR
+cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install
