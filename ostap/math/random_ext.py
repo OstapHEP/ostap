@@ -81,14 +81,26 @@ def _ve_gauss_ ( self , val ) :
     return self.gauss ( mean , sigma )
 
 # =============================================================================
-try :
-    from scipy.random import poisson as _poisson
-    def _poisson_ ( self , mu ) : return _poisson ( mu )
-    logger.debug ('use scipy.random.poisson')
-except ImportError :
-    logger.debug ('scipy.random.poisson is not accessible, use hand-made replacement')
-    _STEP = 500.0
-    _MAX  =  30.0
+_poisson = None
+if not _poisson : 
+    try :
+        from numpy.random import poisson as _poisson
+        def _poisson_ ( self , mu ) : return _poisson ( mu )
+        logger.debug ('use numpy.random.poisson')
+    except ImportError :
+        pass
+
+if not _poisson : 
+    try :
+        from scipy.random import poisson as _poisson
+        def _poisson_ ( self , mu ) : return _poisson ( mu )
+        logger.debug ('use scipy.random.poisson')
+    except ImportError :
+        pass
+
+if not _poisson : 
+    logger.dbug ('Use home-made replacement for poisson')
+    _MAX   = 30.0
     import math
     _sqrt  = math.sqrt
     _exp   = math.exp
@@ -96,9 +108,9 @@ except ImportError :
     _round = cppyy.gbl.Ostap.Math.round
     ## hand-made replacement for poisson random number generator  
     def _poisson_ ( self , mu ) :
-        mu = float ( mu ) 
+        mu = float ( mu )
         if _MAX <= mu :
-            r = self.gauss ( mu , _sqrt( mu ) )
+            r = -1 
             while r < 0 : r = self.gauss ( mu , _sqrt( mu ) )
             return max ( _round ( r ) , 0 )
         x  = 0
@@ -110,7 +122,7 @@ except ImportError :
             p *= mu / x
             s += p
         return x
-    
+
 import random 
 if not hasattr ( random.Random , 'bifur'     ) : random.Random.bifur     = _bifur_
 if not hasattr ( random        , 'bifur'     ) : random.bifur            = random._inst.bifur
