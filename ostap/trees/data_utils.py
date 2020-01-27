@@ -568,7 +568,7 @@ class Data(Files):
         state = Files.__getstate__( self )
         state [ 'e_list1' ] = self.e_list1
         state [ 'chain'   ] = self.chain.GetName()
-        stat  [ 'quick'   ] = self.quick 
+        state [ 'quick'   ] = self.quick 
         return state
 
     ## unpickling 

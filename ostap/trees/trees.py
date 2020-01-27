@@ -22,8 +22,6 @@ __all__     = (
 import ROOT, os, math
 from   ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
 from   ostap.core.ostap_types import integer_types , long_type, string_types 
-from   ostap.logger.utils     import multicolumn
-from   ostap.utils.basic      import terminal_size, isatty
 import ostap.trees.param
 # =============================================================================
 # logging 
@@ -292,17 +290,17 @@ def _tt_project_ ( tree               ,
     - cuts  : selection criteria/weights 
     """
     #
-    
-    ## if nentries < 0 :
-    nentries = ROOT.TTree.kMaxEntries
+
+    if nentries < 0 :
+        nentries = ROOT.TTree.kMaxEntries
         
-    args = options , nentries , firstentry, silent
+    args = options , nentries , firstentry , silent
     ## 
     hname = histo 
     if   hasattr    ( histo , 'GetName' ) : hname = histo.GetName()
-    ## elif isinstance ( histo , str       ) : 
-    ##    h = ROOT.gROOT.FindObject ( hname )
-    ##    if h : histo = h
+    elif isinstance ( histo , str       ) : 
+        h = ROOT.gROOT.FindObject ( hname )
+        if h and isinstance ( h , ROOT.TH1 ) : histo = h
 
     ## reset it!
     if histo and isinstance ( histo , ROOT.TH1  ) : histo.Reset()
@@ -327,8 +325,8 @@ def _tt_project_ ( tree               ,
             if 1 == len( what ) : what = what[0]
 
     #
-    if   isinstance ( what  , str       ) : what =     what 
-    elif isinstance ( what  , ROOT.TCut ) : what = str(what)  
+    if   isinstance ( what  , str       ) : what =       what 
+    elif isinstance ( what  , ROOT.TCut ) : what = str ( what )  
     elif isinstance ( histo , ROOT.TH1  ) : 
         rr = 0 
         hh = histo.clone()
@@ -356,9 +354,11 @@ def _tt_project_ ( tree               ,
     ## the basic case 
     with ROOTCWD() :
         ROOT.gROOT.cd ()
-        ## make projection 
+        ## make projection
+        ## print 'HERE:   %s/%s' %  ( hname , type ( hname ) ) 
         result = tree.Project ( hname , what , cuts , *args[:-1] )
-        if   isinstance ( histo , ROOT.TH1 ) : return result, histo
+        if   isinstance ( histo , ROOT.TH1 ) :
+            return result, histo
         elif isinstance ( histo , str      ) :
             h = ROOT.gROOT.FindObject ( hname )
             if h : return result, h
@@ -843,6 +843,8 @@ def _rt_print_ ( t ) :
     >>> print tree
     """
     ##
+    from   ostap.logger.utils     import multicolumn
+
     res = "Name: %s Entries/#%d" %  ( t.GetName() , t.GetEntries() ) 
     if hasattr ( t , 'GetNtrees' ) : res += " Chain/#%d " %       t.GetNtrees()
     ##
@@ -1160,6 +1162,7 @@ def _rt_print2_ ( data  , prefix = '' ) :
     l  = len ( data             )
     if 10000000 < br * l : return _rt_print_ ( data )
     
+    from   ostap.utils.basic      import terminal_size, isatty
     if not isatty() : return _rt_table_ ( data )
     th  , tw   = terminal_size()
     rep , wid  = _rt_table_0_ ( data , prefix = prefix ) 
@@ -1957,6 +1960,7 @@ class Chain(CleanUp) :
         files_         = []
 
         self.__lens    = ()
+        self.__chain   = None
         
         for fname , finfo in file_infos :
             if   same_host : files_.append ( fname )
@@ -1984,11 +1988,23 @@ class Chain(CleanUp) :
                     else : logger.error ("Cannot copy the file %s"  % full_name )
                         
         self.__files = tuple ( files_ )
+        ## self.__files = tuple ( [ i   for i,j in file_infos ] )
         
-        ## reconstruct the chain 
-        self.__chain   = ROOT.TChain ( self.__name  )
-        for f in self.__files  : self.__chain.Add ( f )
+        ## reconstruct the chain
+        import ROOT
+        import ostap.io.root_file
 
+        ## for f in  self.__files :
+        ##     rf = ROOT.TFile.Open ( f , 'read' , exception = False )
+        ##     if rf and not rf.IsZombie()  :
+        ##         logger.verbose ('Chain/setstate:file %s is OK ' % f ) 
+        ##     else :
+        ##         logger.error   ('Chain/settate: file %s is not OK ' % f ) 
+        ##     del rf
+            
+        ## self.__chain   = ROOT.TChain ( self.__name  )
+        ## for f in self.__files  : self.__chain.Add ( f )
+                
     # ======================================================================================
     ## create Chain object:
     #  - either from the real TTree/TChain:
@@ -2038,14 +2054,13 @@ class Chain(CleanUp) :
             tree    = tree.chain
 
         if files and isinstance ( files , str ) : files = files,
-
                          
         if name and files :
 
             self.__name  = name
             self.__files = files
 
-            if not tree is True : 
+            if tree is True : 
                 chain = self.__create_chain() 
                 assert valid_pointer ( chain ), 'Invalid TChain!'
                 assert len ( files ) == len ( chain.files() ) , 'Invalid length of files'
@@ -2227,14 +2242,17 @@ class Chain(CleanUp) :
     
     def __create_chain ( self ) :
         """``chain'' : get the underlying tree/chain"""
-        c = ROOT.TChain ( self.__name )
+        import ROOT 
+        c = ROOT.TChain ( self.name )
         for f in self.__files  : c.Add ( f )
         return c
 
     @property
     def chain ( self ) :
         """``chain'' : get the underlying tree/chain"""
-        if self.__chain is None : self.__chain = self.__create_chain () 
+        if self.__chain is None :
+            self.__chain = self.__create_chain ()
+            
         return self.__chain
 
     @property
@@ -2327,7 +2345,6 @@ class Chain(CleanUp) :
             return Chain ( name = self.name , files = files )
         
         return NotImplemented
-        
         
 # =============================================================================
 ## @class Tree

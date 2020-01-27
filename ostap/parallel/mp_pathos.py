@@ -179,7 +179,7 @@ class WorkManager ( object ) :
         ps = '%s' % self.pool
         ps = ps.replace( '<pool ' , '' ).replace  ('>','').replace ('servers','remotes')
         for p in self.ppservers : ps = ps.replace ( p.local , p.remote )
-        logger.info ( 'WorkManager is %s' % ps )
+        if not silent : logger.info ( 'WorkManager is %s' % ps )
         
         self.stats  = {}
         self.silent = True if silent else  False 

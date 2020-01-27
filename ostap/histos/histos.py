@@ -4846,6 +4846,25 @@ def _h1_accumulate_ ( h                        ,
     return result
 
 
+# =============================================================================
+## perform some accumulation for the histogram
+#  @code
+#  h =...
+#  sum = h.accumulate ()
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _hh_accumulate_ ( histo ) :
+    
+    """Accumulate the function value over the histogram
+    >>> h =...
+    >>> sum = h.accumulate ()
+    """
+    result = VE(0) 
+    for i in  histo :
+        result += histo [ i ]
+    return result
+
 
 # =============================================================================
 ## get the sum of entries 
@@ -5268,13 +5287,13 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t . integrate   = _h1_integrate_ 
 
 for t in ( ROOT.TH2F , ROOT.TH2D ) :    
-    t . accumulate = _h1_accumulate_ 
-    t . sum        = _h1_accumulate_
+    t . accumulate = _hh_accumulate_ 
+    t . sum        = _hh_accumulate_
     t . integrate  = _h2_integrate_ 
 
 for t in ( ROOT.TH3F , ROOT.TH3D ) :    
-    t . accumulate = _h1_accumulate_ 
-    t . sum        = _h1_accumulate_
+    t . accumulate = _hh_accumulate_ 
+    t . sum        = _hh_accumulate_
     t . integrate  = _h3_integrate_ 
 
 # generic sscaling

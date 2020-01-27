@@ -521,6 +521,8 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
+    print 'WHAT is', what
+    
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
         return Ostap.HistoProject.project3 ( dataset ,
                                              histo   , 
