@@ -117,7 +117,7 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
 else                      : logger = getLogger ( __name__              )
 # =============================================================================
-import ROOT, shelve, zlib
+import ROOT, shelve, zlib, os 
 import ostap.io.root_file  
 from   sys import version_info as python_version 
 logger.debug ( "Simple generic ROOT-based shelve-like-database" )
@@ -177,7 +177,6 @@ class RootOnlyShelf(shelve.Shelf):
             rfile = ROOT.TFile.Open ( filename   , open_mode ( mode ) , *args  )
             shelve.Shelf.__init__ ( self , rfile , writeback )
 
-
     # =========================================================================
     ## clone the database into new one
     #  @code
@@ -202,6 +201,28 @@ class RootOnlyShelf(shelve.Shelf):
         new_db.sync ()  
         return new_db 
 
+    # =========================================================================
+    ## iterator over good keys 
+    def ikeys ( self , pattern = '' ) :
+        """Iterator over avilable keys (patterns included).
+        Pattern matching is performed accoriding to
+        fnmatch/glob/shell rules [it is not regex!] 
+        
+        >>> db = ...
+        >>> for k in db.ikeys('*MC*') : print(k)
+        
+        """
+        keys_ = self.keys()
+        
+        if not pattern :
+            good = lambda s,p : True
+        else :
+            import fnmatch
+            good = lambda s,p : fnmatch.fnmatchcase ( k , p )
+        
+        for k in sorted ( keys_ ) :
+            if good ( k , pattern ) : yield k
+
     @property
     def filename    ( self       ) :
         """``filename'' : the file name for root-database"""
@@ -210,6 +231,38 @@ class RootOnlyShelf(shelve.Shelf):
     def __enter__   ( self       ) : return self 
     def __exit__    ( self , *_  ) : self.close ()
 
+    # =============================================================================
+    ## get item from ROOT-file
+    #  @code
+    #  obj = db['A/B/C/histo']
+    #  @endcode 
+    #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+    #  @date   2015-07-31 
+    def __getitem__ ( self , key ) :
+        """Get the item from ROOT-file
+        >>> obj = db['A/B/C/histo']
+        """
+        try:
+            value = self.cache [ key ]
+        except KeyError:
+            value = self.dict [ key ] 
+            if self.writeback:
+                self.cache [ key ] = value
+        return value
+    
+    # =============================================================================
+    ## put item into ROOT-file 
+    #  @code
+    #  db['A/B/C/histo'] = obj
+    #  @endcode 
+    #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+    #  @date   2015-07-31 
+    def __setitem__ ( self , key , value ) :
+        """ Put item into ROOT-file
+        >>> db ['A/B/C/histo'] = obj
+        """
+        if self.writeback : self.cache [ key ] = value
+        self.dict [ key ] = value 
 
 # =============================================================================
 ## need to disable endcode/decode for the keys 
@@ -234,71 +287,6 @@ if python_version.major > 2 :
     RootOnlyShelf.__ros_get__  = _ros_get_
     RootOnlyShelf.__delitem__  = _ros_delitem_
     
-# =============================================================================
-## get item from ROOT-file
-#  @code
-#  obj = db['A/B/C/histo']
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-#  @date   2015-07-31 
-def _root_getitem_ ( self , key ) :
-    """Get the item from ROOT-file
-    >>> obj = db['A/B/C/histo']
-    """
-    try:
-        value = self.cache[key]
-    except KeyError:
-        value = self.dict[ key ] 
-        if self.writeback:
-            self.cache[key] = value
-    return value
-    
-# =============================================================================
-## put item into ROOT-file 
-#  @code
-#  db['A/B/C/histo'] = obj
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-#  @date   2015-07-31 
-def _root_setitem_ ( self , key , value ) :
-    """ Put item into ROOT-file
-    >>> db['A/B/C/histo'] = obj
-    """
-    if self.writeback:
-        self.cache[key] = value
-    self.dict[ key ] = value 
-
-RootOnlyShelf.__getitem__ = _root_getitem_
-RootOnlyShelf.__setitem__ = _root_setitem_
-
-# =============================================================================
-## add an object into data base
-#  @code
-#  dbase  = ...
-#  object = ...
-#  dbase.ls() 
-#  object >> dbase ## add object into dbase 
-#  dbase.ls() 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2016-06-04
-def _db_rrshift_ ( dbase , obj ) :
-    """Add an object into data base
-    
-    dbase  = ...
-    object = ...
-    dbase.ls() 
-    object >> dbase ## add object into dbase 
-    dbase.ls() 
-    """
-    if   hasattr ( obj , 'GetName' ) : name = obj.GetName()
-    elif hasattr ( obj , 'name'    ) : name = obj.name   ()
-    else : name = obj.__class__.__name__
-    #
-    dbase [ name ] = obj
-    
-RootOnlyShelf.__rrshift__ = _db_rrshift_
-
 # =============================================================================
 ## @class RootShelf
 #  The actual class for ROOT-based shelve-like data base
@@ -333,7 +321,8 @@ class RootShelf(RootOnlyShelf):
         RootOnlyShelf.__init__ ( self , filename , mode , writeback , args = args )
         self.__protocol      = protocol
         self.__compresslevel = compress
-
+        self.__sizes         = {}
+        
     # =========================================================================
     ## clone the database into new one
     #  @code
@@ -369,74 +358,141 @@ class RootShelf(RootOnlyShelf):
         """``compresslevel'' : zlib compression level
         """
         return self.__compresslevel
-
-# =============================================================================
-##  get object (unpickle if needed)  from dbase
-#   @code
-#   obj = db['A/B/C']
-#   @endcode
-#   @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-#   @date   2015-07-31 
-def _pickled_getitem_ ( self , key ):
-    """ Get object (unpickle if needed)  from dbase
-    >>> obj = db['A/B/C']
-    """
-    ##
-    try:    
-        value = self.cache[key]
-    except KeyError:
-        value = self.dict[key]
-        ## blob ?
-        from  ostap.core.core import  Ostap
-        if isinstance ( value , Ostap.BLOB ) :
-            ## unpack it!
-            z     = Ostap.blob_to_bytes ( value )
-            u     = zlib.decompress ( z )
-            ## unpickle it! 
-            f     = BytesIO ( u )
-            value = Unpickler(f).load()
-            del z , u , f            
-        if self.writeback:
-            self.cache[key] = value
-    return value
-
-# =============================================================================
-##  Add object (pickle if needed)  to dbase
-#   @code
-#   db['A/B/C'] = obj
-#   @endcode
-#   @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-#   @date   2015-07-31 
-def _pickled_setitem_ ( self , key , value ) :
-    """ Add object (pickle if needed)  to dbase
-    >>> db['A/B/C'] = obj
-    """
-    ##
-    if self.writeback:
-        self.cache [ key ] = value
-
-    ## not TObject? pickle it and convert to Ostap.BLOB
-    if not isinstance  ( value , ROOT.TObject ) :
-        ## (1) pickle it 
-        f = BytesIO    ( )
-        p = Pickler    ( f , self.protocol )
-        p.dump ( value )
-        ## (2) zip it
-        z      = zlib.compress ( f.getvalue() , self.compresslevel )
-        ## (3) put it into  BLOB 
-        from  ostap.core.core import  Ostap
-        blob   = Ostap.BLOB            ( key      ) 
-        status = Ostap.blob_from_bytes ( blob , z )
-        value  = blob 
-        del z , f , p 
-        
-    ## finally use ROOT 
-    self.dict[key] = value
     
-RootShelf.__getitem__ = _pickled_getitem_
-RootShelf.__setitem__ = _pickled_setitem_
+    # =============================================================================
+    ##  get object (unpickle if needed)  from dbase
+    #   @code
+    #   obj = db['A/B/C']
+    #   @endcode
+    #   @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+    #   @date   2015-07-31 
+    def __getitem__ ( self , key ):
+        """ Get object (unpickle if needed)  from dbase
+        >>> obj = db['A/B/C']
+        """
+        try:    
+            value = self.cache [ key ]
+        except KeyError:
+            value = self.dict [ key ]
+            self.__sizes [ key ] = len ( value ) 
+            ## blob ?
+            from  ostap.core.core import  Ostap
+            if isinstance ( value , Ostap.BLOB ) :
+                ## unpack it!
+                z     = Ostap.blob_to_bytes ( value )
+                u     = zlib.decompress ( z )
+                ## unpickle it! 
+                f     = BytesIO ( u )
+                value = Unpickler(f).load()
+                del z , u , f            
+            if self.writeback:
+                self.cache[key] = value
+                
+        return value
+    
+    # =============================================================================
+    ##  Add object (pickle if needed)  to dbase
+    #   @code
+    #   db['A/B/C'] = obj
+    #   @endcode
+    #   @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+    #   @date   2015-07-31 
+    def __setitem__ ( self , key , value ) :
+        """ Add object (pickle if needed)  to dbase
+        >>> db['A/B/C'] = obj
+        """
+        if self.writeback:
+            self.cache [ key ] = value
+            
+        ## not TObject? pickle it and convert to Ostap.BLOB
+        if not isinstance  ( value , ROOT.TObject ) :
+            ## (1) pickle it 
+            f = BytesIO    ( )
+            p = Pickler    ( f , self.protocol )
+            p.dump ( value )
+            ## (2) zip it
+            z      = zlib.compress ( f.getvalue() , self.compresslevel )
+            self.__sizes [ key ] = len ( z ) 
+            ## (3) put it into  BLOB 
+            from  ostap.core.core import  Ostap
+            blob   = Ostap.BLOB            ( key      ) 
+            status = Ostap.blob_from_bytes ( blob , z )
+            value  = blob 
+            del z , f , p 
+        
+        ## finally use ROOT 
+        self.dict [ key ] = value
 
-RootShelf.__rrshift__ = _db_rrshift_
+    # =========================================================================
+    ## list the avilable keys 
+    def ls    ( self , pattern = '' , load = True ) :
+        """List the available keys (patterns included).
+        Pattern matching is performed accoriding to
+        fnmatch/glob/shell rules [it is not regex!] 
+
+        >>> db = ...
+        >>> db.ls() ## all keys
+        >>> db.ls ('*MC*')        
+        
+        """
+        n  = os.path.basename ( self.filename )
+        ap = os.path.abspath  ( self.filename ) 
+        
+        try :
+            fs = os.path.getsize ( self.filename )
+        except :
+            fs = -1
+            
+        if    fs < 0            : size = "???"
+        elif  fs < 1024         : size = str(fs)
+        elif  fs < 1024  * 1024 :
+            size = '%.2fkB' % ( float ( fs ) / 1024 )
+        elif  fs < 1024  * 1024 * 1024 :
+            size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
+        else :
+            size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
+            
+                        
+        keys = [] 
+        for k in self.ikeys ( pattern ): keys.append ( k )
+        keys.sort()
+        if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
+        else    : mlen = 2 
+        fmt = ' --> %%-%ds : %%s' % mlen
+
+        table = [ ( 'Key' , 'type' , '   size   ') ] 
+        for k in keys :
+            size = '' 
+            ss   =   self.__sizes.get ( k , -1 )
+            if    ss < 0    : size = '' 
+            elif  ss < 1024 : size = '%7d   ' % ss 
+            elif  ss < 1024 * 1024 :
+                size = '%7.2f kB' %  ( float ( ss ) / 1024 )
+            elif  ss < 1024 * 1024 * 1024 :
+                size = '%7.2f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
+            else :
+                size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
+                
+            ot    = type ( self [ k ] )
+            otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
+            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size 
+            table.append ( row )
+
+        import ostap.logger.table as T
+        t      = self.__class__.__name__
+        title  = '%s:%s' % ( t  , n )
+        maxlen = 0
+        for row in table :
+            rowlen = 0 
+            for i in row : rowlen += len ( i )
+            maxlen = max ( maxlen, rowlen ) 
+        if maxlen + 3 <= len ( title ) :
+            title = '<.>' + title [ -maxlen : ] 
+        table = T.table ( table , title = title , prefix = '# ' )
+        ll    = getLogger ( n )
+        line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
+        ll.info (  '%s\n%s' %  ( line , table ) )
+
 # =============================================================================
 ## helper function to open RootShelve data base
 #  @code
@@ -481,8 +537,8 @@ class TmpRootShelf(RootShelf):
     def __init__( self, *args ):
         
         ## create temporary file name 
-        import tempfile
-        filename = tempfile.mktemp  ( suffix = '.root' )
+        import ostap.utils.cleanup as CU 
+        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.root' )
         
         RootShelf.__init__ ( self                                   ,
                              filename                               ,

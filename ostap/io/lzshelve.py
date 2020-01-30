@@ -361,8 +361,10 @@ class TmpLzShelf(LzShelf):
         keyencoding = ENCODING            ) :
 
         ## create temporary file name 
-        import tempfile
-        filename = tempfile.mktemp  ( prefix = 'tmpdb-' , suffix = '.lzdb' )
+        ## import tempfile
+        ## filename = tempfile.mktemp  ( prefix = 'tmpdb-' , suffix = '.lzdb' )
+        import ostap.utils.cleanup as CU 
+        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.lzdb' )
         
         LzShelf.__init__ ( self        ,  
                            filename    ,

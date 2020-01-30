@@ -177,11 +177,13 @@ class  CleanUp(object) :
             CleanUp._tmpdirs.add ( tmp )
             logger.debug ( 'temporary directory requested %s' % tmp   )
             return tmp        
+
     
     @staticmethod
-    def tempfile ( suffix = '' , prefix = 'tmp-' , dir = None , date = True ) :
-        """Get the name of the temporary file. The file will be deleted at-exit
-        >>> fname = CleanUp.tempfile() 
+    def get_temp_file ( suffix = '' , prefix = 'tmp-' , dir = None , date = True ) :
+        """Generate the name for the temporary file.
+        - the method shodul be  abvoided in favour of` CleanUp.tempfile`
+        >>> fname = CleanUp.get_temp_file () 
         """
         with UseTmpDir ( _TmpDir ) :
             if date :
@@ -195,9 +197,20 @@ class  CleanUp(object) :
             _file.close()
             os.unlink(fname)
             assert not os.path.exists ( fname )
-            CleanUp._tmpfiles.add ( fname )
             logger.debug ( 'temporary file      requested %s' % fname )
             return fname
+
+    @staticmethod
+    def tempfile ( suffix = '' , prefix = 'tmp-' , dir = None , date = True ) :
+        """Get the name of the temporary file.
+        - The file will be deleted at-exit
+        >>> fname = CleanUp.tempfile() 
+        """
+        fname = CleanUp.get_temp_file ( suffix = suffix , prefix = prefix ,
+                                        dir    = dir    , date   = date   )
+        assert not os.path.exists  ( fname )
+        CleanUp._tmpfiles.add ( fname )
+        return fname
 
     @staticmethod
     def protect_file ( fname ) :

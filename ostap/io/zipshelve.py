@@ -354,9 +354,9 @@ class TmpZipShelf(ZipShelf):
         keyencoding = ENCODING                 ) :
 
         ## create temporary file name 
-        import tempfile
-        filename = tempfile.mktemp  ( prefix = 'tmpdb-' , suffix = '.zdb' )
-        
+        import ostap.utils.cleanup as CU 
+        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.zdb' )
+         
         ZipShelf.__init__ ( self        ,  
                             filename    ,
                             'c'         ,

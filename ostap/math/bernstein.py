@@ -463,7 +463,6 @@ def solve (  bp  , C = 0 , split = 2 ) :
     ## there are  many roots in the interval 
     # =========================================================================
 
-
     if 1 < nc :
 
         xmin = bp.xmin ()
@@ -521,8 +520,8 @@ def solve (  bp  , C = 0 , split = 2 ) :
             
         ## use simple bisection
         if 2 >= len ( splits ) :
-            if xmin < xmax : splits =     xmin   , 0.5*(   xmin  +   xmax  ) ,    xmax
-            else           : splits =  bp.xmin() , 0.5*(bp.xmin()+bp.xmax()) , bp.xmax()
+            if xmin < xmax : splits =     xmin   , 0.5 * (    xmin   +    xmax    ) ,    xmax
+            else           : splits =  bp.xmin() , 0.5 * ( bp.xmin() + bp.xmax () ) , bp.xmax ()
             splits = list(splits) 
         
         roots = []
@@ -544,13 +543,13 @@ def solve (  bp  , C = 0 , split = 2 ) :
         if roots :
             roots += list ( bp.solve ( split =  ( split - 1 ) ) )
             roots.sort()
-            return tuple(roots)
+            return tuple ( roots )
 
         if 2 == len(splits) :
             if isequal ( bp.xmin() , splits[0] ) and isequal ( bp.xmax() , splits[1] ) :
                 xmn    = splits[0]
                 xmx    = splits[1]
-                splits = [ xmn , 0.5*(xmn+xmx) , xmx ] 
+                splits = [ xmn , 0.5 * ( xmn + xmx ) , xmx ] 
                 
         ns = len(splits)
         for i in range(1,ns) :

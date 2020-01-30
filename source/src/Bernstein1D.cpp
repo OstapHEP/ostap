@@ -220,6 +220,77 @@ bool Ostap::Math::Positive::updateBernstein ()
     return update ;
   }
   //
+  // // generic case 
+  // const unsigned short m = ( o - 1 ) / 2 ;
+  // //
+  // std::vector<double> roots ( o - 1 , 0.0 ) ;
+  // //
+  // const unsigned int   nr = roots.size() ;
+  // for ( unsigned short ir = 0 ; ir < nr ; ++ir ) 
+  // { roots [ ir ] = 0 == ir ? m_sphere.x2 ( ir+1 ) : roots [ ir - 1 ] + m_sphere.x2 ( ir + 1 ) ; }
+  // //
+  // Bernstein b1 ( 0 , xmin () , xmax () ) ; b1.setPar ( 0 , 1 ) ;
+  // Bernstein b2 ( 0 , xmin () , xmax () ) ; b2.setPar ( 0 , 1 ) ;
+  // Bernstein b  ( 2 , xmin () , xmax () ) ;
+  // //
+  // for ( unsigned short j = 0 ; j < o - 1 ; ++j ) 
+  // {
+  //   const double r1 = roots [ j ] ;
+  //   const double r2 = 1 - r1      ;
+  //   //
+  //   b.setPar ( 0 ,  r1 * r1 ) ;
+  //   b.setPar ( 1 , -r1 * r2 ) ;
+  //   b.setPar ( 2 ,  r2 * r2 ) ;
+  //   if ( 0 == j % 2 ) { b1 = b1 * b ; }
+  //   else              { b2 = b2 * b ; }
+  //   std::cout<< "j=" << j << " " << b1.degree() << " " << b2.degree() << std::endl ;
+  // }
+  // //
+  // const double alpha = roots.back() + m_sphere.x2 ( 0                 ) ;
+  // const double beta  = roots.back() + m_sphere.x2 ( m_sphere.nX() - 1 ) ;
+  // //
+  // std::cout 
+  //   << " alpha" << alpha 
+  //   << " beta " << beta <<  std::endl ;
+  // //
+  // if ( 0 == o % 2 )
+  // {
+  //   b1 *= alpha ;
+  //   b2 *= beta  ;
+  //   b   = b1                    + b2.multiply ( 1 , 1 ) ;
+  //   std::cout << "DEGREE(0==%2)" 
+  //             << " b1:" << b1.degree() 
+  //             << " b2:" << b2.degree() 
+  //             << " b: " << b.degree() 
+  //             << " o: " << o << std::endl ;
+  // }
+  // else 
+  // {
+  //   b1 *= alpha ;
+  //   b2 *= beta  ;
+  //   b   = b2.multiply ( 1 , 0 ) + b1.multiply ( 0 , 1 ) ;
+  //   std::cout << "DEGREE(0!=%2)" 
+  //             << " b1:" << b1.degree() 
+  //             << " b2:" << b2.degree() 
+  //             << " b: " << b.degree() 
+  //             << " o: " << o << std::endl ;
+  // }
+  // //
+  // if ( b.degree() != this->degree() ) 
+  // { std::cerr << "ERROR(1)" << b.degree() << " " << degree() << std::endl ;  }
+  // if ( o + 1  != m_sphere.nX()) 
+  // { std::cerr << "ERROR(2)" << ( o + 1  )  << " " << m_sphere.nX () << std::endl ;  }
+  
+  // const double isum = norm / std::accumulate ( b.pars().begin() , b.pars().end() , 0.0 ) ;
+  // for ( unsigned short ix = 0 ; ix < m_sphere.nX() ; ++ix ) 
+  // {
+  //   const bool updated = m_bernstein.setPar ( ix , b.par ( ix ) * isum ) ;
+  //   update = updated || update ;
+  // }
+  // //
+  // return update ;
+  // ==========================================================================
+  
   // generic case 
   //
   // get the coefficients from the sphere 

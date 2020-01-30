@@ -314,18 +314,18 @@ Ostap::Math::Bernstein::Bernstein
 /* construct Bernstein polynomial from its roots
  *  Polinomial has a form
  *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
- *  @param xmin low  edge for Bernstein polynomial
- *  @param xmax high edge for Bernstein polynomial
- *  @param r the list of real  roots of the polinomial
- *  @param c the list of complex roots (only one root from cc-pair is needed)
+ *  @param xmin   low  edge for Bernstein polynomial
+ *  @param xmax   high edge for Bernstein polynomial
+ *  @param rroots the list of real  roots of the polinomial
+ *  @param croots the list of complex roots (only one root from cc-pair is needed)
  */
 // ============================================================================
 Ostap::Math::Bernstein::Bernstein 
-( const double xmin                            , 
-  const double xmax                            , 
-  const std::vector<double>& r                 ,
-  const std::vector<std::complex<double> > & c )
-  : Ostap::Math::PolySum ( r.size() + 2*c.size() ) 
+( const double xmin                                 , 
+  const double xmax                                 , 
+  const std::vector<double>&                 rroots ,
+  const std::vector<std::complex<double> > & croots )
+  : Ostap::Math::PolySum ( rroots.size() + 2*croots.size() ) 
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
 {
@@ -333,7 +333,7 @@ Ostap::Math::Bernstein::Bernstein
   Bernstein result ( std::vector<double> ( 1 , 1.0 ) , xmin , xmax ) ;
   Bernstein b1     ( std::vector<double> ( 2 , 1.0 ) , xmin , xmax ) ;
   Bernstein b2     ( std::vector<double> ( 3 , 1.0 ) , xmin , xmax ) ;
-  for ( double rr : r )
+  for ( double rr : rroots )
   { 
     const double dmn = m_xmin - rr  ;
     const double dmx = m_xmax - rr  ;
@@ -355,7 +355,7 @@ Ostap::Math::Bernstein::Bernstein
     result = result * b1 ;
   }
   const double xmid = 0.5 * ( m_xmin + m_xmax );
-  for ( std::complex<double> cr : c )
+  for ( std::complex<double> cr : croots )
   {
     //  a * x * x + bx + c 
     const double a =  1               ;

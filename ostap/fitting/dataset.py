@@ -453,12 +453,12 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
     if isinstance ( what , str       ) : what = what.strip()
     if isinstance ( cuts , str       ) : cuts = cuts.strip()
     
-    ## native RooFit...  I have some suspicion that it does not work properly
-    if isinstance ( what , ROOT.RooArgList ) and \
-       isinstance ( histo , ROOT.TH1       ) and \
-       hasattr ( dataset , 'fillHistogram' ) :
-        histo.Reset() 
-        return dataset.fillHistogram  ( histo , what , cuts , *args )
+    ## ## native RooFit...  I have some suspicion that it does not work properly
+    ## if isinstance ( what  , ROOT.RooArgList ) and \
+    ##    isinstance ( histo , ROOT.TH1        ) and \
+    ##    hasattr ( dataset , 'fillHistogram'  ) :
+    ##     histo.Reset() 
+    ##     return dataset.fillHistogram  ( histo , what , cuts , *args )
     
     ## delegate to TTree (only for non-weighted dataset with TTree-based storage type) 
     if hasattr ( dataset , 'isWeighted') and not dataset.isWeighted() \
@@ -521,23 +521,34 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
-    print 'WHAT is', what
     
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
-        return Ostap.HistoProject.project3 ( dataset ,
-                                             histo   , 
-                                             what[2] ,
-                                             what[1] ,
-                                             what[0] , cuts , *args) 
+        sc = Ostap.HistoProject.project3 ( dataset ,
+                                           histo   , 
+                                           what[2] ,
+                                           what[1] ,
+                                           what[0] , cuts , *args)
+        if not sc.isSuccess() :
+            logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
+            return None
+        return histo
     elif isinstance ( histo , ROOT.TH2 ) and 2 == len ( what )  :
-        return Ostap.HistoProject.project2 ( dataset ,
-                                             histo   , 
-                                             what[1] ,
-                                             what[0] , cuts , *args )
+        sc = Ostap.HistoProject.project2 ( dataset ,
+                                           histo   , 
+                                           what[1] ,
+                                           what[0] , cuts , *args )
+        if not sc.isSuccess() :
+            logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+            return None
+        return histo
     elif isinstance ( histo , ROOT.TH1 ) and 1 == len ( what )  :
-        return Ostap.HistoProject.project  ( dataset ,
-                                             histo   , 
-                                             what[0] , cuts , *args )
+        sc = Ostap.HistoProject.project  ( dataset ,
+                                           histo   , 
+                                           what[0] , cuts , *args )
+        if not sc.isSuccess() :
+            logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
+            return None
+        return histo
     
     raise AttributeError ( 'DataSet::project, invalid case' )
 

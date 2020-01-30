@@ -259,21 +259,20 @@ class Convolution_pdf(PDF) :
     def old_pdf ( self ):
         """``old_pdf''  : original (non-convolved) PDF"""
         return self.__old_pdf         
-    ## redirect any other attributes to original PDF
-    def __getattr__ ( self , attr ) :
-        """Get all extra attributes from the original PDF"""
+    ## ## redirect any other attributes to original PDF
+    ## def __getattr__ ( self , attr ) :
+    ##     """Get all extra attributes from the original PDF"""
 
-        try :
-            return getattr ( self.old_pdf     , attr )
-        except AttributeError :
-            pass
+    ##     try :
+    ##         return getattr ( self.old_pdf     , attr )
+    ##     except AttributeError :
+    ##         pass
 
-        try :
-            return getattr ( self.convolution , attr )
-        except AttributeError :
-            pass
-
-        raise AttributeError("Unknown attribute %s:" % attr )
+    ##     try :
+    ##         return getattr ( self.convolution , attr )
+    ##     except AttributeError :
+    ##         pass
+    ##     raise AttributeError("Unknown attribute %s:" % attr )
     
 # =============================================================================
 if '__main__' == __name__ :

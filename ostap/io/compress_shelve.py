@@ -295,7 +295,7 @@ class CompressShelf(shelve.Shelf,object):
 
     # =========================================================================
     ## list the avilable keys 
-    def ls    ( self , pattern = '' ) :
+    def ls    ( self , pattern = '' , load = True ) :
         """List the available keys (patterns included).
         Pattern matching is performed accoriding to
         fnmatch/glob/shell rules [it is not regex!] 
@@ -307,7 +307,6 @@ class CompressShelf(shelve.Shelf,object):
         """
         n  = os.path.basename ( self.filename )
         ap = os.path.abspath  ( self.filename ) 
-        ll = getLogger ( n )
         
         try :
             fs = os.path.getsize ( self.filename )
@@ -323,25 +322,50 @@ class CompressShelf(shelve.Shelf,object):
         else :
             size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
             
-        ll.info ( 'Database: %s #keys: %d size: %s' % ( ap , len ( self ) , size ) )
-                
+                        
         keys = [] 
         for k in self.ikeys ( pattern ): keys.append ( k )
         keys.sort()
         if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
         else    : mlen = 2 
-        fmt = ' --> %%-%ds : %%s' % mlen 
+        fmt = ' --> %%-%ds : %%s' % mlen
+
+        table = [ ( 'Key' , 'type',  '   size   ' ) ] 
         for k in keys :
-            ss = len ( self.dict[k] ) ##  compressed size 
-            if    ss < 1024 : size = '%8d' % ss 
-            elif  ss < 1024  * 1024 :
-                size = '%8.3f kB' %  ( float ( ss ) / 1024 )
-            elif  ss < 1024  * 1024 * 1024 :
-                size = '%8.3f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
+            ss = len ( self.dict [ k ] ) ##  compressed size 
+            if    ss < 1024 : size = '%7d   ' % ss 
+            elif  ss < 1024 * 1024 :
+                size = '%7.2f kB' %  ( float ( ss ) / 1024 )
+            elif  ss < 1024 * 1024 * 1024 :
+                size = '%7.2f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
             else :
-                size = '%8.3f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
-            
-            ll.info ( fmt  % ( k , size ) ) 
+                size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
+
+            otype = ''
+            try :
+                if load : ot = type ( self       [ k ] )
+                else    : ot = type ( self.cache [ k ] )
+                otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
+            except KeyError :
+                pass
+            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  
+            table.append ( row )
+
+        import ostap.logger.table as T
+        t      = type( self ).__name__
+        title  = '%s:%s' % ( t  , n )
+        maxlen = 0
+        for row in table :
+            rowlen = 0 
+            for i in row : rowlen += len ( i )
+            maxlen = max ( maxlen, rowlen ) 
+        if maxlen + 3 <= len ( title ) :
+            title = '<.>' + title [ -maxlen : ] 
+
+        table = T.table ( table , title = title , prefix = '# ' )
+        ll    = getLogger ( n )
+        line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
+        ll.info (  '%s\n%s' %  ( line , table ) )
         
         
     # =========================================================================
@@ -449,8 +473,8 @@ class CompressShelf(shelve.Shelf,object):
         except KeyError:            
             value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] )            
             if self.writeback : self.cache [ key ] = value            
-        return value       
-
+        return value
+    
     # =========================================================================
     ## ``set-and-compress-item'' to dbase
     #  @code

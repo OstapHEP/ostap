@@ -7,8 +7,6 @@
 #   - memory
 #   - profiling
 #   - ... 
-#
-#  It is recommended to install psutil module 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 #  
@@ -18,8 +16,6 @@
 - memory
 - profiling
 - etc
-
-It is recommended to install psutil module 
 """
 # =============================================================================
 __version__ = "$Revision$"

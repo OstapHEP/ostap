@@ -96,6 +96,16 @@ except ImportError :
     - https://robpol86.github.io/terminaltables"""
     logger.warning ( message ) 
 # =============================================================================                    
+try :
+    import psutil
+    logger.info  ( "psutil         is imported from %s" % psutil.__file__ )     
+except ImportError :
+    message = """psutil cannot be imported! 
+    psutil is recommended for memory monitoring
+    - There is no local replacement
+    - see https://github.com/giampaolo/psutil"""
+    logger.error ( message ) 
+# =============================================================================        
     
 
 # =============================================================================

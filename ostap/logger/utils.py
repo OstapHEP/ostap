@@ -49,6 +49,7 @@ __all__     = (
     'pretty_2ve'         , ## printpouit of the value with asymmetric errors 
     ##
     'multicolumn'        , ## format the list of strings into multicolumn block
+    'DisplayTree'        , ## display tree-like structures 
     )
 # =============================================================================
 import ROOT,cppyy, time, os,sys ## attention here!!
@@ -818,6 +819,93 @@ def multicolumn ( lines , term_width=None , indent = 0 , pad = 2 ):
     return '\n'.join ( result )
 
 
+# =======================================================================================
+## @class DisplayTree
+#  Very simple class to allow a rendering of Tree-like objects,
+#  in particular the structure and the content of directories 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2020-01-029
+class DisplayTree ( object ) :
+    """Very simple class to allow a rendering of Tree-like objects,
+    in particular the structure and the content of directories 
+    """    
+    prefix_item_middle   = '\033(0\x74\033(B' + '\033(0\x71\033(B' + '\033(0\x71\033(B'
+    prefix_item_last     = '\033(0\x6d\033(B' + '\033(0\x71\033(B' + '\033(0\x71\033(B'
+    prefix_parent_middle = '    '  
+    prefix_parent_last   = '\033(0\x78\033(B' +  '   '
+
+
+    def __init__  ( self            ,
+                    payload         ,   ## the object 
+                    parent  = None  ,   ## parent if any  
+                    display = None  ,   ## display function: how to display it? 
+                    isdir   = False ,   ## directory object ?
+                    last    = False ) : ## last in the list? 
+        
+        self.__payload = payload
+        self.__parent  = parent
+
+        if   display :         ## use display function if specified 
+            self.__display = display
+        elif parent  :         ## otherwise pick if from the parent 
+            self.__display = parent.__display
+            
+        self.__last    = last
+        self.__isdir   = isdir        
+        self.__depth   = self.parent.depth + 1 if parent else 0 
+
+    @property
+    def payload ( self ) :
+        """``payload''  : the actual object, hold by the tree leaf"""
+        return self.__payload
+    @property
+    def parent ( self ) :
+        """``parent'' : the parent element in the tree"""
+        return self.__parent
+    @property
+    def last   (  self ) :
+        """``last''  : is it a alst object oin the list? """
+        return self.__last
+    @property
+    def isdir  (  self ) :
+        """``isdir''  : is it `directory-like' item? """
+        return self.__isdir    
+    @property
+    def depth  (  self ) :
+        """``depth''  : how deep is our tree? """
+        return self.__depth 
+    
+    @property 
+    def itemname ( self ) :
+        """``itemname'' : how the name of the leaf is displayed?"""
+        return self.__display ( self.payload , self.isdir )
+
+    # ==========================================================================
+    ##  show the (sub)tree  
+    def showme ( self , prefix = '' ) :
+        """Show the constructed (sub)tree  
+        """        
+        if self.parent is None:
+            return self.itemname
+
+        symbols = self.prefix_item_last if self.last else self.prefix_item_middle
+
+        graph   = [ prefix + '{!s} {!s}'.format ( symbols , self.itemname ) ]
+
+        parent = self.parent        
+        while parent and parent.parent is not None:
+            pp     = self.prefix_parent_middle if parent.last else self.prefix_parent_last
+            graph.append  ( pp )
+            parent = parent.parent
+
+        return ''.join ( reversed ( graph ) )
+
+    def __str__ (  self ) :
+        return 'Leaf(%s,isdir=%s,last=%s)' % ( self.itemname ,
+                                               self.isdir    ,
+                                               self.last     ) 
+    __repr__ = __str__
+    
 # =============================================================================
 if '__main__' == __name__ :
     

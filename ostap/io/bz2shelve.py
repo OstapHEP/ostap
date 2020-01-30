@@ -360,8 +360,8 @@ class TmpBz2Shelf(Bz2Shelf):
         keyencoding = ENCODING         ) :
 
         ## create temporary file name 
-        import tempfile
-        filename = tempfile.mktemp  ( prefix = 'tmpdb-' , suffix = '.bz2db' )
+        import ostap.utils.cleanup as CU 
+        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.bz2db' )
         
         Bz2Shelf.__init__ ( self        ,  
                             filename    ,

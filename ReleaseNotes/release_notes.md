@@ -10,6 +10,16 @@
   1. add `test_fitting_toys`
   1. add `test_parallel_toys`
   1. add examples/tests for evaluation of significance with toys
+  1. improve the output of `ls`-method for for `compressed_shelve` 
+  1. few minor tweaks needed for `picalib` 
+  1. add `DisplayTree` into `ostap.logger.utils` - useful tool to render the tree-like structures
+  1. impove `ls` methods for all shelve-like databases 
+  1. add `ls_tree` and `ls_table` method for `ROOT.TDirectory`
+```
+f = ROOT.TFile ( .. )
+f.ls_tree ()
+f.ls_table() 
+```
  
 ## Backward incompatible changes
 
@@ -20,7 +30,9 @@
   1. more fixes in `ostap/fitting/minuit.py`
   1. small fixes in `ostap/fitting/toys.py`
   1. tiny fix in `ostap/math/random_ext.py`
-
+  1. Fix signature of `ds_project` method from `ostap.fitting.dataset.py`
+  1. few minor fixes needed for `picalib` 
+ 
 # v1.4.6.0
 
 ## New features:
