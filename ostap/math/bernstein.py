@@ -928,29 +928,29 @@ def _new_init_ ( t ,  *args )  :
     - std::vector<double> 
     - or std::vector<std::complex<double>>
     """
-    from ostap.math.base import doubles, complexes
+    from ostap.math.base        import doubles      , complexes
+    from ostap.core.ostap_types import string_types , listlike_types 
     
     largs = list (  args )
-    alen  = len  ( largs )
-    
-    for i in range(alen) :
-        
-        arg = largs[i] 
+
+    for i , arg in enumerate ( largs ) :
+
         if not isinstance ( arg ,  ( list , tuple ) ) : continue 
         
         try: 
-            _arg = doubles  ( *arg  )
-            largs[i] = _arg
+            _arg = doubles  ( arg  )
+            largs [ i ] = _arg
             continue 
         except TypeError : pass
         
         try: 
-            _arg = complexes ( *arg  )
-            largs[i] = _arg
+            _arg = complexes ( arg  )
+            largs [ i ] = _arg
             continue 
         except TypeError : pass
         
-    targs = tuple(largs)
+    targs = tuple ( largs )
+
     ## use old constructor 
     t._old_init_ ( *targs ) 
 

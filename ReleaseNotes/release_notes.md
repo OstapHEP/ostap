@@ -20,7 +20,8 @@ f = ROOT.TFile ( .. )
 f.ls_tree ()
 f.ls_table() 
 ```
- 
+  1. speedup construction of Bernstein polynomials from the list of roots 
+  
 ## Backward incompatible changes
 
 ## Bug fixes:  

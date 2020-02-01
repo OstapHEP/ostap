@@ -15,7 +15,7 @@
 #include "Ostap/Math.h"
 // ============================================================================
 /** @file 
- *  Cacualte binbomial coefficients and related quantities 
+ *  Calcualate binbomial coefficients and related quantities 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2015-03-08
  */
@@ -38,8 +38,10 @@ namespace
   _choose_ ( unsigned short n , unsigned short k ) 
   {
     //
-    if      ( k > n            ) { return 0 ; }
-    else if ( 0 == k || n == k ) { return 1 ; }
+    if      ( k > n                ) { return 0 ; }
+    else if ( 0 == k || n == k     ) { return 1 ; }
+    else if ( 1 == k || n == k + 1 ) { return n ; }
+    else if ( 2 == k || n == k + 2 ) { return 1ull * n * ( n - 1 ) / 2 ; }
     //
     k = std::min ( k , (unsigned short) ( n - k ) ) ;
     unsigned long long r = 1  ;
@@ -49,6 +51,28 @@ namespace
       // r *= n ;
       // r /= d ; 
       r = ( r / d ) * n + ( r % d ) * n / d;
+    }
+    return r ;
+  }
+  // ==========================================================================
+  /** calculate the inverse binomial coefficient 
+   */
+  inline long double 
+  _ichoose_ ( const unsigned short n , const unsigned short k ) 
+  {
+    //
+    if      ( k > n                ) { return 0        ; }
+    else if ( 0 == k || n == k     ) { return 1        ; }
+    else if ( 1 == k || n == k + 1 ) { return 1.0L / n ; }
+    else if ( 2 == k || n == k + 2 ) { return 2.0L / ( 1ull * n * ( n - 1 ) ) ; }
+    //
+    const unsigned short kk = std::min ( k , (unsigned short) ( n - k ) ) ;
+    //
+    long double r = 1  ;
+    for ( unsigned short i = 1 ; i <= kk  ; ++i ) 
+    {
+      r *= i ;
+      r /= ( n + 1 - i ) ;  
     }
     return r ;
   }
@@ -91,6 +115,16 @@ Ostap::Math::choose
 ( const unsigned short n , 
   const unsigned short k ) { return _choose_ ( n , k ) ; }
 // ============================================================================
+/*  calculate the inverse binomial conefficient 
+ *  \f$ a = C(n,k)^{-1} = \frac{ (n-k)!k!}{n!}\f$
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2020-01-31
+ */
+// ============================================================================
+double Ostap::Math::ichoose 
+( const unsigned short n , 
+  const unsigned short k ) { return _ichoose_ ( n , k ) ; }
+// ============================================================================
 /** calculate the binomial coefficient C(k,n) = n!/((n-k)!*k!)
  *  @author Vanya BELYAEV Ivan.Belyaev@irep.ru
  *  @date 2015-03-08
@@ -106,7 +140,7 @@ double Ostap::Math::choose_double
   else if ( n < s_digits     ) { return _choose_ ( n , k ) ; }
   else if ( n <= 67          ) { return _choose_ ( n , k ) ; }
   //
-  const unsigned  short k1 = 2*k < n ? k : n - k ;
+  const unsigned  short k1 =  2 * k < n ? k : n - k ;
   if ( k1 * std::log2 ( M_E * n / k1 ) < 63 ) 
   { return _choose_ ( n , k ) ; }
   // 

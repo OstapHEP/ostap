@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
+## ## try to ccache when available 
+## find_program(CCACHE_PROGRAM ccache)
+## if(CCACHE_PROGRAM)
+##     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+## endif()
+
 project(ostap LANGUAGES CXX)
 include(CTest)
 

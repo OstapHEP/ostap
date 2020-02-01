@@ -34,6 +34,7 @@
  *  @date 2010-04-19
  */
 // ============================================================================
+#include <iostream>
 namespace 
 {
   // ==========================================================================
@@ -61,6 +62,73 @@ namespace
     //
     // recursion
     return _casteljau_ ( first , second , t0 , t1 ) ;
+  }
+  // ==========================================================================
+  // multiply two polynomials 
+  template <class OUTPUT , 
+            class INPUT1 , 
+            class INPUT2 >
+  OUTPUT _multiply_ ( INPUT1 a_begin , 
+                      INPUT1 a_end   , 
+                      INPUT2 b_begin , 
+                      INPUT2 b_end   ,
+                      OUTPUT output  )
+  {
+    const unsigned int M = 
+      std::max ( typename std::iterator_traits<INPUT1>::difference_type ( 0 )  ,
+                 std::distance ( a_begin , a_end ) ) ;
+    const unsigned int N = 
+      std::max ( typename std::iterator_traits<INPUT2>::difference_type ( 0 )  ,
+                 std::distance ( b_begin , b_end ) ) ;
+    //
+    if      ( 1 == M ) 
+    {
+      const long double a = *a_begin ;
+      for ( unsigned short k = 0 ; k < N ; ++k , ++output ) 
+      {
+        const long double bk =  *( b_begin + k ) ;
+        *output = a * bk ;
+      }
+      return output ;
+    }
+    else if ( 1 == N ) 
+    {
+      const long double b = *b_begin ;
+      for ( unsigned short k = 0 ; k < M ; ++k , ++output ) 
+      {
+        const long double ak =  *( a_begin + k ) ;
+        *output = ak * b ;
+      }
+      return output ;      
+    }
+    //
+    const unsigned int  m = M - 1 ;
+    const unsigned int  n = N - 1 ;
+    //
+    const unsigned long K = m + n ;
+    for ( unsigned long k = 0 ; k <= K ; ++k , ++output ) 
+    {
+      const unsigned int jmin = ( n <= k ) ? k - n : 0 ;
+      const unsigned int jmax = ( k <= m ) ? k     : m ;
+      //
+      long double ck = 0 ;
+      for ( unsigned int j = jmin ; j <= jmax ; ++j ) 
+      {
+        const long double a  = * ( a_begin +       j   ) ;
+        const long double b  = * ( b_begin + ( k - j ) ) ;
+        const long double ab = a * b ;
+        if ( 0 != ab && !s_zero ( ab ) ) 
+        {
+          ck += ab * 
+            Ostap::Math::choose_double ( m     ,     j ) * 
+            Ostap::Math::choose_double ( n     , k - j ) *
+            Ostap::Math::ichoose       ( m + n , k     ) ;
+        }
+      }
+      //
+      *output = ck ;
+    }
+    return output ;
   }
   // ==========================================================================
 }
@@ -319,65 +387,51 @@ Ostap::Math::Bernstein::Bernstein
  *  @param rroots the list of real  roots of the polinomial
  *  @param croots the list of complex roots (only one root from cc-pair is needed)
  */
-// ============================================================================
+// ========================================================================
 Ostap::Math::Bernstein::Bernstein 
-( const double xmin                                 , 
-  const double xmax                                 , 
-  const std::vector<double>&                 rroots ,
-  const std::vector<std::complex<double> > & croots )
-  : Ostap::Math::PolySum ( rroots.size() + 2*croots.size() ) 
+( const double xmin                                        , 
+  const double xmax                                        , 
+  const std::vector<double>&                 roots_real    ,
+  const std::vector<std::complex<double> > & roots_complex )
+  : Ostap::Math::PolySum ( roots_real.size() + 2 * roots_complex.size () ) 
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
 {
+  // temporary  storage 
+  std::vector<double>  vtmp ( npars() , 0.0 ) ;
+  std::array<double,2> v1   { { 0 , 0 } } ;
   //
-  Bernstein result ( std::vector<double> ( 1 , 1.0 ) , xmin , xmax ) ;
-  Bernstein b1     ( std::vector<double> ( 2 , 1.0 ) , xmin , xmax ) ;
-  Bernstein b2     ( std::vector<double> ( 3 , 1.0 ) , xmin , xmax ) ;
-  for ( double rr : rroots )
-  { 
-    const double dmn = m_xmin - rr  ;
-    const double dmx = m_xmax - rr  ;
-    if      ( s_zero ( dmn ) ) 
-    {
-      b1.setPar ( 0 , 0 ) ;
-      b1.setPar ( 1 , 1 ) ; 
-    }
-    else if ( s_zero ( dmx ) ) 
-    {
-      b1.setPar ( 0 , 1 ) ;
-      b1.setPar ( 1 , 0 ) ; 
-    }
-    else 
-    {
-      b1.setPar ( 0 , dmn ) ;
-      b1.setPar ( 1 , dmx ) ;
-    }
-    result = result * b1 ;
-  }
-  const double xmid = 0.5 * ( m_xmin + m_xmax );
-  for ( std::complex<double> cr : croots )
+  m_pars[0]        = 1 ;
+  unsigned short m = 1 ;
+  //
+  for  ( const double r : roots_real )
   {
-    //  a * x * x + bx + c 
-    const double a =  1               ;
-    const double b = -2*cr.real()     ;
-    const double c = std::norm ( cr ) ;    
+    const double tr = t ( r ) ;
+    if      ( s_zero  ( tr     ) ) { v1 [ 0 ] =    0 ; v1 [ 1 ] =       1 ; }
+    else if ( s_equal ( tr , 1 ) ) { v1 [ 0 ] =    1 ; v1 [ 1 ] =       0 ; }
+    else                           { v1 [ 0 ] = - tr ; v1 [ 1 ] =  1 - tr ; }
     //
-    const double a0 = c + m_xmin * ( b + m_xmin * a ) ;
-    const double a1 = c +   xmid * ( b +   xmid * a ) ;
-    const double a2 = c + m_xmax * ( b + m_xmax * a ) ;
-    //    
-    b2.setPar ( 0 ,     a0                      ) ;
-    b2.setPar ( 1 ,  2 * a1 - 0.5 * ( a0 + a2 ) ) ;
-    b2.setPar ( 2 ,     a2                      ) ;
-    //
-    result = result * b2 ;
+    _multiply_ ( m_pars.begin() , m_pars.begin() + m , v1.begin() , v1.end() , vtmp.begin() ) ;
+    std::swap  ( m_pars , vtmp ) ;
+    ++m ;
   }
   //
-  this->m_pars = std::move( result.m_pars ) ;
+  std::array<double,3> v2 { { 0 , 0 , 0 }}  ;
+  for  ( std::complex<double> r : roots_complex ) 
+  {
+    const double a = t ( r.real () ) ;
+    const double b =     r.imag ()   ;
+    const double n = a * a + b * b   ;
+    //
+    v2 [ 0 ] = n             ;
+    v2 [ 1 ] = n - a         ;
+    v2 [ 2 ] = 1 + n - 2 * a ;
+    //
+    _multiply_ ( m_pars.begin() , m_pars.begin() + m , v2.begin() , v2.end() , vtmp.begin() ) ;
+    std::swap  ( m_pars , vtmp ) ;
+    m += 2 ;
+  }
   //
-  // scale it 
-  const short sf = Ostap::Math::frexp2 (  norm() ).second ;
-  Ostap::Math::scale_exp2 (  m_pars , -sf + 1 ) ;
 } 
 // ============================================================================
 /*  construct Bernstein polynomial from its roots
@@ -1188,7 +1242,7 @@ namespace
     {
       if ( 0 != j ) { c *= j ; c /= ( m - j ) ; }
       const long double t = c * _m_head_ ( m , first , first + ( j + 1 ) ) ;
-      *output = 0== j%2 ? t : -t ;
+      *output = ( 0 == j%2 ) ? t : -t ;
     }
     return output ;
   }

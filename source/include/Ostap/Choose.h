@@ -31,6 +31,14 @@ namespace Ostap
     unsigned long long  choose ( const unsigned short n ,
                                  const unsigned short k ) ;
     // ========================================================================
+    /** calculate the inverse binomial conefficient 
+     *  \f$ a = C(n,k)^{-1} = \frac{ (n-k)!k!}{n!}\f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2020-01-31
+     */
+    double ichoose ( const unsigned short n , 
+                     const unsigned short k ) ;
+    // ========================================================================
     /** calculate the logarithm of binomial coefficient
      *  \f$ \log C^n_k \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
