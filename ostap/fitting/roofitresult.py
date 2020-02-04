@@ -564,7 +564,6 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     pars_all   = r.params ( float_only = False )
     pars_float = r.params ( float_only = True  )
 
-
     ## constant/fix parameters 
     crows = [] 
     for p in pars_all :
@@ -591,10 +590,13 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         if n : n = '[10^%+d]' % n
         else : n = '' 
 
-        mxr , mxv = r.max_cor    ( p )
-        gc        = r.globalCorr ( p )
-        cc        = '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
-        if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
+        cc = 'Not available'
+        if 0 <= cq :             
+            mxr , mxv = r.max_cor    ( p )
+            gc        = r.globalCorr ( p )
+            
+            cc        = '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
+            if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
             
         row = p , n , s , cc
         frows.append ( row ) 

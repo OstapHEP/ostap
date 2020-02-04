@@ -21,6 +21,7 @@ f.ls_tree ()
 f.ls_table() 
 ```
   1. speedup construction of Bernstein polynomials from the list of roots 
+  1. re-write `PDF.wilks` method to use `ROOT.RooProfileLL`
   
 ## Backward incompatible changes
 

@@ -1413,10 +1413,6 @@ class PDF (MakeVar) :
                  fix                            , ## variables to fix 
                  range          = ( 0 , None )  ,
                  silent         = True          ,
-                 opt_const      = True          ,
-                 max_calls      = 10000         ,
-                 max_iterations = -1            ,
-                 strategy       = None          ,
                  args           = () , **kwargs ) :
         """Evaluate ``significance'' using Wilks' theorem via NLL
         >>> data = ...
@@ -1439,10 +1435,6 @@ class PDF (MakeVar) :
                                      fix            = fix             ,
                                      range          = range           , 
                                      silent         = silent          ,
-                                     opt_const      = opt_const       , 
-                                     max_calls      = max_calls       , 
-                                     max_iterations = max_iterations  ,
-                                     strategy       = None            ,
                                      args           = args , **kwargs )
         ## convert if needed 
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
@@ -1480,48 +1472,42 @@ class PDF (MakeVar) :
 
             ## fix "fixed" variables and redefine range for main variable
             mn = min ( minv , maxv - error )
-            with FIXVAR ( fixed ) , RangeVar ( var , mn , maxv + error ) :
+            with SETVAR ( var ) , RangeVar ( var , mn , maxv + error ) :
 
                 ## create NLL 
                 nLL , sf = self.nll ( dataset         ,
                                       silent = silent ,
                                       clone  = False  ,
+                                      offset = False  , 
                                       args   = args   , **kwargs )
+
+                ## create profile
+                vars = ROOT.RooArgSet()
+                vars.add ( var )
+                for f in  fixed : vars.add ( f )
                 
-                ## create MINUIT minimizer 
-                minuit = self.minuit ( nLL = nLL ,
-                                       max_calls      = max_calls      ,
-                                       max_iterations = max_iterations ,
-                                       opt_const      = opt_const      ,
-                                       strategy       =  strategy      )
+                pLL = ROOT.RooProfileLL ( 'pLL_%s'          % self.name ,
+                                          'LL-profile (%s)' % self.name , nLL , vars )
+                
+                ## 1st value:
+                var.setVal ( maxv )
+                nll_max = pLL.getVal()
 
-                ## make 1st fit 
-                with SETVAR ( var ) , FIXVAR ( var ) :                
-                    var.setVal ( maxv )
-                    st = minuit.migrad      ('1st fit:   %s=%s' % ( vname , maxv ) )
-                    nll_max = nLL.getVal ()
-                    
                 if 0 < error :
-
-                    with SETVAR ( var ) , FIXVAR ( var ) :                
-                        var.setVal ( maxv + error )
-                        st  = minuit.migrad ('Fit(+err): %s=%s' % ( vname , ( maxv + error ) ) ) 
-                        ve1 = nLL.getVal ()
-                        
-                    with SETVAR ( var ) , FIXVAR ( var ) :                
-                        var.setVal ( maxv - error )
-                        st  = minuit.migrad ('Fit(-err): %s=%s' % ( vname , ( maxv - error ) ) )
-                        ve2 = nLL.getVal ()
+                    
+                    var.setVal ( maxv + error )
+                    ve1 = pLL.getVal()
+                    
+                    var.setVal ( maxv - error )
+                    ve2 = pLL.getVal()
 
                     nll_max = VE ( nll_max , 0.25 * ( ve1 - ve2 ) ** 2 ) 
                     
-                ## make 2nd fit 
-                with SETVAR ( var ) , FIXVAR ( var ) :                
-                    var.setVal ( minv )
-                    st = minuit.migrad      ('2nd fit:   %s=%s' % ( vname , minv )  )
-                    nll_min = nLL.getVal ()
-    
-                dnll = nll_min - nll_max
+                ## 2nd value:
+                var.setVal ( minv )
+                nll_min = pLL.getVal() 
+                
+            dnll = nll_min - nll_max
 
             ## apply scale factor
             if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
@@ -1531,7 +1517,7 @@ class PDF (MakeVar) :
             result = 2.0 * abs ( dnll )
             result = result ** 0.5
             
-            del minuit, nLL
+            del pLL , nLL
             
         return result if 0 <= dnll else -1 * result 
                 

@@ -1795,6 +1795,10 @@ def suppress_topics ( *topics ) :
     """suppress certain message topics
     >>> suppress_topics ( 'Fitting'  , 'Caching' ) 
     """
+    if topics and 1 == len( topics ) :
+        t = str ( topics [ 0 ] ).lower()
+        if 'config' == t : return suppress_topics() 
+                
     svc = ROOT.RooMsgService.instance()
     svc.saveState () 
     topic = msg_topic ( *topics ) 
