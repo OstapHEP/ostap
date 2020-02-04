@@ -53,6 +53,8 @@ RemoveTopics = Plotting            ,
   1. tiny fix in `ostap/math/random_ext.py`
   1. Fix signature of `ds_project` method from `ostap.fitting.dataset.py`
   1. few minor fixes needed for `picalib` 
+  1. fix `Ostap::HistoProject::project` for weighted `RooAbsData`, 
+     now uncertainties are evaluated correctly, properly accounting the errors in weights  
  
 # v1.4.6.0
 

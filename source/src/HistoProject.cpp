@@ -17,6 +17,7 @@
 #include "Ostap/Iterator.h"
 // ============================================================================
 #include "OstapDataFrame.h"
+#include "local_math.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::HistoProject
@@ -68,25 +69,45 @@ Ostap::HistoProject::project
   //
   const bool weighted = data->isWeighted() ;
   //
+  const double xmin = histo->GetXaxis()->GetXmin () ;
+  const double xmax = histo->GetXaxis()->GetXmax () ;
+  //
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // calculate the weight 
-    const double w = 
-      selection && weighted ? selection->getVal() * data->weight() : 
-      selection             ? selection->getVal()                  :
-      weighted              ?                       data->weight() : 1.0 ;
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    // data weight 
+    const double dw = weighted  ? data      -> weight () : 1.0 ;
+    //
+    // calculate the total weight 
+    const double w = sw * dw ;
     //
     // skip null weights 
     if ( !w ) { continue ; }
     //
     // calculate the values (only for non-zero weights)
     const double xvalue = expression.getVal()  ;
-    // fill the histogram  (only for non-zero weights)
-    histo->Fill ( xvalue , w ) ; 
     //
+    // check the range 
+    if ( xmax <= xvalue || xvalue < xmin ) { continue ; }
+    //
+    // fill the histogram  (only for non-zero weights and in-range entries!)
+    histo -> Fill ( xvalue , w ) ; 
+    //
+    if  ( weighted )
+    {
+      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
+      if  ( !s_zero ( we ) && s_equal ( we , w ) )
+      {
+        const int    bin    = histo -> FindBin     ( xvalue ) ;
+        const double binerr = histo -> GetBinError ( bin    ) ;
+        const double err2   = binerr * binerr - w * w + we * we  ;
+        histo -> SetBinError ( bin , std::sqrt ( err2 ) ) ;  
+      }
+    }
   }
   //
   return StatusCode::SUCCESS ;  
@@ -121,26 +142,49 @@ Ostap::HistoProject::project2
   //
   const bool weighted = data->isWeighted() ;
   //
+  const double xmin = histo -> GetXaxis () -> GetXmin () ;
+  const double xmax = histo -> GetXaxis () -> GetXmax () ;
+  const double ymin = histo -> GetYaxis () -> GetXmin () ;
+  const double ymax = histo -> GetYaxis () -> GetXmax () ;
+  //
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // calculate the weight 
-    const double w = 
-      selection && weighted ? selection->getVal() * data->weight() : 
-      selection             ? selection->getVal()                  :
-      weighted              ?                       data->weight() : 1.0 ;
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    // data weight 
+    const double dw = weighted  ? data      -> weight () : 1.0 ;
+    // calculate the total weight 
+    const double w = sw * dw ;
     //
     // skip null weights 
     if ( !w ) { continue ; }
     //
     // calculate the values (only for non-zero weights)
     const double xvalue = xexpression.getVal()  ;
+    // check the range 
+    if ( xmax <= xvalue || xvalue < xmin ) { continue ; }
+    // calculate the values (only for non-zero weights)
     const double yvalue = yexpression.getVal()  ;
+    // check the range 
+    if ( ymax <= yvalue || yvalue < ymin ) { continue ; }
+    //
     // fill the histogram  (only for non-zero weights)
     histo->Fill ( xvalue , yvalue , w ) ; 
     //
+    if  ( weighted )
+    {
+      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
+      if  ( !s_zero ( we ) && s_equal ( we , w ) ) 
+      {
+        const int    bin    = histo -> FindBin     ( xvalue , yvalue ) ;
+        const double binerr = histo -> GetBinError ( bin    ) ;
+        const double err2   = binerr * binerr - w * w + we * we  ;
+        histo -> SetBinError ( bin , std::sqrt ( err2 ) ) ;  
+      }
+    }
   }
   //
   return StatusCode::SUCCESS ;  
@@ -177,27 +221,50 @@ Ostap::HistoProject::project3
   //
   const bool weighted = data->isWeighted() ;
   //
+  const double xmin = histo -> GetXaxis () -> GetXmin () ;
+  const double xmax = histo -> GetXaxis () -> GetXmax () ;
+  const double ymin = histo -> GetYaxis () -> GetXmin () ;
+  const double ymax = histo -> GetYaxis () -> GetXmax () ;
+  const double zmin = histo -> GetZaxis () -> GetXmin () ;
+  const double zmax = histo -> GetZaxis () -> GetXmax () ;
+  //
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // calculate the weight 
-    const double w = 
-      selection && weighted ? selection->getVal() * data->weight() : 
-      selection             ? selection->getVal()                  :
-      weighted              ?                       data->weight() : 1.0 ;
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    // data weight 
+    const double dw = weighted  ? data      -> weight () : 1.0 ;
+    // calculate the total weight 
+    const double w = sw * dw ;
     //
     // skip null weights 
     if ( !w ) { continue ; }
     //
     // calculate the values (only for non-zero weights)
     const double xvalue = xexpression.getVal()  ;
+    if ( xmax <= xvalue || xvalue < xmin ) { continue ; }
     const double yvalue = yexpression.getVal()  ;
+    if ( ymax <= yvalue || yvalue < ymin ) { continue ; }
     const double zvalue = zexpression.getVal()  ;
+    if ( zmax <= zvalue || zvalue < zmin ) { continue ; }
+    //
     // fill the histogram  (only for non-zero weights)
     histo->Fill ( xvalue , yvalue , zvalue , w ) ; 
     //
+    if  ( weighted )
+    {
+      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
+      if  ( !s_zero ( we )  && s_equal ( we , w ) )
+      {
+        const int    bin    = histo -> FindBin     ( xvalue , yvalue , zvalue ) ;
+        const double binerr = histo -> GetBinError ( bin    ) ;
+        const double err2   = binerr * binerr - w * w + we * we  ;
+        histo -> SetBinError ( bin , std::sqrt ( err2 ) ) ;  
+      }
+    }
   }
   //
   return StatusCode::SUCCESS ;  
