@@ -263,9 +263,9 @@ namespace Ostap
                  const double                xmin  =  0 ,
                  const double                xmax  =  1 ) ;
       /// constructor from the sphere with coefficients
-      Positive ( const Ostap::Math::NSphere& sphere    ,
-                 const double                xmin = 0  ,
-                 const double                xmax = 0  ) ;
+      // Positive ( const Ostap::Math::NSphere& sphere    ,
+      //           const double                xmin = 0  ,
+      //           const double                xmax = 0  ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -274,12 +274,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_sphere.nPhi () ; }
+      /// get number of parameters (==degree)
+      std::size_t npars () const { return degree () ; }
       /// set k-parameter
       bool setPar       ( const unsigned short k , const double value ) 
-      { 
-        const bool update = m_sphere.setPhase ( k , value ) ;
+      {
+        const bool update = 
+          0 == k ? 
+          m_sphereA.setPhase ( 0     , value ) :
+          m_sphereR.setPhase ( k - 1 , value ) ;
         return update ? updateBernstein () : false ;
       }
       /// set k-parameter
@@ -287,9 +290,9 @@ namespace Ostap
       { return setPar   ( k , value ) ; }
       /// get the parameter value
       double  par       ( const unsigned short k ) const
-      { return m_sphere.par ( k ) ; }
-      /// get all parameters (phases on sphere)
-      const std::vector<double>& pars  () const { return m_sphere   .pars () ; }
+      { return 0 == k ? m_sphereA.par ( 0 ) : m_sphereR.par ( k - 1 ) ; }
+      /// get all parameters (phases on sphere) BY VALUE!
+      std::vector<double> pars  () const ;
       /// get bernstein coefficients
       const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
       // ======================================================================
@@ -336,13 +339,14 @@ namespace Ostap
       /// get the underlying Bernstein polynomial
       const Ostap::Math::Bernstein& bernstein () const { return m_bernstein ; }
       /// get the parameter sphere
-      const Ostap::Math::NSphere&   sphere    () const { return m_sphere    ; }
+      const Ostap::Math::NSphere&   asphere   () const { return m_sphereA   ; }
+      /// get the parameter sphere
+      const Ostap::Math::NSphere&   rsphere   () const { return m_sphereR   ; }
       /// get the indefinite integral
       Bernstein indefinite_integral ( const double C = 0 ) const
       { return m_bernstein.indefinite_integral ( C ) ; }
       /// get the derivative
-      Bernstein derivative          () const
-      { return m_bernstein.derivative          () ; }
+      Bernstein derivative () const { return m_bernstein.derivative () ; }
       // ======================================================================
     public:  /// basic operations  for python
       // ======================================================================
@@ -382,20 +386,35 @@ namespace Ostap
       void swap ( Positive& right ) 
       {
         Ostap::Math::swap ( m_bernstein , right.m_bernstein ) ;
-        Ostap::Math::swap ( m_sphere    , right.m_sphere    ) ;
+        Ostap::Math::swap ( m_sphereA   , right.m_sphereA   ) ;
+        Ostap::Math::swap ( m_sphereR   , right.m_sphereR   ) ;
+        //
+        std::swap ( m_rs  , right.m_rs  ) ;
+        std::swap ( m_v1  , right.m_v1  ) ;
+        std::swap ( m_v2  , right.m_v2  ) ;
+        std::swap ( m_aux , right.m_aux ) ;
       } 
       // ======================================================================
     private : 
       // ======================================================================
-      /// update bernstein coefficiencts
+      /// update bernstein coefficients
       bool updateBernstein () ;
       // ======================================================================
     protected:
       // ======================================================================
       /// the actual bernstein polynomial
       Ostap::Math::Bernstein m_bernstein ; // the actual bernstein polynomial
-      /// arameters sphere
-      Ostap::Math::NSphere   m_sphere    ;
+      /// (alpha/beta) sphere
+      Ostap::Math::NSphere   m_sphereA   ;
+      /// sphere of roots 
+      Ostap::Math::NSphere   m_sphereR   ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      std::vector<long double> m_rs  ;
+      std::vector<long double> m_v1  ;
+      std::vector<long double> m_v2  ;
+      std::vector<long double> m_aux ;
       // ======================================================================
     } ;
     // ========================================================================

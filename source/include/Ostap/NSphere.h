@@ -26,33 +26,33 @@ namespace Ostap
       /** Standard constructor for rotated sphere 
        *  @param nPhases  dimensionality of N-sphere 
        */
-      NSphere ( const unsigned short       nPhases = 1 ) ;
+      NSphere  ( const unsigned short       nPhases = 1 ) ;
       // =======================================================================
       /** Standard constructor
        *  @param nPhases  dimensionality of N-sphere 
        *  @param rotated  rotate it?
        */
-      NSphere ( const unsigned short       nPhases     ,
-                const unsigned short       rotated     ) ;
+      NSphere  ( const unsigned short       nPhases     ,
+                 const unsigned short       rotated     ) ;
       // =======================================================================
       /** Standard constructor
        *  @param phases  vector of phases 
        *  @param rotated  rotate it?
        */
-      NSphere ( const std::vector<double>& phases      ,
-                const unsigned short       rotated     ) ;
+      NSphere  ( const std::vector<double>& phases      ,
+                 const unsigned short       rotated     ) ;
       // =======================================================================
       /** Standard constructor
        *  @param phases  vector of phases 
        */
-      NSphere ( const std::vector<double>& phases      ) ;
+      NSphere  ( const std::vector<double>& phases      ) ;
       // =======================================================================
       /// copy
-      NSphere ( const NSphere&  right ) ;
+      NSphere  ( const NSphere&  right ) ;
       /// move
-      NSphere (       NSphere&& right ) ;
+      NSphere  (       NSphere&& right ) ;
       /// destructor 
-      ~NSphere() ; 
+      ~NSphere () ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -159,14 +159,14 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    /// swap two speheres 
+    /// swap two spheres 
     inline void swap ( NSphere& a , NSphere& b ) { a.swap ( b ) ; }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
 } //                                                 The end of namespace Ostap
 // ============================================================================
-// get x_i coefficient:               0 <= i < nX  
+// get x_i coefficient:  0 <= i < nX  
 // ============================================================================
 inline double Ostap::Math::NSphere::x 
 ( const unsigned short indx ) const 

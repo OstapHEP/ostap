@@ -1299,6 +1299,135 @@ class PDF (MakeVar) :
         self.debug ( 'nll: createNLL args: %s'% list ( opts ) )            
         return self.pdf.createNLL ( dataset , *opts ) , sf 
 
+    # =========================================================================
+    ## get NLL/profile-graph for the variable, using the specified bscissas
+    #  @code
+    #  pdf   = ...
+    #  graph = pdf.graph_nll ( 'S'               ,
+    #                          range ( 0 , 100 ) ,
+    #                          dataset           )
+    #  @endcode
+    def graph_nll ( self            ,
+                    variable        , 
+                    values          ,
+                    dataset         ,
+                    silent  = True  ,
+                    args    = ()    , **kwargs ) :
+        """Get NLL/profile-graph for the variable, using the specified abscissas
+        >>> pdf   = ...
+        >>> graph = pdf.graph_nll ( 'S'               ,
+        ...                          range ( 0 , 100 ) ,
+        ...                          dataset           )
+        """
+
+        ## 1) create NLL 
+        nLL, sf = self.nll ( dataset , silent = silent ,  args = args , **kwargs )
+
+        ## get the parametrs
+        var  = variable 
+        pars = self.pdf.getParameters ( dataset ) 
+        assert var in pars , "Variable %s is not a parameter"   % var
+        if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
+        del pars 
+
+        ## 2) collect NLL values 
+        results = []
+        vmin    = None 
+        with SETVAR  ( var ) :
+            from ostap.utils.progress_bar import progress_bar 
+            for v in progress_bar  ( values , silent = silent ) :
+                var.setVal ( v )
+                n   = nLL.getVal() 
+                res = v , n
+                results.append ( res )
+                vmin = n if vmin is None else min ( vmin , n ) 
+        
+        ## 3) create graph
+        import ostap.histos.graphs
+        graph = ROOT.TGraph ( len ( results ) )
+        results.sort () 
+        for i , point in enumerate ( results ) :
+            x , y = point 
+            if vmin is None : graph [ i ] = x , y
+            else            : graph [ i ] = x , y - vmin 
+            
+        ## scale it if needed
+        if 1 != sf :
+            logger.info ('graph_nll: apply scale factor of %s due to dataset weights' % sf )
+            graph *= sf 
+            
+        return graph 
+
+    # =========================================================================
+    ## get NLL-profile-graph for the variable, using the specified abscissas
+    #  @code
+    #  pdf   = ...
+    #  graph = pdf.graph_profile ( 'S'                       ,
+    #                              vrange ( 0 , 12.5 , 10  ) ,
+    #                              dataset                   )
+    #  @endcode
+    def graph_profile ( self            ,
+                        variable        , 
+                        values          ,
+                        dataset         ,
+                        fix     = []    ,
+                        silent  = True  ,
+                        args    = ()    , **kwargs ) :
+        """Get profile-graph for the variable, using the specified abscissas
+        >>> pdf   = ...
+        >>> graph = pdf.graph_profile ( 'S'                     ,
+        ...                             range ( 0 , 12.5 , 20 ) ,
+        ...                             dataset                 )
+        """
+
+        ## 1) create NLL 
+        nLL , sf = self.nll ( dataset , silent = silent ,  args = args , **kwargs )
+
+        ## get the parametrs
+        var  = variable 
+        pars = self.pdf.getParameters ( dataset ) 
+        assert var in pars , "Variable %s is not a parameter"   % var
+        if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
+
+        vars = ROOT.RooArgSet ( var )
+        for f in fix :
+            fv = f
+            if not isinstance ( fv , ROOT.RooAbsReal ) : fv = pars [ fv ]
+            vars.add ( fv ) 
+            
+        ## 2)  create profile LL
+        pLL = ROOT.RooProfileLL ( 'pLL_%s_%s'         % ( var.name , self.name ) ,
+                                  'LL-profile(%s,%s)' % ( var.name , self.name ) ,
+                                  nLL , vars )
+
+        ## 2) collect pLL values 
+        results = [] 
+        vmin    = None 
+        with SETVAR  ( var ) :
+            from ostap.utils.progress_bar import progress_bar 
+            for  v in progress_bar ( values , silent = silent )  :
+                var.setVal ( v )
+                p   = pLL.getVal() 
+                res = v , p 
+                results.append ( res )
+                vmin = p if vmin is None else min ( vmin , p ) 
+             
+        ## 3) create graph 
+        import ostap.histos.graphs
+        graph = ROOT.TGraph ( len ( results ) )
+        results.sort ()
+        for i , point  in enumerate ( results ) :
+            x , y = point 
+            if vmin is None : graph [ i ] = x , y
+            else            : graph [ i ] = x , y - vmin 
+            
+        ## scale it if needed
+        if 1 != sf :
+            logger.info ('graph_profile: apply scale factor of %s due to dataset weights' % sf )
+            graph *= sf 
+            
+        return graph 
+        
     # ========================================================================
     ## evaluate "significance" using Wilks' theorem via NLL
     #  @code

@@ -1798,13 +1798,28 @@ def suppress_topics ( *topics ) :
     if topics and 1 == len( topics ) :
         t = str ( topics [ 0 ] ).lower()
         if 'config' == t : return suppress_topics() 
-                
-    svc = ROOT.RooMsgService.instance()
-    svc.saveState () 
-    topic = msg_topic ( *topics ) 
-    num   = svc.numStreams()
-    for i in range ( num ) :
-        ok = Ostap.Utils.remove_topic ( i , topic ) 
+
+    if not topics :
+        newtopics = [] 
+        import ostap.core.config as CONFIG
+        if 'RooFit' in CONFIG.config :
+            import string
+            ws     = string.whitespace 
+            node   = CONFIG.config [ 'RooFit' ]
+            data   = node.get('RemoveTopics','(,)' )
+            topics = tuple ( i.strip ( ws ) for i in data.split ( ',' ) if i.strip ( ws ) ) 
+            
+    if topics : 
+        svc = ROOT.RooMsgService.instance()
+        svc.saveState () 
+        topic = msg_topic ( *topics ) 
+        num   = svc.numStreams()
+        for i in range ( num ) : ok = Ostap.Utils.remove_topic ( i , topic ) 
+
+# =============================================================================
+## and finally suppress exra RooFit topics! 
+suppress_topics ()
+
 
 # =============================================================================
 if '__main__' == __name__ :

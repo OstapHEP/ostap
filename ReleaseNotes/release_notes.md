@@ -22,7 +22,26 @@ f.ls_table()
 ```
   1. speedup construction of Bernstein polynomials from the list of roots 
   1. re-write `PDF.wilks` method to use `ROOT.RooProfileLL`
-  
+  1. add methods  `PDF.graph_nll` and `PDF.graph_profile` for 
+     a bit more easy and more fast drawing of NLL-scans and profiles 
+```
+pdf = ...
+g1 = pdf.graph_nll     ( 'S' , vrange(0,20.0,100) , dataset )
+g2 = pdf.graph_profile ( 'S' , vrange(0,20.0,100) , dataset , fix = ['gamma','mu'] )
+```
+  1. allow to suppress certain RooFit message topics from the configuration file, e.g.
+```
+[RooFit]
+RemoveTopics = Plotting            ,
+               Caching             ,
+               Eval                , 
+               Minization          ,
+               Integration         ,
+               Optimization        ,
+               NumericIntegration  , 
+               Fitting     
+```
+
 ## Backward incompatible changes
 
 ## Bug fixes:  

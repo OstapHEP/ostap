@@ -865,10 +865,18 @@ Ostap::Math::PS2DPol3::PS2DPol3
 std::vector<double> Ostap::Math::PS2DPol3::pars() const 
 {
   std::vector<double> result ( npars() , 0.0 ) ;
-  const std::vector<double>& xps = xpars () ;
-  const std::vector<double>& yps = ypars () ;
-  std::copy ( xps.begin() , xps.end() , result.begin()              ) ;
-  std::copy ( yps.begin() , yps.end() , result.begin() + xps.size() ) ;
+  const unsigned short nPx = m_psx.npars() ;
+  const unsigned short nPy = m_psy.npars() ;
+  //
+  for ( unsigned short ix = 0 ; ix < nPx ; ++ix )
+  { result [       ix ] = m_psx.par ( ix ) ; }
+  for ( unsigned short iy = 0 ; iy < nPy ; ++iy )
+  { result [ nPx + iy ] = m_psy.par ( iy ) ; }
+  //
+  // const std::vector<double>& xps = xpars () ;
+  // const std::vector<double>& yps = ypars () ;
+  // std::copy ( xps.begin() , xps.end() , result.begin()              ) ;
+  // std::copy ( yps.begin() , yps.end() , result.begin() + xps.size() ) ;
   return result ;
 }
 // ===========================================================================

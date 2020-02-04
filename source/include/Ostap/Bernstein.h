@@ -260,10 +260,8 @@ namespace Ostap
       Bernstein 
       ( const double xmin , 
         const double xmax , 
-        const std::vector<double>&                 roots_real  = 
-        std::vector<double> () , 
-        const std::vector<std::complex<double> > & roots_complex = 
-        std::vector<std::complex<double> > ()  );
+        const std::vector<double>&                 roots_real    = std::vector<double> () , 
+        const std::vector<std::complex<double> > & roots_complex = std::vector<std::complex<double> > () );
       // ======================================================================
       /** construct Bernstein polynomial from its roots
        *
@@ -279,8 +277,7 @@ namespace Ostap
       ( const double xmin , 
         const double xmax , 
         const std::vector<std::complex<double> > & roots_complex ,
-        const std::vector<double>&                 roots_real    = 
-        std::vector<double> () ) ;
+        const std::vector<double>&                 roots_real    = std::vector<double> () ) ;
       // ======================================================================
     public: // constructors from different plynomial types 
       // ======================================================================

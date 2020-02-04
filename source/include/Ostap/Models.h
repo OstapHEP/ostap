@@ -279,7 +279,7 @@ namespace Ostap
       double  parameter ( const unsigned short k ) const
       { return m_positive.par ( k ) ; }
       ///  get all parameters 
-      const  std::vector<double>& pars() const { return m_positive.pars() ; }
+      // const  std::vector<double>& pars() const { return m_positive.pars() ; }
       // get the order of polynomial 
       unsigned short n () const { return m_positive.degree() ; }
       // ======================================================================
@@ -425,7 +425,7 @@ namespace Ostap
       double  parameter   ( const unsigned short k ) const
       { return m_positive.par ( k ) ; }
       ///  get all parameters 
-      const  std::vector<double>& pars() const { return m_positive.pars() ; }
+      // const  std::vector<double>& pars() const { return m_positive.pars() ; }
       // get the order of polynomial 
       unsigned short n   () const { return m_positive.degree() ; }
       /// get the exponent 

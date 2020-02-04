@@ -25,6 +25,7 @@
 #include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
+#include "bernstein_utils.h"
 // ============================================================================
 /** @file 
  *  Implementation file for functions, related to Bernstein's polynomnials 
@@ -33,105 +34,6 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
-// ============================================================================
-#include <iostream>
-namespace 
-{
-  // ==========================================================================
-  // De Casteljau's algorithm
-  template <class ITERATOR>
-  long double _casteljau_
-  ( ITERATOR          first ,
-    ITERATOR          last  ,
-    const long double t0    ,
-    const long double t1    )
-  {
-    // the trivial cases
-    if      ( first == last    ) { return 0       ; }
-    //
-    const std::size_t len  = std::distance ( first , last  ) ;
-    //
-    if      ( 1 == len ) { return       *first                        ; }
-    else if ( 2 == len ) { return t1 * (*first) + t0 * ( *(first+1) ) ; }
-    //
-    ITERATOR second = --last ;
-    //
-    // prepare recursion
-    for ( ITERATOR it = first ; it != second ; ++it )
-    { *it = t1 * ( *it )  + t0 * ( *( it+1 ) ) ; }
-    //
-    // recursion
-    return _casteljau_ ( first , second , t0 , t1 ) ;
-  }
-  // ==========================================================================
-  // multiply two polynomials 
-  template <class OUTPUT , 
-            class INPUT1 , 
-            class INPUT2 >
-  OUTPUT _multiply_ ( INPUT1 a_begin , 
-                      INPUT1 a_end   , 
-                      INPUT2 b_begin , 
-                      INPUT2 b_end   ,
-                      OUTPUT output  )
-  {
-    const unsigned int M = 
-      std::max ( typename std::iterator_traits<INPUT1>::difference_type ( 0 )  ,
-                 std::distance ( a_begin , a_end ) ) ;
-    const unsigned int N = 
-      std::max ( typename std::iterator_traits<INPUT2>::difference_type ( 0 )  ,
-                 std::distance ( b_begin , b_end ) ) ;
-    //
-    if      ( 1 == M ) 
-    {
-      const long double a = *a_begin ;
-      for ( unsigned short k = 0 ; k < N ; ++k , ++output ) 
-      {
-        const long double bk =  *( b_begin + k ) ;
-        *output = a * bk ;
-      }
-      return output ;
-    }
-    else if ( 1 == N ) 
-    {
-      const long double b = *b_begin ;
-      for ( unsigned short k = 0 ; k < M ; ++k , ++output ) 
-      {
-        const long double ak =  *( a_begin + k ) ;
-        *output = ak * b ;
-      }
-      return output ;      
-    }
-    //
-    const unsigned int  m = M - 1 ;
-    const unsigned int  n = N - 1 ;
-    //
-    const unsigned long K = m + n ;
-    for ( unsigned long k = 0 ; k <= K ; ++k , ++output ) 
-    {
-      const unsigned int jmin = ( n <= k ) ? k - n : 0 ;
-      const unsigned int jmax = ( k <= m ) ? k     : m ;
-      //
-      long double ck = 0 ;
-      for ( unsigned int j = jmin ; j <= jmax ; ++j ) 
-      {
-        const long double a  = * ( a_begin +       j   ) ;
-        const long double b  = * ( b_begin + ( k - j ) ) ;
-        const long double ab = a * b ;
-        if ( 0 != ab && !s_zero ( ab ) ) 
-        {
-          ck += ab * 
-            Ostap::Math::choose_double ( m     ,     j ) * 
-            Ostap::Math::choose_double ( n     , k - j ) *
-            Ostap::Math::ichoose       ( m + n , k     ) ;
-        }
-      }
-      //
-      *output = ck ;
-    }
-    return output ;
-  }
-  // ==========================================================================
-}
 // ============================================================================
 // constructor from the order
 // ============================================================================
@@ -411,7 +313,8 @@ Ostap::Math::Bernstein::Bernstein
     else if ( s_equal ( tr , 1 ) ) { v1 [ 0 ] =    1 ; v1 [ 1 ] =       0 ; }
     else                           { v1 [ 0 ] = - tr ; v1 [ 1 ] =  1 - tr ; }
     //
-    _multiply_ ( m_pars.begin() , m_pars.begin() + m , v1.begin() , v1.end() , vtmp.begin() ) ;
+    Ostap::Math::Utils::b_multiply 
+      ( m_pars.begin() , m_pars.begin() + m , v1.begin() , v1.end() , vtmp.begin() ) ;
     std::swap  ( m_pars , vtmp ) ;
     ++m ;
   }
@@ -427,7 +330,8 @@ Ostap::Math::Bernstein::Bernstein
     v2 [ 1 ] = n - a         ;
     v2 [ 2 ] = 1 + n - 2 * a ;
     //
-    _multiply_ ( m_pars.begin() , m_pars.begin() + m , v2.begin() , v2.end() , vtmp.begin() ) ;
+    Ostap::Math::Utils::b_multiply
+      ( m_pars.begin() , m_pars.begin() + m , v2.begin() , v2.end() , vtmp.begin() ) ;
     std::swap  ( m_pars , vtmp ) ;
     m += 2 ;
   }
@@ -663,8 +567,8 @@ double Ostap::Math::Bernstein::derivative ( const double x   ) const
   const double t0 = t ( x ) ;
   const double t1 = 1 - t0  ;
   //
-  return
-    _casteljau_ ( ck.begin() + 1 , ck.end() , t0 , t1 ) * ( npars()-1 )  / ( m_xmax - m_xmin ) ;
+  return Ostap::Math::Utils::casteljau 
+    ( ck.begin() + 1 , ck.end() , t0 , t1 ) * ( npars()-1 )  / ( m_xmax - m_xmin ) ;
 }
 // ============================================================================
 // get the value
@@ -693,11 +597,12 @@ double Ostap::Math::Bernstein::evaluate ( const double x ) const
   {
     std::array<long double,16> _pars;
     std::copy( m_pars.begin() , m_pars.end() , _pars.begin() ) ;
-    return _casteljau_ ( _pars.begin() , _pars.begin() + npars() , t0 , t1 ) ;
+    return Ostap::Math::Utils::casteljau
+      ( _pars.begin() , _pars.begin() + npars() , t0 , t1 ) ;
   }
   // generic case:
   std::vector<long double> dcj ( m_pars.begin() , m_pars.end() ) ;
-  return _casteljau_ ( dcj.begin() , dcj.end() , t0 , t1 ) ;
+  return Ostap::Math::Utils::casteljau ( dcj.begin() , dcj.end() , t0 , t1 ) ;
 }
 // ============================================================================
 Ostap::Math::Bernstein&
@@ -1095,30 +1000,21 @@ Ostap::Math::Bernstein::multiply ( const Ostap::Math::Bernstein& other ) const
     return b1.multiply ( b2 ) ;
   }
   //
-  if ( zero() || other.zero() ) { return Bernstein( degree() , xmin() , xmax() ) ; }
-  //
   const unsigned short m =       degree() ;
   const unsigned short n = other.degree() ;
   //
+  if ( 0 == m ) { return   other *       m_pars [ 0 ] ; }
+  if ( 0 == n ) { return (*this) * other.m_pars [ 0 ] ; }
+  //
+  if ( zero() || other.zero() ) { return Bernstein( degree() , xmin() , xmax() ) ; }
+  //
   Bernstein result ( m + n , xmin() , xmax() ) ;
   //
-  long double c = 1 ;
-  for ( unsigned short k = 0 ; k <= m + n ; ++k ) 
-  {
-    if ( 0 != k ) {  c *= ( m + n - k + 1 ) ; c /= k; }
-    //
-    const unsigned jmax = std::min ( m , k ) ;
-    const unsigned jmin = k > n ? k - n : 0 ;
-    long double     cc  = 0 == jmin ? 
-      c_nk ( n , k - jmin ) :
-      c_nk ( m ,     jmin ) ;  
-    for ( unsigned short j = jmin ; j <= jmax ; ++j ) 
-    {
-      if ( j != jmin ) { cc *= ( m - j + 1 )  * ( k - j + 1 ) ; cc /= j * ( n - k + j ) ; }
-      result.m_pars[k] += cc * m_pars [ j]  * other.m_pars[k-j] ;
-    }
-    result.m_pars[k] /= c ;
-  }
+  Ostap::Math::Utils::b_multiply
+    ( m_pars        . begin () ,         m_pars . end () ,
+      other.m_pars  . begin () , other . m_pars . end () , 
+      result.m_pars . begin () ) ;
+  //
   return result ; 
 }
 // ============================================================================
@@ -1533,7 +1429,8 @@ double Ostap::Math::casteljau
   const long double t0 =     x  ;
   const long double t1 = 1 - t0 ;
   //
-  return _casteljau_ ( _tmp.begin() , _tmp.end  () , t0 , t1 ) ;
+  return Ostap::Math::Utils::casteljau 
+    ( _tmp.begin() , _tmp.end  () , t0 , t1 ) ;
 }
 // ============================================================================
 namespace 
