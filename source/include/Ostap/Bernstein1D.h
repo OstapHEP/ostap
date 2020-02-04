@@ -240,13 +240,27 @@ namespace Ostap
     inline void swap ( BernsteinEven& a , BernsteinEven& b ) { a.swap ( b ) ; }
     // ========================================================================
     /** @class Positive
-     *  The "positive" polynomial of order N
-     *  Actually it is a sum of basic bernstein polynomials with
-     *  non-negative coefficients
-     *  \f$ f(x) = \sum_i  \alpha^2_i B^n_i(x)\f$, where
-     *  \f$  \sum_i \alpha^2_i = 1\f$ and
-     *  parameters \f$ \alpha_i(p_0,p_1,....p_{n-1})\f$ form
-     *  n-dimension sphere
+     *  The "positive" polynomial of order N.
+     *
+     *  Positive polynomials are described according to  Karlin and Shapley 
+     *  @see S.Karlin and L.S. Shapley,"Geometry of Moment Space",
+     *       Memoirs of the Amer.Math.Soc., 12, 1953 
+     *  @see https://bookstore.ams.org/memo-1-12/
+     *  For $n=2m$ the polynomial, non-negative at the \f$ 0\le x \le 1\f$ 
+     *  interval is written as 
+     *  \f[ P_{2m}(x) = 
+     *  \alpha \sum_{j=1}^{m} \left(x-x_{2j-1}\right)^2} + 
+     *  \beta x  (1-x) \sum_{j=1}^{m-1} \left(x-x_{2j}\right)^2} \f] 
+     *  and for $n=2m+1$ the polynomial is :
+     *  \f[ P_{2m+1}(x) = 
+     *  \alpha x \sum_{j=1}^{m} \left(x-x_{2j}\right)^2} + 
+     *  \beta x  (1-x) \sum_{j=1}^{m} \left(x-x_{2j-1}\right)^2} \f] 
+     *  where \f$0\le x_{1} \le ... \le x_{n-1} \le 1\f$ and 
+     *  \f$ 0 < \alpha \f$, \f$ 0 < \beta \f$
+     *  The parameters $0 \le x_i \le 1 $ are parameterized in 
+     *  terms of multidimensional sphere, using \f$ n-1\f$ phases
+     *  and \f$0\le\alpha\f$ and \f$0\le beta \f$ are paramerized using 
+     *  one more phase such that \f$ \alpha + \beta= 1\f$      
      */
     class Positive 
     {
