@@ -53,24 +53,48 @@ else                      : logger = getLogger ( __name__               )
 #  Basic base class to encapsulate any processing
 #  that is going to be porcessed in parallel.
 #  User class much inherit from it and implement the methods:
-#  - <code>initializeLocal</code>
-#  - <code>initializeRemote</code>
+#  - <code>initialize_local</code>
+#  - <code>initialize_remote</code>
 #  - <code>process</code>
 #  - <code>finalize</code>
+# 
+#  One can specify following attributes:
+#  - <code>directory</code>: the working directory for the job
+#  - <code>environment</code>: additional environmental variables 
+#  - <code>append_to</code>: append some path-like enviroment varibales 
+#  - <code>prepend_to</code>: prepend some path-like enviroment varibales 
+#  - <code>dot_in_path</code>: shoud the '.' be added to sysy.path?
 #  @author Pere MATO Pere.Meto@cern.ch
 class Task ( object ) :
     """ Basic base class to encapsulate any processing that is
     going to be processed in parallel.
     User class must inherit from it and implement the methods
-    - initializeLocal
-    - initializeRemote
+    - initialize_local
+    - initialize_remote
     - process
     - finalize.
+    One can specify following attributes:
+    - <directory : the working directory for the job
+    - environment : additional environmental variables 
+    - append_to : append some path-like enviroment varibales 
+    - prepend_to : prepend some path-like enviroment varibales 
+    - dot_in_path : shoud the '.' be added to sys.path?
     """
     __metaclass__ = abc.ABCMeta
-    __directory   = None
-    __environment = {}
     
+    ## @attention ensure that the important attributes are available even before __init__
+    def __new__( cls , *args , **kwargs):
+        obj = super( Task , cls).__new__( cls )
+        ## define the local trash 
+        
+        obj.__directory   = None
+        obj.__environment = {}
+        obj.__prepend_to  = {}
+        obj.__append_to   = {}
+        obj.__dot_in_path = None
+        
+        return obj
+
     ## Local initialization:  invoked once on localhost for master task
     def initialize_local  ( self )          :
         """Local initialization:  invoked once on localhost for master task"""
@@ -79,7 +103,7 @@ class Task ( object ) :
     ## Remote initialization: invoked for each slave task on remote host
     def initialize_remote ( self , jobid = -1 )  :
         """Remote initialization: invoked for each slave task on remote host
-        -  default: use the same as ``local initialization''
+        - default: run ``local initialization''
         """
         return self.initialize_local () 
     
@@ -136,18 +160,35 @@ class Task ( object ) :
         """``environment'' : additional environment for the job"""
         return self.__environment
     
-    @environment.setter 
-    def environment ( self , value ) :
-        self.__environment = value 
-            
+    @property
+    def append_to ( self ) :
+        """``append_to'' : a dictionary of enbvironemtn varibales to be appended"""
+        return self.__append_to
+
+    @property
+    def prepend_to ( self ) :
+        """``prepend_to'' : a dictionary of enbvironemtn varibales to be appended"""
+        return self.__prepend_to
+    
+    @property
+    def dot_in_path ( self ) :
+        """``dot in path'' : has a dot in sys.path?"""
+        return  self.__dot_in_path
+    
+    @dot_in_path.setter 
+    def dot_in_path ( self , value ) :
+        self.__dot_in_path = value
+        
 # =============================================================================
 ## @class GenericTask
-#  Generic ``temlated'' task for Parallel processing  
-#    One needs to  define three functions/functors:
+#  Generic ``templated'' task for Parallel processing  
+#  One needs to  define three functions/functors:
 #    - processor   :<code>        output = processor ( jobid , item )         </code>
 #    - merger      :<code>updated_output = merger ( old_output , new_output ) </code>
 #    - initializer :<code>        output = initializer (      )               </code> 
 #    - environment : additional environment for the job 
+#    - append_to   : additional variables to be ''appended''
+#    - prepend_to  : additional variables to be ''prepended''
 class GenericTask(Task) :
     """Generic ``temlated'' task for parallel processing.
     One needs to  define three functions/functors:
@@ -157,6 +198,8 @@ class GenericTask(Task) :
     - initializer :         output = initializer (      )
     - directory   : change to this directory  (if it exists)
     - environment : additional environment for the job 
+    - append_to   : additional variables to be ''appended''
+    - prepend_to  : additional variables to be ''prepended''
     """
     # =========================================================================
     def __init__ ( self                ,
@@ -164,25 +207,32 @@ class GenericTask(Task) :
                    merger      = None  ,
                    initializer = tuple ,
                    directory   = None  ,
-                   environment = {}    ) :
+                   environment = {}    ,
+                   append_to   = {}    ,
+                   prepend_to  = {}    ) :
         """Generic task for parallel processing. One needs to define three functions/functors
         - processor   :         output = processor   ( jobid , item ) 
         - merger      : updated_output = merger      ( old_output , new_output )
         - initializer :         output = initializer (      )  
         - directory   : change to this directory  (if it exists) 
         - environment : additional environment for the job 
+        - append_to   : additional variables to be ''appended''
+        - prepend_to  : additional variables to be ''prepended''
         """
 
         if not merger :
             import operator
             merger = operator.iadd
-            
+
         self.__processor   = processor
         self.__merger      = merger
         self.__initializer = initializer
-        self.__output      = None 
+        self.__output      = None
+        
         self.directory     = directory
-        self.environment   = environment
+        self.environment  . update ( environment ) 
+        self.append_to    . update ( append_to   ) 
+        self.prepend_to   . update ( prepend_to  ) 
         
     # =========================================================================
     ## local initialization (executed once in parent process)
@@ -497,22 +547,53 @@ def task_executor ( item ) :
     jobid = item [ 1  ] 
     args  = item [ 2: ] 
 
-    import os
+    import os, re, sys  
+
+    what      =  r'(?<!\\)\$[A-Za-z_][A-Za-z0-9_]*' 
+    expandvars = lambda item : re.sub ( what , '' , os.path.expandvars ( item ) )
 
     ## change the current working directory 
-    import os 
-    if task.directory and \
-           os.path.exists ( task.directory ) and \
-           os.path.isdir  ( task.directory ) :
-        
-        logger.debug ( 'Task %s: change the current directory to %s' %  ( jobid , task.directory ) )
-        os.chdir ( task.directory ) 
-
+    if task.directory :
+        directory = expandvars ( task.directory )
+        if os.path.exists ( directory ) and os.path.isdir( directory ) :
+            logger.debug ( 'Task %s: change the current directory to %s' %  ( jobid , directory ) )
+            os.chdir ( directory ) 
+            
     ## modify/update environment variables, if needed 
-    for k, v in  task.environment :
-        logger.debug ( 'Task %s: modify the environment variable %s : %s ' % ( jobid , k , v ) )
-        os.environ [ k ] =  v
+    for key in task.environment :
+        item  = expandvars  ( task.environment [ key ] )
+        logger.debug ( 'Task %s: modify the environment variable %s : %s ' % ( jobid , key , item ) )
+        os.environ [ key ] =  item
+        
+    ## 2. prepend paths 
+    for key in task.prepend_to   :
+        item  = expandvars ( task.prepend_to [ key ] )
+        ncmps = item.split ( os.pathsep )
+        hask  = os.environ.get ( key , None )
+        if hask is None : cmps =                             ncmps
+        else            : cmps = hask.split ( os.pathsep ) + ncpms
+        #
+        path = os.pathsep.join ( cmps )
+        os.environ [ key ] = path 
+        logger.debug ( 'Task %s: prepend path %s : %s ' % ( jobid , key , path ) )
 
+    ## 3. append paths 
+    for key in task.append_to   :
+        item  = expandvars ( task.append_to [ key ] )
+        ncmps = item.split ( os.pathsep )
+        hask  = os.environ.get ( key , None )
+        if hask is None : cmps = ncmps
+        else            : cmps = ncmps + hask.split ( os.pathsep )
+        #
+        path = os.pathsep.join ( cmps )
+        os.environ [ key ] = path 
+        logger.debug ( 'Task %s: append  path %s : %s ' % ( jobid , key , path ) )
+        
+    ## 4. Is current directory in the path? 
+    if task.dot_in_path and not '.' in sys.path :
+        sys.path  = ['.'] + sys.path
+        logger.debug ( "Task %s: '.' is added to sys.path" % jobid )
+        
     ## perform remote  inialization (if needed) 
     task.initialize_remote ( jobid ) 
         

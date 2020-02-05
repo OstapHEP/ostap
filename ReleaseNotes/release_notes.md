@@ -41,7 +41,18 @@ RemoveTopics = Plotting            ,
                NumericIntegration  , 
                Fitting     
 ```
-
+  1. Add more flexibility for parallel `Task` : one can specify the additional environment variables, prepend and append path-like environment variables, execution directory, ... variables are expanded.
+```
+mytask = MyTask  (... ) 
+mytask.environment [ 'LD_LIBRARY_PATH' ] = 'some_directory1:some_directory2' 
+mytask.prepend_to  [ 'PATH'            ] = 'some_directory1:some_directory2:some_directory3'
+mytask.append_to   [ 'PYTHONPATH'      ] = '$HOME/python'  ## will be expanded at remote host
+mytask.directory                         = 'some_existing_remote_directory'
+mytask.dot_in_path                       = '.' in sys.path 
+```
+  1. add new  function `random_random` into `ostap/parallel/utils.py`, that sets (hopefully) proper seeds for the `random`, `ROOT.gRandom` and `ROOT.RooRandom` 
+  1. add invocation of `random_random` from `initialize_remote` for the parallel toys.
+ 
 ## Backward incompatible changes
 
 ## Bug fixes:  
@@ -55,7 +66,9 @@ RemoveTopics = Plotting            ,
   1. few minor fixes needed for `picalib` 
   1. fix `Ostap::HistoProject::project` for weighted `RooAbsData`, 
      now uncertainties are evaluated correctly, properly accounting the errors in weights  
+  1. fix typo in `paralllel_toys2`
  
+
 # v1.4.6.0
 
 ## New features:

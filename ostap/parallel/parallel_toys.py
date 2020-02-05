@@ -72,7 +72,19 @@ class  ToysTask(Task) :
         self.__the_output = value 
     
     def initialize_local   ( self ) : self.__the_output = ()
+
+    ## initialize the remote task, treta the random numbers  
+    def initialize_remote  ( self , jobid = -1 ) :
+        """Initialize the remote task, treta the random numbers  
+        """
+
+        import random, ROOT
+        from ostap.parallel.utils import random_random
+        random_random ( jobid )
+        
+        return self.initialize_local() 
     
+        
     ## get the results 
     def results ( self ) :
         return self.__the_output
@@ -509,7 +521,7 @@ def parallel_toys2(
     import ostap.fitting.toys as Toys
     if 1 == nSplit :
         return Toys.make_toys2 (
-            gen_pdf    = gen_df     ,
+            gen_pdf    = gen_pdf    ,
             fit_pdf    = fit_pdf    ,
             nToys      = nToys      ,
             data       = data       ,
@@ -560,7 +572,9 @@ def parallel_toys2(
                           more_vars  = more_vars      ,
                           silent     = silent         ,
                           progress   = progress       )
-                          
+
+    task.environment['QUQU'] = 'QUQU!!!!!!!!!'
+    
     wmgr  = WorkManager ( ncpus = ncpus , ppservers  = ppservers , silent = False )
 
     data  = nSplit * [ nToy ]
