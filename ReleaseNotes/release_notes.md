@@ -26,8 +26,8 @@ f.ls_table()
      a bit more easy and more fast drawing of NLL-scans and profiles 
 ```
 pdf = ...
-g1 = pdf.graph_nll     ( 'S' , vrange(0,20.0,100) , dataset )
-g2 = pdf.graph_profile ( 'S' , vrange(0,20.0,100) , dataset , fix = ['gamma','mu'] )
+g1 = pdf.graph_nll     ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset )
+g2 = pdf.graph_profile ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset , fix = ['gamma','mu'] )
 ```
   1. allow to suppress certain RooFit message topics from the configuration file, e.g.
 ```
@@ -52,6 +52,12 @@ mytask.dot_in_path                       = '.' in sys.path
 ```
   1. add new  function `random_random` into `ostap/parallel/utils.py`, that sets (hopefully) proper seeds for the `random`, `ROOT.gRandom` and `ROOT.RooRandom` 
   1. add invocation of `random_random` from `initialize_remote` for the parallel toys.
+  1. add methods `graph_nll` and `graph_profile` for class `SimFit`
+```
+pdf = ...
+g1 = pdf.graph_nll     ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset )
+g2 = pdf.graph_profile ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset , fix = ['gamma','mu'] )
+```
  
 ## Backward incompatible changes
 

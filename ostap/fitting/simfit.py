@@ -1218,6 +1218,41 @@ class SimFit ( MakeVar ) :
         """
         return self.pdf.__getitem__ ( param )
 
+    # =========================================================================
+    ## get NLL/profile-graph for the variable, using the specified bscissas
+    #  @code
+    #  pdf   = ...
+    #  graph = pdf.graph_nll ( 'S'               ,
+    #                          range ( 0 , 100 ) ,
+    #                          dataset           )
+    #  @endcode
+    def graph_nll ( self , *args , **kwargs ) :
+        """Get NLL/profile-graph for the variable, using the specified abscissas
+        >>> pdf   = ...
+        >>> graph = pdf.graph_nll ( 'S'               ,
+        ...                          range ( 0 , 100 ) ,
+        ...                          dataset           )
+        """
+        return self.pdf.graph_nll ( *args , **kwargs )
+    
+    # =========================================================================
+    ## get NLL-profile-graph for the variable, using the specified abscissas
+    #  @code
+    #  pdf   = ...
+    #  graph = pdf.graph_profile ( 'S'                       ,
+    #                              vrange ( 0 , 12.5 , 10  ) ,
+    #                              dataset                   )
+    #  @endcode
+    def graph_profile ( self , *args , **kwargs ) :
+        """Get profile-graph for the variable, using the specified abscissas
+        >>> pdf   = ...
+        >>> graph = pdf.graph_profile ( 'S'                     ,
+        ...                             range ( 0 , 12.5 , 20 ) ,
+        ...                             dataset                 )
+        """
+        return self.pdf.graph_profile ( *args , **kwargs )
+         
+    
 # =============================================================================
 _decorated_classes_  = (
     ROOT.RooCategory , 
