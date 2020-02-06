@@ -172,8 +172,8 @@ def test_parallel_significance_toys ( ) :
         fit_pars    = { 'B' : 100         ,
                         'S' : 10          ,
                         'phi0_Bkg_S': 0.0 } , ## initial fit values for parameters 
-        silent      = True , 
-        progress    = True )
+        silent      = True  , 
+        progress    = False )
 
     for p in stats :
         logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
@@ -188,7 +188,7 @@ def test_parallel_significance_toys ( ) :
         logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
         time.sleep  ( 1 )
 
-
+    
 # =============================================================================
 if '__main__' == __name__ :
 

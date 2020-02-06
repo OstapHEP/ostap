@@ -73,6 +73,7 @@ g2 = pdf.graph_profile ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset , fix = ['gam
   1. fix `Ostap::HistoProject::project` for weighted `RooAbsData`, 
      now uncertainties are evaluated correctly, properly accounting the errors in weights  
   1. fix typo in `paralllel_toys2`
+  1. fix `random_random` for python3
  
 
 # v1.4.6.0

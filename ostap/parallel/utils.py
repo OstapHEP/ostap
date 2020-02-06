@@ -230,7 +230,7 @@ def random_random ( jobid ) :
     if sys.version_info.major < 3 : random.jumpahead ( jhid )
     else :
         njumps = jhid % 9967
-        for j in range ( njumps ) : random.uniform ()
+        for j in range ( njumps ) : random.uniform ( 0 , 1 )
 
     ## sleep a bit (up to one second) 
     time.sleep ( random.uniform ( 0.1 , 1.0 ) )

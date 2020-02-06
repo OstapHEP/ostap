@@ -573,8 +573,6 @@ def parallel_toys2(
                           silent     = silent         ,
                           progress   = progress       )
 
-    task.environment['QUQU'] = 'QUQU!!!!!!!!!'
-    
     wmgr  = WorkManager ( ncpus = ncpus , ppservers  = ppservers , silent = False )
 
     data  = nSplit * [ nToy ]
