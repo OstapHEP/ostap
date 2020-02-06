@@ -1248,7 +1248,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
     ## add complex expressions 
     if formulas :
         # a
-        vset   = ds.get()
+        vset = ds.get()
         vlst = ROOT.RooArgList()
         for v in vset : vlst.add ( v )
 
@@ -1332,7 +1332,7 @@ def fill_dataset ( tree                 ,
     return data , stat 
 
 ROOT.TTree.fill_dataset = fill_dataset
-    
+
 # =============================================================================
 ## define the helper function for proper decoration of ROOT.TTree/TChain
 #
