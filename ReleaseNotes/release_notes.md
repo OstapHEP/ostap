@@ -1,6 +1,8 @@
+# v1.4.7.0
+
 ## New features:
 
-  1. Slight improvements in `ostap.fittig.minuit`
+  1. Slight improvements in `ostap.fitting.minuit`
   1. add new test for `ROOT.TMiniut` decorations :  `test_fitting_minuit`
   1. allow `pathos` to be used for paralellization for python version > 3.6  
   1. add test `test_parallel_dill` to check the the problem with combniation 
