@@ -1802,7 +1802,7 @@ namespace Ostap
       /// get b-parameter
       double B    () const { return  b    () ; } // get n-parameter
       /// get b-parameter
-      double B0   () const { return  b    () ; } // get n-parameter
+      double B_0   () const { return  b    () ; } // get n-parameter
       /// get b-parameter
       double b0   () const { return  b    () ; } // get n-parameter
       // =====================================================================
