@@ -214,11 +214,11 @@ bool Ostap::Math::Positive::updateBernstein ()
     const long double c1 = - r  * ri * alpha ;
     const long double c2 =   ri * ri * alpha ;
     //
-    const bool updated1 = m_bernstein.setPar ( 0 , c0            ) ;
-    const bool updated2 = m_bernstein.setPar ( 1 , c1 + 2 * beta ) ;
-    const bool updated3 = m_bernstein.setPar ( 2 , c2            ) ;
+    const bool updated1 = m_bernstein.setPar ( 0 , c0              ) ;
+    const bool updated2 = m_bernstein.setPar ( 1 , c1 + 0.5 * beta ) ;
+    const bool updated3 = m_bernstein.setPar ( 2 , c2              ) ;
     //
-    m_bernstein *= ( norm / ( c0 + c1 + c2 + 2 * beta ) ) ;
+    m_bernstein *= ( norm / ( c0 + c1 + c2 + 0.5 * beta ) ) ;
     //
     return updated1 || updated2 || updated3 ;
   }
