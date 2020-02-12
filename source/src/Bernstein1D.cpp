@@ -199,7 +199,7 @@ bool Ostap::Math::Positive::updateBernstein ()
     const bool updated1 = m_bernstein.setPar ( 1 , m_sphereA.x2 ( 1 ) * norm ) ;
     update              = updated1 || update ;
     //
-    return update ;
+    return updated0 || updated1 ;
   }
   else if  ( 2 == o )
   {
@@ -210,17 +210,16 @@ bool Ostap::Math::Positive::updateBernstein ()
     long double alpha     = m_sphereA . x2 ( 0 ) ;
     long double beta      = m_sphereA . x2 ( 1 ) ;
     ///
-    const long double c0 =   r  * r  ;
-    const long double c1 = - r  * ri ;
-    const long double c2 =   ri * ri ;
+    const long double c0 =   r  * r  * alpha ;
+    const long double c1 = - r  * ri * alpha ;
+    const long double c2 =   ri * ri * alpha ;
     //
-    alpha /= ( c0 + c1 + c2 ) ;
+    const bool updated1 = m_bernstein.setPar ( 0 , c0            ) ;
+    const bool updated2 = m_bernstein.setPar ( 1 , c1 + 2 * beta ) ;
+    const bool updated3 = m_bernstein.setPar ( 2 , c2            ) ;
     //
-    const bool updated1 = m_bernstein.setPar ( 0 , alpha * c0            ) ;
-    const bool updated2 = m_bernstein.setPar ( 1 , alpha * c1 + 2 * beta ) ;
-    const bool updated3 = m_bernstein.setPar ( 2 , alpha * c2            ) ;
+    m_bernstein *= ( norm / ( c0 + c1 + c2 + 2 * beta ) ) ;
     //
-    m_bernstein *= ( norm / ( alpha + 2 * beta ) ) ;
     return updated1 || updated2 || updated3 ;
   }
   // ==========================================================================

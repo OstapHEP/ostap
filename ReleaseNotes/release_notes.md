@@ -1,3 +1,12 @@
+## New features:
+
+## Backward incompatible changes
+
+## Bug fixes:  
+
+  1. fix `Ostap::Math::Positive::updateBernstein`. The bug was introduced in 1.4.7.0. Thanks to Tatiana Ovsiannikova for  reporting the problem.
+
+
 # v1.4.7.0
 
 ## New features:
