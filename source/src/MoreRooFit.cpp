@@ -6,14 +6,17 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooAddition.h"
+#include "RooGlobalFunc.h"
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/MoreRooFit.h"
+#include "Ostap/Power.h"
 // ============================================================================
 // local
 // ============================================================================
 #include "Exception.h"
+#include "local_math.h"
 // ============================================================================
 /** @file
  *  implementaton of various small additions to RooFit 
@@ -25,6 +28,8 @@ ClassImp(Ostap::MoreRooFit::Subtraction   )
 ClassImp(Ostap::MoreRooFit::Division      )
 ClassImp(Ostap::MoreRooFit::Fraction      )
 ClassImp(Ostap::MoreRooFit::RelDifference )
+ClassImp(Ostap::MoreRooFit::Power         )
+ClassImp(Ostap::MoreRooFit::Exp           )
 // ============================================================================
 namespace 
 {
@@ -205,16 +210,6 @@ Double_t Ostap::MoreRooFit::Division::evaluate () const
 
 
 // ============================================================================
-// constructor with two variables 
-// ============================================================================
-Ostap::MoreRooFit::Fraction::Fraction
-( const char* name  , 
-  const char* title , 
-  RooAbsReal& a     , 
-  RooAbsReal& b     ) 
-  : Division ( name , title , a , b ) 
-{}
-// ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::MoreRooFit::Fraction::Fraction
@@ -248,16 +243,6 @@ Double_t Ostap::MoreRooFit::Fraction::evaluate () const
 
 
 // ============================================================================
-// constructor with two variables 
-// ============================================================================
-Ostap::MoreRooFit::RelDifference::RelDifference
-( const char* name  , 
-  const char* title , 
-  RooAbsReal& a     , 
-  RooAbsReal& b     ) 
-  : Division ( name , title , a , b ) 
-{}
-// ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::MoreRooFit::RelDifference::RelDifference
@@ -290,11 +275,77 @@ Double_t Ostap::MoreRooFit::RelDifference::evaluate () const
 }
 
 
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::Power::Power
+( const Ostap::MoreRooFit::Power& right , 
+  const char*               name  ) 
+  : Division  ( right , name ) {}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Power::~Power(){}
+// ============================================================================
+// cloning
+// ============================================================================
+Ostap::MoreRooFit::Power* 
+Ostap::MoreRooFit::Power::clone ( const char* newname ) const 
+{ return new Power ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::Power::evaluate () const 
+{
+  const double a = m_A ;
+  const double b = m_B ;
+  //
+  const long double aL = a ;
+  const long double bL = b ;
+  //
+  if      ( s_zero ( b )          ) { return 1.0 ; }        // RETURN 
+  else if ( 0 < b && s_zero ( a ) ) { return 0.0 ; }        // RETURN
+  else if ( 0 < b && Ostap::Math::isint ( b ) )
+  {
+    const int nb = Ostap::Math::round   ( b ) ;
+    if      ( 0 == nb )             { return 1.0 ; }        // RETURN  
+    else if ( 0 <  nb ) 
+    {
+      const unsigned long NB = nb ;
+      return 0 == NB ? 1.0L : Ostap::Math::POW ( aL , NB ) ;  //   RETURN
+    } 
+  }
+  //
+  return std::pow ( aL , bL ) ;
+}
 
-  
-
-
-
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::Exp::Exp
+( const Ostap::MoreRooFit::Exp& right , 
+  const char*                   name  ) 
+  : Division  ( right , name ) {}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Exp::~Exp(){}
+// ============================================================================
+// cloning
+// ============================================================================
+Ostap::MoreRooFit::Exp* 
+Ostap::MoreRooFit::Exp::clone ( const char* newname ) const 
+{ return new Exp ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::Exp::evaluate () const 
+{
+  const long double a = m_A ;
+  const long double b = m_B ;
+  //
+  return s_zero ( a ) || s_zero ( b ) ? 0 : std::exp ( a * b ) ;
+}
 // ============================================================================
 //                                                                      The END
 // ============================================================================

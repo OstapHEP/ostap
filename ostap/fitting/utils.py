@@ -26,11 +26,11 @@ __all__     = (
     'component_clone'   , ## Should one use ``cloned'' component?
     # 
     'numcpu'            , ## number of CPUs
-    'ncpu'              , ## fuction to builf ROOT.RooFit.NumCPU
+    'ncpu'              , ## fuction to build ROOT.RooFit.NumCPU
     ## add/remove RooFit topic
-    'remove_topic'       , ## remove topic from RooMsgService
-    'add_topic'          , ## add    topic from RooMsgService
-    'suppress_topics'    , ## suppress topics from RooMsgService 
+    'remove_topic'      , ## remove topic from RooMsgService
+    'add_topic'         , ## add    topic from RooMsgService
+    'suppress_topics'   , ## suppress topics from RooMsgService 
     #
     'Phases'            , ##  helper class for Ostap polynomial/PDFs
     'RooPolyBase'       , ##  helper class for RooFit polynomials
@@ -900,14 +900,182 @@ class MakeVar ( object ) :
         
         return result
 
+    # =============================================================================
+    ## construct (on-flight) variable  for \f$ a^b \f$ 
+    #  <code>var1</code> and <code>var2</code>: 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_power        ( var1 , var2 )
+    #  var4 = xxx.vars_power        ( var1 , 2.0  )    
+    #  var4 = xxx.vars_power        ( 2.0  , var2 )    
+    #  @endcode 
+    def vars_power ( self , var1 , var2 , name = '' , title = '' ) :
+        """ construct (on-flight) variable  for \f$ a^b \f$ 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_power        ( var1 , var2 )
+        >>> var4 = xxx.vars_power        ( var1 , 2.0  )    
+        >>> var4 = xxx.vars_power        ( 2.0  , var2 )    
+        """
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = float ( var1 ) ** float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 1 == var1 : return ROOT.RooRealConstant.value ( 1 ) ## shortcut
+            #
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
+            return self.vars_power ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooRealConstant.value (  1 ) ## shortcut
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
+            return self.vars_power ( var1 , var2 , name , title )
+        
+        vnames = var1.name , var2.name 
+        
+        name  = name  if name  else 'Power_%s_%s'     % vnames 
+        title = title if title else '(%s) ** (%s)' % vnames 
+        
+        ## varlist = ROOT.RooArgList    ( var1 , var2                     )
+        ## self.aux_keep.append ( varlist )
+        ## formula = '(%s-%s)/(%s+%s))' % ( var1.name , var2.name , var1.name , var2.name )
+        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
+        
+        result  = Ostap.MoreRooFit.Power ( self.var_name ( name ) , title , var1 , var2  )
+        #
+        self.aux_keep.append ( result  )
+        
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) variable  for \f$ exp(ab) \f$ 
+    #  <code>var1</code> and <code>var2</code>: 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_exp ( var1 , var2 )
+    #  var4 = xxx.vars_exp ( var1 , -1   )    
+    #  var4 = xxx.vars_exp ( -1   , var2 )    
+    #  @endcode 
+    def vars_exp ( self , var1 , var2 = 1 , name = '' , title = '' ) :
+        """ construct (on-flight) variable  for \f$ exp(a*b) \f$ 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_exp ( var1 , var2 )
+        >>> var4 = xxx.vars_exp ( var1 , 2.0  )    
+        >>> var4 = xxx.vars_exp ( 2.0  , var2 )    
+        """
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = math.exp ( float ( var1 ) * float ( var2 ) )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1 : return ROOT.RooRealConstant.value ( 1 ) ## shortcut
+            #
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
+            return self.vars_exp ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooRealConstant.value ( 1 ) ## shortcut
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
+            return self.vars_exp ( var1 , var2 , name , title )
+        
+        vnames = var1.name , var2.name 
+        
+        name  = name  if name  else 'Exp_%s_%s'           % vnames 
+        title = title if title else 'exp ( (%s) * (%s) )' % vnames 
+        
+        ## varlist = ROOT.RooArgList    ( var1 , var2                     )
+        ## self.aux_keep.append ( varlist )
+        ## formula = '(%s-%s)/(%s+%s))' % ( var1.name , var2.name , var1.name , var2.name )
+        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
+        
+        result  = Ostap.MoreRooFit.Exp ( self.var_name ( name ) , title , var1 , var2  )
+        #
+        self.aux_keep.append ( result  )
+        
+        return result
     
     vars_sum           = vars_add 
     vars_product       = vars_multiply
     vars_ratio         = vars_divide
     vars_difference    = vars_subtract
     vars_reldifference = vars_asymmetry
+    vars_pow           = vars_power
+    vars_expo          = vars_exp
 
-    
+    # =========================================================================
+    ## helper function to create <code>RooFormulaVar</code>
+    #  @code
+    #  OBJ = ...
+    #  f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
+    #  @endcode 
+    def vars_formula ( self , formula , vars , name = '' , title = '' ) :
+        """helper function to create <code>RooFormulaVar</code>
+        >>> OBJ = ...
+        >>> f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
+        """
+
+        assert vars and len ( vars ) , 'Variables must be specified!'
+
+        vvars = []
+        for v in  vars :
+            if isinstance    ( v , ROOT.RooAbsArg ) :
+                vvars.append ( v )
+            elif isinstance  ( v , string_types   ) :
+                try :
+                    vv = self.parameter ( v )
+                    vvars.append ( vv ) 
+                except :
+                    raise TypeError ( "Unknown parameter name %s" % v)
+            else :
+                raise TypeError( "Unknown parameter type %s/%s" % ( v , type ( v ) ) ) 
+
+        vlst = ROOT.RooArgList()
+        for v in vvars : vlst.add ( v )
+
+        has_at      = '@' in formula
+        has_percent = '%' in formula
+        import re
+        has_index   = re.search ( r'\[( *)(?P<degree>\d*)( *)\]' , formula )
+        has_format1 = re.search ( r'\{( *)(?P<degree>\d*)( *)\}' , formula )
+        has_format2 = re.search ( r'\{( *)(?P<degree>\w*)( *)\}' , formula )
+
+        formula_ = formula 
+        if   has_at      : pass 
+        elif has_index   : pass 
+        elif has_percent :  
+            vnames   = tuple ( [ p.name for p in vlst ] )
+            formula_ = formula % vnames
+        elif has_format1 :            
+            vnames   = tuple ( [ p.name for p in vlst ] )
+            formula_ = formula.format ( *vnames ) 
+        elif has_format2 :
+            kw  = {}
+            for p in vlist : kw [ p.name ] = p.name
+            formula_ = formula.format ( *kw )
+            
+        name  = name  if name  else 'Formula_%s '    % self.name 
+        title = title if title else 'Formula:%s/%s'  % ( formula , self.name )
+        
+        rfv = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
+        
+        self.aux_keep.append ( vlst )
+        self.aux_keep.append ( rvf  )
+        
+        return rfv 
+        
+        
     # =========================================================================
     ## Soft/Gaussian constraints 
     # =========================================================================
@@ -933,8 +1101,8 @@ class MakeVar ( object ) :
 
         assert 0 < value.cov2() , 'Invalid error for %s' % value
         
-        name  = name  if name  else 'Gauss_%s_%s'                       % ( var.GetName() , self.name ) 
-        title = title if title else 'Gauissian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
+        name  = name  if name  else 'Gauss_%s_%s'                      % ( var.GetName() , self.name ) 
+        title = title if title else 'Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
         
         # value & error as RooFit objects: 
         val = ROOT.RooFit.RooConst ( value.value () )

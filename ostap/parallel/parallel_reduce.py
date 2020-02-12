@@ -38,12 +38,14 @@ class  ReduceTask(Task) :
                    selection  = {}    ,
                    save_vars  = ()    ,
                    new_vars   = {}    ,
-                   addselvars = False ) :
+                   addselvars = False ,
+                   name       = ''    ) :
         
         self.selection   = selection
         self.save_vars   = save_vars
         self.new_vars    = new_vars 
         self.addselvars  = addselvars 
+        self.name        = name 
 
         self.__output  = ()  
 
@@ -65,6 +67,7 @@ class  ReduceTask(Task) :
                           save_vars  = self.save_vars  ,
                           new_vars   = self.new_vars   ,
                           addselvars = self.addselvars ,
+                          name       = self.name       ,
                           tmp_keep   = True            , ## attention! True is here! 
                           silent     = True            )
         
@@ -112,7 +115,8 @@ def reduce ( chain               ,
              save_vars  = ()     ,
              new_vars   = {}     ,
              no_vars    = ()     , 
-             output     = ''     , 
+             output     = ''     ,
+             name       = ''     , 
              addselvars = False  ,
              silent     = False  ,
              ## 
@@ -133,6 +137,7 @@ def reduce ( chain               ,
                               new_vars   = new_vars   ,
                               no_vars    = no_vars    ,
                               output     = output     ,
+                              name       = name       , 
                               addselvars = addselvars ,
                               silent     = silent     )
 
@@ -142,10 +147,11 @@ def reduce ( chain               ,
     
     ch   = Chain ( chain ) 
     
-    task = ReduceTask ( selection  ,
-                        save_vars  ,
-                        new_vars   ,
-                        addselvars )
+    task = ReduceTask ( selection  = selection  ,
+                        save_vars  = save_vars  ,
+                        new_vars   = new_vars   ,
+                        addselvars = addselvars ,
+                        name       = name       )
     
     wmgr  = WorkManager  ( ppservers = ppservers  , silent = silent    )
     trees = ch.split     ( max_files = 1  )
@@ -160,7 +166,8 @@ def reduce ( chain               ,
                                save_vars  = ()     ,
                                addselvars = False  ,
                                silent     = True   ,
-                               output     = output )
+                               output     = output ,
+                               name       = name   )
         
         result = Chain ( reduced.chain ) 
         

@@ -527,7 +527,7 @@ def make_ostap_style ( name                           ,
     conf [ 'GridWidth'         ] = get_int   ( config , 'FuncWidth'     , line_width  ) 
     
     conf [ 'MarkerStyle'       ] = get_int   ( config , 'MarkerStyle'   , 20  ) 
-    conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'    , 1.2 )
+    conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'    , 1.0 )
     
     conf [ 'LabelOffset'       ] = get_float ( config , 'LabelOffset'   , 0.015 ) 
 

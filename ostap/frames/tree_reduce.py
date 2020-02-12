@@ -56,6 +56,7 @@ class ReduceTree(CleanUp):
                    no_vars    = ()    ,   ## exclude these variables
                    ##
                    output     = ''    ,   ## output file name
+                   name       = ''    ,   ## the name 
                    addselvars = False ,   ## add varibles from selections?
                    tmp_keep   = False ,   ## keep the temporary file 
                    silent     = False ):  ## silent processing 
@@ -137,22 +138,25 @@ class ReduceTree(CleanUp):
         
         ## chain name:
         ## FIXME!
-        # cname = chain.GetName()  ## produces ROOT error 
-        _ , _ , cname = chain.GetName().rpartition ( '/' ) 
+        # cname = chain.GetName()  ## produces ROOT error
+        if not name :
+            _ , _ , cname = chain.GetName().rpartition ( '/' ) 
+            name = '%s_reduced' % cname 
+        self.__name = name
         
         if not save_vars : 
-            snapshot = frame.Snapshot ( cname , output )
+            snapshot = frame.Snapshot ( name , output )
         else :
             bvars    = chain.the_variables ( *save_vars )
             all_vars = list ( bvars ) + [ v for v in nvars if not v in bvars ]
             from ostap.core.core import strings as _strings
             all_vars = _strings ( all_vars  ) 
-            snapshot = frame.Snapshot ( cname , output , all_vars )
+            snapshot = frame.Snapshot ( name , output , all_vars )
 
         assert os.path.exists ( output ) and\
                os.path.isfile ( output ) , 'Invalid file %s' % fname
 
-        self.__chain = ROOT.TChain ( cname )
+        self.__chain = ROOT.TChain ( name )
         self.__chain.Add ( output ) 
         self.__output = output 
 
@@ -169,7 +173,6 @@ class ReduceTree(CleanUp):
         mb , r = divmod ( r  ,  1024 * 1024 )
         kb , r = divmod ( r  ,  1024 )
         
-
         if   gb : fs = '%.1fGB' % ( float ( fs ) / 1024 / 1024 / 1024 )
         elif mb : fs = '%.1fMB' % ( float ( fs ) / 1024 / 1024 )
         elif kb : fs = '%.1fkB' % ( float ( fs ) / 1024 ) 
@@ -189,11 +192,16 @@ class ReduceTree(CleanUp):
     def output   ( self ) :
         """``output'' : the output file name"""
         return self.__output
-    
+
     @property
     def chain  ( self ) :
         """``chain'': the reduced chain/tree (same as tree)"""
         return self.__chain
+    
+    @property
+    def name     ( self ) :
+        """``name'' : the output chain name"""
+        return self.__name 
     
     @property
     def tree   ( self ) :
@@ -204,6 +212,11 @@ class ReduceTree(CleanUp):
     def table ( self ) :
         """``table'' : get the statitics as table"""
         return self.__table
+
+    @property
+    def report ( self ) :
+        """``report'' : get the statitics report"""
+        return self.__report
     
 # ===============================================================================
 ## Powerful method to reduce/tranform the tree/chain.
@@ -227,6 +240,7 @@ def reduce  ( tree               ,
               new_vars   = {}    ,
               no_vars    = ()    ,
               output     = ''    ,
+              name       = ''    , 
               addselvars = False ,
               silent     = False ) :
     
@@ -254,6 +268,7 @@ def reduce  ( tree               ,
                            new_vars   = new_vars   ,
                            no_vars    = no_vars    ,
                            output     = output     ,
+                           name       = name       , 
                            addselvars = addselvars ,
                            tmp_keep   = True       , 
                            silent     = silent     )

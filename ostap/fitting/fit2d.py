@@ -1549,13 +1549,13 @@ class Fit2D (PDF2) :
         ## coefficients/yields 
         # =====================================================================
     
-        self.__ss = self.make_var ( ss   , "SS"                       + suffix ,
+        self.__ss = self.make_var ( ss   , "SS"               + suffix ,
                                     "Signal(x,y)"             + suffix , None , 1000  , 0 , 1.e+7 )
-        self.__sb = self.make_var ( sb   ,  "SB"                      + suffix ,
+        self.__sb = self.make_var ( sb   ,  "SB"              + suffix ,
                                     "Signal(x)&Background(y)" + suffix , None ,  100  , 0 , 1.e+7 )
-        self.__bs = self.make_var ( bs   , "BS"                      + suffix ,
+        self.__bs = self.make_var ( bs   , "BS"               + suffix ,
                                     "Background(x)&Signal(y)" + suffix , None ,  100  , 0 , 1.e+7 )        
-        self.__bb = self.make_var ( bb   , "BB"                      + suffix ,
+        self.__bb = self.make_var ( bb   , "BB"               + suffix ,
                                     "Background(x,y)"         + suffix , None ,   10  , 0 , 1.e+7 )
         
         self.alist1 = ROOT.RooArgList (

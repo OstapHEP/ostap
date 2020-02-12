@@ -236,7 +236,6 @@ def pdg_format ( value , error , latex = False ) :
     qv , bv   = _frexp10_ (  value  )
     n         = int       ( math.floor ( bv / 3. ) ) 
 
-
     q = abs ( q ) 
     short = ( 0 == n ) or (  1 == n and  abs(v) < 10000 ) or ( -1 == n and  abs(v) > 0.1 ) 
     

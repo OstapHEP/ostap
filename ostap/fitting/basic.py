@@ -2776,7 +2776,7 @@ class PDF (MakeVar) :
     #  params = pdf.parameters ( dataset ) 
     #  @endcode
     def parameters ( self , dataset = None ) :
-        """ Get all parameters/varibales in form of dictionary
+        """ Get all parameters/variables in form of dictionary
         >>> pdf    = ...
         >>> params = pdf.parameters ( dataset ) 
         """
@@ -2785,7 +2785,10 @@ class PDF (MakeVar) :
         pars = self.pdf.getParameters ( dataset )
 
         tmp    = {}
-        for p in pars : tmp[p.name] = p.value
+        for p in pars :
+            if not isinstance ( p, ROOT.RooAbsCategory ) :
+                tmp [ p.name ] = p.value
+                
         keys   = tmp.keys()
         result = {} 
         for key in sorted ( keys ) : result [ key ] = tmp [ key ] 

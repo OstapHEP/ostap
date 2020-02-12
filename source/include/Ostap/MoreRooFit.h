@@ -119,7 +119,7 @@ namespace Ostap
       Fraction  ( const char*    name  , 
                   const char*    title , 
                   RooAbsReal&    a     , 
-                  RooAbsReal&    b     ) ;
+                  RooAbsReal&    b     ) : Division ( name , title , a , b ) {}
       // ======================================================================
       /// default constructor 
       Fraction  () =  default ;
@@ -154,10 +154,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor with two variables 
-      RelDifference  ( const char* name  , 
-                       const char* title , 
-                       RooAbsReal& a     , 
-                       RooAbsReal& b     ) ;
+      RelDifference ( const char*    name  , 
+                      const char*    title , 
+                      RooAbsReal&    a     , 
+                      RooAbsReal&    b     ) : Division ( name , title , a , b ) {}
       // ======================================================================
       /// default constructor 
       RelDifference () =  default ;
@@ -172,6 +172,82 @@ namespace Ostap
       // clone method 
       RelDifference * clone ( const char* newname ) const override ;
       // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Power
+     *  Evaluate \f$ a^b \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Power: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Power , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor 
+      Power ( const char*    name  , 
+              const char*    title , 
+              RooAbsReal&    a     , 
+              RooAbsReal&    b     ) : Division ( name , title , a , b ) {}
+      // ======================================================================
+      /// default constructor 
+      Power () =  default ;
+      // ======================================================================
+      // copy 
+      Power ( const Power&   right       , 
+              const char*    newname = 0 ) ;
+      // ======================================================================
+      // destructor 
+      virtual ~Power() ;
+      // ======================================================================
+      // clone method 
+      Power* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Exp
+     *  Evaluate \f$ exp(ab) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Exp: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Exp , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor 
+      Exp ( const char*    name  , 
+            const char*    title , 
+            RooAbsReal&    a     , 
+            RooAbsReal&    b     ) : Division ( name , title , a , b ) {}
+      // ======================================================================
+      /// default constructor 
+      Exp () =  default ;
+      // ======================================================================
+      // copy 
+      Exp ( const Exp&     right       , 
+            const char*    newname = 0 ) ;
+      // ======================================================================
+      // destructor 
+      virtual ~Exp () ;
+      // ======================================================================
+      // clone method 
+      Exp* clone ( const char* newname ) const override ;
+      // ====================================================================== 
     protected:
       // ======================================================================
       // the actual evaluation of the result 

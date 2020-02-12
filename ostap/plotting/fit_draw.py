@@ -592,7 +592,8 @@ data_options_plain              = ()
 
 ## suppress small bars at the end of error bars 
 data_options_nobars             = ROOT.RooFit.MarkerStyle ( 20   ) , \
-                                  ROOT.RooFit.DrawOption  ( "zp" )
+                                  ROOT.RooFit.DrawOption  ( "zp" ) , \
+                                  ROOT.RooFit.MarkerSize  ( 0.75 ) 
 
 ## sutable for large number of bins: small markers 
 data_options_small              = ROOT.RooFit.MarkerStyle ( 20   ) , \

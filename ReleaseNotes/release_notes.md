@@ -1,3 +1,22 @@
+## New features:
+  1. add methods `vars_power`,`vars_exp` and `vars_formula` that allows to create functional variables (and properly store intermediate objects) 
+```
+pdf = ...
+v1  = pdf.vars_power   ( a  ,  2 ) ## a^2
+v2  = pdf.vars_power   ( 10 ,  b ) ## 10^b
+v3  = pdf.vars_power   ( a  ,  b ) ## a^b 
+v4  = pdf.vars.exp     ( a  , -1 ) ## exp(-a)
+v5  = pdf.vars.exp     ( a  ,  b ) ## exp(a*b)
+v6  = pdf.vars_formula ( '{}*{}/{}'       , vars = ( a , b , c ) ) 
+v7  = pdf.vars_formula ( 'x[0]*x[1]/x[2]' , vars = ( a , b , c ) ) 
+``` 
+
+## Backward incompatible changes
+
+## Bug fixes:  
+
+
+
 # v1.4.7.1
 
 ## New features:
