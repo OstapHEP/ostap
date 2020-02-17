@@ -1286,6 +1286,7 @@ class PDF (MakeVar) :
         ok = []
         for o in opts :
             if o.name == 'SumW2Error'      : continue
+            if o.name == 'AsymptoticError' : continue
             if o.name == 'PrintLevel'      : continue
             if o.name == 'PrintEvalErrors' : continue
             ok.append ( o )

@@ -465,8 +465,7 @@ class MakeVar ( object ) :
                           'WARNINGS'         ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Warnings ( a ) ) 
             
-            elif kup in ( 'WEIGHTED'         ,
-                          'SUMW2'            ,
+            elif kup in ( 'SUMW2'            ,
                           'SUMW2ERR'         ,
                           'SUMW2ERROR'       ,
                           'SUMW2ERRORS'      ) and isinstance ( a , bool ) :
@@ -480,14 +479,33 @@ class MakeVar ( object ) :
 
                 _args.append (  ROOT.RooFit.SumW2Error( a ) )
                     
+            elif kup in ( 'ASYMPTOTIC'       ,
+                          'ASYMPTOTICERR'    ,
+                          'ASYMPTOTICERROR'  ,
+                          'ASYMPTOTICERRORS' ) and isinstance ( a , bool ) and 61900 <= ROOT.gROOT.GetVersionInt() :
+                
+                if   a and dataset and     dataset.isWeighted()           : pass 
+                elif a and dataset and not dataset.isWeighted()           :
+                    self.warning ('parse_args: AsymptoticError-flag is True  for non-weighted dataset')
+                elif       dataset and not dataset.isWeighted() and not a : pass 
+                elif       dataset and     dataset.isWeighted() and not a :
+                    self.warning ('parse_args: AsymptoticError-flag is False for     weighted dataset')                    
+
+                _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
+                    
+
             elif kup in ( 'EXTENDED' ,       ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.Extended ( a ) )                
-            elif kup in ( 'NCPU'             ,
+            elif kup in ( 'CPU'              ,
+                          'CPUS'             ,
+                          'NCPU'             ,
                           'NCPUS'            ,
                           'NUMCPU'           ,
                           'NUMCPUS'          ) and isinstance ( a , int ) and 1<= a : 
                 _args.append   (  ROOT.RooFit.NumCPU( a  ) ) 
-            elif kup in ( 'NCPU'             ,
+            elif kup in ( 'CPU'              ,
+                          'CPUS'             ,
+                          'NCPU'             ,
                           'NCPUS'            ,
                           'NUMCPU'           ,
                           'NUMCPUS'          ) and \
@@ -562,12 +580,10 @@ class MakeVar ( object ) :
         ## check sumw2 for the weighted datasets 
         if dataset and dataset.isWeighted() :
             for a in _args :
-                if 'SumW2Error' !=  a.name : continue
-                if not bool ( a.getInt(0) ) :
-                    logger.warning ("parse_args: 'sumw2=False' is specified for the weighted  dataset!") 
-                break 
-            ##else :
-            ##    logger.warning ("parse_args: 'no sumw2=True' is specified for the weighted  dataset") 
+                if 'SumW2Error'      == a.name and not bool ( a.getInt ( 0 ) ) :
+                    logger.warning ("parse_args: 'sumw2=False' is specified for the weighted  dataset!")
+                if 'AsymptotocError' == a.name and not bool ( a.getInt ( 0 ) ) :
+                    logger.warning ("parse_args: 'asymptorocerror=False' is specified for the weighted  dataset!")
 
         keys = [ str ( a ) for a in _args ]
         keys.sort ()

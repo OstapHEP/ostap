@@ -10,6 +10,15 @@ v5  = pdf.vars.exp     ( a  ,  b ) ## exp(a*b)
 v6  = pdf.vars_formula ( '{}*{}/{}'       , vars = ( a , b , c ) ) 
 v7  = pdf.vars_formula ( 'x[0]*x[1]/x[2]' , vars = ( a , b , c ) ) 
 ``` 
+  1. add `Asymptotic` (also `AsymptoticErr`, `AsymptoticError`, `AsymptoticErrors`, case-insensitive)
+     keyword for fit-related methods, that (for ROOT versions starting from 6.19)
+     is decoded to `ROOT.RooFit.AsymptoticError(...)`
+  1. add possible file-extensions for   canvas-plots :
+```
+canvas >> 'plots.tgz' ## make plot in all formats and store them in tar/GZIP  format
+canvas >> 'plots.tbz' ## make plot in all formats and store them in tar/BZIP2 format
+canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  format
+``` 
 
 ## Backward incompatible changes
 

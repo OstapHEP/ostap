@@ -25,6 +25,7 @@ __all__     = (
 import ROOT, os, tempfile  
 import ostap.core.core
 import ostap.plotting.style
+from   sys import version_info as python_version
 # =============================================================================
 # logging 
 # =============================================================================
@@ -101,17 +102,20 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
     """
     #
     cnv.Update () 
-    from ostap.logger.utils import rootWarning 
-    n , d , e = fname.rpartition('.')
+    from ostap.logger.utils import rootWarning
+    n , e  = os.path.splitext ( fname )
     el = e.lower() 
-    if n and d and el in all_extensions : 
+    if n and el in all_extensions : 
         with rootWarning () :
             cnv.Update   () 
             cnv.Print    ( fname )
             logger.debug ( 'Canvas --> %s' % fname )
             return cnv
         
-    if n and d and el in ( 'tgz' , 'tar' , 'zip' ) :
+    if n and el in ( 'tgz' , 'gztar' , 'targz' , 'tar' ,
+                     'zip' ,
+                     'tbz' , 'tbz2'  , 'tarbz' , 'tarbz2' , 'bztar' , 'bz2tar' ,                     
+                     'txz' , 'tlz'   , 'tarxz' , 'tarlz'  , 'xztar' , 'lztar') :
         
         files = [] 
         for ext in exts :
@@ -122,15 +126,35 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
                 if os.path.exists ( name ) and os.path.isfile ( name ) : 
                     files.append ( name )
                     
-        if   files and el in ( 'tgz' , 'tar' ) : 
+        if   files and el in ( 'tgz' , 'targz'  , 'gztar' , 'tar' ) : 
             import tarfile
             with tarfile.open ( fname , "w:gz" ) as output :
                 for f in files : output.add   ( f )
+            if os.path.exists ( fname ) :
+                logger.debug ( 'tgz-archive created %s' % fname )
                 
+        elif files and el in ( 'tbz' , 'tarbz' , 'tarbz2' , 'tbz2' , 'bztar' , 'bz2tar' ) : 
+            import tarfile
+            with tarfile.open ( fname , "w:bz2" ) as output :
+                for f in files : output.add   ( f )
+            if os.path.exists ( fname ) :
+                logger.debug ( 'tbz-archive created %s' % fname )
+
+        elif files and el in ( 'txz'   , 'tlz'   ,
+                               'tarxz' , 'tarlz' ,
+                               'xztar' , 'lztar' ) and 3 <= python_version.major : 
+            import tarfile
+            with tarfile.open ( fname , "w:xz" ) as output :
+                for f in files : output.add   ( f )
+            if os.path.exists ( fname ) :
+                logger.debug ( 'txz-archive created %s' % fname )
+                            
         elif files and el in ( 'zip' , ) : 
             import zipfile
             with zipfile.ZipFile( fname , "w"  ) as output :
                 for f in files : output.write ( f )
+            if os.path.exists ( fname ) :
+                logger.debug ( 'zip-archive created %s' % fname )
 
         for f in files :
             try :
