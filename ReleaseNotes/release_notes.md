@@ -22,6 +22,8 @@ canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  fo
 
 ## Backward incompatible changes
 
+  1. Remove all `Rotated`-stuff
+
 ## Bug fixes:  
 
 

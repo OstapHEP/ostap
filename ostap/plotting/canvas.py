@@ -126,35 +126,42 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
                 if os.path.exists ( name ) and os.path.isfile ( name ) : 
                     files.append ( name )
                     
-        if   files and el in ( 'tgz' , 'targz'  , 'gztar' , 'tar' ) : 
+        if   files and el in  ( 'tgz' , 'targz'  , 'gztar' ) : 
             import tarfile
             with tarfile.open ( fname , "w:gz" ) as output :
                 for f in files : output.add   ( f )
             if os.path.exists ( fname ) :
-                logger.debug ( 'tgz-archive created %s' % fname )
+                logger.debug  ( 'tgz-archive created %s' % fname )
                 
-        elif files and el in ( 'tbz' , 'tarbz' , 'tarbz2' , 'tbz2' , 'bztar' , 'bz2tar' ) : 
+        elif files and el in  ( 'tar' , ) : 
+            import tarfile
+            with tarfile.open ( fname , "w" ) as output :
+                for f in files : output.add   ( f )
+            if os.path.exists ( fname ) :
+                logger.debug  ( 'tar-archive created %s' % fname )
+                
+        elif files and el in  ( 'tbz' , 'tarbz' , 'tarbz2' , 'tbz2' , 'bztar' , 'bz2tar' ) : 
             import tarfile
             with tarfile.open ( fname , "w:bz2" ) as output :
                 for f in files : output.add   ( f )
             if os.path.exists ( fname ) :
-                logger.debug ( 'tbz-archive created %s' % fname )
+                logger.debug  ( 'tbz-archive created %s' % fname )
 
-        elif files and el in ( 'txz'   , 'tlz'   ,
-                               'tarxz' , 'tarlz' ,
-                               'xztar' , 'lztar' ) and 3 <= python_version.major : 
+        elif files and el in  ( 'txz'   , 'tlz'   ,
+                                'tarxz' , 'tarlz' ,
+                                'xztar' , 'lztar' ) and 3 <= python_version.major : 
             import tarfile
             with tarfile.open ( fname , "w:xz" ) as output :
                 for f in files : output.add   ( f )
             if os.path.exists ( fname ) :
-                logger.debug ( 'txz-archive created %s' % fname )
+                logger.debug  ( 'txz-archive created %s' % fname )
                             
-        elif files and el in ( 'zip' , ) : 
+        elif files and el in  ( 'zip' , ) : 
             import zipfile
             with zipfile.ZipFile( fname , "w"  ) as output :
                 for f in files : output.write ( f )
             if os.path.exists ( fname ) :
-                logger.debug ( 'zip-archive created %s' % fname )
+                logger.debug  ( 'zip-archive created %s' % fname )
 
         for f in files :
             try :

@@ -55,7 +55,6 @@
 #include "Ostap/PySelector.h"
 #include "Ostap/PySelectorWithCuts.h"
 #include "Ostap/Polarization.h"
-#include "Ostap/Rotated.h"
 #include "Ostap/SFactor.h"
 #include "Ostap/StatEntity.h"
 #include "Ostap/StatVar.h"

@@ -198,11 +198,6 @@ __all__ = (
     'ExpoPol2Dsym_pdf', ## Symmetric version of above
     'Spline2Dsym_pdf' , ## Symmetric 2D positive spline
     #
-    ## 2D-rotated models
-    #
-    'Rotated2Gauss_pdf' , ## Rotated product of two Gaussians 
-    'Rotated2CB_pdf'    , ## Rotated product of two double-sided Crystal Ball functions 
-    #
     ## models for Pt-spectra fitting
     #
     'Tsallis_pdf'       , ## useful model for fitting pT-spectra 
@@ -261,8 +256,6 @@ logger.debug ("Import 2D-fit machinery            from ``fit2d''"        )
 from ostap.fitting.fit2d         import *
 logger.debug ("Import 2D background        models from ``models_2d''"    )
 from ostap.fitting.models_2d     import *  
-logger.debug ("Import 2D rotated (signal)  models from ``rotated_2d''"   )
-from ostap.fitting.rotated_2d    import *  
 logger.debug ("Import 3D-fit machinery            from ``fit3d''"        )
 from ostap.fitting.fit3d         import *
 logger.debug ("Import 3D background        models from ``models_3d''"    )
@@ -292,8 +285,6 @@ models += _models
 from ostap.fitting.resolution    import models as _models 
 models += _models
 from ostap.fitting.models_2d     import models as _models 
-models += _models
-from ostap.fitting.rotated_2d    import models as _models 
 models += _models
 
 # ============================================================================
