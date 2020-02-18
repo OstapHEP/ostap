@@ -27,7 +27,6 @@ canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  fo
 ## Bug fixes:  
 
 
-
 # v1.4.7.1
 
 ## New features:
