@@ -180,17 +180,20 @@ class PDF3 (PDF2) :
         
         """
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
-            in_range2 = 'aux_rng2'
+            range_name = 'aux3_rng12_%s' % self.name
+            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+            in_range2  = range_name 
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
-            with rooSilent ( 3 ) : self.zvar.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
-            in_range3 = 'aux_rng3'
+            range_name = 'aux3_rng13_%s' % self.name
+            with rooSilent ( 3 ) : self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+            in_range3  = range_name 
 
         in_range = []
-        if in_range2 : in_range.append( in_range2 )
-        if in_range3 : in_range.append( in_range3 )
-        in_ranage = tuple( in_range ) 
+        if in_range2 : in_range.append ( in_range2 )
+        if in_range3 : in_range.append ( in_range3 )
+        in_range = tuple ( in_range )
+        
         return self.draw ( drawvar  = self.xvar , 
                            dataset  = dataset   ,
                            nbins    = nbins     ,
@@ -232,17 +235,20 @@ class PDF3 (PDF2) :
         
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            with rooSilent ( 3 ) : self.xvar.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
-            in_range1 = 'aux_rng1'
+            range_name = 'aux3_rng21_%s' % self.name
+            with rooSilent ( 3 ) : self.xvar.setRange ( range_name , in_range1[0] , in_range1[1] )
+            in_range1  = range_name
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
-            with rooSilent ( 3 ) : self.zvar.setRange ( 'aux_rng3' , in_range3[0] , in_range3[1] )
-            in_range3 = 'aux_rng3'
+            range_name = 'aux3_rng23_%s' % self.name
+            with rooSilent ( 3 ) : self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+            in_range3  = range_name 
 
         in_range = []
-        if in_range1 : in_range.append( in_range1 )
-        if in_range3 : in_range.append( in_range3 )
-        in_ranage = tuple( in_range ) 
+        if in_range1 : in_range.append ( in_range1 )
+        if in_range3 : in_range.append ( in_range3 )
+        in_range = tuple ( in_range )
+        
         return self.draw ( drawvar  = self.yvar , 
                            dataset  = dataset   ,
                            nbins    = nbins     ,
@@ -283,17 +289,20 @@ class PDF3 (PDF2) :
         
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            with rooSilent ( 3 ) : self.xvar.setRange ( 'aux_rng1' , in_range1[0] , in_range1[1] )
-            in_range1 = 'aux_rng1'
+            range_name = 'aux3_rng31_%s' % self.name
+            with rooSilent ( 3 ) : self.xvar.setRange ( range_name ,  in_range1[0] , in_range1[1] )
+            in_range1  = range_name 
 
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range2[0] , in_range2[1] )
-            in_range2 = 'aux_rng2'
+            range_name = 'aux3_rng32_%s' % self.name
+            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+            in_range2  = range_name 
 
         in_range = []
-        if in_range1 : in_range.append( in_range1 )
-        if in_range2 : in_range.append( in_range2 )
-        in_ranage = tuple( in_range ) 
+        if in_range1 : in_range.append ( in_range1 )
+        if in_range2 : in_range.append ( in_range2 )
+        in_range = tuple ( in_range )
+        
         return self.draw ( drawvar  = self.zvar , 
                            dataset  = dataset   ,
                            nbins    = nbins     ,

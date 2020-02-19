@@ -195,8 +195,9 @@ class PDF2 (PDF) :
         
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
-            with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range[0] , in_range[1] )
-            in_range = 'aux_rng2'
+            range_name = 'aux2_rng2_%s' % self.name 
+            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range[0] , in_range[1] )
+            in_range = range_name 
 
         return self.draw ( drawvar  = self.xvar , 
                            dataset  = dataset   ,
@@ -238,8 +239,9 @@ class PDF2 (PDF) :
 
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
-            with rooSilent ( 3 ) : self.xvar.setRange ( 'aux_rng1' , in_range[0] , in_range[1] )
-            in_range = 'aux_rng1'
+            range_name = 'aux2_rng1_%s' % self.name 
+            with rooSilent ( 3 ) : self.xvar.setRange ( range_name , in_range[0] , in_range[1] )
+            in_range = range_name
 
         return self.draw ( drawvar  = self.yvar ,
                            dataset  = dataset   ,
@@ -305,11 +307,12 @@ class PDF2 (PDF) :
         newargs = kwargs.copy ()
         
         if in_range and isinstance ( in_range , list_types ) and 2 == len ( in_range ) :
-            low  = in_range[0]
-            high = in_range[1]
-            if isinstance ( low , num_types ) and isinstancee ( high , num_types ) and low < high : 
-                with rooSilent ( 3 ) : drawvar.setRange ( 'aux_range' , low , high )
-                in_range = 'aux_range'
+            low  = in_range [ 0 ]
+            high = in_range [ 1 ]
+            if isinstance ( low , num_types ) and isinstancee ( high , num_types ) and low < high :
+                range_name = 'aux2_range_%s' % self.name 
+                with rooSilent ( 3 ) : drawvar.setRange ( range_name , low , high )
+                in_range = range_name
     
         if in_range and not isinstance ( in_range , list_types ) :
             in_range = in_range ,
