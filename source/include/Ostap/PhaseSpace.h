@@ -344,7 +344,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate N-body phase space near the left threhsold
+      /// evaluate N-body phase space near the left threshold
       double operator   () ( const double x ) const ;
       // ======================================================================
     public:

@@ -2,11 +2,20 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file  combine.py
-#  Few helper utilities for combining the correlated measurements
+#  Few helper utilities for combining the correlated measurements,
+#  aka ``BLUE'': Best Linear Unbiased Estimator
+# 
 #  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
 #  @see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
 #  @see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
 #
+#  @see Louis Lyons, Duncan Gibaut, Peter Clifford, 
+#       "How to combine correlated estimates of a single physical quantity",
+#        Nuclear Instruments and Methods in Physics Research Section A:
+#        Accelerators, Spectrometers, Detectors and Associated Equipment
+#        Volume 270, Issue 1, 1 July 1988, Pages 110-117
+#  @see https://doi.org/10.1016/0168-9002(88)90018-6
+# 
 #  @see Ostap::Math::Combine
 #  @code
 #  x = VE ( 0.95 , 0.08**2 )        ## the first  measurement (with stat uncertainty)
@@ -27,7 +36,6 @@
 - see P.Avery ``Combining measurements with correlated errors'', CBX 95 55
 - see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
 - see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
-
 
 - see Ostap::Math::Combine
 
@@ -107,21 +115,21 @@ class Combine(object) :
         DATA     = Ostap.Vector       ( N ) 
         COV2     = Ostap.SymMatrix    ( N ) 
 
-        self.cov2 = None  
-        if isinstance  ( data , DATA ) : self.data = data
+        self.__cov2 = None  
+        if isinstance  ( data , DATA ) : self.__data = data
         else :
-            self.data = DATA() 
-            for i in range(N)  :
+            self.__data = DATA() 
+            for i in range ( N )  :
                 e  = data[i]
                 if hasattr ( e , 'cov2' ) and 0 < e.cov2() :
-                    if not self.cov2 : self.cov2 = COV2() 
-                    self.cov2[i,i] = e.cov2()  
-                self.data[i] = data[i]
+                    if not self.__cov2 : self.__cov2 = COV2() 
+                    self.__cov2[i,i] = e.cov2()  
+                self.__data[i] = data[i]
 
-        self.covs = [] 
+        self.__covs = [] 
         ## add covariance matrix
-        if not self.cov2 : self.cov2 = COV2()
-        else             : self.covs.append ( COV2( self.cov2 )  )
+        if not self.__cov2 : self.__cov2 =        COV2 (             )
+        else               : self.__covs.append ( COV2 ( self.__cov2 )  )
 
         _covs = ( cov2, ) + args
         for c in _covs :
@@ -129,35 +137,38 @@ class Combine(object) :
             c1 = COV2()
             c1.increment ( c )
 
-            self.cov2.increment ( c1 )
-            self.covs.append    ( COV2 ( c1 ) )
+            self.__cov2.increment (        c1   )
+            self.__covs.append    ( COV2 ( c1 ) )
 
+        self.__covs   = tuple ( self.__covs ) 
         self.combiner = COMBINER( self.data , self.cov2 )
 
-    ## get the final result: combined measurement with total uncertainty
-    #  @code 
-    #  combiner = Combiner ( ... )
-    #  print combiner.result()
-    #  @endcode
-    def result  ( self ) :
-        """Get the final result: combined measurement with total combined uncertainty
-        >>> combiner = Combiner ( ... )
-        >>> print combiner.result() 
-        """
-        return self.combiner.result  ()
+    @property
+    def data ( self )  :
+        """``data'' : input data/measurements"""
+        return self.__data
 
-    ## get the weights used to get the result  
-    #  @code
-    #  combiner = Combiner ( ... )
-    #  print combiner.weights ()
-    #  @endcode 
-    def weight  ( self ) :
-        """Get the weights used to get the result
-        >>> combiner = Combiner ( ... )
-        >>> print combiner.weights ()         
-        """
+    @property
+    def covs ( self )  :
+        """``covs'' : covariance matrices"""
+        return self.__covs
+    
+    @property
+    def cov2 ( self )  :
+        """``cov2'' : overall covariance matrix"""
+        return self.__cov2 
+
+    @property
+    def result ( self ) :
+        """``result'' : the final  result"""
+        return self.combiner.result  ()
+    
+    @property 
+    def weights ( self ) :
+        """``weights'' : the weights"""
         return self.combiner.weights ()
 
+    # =========================================================================
     ## get the decomposition of the final variances 
     #  @code
     #  combiner = Combiner ( ... ) 
@@ -169,13 +180,14 @@ class Combine(object) :
         >>> print c.result(), c.covComponents() 
         """
         r = []
-        w = self.combiner.weights()
+        w = self.weights
         for c in self.covs :
             a = c.sim ( w )
             r.append  ( a )
             
         return tuple ( r ) 
-                    
+
+    # =========================================================================
     ## get the decomposition of the final uncertainty
     #  @code 
     #  combiner = ...
@@ -196,7 +208,18 @@ class Combine(object) :
         ce = [ _sqrt_ ( c ) for c in cc ]
         
         return tuple ( ce ) 
-        
+
+    @property
+    def variances  ( self ) :
+        """``variances'' : get variance components"""
+        return self.covComponents()
+    
+    @property
+    def errors  ( self ) :
+        """``errors'' : get error components"""
+        return self.errComponents()
+    
+
         
 # =============================================================================
 if '__main__' == __name__ :
@@ -221,11 +244,11 @@ if '__main__' == __name__ :
     c1 = Combine( [x,y] , syst1 )
     c2 = Combine( [x,y] , syst2 )
 
-    r1 = c1.result()
-    e1 = c1.errComponents()
+    r1 = c1.result
+    e1 = c1.errors 
 
-    r2 = c2.result()
-    e2 = c2.errComponents()
+    r2 = c2.result
+    e2 = c2.errors
 
     logger.info ( 'CORRELATED  : %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r2.value() , r2.error()  , r2.value() , e2[0] , e2[1] ) ) 
     logger.info ( 'UNCORRELATED: %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r1.value() , r1.error()  , r1.value() , e1[0] , e1[1] ) ) 
@@ -248,11 +271,11 @@ if '__main__' == __name__ :
     c1 = Combine( [x,y] , syst1 )
     c2 = Combine( [x,y] , syst2 )
 
-    r1 = c1.result()
-    e1 = c1.errComponents()
+    r1 = c1.result
+    e1 = c1.errors 
 
-    r2 = c2.result()
-    e2 = c2.errComponents()
+    r2 = c2.result
+    e2 = c2.errors 
 
     logger.info ( 'CORRELATED  : %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r2.value() , r2.error()  , r2.value() , e2[0] , e2[1] ) ) 
     logger.info ( 'UNCORRELATED: %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r1.value() , r1.error()  , r1.value() , e1[0] , e1[1] ) ) 
@@ -261,5 +284,5 @@ if '__main__' == __name__ :
     
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -17,10 +17,19 @@
 #include "Ostap/SVectorWithError.h"
 // ============================================================================
 /** @file Ostap/Combine.h 
- *  Helper utility to combine   correlated measurements 
+ *  Helper utility to combine   correlated measurements:
+ *   "BLUE" : Best Linear Unbiased Estimator 
+ * 
  *  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
  *  @see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
  *  @see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+ * 
+ *  @see Louis Lyons, Duncan Gibaut, Peter Clifford, 
+ *       "How to combine correlated estimates of a single physical quantity",
+ *       Nuclear Instruments and Methods in Physics Research Section A:
+ *        Accelerators, Spectrometers, Detectors and Associated Equipment
+ *        Volume 270, Issue 1, 1 July 1988, Pages 110-117
+ *  @see https://doi.org/10.1016/0168-9002(88)90018-6
  */  
 // ============================================================================
 namespace  Ostap
@@ -31,9 +40,18 @@ namespace  Ostap
     // ========================================================================
     /** @class Combine
      *  Helper utility to combine   correlated measurements 
+     *  "BLUE" : Best Linear Unbiased Estimator 
+     *
      *  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
      *  @see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
      *  @see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+     *  @see Louis Lyons, Duncan Gibaut, Peter Clifford, 
+     *       "How to combine correlated estimates of a single physical quantity",
+     *       Nuclear Instruments and Methods in Physics Research Section A:
+     *        Accelerators, Spectrometers, Detectors and Associated Equipment
+     *        Volume 270, Issue 1, 1 July 1988, Pages 110-117
+     *  @see https://doi.org/10.1016/0168-9002(88)90018-6
+     *
      *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-09-28
      */

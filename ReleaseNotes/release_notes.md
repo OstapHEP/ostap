@@ -19,12 +19,17 @@ canvas >> 'plots.tgz' ## make plot in all formats and store them in tar/GZIP  fo
 canvas >> 'plots.tbz' ## make plot in all formats and store them in tar/BZIP2 format
 canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  format
 ``` 
+  1. Improve a bit the interface for BLUE: Best Linear Unbiased Estimator : 
+     combination of correlated measurements 
+  1. add test for BLUE  `ostap/stats/tests/test_stats_blue.py`
 
 ## Backward incompatible changes
 
   1. Remove all `Rotated`-stuff
 
 ## Bug fixes:  
+
+  1. fix typo in treatment of `pdf.draw ( ,,, , in_range(1/2/3) = ... , )` 
 
 
 # v1.4.7.1
