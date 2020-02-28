@@ -25,7 +25,7 @@ canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  fo
   1. add SciPy/FFT-based convolution for functions `ostap/math/sp_convolution.py'
   1. add SciPy-based bspline interpolation for functions `ostap/math/sp_interpolation.py'
   1. imporve pseudo-abstract operations `ostap/math/operations.py'
-  1. extend interpoaltion tests
+  1. extend interpolation tests
  
  
 ## Backward incompatible changes
