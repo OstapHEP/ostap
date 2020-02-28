@@ -16,7 +16,7 @@ __all__     = (
     'exp'        , 'expm1'      ,
     'log'        , 'log10'      , 'log1p'  , 
     'sqrt'       , 'cbrt'       , 'pow'    ,   
-    'sin'        , 'cos'        ,  'tan'   , 
+    'sin'        , 'cos'        , 'tan'    , 
     'sinh'       , 'cosh'       , 'tanh'   , 'sech'   ,
     'asin'       , 'acos'       , 'atan'   , 
     'asinh'      , 'acosh'      , 'atanh'  ,

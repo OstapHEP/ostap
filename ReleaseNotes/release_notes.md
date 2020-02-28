@@ -22,7 +22,12 @@ canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  fo
   1. Improve a bit the interface for BLUE: Best Linear Unbiased Estimator : 
      combination of correlated measurements 
   1. add test for BLUE  `ostap/stats/tests/test_stats_blue.py`
-
+  1. add SciPy/FFT-based convolution for functions `ostap/math/sp_convolution.py'
+  1. add SciPy-based bspline interpolation for functions `ostap/math/sp_interpolation.py'
+  1. imporve pseudo-abstract operations `ostap/math/operations.py'
+  1. extend interpoaltion tests
+ 
+ 
 ## Backward incompatible changes
 
   1. Remove all `Rotated`-stuff

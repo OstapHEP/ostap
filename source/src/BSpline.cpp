@@ -1029,7 +1029,7 @@ Ostap::Math::boehm ( const double         x     ,
 { return _insert_  ( x , num , knots , pars , order ) ; }
 // ============================================================================
 /*  get a vector of knots from Greville abscissas 
- *  @param aabscissas (INPUT) vector of greville's abscissas 
+ *  @param abscissas (INPUT) vector of greville's abscissas 
  *  @param degree of the spline 
  *  @return vector of knots 
  */
@@ -2947,7 +2947,7 @@ namespace
 }
 // ============================================================================
 /*  get abscissas of crossing points of the control polygon with x-axis
- *  @param  b bernstein polynomial
+ *  @param  b basic spline 
  *  @return abscissas of crossing points of the control  polygon
  */
 // ============================================================================
@@ -2989,12 +2989,13 @@ Ostap::Math::Interpolation::bspline
   return bspline ( xy , bs ) ;
 }
 // ============================================================================
-/* create the interpolation spline 
- *  @param xy (INPUT)   vector of data 
- *  @param bs (UPPDATE) the spline 
+/*  create the interpolation spline 
+ *  @param xy (INPUT)  vector of data 
+ *  @param bs (UPDATE) the spline 
  *  @return status code 
  */
 // ============================================================================
+#include <iostream> 
 Ostap::StatusCode 
 Ostap::Math::Interpolation::bspline 
 ( std::vector< std::pair<double,double> > xy ,
@@ -3004,7 +3005,7 @@ Ostap::Math::Interpolation::bspline
   // mismatch for number of input parameters 
   if ( N != bs.npars() ) { return 110 ; }             // RETURN 110 
   //
-  std::sort (  xy.begin() , xy.end() ) ;
+  std::stable_sort ( xy.begin() , xy.end() ) ;
   //
   gsl_matrix      * m = gsl_matrix_alloc ( N , N );
   // 
@@ -3012,17 +3013,26 @@ Ostap::Math::Interpolation::bspline
   const double xmax = bs.xmax () ;
   //
   for ( unsigned short i = 0 ; i < N ; ++i ) 
-  { for ( unsigned short j = 0 ; j < N ; ++j ) 
+  { 
+    for ( unsigned short j = 0 ; j < N ; ++j ) 
     {
-      double xj =  xy[j].first ;
+      double xj =  xy [ j ].first ;
+      //
       if      ( s_equal ( xj , xmin ) ) 
       { xj = Ostap::Math::next_double ( xmin , +s_ulps ) ; }
       else if ( s_equal ( xj , xmax ) ) 
-      { xj = Ostap::Math::next_float ( xmax , -s_ulps ) ; }
+      { xj = Ostap::Math::next_double ( xmax , -s_ulps ) ; }
       //
       const double bij = bs.bspline ( i , xj ) ;
-      if  ( i == j && s_zero ( bij ) ) 
-      { gsl_matrix_free  ( m ) ; { return 111 ; } }  // RETURN 111 
+      if  ( i == j && s_zero ( bij ) )
+      { 
+        std::cout 
+          << " i=" << i 
+          << " j=" << j
+          << " b=" << bij << std::endl ;
+        gsl_matrix_free  ( m ) ;  
+        return 111             ;  // RETURN 111 
+      }
       gsl_matrix_set (  m , j , i , bij  ) ; 
     } 
   }
@@ -3063,5 +3073,21 @@ Ostap::Math::Interpolation::bspline
   return Ostap::StatusCode::SUCCESS ;
 }
 // ============================================================================
-// The END 
+#include "Ostap/Interpolation.h"
+// ============================================================================
+/*  define parameters for the interpolation spline 
+ *  @param data (INPUT)  table of data 
+ *  @param bs   (UPDATE) the spline 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Math::Interpolation::bspline 
+( const Ostap::Math::Interpolation::Table& data ,
+  Ostap::Math::BSpline&              bs   ) 
+{ return bspline ( data.table() , bs ) ; }
+
+
+// ============================================================================
+//                                                                      The END 
 // ============================================================================

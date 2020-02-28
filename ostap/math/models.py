@@ -11,7 +11,14 @@
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
-__all__     = ()
+__all__     = (
+    'tf1'     , ## convert model/function to TF1 ,
+    'tf2'     , ## convert model/function to TF2 ,
+    'tf3'     , ## convert model/function to TF3 ,
+    'f1_draw' , ## draw 1D-function via conversion to TF1 
+    'f2_draw' , ## draw 1D-function via conversion to TF2 
+    'f3_draw' , ## draw 1D-function via conversion to TF3 
+    )
 # =============================================================================
 import  ROOT 
 from    ostap.core.core import cpp, Ostap, funID
@@ -43,11 +50,11 @@ class _WO3_ (object)  :
 pos_infinity = float('+inf')
 neg_infinity = float('-inf')
 # =============================================================================
-## convert the model into TF1
-def _tf1_ ( self                 ,
-            xmin  = neg_infinity ,
-            xmax  = pos_infinity ,
-            npars = 0            , args = () ) :
+## convert the model/function into TF1
+def tf1  ( self                 ,
+           xmin  = neg_infinity ,
+           xmax  = pos_infinity ,
+           npars = 0            , args = () ) :
     """Convert the function to TF1    
     >>> obj = ...
     >>> fun = obj.tf1 ( 3.0 , 3.2 )
@@ -74,12 +81,12 @@ def _tf1_ ( self                 ,
 
 # =============================================================================
 ## convert the model into TF2
-def _tf2_ ( self ,
-            xmin  = neg_infinity ,
-            xmax  = pos_infinity ,
-            ymin  = neg_infinity ,
-            ymax  = pos_infinity ,
-            npars = 0            , args = () ) :
+def tf2 ( self ,
+          xmin  = neg_infinity ,
+          xmax  = pos_infinity ,
+          ymin  = neg_infinity ,
+          ymax  = pos_infinity ,
+          npars = 0            , args = () ) :
     """Convert the function to TF2
     >>> obj = ...    
     >>> fun = obj.tf2 ( 3.0 , 3.2 , 3.0 , 3.2 )    
@@ -113,14 +120,14 @@ def _tf2_ ( self ,
 
 # =============================================================================
 ## convert the model into TF3
-def _tf3_ ( self ,
-            xmin  = neg_infinity ,
-            xmax  = pos_infinity ,
-            ymin  = neg_infinity ,
-            ymax  = pos_infinity ,
-            zmin  = neg_infinity ,
-            zmax  = pos_infinity ,
-            npars = 0            , args = () ) :
+def tf3 ( self ,
+          xmin  = neg_infinity ,
+          xmax  = pos_infinity ,
+          ymin  = neg_infinity ,
+          ymax  = pos_infinity ,
+          zmin  = neg_infinity ,
+          zmax  = pos_infinity ,
+          npars = 0            , args = () ) :
     """Convert the function to TF3
     >>> obj = ...    
     >>> fun = obj.tf3 ( 3.0 , 3.2 , 3.0 , 3.2 , 1 , 2 )    
@@ -161,7 +168,7 @@ def _tf3_ ( self ,
 
 # =============================================================================
 ## draw the function 
-def _f1_draw_ ( self , opts ='' , **kwargs ) :
+def f1_draw ( self , opts ='' , **kwargs ) :
     """Drawing the function object through conversion to ROOT.TF1    
     >>> fun = ...
     >>> fun.draw()    
@@ -173,11 +180,11 @@ def _f1_draw_ ( self , opts ='' , **kwargs ) :
         npars = kwargs.pop ( 'npars' , 0  ) 
         args  = kwargs.pop ( 'args'  , () )
         
-        self._tf1        = _tf1_ ( self          ,
-                                   xmin  = xmin  ,
-                                   xmax  = xmax  ,
-                                   npars = npars ,
-                                   args  = args  )
+        self._tf1        =  tf1 ( self          ,
+                                  xmin  = xmin  ,
+                                  xmax  = xmax  ,
+                                  npars = npars ,
+                                  args  = args  )
         
         if type(self) in ( Ostap.Math.Positive          ,
                            Ostap.Math.PositiveEven      , 
@@ -196,7 +203,7 @@ def _f1_draw_ ( self , opts ='' , **kwargs ) :
 
 # =============================================================================
 ## draw the function 
-def _f2_draw_ ( self , opts ='' , **kwargs ) :
+def f2_draw ( self , opts ='' , **kwargs ) :
     """Drawing the function object through conversion to ROOT.TF2    
     >>> fun = ...
     >>> fun.draw()    
@@ -210,19 +217,19 @@ def _f2_draw_ ( self , opts ='' , **kwargs ) :
         npars = kwargs.pop ( 'npars' , 0  ) 
         args  = kwargs.pop ( 'args' , () )
 
-        self._tf2        = _tf2_ ( self ,
-                                   xmin  = xmin  ,
-                                   xmax  = xmax  ,
-                                   ymin  = ymin  ,
-                                   ymax  = ymax  ,
-                                   npars = npars , 
-                                   args  = args  )
+        self._tf2        =  tf2 ( self ,
+                                  xmin  = xmin  ,
+                                  xmax  = xmax  ,
+                                  ymin  = ymin  ,
+                                  ymax  = ymax  ,
+                                  npars = npars , 
+                                  args  = args  )
         
     return self._tf2.draw ( opts , **kwargs )
 
 # =============================================================================
 ## draw the function 
-def _f3_draw_ ( self , opts ='' , **kwargs ) :
+def f3_draw ( self , opts ='' , **kwargs ) :
     """Drawing the function object through conversion to ROOT.TF3    
     >>> fun = ...
     >>> fun.draw()    
@@ -238,15 +245,15 @@ def _f3_draw_ ( self , opts ='' , **kwargs ) :
         npars = kwargs.pop ( 'npars' , 0  ) 
         args  = kwargs.pop ( 'args' , () )
 
-        self._tf3        = _tf3_ ( self ,
-                                   xmin  = xmin  ,
-                                   xmax  = xmax  ,
-                                   ymin  = ymin  ,
-                                   ymax  = ymax  ,
-                                   zmin  = zmin  ,
-                                   zmax  = zmax  ,
-                                   npars = npars , 
-                                   args  = args  )
+        self._tf3        = tf3 ( self ,
+                                 xmin  = xmin  ,
+                                 xmax  = xmax  ,
+                                 ymin  = ymin  ,
+                                 ymax  = ymax  ,
+                                 zmin  = zmin  ,
+                                 zmax  = zmax  ,
+                                 npars = npars , 
+                                 args  = args  )
         
     return self._tf3.draw ( opts , **kwargs )
 
@@ -856,10 +863,10 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Functions.PyCallable        , 
                Ostap.Math.ChebyshevApproximation ,
                ) :
-    model.tf1          = _tf1_ 
+    model.tf1          =  tf1 
     model.sp_integrate = sp_integrate_1D
     model.__getattr__  = _tf1_getattr_
-    model.draw         = _f1_draw_
+    model.draw         =  f1_draw
     
     if not hasattr ( model , 'max' ) : 
         if hasattr ( model , 'mode' ) :
@@ -921,8 +928,8 @@ for model in ( Ostap.Math.Bernstein         ,
                Ostap.Math.ConvexSpline      , 
                Ostap.Math.ConvexOnlySpline  ) : 
     
-    model.draw = _f1_draw_
-    model.Draw = _f1_draw_
+    model.draw = f1_draw
+    model.Draw = f1_draw
 
 
 # =============================================================================
@@ -1019,9 +1026,9 @@ for model in ( Ostap.Math.BSpline2D           ,
                Ostap.Math.Expo2DPolSym        ,
                Ostap.Math.LegendreSum2        ) :
     
-    model . tf2  = _tf2_ 
-    model . tf   = _tf2_
-    model . draw = _f2_draw_ 
+    model . tf2  =  tf2 
+    model . tf   =  tf2
+    model . draw =  f2_draw
     model.sp_integrate    = sp_integrate_2D
     model.sp_integrate_2D = sp_integrate_2D
     model.sp_integrate_x  = sp_integrate_2Dx
@@ -1046,9 +1053,9 @@ for model in ( Ostap.Math.Bernstein3D    ,
                Ostap.Math.Positive3DMix  ,
                Ostap.Math.LegendreSum3   ) :
     
-    model . tf3  = _tf3_ 
-    model . tf   = _tf3_ 
-    model . draw = _f3_draw_ 
+    model . tf3  =  tf3 
+    model . tf   =  tf3 
+    model . draw =  f3_draw
     model.sp_integrate    = sp_integrate_3D
     model.sp_integrate_x  = sp_integrate_3Dx
     model.sp_integrate_y  = sp_integrate_3Dy
@@ -1395,7 +1402,7 @@ Ostap.Math.BreitWignerBase . amp = _amp_
 import ostap.math.derivative as _D1
 import ostap.math.integral   as _D2
 for i in ( _D1.Derivative , _D2.Integral , _D2.IntegralCache ) :
-    if not hasattr ( i , 'tf1' ) : i.tf1 = _tf1_
+    if not hasattr ( i , 'tf1' ) : i.tf1 = tf1
 
 # =============================================================================
 def _ff_str_ ( ff ) :

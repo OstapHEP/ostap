@@ -15,6 +15,14 @@
 #  p2  = Pow ( lambda x : x , lambda x : x**2  )
 #  @endcode
 #
+#  Integration, differentiation, moments, etc are available  via
+#  - ostap.math.derivative
+#  - ostap.math.integral 
+#  - ostap.stats.moments  
+#
+#  + converison to ROOT.TF(1,2,3)
+#  + visualization via ROOT.TF(1,2,3)
+#
 #  @attention It could be coded in much simpler way,
 #             but since it is extensively used for pickling,
 #             we need to  avoid lambdas and non-pickable functions  
@@ -31,11 +39,19 @@
 >>> cos2 = Mul ( math.cos , math.cos )
 >>> fun  = Sum ( sin2     , cos2  )
 
->>> p2  = Pow ( lambda x : x , lambda x : x**2  )
+>>> p2   = Pow ( lambda x : x , lambda x : x**2  )
+
+Integration, differentiation, moments, etc are available  via
+- ostap.math.derivative
+- ostap.math.integral 
+- ostap.stats.moments  
+
++ converison to ROOT.TF(1,2,3)
++ visualization via ROOT.TF(1,2,3)
 
 NB: It could be coded in much simpler way,
 but since it is extensively used for pickling,
-we need to  avoid lambdas and non-pickable functions  
+we need to avoid lambdas and non-pickable constructions   
 
 """
 # =============================================================================
@@ -47,6 +63,7 @@ __all__     = (
     'Operation2' , ## wrap the operation
     'WrapOper2'  , ## wrap the operation
     'Constant'   , ## constant function
+    'Wrapper'    , ## wrapper function
     'Compose'    , ## composition of two functions 
     'Descartes'  , ## Descartes' product of two functions
     'Sum'        , ## wrapped summation 
@@ -62,9 +79,35 @@ __all__     = (
     'Or_b'       , ## wrapped OR(bitwise)-operation
     'And_b'      , ## wrapped AND(bitwise)-operation
     'Xor_b'      , ## wrapped XOR(bitwise)-operation
+    'Exp'        , ## exponent
+    'Log'        , ## natural logarithm
+    'Log10'      , ## decimal logarithm
+    'Sin'        , ## sine 
+    'Sinh'       , ## hyperbolic sine 
+    'ASin'       , ## inverse sine 
+    'ASinh'      , ## inverse hyperbolic sine 
+    'Cos'        , ## cosine
+    'Cosh'       , ## hyperbolic cosine 
+    'ACos'       , ## inverse cosine 
+    'ACosh'      , ## inverse hyperbolic cosine 
+    'Tan'        , ## tangent
+    'Tanh'       , ## hyperbolic tangent  
+    'ATan'       , ## inverse tangent
+    'ATanh'      , ## inverse hyperbolic tangent
+    'Sech'       , ## hyperbolic secant: 1/cosh 
+    'Erf'        , ## error function
+    'Erfc'       , ## complementary error function
+    'Gamma'      , ## gamma function
+    'LogGamma'   , ## logarithm of gamma fnuction
+    'iGamma'     , ## 1/Gamma 
+    'Sqrt'       , ## square root
+    'Cbrt'       , ## cubic root
+    'Square'     , ## square 
+    'Cube'       , ## cube
+    'digitize'   , ## digitize the fuction to numpy-array 
     ) 
 # =============================================================================
-import operator
+import operator, abc, math 
 from   ostap.core.ostap_types import num_types, integer_types, list_types  
 # =============================================================================
 # logging 
@@ -82,19 +125,74 @@ class _For (object) :
 class _Fand(object) :
     def __call__ ( self , x , y ) : return x and y 
 # =============================================================================
+#  @class Function
+class Function(object) :
+    __metaclass__ = abc.ABCMeta
+    @abc.abstractmethod
+    def __call__ ( self , *args ) :
+        """Use the function!"""
+        return NotImplemented
+    ## ## simple operations 
+    def __add__      ( self , other ) : return Sum ( self  , other )
+    def __sub__      ( self , other ) : return Sub ( self  , other )
+    def __mul__      ( self , other ) : return Mul ( self  , other )
+    def __div__      ( self , other ) : return Div ( self  , other )
+    def __truediv__  ( self , other ) : return Div ( self  , other )
+    def __pow__      ( self , other ) : return Pow ( self  , other )
+    def __radd__     ( self , other ) : return Sum ( other , self  )
+    def __rmul__     ( self , other ) : return Mul ( other , self  )
+    def __rsub__     ( self , other ) : return Sub ( other , self  )
+    def __rdiv__     ( self , other ) : return Div ( other , self  )
+    def __rtruediv__ ( self , other ) : return Div ( other , self  )
+    
+    def __iadd__     ( self , other ) : return NotImplemented
+    def __imul__     ( self , other ) : return NotImplemented
+    def __isub__     ( self , other ) : return NotImplemented
+    def __idiv__     ( self , other ) : return NotImplemented
+
+# =============================================================================
 ## @class Constant
 #  trivial "constant"  function
-class Constant(object) :
+class Constant(Function) :
     """Trivial ``constant'' function
     """
     def __init__ ( self , value ) :
         self.__value = value
     def __call__ ( self , *x    ) :
         return  self.__value
+    def __str__ ( self ) : return "%s" % self.value          
+    __repr__ = __str__ 
     @property
     def value ( self ) :
         """``value'' : value of the constant"""
         return self.__value
+
+# =============================================================================
+## @class Wrapper
+#  Wrap another function
+class Wrapper(Function) :
+    """Trivial wrapper function
+    """
+    def __init__ ( self , function , name = '' ) :
+        if not isinstance ( function , Wrapper ) : self.__function = function
+        else                                     : self.__function = function.function        
+        self.__name = name if name else str(function) 
+    def __call__ ( self , *x ) :
+        return  self.__function ( *x ) 
+    def __str__ ( self ) : return "%s" % self.function           
+    __repr__ = __str__ 
+    @property
+    def function ( self ) :
+        """``function'' : the actual function"""
+        return self.__function
+    @property
+    def name     ( self ) :
+        """``name'' : function name"""
+        return self.__name__
+    def __str__  ( self ) :
+        return self.__name__
+    __repr__ = __str__ 
+
 # =============================================================================
 ## helper class to wrap certain operation
 #  @code
@@ -102,7 +200,7 @@ class Constant(object) :
 #  fun2  = lambda x : x**2
 #  fsum  = WrapOper ( fun1 , fun2 , operator.add ) 
 #  @endcode 
-class WrapOper2(object) :
+class WrapOper2(Function) :
     """Helper class to wrap certain operation
     >>> fun1  = math.sin
     >>> fun2  = lambda x : x**2
@@ -152,7 +250,7 @@ class WrapOper2(object) :
 #  funy = math.sin
 #  fun2 = Descartes (  funx , funy , 1 )
 #  @endcode
-class Descartes(object) :
+class Descartes(Function) :
     """Make the Descartes product of two functions
     >>> funx = math.sin
     >>> funy = math.sin
@@ -173,11 +271,11 @@ class Descartes(object) :
         
         ## trivial case 
         if isinstance ( a , num_types ) :
-            afun = Constant ( float ( a ) ) 
+            afun = Constant ( a * 1.0 ) 
             
         ## trivial case 
         if isinstance ( b , num_types ) :
-            bfun = Constant ( float ( b ) ) 
+            bfun = Constant ( b * 1.0 ) 
             
         assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , type( a ) )  
         assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , type( b ) )  
@@ -186,7 +284,7 @@ class Descartes(object) :
         self.__bfun = bfun 
         self.__N = N
         
-
+    # =========================================================================
     def __call__ ( self , *x ) :
 
         afun = self.__afun
@@ -219,29 +317,33 @@ class Descartes(object) :
 #  fun2 = lambda x : x*x
 #  comp = Compose (fun2 , fun1 )
 #  @endcode 
-class Compose(object) :
+class Compose(Function) :
     """trivial  composition of two functions
     >>> fun1 = math.sin
     >>> fun2 = lambda x : x*x
     >>> comp = Compose ( fun2 , fun1 )
     """
-    def __init__ ( self , a , b )  :
+    def __init__ ( self , a , b , na = '' , nb = '' )  :
         
         afun = a
         bfun = b
         
         ## trivial case 
         if isinstance ( a , num_types ) :
-            afun = Constant ( float ( a ) ) 
+            afun = Constant ( a * 1.0 ) 
             
         ## trivial case 
         if isinstance ( b , num_types ) :
-            bfun = Constant ( float ( b ) ) 
+            bfun = Constant ( b * 1.0 ) 
             
         assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , type( a ) )  
         assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , type( b ) )  
         self.__afun = afun 
-        self.__bfun = bfun 
+        self.__bfun = bfun
+        
+        self.__na   = na if na else str ( afun ) 
+        self.__nb   = nb if nb else str ( bfun ) 
+        
         
     def __call__ ( self , *x ) :
 
@@ -261,8 +363,11 @@ class Compose(object) :
     @property
     def b ( self ) :
         """``b'' - the second operand/function"""
-        return self.__bfun 
+        return self.__bfun
 
+    def __str__ ( self ) :
+        return "%s(%s)" % ( self.__na , self.__nb )
+    __repr__ = __str__ 
         
 # =============================================================================
 ## @class Operation2
@@ -274,24 +379,29 @@ class Compose(object) :
 #  @endcode
 #  - first it tries to use the native operations for callables
 #  - if it fails, generic WrapOper2 is used
-class Operation2(object) :
+class Operation2(Function) :
     """Helper base class to define the operation
     >>> fun1 = ...
     >>> fun2 = ...
     >>> ops  = Operation2( fun1 ,  fun2 , lambda a , b : a + b )      
     """
-    def __init__ ( self , a ,  b , oper ) : 
+    def __init__ ( self , a ,  b , oper , symbol = '?' , prefix = '' ) : 
 
         afun = a
         bfun = b
 
-        ## trivial case 
-        if isinstance ( a , num_types ) :
-            afun = Constant ( float ( a ) ) 
-            
-        ## trivial case 
-        if isinstance ( b , num_types ) :
-            bfun = Constant ( float ( b ) ) 
+        anum = isinstance ( a , num_types )
+        bnum = isinstance ( b , num_types )
+
+        funab = None
+        if anum and bnum :
+            afun  = Constant ( a * 1.0 ) 
+            bfun  = Constant ( b * 1.0 ) 
+            funab = Constant ( oper  ( a * 1.0 , b * 1.0 ) )
+        elif anum :
+            afun  = Constant ( a * 1.0 ) 
+        elif bnum :
+            bfun  = Constant ( b * 1.0 ) 
             
         assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , type( a ) )  
         assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , type( b ) )  
@@ -299,45 +409,58 @@ class Operation2(object) :
         self.__afun = afun
         self.__bfun = bfun
         self.__oper = oper
+
+        ## try to use the native operations, if/when defined
+
+        if isinstance   ( afun , Operation2 ) : afun = afun.result
+        if isinstance   ( bfun , Operation2 ) : bfun = bfun.result
         
-        ## try to use the native operations, if defined  
+        fa = isinstance ( afun , Function   )
+        fb = isinstance ( bfun , Function   )
 
-        native = [  ( afun , bfun ) ]
+        if fa and fb and not funab : 
+            funab = WrapOper2 ( afun , bfun , oper )
 
-        if   isinstance ( afun , Operation2 ) and isinstance ( bfun , Operation2 ) :
-            native.append ( ( afun.result , bfun.result ) )
-        elif isinstance ( afun , Operation2 ) :        
-            native.append ( ( afun.result , bfun        ) )
-        elif isinstance ( bfun , Operation2 ) :        
-            native.append ( ( afun        , bfun.result ) )
+        if not funab :
 
-        funab = None 
-        for _a , _b in native :
-            if funab is None : 
-                try :
-                    funab = self.__oper ( _a , _b )
-                    if not callable ( funab ) :
-                        funab = None 
-                        raise TypeError ()
-                    self.__shortcut = True
-                    ## logger.info ('Native  operation is used %s vs %s' % ( type(a) , type(b) ) ) 
-                except :
-                    pass                
-        del native
+            native = [  ( afun , bfun ) ]
+            
+            if anum : native = [ ( a    , bfun ) , ( afun , bfun ) ]
+            if bnum : native = [ ( afun , b    ) , ( afun , bfun ) ]
+
+            if   isinstance ( afun , Operation2 ) and isinstance ( bfun , Operation2 ) :
+                native.append ( ( afun.result , bfun.result ) )
+            elif isinstance ( afun , Operation2 ) :        
+                native.append ( ( afun.result , bfun        ) )
+            elif isinstance ( bfun , Operation2 ) :        
+                native.append ( ( afun        , bfun.result ) )
+
+            for _a , _b in native :
+                if funab is None : 
+                    try :
+                        funab = oper ( _a , _b )
+                        if not callable ( funab ) :
+                            funab = None 
+                            raise TypeError ()
+                        self.__shortcut = True
+                        ## logger.info ('Native  operation is used %s vs %s' % ( type(a) , type(b) ) )
+                    except :
+                        pass                
+            del native
                     
         ## use generic wrapper, if no native operations are defined 
-        if funab is None :
+        if not funab :
             funab = WrapOper2 ( afun , bfun , oper )
             self.__shortcut = False 
             ## logger.info ('Generic operation is used %s vs %s' % ( type(a) , type(b) ) ) 
 
         ## store the result 
-        self.__funab = funab 
-
-    def __call__ ( self , *x ) :
-
-        fab = self.__funab 
+        self.__funab  = funab 
+        self.__symbol = symbol
+        self.__prefix = prefix
         
+    def __call__ ( self , *x ) :
+        fab = self.__funab         
         return fab ( *x ) 
     
     @property
@@ -364,6 +487,12 @@ class Operation2(object) :
     def shortcut ( self ) :
         """``shortcut'' :  Has native/shortcut approach used?"""
         return  self.__shortcut
+
+    def __str__ ( self ) :
+        return "%s((%s)%s(%s))" % ( self.__prefix , self.a ,
+                                    self.__symbol , self.b )
+            
+    __repr__ = __str__
     
 # =============================================================================
 ## @class Sum
@@ -376,7 +505,7 @@ class Sum (Operation2)  :
     >>> op = Sum ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
-        super(Sum,self).__init__ ( a , b , operator.add )
+        super(Sum,self).__init__ ( a , b , operator.add , '+' )
 
 # =============================================================================
 ## @class Sub
@@ -389,7 +518,7 @@ class Sub (Operation2)  :
     >>> op = Sub ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
-        super(Sub,self).__init__ ( a , b , operator.sub )
+        super(Sub,self).__init__ ( a , b , operator.sub , '-' )
 
 # =============================================================================
 ## @class Mul
@@ -402,7 +531,7 @@ class Mul (Operation2)  :
     >>> op = Mul ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
-        super(Mul,self).__init__ ( a , b , operator.mul )
+        super(Mul,self).__init__ ( a , b , operator.mul  , '*' )
 
 # =============================================================================
 ## @class Div
@@ -415,7 +544,7 @@ class Div (Operation2)  :
     >>> op = Div ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
-        super(Div,self).__init__ ( a , b , operator.truediv )
+        super(Div,self).__init__ ( a , b , operator.truediv , '/')
 
 # =============================================================================
 ## @class Pow
@@ -428,7 +557,25 @@ class Pow (Operation2)  :
     >>> op = Pow ( lambda x : x , lambda x : x**2  )
     """
     def __init__ ( self , a , b )  :
-        super(Pow,self).__init__ ( a , b , operator.pow )
+        super(Pow,self).__init__ ( a , b , operator.pow , '**')
+
+# =============================================================================
+## @class Square
+#  square-operation
+class Square(Pow)  :
+    """square-operation
+    """
+    def __init__ ( self , a )  :
+        super(Square,self).__init__ ( a , 2 )
+
+# =============================================================================
+## @class Cube
+#  cube-operation
+class Cube(Pow)  :
+    """Cube-operation
+    """
+    def __init__ ( self , a )  :
+        super(Cube,self).__init__ ( a , 3 )
 
 # =============================================================================
 ## @class Mod
@@ -441,7 +588,7 @@ class Mod (Operation2)  :
     >>> op = Mod ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
-        super(Mod ,self).__init__ ( a , b , operator.mod )
+        super(Mod ,self).__init__ ( a , b , operator.mod , '%')
 
 # =============================================================================
 ## @class Max
@@ -454,7 +601,7 @@ class Max (Operation2)  :
     >>> op = Max ( math.sin , math.cos ) 
     """
     def __init__ ( self , a , b )  :        
-        super(Max,self).__init__ ( a , b , _Fmax() )
+        super(Max,self).__init__ ( a , b , _Fmax() , ',' , 'max')
 
 # =============================================================================
 ## @class Min
@@ -467,7 +614,7 @@ class Min (Operation2)  :
     >>> op = Min ( math.sin , math.cos ) 
     """
     def __init__ ( self , a , b )  :
-        super(Min,self).__init__ ( a , b , _Fmin() )
+        super(Min,self).__init__ ( a , b , _Fmin() , '' , 'min')
 
 # =============================================================================
 ## @class Or_l
@@ -480,7 +627,7 @@ class Or_l (Operation2)  :
     >>> op = Or_l ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :        
-        super(Or_l,self).__init__ ( a , b , _For () )
+        super(Or_l,self).__init__ ( a , b , _For () , ' or ' )
 
 # =============================================================================
 ## @class And_l
@@ -493,7 +640,7 @@ class And_l (Operation2)  :
     >>> op = And_l ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :
-        super(And_l,self).__init__ ( a , b , _Fand() )
+        super(And_l,self).__init__ ( a , b , _Fand() , ' and ' )
 
 
 # =============================================================================
@@ -507,7 +654,7 @@ class Or_b (Operation2)  :
     >>> op = Or_b ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :        
-        super(Or_b,self).__init__ ( a , b , operator.or_ )
+        super(Or_b,self).__init__ ( a , b , operator.or_ , '|' )
 
 # =============================================================================
 ## @class And_b
@@ -520,7 +667,7 @@ class And_b (Operation2)  :
     >>> op = And_b ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :
-        super(And_b,self).__init__ ( a , b , operator.and_ )
+        super(And_b,self).__init__ ( a , b , operator.and_ , '&' )
 
 # =============================================================================
 ## @class Xor_b
@@ -533,15 +680,296 @@ class Xor_b (Operation2)  :
     >>> op = Xor_b ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :        
-        super(Xor_b,self).__init__ ( a , b , operator.xor )
+        super(Xor_b,self).__init__ ( a , b , operator.xor , '^' )
 
+# =============================================================================
+## @class Abs
+#  absolute value  
+class Abs(Compose) :
+    """absolute value"""
+    def __init__ ( self , func ) :
+        super(Abs,self).__init__ ( abs , func , 'exp')
+
+# =============================================================================
+## @class Exp
+#  simple 'exponent' 
+class Exp(Compose) :
+    """Exponent for the function"""
+    def __init__ ( self , func ) :
+        super(Exp,self).__init__ ( math.exp , func , 'exp')
+
+
+# =============================================================================
+## @class Log
+#  simple 'log' 
+class Log(Compose) :
+    """Log for the function"""
+    def __init__ ( self , func ) :
+        super(Log,self).__init__ ( math.log , func , 'log')
+
+# =============================================================================
+## @class Log10
+#  simple 'log10' 
+class Log10(Compose) :
+    """Log10 for the function"""
+    def __init__ ( self , func ) :
+        super(Log10,self).__init__ ( math.log10 , func , 'log10' )
+
+# =============================================================================
+## @class Sin
+#  simple 'sin' 
+class Sin(Compose) :
+    """Sin for the function"""
+    def __init__ ( self , func ) :
+        super(Sin,self).__init__ ( math.sin , func , 'sin')
+
+# =============================================================================
+## @class Cos
+#  simple 'cos' 
+class Cos(Compose) :
+    """Cos for the function"""
+    def __init__ ( self , func ) :
+        super(Cos,self).__init__ ( math.cos , func , 'cos' )
+
+# =============================================================================
+## @class Tan
+#  simple 'tan' 
+class Tan(Compose) :
+    """Tan for the function"""
+    def __init__ ( self , func ) :
+        super(Tan,self).__init__ ( math.tan , func , 'tan' )
+
+# =============================================================================
+## @class Sinh
+#  simple 'sinh' 
+class Sinh(Compose) :
+    """Sinh for the function"""
+    def __init__ ( self , func ) :
+        super(Sinh,self).__init__ ( math.sinh , func , 'sinh' )
+
+# =============================================================================
+## @class Cosh
+#  simple 'cosh' 
+class Cosh(Compose) :
+    """Cos for the function"""
+    def __init__ ( self , func ) :
+        super(Cosh,self).__init__ ( math.cosh , func , 'cosh' )
+
+# =============================================================================
+## @class Tanh
+#  simple 'tan' 
+class Tanh(Compose) :
+    """Tanh for the function"""
+    def __init__ ( self , func ) :
+        super(Tanh,self).__init__ ( math.tanh , func , 'tanh' )
+
+# =============================================================================
+## @class ASin
+#  simple 'asin' 
+class ASin(Compose) :
+    """ASin for the function"""
+    def __init__ ( self , func ) :
+        super(ASin,self).__init__ ( math.asin , func , 'asinh' )
+
+# =============================================================================
+## @class ACos
+#  simple 'acos' 
+class ACos(Compose) :
+    """ACos for the function"""
+    def __init__ ( self , func ) :
+        super(ACos,self).__init__ ( math.acos , func , 'acos' )
+
+# =============================================================================
+## @class ATan
+#  simple 'atan' 
+class ATan(Compose) :
+    """ATan for the function"""
+    def __init__ ( self , func ) :
+        super(ATan,self).__init__ ( math.atan , func , 'atan' )
+
+# =============================================================================
+## @class ASinh
+#  simple 'asinh' 
+class ASinh(Compose) :
+    """ASinh for the function"""
+    def __init__ ( self , func ) :
+        super(ASinh,self).__init__ ( math.asinh , func , 'asinh' )
+
+# =============================================================================
+## @class ACosh
+#  simple 'acosh' 
+class ACosh(Compose) :
+    """ACosh for the function"""
+    def __init__ ( self , func ) :
+        super(ACosh,self).__init__ ( math.acosh , func , 'acosh' )
+
+# =============================================================================
+## @class ATanh
+#  simple 'atanh' 
+class ATanh(Compose) :
+    """ATanh for the function"""
+    def __init__ ( self , func ) :
+        super(ATanh,self).__init__ ( math.atanh , func , 'atanh' )
+
+
+# =============================================================================
+## @class Erf
+#  simple 'erf' 
+class Erf(Compose) :
+    """Erf for the function"""
+    def __init__ ( self , func ) :
+        super(Erf,self).__init__ ( math.erf , func ,  'erf' )
+
+# =============================================================================
+## @class Erfc
+#  simple 'erfc' 
+class Erfc(Compose) :
+    """Erfc for the function"""
+    def __init__ ( self , func ) :
+        super(Erfc,self).__init__ ( math.erfc , func , 'erfc' )
+
+# =============================================================================
+## @class Gamma
+#  simple 'Gamma' 
+class Gamma(Compose) :
+    """Gamma for the function"""
+    def __init__ ( self , func ) :
+        super(Gamma,self).__init__ ( math.gamma , func , 'G' )
+
+# =============================================================================
+## @class LogGamma
+#  simple 'LogGamma' 
+class LogGamma(Compose) :
+    """LogGamma for the function"""
+    def __init__ ( self , func ) :
+        super(LogGamma,self).__init__ ( math.lgamma , func , 'lnG')
+
+# =============================================================================
+## @class iGamma
+#  1/Gamma
+class iGamma(Compose) :
+    """1/Gamma for the function"""
+    def __init__ ( self , func ) :
+        from ostap.math.math_ve import igamma as _igamma         
+        super(iGamma,self).__init__ ( _igamma , func , 'iG')
+
+# =============================================================================
+## @class Sqrt
+#  simple 'Sqrt' 
+class Sqrt(Compose) :
+    """Square root for the function"""
+    def __init__ ( self , func ) :
+        super(Sqrt,self).__init__ ( math.sqrt , func , 'sqrt')
+
+# =============================================================================
+## @class Cbrt
+#  Cubic root 
+class Cbrt(Compose) :
+    """Cubic root for the function"""
+    def __init__ ( self , func ) :
+        from ostap.math.math_ve import cbrt as _cbrt 
+        super(Cbrt,self).__init__ ( _cbrt , func , 'cbrt')
+
+
+# =============================================================================
+## @class Sech
+#  1/cosh 
+class Sech (Compose) :
+    """Sech (1/cosh) for the function"""
+    def __init__ ( self , func ) :
+        from ostap.math.math_ve import sech as _sech 
+        super(Sech,self).__init__ ( _sech , func , 'sech')
+
+
+# =============================================================================
+## convert function object to TF1 
+def tf1  ( fun , **kwargs ) :
+    """Convert function object to TF1     
+    """
+    from ostap.math.models import tf1 as _tf1 
+    return _tf1 ( fun , **kwargs )
+
+# =============================================================================
+## convert function object to TF2 
+def tf2  ( fun , **kwargs ) :
+    """Convert function object to TF2     
+    """
+    from ostap.math.models import tf2 as _tf2
+    return _tf2 ( fun , **kwargs )
+
+# =============================================================================
+## convert function object to TF3 
+def tf3  ( fun , **kwargs ) :
+    """Convert function object to TF3     
+    """
+    from ostap.math.models import tf3 as _tf3 
+    return _tf3 ( fun , **kwargs )
+
+
+# =============================================================================
+## draw function via conversion to TF1 
+def draw1D ( fun , **kwargs ) :
+    """draw function via conversion to TF1"""
+    from ostap.math.models import f1_draw
+    return f1_draw ( fun , **kwargs )
+
+# =============================================================================
+## draw function via conversion to TF2 
+def draw3D ( fun , **kwargs ) :
+    """draw function via conversion to TF2"""
+    from ostap.math.models import _f2_draw_
+    return f2_draw ( fun , **kwargs )
+
+# =============================================================================
+## draw function via conversion to TF3 
+def draw3D ( fun , **kwargs ) :
+    """draw function via conversion to TF3"""
+    from ostap.math.models import _f3_draw_
+    return f3_draw ( fun , **kwargs ) 
+
+
+# =============================================================================
+## digitize the function as np-array
+#  @code
+#  >>>  fun   = ...
+#  >>> array1 =    digitize ( fun , 0 , 1 , 1000  )
+#  >>> array2 =    digitize ( fun , 0 , 1 , 0.001 )
+#  @endcode 
+def digitize ( func , xmin , xmax , N ) :
+    """Digitize the function as np-array
+    >>>  fun   = ...
+    >>> array1 =    digitize ( fun , 0 , 1 , 1000  )
+    >>> array2 =    digitize ( fun , 0 , 1 , 0.001 )
+    """
+    try : 
+        import numpy as np
+    except ImportError :
+        logger.error ( 'NumPy cannot be used!')
+        return ()
+    
+    from   ostap.core.ostap_types import int_types
+    
+    if   isinstance   ( N , int_types   ) and 1 < N :
+        x = np.linspace ( xmin * 1.0 , xmax * 1.0 , N )
+    elif isinstance   ( N , float_types ) and 0 < N < abs ( xmax - xmin ) : 
+        x = np.arange   ( xmin * 1.0 , xmax * 1.0 , N )
+    else :
+        raise TypeError ('Invalid xmin/xmax/N: %s/%s/%s' % ( xmin ,
+                                                             xmax ,
+                                                             N    ) )
+    ## vectorize function 
+    vfunc = np.vectorize ( func)
+    
+    return  vfunc ( x ) 
+        
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+
 # =============================================================================
-# The  END
+##                                                                     The  END
 # =============================================================================
 
