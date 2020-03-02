@@ -188,9 +188,9 @@ class Wrapper(Function) :
     @property
     def name     ( self ) :
         """``name'' : function name"""
-        return self.__name__
+        return self.__name
     def __str__  ( self ) :
-        return self.__name__
+        return self.__name
     __repr__ = __str__ 
 
 # =============================================================================
@@ -947,11 +947,11 @@ def digitize ( func , xmin , xmax , N ) :
         logger.error ( 'NumPy cannot be used!')
         return ()
     
-    from   ostap.core.ostap_types import int_types
+    from   ostap.core.ostap_types import integer_types
     
-    if   isinstance   ( N , int_types   ) and 1 < N :
+    if   isinstance   ( N , integer_types ) and 1 < N :
         x = np.linspace ( xmin * 1.0 , xmax * 1.0 , N )
-    elif isinstance   ( N , float_types ) and 0 < N < abs ( xmax - xmin ) : 
+    elif isinstance   ( N , float_types   ) and 0 < N < abs ( xmax - xmin ) : 
         x = np.arange   ( xmin * 1.0 , xmax * 1.0 , N )
     else :
         raise TypeError ('Invalid xmin/xmax/N: %s/%s/%s' % ( xmin ,

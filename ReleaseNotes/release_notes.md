@@ -35,7 +35,7 @@ canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  fo
 ## Bug fixes:  
 
   1. fix typo in treatment of `pdf.draw ( ,,, , in_range(1/2/3) = ... , )` 
-
+  1. foix some new typos/errors in `ostap.math`
 
 # v1.4.7.1
 

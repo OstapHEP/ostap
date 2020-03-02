@@ -19,7 +19,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_interpolation' )
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
-import scipy.interpolation as SI
+import scipy.interpolate as SI
 
 # ==============================================================================
 ## simple class for scipy-based interpolation  
@@ -50,8 +50,8 @@ class SplineInterpolator(object) :
                                                           y   = y     ,
                                                           k   = order ,
                                                           ext = ext   )
-        self.__derivative = None
-        self.__integral   = None
+        self.__antiderivative = None
+        self.__derivative     = None
 
     # =========================================================================
     ## the main method:
@@ -62,6 +62,20 @@ class SplineInterpolator(object) :
     def __call__ ( self , x ) :
         return self.__spline ( x )
 
+    @property
+    def derivative ( self ) :
+        """``derivative'' : get the spline object for defivative"""
+        if not self.__derivative :
+            self.__derivative = self.__spline.derivative()
+        return self.__derivative
+
+    @property
+    def antiderivative ( self ) :
+        """``antiderivative'' : get the spline object for indefinite itegral"""
+        if not self.__antiderivative :
+            self.__antiderivative = self.__spline.antiderivative()
+        return self.__antiderivative
+    
     # =========================================================================
     ## get the integral
     #  @code 
@@ -87,20 +101,6 @@ class SplineInterpolator(object) :
         """``spline'' : get the underlying bspline/scipy object"""
         return self.__spline
 
-    @property
-    def derivative ( self ) :
-        """``derivative'' : get the spline object for defivative"""
-        if not self.__derivative :
-            self.__derivative = self.__spline.derivative()
-        return self.__derivative
-
-    @property
-    def antiderivative ( self ) :
-        """``antiderivative'' : get the spline object for indefinite itegral"""
-        if not self.__antiderivative :
-            self.__antiderivative = self.__spline.antiderivative()
-        return self.__antiderivative
-    
     
 # =============================================================================
 if '__main__' == __name__ :

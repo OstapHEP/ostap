@@ -64,9 +64,15 @@ def tf1  ( self                 ,
     if not hasattr ( self , '_wo1' ) : self._wo1 = _WO1_ ( self )
     if not self._wo1                 : self._wo1 = _WO1_ ( self )
     #
-    if hasattr ( self , 'xmin'  ) : xmin  = max ( xmin  , self.xmin () )
-    if hasattr ( self , 'xmax'  ) : xmax  = min ( xmax  , self.xmax () )
-    if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
+    if hasattr ( self , 'xmin'  ) :
+        xmn   = self.xmin
+        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+    if hasattr ( self , 'xmax'  ) :
+        xmx   = self.xmax
+        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+    if hasattr ( self , 'npars' ) :
+        nps   = self.npars
+        npars = max ( npars , nps () if callable ( nps ) else nps )
     #
     assert xmin > neg_infinity, \
           "``xmin''-parameter needs to be specified %s" % xmin
@@ -95,12 +101,23 @@ def tf2 ( self ,
     ##
     if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( self )
     if not self._wo2                 : self._wo2 = _WO2_ ( self )
-    ## 
-    if hasattr ( self , 'xmin'  ) : xmin  = max ( xmin  , self.xmin () )
-    if hasattr ( self , 'xmax'  ) : xmax  = min ( xmax  , self.xmax () )
-    if hasattr ( self , 'ymin'  ) : ymin  = max ( ymin  , self.ymin () )
-    if hasattr ( self , 'ymax'  ) : ymax  = min ( ymax  , self.ymax () )
-    if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
+    ##
+    if hasattr ( self , 'xmin'  ) :
+        xmn   = self.xmin
+        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+    if hasattr ( self , 'xmax'  ) :
+        xmx   = self.xmax
+        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+    if hasattr ( self , 'ymin'  ) :
+        ymn   = self.ymin
+        ymin  = max ( ymin  , ymn () if callable ( ymn ) else ymn )
+    if hasattr ( self , 'ymax'  ) :
+        ymx   = self.ymax
+        ymax  = min ( ymax  , ymx () if callable ( ymx ) else ymx )
+    if hasattr ( self , 'npars' ) :
+        nps   = self.npars
+        npars = max ( npars , nps () if callable ( nps ) else nps )
+
     ##
     assert xmin > neg_infinity, \
            "``xmin''-parameter needs to be specified %s" % xmin
@@ -136,14 +153,31 @@ def tf3 ( self ,
     ##
     if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( self )
     if not self._wo3                 : self._wo3 = _WO3_ ( self )
-    ## 
-    if hasattr ( self , 'xmin'  ) : xmin  = max ( xmin  , self.xmin () )
-    if hasattr ( self , 'xmax'  ) : xmax  = min ( xmax  , self.xmax () )
-    if hasattr ( self , 'ymin'  ) : ymin  = max ( ymin  , self.ymin () )
-    if hasattr ( self , 'ymax'  ) : ymax  = min ( ymax  , self.ymax () )
-    if hasattr ( self , 'zmin'  ) : zmin  = max ( zmin  , self.zmin () )
-    if hasattr ( self , 'zmax'  ) : zmax  = min ( zmax  , self.zmax () )
-    if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
+    ##
+
+    if hasattr ( self , 'xmin'  ) :
+        xmn   = self.xmin
+        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+    if hasattr ( self , 'xmax'  ) :
+        xmx   = self.xmax
+        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+    if hasattr ( self , 'ymin'  ) :
+        ymn   = self.ymin
+        ymin  = max ( ymin  , ymn () if callable ( ymn ) else ymn )
+    if hasattr ( self , 'ymax'  ) :
+        ymx   = self.ymax
+        ymax  = min ( ymax  , ymx () if callable ( ymx ) else ymx )
+    if hasattr ( self , 'zmin'  ) :
+        zmn   = self.zmin
+        zmin  = max ( zmin  , zmn () if callable ( zmn ) else zmn )
+    if hasattr ( self , 'zmax'  ) :
+        zmx   = self.zmax
+        zmax  = min ( zmax  , zmx () if callable ( zmx ) else zmx )
+    if hasattr ( self , 'npars' ) :
+        nps   = self.npars
+        npars = max ( npars , nps () if callable ( nps ) else nps )
+
+
     #
     assert xmin > neg_infinity, \
            "``xmin''-parameter needs to be specified %s" % xmin

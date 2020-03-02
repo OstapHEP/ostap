@@ -77,7 +77,7 @@ class GaussConvolution(ArrayConvolution,Function) :
                    func           ,
                    xmin           ,
                    xmax           ,
-                   N     = 1000   ,
+                   N     = 1024   ,
                    sigma = 1      ,
                    mode  = 'same' ) :
         """Create the convolution 
@@ -86,8 +86,8 @@ class GaussConvolution(ArrayConvolution,Function) :
         >>> sp = GaussConvolution (x , y )
         """
 
-        from ostap.core.ostap_types import int_types
-        assert  isinstace ( N , int_types ) and 1 < N , 'Illegal N %s!' % N 
+        from ostap.core.ostap_types import integer_types
+        assert isinstance ( N , integer_types ) and 1 < N , 'Illegal N %s!' % N 
 
         self.__func   = func 
         self.__params = xmin , xmax , N , sigma 
@@ -174,8 +174,8 @@ class Convolution(ArrayConvolution,Function) :
         >>> sp = Convolution (x , y )
         """
 
-        from ostap.core.ostap_types import int_types
-        assert  isinstace ( N , int_types ) and 1 < N , 'Illegal N %s!' % N 
+        from ostap.core.ostap_types import integer_types
+        assert isinstance ( N , integer_types ) and 1 < N , 'Illegal N %s!' % N 
 
         self.__func1   = func1
         self.__params1 = xmin1 , xmax1 , N
