@@ -155,8 +155,8 @@ Double_t Ostap::Models::BreitWigner::analyticalIntegral
 std::complex<double> Ostap::Models::BreitWigner::amplitude () const
 {
   //
-  m_bw->setM0   ( m_mass  ) ;
-  m_bw->setGamma ( m_width ) ;
+  m_bw -> setM0    ( m_mass  ) ;
+  m_bw -> setGamma ( m_width ) ;
   //
   return m_bw->amplitude ( m_x ) ;
 }
@@ -286,7 +286,134 @@ Double_t Ostap::Models::BreitWignerMC::analyticalIntegral
   return m_bw->integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================  
-  
+
+
+// ============================================================================
+/// Breit-wigner with interference 
+// ============================================================================
+// constructor from Breit-Wigner and backround 
+// ============================================================================
+Ostap::Models::BWI::BWI 
+( const char*                       name  , 
+  const Ostap::Models::BreitWigner& bw    ,
+  RooAbsReal&                       b     , 
+  RooAbsReal&                       ab    , 
+  RooAbsReal&                       phib  ) 
+  : BreitWigner ( bw , name ) 
+  , m_b     ( "b"     , "backgground"       , this , b     ) 
+  , m_ab    ( "ab"    , "backgronud factor" , this , ab    ) 
+  , m_phib  ( "phib"  , "background phase"  , this , phib  )
+{}
+// ============================================================================
+// constructor from all parameters
+// ============================================================================
+Ostap::Models::BWI::BWI
+( const char*          name      ,
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mass      ,
+  RooAbsReal&          width     ,
+  const double         m1        ,
+  const double         m2        ,
+  const unsigned short L         , 
+  RooAbsReal&          b         ,
+  RooAbsReal&          ab        , 
+  RooAbsReal&          phib      ) 
+  : BreitWigner  ( name , title , x , mass , width , m1 , m2 , L ) 
+  , m_b     ( "b"     , "backgground"       , this , b     ) 
+  , m_ab    ( "ab"    , "backgronud factor" , this , ab    ) 
+  , m_phib  ( "phib"  , "background phase"  , this , phib  )
+{}
+// ============================================================================
+// constructor from all parameters
+// ============================================================================
+Ostap::Models::BWI::BWI
+( const char*          name      ,
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mass      ,
+  RooAbsReal&          width     ,
+  const double         m1        ,
+  const double         m2        ,
+  const unsigned short L                         ,
+  const Ostap::Math::FormFactors::JacksonRho rho , 
+  RooAbsReal&          b         ,
+  RooAbsReal&          ab        , 
+  RooAbsReal&          phib      ) 
+  : BreitWigner  ( name , title , x , mass , width , m1 , m2 , L , rho ) 
+  , m_b     ( "b"     , "backgground"       , this , b     ) 
+  , m_ab    ( "ab"    , "backgronud factor" , this , ab    ) 
+  , m_phib  ( "phib"  , "background phase"  , this , phib  )
+{}
+// ============================================================================
+// constructor from all parameters
+// ============================================================================
+Ostap::Models::BWI::BWI
+( const char*          name          ,
+  const char*          title         ,
+  RooAbsReal&          x             ,
+  RooAbsReal&          mass          ,
+  RooAbsReal&          width         ,
+  const Ostap::Math::BreitWigner& bw , 
+  RooAbsReal&          b             ,
+  RooAbsReal&          ab            , 
+  RooAbsReal&          phib          ) 
+  : BreitWigner  ( name , title , x , mass , width , bw    ) 
+  , m_b     ( "b"     , "backgground"       , this , b     ) 
+  , m_ab    ( "ab"    , "backgronud factor" , this , ab    ) 
+  , m_phib  ( "phib"  , "background phase"  , this , phib  )
+{}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::BWI::BWI
+( const Ostap::Models::BWI& right , 
+  const char*               name  ) 
+  : BreitWigner ( right , name )
+    //
+  , m_b      ( "b"    , this , right.m_b    ) 
+  , m_ab     ( "ab"   , this , right.m_ab   ) 
+  , m_phib   ( "phib" , this , right.m_phib )
+{}
+// ============================================================================
+Ostap::Models::BWI::~BWI(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::BWI* 
+Ostap::Models::BWI::clone ( const char* name ) const 
+{ return new Ostap::Models::BWI ( *this , name ) ; }
+// ============================================================================
+// the actual evaluation of function
+// ============================================================================
+Double_t Ostap::Models::BWI::evaluate () const 
+{
+  //
+  setPars () ;
+  //
+  const double b    = m_b    ;
+  const double ab   = m_ab   ;
+  const double phib = m_phib ;
+  //
+  const std::complex<double> ib  = ab * std::exp ( std::complex<double>(0,1) * phib ) ;
+  //
+  const double x = m_x ;
+  const std::complex<double> g   = function().gamma ( x ) / function().gamma0 () ;
+  //
+  const std::complex<double> amp = g.real() * amplitude() + b * ib ;
+  //
+  return std::norm ( amp ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::BWI::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const { return 0 ; }
+// ============================================================================
+
+
+
+
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -7241,6 +7368,7 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
 ClassImp(Ostap::Models::Uniform            ) 
 ClassImp(Ostap::Models::BreitWigner        ) 
 ClassImp(Ostap::Models::BreitWignerMC      ) 
+ClassImp(Ostap::Models::BWI  ) 
 ClassImp(Ostap::Models::BW23L              ) 
 ClassImp(Ostap::Models::Flatte             ) 
 ClassImp(Ostap::Models::LASS               ) 

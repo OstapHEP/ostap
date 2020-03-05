@@ -25,7 +25,7 @@ def test_stats_blue1 () :
     ## fit model systematics, assumed to be uncorrelated 
     syst1 = Ostap.Math.SymMatrix2x2()
     syst1 [0,0] = 0.134**2
-    syst1 [1,1] = 0.091**2
+    syst1 [1,1] = 0.091**2 + 0.01**2 ## add also psi' mass 
     
     ## momentum scaling, 100% correlated  
     syst2 = Ostap.Math.SymMatrix2x2()
@@ -41,9 +41,9 @@ def test_stats_blue1 () :
     
     ## kaon mass, 100% correlated  
     syst4 = Ostap.Math.SymMatrix2x2()
-    syst4 [0,0] = 0.026**2
-    syst4 [1,1] = 0.026**2
-    syst4 [0,1] = 0.026*0.026
+    syst4 [0,0] = 0.029**2
+    syst4 [1,1] = 0.029**2
+    syst4 [0,1] = 0.029*0.029
     
     cmb = Combine( [m1,m2] , syst1 + syst2 + syst3 + syst4 )
     
@@ -58,18 +58,23 @@ def test_stats_blue1 () :
 
 def test_stats_blue2 () :
     
-    m1 =  VE ( 5366.779 , 0.069**2 ) ## Bs -> J/psi K*K*
-    m2 =  VE ( 5367.122 , 0.089**2 ) ## Bs -> ( psi' -> J/psi pi+ pi-) (phi->K+ K-)
-    m3 =  VE ( 5366.83  , 0.25 **2 ) ## Bs -> chi_c1 -> ( J/psi gamma ) K+ K- 
-    m4 =  VE ( 5367.08  , 0.38 **2 ) 
-    m5 =  VE ( 5366.90  , 0.22 **2 ) 
-    m6 =  VE ( 5366.77  , 0.24 **2 )
+    m0 =  VE ( 5366.779 , 0.069**2 ) ## Bs -> J/psi K*K*
+    m1 =  VE ( 5367.122 , 0.089**2 ) ## Bs -> ( psi' -> J/psi pi+ pi-) (phi->K+ K-)    
+    m2 =  VE ( 5366.83  , 0.25 **2 ) ## Bs -> chi_c1 -> ( J/psi gamma ) K+ K- 
+    m3 =  VE ( 5367.08  , 0.38 **2 ) ## Bs -> J/psi  phi phi 
+    m4 =  VE ( 5366.90  , 0.22 **2 ) ## Bs -> J/psi phi
+    m5 =  VE ( 5366.85  , 0.19 **2 ) ## Bs -> J/psi p pbar
     
     COV2 = Ostap.Math.SymMatrix6x6
     
+    ## charmonuium masses 
+    syst   = COV2()
+    syst  [1,1] = 0.01**2 
+    syst  [2,2] = 0.04**2 
+
     ## momentum scaling for 2010, uncorrelated 
     syst0  = COV2()
-    syst0 [4,4] = 0.28**2 
+    syst0 [4,4] = 0.22**2 
     
     ## fit model systematics, assumed to be uncorrelated 
     syst1 = COV2 ()
@@ -77,7 +82,7 @@ def test_stats_blue2 () :
     syst1 [1,1] = 0.091**2
     syst1 [2,2] = (0.01+0.00)**2
     syst1 [3,3] = (0.02+0.00)**2
-    syst1 [4,4] = (0.01+0.02)**2
+    syst1 [4,4] = (0.02+0.01)**2
     syst1 [5,5] = (0.02+0.00)**2    
     
     ## momentum scaling, 100% correlated  
@@ -102,8 +107,8 @@ def test_stats_blue2 () :
     
     ## kaon mass, 100% correlated  
     syst4 = COV2()
-    syst4 [0,0] = 0.026**2
-    syst4 [1,1] = 0.026**2
+    syst4 [0,0] = 0.029**2
+    syst4 [1,1] = 0.029**2
     syst4 [2,2] = 0.020**2
     syst4 [3,3] = 0.060**2
     syst4 [4,4] = 0.020**2
@@ -118,13 +123,13 @@ def test_stats_blue2 () :
                 CV  [ i , j ] = ( cii * cjj )**0.5 
                 
                 
-    cmb = Combine( [m1,m2,m3,m4,m5,m6] , syst0 + syst1 + syst2 + syst3 + syst4 )
+    cmb = Combine( [m0,m1,m2,m3,m4,m5] , syst + syst0 + syst1 + syst2 + syst3 + syst4 )
     
     r          = cmb.result        
     stat, syst = cmb.errors 
     
     
-    for i,c  in enumerate ( ( m1 , m2 , m3 , m4 , m5 , m6 ) ) :
+    for i,c  in enumerate ( ( m0 , m1 , m2 , m3 , m4 , m5 ) ) :
         logger.info ( 'Component %d: %.3f +/- %.3f ' % ( i + 1 , c.value() , c.error() ) )
         
     logger.info ( 'Combined   : %.3f +/- %.3f = (%.3f +/- %.3f +/- %.3f) ' % ( r.value() , r.error()  , r.value() , stat, syst ) ) 
@@ -134,8 +139,9 @@ def test_stats_blue2 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_stats_blue1()
-    test_stats_blue2()
+    test_stats_blue1 ()
+    test_stats_blue2 ()
+    
 # =============================================================================
 ##                                                                      The END 
 # ============================================================================= 

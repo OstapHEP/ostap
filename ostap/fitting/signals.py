@@ -50,6 +50,7 @@ Empricial PDFs to describe narrow peaks
 PDF to describe ``wide'' peaks
 
   - BreitWigner
+  - BreitWigner with interference 
   - LASS
   - Bugg
   - Flatte
@@ -100,6 +101,7 @@ __all__ = (
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
     # 
     'BreitWigner_pdf'        , ## (relativistic) 2-body Breit-Wigner
+    'BWI_pdf'                , ## (relativistic) Breit-Wigner with interference 
     'Flatte_pdf'             , ## Flatte-function  (pipi/KK)
     'LASS_pdf'               , ## kappa-pole
     'Bugg_pdf'               , ## sigma-pole
@@ -119,7 +121,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' 
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
 from   ostap.core.core     import cpp , Ostap 
-from   ostap.fitting.basic import MASS, PDF  
+from   ostap.fitting.basic import MASS, PDF 
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -3034,6 +3036,111 @@ class BWMC_pdf(MASS) :
         return self.__fractions
 
 models.append ( BWMC_pdf )
+
+# =============================================================================
+## @class BWI_pdf
+#  (relativistic) Breit-Wigner function + some interference
+#   Breit-Wigner with some embedded interference: 
+#   \f[ f(x) = \left| \upalpha b(x) + A(x)_{\mathrm{BW}} \right|^2 \f], 
+#   where \f$b(x)\f$ - any smooth function and 
+#   \f$ A(x)_{\mathrm{BW}} \f$ is Breit-Wigner amplitude 
+#  @see Ostap.Models.BWI
+class BWI_pdf (BreitWigner_pdf) :
+    """ (Relativistic) Breit-Wigner function + some interference
+    Breit-Wigner with some embedded interference
+    - see Ostap.Models.BWI
+    """
+    def __init__ ( self         ,
+                   name         ,
+                   breitwigner  ,
+                   xvar         ,
+                   mean  = None ,
+                   gamma = None ,
+                   bkg   = -1   ,   ## background function 
+                   a     = None ,   ## background scale 
+                   phi   = 0    ) : ## bakcgrouns phase 
+        
+        ## initialize the base 
+        BreitWigner_pdf.__init__ ( self , name , breitwigner , xvar , mean , gamma )
+
+        self.__bw = self.pdf
+
+        if   isinstance ( bkg , PDF             ) :             ## PDF ? 
+            ## PDF?
+            self.__bkg = bkg
+            self.__b   = self.__bkg.pdf
+        elif isinstance ( bkg , ROOT.RooAbsPdf  ) :              ## PDF? 
+            ## PDF? 
+            from ostap.fitting.basic import Generic1D_pdf as G1D 
+            self.__bkg = G1D ( bkg , self.xvar ) 
+            self.__b   = self.__bkg.pdf
+        elif isinstance ( bkg , ROOT.RooRealVar ) or isinstance ( bkg , ROOT.RooConstVar ) :
+            ## constant?
+            self.__bkg = bkg
+            self.__b   = self.make_var ( bkg              ,
+                                         "bkg_%s"  % name ,
+                                         "bkg(%s)" % name , bkg )
+        elif isinstance ( bkg , ROOT.RooAbsReal ) :               ## function ?
+            ## function? 
+            from ostap.fitting.basic import Generic1D_pdf as G1D 
+            self.__bkg = G1D ( bkg , self.xvar , special = True ) 
+            self.__b   = self.__bkg.pdf
+        else :                                                    ## function?
+            ## function ? 
+            from ostap.fitting.background import make_bkg as MKB
+            self.__bkg = MKB ( bkg , 'B_4'+ self.name , self.xvar )
+            self.__b   = self.__bkg.pdf 
+            
+        ## create background phase
+        self.__a  = self.make_var  ( a              ,
+                                     "a_%s"    % name ,
+                                     "a(%s)"   % name , a , 0 , 1.e+5 )
+        
+        ## create background phase 
+        self.__phi = self.make_var ( phi              ,
+                                     "phi_%s"  % name ,
+                                     "phi(%s)" % name , phi , -10 , 10 )
+
+        
+        ## finally create PDF
+        self.pdf = Ostap.Models.BWI ( 'rbwi'     + name , 
+                                      self.bw           ,
+                                      self.b            ,
+                                      self.a            ,
+                                      self.phi          ) 
+            
+        ## save configuration
+        self.config = {
+            'name'        : self.name        ,
+            'xvar'        : self.xvar        , 
+            'breitwigner' : self.breitwigner , 
+            'mean'        : self.mean        ,
+            'gamma'       : self.gamma       ,
+            'bkg'         : self.bkg         ,
+            'a'           : self.a           , 
+            'phi'         : self.phi         } 
+                        
+    @property
+    def bw          ( self ) :
+        """The Breit-Wigner PDF itself"""
+        return self.__bw
+    @property
+    def bkg          ( self ) :
+        """The background"""
+        return self.__bkg
+    @property
+    def b           ( self ) :
+        """The background"""
+        return self.__b
+    @property
+    def a           ( self ) :
+        """The background factor"""
+        return self.__a
+    @property
+    def phi         ( self ) :
+        """The background phase"""
+        return self.__phi
+
 
 # =============================================================================
 ## @class BW23L_pdf

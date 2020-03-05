@@ -154,7 +154,7 @@ namespace Ostap
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
+      // fake default constructor, needed just for proper (de)serialization
       BreitWigner() {} ;
       // ======================================================================
     public:
@@ -376,6 +376,93 @@ namespace Ostap
       mutable Ostap::Math::BW23L m_bw ;            // the actual function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class BWI 
+     *  Breit-Wigner with some embedded interference: 
+     *  \f[ f(x) = \left| \upalpha b(x) + A(x)_{\mathrm{BW}} \right|^2 \f], 
+     *  where \f$b(x)\f$ - any smooth function and 
+     *  \f$ A(x)_{\mathrm{BW}} \f$ is Breit-Wigner amplitude 
+     */
+    class BWI  : public BreitWigner
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::BWI, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///constructor from Breit-Wigner and backround 
+      BWI ( const char*                         name  , 
+            const Ostap::Models::BreitWigner&   bw    ,
+            RooAbsReal&                         b     , 
+            RooAbsReal&                         ab    , 
+            RooAbsReal&                         phib  ) ;
+      /// constructor from all parameters
+      BWI ( const char*          name      ,
+            const char*          title     ,
+            RooAbsReal&          x         ,
+            RooAbsReal&          mass      ,
+            RooAbsReal&          width     ,
+            const double         m1        ,
+            const double         m2        ,
+            const unsigned short L         , 
+            RooAbsReal&          b         ,
+            RooAbsReal&          ab        , 
+            RooAbsReal&          phib      ) ;
+      /// constructor from all parameters
+      BWI ( const char*          name      ,
+            const char*          title     ,
+            RooAbsReal&          x         ,
+            RooAbsReal&          mass      ,
+            RooAbsReal&          width     ,
+            const double         m1        ,
+            const double         m2        ,
+            const unsigned short L                         ,
+            const Ostap::Math::FormFactors::JacksonRho rho , 
+            RooAbsReal&          b         ,
+            RooAbsReal&          ab        , 
+            RooAbsReal&          phib      ) ;
+      /// constructor from main parameters and "shape"
+      BWI ( const char*          name          ,
+            const char*          title         ,
+            RooAbsReal&          x             ,
+            RooAbsReal&          mass          ,
+            RooAbsReal&          width         ,
+            const Ostap::Math::BreitWigner& bw , 
+            RooAbsReal&          b             ,
+            RooAbsReal&          ab            , 
+            RooAbsReal&          phib          ) ;
+      /// "copy" constructor
+      BWI ( const BWI& , const char* name = 0 ) ;
+      /// virtual destructor
+      virtual ~BWI() ;
+      /// clone
+      BWI* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for the proper (de)serialization
+      BWI () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate () const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      // ======================================================================
+    private:
+      // ======================================================================
+      RooRealProxy m_b    ;  // background shape 
+      RooRealProxy m_ab   ;  // background factor  
+      RooRealProxy m_phib ;  // background phase 
+      // ======================================================================
+    };
     // ========================================================================
     /** @class Flatte
      *

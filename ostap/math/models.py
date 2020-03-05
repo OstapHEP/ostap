@@ -1120,6 +1120,7 @@ def sp_maximum_1D_ ( pdf , xmin , xmax , x0 , *args ) :
 
 for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.BreitWignerMC      , 
+             Ostap.Models.BWI                , 
              Ostap.Models.Flatte             ,
              Ostap.Models.Bukin              ,
              Ostap.Models.PhaseSpace2        ,
@@ -1639,6 +1640,7 @@ _decorated_classes_ = set( [
     ##
     Ostap.Models.BreitWigner        , 
     Ostap.Models.BreitWignerMC      , 
+    Ostap.Models.BWI                , 
     Ostap.Models.Flatte             ,
     Ostap.Models.Bukin              ,
     Ostap.Models.PhaseSpace2        ,
