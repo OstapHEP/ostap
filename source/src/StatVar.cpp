@@ -9,6 +9,13 @@
 #include <set>
 #include <random>
 // ============================================================================
+// ROOT
+// ============================================================================
+#include "TTree.h"
+#include "TCut.h"
+#include "RooDataSet.h"
+#include "RooAbsReal.h"
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Formula.h"
@@ -16,12 +23,7 @@
 #include "Ostap/Notifier.h"
 #include "Ostap/MatrixUtils.h"
 #include "Ostap/StatVar.h"
-// ============================================================================
-// ROOT
-// ============================================================================
-#include "TTree.h"
-#include "TCut.h"
-#include "RooDataSet.h"
+#include "Ostap/FormulaVar.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -40,8 +42,8 @@ namespace
   static_assert ( std::numeric_limits<unsigned long>::is_specialized   ,
                   "Numeric_limist<unsigned long> are not specialized!" ) ;
   // ==========================================================================
-  /// make RooFormulaVar 
-  std::unique_ptr<RooFormulaVar>
+  /// make FormulaVar 
+  std::unique_ptr<Ostap::FormulaVar>
   make_formula ( const std::string& expression           , 
                  const RooAbsData&  data                 , 
                  const bool         allow_empty = false  ) 
@@ -59,8 +61,7 @@ namespace
     RooAbsArg* coef = 0 ;
     while ( ( coef = (RooAbsArg*) iter.next() ) ) { alst.add ( *coef ); }
     //
-    const auto fname = Ostap::tmp_name ( "formula_" , expression ) ;
-    auto result = std::make_unique<RooFormulaVar> ( fname.c_str () , expression.c_str() , alst , false ) ;
+    auto result = std::make_unique<Ostap::FormulaVar> ( expression , alst , false ) ;
     Ostap::Assert ( result && result->ok()                   , 
                     "Invalid formula:\"" + expression + "\"" , 
                     "Ostap::StatVar::make_formula"           ) ;
@@ -1256,8 +1257,8 @@ Ostap::StatVar::statVar
   Statistic result ;
   if ( 0 == data || last <= first ) { return result ; }         // RETURN
   //
-  const std::unique_ptr<RooFormulaVar> formula   { make_formula ( expression , *data        ) } ;
-  const std::unique_ptr<RooFormulaVar> selection { make_formula ( cuts       , *data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> formula   { make_formula ( expression , *data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts       , *data , true ) } ;
   //
   const bool  weighted = data->isWeighted() ;
   const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
@@ -1322,8 +1323,8 @@ Ostap::StatVar::statCov
   //
   if ( 0 == data || last <= first ) { return 0 ; }               // RETURN
   //
-  const std::unique_ptr<RooFormulaVar> formula1 { make_formula ( exp1 , *data ) } ;
-  const std::unique_ptr<RooFormulaVar> formula2 { make_formula ( exp2 , *data ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> formula1 { make_formula ( exp1 , *data ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> formula2 { make_formula ( exp2 , *data ) } ;
   //
   const bool  weighted = data->isWeighted() ;
   const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
@@ -1401,9 +1402,9 @@ Ostap::StatVar::statCov
   //
   if ( 0 == data || last <= first ) { return 0 ; }               // RETURN
   //
-  const std::unique_ptr<RooFormulaVar> formula1  { make_formula ( exp1 , *data         ) } ;
-  const std::unique_ptr<RooFormulaVar> formula2  { make_formula ( exp2 , *data         ) } ;
-  const std::unique_ptr<RooFormulaVar> selection { make_formula ( cuts , *data ,  true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> formula1  { make_formula ( exp1 , *data         ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> formula2  { make_formula ( exp2 , *data         ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data ,  true ) } ;
   //
   const bool weighted = data->isWeighted() ;
   const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
@@ -1852,7 +1853,7 @@ double Ostap::StatVar::nEff
   // the simplest case :
   if ( !with_cuts && cut_range.empty() && !weighted ) { return the_last - first ; } // RETURN
   //
-  const std::unique_ptr<RooFormulaVar> cut { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut { make_formula ( cuts , data , true ) } ;
   //
   long double sumw  = 0    ;
   long double sumw2 = 0    ;
@@ -1913,8 +1914,8 @@ double Ostap::StatVar::get_moment
   //
   const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
-  const std::unique_ptr<RooFormulaVar> expression { make_formula ( expr , data        ) } ;
-  const std::unique_ptr<RooFormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
   return _moment_ ( data      , *expression ,
                     cut.get() ,  
@@ -1952,8 +1953,8 @@ Ostap::StatVar::moment
   const bool  with_cuts  = !cuts    .empty () ;
   const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
-  const std::unique_ptr<RooFormulaVar> expression { make_formula ( expr , data        ) } ;
-  const std::unique_ptr<RooFormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
   long double mom   = 0 ;
   long double sumw  = 0 ; // sum of weights 
@@ -2035,8 +2036,8 @@ Ostap::StatVar::central_moment
   const bool  with_cuts  = !cuts    .empty () ;
   const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
-  const std::unique_ptr<RooFormulaVar> expression { make_formula ( expr , data        ) } ;
-  const std::unique_ptr<RooFormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
   const long double mu =
     _moment_ ( data ,  *expression , cut.get() , 1  , 0 , first ,  the_last , cutrange );
@@ -2138,8 +2139,8 @@ Ostap::StatVar::skewness
   const bool  with_cuts  = !cuts    .empty () ;
   const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
-  const std::unique_ptr<RooFormulaVar> expression { make_formula ( expr , data        ) } ;
-  const std::unique_ptr<RooFormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //
   const long double mu =
     _moment_ ( data ,  *expression , cut.get() , 1  , 0 , first ,  the_last , cutrange );
@@ -2224,8 +2225,8 @@ Ostap::StatVar::kurtosis
   const bool  with_cuts = !cuts    .empty () ;
   const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
-  const std::unique_ptr<RooFormulaVar> expression { make_formula ( expr , data        ) } ;
-  const std::unique_ptr<RooFormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //
   const long double mu =
     _moment_ ( data ,  *expression , cut.get() , 1  , 0 , first ,  the_last , cutrange );
@@ -2318,8 +2319,8 @@ double Ostap::StatVar::quantile
   //
   const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
-  const std::unique_ptr<RooFormulaVar> expression { make_formula ( expr , data        ) } ;
-  const std::unique_ptr<RooFormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
   const std::vector<double> result = _quantiles_ 
     (  data,  std::set<double>{{ q }} , 
@@ -2372,8 +2373,8 @@ Ostap::StatVar::interval
   //
   const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
-  const std::unique_ptr<RooFormulaVar> expression { make_formula ( expr , data        ) } ;
-  const std::unique_ptr<RooFormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
   const std::vector<double> result = _quantiles_ 
     (  data,  std::set<double>{{ q1 , q2 }} , 
@@ -2423,8 +2424,8 @@ Ostap::StatVar::quantiles
   //
   const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
-  const std::unique_ptr<RooFormulaVar> expression { make_formula ( expr , data        ) } ;
-  const std::unique_ptr<RooFormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
   return _quantiles_ ( data  , qs  , 
                        *expression , cut.get() , 

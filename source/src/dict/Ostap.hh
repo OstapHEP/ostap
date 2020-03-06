@@ -30,6 +30,7 @@
 #include "Ostap/EigenSystem.h"
 #include "Ostap/Error2Exception.h"
 #include "Ostap/Formula.h"
+#include "Ostap/FormulaVar.h"
 #include "Ostap/Fourier.h"
 #include "Ostap/Funcs.h"
 #include "Ostap/GenericMatrixTypes.h"

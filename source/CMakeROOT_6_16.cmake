@@ -63,6 +63,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Exception.cpp
                          src/Faddeeva.cpp 
                          src/Formula.cpp   
+                         src/FormulaVar.cpp   
                          src/Fourier.cpp   
                          src/Funcs.cpp   
                          src/GetWeight.cpp 

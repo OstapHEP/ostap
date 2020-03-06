@@ -13,12 +13,12 @@
 #include "RooRealVar.h"
 #include "RooArgSet.h"
 #include "RooDataSet.h"
-#include "RooFormulaVar.h"
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/IFuncs.h"
 #include "Ostap/AddVars.h"
+#include "Ostap/FormulaVar.h"
 // ============================================================================
 /** @file
  *  Implementation fiel for functions from file Ostap/AddVars.h
@@ -89,8 +89,7 @@ Ostap::Functions::add_var
   if ( nullptr == vars ) { return nullptr ; }
   //
   RooArgList lst { *vars } ;
-  auto var = std::make_unique<RooFormulaVar>
-    ( name.c_str() , formula.c_str() , lst , false ) ;
+  auto var = std::make_unique<Ostap::FormulaVar> ( name , formula , lst , false ) ;
   if ( !var ||  !var->ok() ) { return nullptr ; }
   //
   dataset.addColumn ( *var ) ;

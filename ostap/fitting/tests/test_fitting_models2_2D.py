@@ -238,7 +238,6 @@ def test_p1xp1_BBs () :
 # =============================================================================
 ## gauss as signal, 1st order polynomial as background 
 # =============================================================================
-##if 1 < 2 :
 def test_p1xp1_BBss () :
     
     logger.info ('Symmetrised fit model with non-factorized symmetric background:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
@@ -432,7 +431,6 @@ def test_pbxpb_BBsym () :
 # =============================================================================
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
-##if 1 < 2 :
 def test_psxps_BBs () :
         
     logger.info ('Non-factorizeable symmetric background component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (PS*P1)**2')
@@ -538,5 +536,5 @@ if '__main__' == __name__ :
     with timing ( 'save to DB'     ) : test_db ()          
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

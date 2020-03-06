@@ -4,7 +4,6 @@
 // ROOT 
 // ============================================================================
 #include "RooDataSet.h"
-#include "RooFormulaVar.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -13,6 +12,7 @@
 // ============================================================================
 #include "Ostap/StatVar.h"
 #include "Ostap/Formula.h"
+#include "Ostap/FormulaVar.h"
 #include "Ostap/HistoProject.h"
 #include "Ostap/Iterator.h"
 // ============================================================================
@@ -303,24 +303,22 @@ Ostap::HistoProject::project
   RooAbsArg*   coef = 0 ;
   while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
   //
-  // convert expressions into RooFormulaVar 
+  // convert expressions into FormulaVar 
   const bool        with_cuts   = !selection.empty() ;
   const RooAbsReal* cut_var     = 0 ;
   if ( with_cuts ) { cut_var =get_var ( *aset , selection ) ; }
-  std::unique_ptr<RooFormulaVar> cuts ;
+  std::unique_ptr<Ostap::FormulaVar> cuts ;
   if ( with_cuts && 0 == cut_var ) 
   {
-    const auto fname = Ostap::tmp_name ( "formula_" , selection ) ;
-    cuts.reset ( new RooFormulaVar( fname.c_str ()  , selection.c_str() , alst , false ) ) ;
+    cuts.reset ( new Ostap::FormulaVar( selection , alst , false ) ) ;
     if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , expression ) ;
-  std::unique_ptr<RooFormulaVar> xwhat ;
+  std::unique_ptr<Ostap::FormulaVar> xwhat ;
   if ( 0 == x_var ) 
   {
-    const auto fname = Ostap::tmp_name ( "formula_" , expression ) ;
-    xwhat.reset( new RooFormulaVar( fname.c_str () ,  expression.c_str() , alst , false ) ) ;
+    xwhat.reset( new Ostap::FormulaVar( expression , alst , false ) ) ;
     if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
   }
   //
@@ -365,33 +363,30 @@ Ostap::HistoProject::project2
   RooAbsArg*   coef = 0 ;
   while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
   //
-  // convert expressions into RooFormulaVar 
+  // convert expressions into FormulaVar 
   const bool        with_cuts   = !selection.empty() ;
   const RooAbsReal* cut_var     = 0 ;
   if ( with_cuts ) { cut_var =get_var ( *aset , selection ) ; }
-  std::unique_ptr<RooFormulaVar> cuts ;
+  std::unique_ptr<Ostap::FormulaVar> cuts ;
   if ( with_cuts && 0 == cut_var ) 
   {
-    const auto fname = Ostap::tmp_name ( "formula_" , selection ) ;
-    cuts.reset ( new RooFormulaVar ( fname.c_str () , selection.c_str() , alst , false ) ) ;
+    cuts.reset ( new Ostap::FormulaVar ( selection , alst , false ) ) ;
     if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
-  std::unique_ptr<RooFormulaVar> xwhat ;
+  std::unique_ptr<Ostap::FormulaVar> xwhat ;
   if ( 0 == x_var ) 
   {
-    const auto fname = Ostap::tmp_name ( "formula_" , xexpression ) ;
-    xwhat.reset( new RooFormulaVar( fname.c_str () ,  xexpression.c_str() , alst , false ) ) ;
+    xwhat.reset( new Ostap::FormulaVar( xexpression , alst , false ) ) ;
     if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
   }
   //
   const RooAbsReal* y_var = get_var ( *aset , yexpression ) ;
-  std::unique_ptr<RooFormulaVar> ywhat ;
+  std::unique_ptr<Ostap::FormulaVar> ywhat ;
   if ( 0 == y_var ) 
   { 
-    const auto fname = Ostap::tmp_name ( "formula_" , yexpression ) ;
-    ywhat.reset( new RooFormulaVar( fname.c_str () ,  yexpression.c_str() , alst , false ) ) ;
+    ywhat.reset( new Ostap::FormulaVar( yexpression , alst , false ) ) ;
     if ( !ywhat->ok()   ) { return Ostap::StatusCode(304)  ; }             // RETURN
   }
   //
@@ -439,42 +434,38 @@ Ostap::HistoProject::project3
   RooAbsArg*   coef = 0 ;
   while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
   //
-  // convert expressions into RooFormulaVar 
+  // convert expressions into FormulaVar 
   const bool        with_cuts   = !selection.empty() ;
   const RooAbsReal* cut_var     = 0 ;
   if ( with_cuts ) { cut_var =get_var ( *aset , selection ) ; }
-  std::unique_ptr<RooFormulaVar> cuts ;
+  std::unique_ptr<Ostap::FormulaVar> cuts ;
   if ( with_cuts && 0 == cut_var ) 
   {
-    const auto fname = Ostap::tmp_name ( "formula_" , selection) ;
-    cuts.reset ( new RooFormulaVar( fname.c_str () , selection.c_str() , alst , false ) ) ;
+    cuts.reset ( new Ostap::FormulaVar( selection , alst , false ) ) ;
     if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
-  std::unique_ptr<RooFormulaVar> xwhat ;
+  std::unique_ptr<Ostap::FormulaVar> xwhat ;
   if ( 0 == x_var ) 
   {
-    const auto fname = Ostap::tmp_name ( "formula_" , xexpression ) ;
-    xwhat.reset( new RooFormulaVar( fname.c_str () ,  xexpression.c_str() , alst , false ) ) ;
+    xwhat.reset( new Ostap::FormulaVar( xexpression , alst , false ) ) ;
     if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
   }
   //
   const RooAbsReal* y_var = get_var ( *aset , yexpression ) ;
-  std::unique_ptr<RooFormulaVar> ywhat ;
+  std::unique_ptr<Ostap::FormulaVar> ywhat ;
   if ( 0 == y_var ) 
   {
-    const auto fname = Ostap::tmp_name ( "formula_" , yexpression ) ;
-    ywhat.reset( new RooFormulaVar( fname.c_str() ,  yexpression.c_str() , alst , false ) ) ;
+    ywhat.reset( new Ostap::FormulaVar( yexpression , alst , false ) ) ;
     if ( !ywhat->ok()   ) { return Ostap::StatusCode(304)  ; }             // RETURN
   }
   //
   const RooAbsReal* z_var = get_var ( *aset , zexpression ) ;
-  std::unique_ptr<RooFormulaVar> zwhat ;
+  std::unique_ptr<Ostap::FormulaVar> zwhat ;
   if ( 0 == z_var ) 
   {
-    const auto fname = Ostap::tmp_name ( "formula_" , zexpression ) ;
-    zwhat.reset( new RooFormulaVar( fname.c_str ()  ,  zexpression.c_str() , alst , false ) ) ;
+    zwhat.reset( new Ostap::FormulaVar( zexpression , alst , false ) ) ;
     if ( !zwhat->ok()   ) { return Ostap::StatusCode(305)  ; }             // RETURN
   }
   //

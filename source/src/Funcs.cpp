@@ -8,11 +8,11 @@
 #include "Ostap/Iterator.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/HFuncs.h"
+#include "Ostap/FormulaVar.h"
 // ============================================================================
 // Root
 // ============================================================================
 #include "TTree.h"
-#include "RooFormulaVar.h"
 #include "RooArgList.h"
 #include "RooArgSet.h"
 #include "RooAbsData.h"
@@ -177,8 +177,7 @@ bool Ostap::Functions::FuncRooFormula::make_formula () const
   Ostap::Utils::Iterator iter ( *varset ) ;
   while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
   //
-  m_formula = std::make_unique<RooFormulaVar> 
-    ( m_name .c_str () , m_expression.c_str () , varlst , false ) ;
+  m_formula = std::make_unique<Ostap::FormulaVar> ( m_name , m_expression , varlst , false ) ;
   //
   return m_formula && m_formula -> ok () ;
 }
@@ -718,9 +717,7 @@ bool Ostap::Functions::FuncRooTH1::make_xvar() const
   Ostap::Utils::Iterator iter ( *varset ) ;
   while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
   //
-  const auto fname = Ostap::tmp_name ( "formula_" , m_xvar_exp );
-  m_xvar = std::make_unique<RooFormulaVar> 
-    ( fname.c_str() , m_xvar_exp.c_str () , varlst , false ) ;
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
   //
   return m_xvar && m_xvar -> ok () ;
 }
@@ -835,9 +832,7 @@ bool Ostap::Functions::FuncRooTH2::make_xvar() const
   Ostap::Utils::Iterator iter ( *varset ) ;
   while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
   //
-  const auto fname = Ostap::tmp_name ( "formula_" , m_xvar_exp );
-  m_xvar = std::make_unique<RooFormulaVar> 
-    ( fname.c_str() , m_xvar_exp.c_str () , varlst , false ) ;
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
   //
   return m_xvar && m_xvar -> ok () ;
 }
@@ -858,9 +853,7 @@ bool Ostap::Functions::FuncRooTH2::make_yvar() const
   Ostap::Utils::Iterator iter ( *varset ) ;
   while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
   //
-  const auto fname = Ostap::tmp_name ( "formula_" , m_yvar_exp );
-  m_yvar = std::make_unique<RooFormulaVar> 
-    ( fname.c_str() , m_yvar_exp.c_str () , varlst , false ) ;
+  m_yvar = std::make_unique<Ostap::FormulaVar>( m_yvar_exp , varlst , false ) ;
   //
   return m_yvar && m_yvar -> ok () ;
 }
@@ -992,9 +985,7 @@ bool Ostap::Functions::FuncRooTH3::make_xvar() const
   Ostap::Utils::Iterator iter ( *varset ) ;
   while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
   //
-  const auto fname = Ostap::tmp_name ( "formula_" , m_xvar_exp );
-  m_xvar = std::make_unique<RooFormulaVar> 
-    ( fname.c_str() , m_xvar_exp.c_str () , varlst , false ) ;
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
   //
   return m_xvar && m_xvar -> ok () ;
 }
@@ -1015,9 +1006,7 @@ bool Ostap::Functions::FuncRooTH3::make_yvar() const
   Ostap::Utils::Iterator iter ( *varset ) ;
   while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
   //
-  const auto fname = Ostap::tmp_name ( "formula_" , m_yvar_exp );
-  m_yvar = std::make_unique<RooFormulaVar> 
-    ( fname.c_str() , m_yvar_exp.c_str () , varlst , false ) ;
+  m_yvar = std::make_unique<Ostap::FormulaVar> ( m_yvar_exp , varlst , false ) ;
   //
   return m_yvar && m_yvar -> ok () ;
 }
@@ -1038,9 +1027,7 @@ bool Ostap::Functions::FuncRooTH3::make_zvar() const
   Ostap::Utils::Iterator iter ( *varset ) ;
   while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
   //
-  const auto fname = Ostap::tmp_name ( "formula_" , m_zvar_exp );
-  m_zvar = std::make_unique<RooFormulaVar> 
-    ( fname.c_str() , m_zvar_exp.c_str () , varlst , false ) ;
+  m_zvar = std::make_unique<Ostap::FormulaVar> ( m_zvar_exp , varlst , false ) ;
   //
   return m_zvar && m_zvar -> ok () ;
 }
