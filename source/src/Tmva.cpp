@@ -92,7 +92,7 @@ namespace
         else 
         {
           std::string fname = name + "_formula" ;
-          auto _v = std::make_unique<RooFormulaVar>( fname.c_str(), formula.c_str() , varlst ) ;
+          auto _v = std::make_unique<RooFormulaVar>( fname.c_str(), formula.c_str() , varlst , false ) ;
           if ( !_v->ok() ) { return Ostap::TMVA:: InvalidFormula ;}      
           var    = _v.get() ;
           _vars.push_back ( std::move ( _v ) ) ;

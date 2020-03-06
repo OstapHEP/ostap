@@ -89,7 +89,8 @@ Ostap::Functions::add_var
   if ( nullptr == vars ) { return nullptr ; }
   //
   RooArgList lst { *vars } ;
-  auto var = std::make_unique<RooFormulaVar>( name.c_str() , formula.c_str() , lst ) ;
+  auto var = std::make_unique<RooFormulaVar>
+    ( name.c_str() , formula.c_str() , lst , false ) ;
   if ( !var ||  !var->ok() ) { return nullptr ; }
   //
   dataset.addColumn ( *var ) ;

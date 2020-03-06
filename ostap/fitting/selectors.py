@@ -380,7 +380,8 @@ def valid_formula ( expression , varset ) :
     from ostap.logger.utils import rooSilent, rootError  
     with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
         with rootError( ROOT.kError + 1 ) :
-            _f = ROOT.RooFormulaVar( '' , expression , varset )
+            _fname = 'formula_%s' % abs ( hash ( expression ) ) 
+            _f = ROOT.RooFormulaVar( _fname , expression , varset , False )
             fok = _f.ok ()
             del _f
             
@@ -1257,7 +1258,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         ffs   = []
         fcuts = [] 
         for f in formulas :            
-            fv = ROOT.RooFormulaVar ( f.name , f.description , f.formula , vlst )
+            fv = ROOT.RooFormulaVar ( f.name , f.description , f.formula , vlst , False )
             assert fv.ok() , 'Invalid formula: %s' % f.formula 
             ffs.append ( fv )
             fcols.add  ( fv )

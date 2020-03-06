@@ -426,7 +426,7 @@ def _stat_var_ ( tree , expression , *cuts ) :
         return _stat_vars_ ( tree ,  expression , *cuts )
     
     expression = expression[0] 
-    
+
     return Ostap.StatVar.statVar ( tree , expression , *cuts )
     
 ROOT.TTree     . statVar = _stat_var_

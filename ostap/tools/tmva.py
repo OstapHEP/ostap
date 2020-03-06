@@ -843,12 +843,14 @@ class Trainer(object):
         show_plots = self.category in ( 0 , -1 ) and self.verbose
 
         with batch ( ROOT.gROOT.IsBatch () or not show_plots ) :
-
-            ROOT.TMVA.variables                          ( self.name , output     )
-            ROOT.TMVA.correlations                       ( self.name , output     )
-            for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
-            ## ROOT.TMVA.mvaeffs                         ( self.name , output     )
-            for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
+ 
+            ROOT.TMVA.variables                              ( self.name , output     )
+            
+            if 62000 > ROOT.gROOT.GetVersionInt() : 
+                ROOT.TMVA.correlations                       ( self.name , output     )
+                for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
+                ROOT.TMVA.mvaeffs                            ( self.name , output     )
+                for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
         
         ## convert EPS  files to PDF 
         if cmd_exists ( 'epstopdf' ) :

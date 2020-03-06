@@ -51,7 +51,7 @@ Ostap::SelectorWithCuts::SelectorWithCuts
   , m_event            ( 0              )            
 {
   if ( tree && !fMycuts.empty() )
-  { fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
+  { fMyformula.reset ( new Ostap::Formula ( fMycuts , tree ) ) ; }
 }
 // ============================================================================
 // constructor 
@@ -66,7 +66,7 @@ Ostap::SelectorWithCuts::SelectorWithCuts
   , m_event            ( 0           )            
 {
   if ( tree && !fMycuts.empty() )
-  { fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
+  { fMyformula.reset ( new Ostap::Formula ( fMycuts , tree ) ) ; }
 }
 // ============================================================================
 // virtual destructor 
@@ -89,7 +89,7 @@ void Ostap::SelectorWithCuts::Init ( TTree* tree )
   m_event = 0 ;
   //
   if ( !fMycuts.empty() ) 
-  { fMyformula.reset ( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
+  { fMyformula.reset ( new Ostap::Formula ( fMycuts , tree ) ) ; }
   //
   TPySelector::Init ( tree ) ;
 }
@@ -105,7 +105,7 @@ void Ostap::SelectorWithCuts::SlaveBegin ( TTree* tree )
 {
   //
   if ( !fMycuts.empty() ) 
-  { fMyformula.reset( new Ostap::Formula ( "" , fMycuts , tree ) ) ; }
+  { fMyformula.reset( new Ostap::Formula ( fMycuts , tree ) ) ; }
   //
   TPySelector::SlaveBegin ( tree ) ;
 }

@@ -13,9 +13,7 @@
 // ============================================================================
 #include "Ostap/Math.h"
 // ============================================================================
-/// local namespace to hide all tehcnical symbols 
-
-
+/// local namespace to hide all tehcnical symbols
 namespace 
 {
   // ==========================================================================
@@ -69,7 +67,6 @@ namespace
   *  representation of negative INFINITY_LOG
   */
   const double  s_INFINITY_LOG_NEG = std::log ( 2 * s_SMALL2 ) ;
-
   // ==========================================================================
   // Constants
   // ==========================================================================

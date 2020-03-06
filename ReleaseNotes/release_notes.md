@@ -1,4 +1,7 @@
+# v1.4.8.0
+
 ## New features:
+
   1. add methods `vars_power`,`vars_exp` and `vars_formula` that allows to create functional variables (and properly store intermediate objects) 
 ```
 pdf = ...
@@ -27,7 +30,8 @@ canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  fo
   1. imporve pseudo-abstract operations `ostap/math/operations.py'
   1. extend interpolation tests
   1. add simple shapes to probe signal/background interference `Ostap::Models::BWI` and `BWI_pdf` 
- 
+  1. Fixes for ROOT 6.20/00
+
 ## Backward incompatible changes
 
   1. Remove all `Rotated`-stuff
@@ -46,7 +50,6 @@ canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  fo
 ## Bug fixes:  
 
   1. fix `Ostap::Math::Positive::updateBernstein`. The bug was introduced in 1.4.7.0. Thanks to Tatiana Ovsiannikova for  reporting the problem.
-
 
 # v1.4.7.0
 

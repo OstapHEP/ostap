@@ -41,6 +41,12 @@ namespace Ostap
     Formula ( const std::string& name       , 
               const TCut&        expression ,
               TTree*             tree       ) ;
+    /// constructor from name, expression and the tree 
+    Formula ( const std::string& expression ,
+              TTree*             tree       ) ;
+    /// constructor from name, expression and the tree 
+    Formula ( const TCut&        expression ,
+              TTree*             tree       ) ;
     /// default constructor, needed for serialisationn 
     Formula () = default  ;
     /// virtual destructor 

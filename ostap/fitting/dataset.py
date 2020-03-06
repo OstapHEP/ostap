@@ -493,7 +493,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         cuts0 = cuts 
         if ''   == cuts : cuts0 = 0
         elif isinstance ( cuts , str ) :
-            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() )
+            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
         return ds_project ( dataset , histo , vars , cuts0 , *args ) 
             
     if isinstance ( histo , str ) :
@@ -518,7 +518,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         
         if   '' == cuts : cuts0 = 0 
         elif isinstance ( cuts , str ) :
-            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() )
+            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
     
@@ -825,7 +825,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     vset     = dataset.get()
     for   v     in vset : vlst.add ( v )
     #
-    vcol     = ROOT.RooFormulaVar ( vname , formula , formula , vlst )
+    vcol     = ROOT.RooFormulaVar ( vname , formula , formula , vlst , False )
     dataset.addColumn ( vcol )
     #
     return dataset 
