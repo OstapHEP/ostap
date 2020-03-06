@@ -1,3 +1,21 @@
+## New features:
+
+  1. add new roofit variables  (`RooAbsReal`):  
+
+    useful e.g, for efficiency or phase/amplitude parameterization
+     - `Ostap::MoreRooFit::Benrstein`      
+     - `Ostap::MoreRooFit::Monotonic` 
+     - `Ostap::MoreRooFit::Convex` 
+     - `Ostap::MoreRooFit::ConvexOnly` 
+
+  1. make a first try to use `evalauteBatch`
+
+
+## Backward incompatible changes
+
+## Bug fixes:  
+
+
 # v1.4.8.0
 
 ## New features:

@@ -160,6 +160,63 @@ std::complex<double> Ostap::Models::BreitWigner::amplitude () const
   //
   return m_bw->amplitude ( m_x ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+namespace 
+{
+  template<class Tx, class Tmass, class Twidth, class FBW >
+  void compute_BW ( RooSpan<double> output , Tx x , Tmass m , Twidth w , FBW& bw ) 
+  {
+    const int n = output.size();
+    for ( int i = 0 ; i < n ; ++i ) 
+    {
+      bw.setM0       ( m [i] ) ;
+      bw.setGamma0   ( w [i] ) ;
+      output[i] = bw ( x [i] ) ; 
+    }
+  }
+}
+// ============================================================================
+RooSpan<double> Ostap::Models::BreitWigner::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  //
+  auto x = m_x    .getValBatch ( begin , batchSize ) ;
+  auto m = m_mass .getValBatch ( begin , batchSize ) ;
+  auto w = m_width.getValBatch ( begin , batchSize ) ;
+  //
+  const bool bx = !x.empty() ;
+  const bool bm = !m.empty() ;
+  const bool bw = !w.empty() ;
+  //
+  if ( !bx && !bm && bw ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  using BracketAdapter<double> as BA ;
+  //
+  if      (  bx && !bm && !bw ) 
+  { compute_BW ( output , *m_bw , x          , BA ( m_mass  ) , BA ( m_width ) ) ; }
+  else if ( !bx &&  bm && !bw ) 
+  { compute_BW ( output , *m_bw , BA ( m_x ) , m              , BA ( m_width ) ) ; }
+  else if ( !bx && !bm &&  bw ) 
+  { compute_BW ( output , *m_bw , BA ( m_x ) , BA ( m_mass )  , w              ) ; }
+  if      (  bx && bm && !bw ) 
+  { compute_BW ( output , *m_bw , x          , m              , BA ( m_width ) ) ; }
+  else if (  bx && !bm &&  bw ) 
+  { compute_BW ( output , *m_bw , x          , BA ( m_mass )  , w              ) ; }
+  else if ( !bx && bm &&  bw ) 
+  { compute_BW ( output , *m_bw , BA ( m_x ) , m              , w              ) ; }
+  else if (  bx && bm && bw ) 
+  { compute_BW ( output , *m_bw , x          , m              , w              ) ; }
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 
@@ -7361,9 +7418,6 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
   //
   return 0 ;
 }
-// ============================================================================
-
-
 // ============================================================================
 ClassImp(Ostap::Models::Uniform            ) 
 ClassImp(Ostap::Models::BreitWigner        ) 

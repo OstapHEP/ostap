@@ -113,6 +113,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Models2D.cpp
                          src/MoreMath.cpp
                          src/MoreRooFit.cpp
+                         src/MoreVars.cpp
                          src/Mute.cpp
                          src/NStatEntity.cpp
                          src/Notifier.cpp
