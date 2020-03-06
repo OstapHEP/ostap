@@ -163,10 +163,12 @@ std::complex<double> Ostap::Models::BreitWigner::amplitude () const
 // ============================================================================
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
 // ============================================================================
+#include "BatchHelpers.h"
+// ============================================================================
 namespace 
 {
   template<class Tx, class Tmass, class Twidth, class FBW >
-  void compute_BW ( RooSpan<double> output , Tx x , Tmass m , Twidth w , FBW& bw ) 
+  void compute_BW ( RooSpan<double> output , FBW& bw , Tx x , Tmass m , Twidth w ) 
   {
     const int n = output.size();
     for ( int i = 0 ; i < n ; ++i ) 
@@ -195,7 +197,7 @@ RooSpan<double> Ostap::Models::BreitWigner::evaluateBatch
   //
   auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
   //
-  using BracketAdapter<double> as BA ;
+  typedef BatchHelpers::BracketAdapter<double> BA ;
   //
   if      (  bx && !bm && !bw ) 
   { compute_BW ( output , *m_bw , x          , BA ( m_mass  ) , BA ( m_width ) ) ; }
