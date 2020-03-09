@@ -15,11 +15,34 @@
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 // ============================================================================
+// Local
+// ============================================================================
+#include "local_roofit.h"
+// ============================================================================
 /** @file 
  *  Implementation file for namespace Ostap::Models
  *  @author Vanya BELYAEV  Ivan.Belyaev@cern.ch
  *  @date   2011-11-30
  */
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+#include "BatchHelpers.h"
+// ============================================================================
+typedef BatchHelpers::BracketAdapter<double> BA ;
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  template<class TX, class FUN>
+  void compute_X ( RooSpan<double> output , FUN& fun , TX x ) 
+  {
+    const int n = output.size();
+    for ( int i = 0 ; i < n ; ++i ) { output [ i ] = fun ( x [ i ] ) ; }
+  }
+  // ==========================================================================
+}
+#endif
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -163,56 +186,19 @@ std::complex<double> Ostap::Models::BreitWigner::amplitude () const
 // ============================================================================
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
 // ============================================================================
-#include "BatchHelpers.h"
-// ============================================================================
-namespace 
-{
-  template<class Tx, class Tmass, class Twidth, class FBW >
-  void compute_BW ( RooSpan<double> output , FBW& bw , Tx x , Tmass m , Twidth w ) 
-  {
-    const int n = output.size();
-    for ( int i = 0 ; i < n ; ++i ) 
-    {
-      bw.setM0       ( m [i] ) ;
-      bw.setGamma0   ( w [i] ) ;
-      output[i] = bw ( x [i] ) ; 
-    }
-  }
-}
-// ============================================================================
-RooSpan<double> Ostap::Models::BreitWigner::evaluateBatch 
+RooSpan<double> 
+Ostap::Models::BreitWigner::evaluateBatch 
 ( std::size_t begin     , 
   std::size_t batchSize ) const 
 { 
-  //
-  auto x = m_x    .getValBatch ( begin , batchSize ) ;
-  auto m = m_mass .getValBatch ( begin , batchSize ) ;
-  auto w = m_width.getValBatch ( begin , batchSize ) ;
-  //
-  const bool bx = !x.empty() ;
-  const bool bm = !m.empty() ;
-  const bool bw = !w.empty() ;
-  //
-  if ( !bx && !bm && bw ) { return {} ; }
-  //
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
   auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
   //
-  typedef BatchHelpers::BracketAdapter<double> BA ;
-  //
-  if      (  bx && !bm && !bw ) 
-  { compute_BW ( output , *m_bw , x          , BA ( m_mass  ) , BA ( m_width ) ) ; }
-  else if ( !bx &&  bm && !bw ) 
-  { compute_BW ( output , *m_bw , BA ( m_x ) , m              , BA ( m_width ) ) ; }
-  else if ( !bx && !bm &&  bw ) 
-  { compute_BW ( output , *m_bw , BA ( m_x ) , BA ( m_mass )  , w              ) ; }
-  if      (  bx && bm && !bw ) 
-  { compute_BW ( output , *m_bw , x          , m              , BA ( m_width ) ) ; }
-  else if (  bx && !bm &&  bw ) 
-  { compute_BW ( output , *m_bw , x          , BA ( m_mass )  , w              ) ; }
-  else if ( !bx && bm &&  bw ) 
-  { compute_BW ( output , *m_bw , BA ( m_x ) , m              , w              ) ; }
-  else if (  bx && bm && bw ) 
-  { compute_BW ( output , *m_bw , x          , m              , w              ) ; }
+  setPars () ;
+  compute_X ( output , *m_bw , x ) ;
   //
   return output ;
 }
@@ -246,15 +232,12 @@ Ostap::Models::BreitWignerMC::BreitWignerMC
   , m_bw ( bw.clone() ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned   num  = 0 ;
-  Ostap::Utils::Iterator tmp ( widths ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_bw->nChannels() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_widths.add ( *coef ) ;
-  }
+  ::copy_real   ( widths , m_widths , "Invalid width parameter!" ,
+                  "Ostap::Models::BreitWignerMC" ) ;
+  //
+  Ostap::Assert ( m_widths.size() == m_bw->nChannels() , 
+                  "Widths/#channels mismatch" , 
+                  "Ostap::Models::BreitWignerMC" ) ;
   //
   setPars() ;
 }
@@ -289,7 +272,7 @@ void Ostap::Models::BreitWignerMC::setPars () const
   // set the mass 
   m_bw->setM0 ( m_mass ) ;
   // 
-  // set teh widths
+  // set the widths
   RooAbsArg*       g   = 0 ;
   const RooArgSet* nset  = m_widths.nset() ;
   //
@@ -345,7 +328,27 @@ Double_t Ostap::Models::BreitWignerMC::analyticalIntegral
   return m_bw->integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================  
-
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::BreitWignerMC::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , *m_bw , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 // ============================================================================
 /// Breit-wigner with interference 
@@ -469,7 +472,6 @@ Int_t Ostap::Models::BWI::getAnalyticalIntegral
   RooArgSet&     analVars     ,
   const char* /* rangename */ ) const { return 0 ; }
 // ============================================================================
-
 
 
 
@@ -612,6 +614,29 @@ Double_t Ostap::Models::BW23L::analyticalIntegral
   return m_bw.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::BW23L::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_bw , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
+
 
   
 // ============================================================================
@@ -710,6 +735,31 @@ std::complex<double> Ostap::Models::Flatte::amplitude () const
   setPars () ;
   return m_flatte->amplitude ( m_x ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Flatte::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , *m_flatte , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
+
+
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -821,6 +871,29 @@ std::complex<double> Ostap::Models::LASS::amplitude() const
   return m_lass.amplitude ( m_x  ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::LASS::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_lass , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
+
 
 // ============================================================================
 // constructor from all parameters 
@@ -937,6 +1010,28 @@ std::complex<double> Ostap::Models::LASS23L::amplitude() const
   return m_lass.amplitude ( m_x  ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::LASS23L::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_lass , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
 
 // ============================================================================
 // constructor from all parameters 
@@ -1051,6 +1146,28 @@ std::complex<double> Ostap::Models::Bugg::amplitude() const
   return m_bugg.amplitude ( m_x  ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Bugg::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_bugg , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
 
 // ============================================================================
 // constructor from all parameters 
@@ -1169,6 +1286,27 @@ Ostap::Models::Bugg23L::amplitude() const
   return m_bugg.amplitude ( m_x  ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Bugg23L::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_bugg , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 // ============================================================================
 //         Voigt
@@ -1262,6 +1400,29 @@ Double_t Ostap::Models::Voigt::analyticalIntegral
   return m_voigt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Voigt::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_voigt , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
+
 
 // ============================================================================
 //         PseudoVoigt
@@ -1355,6 +1516,27 @@ Double_t Ostap::Models::PseudoVoigt::analyticalIntegral
   return m_voigt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PseudoVoigt::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_voigt , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 
@@ -1465,6 +1647,27 @@ Double_t Ostap::Models::Swanson::analyticalIntegral
   return m_swanson.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Swanson::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_swanson , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 // ============================================================================
@@ -1561,6 +1764,27 @@ Double_t Ostap::Models::CrystalBall::analyticalIntegral
   return m_cb.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::CrystalBall::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_cb , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 
@@ -1660,6 +1884,28 @@ Double_t Ostap::Models::CrystalBallRS::analyticalIntegral
   return m_cb.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::CrystalBallRS::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_cb , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 // ============================================================================
 // Double-sided CrystalBall
@@ -1764,6 +2010,54 @@ Double_t Ostap::Models::CrystalBallDS::analyticalIntegral
   return m_cb2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::CrystalBallDS::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x . empty ()      ) { return {} ; }
+  // 
+  auto m0     = m_m0    . getValBatch ( begin , batchSize ) ;
+  if ( !m0    . empty ()  ) { return {} ; }
+  //
+  auto sigma  = m_sigma . getValBatch ( begin , batchSize ) ;
+  if ( !sigma . empty ()  ) { return {} ; }
+  //
+  auto alphaL = m_alphaL. getValBatch ( begin , batchSize ) ;
+  if ( !alphaL. empty ()  ) { return {} ; }
+  //
+  auto alphaR = m_alphaR. getValBatch ( begin , batchSize ) ;
+  if ( !alphaR. empty ()  ) { return {} ; }
+  //
+  auto nL     = m_nL    . getValBatch ( begin , batchSize ) ;
+  if ( !nL    . empty ()  ) { return {} ; }
+  //
+  auto nR     = m_nR    . getValBatch ( begin , batchSize ) ;
+  if ( !nR    . empty ()  ) { return {} ; }
+  //
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_cb2 , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
+
+
+
+
+
+
+
 
 
 // ============================================================================
@@ -1879,6 +2173,49 @@ double Ostap::Models::Needham::alpha   () const
   return a ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Needham::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto m0     = m_m0    . getValBatch ( begin , batchSize ) ;
+  if ( !m0    . empty ()  ) { return {} ; }
+  //
+  auto sigma  = m_sigma . getValBatch ( begin , batchSize ) ;
+  if ( !sigma . empty ()  ) { return {} ; }
+  //
+  auto  a0    = m_a0    . getValBatch ( begin , batchSize ) ;
+  if ( !a0    . empty ()  ) { return {} ; }
+  auto  a1    = m_a1    . getValBatch ( begin , batchSize ) ;
+  if ( !a0    . empty ()  ) { return {} ; }
+  auto  a2    = m_a2    . getValBatch ( begin , batchSize ) ;
+  if ( !a2    . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_needham , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1980,6 +2317,42 @@ Double_t Ostap::Models::Apollonios::analyticalIntegral
   return m_apo.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Apollonios::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x     = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x     . empty ()      ) { return {} ; }
+  // 
+  auto  m0    = m_m0    . getValBatch ( begin , batchSize ) ;
+  if ( !m0    . empty ()  ) { return {} ; }
+  //
+  auto  sigma = m_sigma . getValBatch ( begin , batchSize ) ;
+  if ( !sigma . empty ()  ) { return {} ; }
+  //
+  auto  alpha = m_alpha . getValBatch ( begin , batchSize ) ;
+  if ( !alpha . empty ()  ) { return {} ; }
+  //
+  auto  n     = m_n     . getValBatch ( begin , batchSize ) ;
+  if ( !n . empty ()  ) { return {} ; }
+  //
+  auto  b     = m_b     . getValBatch ( begin , batchSize ) ;
+  if ( !b     . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_apo , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 
@@ -2077,6 +2450,39 @@ Double_t Ostap::Models::Apollonios2::analyticalIntegral
   return m_apo2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Apollonios2::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x     . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  m0     = m_m0    . getValBatch ( begin , batchSize ) ;
+  if ( !m0     . empty ()  ) { return {} ; }
+  //
+  auto  sigmaL = m_sigmaL . getValBatch ( begin , batchSize ) ;
+  if ( !sigmaL . empty ()  ) { return {} ; }
+  //
+  auto  sigmaR = m_sigmaR . getValBatch ( begin , batchSize ) ;
+  if ( !sigmaR . empty ()  ) { return {} ; }
+  //
+  auto  beta   = m_beta   . getValBatch ( begin , batchSize ) ;
+  if ( !beta   . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_apo2 , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 
@@ -2171,6 +2577,36 @@ Double_t Ostap::Models::BifurcatedGauss::analyticalIntegral
   return m_bg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::BifurcatedGauss::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  peak   = m_peak    . getValBatch ( begin , batchSize ) ;
+  if ( !peak   . empty ()  ) { return {} ; }
+  //
+  auto  sigmaL = m_sigmaL . getValBatch ( begin , batchSize ) ;
+  if ( !sigmaL . empty ()  ) { return {} ; }
+  //
+  auto  sigmaR = m_sigmaR . getValBatch ( begin , batchSize ) ;
+  if ( !sigmaR . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_bg , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 // ============================================================================
@@ -2265,6 +2701,36 @@ Double_t Ostap::Models::GenGaussV1::analyticalIntegral
   return m_ggv1.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::GenGaussV1::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  mu     = m_mu      . getValBatch ( begin , batchSize ) ;
+  if ( !mu     . empty ()  ) { return {} ; }
+  //
+  auto  alpha  = m_alpha   . getValBatch ( begin , batchSize ) ;
+  if ( !alpha  . empty ()  ) { return {} ; }
+  //
+  auto  beta   = m_beta    . getValBatch ( begin , batchSize ) ;
+  if ( !beta   . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_ggv1 , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 
@@ -2360,6 +2826,36 @@ Double_t Ostap::Models::GenGaussV2::analyticalIntegral
   return m_ggv2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::GenGaussV2::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  xi     = m_xi      . getValBatch ( begin , batchSize ) ;
+  if ( !xi     . empty ()  ) { return {} ; }
+  //
+  auto  alpha  = m_alpha   . getValBatch ( begin , batchSize ) ;
+  if ( !alpha  . empty ()  ) { return {} ; }
+  //
+  auto  kappa  = m_kappa   . getValBatch ( begin , batchSize ) ;
+  if ( !kappa  . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_ggv2 , x ) ;
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 
@@ -2456,6 +2952,37 @@ Double_t Ostap::Models::SkewGauss::analyticalIntegral
   return m_sg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::SkewGauss::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  xi     = m_xi      . getValBatch ( begin , batchSize ) ;
+  if ( !xi     . empty ()  ) { return {} ; }
+  //
+  auto  omega  = m_omega   . getValBatch ( begin , batchSize ) ;
+  if ( !omega  . empty ()  ) { return {} ; }
+  //
+  auto  alpha  = m_alpha   . getValBatch ( begin , batchSize ) ;
+  if ( !alpha  . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_sg , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 // ============================================================================
 //         Bukin
@@ -2557,6 +3084,42 @@ Double_t Ostap::Models::Bukin::analyticalIntegral
   return m_bukin.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Bukin::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  peak   = m_peak    . getValBatch ( begin , batchSize ) ;
+  if ( !peak   . empty ()  ) { return {} ; }
+  //
+  auto  sigma  = m_sigma   . getValBatch ( begin , batchSize ) ;
+  if ( !sigma  . empty ()  ) { return {} ; }
+  //
+  auto  xi     = m_xi      . getValBatch ( begin , batchSize ) ;
+  if ( !xi     . empty ()  ) { return {} ; }
+  //
+  auto  rhoL   = m_rhoL    . getValBatch ( begin , batchSize ) ;
+  if ( !rhoL   . empty ()  ) { return {} ; }
+  //
+  auto  rhoR   = m_rhoR    . getValBatch ( begin , batchSize ) ;
+  if ( !rhoR   . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_bukin , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
   
 // ============================================================================
@@ -2646,6 +3209,36 @@ Double_t Ostap::Models::StudentT::analyticalIntegral
   setPars () ;
   return m_stt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::StudentT::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  mu     = m_mu      . getValBatch ( begin , batchSize ) ;
+  if ( !mu     . empty ()  ) { return {} ; }
+  //
+  auto  sigma  = m_sigma   . getValBatch ( begin , batchSize ) ;
+  if ( !sigma  . empty ()  ) { return {} ; }
+  //
+  auto  n      = m_n       . getValBatch ( begin , batchSize ) ;
+  if ( !n      . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_stt , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -2744,6 +3337,42 @@ Double_t Ostap::Models::BifurcatedStudentT::analyticalIntegral
   setPars () ;
   return m_stt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::BifurcatedStudentT::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  mu     = m_mu      . getValBatch ( begin , batchSize ) ;
+  if ( !mu     . empty ()  ) { return {} ; }
+  //
+  auto  sigmaL = m_sigmaL  . getValBatch ( begin , batchSize ) ;
+  if ( !sigmaL . empty ()  ) { return {} ; }
+  //
+  auto  sigmaR = m_sigmaR  . getValBatch ( begin , batchSize ) ;
+  if ( !sigmaR . empty ()  ) { return {} ; }
+  //
+  auto  nL     = m_nL      . getValBatch ( begin , batchSize ) ;
+  if ( !nL     . empty ()  ) { return {} ; }
+  //
+  auto  nR     = m_nR      . getValBatch ( begin , batchSize ) ;
+  if ( !nR     . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_stt , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -2844,6 +3473,39 @@ Double_t Ostap::Models::GramCharlierA::analyticalIntegral
   return m_gca.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::GramCharlierA::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto  m0     = m_m0      . getValBatch ( begin , batchSize ) ;
+  if ( !m0     . empty ()  ) { return {} ; }
+  //
+  auto  sigma  = m_sigma   . getValBatch ( begin , batchSize ) ;
+  if ( !sigma  . empty ()  ) { return {} ; }
+  //
+  auto  kappa3 = m_kappa3  . getValBatch ( begin , batchSize ) ;
+  if ( !kappa3 . empty ()  ) { return {} ; }
+  //
+  auto  kappa4 = m_kappa4  . getValBatch ( begin , batchSize ) ;
+  if ( !kappa4 . empty ()  ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_gca , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -2908,7 +3570,26 @@ Double_t Ostap::Models::PhaseSpace2::analyticalIntegral
   return m_ps2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PhaseSpace2::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x       . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()  ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  compute_X ( output , m_ps2 , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -2992,6 +3673,31 @@ Double_t Ostap::Models::PhaseSpaceLeft::analyticalIntegral
   return m_left.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PhaseSpaceLeft::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto  t      = m_threshold . getValBatch ( begin , batchSize ) ;
+  if ( !t      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_left , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 
 
@@ -3076,6 +3782,30 @@ Double_t Ostap::Models::PhaseSpaceRight::analyticalIntegral
   setPars () ;
   return m_right.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PhaseSpaceRight::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto  t      = m_threshold . getValBatch ( begin , batchSize ) ;
+  if ( !t      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_right , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -3163,6 +3893,34 @@ Double_t Ostap::Models::PhaseSpaceNL::analyticalIntegral
   return m_ps.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PhaseSpaceNL::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto  l      = m_low       . getValBatch ( begin , batchSize ) ;
+  if ( !l      . empty ()    ) { return {} ; }
+  // 
+  auto  h      = m_high      . getValBatch ( begin , batchSize ) ;
+  if ( !h      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_ps , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 // ============================================================================
 // Two-body phase space from 3-body decays 
@@ -3224,6 +3982,26 @@ Double_t Ostap::Models::PhaseSpace23L::analyticalIntegral
   //
   return m_ps23L.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PhaseSpace23L::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  compute_X ( output , m_ps23L , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -3343,22 +4121,16 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   const unsigned short L         , 
   RooArgList&          phis      )
   : RooAbsPdf ( name , title ) 
-//
+    //
   , m_x        ( "x"       , "Observable"   , this , x    ) 
   , m_phis     ( "phi"     , "Coefficients" , this ) 
-//
+    //
   , m_ps       ( low , high , L , N , phis.getSize() ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned      num  = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_ps.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PhaseSpacePol" );
+  Ostap::Assert ( m_phis.size() == m_ps.npars() , 
+                  "#phis/#npars mismatch!"            , "Ostap::Models::PhaseSpacePol" );
   //
   const RooRealVar* v = dynamic_cast<RooRealVar*>(&x) ;
   if ( 0 != v ) 
@@ -3477,15 +4249,9 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   , m_ps       ( ps , phis.getSize() ) 
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned     num  = 0 ;
-  Ostap::Utils::Iterator   tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_ps.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PhaseSpacePol" );
+  Ostap::Assert ( m_phis.size() == m_ps.npars() , 
+                  "#phis/#npars mismatch!"            , "Ostap::Models::PhaseSpacePol" );
   //
   const RooRealVar* v = dynamic_cast<RooRealVar*>(&x) ;
   if ( 0 != v ) 
@@ -3529,19 +4295,7 @@ void Ostap::Models::PhaseSpacePol::setPars () const
   RooAbsArg*       phi   = 0 ;
   const RooArgSet* nset  = m_phis.nset() ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_ps.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis ,  m_ps ) ;
   //
 }
 // ============================================================================
@@ -3575,6 +4329,27 @@ Double_t Ostap::Models::PhaseSpacePol::analyticalIntegral
   return m_ps.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PhaseSpacePol::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_ps , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -3599,15 +4374,11 @@ Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   , m_ps       ( ps , phis.getSize() , 0.0 , x.getMin() , x.getMax() ) 
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned     num  = 0 ;
-  Ostap::Utils::Iterator   tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_ps.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
+                  "Ostap::Models::PhaseSpaceLeftExpoPol" ) ;
+  Ostap::Assert ( m_phis.size() == m_ps.npars() , 
+                  "#phis/#npars mismatch!"            , 
+                  "Ostap::Models::PhaseSpaceLeftExpoPol" ) ;
   //
   setPars() ;
 }
@@ -3648,16 +4419,7 @@ void Ostap::Models::PhaseSpaceLeftExpoPol::setPars () const
   RooAbsArg*       phi   = 0 ;
   const RooArgSet* nset  = m_phis.nset() ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    const double phi   = r->getVal ( nset ) ;
-    m_ps.setPar ( k  , phi ) ;
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_ps ) ;
   //
 }
 // ============================================================================
@@ -3689,6 +4451,27 @@ Double_t Ostap::Models::PhaseSpaceLeftExpoPol::analyticalIntegral
   return m_ps.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PhaseSpaceLeftExpoPol::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_ps , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -3709,14 +4492,11 @@ Ostap::Models::PolyPositive::PolyPositive
   , m_positive ( phis.getSize() , xmin , xmax ) 
 {
   //
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  RooAbsArg* coef = 0 ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
+                  "Ostap::Models::PolyPositive" ) ;
+  Ostap::Assert ( m_phis.size() == m_positive.npars()  , 
+                  "#phis/#npars mismatch!"             ,
+                  "Ostap::Models::PolyPositive" ) ;
   //
   setPars () ;
 }
@@ -3753,19 +4533,8 @@ void Ostap::Models::PolyPositive::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_positive ) ;
+  //
 }
 //
 // ============================================================================
@@ -3799,6 +4568,27 @@ Double_t Ostap::Models::PolyPositive::analyticalIntegral
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PolyPositive::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_positive , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -3819,14 +4609,11 @@ Ostap::Models::PolyPositiveEven::PolyPositiveEven
   , m_even     ( phis.getSize() , xmin , xmax ) 
 {
   //
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  RooAbsArg* coef = 0 ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
+                  "Ostap::Models::PolyPositiveEven" ) ;
+  Ostap::Assert ( m_phis.size() == m_even.npars() , 
+                  "#phis/#npars mismatch!"            ,
+                  "Ostap::Models::PolyPositiveEven" ) ;
   //
   setPars () ;
 }
@@ -3863,19 +4650,8 @@ void Ostap::Models::PolyPositiveEven::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_even.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_even ) ;
+  //
 }
 //
 // ============================================================================
@@ -3909,6 +4685,27 @@ Double_t Ostap::Models::PolyPositiveEven::analyticalIntegral
   return m_even.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PolyPositiveEven::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_even , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -3929,14 +4726,9 @@ Ostap::Models::PolyMonotonic::PolyMonotonic
   , m_monotonic ( phis.getSize() , xmin , xmax , increasing ) 
 {
   //
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  RooAbsArg* coef = 0 ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
+                  "Ostap::Models::PolyMonotonic" ) ;
+  //
   setPars () ;
 }
 // ============================================================================
@@ -3972,19 +4764,8 @@ void Ostap::Models::PolyMonotonic::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_monotonic.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_monotonic ) ;
+  //
 }
 //
 // ============================================================================
@@ -4018,6 +4799,27 @@ Double_t Ostap::Models::PolyMonotonic::analyticalIntegral
   return m_monotonic.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PolyMonotonic::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_monotonic , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -4041,14 +4843,8 @@ Ostap::Models::PolyConvex::PolyConvex
   , m_convex ( phis.getSize() , xmin , xmax , increasing , convex ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PolyConvex" ) ;
+  //
   setPars () ;
 }
 // ============================================================================
@@ -4082,21 +4878,8 @@ void Ostap::Models::PolyConvex::setPars () const
   RooAbsArg*       phi   = 0 ;
   const RooArgSet* nset  = m_phis.nset() ;
   //
-  std::vector<double> sin2phi ;
+  ::set_pars ( m_phis , m_convex ) ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_convex.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -4129,6 +4912,27 @@ Double_t Ostap::Models::PolyConvex::analyticalIntegral
   return m_convex.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PolyConvex::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_convex , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -4151,14 +4955,8 @@ Ostap::Models::PolyConvexOnly::PolyConvexOnly
   , m_convex ( phis.getSize() , xmin , xmax , convex ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PolyConvexOnly" ) ;
+  //
   setPars () ;
 }
 // ============================================================================
@@ -4194,19 +4992,8 @@ void Ostap::Models::PolyConvexOnly::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  unsigned short k = 0 ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_convex.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_convex ) ;
+  //
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -4239,6 +5026,27 @@ Double_t Ostap::Models::PolyConvexOnly::analyticalIntegral
   return m_convex.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PolyConvexOnly::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_convex , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -4262,14 +5070,7 @@ Ostap::Models::PolySigmoid::PolySigmoid
   , m_sigmoid  ( phis.getSize() , xmin , xmax , m_alpha , m_x0 ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PolySigmoid" ) ;
   //
   setPars () ;
 }
@@ -4306,21 +5107,7 @@ void Ostap::Models::PolySigmoid::setPars () const
   RooAbsArg*       phi   = 0 ;
   const RooArgSet* nset  = m_phis.nset() ;
   //
-  std::vector<double> sin2phi ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_sigmoid.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_sigmoid ) ;
   //
   m_sigmoid.setAlpha ( m_alpha ) ;
   m_sigmoid.setX0    ( m_x0    ) ;
@@ -4357,6 +5144,33 @@ Double_t Ostap::Models::PolySigmoid::analyticalIntegral
   return m_sigmoid.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PolySigmoid::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto  alpha  = m_alpha     . getValBatch ( begin , batchSize ) ;
+  if ( !alpha  . empty ()    ) { return {} ; }
+  // 
+  auto  x0     = m_x0        . getValBatch ( begin , batchSize ) ;
+  if ( !x0     . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_sigmoid , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -4383,14 +5197,7 @@ Ostap::Models::PositiveSpline::PositiveSpline
   , m_spline   ( spline ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PositiveSpline" ) ;
   //
   setPars () ;
 }
@@ -4428,19 +5235,8 @@ void Ostap::Models::PositiveSpline::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_spline.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_spline ) ;
+  //
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -4473,6 +5269,27 @@ Double_t Ostap::Models::PositiveSpline::analyticalIntegral
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PositiveSpline::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_spline , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -4502,14 +5319,7 @@ Ostap::Models::MonotonicSpline::MonotonicSpline
   , m_spline   ( spline ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator  tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::MonotonicSpline" ) ;
   //
   setPars () ;
 }
@@ -4546,19 +5356,8 @@ void Ostap::Models::MonotonicSpline::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator  it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_spline.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_spline ) ;
+  //
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -4591,6 +5390,28 @@ Double_t Ostap::Models::MonotonicSpline::analyticalIntegral
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::MonotonicSpline::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_spline , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 // ============================================================================
 // convex spline 
@@ -4616,14 +5437,7 @@ Ostap::Models::ConvexSpline::ConvexSpline
   , m_spline   ( spline ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator tmp  ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::ConvexSpline" ) ;
   //
   setPars () ;
 }
@@ -4660,19 +5474,8 @@ void Ostap::Models::ConvexSpline::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it  ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_spline.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_spline ) ;
+  //
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -4706,6 +5509,27 @@ Double_t Ostap::Models::ConvexSpline::analyticalIntegral
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::ConvexSpline::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_spline , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 // ============================================================================
 // convex spline 
@@ -4731,14 +5555,7 @@ Ostap::Models::ConvexOnlySpline::ConvexOnlySpline
   , m_spline   ( spline ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator tmp  ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::ConvexOnlySpline" ) ;
   //
   setPars () ;
 }
@@ -4775,19 +5592,8 @@ void Ostap::Models::ConvexOnlySpline::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it  ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_spline.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_spline ) ;
+  //
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -4820,6 +5626,27 @@ Double_t Ostap::Models::ConvexOnlySpline::analyticalIntegral
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::ConvexOnlySpline::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_spline , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -4842,14 +5669,7 @@ Ostap::Models::ExpoPositive::ExpoPositive
   , m_positive ( phis.getSize() , 0 , xmin , xmax ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator  tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::ExpoPositive" ) ;
   //
   m_positive.setTau ( m_tau ) ;
   setPars () ;
@@ -4891,19 +5711,7 @@ void Ostap::Models::ExpoPositive::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator  it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_positive ) ;
   //
   m_positive.setTau ( m_tau ) ;
 }
@@ -4938,6 +5746,30 @@ Double_t Ostap::Models::ExpoPositive::analyticalIntegral
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::ExpoPositive::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto  t      = m_tau         . getValBatch ( begin , batchSize ) ;
+  if ( !t      . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_positive , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -4963,14 +5795,7 @@ Ostap::Models::TwoExpoPositive::TwoExpoPositive
   , m_2expopos ( phis.getSize() , 1 , 2 , 1 , xmin , xmax ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-  }
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::TwoExpoPositive" ) ;
   //
   setPars () ;
   //
@@ -5013,19 +5838,7 @@ void Ostap::Models::TwoExpoPositive::setPars () const
   //
   std::vector<double> sin2phi ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phi   = r->getVal ( nset ) ;
-    //
-    m_2expopos.setPar ( k  , phi ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis , m_2expopos ) ;
   //
   m_2expopos.setAlpha ( m_alpha ) ;
   m_2expopos.setDelta ( m_delta ) ;
@@ -5061,6 +5874,36 @@ Double_t Ostap::Models::TwoExpoPositive::analyticalIntegral
   setPars () ;
   return m_2expopos.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::TwoExpoPositive::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto  alpha  = m_alpha     . getValBatch ( begin , batchSize ) ;
+  if ( !alpha  . empty ()    ) { return {} ; }
+  // 
+  auto  delta  = m_delta     . getValBatch ( begin , batchSize ) ;
+  if ( !delta  . empty ()    ) { return {} ; }
+  // 
+  auto  x0     = m_x0         . getValBatch ( begin , batchSize ) ;
+  if ( !x0     . empty ()    ) { return {} ; }
+  // 
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_2expopos , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -5147,6 +5990,63 @@ Double_t Ostap::Models::GammaDist::analyticalIntegral
   setPars () ;
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+namespace 
+{
+  template<class TX , 
+           class TK ,
+           class TT, class FUN>
+  void compute_GD ( RooSpan<double> output , FUN& fun , TX x , TK k , TT theta ) 
+  {
+    const int n = output.size();
+    for ( int i = 0 ; i < n ; ++i ) 
+    {
+      fun.setK        ( k     [i] ) ;
+      fun.setTheta    ( theta [i] ) ;
+      output[i] = fun ( x     [i] ) ; 
+    }
+  }
+}
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::GammaDist::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  auto  k      = m_k         . getValBatch ( begin , batchSize ) ;
+  auto  theta  = m_theta     . getValBatch ( begin , batchSize ) ;
+  //
+  const bool bx = x    .empty()  ;
+  const bool bk = k    .empty()  ;
+  const bool bt = theta.empty()  ;
+  //
+  if ( bx &&  bk &&  bt ) { return {}; } //
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  if      (  bx && !bk && !bt ) 
+  { compute_GD ( output , m_gamma ,         x   , BA ( m_k ) , BA ( m_theta ) ) ; }
+  else if ( !bx &&  bk && !bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) ,        k   , BA ( m_theta ) ) ; }
+  else if ( !bx && !bk &&  bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) , BA ( m_k ) ,        theta   ) ; }
+  else if ( !bx &&  bk &&  bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) ,        k   ,        theta   ) ; }
+  else if (  bx && !bk &&  bt ) 
+  { compute_GD ( output , m_gamma ,         x   , BA ( m_k ) ,        theta   ) ; }
+  else if (  bx &&  bk && !bt ) 
+  { compute_GD ( output , m_gamma , x           ,        k   , BA ( m_theta ) ) ; }
+  else if (  bx &&  bk &&  bt ) 
+  { compute_GD ( output , m_gamma , x           ,        k   ,        theta   ) ; }
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -5242,6 +6142,27 @@ Double_t Ostap::Models::GenGammaDist::analyticalIntegral
   setPars () ;
   return m_ggamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::GenGammaDist::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_ggamma , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -5340,6 +6261,28 @@ Double_t Ostap::Models::Amoroso::analyticalIntegral
   return m_amoroso.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Amoroso::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_amoroso , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 
 
@@ -5429,6 +6372,46 @@ Double_t Ostap::Models::LogGammaDist::analyticalIntegral
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::LogGammaDist::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  auto  k      = m_k         . getValBatch ( begin , batchSize ) ;
+  auto  theta  = m_theta     . getValBatch ( begin , batchSize ) ;
+  //
+  const bool bx = x    .empty()  ;
+  const bool bk = k    .empty()  ;
+  const bool bt = theta.empty()  ;
+  //
+  if ( bx &&  bk &&  bt ) { return {}; } //
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  if      (  bx && !bk && !bt ) 
+  { compute_GD ( output , m_gamma ,         x   , BA ( m_k ) , BA ( m_theta ) ) ; }
+  else if ( !bx &&  bk && !bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) ,        k   , BA ( m_theta ) ) ; }
+  else if ( !bx && !bk &&  bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) , BA ( m_k ) ,        theta   ) ; }
+  else if ( !bx &&  bk &&  bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) ,        k   ,        theta   ) ; }
+  else if (  bx && !bk &&  bt ) 
+  { compute_GD ( output , m_gamma ,         x   , BA ( m_k ) ,        theta   ) ; }
+  else if (  bx &&  bk && !bt ) 
+  { compute_GD ( output , m_gamma , x           ,        k   , BA ( m_theta ) ) ; }
+  else if (  bx &&  bk &&  bt ) 
+  { compute_GD ( output , m_gamma , x           ,        k   ,        theta   ) ; }
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -5515,6 +6498,46 @@ Double_t Ostap::Models::Log10GammaDist::analyticalIntegral
   setPars () ;
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Log10GammaDist::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  auto  k      = m_k         . getValBatch ( begin , batchSize ) ;
+  auto  theta  = m_theta     . getValBatch ( begin , batchSize ) ;
+  //
+  const bool bx = x    .empty()  ;
+  const bool bk = k    .empty()  ;
+  const bool bt = theta.empty()  ;
+  //
+  if ( bx &&  bk &&  bt ) { return {}; } //
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  if      (  bx && !bk && !bt ) 
+  { compute_GD ( output , m_gamma ,         x   , BA ( m_k ) , BA ( m_theta ) ) ; }
+  else if ( !bx &&  bk && !bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) ,        k   , BA ( m_theta ) ) ; }
+  else if ( !bx && !bk &&  bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) , BA ( m_k ) ,        theta   ) ; }
+  else if ( !bx &&  bk &&  bt ) 
+  { compute_GD ( output , m_gamma , BA  ( m_x ) ,        k   ,        theta   ) ; }
+  else if (  bx && !bk &&  bt ) 
+  { compute_GD ( output , m_gamma ,         x   , BA ( m_k ) ,        theta   ) ; }
+  else if (  bx &&  bk && !bt ) 
+  { compute_GD ( output , m_gamma , x           ,        k   , BA ( m_theta ) ) ; }
+  else if (  bx &&  bk &&  bt ) 
+  { compute_GD ( output , m_gamma , x           ,        k   ,        theta   ) ; }
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -5605,6 +6628,27 @@ Double_t Ostap::Models::LogGamma::analyticalIntegral
   setPars() ;
   return m_lgamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::LogGamma::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_lgamma , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -5700,6 +6744,27 @@ Double_t Ostap::Models::BetaPrime::analyticalIntegral
   return m_betap.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::BetaPrime::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_betap , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -5793,6 +6858,27 @@ Double_t Ostap::Models::SinhAsinh::analyticalIntegral
   setPars () ;
   return m_sinhasinh.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::SinhAsinh::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_sinhasinh , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -5888,6 +6974,27 @@ Double_t Ostap::Models::JohnsonSU::analyticalIntegral
   return m_johnsonSU.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::JohnsonSU::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_johnsonSU , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -5973,6 +7080,27 @@ Double_t Ostap::Models::Landau::analyticalIntegral
   setPars () ;
   return m_landau.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Landau::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_landau , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -6060,6 +7188,27 @@ Double_t Ostap::Models::Atlas::analyticalIntegral
   return m_atlas.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Atlas::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_atlas , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -6146,6 +7295,27 @@ Double_t Ostap::Models::Sech::analyticalIntegral
   setPars () ;
   return m_sech.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Sech::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_sech , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -6240,6 +7410,28 @@ Double_t Ostap::Models::Losev::analyticalIntegral
   return m_losev.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Losev::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_losev , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 // ============================================================================
 // constructor from all parameters 
@@ -6324,6 +7516,27 @@ Double_t Ostap::Models::Logistic::analyticalIntegral
   setPars () ;
   return m_logistic.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Logistic::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_logistic , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -6416,6 +7629,28 @@ Double_t Ostap::Models::Argus::analyticalIntegral
   return m_argus.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Argus::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_argus , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 // ============================================================================
 // constructor from all parameters 
@@ -6497,6 +7732,28 @@ Double_t Ostap::Models::Slash::analyticalIntegral
   return m_slash.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Slash::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_slash , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 // ============================================================================
 // constructor from all parameters 
@@ -6581,6 +7838,27 @@ Double_t Ostap::Models::AsymmetricLaplace::analyticalIntegral
   setPars () ;
   return m_laplace.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::AsymmetricLaplace::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_laplace , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -6672,6 +7950,27 @@ Double_t Ostap::Models::Tsallis::analyticalIntegral
   return m_tsallis.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Tsallis::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_tsallis , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -6758,6 +8057,27 @@ Double_t Ostap::Models::QGSM::analyticalIntegral
   setPars () ;
   return m_qgsm.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::QGSM::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_qgsm , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -6851,6 +8171,27 @@ Double_t Ostap::Models::TwoExpos::analyticalIntegral
   return m_2expos.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::TwoExpos::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_2expos , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 // ============================================================================
@@ -6939,6 +8280,27 @@ Double_t Ostap::Models::DoubleGauss::analyticalIntegral
   return m_2gauss.integral ( xmin , xmax ) ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::DoubleGauss::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_2gauss , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 // ============================================================================
 /*  constructor from all parameters
@@ -7020,6 +8382,27 @@ Double_t Ostap::Models::Gumbel::analyticalIntegral
   setPars() ;
   return m_gumbel.integral ( xmin , xmax ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Gumbel::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_gumbel , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -7107,6 +8490,28 @@ Double_t Ostap::Models::Weibull::analyticalIntegral
   setPars() ;
   return m_weibull.integral ( xmin , xmax ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Weibull::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_weibull , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -7189,6 +8594,28 @@ Double_t Ostap::Models::RaisingCosine::analyticalIntegral
   setPars() ;
   return m_rcos.integral ( xmin , xmax ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::RaisingCosine::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_rcos , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -7277,6 +8704,27 @@ Double_t Ostap::Models::QGaussian::analyticalIntegral
   setPars() ;
   return m_qgauss.integral ( xmin , xmax ) ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::QGaussian::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto  x      = m_x         . getValBatch ( begin , batchSize ) ;
+  if (  x      . empty ()    ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars () ;
+  compute_X ( output , m_qgauss , x ) ;
+  //
+  return output ;
+}
+// ============================================================================
+#endif
 // ============================================================================
 
 
@@ -7421,6 +8869,41 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
   return 0 ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Uniform::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  //
+  auto  x = m_x . getValBatch ( begin , batchSize ) ;
+  if ( ( 1 == m_dim ) && x.empty () )                    { return {} ; }
+  //
+  if  ( 2 <= m_dim ) 
+  {
+    //
+    auto  y = m_y . getValBatch ( begin , batchSize ) ;
+    if ( ( 2 == m_dim ) && x .empty () && y.empty() )    { return {} ; }
+    //
+    if ( 3 == m_dim ) 
+    {
+      auto  z = m_z . getValBatch ( begin , batchSize ) ;
+      if ( x.empty () && y.empty() && z.empty() )        { return {} ; }
+    }
+  }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  for ( auto& o : output ) { o = 1.0 ; }  
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
+
+// ============================================================================
 ClassImp(Ostap::Models::Uniform            ) 
 ClassImp(Ostap::Models::BreitWigner        ) 
 ClassImp(Ostap::Models::BreitWignerMC      ) 
@@ -7493,5 +8976,5 @@ ClassImp(Ostap::Models::MonotonicSpline    )
 ClassImp(Ostap::Models::ConvexOnlySpline   )
 ClassImp(Ostap::Models::ConvexSpline       )
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

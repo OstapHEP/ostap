@@ -13,14 +13,38 @@
 // ============================================================================
 // ROOT 
 // ============================================================================
+#include "RVersion.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
+// ============================================================================
+// Local
+// ============================================================================
+#include "local_roofit.h"
 // ============================================================================
 /** @file 
  *  Implementation file for namespace Ostap::Models
  *  @author Vanya BELYAEV  Ivan.Belyaev@cern.ch
  *  @date   2011-11-30
  */
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+#include "BatchHelpers.h"
+// ============================================================================
+typedef BatchHelpers::BracketAdapter<double> BA ;
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  template<class TX, class TY, class FUN>
+  void compute_XY ( RooSpan<double> output , FUN& fun , TX x , TY y ) 
+  {
+    const int n = output.size();
+    for ( int i = 0 ; i < n ; ++i ) { output [ i ] = fun ( x [ i ] , y [ i ] ) ; }
+  }
+  // ==========================================================================
+}
+#endif
 // ============================================================================
 // generic polinomial
 // ============================================================================
@@ -36,26 +60,16 @@ Ostap::Models::Poly2DPositive::Poly2DPositive
   , m_x        ( "x"       , "Observable-X" , this , x ) 
   , m_y        ( "y"       , "Observable-Y" , this , y ) 
   , m_phis     ( "phis"    , "Coefficients" , this     )
-//
+    //
   , m_positive ( nX , nY , x.getMin() , x.getMax() , y.getMin() , y.getMax() ) 
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_positive.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Poly2DPositive"          ) ;
   //
-  if ( num != m_positive.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::Poly2DPositive"            , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_positive.npars () , 
+                  "Widths/#channels mismatch" , 
+                  "Ostap::Models::Poly2DPositive"      ) ;
   //
   setPars () ;
 }
@@ -87,26 +101,7 @@ Ostap::Models::Poly2DPositive::clone( const char* name ) const
 { return new Ostap::Models::Poly2DPositive(*this,name) ; }
 // ============================================================================
 void Ostap::Models::Poly2DPositive::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis , m_positive ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -145,7 +140,39 @@ Double_t Ostap::Models::Poly2DPositive::analyticalIntegral
     3 == code ? m_positive.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Poly2DPositive::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_positive ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_positive , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_positive ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
+
+
+#include <iostream>
 // ============================================================================
 // generic polinomial
 // ============================================================================
@@ -166,22 +193,17 @@ Ostap::Models::Poly2DSymPositive::Poly2DSymPositive
                  std::max ( x.getMax() , y.getMax() ) )
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_positive.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_positive.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::Poly2DSymPositive"         , 
-                            Ostap::StatusCode::FAILURE         ) ; }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Poly2DSymPositive"       ) ;
   
+  std::cout 
+    << " #phis : "  << phis.size() 
+    << " #m_phis: " << m_phis.size() 
+    << " #npars: "  << m_positive.npars() << std::endl ;
+  //
+  Ostap::Assert ( m_phis.size() == m_positive.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Poly2DSymPositive"      ) ;
   //
   setPars () ;
 }
@@ -214,26 +236,7 @@ Ostap::Models::Poly2DSymPositive::clone( const char* name ) const
 { return new Ostap::Models::Poly2DSymPositive(*this,name) ; }
 // ============================================================================
 void Ostap::Models::Poly2DSymPositive::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis ,  m_positive ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -271,6 +274,36 @@ Double_t Ostap::Models::Poly2DSymPositive::analyticalIntegral
     2 == code ? m_positive.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_positive.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Poly2DSymPositive::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_positive ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_positive , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_positive ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 
@@ -297,22 +330,14 @@ Ostap::Models::PS2DPol::PS2DPol
                  y.getMin() , y.getMax() )
 {
   //  
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol          "       ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS22DPol"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol"                ) ;
+  //
+  setPars () ;
   //
 }
 // ============================================================================
@@ -333,22 +358,12 @@ Ostap::Models::PS2DPol::PS2DPol
   , m_function ( ps ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol"                 ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS22DPol"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol"                ) ;
   //
   setPars () ;
 }
@@ -380,26 +395,7 @@ Ostap::Models::PS2DPol::clone( const char* name ) const
 { return new Ostap::Models::PS2DPol ( *this , name ) ; }
 // ============================================================================
 void Ostap::Models::PS2DPol::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis ,  m_function ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -437,7 +433,36 @@ Double_t Ostap::Models::PS2DPol::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
-
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PS2DPol::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 // ============================================================================
@@ -465,22 +490,14 @@ Ostap::Models::PS2DPol2::PS2DPol2
                  y.getMin() , y.getMax() )
 {
   //  
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol2"                ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS2DPol2"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol2"               ) ;
+  //
+  setPars () ;
   //
 }
 // ============================================================================
@@ -501,22 +518,12 @@ Ostap::Models::PS2DPol2::PS2DPol2
   , m_function ( ps ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol2"                ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS2DPol2"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol2"               ) ;
   //
   setPars () ;
 }
@@ -548,26 +555,7 @@ Ostap::Models::PS2DPol2::clone( const char* name ) const
 { return new Ostap::Models::PS2DPol2 ( *this , name ) ; }
 // ============================================================================
 void Ostap::Models::PS2DPol2::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis ,  m_function ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -605,6 +593,39 @@ Double_t Ostap::Models::PS2DPol2::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PS2DPol2::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
+
+
+
 
 // ============================================================================
 //  PS(x)*PS(y)*Polynom 
@@ -631,22 +652,14 @@ Ostap::Models::PS2DPol3::PS2DPol3
                  y.getMin() , y.getMax() )
 {
   //  
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol3"                ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS2DPol3"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol3"               ) ;
+  //
+  setPars () ;
   //
 }
 // ============================================================================
@@ -666,25 +679,16 @@ Ostap::Models::PS2DPol3::PS2DPol3
     //
   , m_function ( ps ) 
 {
+  //  
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol3"                ) ;
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
-  //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS2DPol3"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol3"               ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -714,26 +718,7 @@ Ostap::Models::PS2DPol3::clone( const char* name ) const
 { return new Ostap::Models::PS2DPol3 ( *this , name ) ; }
 // ============================================================================
 void Ostap::Models::PS2DPol3::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis ,  m_function ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -771,6 +756,36 @@ Double_t Ostap::Models::PS2DPol3::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PS2DPol3::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -795,22 +810,14 @@ Ostap::Models::PS2DPolSym::PS2DPolSym
   , m_function ( ps , n , x.getMin() , x.getMax() ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned   num  = 0 ;  
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPolSym"              ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS22DPol"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPolSym"             ) ;
+  //
+  setPars () ;
   //
 }
 // ============================================================================
@@ -828,27 +835,18 @@ Ostap::Models::PS2DPolSym::PS2DPolSym
   , m_y        ( "y"       , "Observable-Y" , this , y ) 
   , m_phis     ( "phis"    , "Coefficients" , this     )
     //
-  , m_function ( ps ) 
+  , m_function ( ps )
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPolSym"              ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS22DPol"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPolSym"             ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -878,24 +876,7 @@ Ostap::Models::PS2DPolSym::clone( const char* name ) const
 { return new Ostap::Models::PS2DPolSym ( *this , name ) ; }
 // ============================================================================
 void Ostap::Models::PS2DPolSym::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-}
+{ ::set_pars ( m_phis ,  m_function ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -933,6 +914,36 @@ Double_t Ostap::Models::PS2DPolSym::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PS2DPolSym::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ======================================================================
+#endif
+// ======================================================================
 
 
 // ============================================================================
@@ -955,22 +966,14 @@ Ostap::Models::PS2DPol2Sym::PS2DPol2Sym
   , m_function ( ps , mmax , n , x.getMin() , x.getMax() ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned   num  = 0 ;  
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol2Sym"             ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS2DPol2Sym"               , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol2Sym"            ) ;
+  //
+  setPars () ;
   //
 }
 // ============================================================================
@@ -991,24 +994,15 @@ Ostap::Models::PS2DPol2Sym::PS2DPol2Sym
   , m_function ( ps ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol2Sym"             ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS2DPol2Sym"               , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol2Sym"            ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -1038,24 +1032,7 @@ Ostap::Models::PS2DPol2Sym::clone( const char* name ) const
 { return new Ostap::Models::PS2DPol2Sym ( *this , name ) ; }
 // ============================================================================
 void Ostap::Models::PS2DPol2Sym::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-}
+{ ::set_pars ( m_phis ,  m_function ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -1093,9 +1070,36 @@ Double_t Ostap::Models::PS2DPol2Sym::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
-
-
-
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PS2DPol2Sym::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 // ============================================================================
 //  PS(x)*PS(y)*SymPolynom 
@@ -1117,21 +1121,15 @@ Ostap::Models::PS2DPol3Sym::PS2DPol3Sym
   , m_function ( ps , mmax , n , x.getMin() , x.getMax() ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned   num  = 0 ;  
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol3Sym"             ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS2DPol3Sym"               , 
-                            Ostap::StatusCode::FAILURE         ) ; }
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol3Sym"            ) ;
+  //
+  setPars () ;
+  //
 }
 // ============================================================================
 // generic polinomial
@@ -1151,24 +1149,15 @@ Ostap::Models::PS2DPol3Sym::PS2DPol3Sym
   , m_function ( ps ) 
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::PS2DPol3Sym"             ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::PS2DPol3Sym"               , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
+                  "Widths/#channels mismatch"             , 
+                  "Ostap::Models::Ps2DPol3Sym"            ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -1198,24 +1187,7 @@ Ostap::Models::PS2DPol3Sym::clone( const char* name ) const
 { return new Ostap::Models::PS2DPol3Sym ( *this , name ) ; }
 // ============================================================================
 void Ostap::Models::PS2DPol3Sym::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-}
+{ ::set_pars ( m_phis ,  m_function ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -1253,6 +1225,36 @@ Double_t Ostap::Models::PS2DPol3Sym::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::PS2DPol3Sym::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -1282,22 +1284,15 @@ Ostap::Models::ExpoPS2DPol::ExpoPS2DPol
                  y.getMin() , y.getMax() )
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned   num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::ExpoPS2DPol"             ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::ExpoPS22DPol"              , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()     , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::ExpoPS2DPol"             ) ;
+  //
+  setPars () ;
+  //
 }
 // ============================================================================
 // generic polinomial
@@ -1319,24 +1314,15 @@ Ostap::Models::ExpoPS2DPol::ExpoPS2DPol
   , m_function ( ps ) 
 {
   //  
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::ExpoPS2DPol"             ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::ExpoPS22DPol"              , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()     , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::ExpoPS2DPol"             ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -1369,22 +1355,7 @@ Ostap::Models::ExpoPS2DPol::clone( const char* name ) const
 void Ostap::Models::ExpoPS2DPol::setPars () const 
 {
   //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short   k     = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis ,  m_function ) ;
   //
   m_function.setTau ( m_tau ) ;
 }
@@ -1425,6 +1396,36 @@ Double_t Ostap::Models::ExpoPS2DPol::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::ExpoPS2DPol::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -1454,22 +1455,12 @@ Ostap::Models::Expo2DPol::Expo2DPol
                  nX         , nY         )
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Expo2DPol"               ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::ExpoPS22DPol"              , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_function.npars ()     , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Expo2DPol"               ) ;
   //
   m_function.setTauX ( m_taux ) ;
   m_function.setTauY ( m_tauy ) ;
@@ -1508,22 +1499,7 @@ Ostap::Models::Expo2DPol::clone( const char* name ) const
 void Ostap::Models::Expo2DPol::setPars () const 
 {
   //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis ,  m_function ) ;
   //
   m_function.setTauX ( m_taux ) ;
   m_function.setTauY ( m_tauy ) ;
@@ -1566,6 +1542,36 @@ Double_t Ostap::Models::Expo2DPol::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Expo2DPol::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -1591,23 +1597,15 @@ Ostap::Models::Expo2DPolSym::Expo2DPolSym
   , m_function ( x.getMin() , x.getMax() , n )
 {
   //
-  RooAbsArg* coef = 0 ;
-  unsigned num = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_function.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Expo2DPolSym"            ) ;
   //
-  if ( num != m_function.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::ExpoPS22DPol"              , 
-                            Ostap::StatusCode::FAILURE         ) ; }
+  Ostap::Assert ( m_phis.size() == m_function.npars ()     , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Expo2DPolSym"            ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -1639,22 +1637,8 @@ Ostap::Models::Expo2DPolSym::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::Expo2DPolSym::setPars () const 
 {
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_function.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
+  ::set_pars ( m_phis ,  m_function ) ;
   //
   m_function.setTau ( m_tau ) ;
   //
@@ -1697,6 +1681,35 @@ Double_t Ostap::Models::Expo2DPolSym::analyticalIntegral
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Expo2DPolSym::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 
@@ -1725,24 +1738,15 @@ Ostap::Models::Spline2D::Spline2D
   , m_spline   ( spline ) 
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator   tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_spline.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Spline2D"                ) ;
   //
-  if ( num != m_spline.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::Spline2D"                  , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( m_phis.size() == m_spline.npars ()       , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Spline2D"                ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -1772,26 +1776,7 @@ Ostap::Models::Spline2D::clone( const char* name ) const
 { return new Ostap::Models::Spline2D(*this,name) ; }
 // ============================================================================
 void Ostap::Models::Spline2D::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator   it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_spline.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis ,  m_spline ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -1830,6 +1815,38 @@ Double_t Ostap::Models::Spline2D::analyticalIntegral
     2 == code ? m_spline.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_spline.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Spline2D::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_spline ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_spline , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_spline ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
+
 
 // ============================================================================
 // generic 2D symmetric spline
@@ -1849,23 +1866,15 @@ Ostap::Models::Spline2DSym::Spline2DSym
   , m_spline   ( spline ) 
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_spline.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Spline2DSym"             ) ;
   //
-  if ( num != m_spline.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::Spline2DSym"               , 
-                            StatusCode::FAILURE                ) ; }
+  Ostap::Assert ( m_phis.size() == m_spline.npars ()       , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Spline2DSym"             ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -1895,26 +1904,7 @@ Ostap::Models::Spline2DSym::clone( const char* name ) const
 { return new Ostap::Models::Spline2DSym(*this,name) ; }
 // ============================================================================
 void Ostap::Models::Spline2DSym::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_spline.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis ,  m_spline ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -1953,6 +1943,36 @@ Double_t Ostap::Models::Spline2DSym::analyticalIntegral
     2 == code ? m_spline.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_spline.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Spline2DSym::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  //
+  if ( ex && ey ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey ) { compute_XY ( output , m_spline ,        x   , BA ( m_y ) ) ; }
+  else if (  ex && !ey ) { compute_XY ( output , m_spline , BA ( m_x ) ,        y   ) ; }
+  else                   { compute_XY ( output , m_spline ,        x   ,        y   ) ; }         
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 
 

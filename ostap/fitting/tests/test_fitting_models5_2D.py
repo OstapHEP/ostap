@@ -120,6 +120,8 @@ def test_model_15 () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -160,5 +162,5 @@ if '__main__' == __name__ :
     with timing ('save to DB:'     ) : test_db ()          
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

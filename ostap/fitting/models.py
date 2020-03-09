@@ -273,6 +273,8 @@ logger.debug ("Import modifiers                   from ``modifiers''"    )
 from ostap.fitting.modifiers     import *
 logger.debug ("Import PyPDF                       from ``pypdf''"        )
 from ostap.fitting.pypdf         import PyPDF
+logger.debug ("Import functions                   from ``roofuncs''"     )
+from ostap.fitting.roofuncs      import * 
 
 models = []
 from ostap.fitting.signals       import models as _models 
@@ -288,6 +290,8 @@ models += _models
 from ostap.fitting.models_2d     import models as _models 
 models += _models
 
+
+
 # ============================================================================
 ## add the product operator for multiplication of two PDFs 
 import ostap.fitting.pdf_ops
@@ -298,8 +302,8 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger , symbols = models )
-    
- 
+
+
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -84,6 +84,8 @@ def test_gauss() :
         result, frame = model_gauss . fitTo ( dataset0 )
         result, frame = model_gauss . fitTo ( dataset0 )
         
+        model_gauss.draw (  dataset0 )
+        
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
         print(result)
@@ -119,6 +121,8 @@ def test_crystalball () :
         model_cb.signal.alpha.release()
         result, frame = model_cb. fitTo ( dataset0 )
         result, frame = model_cb. fitTo ( dataset0 )
+
+        model_cb.draw (  dataset0 )
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -155,7 +159,9 @@ def test_crystalball_RS () :
         model_cbrs.signal.alpha.release()
         result, frame = model_cbrs. fitTo ( dataset0 )
         result, frame = model_cbrs. fitTo ( dataset0 )
-        
+
+        model_cbrs.draw (  dataset0 )
+
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
@@ -196,6 +202,8 @@ def test_crystalball_DS () :
         model_cbds.signal.aR.fix(1.5)    
         result, frame = model_cbds. fitTo ( dataset0 )
         
+        model_cbds.draw (  dataset0 )
+
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
@@ -260,7 +268,8 @@ def test_apollonios () :
     
     with rooSilent() : 
         result, frame = model_apollonios. fitTo ( dataset0 )
-        result, frame = model_apollonios. fitTo ( dataset0 )
+        result, frame = model_apollonios. fitTo ( dataset0 )        
+        model_apollonios.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -298,6 +307,7 @@ def test_apollonios2() :
         result, frame = model_apollonios2. fitTo ( dataset0 )
         model_apollonios2.signal.asym.release ()
         result, frame = model_apollonios2. fitTo ( dataset0 )
+        model_apollonios2.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -333,6 +343,7 @@ def test_bifurcated () :
     with rooSilent() : 
         result, frame = model_bifurcated . fitTo ( dataset0 )
         result, frame = model_bifurcated . fitTo ( dataset0 )
+        model_bifurcated.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -369,7 +380,8 @@ def test_2gauss () :
         result, frame = model_2gauss. fitTo ( dataset0 )
         signal_2gauss.fraction.release() 
         result, frame = model_2gauss. fitTo ( dataset0 )
-
+        model_2gauss.draw (  dataset0 )
+        
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
@@ -403,6 +415,7 @@ def test_gengauss_v1 () :
         result, frame = model_gauss_gv1. fitTo ( dataset0 )
         model_gauss_gv1.signal.mean .release() 
         result, frame = model_gauss_gv1. fitTo ( dataset0 )
+        model_gauss_gv1.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -442,6 +455,8 @@ def test_gengauss_v2 () :
         model_gauss_gv2.B.setVal( 500)
         result, frame = model_gauss_gv2. fitTo ( dataset0 )
         
+        model_gauss_gv2.draw (  dataset0 )
+        
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
@@ -469,6 +484,7 @@ def test_skewgauss() :
     with rooSilent() : 
         result, frame = model_gauss_skew. fitTo ( dataset0 )
         result, frame = model_gauss_skew. fitTo ( dataset0 )
+        model_gauss_skew.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -545,6 +561,8 @@ def test_bukin() :
         model_bukin.signal.mean .release() 
         model_bukin.signal.sigma.release() 
         result, frame = model_bukin. fitTo ( dataset0 )
+
+        model_bukin.draw (  dataset0 )
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -576,6 +594,7 @@ def test_studentT () :
     with rooSilent() : 
         result, frame = model_student. fitTo ( dataset0 )
         result, frame = model_student. fitTo ( dataset0 )
+        model_student.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -611,6 +630,8 @@ def test_bifstudentT():
         signal.sigma.release()
         result, frame = model. fitTo ( dataset0 )
         
+        model.draw (  dataset0 )
+
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
@@ -654,6 +675,8 @@ def test_sinhasinh() :
         result,f  = model.fitTo ( dataset0 )  
         signal.epsilon.release()
         result,f  = model.fitTo ( dataset0 )  
+
+        model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -693,6 +716,8 @@ def test_johnsonSU () :
         signal.delta.release()
         result,f  = model.fitTo ( dataset0 )  
         
+        model.draw (  dataset0 )
+
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
         print(result)
@@ -729,6 +754,8 @@ def test_atlas () :
         signal.sigma .release()
         result,f  = model.fitTo ( dataset0 )  
         
+        model.draw ( dataset0 )
+
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
         print(result)
@@ -763,6 +790,8 @@ def test_sech() :
         signal.sigma .release()
         result,f  = model.fitTo ( dataset0 )  
         
+        model.draw (  dataset0 )
+        
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
         print(result)
@@ -796,7 +825,9 @@ def test_losev() :
         signal.mean  .release()
         signal.alpha .release()
         signal.beta  .release()
-        result,f  = model.fitTo ( dataset0 )  
+        result,f  = model.fitTo ( dataset0 )
+        
+        model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -832,7 +863,9 @@ def test_logistic () :
         result,f  = model.fitTo ( dataset0 )  
         signal.mean  .release()
         signal.sigma .release()
-        result,f  = model.fitTo ( dataset0 )  
+        result,f  = model.fitTo ( dataset0 )
+        
+        model.draw (  dataset0 )
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -844,6 +877,7 @@ def test_logistic () :
         logger.info ( "Logistic distribution\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
+    
 # =============================================================================
 ## Voigt
 # =============================================================================
@@ -870,6 +904,7 @@ def test_voigt () :
         result, frame = model. fitTo ( dataset0 )
         signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 )
+        model.draw (  dataset0 )
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -910,6 +945,7 @@ def test_pvoigt () :
         result, frame = model. fitTo ( dataset0 )
         model.signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 )
+        model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -960,6 +996,7 @@ def test_bw () :
         signal.mean .release()
         signal.gamma.release()
         result, frame = model. fitTo ( dataset0 )
+        model.draw (  dataset0 )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -996,6 +1033,7 @@ def test_slash():
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
         result, frame = model. fitTo ( dataset0 )
+        model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -1031,6 +1069,7 @@ def test_laplace():
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
         result, frame = model. fitTo ( dataset0 )
+        model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -1066,6 +1105,7 @@ def test_rasingcosine () :
         signal.mean  .release()
         signal.scale .release()
         result,f  = model.fitTo ( dataset0 )  
+        model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -1082,8 +1122,8 @@ def test_rasingcosine () :
 # =============================================================================
 ## Breit-Wigner with interference
 # =============================================================================
-## def test_bwi () :
-if 1 < 2 :     
+def test_bwi () :
+## if 1 < 2 :     
     logger.info ('Test BWI_pdf' )
     
     ff = cpp.Ostap.Math.FormFactors.BlattWeisskopf( 1 , 3.5 ) ## formfactor 
@@ -1102,7 +1142,8 @@ if 1 < 2 :
           breitwigner = bw                ,     
           xvar        = mass              ,
           mean        = signal_gauss.mean ,
-          bkg         = -1                ) , 
+          bkg         = -1                ) ,
+        suffix     = '_a' , 
         background = Models.PolyPos_pdf ('BkgBWI', xvar = mass , power = 1 )) 
     
     signal = model.signal 
@@ -1116,6 +1157,7 @@ if 1 < 2 :
         signal.mean .release()
         signal.gamma.release()
         result, frame = model. fitTo ( dataset0 )
+        model.draw (  dataset0 )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -1146,38 +1188,39 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## test_gauss          () ## simple Gaussian PDF                       + background 
-    ## test_crystalball    () ## Crystal Ball                              + background
-    ## test_crystalball_RS () ## right-side Crystal Ball                   + background  
-    ## test_crystalball_DS () ## double side Crystal Ball                  + background 
-    ## test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
-    ## test_apollonios     () ## Apollonios function                       + background 
-    ## test_apollonios2    () ## modified Apollonios function              + background 
-    ## test_bifurcated     () ## bifurcated Gaussian function              + background 
-    ## test_2gauss         () ## double     Gaussian function              + background 
-    ## test_gengauss_v1    () ## generalized Gaussian function V1          + background 
-    ## test_gengauss_v2    () ## generalized Gaussian function V2          + background 
-    ## test_skewgauss      () ## skew gaussian                             + background 
-    ## test_qgauss         () ## q-Gaussian function                       + background 
-    ## test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
-    ## test_studentT       () ## Student-t shape                           + background 
-    ## test_bifstudentT    () ## Bifurcated Student-t shape                + background 
-    ## test_sinhasinh      () ## Sinh-Asinh distribution                   + background 
-    ## test_johnsonSU      () ## Johnson-SU distribution                   + background 
-    ## test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
-    ## test_sech           () ## Sech (1/cosh)  distribution               + background 
-    ## test_losev          () ## Asymmetric hyperbilic secant distribution + background 
-    ## test_logistic       () ## Logistic distribution                     + background 
-    ## test_voigt          () ## Voigt profile                             + background 
-    ## test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 
-    ## test_bw             () ## Breit-Wigner(+resolution)                 + background 
-    ## test_slash          () ## Slash-function                            + background 
-    ## test_rasingcosine   () ## Raising Cosine                            + background 
-    ## test_laplace        () ## Laplace-function                            + background 
+    test_gauss          () ## simple Gaussian PDF                       + background 
+    test_crystalball    () ## Crystal Ball                              + background
+    test_crystalball_RS () ## right-side Crystal Ball                   + background  
+    test_crystalball_DS () ## double side Crystal Ball                  + background 
+    test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
+    test_apollonios     () ## Apollonios function                       + background 
+    test_apollonios2    () ## modified Apollonios function              + background 
+    test_bifurcated     () ## bifurcated Gaussian function              + background 
+    test_2gauss         () ## double     Gaussian function              + background 
+    test_gengauss_v1    () ## generalized Gaussian function V1          + background 
+    test_gengauss_v2    () ## generalized Gaussian function V2          + background 
+    test_skewgauss      () ## skew gaussian                             + background 
+    test_qgauss         () ## q-Gaussian function                       + background 
+    test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
+    test_studentT       () ## Student-t shape                           + background 
+    test_bifstudentT    () ## Bifurcated Student-t shape                + background 
+    test_sinhasinh      () ## Sinh-Asinh distribution                   + background 
+    test_johnsonSU      () ## Johnson-SU distribution                   + background 
+    test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
+    test_sech           () ## Sech (1/cosh)  distribution               + background 
+    test_losev          () ## Asymmetric hyperbilic secant distribution + background 
+    test_logistic       () ## Logistic distribution                     + background 
+    test_voigt          () ## Voigt profile                             + background 
+    test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 
+    test_bw             () ## Breit-Wigner(+resolution)                 + background 
+    test_slash          () ## Slash-function                            + background 
+    test_rasingcosine   () ## Raising Cosine                            + background 
+    test_laplace        () ## Laplace-function                            + background 
     
-    ## ## check finally that everything is serializeable:
-    ## test_db ()
-    pass 
+    ## check finally that everything is serializeable:
+    test_db ()
+
+    ##pass 
          
 
 # =============================================================================

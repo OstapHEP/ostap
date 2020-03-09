@@ -236,6 +236,10 @@ def test_comp_3dfit () :
         
         r = model.fitTo ( dataset , ncpu=8 )
 
+        model.draw1 (  dataset )
+        model.draw2 (  dataset )
+        model.draw3 (  dataset )
+        
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
 
@@ -243,7 +247,8 @@ def test_comp_3dfit () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_comp_3dfit    () 
+    test_comp_3dfit    ()
+    
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

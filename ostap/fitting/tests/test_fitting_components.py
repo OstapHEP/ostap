@@ -98,11 +98,12 @@ def test_extended1 () :
         background       = Models.Bkg_pdf ('P1' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds = [ wide_1   , wide_2   ] ,
         others           = [ narrow_1 , narrow_2 ] , 
+        suffix           = '_a'
         )
  
-    with rooSilent() : 
-    ## signals
-
+    with rooSilent() :
+        
+        ## signals
         model.S[0].fix ( 5000 )
         model.S[1].fix ( 5000 )
         model.S[2].fix ( 5000 )
@@ -129,7 +130,7 @@ def test_extended1 () :
         model.B[1].release()
         model.C[0].release() 
         
-    r, f = model.fitTo ( dataset , draw = False , silent = True )
+    r, f = model.fitTo ( dataset , draw = True, silent = True )
 
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
@@ -144,12 +145,13 @@ def test_extended2 () :
         name                = 'E2'                    , 
         signal              = signal_1                , 
         othersignals        = [ signal_2 , signal_3 ] ,
-        background          = Models.Bkg_pdf ('P1' , xvar = mass , power = 0 , tau = 0 ) ,
+        background          = Models.Bkg_pdf ('P2' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds    = [ wide_1   , wide_2   ] ,
         others              = [ narrow_1 , narrow_2 ] ,
         combine_signals     =  True  , ## ATTENTION!
         combine_others      =  True  , ## ATTENTION! 
-        combine_backgrounds =  True  , ## ATTENTION!   
+        combine_backgrounds =  True  , ## ATTENTION!
+        suffix              = '_b'
         )
     
 
@@ -162,7 +164,7 @@ def test_extended2 () :
     model.S.release() 
     model.B.release() 
     model.C.release() 
-    r, f = model.fitTo ( dataset , draw = False , silent = True )
+    r, f = model.fitTo ( dataset , draw = True , silent = True )
     
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
@@ -176,10 +178,11 @@ def test_nonextended1 () :
         name                = 'N1'                    , 
         signal              = signal_1                , 
         othersignals        = [ signal_2 , signal_3 ] ,
-        background          = Models.Bkg_pdf ('P2' , xvar = mass , power = 0 , tau = 0 ) ,
+        background          = Models.Bkg_pdf ('P3' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds    = [ wide_1 , wide_2 ] ,
         others              = [ narrow_1 , narrow_2 ] , 
-        extended            = False  ## ATTENTION! 
+        extended            = False , ## ATTENTION! 
+        suffix              = '_c'
         )
 
     model.F[0].setVal ( 0.20 )
@@ -191,7 +194,7 @@ def test_nonextended1 () :
     model.F[5].setVal ( 0.25 )
     model.F[6].setVal ( 0.50 )
     
-    r, f = model.fitTo ( dataset , draw = False , silent = True )
+    r, f = model.fitTo ( dataset , draw = True , silent = True )
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
 # ==============================================================================
@@ -204,13 +207,14 @@ def test_nonextended2 () :
         name                = 'N2'                    , 
         signal              = signal_1                , 
         othersignals        = [ signal_2 , signal_3 ] ,
-        background          = Models.Bkg_pdf ('P3' , xvar = mass , power = 0 , tau = 0 ) ,
+        background          = Models.Bkg_pdf ('P4' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds    = [ wide_1 , wide_2 ] ,
         others              = [ narrow_1 , narrow_2   ] , 
         combine_signals     =  True  , ## ATTENTION!
         combine_others      =  True  , ## ATTENTION! 
         combine_backgrounds =  True  , ## ATTENTION!   
         extended            = False  , ## ATTENTION!
+        suffix              = '_d'
         )
                   ## fB_1    3.3333e-01    9.4219e-01 +/-  7.64e-02  <none>
                   ## fB_2    3.3333e-01    4.6419e-04 +/-  6.25e-01  <none>
@@ -238,7 +242,7 @@ def test_nonextended2 () :
         model.fS[0].release() 
         model.fS[1].release()
         
-        r, f = model.fitTo ( dataset , draw = False , silent = True )        
+        r, f = model.fitTo ( dataset , draw = True , silent = True )        
         
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
@@ -252,11 +256,12 @@ def test_nonextended3 () :
         name                = 'N3'                    , 
         signal              = signal_1                , 
         othersignals        = [ signal_2 , signal_3 ] ,
-        background          = Models.Bkg_pdf ('P2' , xvar = mass , power = 0 , tau = 0 ) ,
+        background          = Models.Bkg_pdf ('P5' , xvar = mass , power = 0 , tau = 0 ) ,
         otherbackgrounds    = [ wide_1 , wide_2 ] ,
         others              = [ narrow_1 , narrow_2  ] , 
         extended            = False , ## ATTENTION!
-        recursive           = False   ## ATTENTION! 
+        recursive           = False ,  ## ATTENTION!
+        suffix              = "_e"
         )
     
 
@@ -278,20 +283,21 @@ def test_nonextended3 () :
         model.F[2].release()
         model.F[3].release()  
         
-        r, f = model.fitTo ( dataset , draw = False , silent = True )
+        r, f = model.fitTo ( dataset , draw = True , silent = True )
         
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    pass 
-    ## test_extended1    () 
-    ## test_extended2    () 
-    ## test_nonextended1 () 
-    ## test_nonextended2 () 
-    ## test_nonextended3 () 
+    pass
+
+    test_extended1    () 
+    test_extended2    () 
+    test_nonextended1 () 
+    test_nonextended2 () 
+    test_nonextended3 () 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

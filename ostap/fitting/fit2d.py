@@ -26,7 +26,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random 
-from   ostap.core.core      import dsID , VE , Ostap, hID , iszero
+from   ostap.core.core      import dsID , VE , Ostap, hID , iszero, valid_pointer
 from   ostap.core.ostap_types     import integer_types 
 from   ostap.fitting.roofit import SETVAR
 from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
@@ -309,7 +309,7 @@ class PDF2 (PDF) :
         if in_range and isinstance ( in_range , list_types ) and 2 == len ( in_range ) :
             low  = in_range [ 0 ]
             high = in_range [ 1 ]
-            if isinstance ( low , num_types ) and isinstancee ( high , num_types ) and low < high :
+            if isinstance ( low , num_types ) and isinstance ( high , num_types ) and low < high :
                 range_name = 'aux2_range_%s' % self.name 
                 with rooSilent ( 3 ) : drawvar.setRange ( range_name , low , high )
                 in_range = range_name

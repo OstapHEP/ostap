@@ -33,7 +33,8 @@ __all__     = (
     'suppress_topics'   , ## suppress topics from RooMsgService 
     #
     'Phases'            , ##  helper class for Ostap polynomial/PDFs
-    'RooPolyBase'       , ##  helper class for RooFit polynomials
+    'ParamsPoly'        , ##  helper class for RooFit polynomials
+    'ShiftScalePoly'    , ##  helper class for RooFit polynomials
     #
     "NameDuplicates"    , ## allow/disallow name duplicates 
     )
@@ -42,7 +43,9 @@ import ROOT, math, string
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   ostap.core.core        import Ostap, rootID, VE, items_loop
-from   ostap.core.ostap_types import num_types, list_types, integer_types, string_types 
+from   ostap.core.ostap_types import ( num_types     , list_types   ,
+                                       integer_types , string_types ,
+                                       is_good_number               )
 from   ostap.logger.utils     import roo_silent
 from   sys                    import version_info as python_version 
 from   ostap.math.random_ext  import ve_gauss, poisson  
@@ -478,7 +481,7 @@ class MakeVar ( object ) :
                     self.warning ('parse_args: SumW2-flag is False for     weighted dataset')                    
 
                 _args.append (  ROOT.RooFit.SumW2Error( a ) )
-                    
+                                    
             elif kup in ( 'ASYMPTOTIC'       ,
                           'ASYMPTOTICERR'    ,
                           'ASYMPTOTICERROR'  ,
@@ -493,7 +496,9 @@ class MakeVar ( object ) :
 
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
-
+            elif kup in ( 'BATCH'            ,
+                          'BATCHMODE'        ) and isinstance ( a , bool ) and 62000 <= ROOT.gROOT.GetVersionInt() :
+                _args.append (  ROOT.RooFit.BatchMode ( a ) )                                
             elif kup in ( 'EXTENDED' ,       ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.Extended ( a ) )                
             elif kup in ( 'CPU'              ,
@@ -603,7 +608,21 @@ class MakeVar ( object ) :
         if kset : self.debug ( 'parse_args: Parsed arguments %s' % keys )
         ## if kset : self.info  ( 'parse_args: Parsed arguments %s' % keys )
         else    : self.debug ( 'parse_args: Parsed arguments %s' % keys )
+        
+        def chunks(lst, n):
+            """Yield successive n-sized chunks from lst."""
+            for i in range(0, len(lst), n):
+                yield lst[i:i + n]
 
+        ## _args.append ( ROOT.RooFit.BatchMode ( True ) )
+        
+        nn = 4 
+        while nn < len ( _args ) :
+            _a = [] 
+            for c in chunks ( _args , nn ) :
+                _a.append ( ROOT.RooFit.MultiArg ( *c ) )
+            _args = _a 
+                                    
         return tuple ( _args )
     
     # =========================================================================
@@ -1357,6 +1376,9 @@ class MakeVar ( object ) :
         return 
     
 # =============================================================================
+
+
+# =============================================================================
 ## simple convertor of 1D-histo to data set
 #  @code
 #  h   = ...
@@ -1574,6 +1596,7 @@ class H3D_dset(MakeVar) :
         """Hash value for the histogram"""
         return self.__histo_hash
     
+
 # =============================================================================
 ## @class Phases
 #  helper class to build/keep the list of ``phi''-arguments
@@ -1618,7 +1641,7 @@ class Phases(MakeVar) :
             phi_i = self.make_var ( None ,
                                     'phi%d_%s'      % ( i , self.name )  ,
                                     '#phi_{%d}(%s)' % ( i , self.name )  ,
-                                    None , 0 ,  -0.85 * pi  , 1.55 * pi  )
+                                    None , 0 ,  -1.55 * pi  , 3.55 * pi  )
             self.__phis    .append ( phi_i ) 
             self.__phi_list.add    ( phi_i )
         
@@ -1668,6 +1691,11 @@ class Phases(MakeVar) :
         """The list/ROOT.RooArgList of ``phases'', used to parameterize polynomial-like shapes
         """
         return self.__phi_list
+    @property
+    def phis_lst ( self ) :
+        """The list/ROOT.RooArgList of ``phases'', used to parameterize polynomial-like shapes
+        """
+        return self.__phi_list
 
     ## ## number of parameters 
     ## def __len__     ( self ) :
@@ -1702,57 +1730,58 @@ class Phases(MakeVar) :
     ##         for p , v in zip (  my_phis , values ) : p.setVal ( float ( v ) )
         
 
-# =============================================================================        
-## @class RooPolyBase
-#  Helper base class to make Ostap wrapper for the native RooFit polynomials 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2019-04-27
-class RooPolyBase(MakeVar) :
-    """Helper base class to make Ostap wrapper for the native RooFit polynomials 
+# =============================================================================
+## @class ParamsPoly
+#  Helper base class to implement polynomials 
+class ParamsPoly(MakeVar) :
+    """Helper base class to implement polynomials 
     """
-    ## constructor
-    def __init__ ( self                ,
-                   name                , ## the name 
-                   xvar                , ## the variable
-                   power        = 0    , ## degree of polynomial
-                   coefficients = [] ) : ## the list of coefficients 
-
-        assert isinstance ( power , integer_types ) and  0<= power ,\
-               "Invalid type of ``power''"
+    def __init__ ( self , power = 1 , pars = None ) :
         
-        clist = [] 
-        for c in coefficients  :
-            cvar = self.make_var ( c ,
-                                   'c%s_%d' % ( self.name , i ) ,
-                                   'coefficient for x^%d' % i   , 
-                                   c , 0 ,  -1.e+3 , 1e+3   ) 
-            clist.append ( cvar )
+        ## initialize the base class 
+        MakeVar.__init__ ( self )
+        
+        assert pars or ( isinstance ( power , integer_types ) and 0 <= power ) ,\
+               'Inconsistent power/npars setting'
+
+        self.__pars     = [] 
+        self.__pars_lst = ROOT.RooArgList()
+        
+        params = []
+        if pars :
+            for i , p in enumerate ( pars ) :                
+                pp = self.make_var ( p ,
+                                     'par%d_%s'            % ( i , self.name ) ,
+                                     'parameter %d for %s' % ( i , self.name ) , None , p )
+                if not isinstance ( p , ROOT.RooAbsReal ) : pp.setConstant ( False ) 
+                params.append ( pp )
+        else :
+            for i in range ( power + 1 ) :                
+                pp = self.make_var ( 0.0 ,
+                                     'par%d_%s'            % ( i , self.name ) ,
+                                     'parameter %d for %s' % ( i , self.name ) , None , 0.0 )
+                pp.setConstant ( False ) 
+                params.append ( pp )
+
+        for p  in params :
+            self.__pars.append  ( p )
+            self.__pars_lst.add ( p )
             
-        if not self.__coefficients : 
-            for i in range ( 1 , power + 1 ) : 
-                cvar = self.make_var ( None ,
-                                       'c%s_%d' % ( self.name , i ) ,
-                                       'coefficient for x^%d' % i   , 
-                                       None , 0  ,  -1.e+3 , 1e+3   ) 
-                clist.append ( cvar )
+        self.__pars = tuple ( self.__pars ) 
 
-        self.__power        = len   ( clist )
-        self.__coefficients = tuple ( clist ) 
-        self.__clist        = ROOT.RooArgList()
-        for c in clist : self.__clist.Add ( c )
-        del clist
-        
+        assert self.pars , 'Invalid number of parameters!'
+
+        self.config = {
+            'name' : self.name ,
+            'xvar' : self.xvar ,
+            'pars' : self.pars }
+
     @property
-    def power ( self ) :
-        """``power''-polynomial degree/order"""
-        return self.__power
-    @property 
-    def coefficients ( self ) :
-        """``coefficients'' : list of polynomial coefficients"""
-        return tuple( self.__coefficients )
-    @coefficients.setter
-    def coefficients ( self , values ) : 
-
+    def pars  ( self ) :
+        """``pars'' : the polynomial coefficients/parameters"""
+        return self.__pars    
+    @pars.setter
+    def pars ( self , values ) :    
         from ostap.core.ostap_types import num_types , list_types
         ##
         if   isinstance ( values , num_types          ) : values = [ values           ]
@@ -1763,11 +1792,116 @@ class RooPolyBase(MakeVar) :
         else :
             raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
 
-        for s , v in  zip ( self.__coefficients , values ) :
+        for s , v in  zip ( self.__pars , values ) :
             vv = float ( v  )
-            if s.minmax() and not vv in s :
+            if s.minmax () and not vv in s :
                 self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )
             s.setVal   ( vv )
+            
+    def reset_pars ( self , value = 0 ) :
+        """Set all pars to be value 
+        >>> pdf = ...
+        >>> pdf.reset_pars() 
+        """
+        for f in self.__pars : f.setVal( value )
+
+    @property
+    def pars_lst ( self ) :
+        """``pars_lst'' : the polynomial coefficients/parameters as RooArgList"""
+        return self.__pars_lst
+    
+    @property
+    def power ( self ) :
+        """``power''  : polynomial degree """
+        return len  ( self.pars ) - 1
+
+# =============================================================================
+## @class ShiftScalePoly
+#  Helper base class to implement polynomials
+#  \f$ f(x) = a + b P(x) \f$,
+#  where \f$P(x)\f$ some special polynomial 
+class ShiftScalePoly ( Phases ) :
+    """Helper fbase class to implemnet polynomials 
+    """
+    def __init__ ( self         ,
+                   a     = 0.0  , ## shift/bias
+                   b     = 1.0  , ## scale 
+                   power = 1    ,
+                   pars  = None ) :
+        
+        ## initialize the base class 
+        Phases.__init__ ( self , power , pars ) 
+                          
+        ## parameter a 
+        self.__a  = self.make_var ( a ,
+                                    'a_%s'              % self.name ,
+                                    'bias/shift for %s' % self.name , a )
+        ## parameter a 
+        self.__b  = self.make_var ( b ,
+                                    'b_%s'              % self.name ,
+                                    'scale for %s'      % self.name , b )
+        
+        self.config = {
+            'name' : self.name ,
+            'xvar' : self.xvar ,
+            'pars' : self.pars ,
+            'a'    : self.a    ,
+            'b'    : self.b    }
+
+    @property
+    def a ( self ) :
+        """``a'' : bias parameter for polynomial:  f(x) = a + b*M(x)"""
+        return self.__a
+    @a.setter
+    def a ( self , value ) :
+        vv = float ( value )
+        if self.__a.minmax () and not vv in self.__a  :
+            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__a.minmax() ) )
+        self.__a.setVal ( vv )
+
+    @property
+    def b ( self ) :
+        """``scale'' : bias parameter for polynomial:  f(x) = a + b*M(x)"""
+        return self.__b
+    @b.setter
+    def b ( self , value ) :
+        vv = float ( value )
+        if self.__b.minmax () and not vv in self.__b  :
+            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__b.minmax() ) )
+        self.__b.setVal ( vv )
+    
+    @property
+    def shift  ( self ) :
+        """``shift'' : bias/shift parameter  (same as ``a'')"""
+        return self.__a
+    @shift.setter
+    def shift  ( self , value ) : self.a = value 
+    @property
+    def bias  ( self ) :
+        """``bias'' : bias/shift parameter  (same as ``a'')"""
+        return self.__a
+    @bias.setter
+    def bias   ( self , value ) : self.a = value
+    
+    @property
+    def scale ( self ) :
+        """``scale'' : bias/shift parameter  (same as ``b'')"""
+        return self.__b
+    @scale.setter
+    def scale ( self , value ) : self.b = value
+
+    @property
+    def pars  ( self ) :
+        """``pars'' :  polynomial parameters (same as ``phis'')"""
+        return self.phis
+    @pars.setter 
+    def pars  ( self , values ) :
+        self.phis = values 
+    @property
+    def pars_lst ( self ) :
+        """``pars_lst'' :  polynomial parameters as RooArgList"""
+        return self.phis_lst
+    
 
 # ==============================================================================
 ## Should one use ``similar'' component?

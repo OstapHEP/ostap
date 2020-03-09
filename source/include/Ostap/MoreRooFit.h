@@ -255,6 +255,51 @@ namespace Ostap
       // ======================================================================
     }; //
     // ========================================================================
+    /** @class ScaleAndShift 
+     *  \f[ f = a +  b c \f]
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class ScaleAndShift : public RooAbsReal 
+    {
+      // ======================================================================
+      ClassDef(Ostap::MoreRooFit::ScaleAndShift, 1 ) ;  // Fraction 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with three variables 
+      ScaleAndShift  ( const char*    name  , 
+                       const char*    title , 
+                       RooAbsReal&    a     , 
+                       RooAbsReal&    b     , 
+                       RooAbsReal&    c     ) ;
+      // ======================================================================
+      /// default constructor 
+      ScaleAndShift   () =  default ;
+      // ======================================================================
+      // copy 
+      ScaleAndShift  ( const ScaleAndShift& right       , 
+                       const char*          newname = 0 ) ;
+      // ======================================================================
+      // destructor 
+      virtual ~ScaleAndShift () ;
+      // ======================================================================
+      // clone method 
+      ScaleAndShift * clone ( const char* newname ) const override ;
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    private:
+      // ======================================================================
+      RooRealProxy m_a ; // a 
+      RooRealProxy m_b ; // b 
+      RooRealProxy m_c ; // c 
+      // ======================================================================
+    };
+    // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================
 } //                                                 The end of namespace Ostap

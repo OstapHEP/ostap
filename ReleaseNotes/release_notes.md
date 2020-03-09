@@ -7,14 +7,17 @@
      - `Ostap::MoreRooFit::Monotonic` 
      - `Ostap::MoreRooFit::Convex` 
      - `Ostap::MoreRooFit::ConvexOnly` 
-
-  1. make a first try to use `evalauteBatch`
-
+  1. More generic `Ostap::MoreRooFit::ShiftAndScale`
+  1. make a first try to add `evaluateBatch` for existing PDFs: no large gain is observed :-(
+  1. add `roofunc.py` & `funbasic.py`
+  1. add `FUNC`, `FUNC2` and `FUNC3` classes. Move some functionality from `PDF`
+  1. add `Fun1D`, `Fun2D`  and `Fun3D` wrappers 
+  1. update `efficiency.py`
+  1. reshuffle a bit the existins strustures
 
 ## Backward incompatible changes
 
 ## Bug fixes:  
-
 
 # v1.4.8.0
 

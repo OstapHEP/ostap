@@ -123,6 +123,7 @@ __all__     = (
     'crossterm2_options'           , ## draw options for "crossterm2"   component(s)    
     'component_options'            , ## draw options for "other"        component(s)
     'total_fit_options'            , ## draw options for the total fit curve
+    'curve_options'                , ## draw options for the curve 
     ##
     'signal_style'                 , ## style for "signal"        component(s)
     'background_style'             , ## style for "background"    component(s)
@@ -147,6 +148,7 @@ __all__     = (
     'default_crossterm2_options'   , ## draw options for "crossterm2" component(s)
     'default_component_options'    , ## draw options for "other"      component(s)
     'default_total_fit_options'    , ## draw options for the total fit curve    
+    'default_curve_options'        , ## draw options for the curve    
     ##
     'default_signal_style'         , ## style for "signal"        component(s)
     'default_background_style'     , ## style for "background"    component(s)
@@ -200,6 +202,9 @@ keys = (
     ##
     'draw_axis_title'             , ## draw the titles for the axes ?
     'draw_options'                , ## generic ROOT draw options, e.g. 'same'
+    ##
+    'total_fit_options'           ,
+    'curve_options'               ,
     ##
     'combined_background_options' ,
     'combined_background_style'   ,
@@ -616,6 +621,9 @@ default_total_fit_options       = ( lineWidth ( 3 )                     ,
                                     lineColor ( ROOT.kOrange + 1 )      ,
                                     ROOT.RooFit.Precision ( precision ) )
 
+## default curve : thick red orange line 
+default_curve_options           = default_total_fit_options 
+
 ## default optios for cross-terms 
 default_crossterm1_options      = ROOT.RooFit.Precision ( precision  ) ,   
 
@@ -679,6 +687,8 @@ crossterm2_options = get_options (
     CONFIG.fit_draw , 'crossterm2_options'          , default_crossterm2_options   )
 total_fit_options  = get_options (
     CONFIG.fit_draw , 'total_fit_options'           , default_total_fit_options    )
+curve_options      = get_options (
+    CONFIG.fit_draw , 'curve_options'               , default_curve_options        )
 background2D_options = get_options (
     CONFIG.fit_draw , 'background2D_options'        , default_background2D_options )
 ## combined stuff 

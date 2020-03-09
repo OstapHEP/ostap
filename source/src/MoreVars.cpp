@@ -14,6 +14,7 @@
 // local
 // ============================================================================
 #include "Exception.h"
+#include "local_roofit.h"
 // ============================================================================
 /** @file
  *  Implementation file for objects from the file Ostap/MoreVars.h
@@ -56,25 +57,7 @@ Ostap::MoreRooFit::Bernstein::Bernstein
   //
   Ostap::Assert ( 1 <= pars.size () , s_EMPTYPARS  , s_v1 , 510 ) ;
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) 
-  //
-  Ostap::Utils::Iterator tmp ( pars ) ;
-  RooAbsArg* c = 0 ;
-  while ( c = (RooAbsArg*) tmp.next() )
-  {
-    Ostap::Assert( dynamic_cast<RooAbsReal*> ( c ) != nullptr , s_INVALIDPAR , s_v1 , 511 ) ;
-    m_pars.add ( *c ) ;
-  }
-  //
-#else 
-  //
-  for ( auto* c : pars ) 
-  {
-    Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , s_INVALIDPAR , s_v1 , 511 ) ;
-    m_pars.add ( *c ) ;
-  }
-  //
-#endif 
+  ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v1 ) ;
   //
   Ostap::Assert ( m_bernstein.npars() == m_pars.size() , s_INVALIDPARS , s_v1 , 512 ) ;
   //
@@ -105,18 +88,8 @@ Ostap::MoreRooFit::Bernstein*
 Ostap::MoreRooFit::Bernstein::clone ( const char* newname ) const
 { return new Bernstein( *this , newname ) ; }
 // ============================================================================
-bool Ostap::MoreRooFit::Bernstein::setPars() const 
-{
-  //
-  bool changed = false ;
-  for ( unsigned short i = 0 ; i < m_bernstein.npars () ; ++i ) 
-  {
-    const RooAbsReal& r = static_cast<const RooAbsReal&>( m_pars[i] ) ;
-    if ( m_bernstein.setPar ( i , r.getVal() ) ) { changed = true ; }
-  }
-  //
-  return changed ;
-}
+void Ostap::MoreRooFit::Bernstein::setPars() const 
+{ ::set_pars ( m_pars , m_bernstein ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::Bernstein::evaluate  () const 
 {
@@ -161,33 +134,15 @@ Ostap::MoreRooFit::Monotonic::Monotonic
   const RooArgList&  pars       ) 
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "x"    , "Dependent"  , this , xvar ) 
-  , m_a         ( "a"    , "bias"       , this , a    ) 
+  , m_a         ( "a"    , "shift/bias" , this , a    ) 
   , m_b         ( "b"    , "scale"      , this , b    ) 
   , m_pars      ( "pars" , "Parameters" , this ) 
-  , m_monotonic ( pars.size() - 1 , xmin , xmax , increasing ) 
+  , m_monotonic ( pars.size () , xmin , xmax , increasing ) 
 {
   //
-  Ostap::Assert ( 1 <= pars.size () , s_EMPTYPARS  , s_v1 , 510 ) ;
+  Ostap::Assert ( 0 <= pars.size () , s_EMPTYPARS  , s_v2 , 510 ) ;
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) 
-  //
-  Ostap::Utils::Iterator tmp ( pars ) ;
-  RooAbsArg* c = 0 ;
-  while ( c = (RooAbsArg*) tmp.next() )
-  {
-    Ostap::Assert( dynamic_cast<RooAbsReal*> ( c ) != nullptr , s_INVALIDPAR , s_v2 , 511 ) ;
-    m_pars.add ( *c ) ;
-  }
-  //
-#else 
-  //
-  for ( auto* c : pars ) 
-  {
-    Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , s_INVALIDPAR , s_v2 , 511 ) ;
-    m_pars.add ( *c ) ;
-  }
-  //
-#endif 
+  ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v2 ) ;
   //
   Ostap::Assert ( m_monotonic.npars() == m_pars.size() , s_INVALIDPARS , s_v2 , 512 ) ;
   //
@@ -220,18 +175,8 @@ Ostap::MoreRooFit::Monotonic*
 Ostap::MoreRooFit::Monotonic::clone ( const char* newname ) const
 { return new Monotonic ( *this , newname ) ; }
 // ============================================================================
-bool Ostap::MoreRooFit::Monotonic::setPars() const 
-{
-  //
-  bool changed = false ;
-  for ( unsigned short i = 0 ; i < m_monotonic.npars () ; ++i ) 
-  {
-    const RooAbsReal& r = static_cast<const RooAbsReal&>( m_pars[i] ) ;
-    if ( m_monotonic.setPar ( i , r.getVal() ) ) { changed = true ; }
-  }
-  //
-  return changed ;
-}
+void Ostap::MoreRooFit::Monotonic::setPars() const 
+{ ::set_pars (  m_pars , m_monotonic ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::Monotonic::evaluate  () const 
 {
@@ -287,33 +232,15 @@ Ostap::MoreRooFit::Convex::Convex
   const RooArgList&  pars       ) 
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "x"    , "Dependent"  , this , xvar ) 
-  , m_a         ( "a"    , "bias"       , this , a    ) 
+  , m_a         ( "a"    , "shift/bias" , this , a    ) 
   , m_b         ( "b"    , "scale"      , this , b    ) 
   , m_pars      ( "pars" , "Parameters" , this ) 
-  , m_convex    ( pars.size() - 1 , xmin , xmax , increasing , convex ) 
+  , m_convex    ( pars.size() , xmin , xmax , increasing , convex ) 
 {
   //
-  Ostap::Assert ( 1 <= pars.size () , s_EMPTYPARS  , s_v3 , 510 ) ;
+  Ostap::Assert ( 0 <= pars.size () , s_EMPTYPARS  , s_v3 , 510 ) ;
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) 
-  //
-  Ostap::Utils::Iterator tmp ( pars ) ;
-  RooAbsArg* c = 0 ;
-  while ( c = (RooAbsArg*) tmp.next() )
-  {
-    Ostap::Assert( dynamic_cast<RooAbsReal*> ( c ) != nullptr , s_INVALIDPAR , s_v3 , 511 ) ;
-    m_pars.add ( *c ) ;
-  }
-  //
-#else 
-  //
-  for ( auto* c : pars ) 
-  {
-    Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , s_INVALIDPAR , s_v3 , 511 ) ;
-    m_pars.add ( *c ) ;
-  }
-  //
-#endif 
+  ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v3 ) ;
   //
   Ostap::Assert ( m_convex.npars() == m_pars.size() , s_INVALIDPARS , s_v3 , 512 ) ;
   //
@@ -346,18 +273,8 @@ Ostap::MoreRooFit::Convex*
 Ostap::MoreRooFit::Convex::clone ( const char* newname ) const
 { return new Convex ( *this , newname ) ; }
 // ============================================================================
-bool Ostap::MoreRooFit::Convex::setPars() const 
-{
-  //
-  bool changed = false ;
-  for ( unsigned short i = 0 ; i < m_convex.npars () ; ++i ) 
-  {
-    const RooAbsReal& r = static_cast<const RooAbsReal&>( m_pars[i] ) ;
-    if ( m_convex.setPar ( i , r.getVal() ) ) { changed = true ; }
-  }
-  //
-  return changed ;
-}
+void Ostap::MoreRooFit::Convex::setPars() const 
+{ ::set_pars (  m_pars , m_convex ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::Convex::evaluate  () const 
 {
@@ -412,33 +329,15 @@ Ostap::MoreRooFit::ConvexOnly::ConvexOnly
   const RooArgList&  pars       ) 
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "x"    , "Dependent"  , this , xvar ) 
-  , m_a         ( "a"    , "bias"       , this , a    ) 
+  , m_a         ( "a"    , "shift/bias" , this , a    ) 
   , m_b         ( "b"    , "scale"      , this , b    ) 
   , m_pars      ( "pars" , "Parameters" , this ) 
-  , m_convex    ( pars.size() - 1 , xmin , xmax , convex ) 
+  , m_convex    ( pars.size() , xmin , xmax , convex ) 
 {
   //
-  Ostap::Assert ( 1 <= pars.size () , s_EMPTYPARS  , s_v4 , 510 ) ;
+  Ostap::Assert ( 0 <= pars.size () , s_EMPTYPARS  , s_v4 , 510 ) ;
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) 
-  //
-  Ostap::Utils::Iterator tmp ( pars ) ;
-  RooAbsArg* c = 0 ;
-  while ( c = (RooAbsArg*) tmp.next() )
-  {
-    Ostap::Assert( dynamic_cast<RooAbsReal*> ( c ) != nullptr , s_INVALIDPAR , s_v4 , 511 ) ;
-    m_pars.add ( *c ) ;
-  }
-  //
-#else 
-  //
-  for ( auto* c : pars ) 
-  {
-    Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , s_INVALIDPAR , s_v4 , 511 ) ;
-    m_pars.add ( *c ) ;
-  }
-  //
-#endif 
+  ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v4 ) ;
   //
   Ostap::Assert ( m_convex.npars() == m_pars.size() , s_INVALIDPARS , s_v4 , 512 ) ;
   //
@@ -471,18 +370,8 @@ Ostap::MoreRooFit::ConvexOnly*
 Ostap::MoreRooFit::ConvexOnly::clone ( const char* newname ) const
 { return new ConvexOnly ( *this , newname ) ; }
 // ============================================================================
-bool Ostap::MoreRooFit::ConvexOnly::setPars() const 
-{
-  //
-  bool changed = false ;
-  for ( unsigned short i = 0 ; i < m_convex.npars () ; ++i ) 
-  {
-    const RooAbsReal& r = static_cast<const RooAbsReal&>( m_pars[i] ) ;
-    if ( m_convex.setPar ( i , r.getVal() ) ) { changed = true ; }
-  }
-  //
-  return changed ;
-}
+void Ostap::MoreRooFit::ConvexOnly::setPars() const 
+{ ::set_pars (  m_pars , m_convex ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::ConvexOnly::evaluate  () const 
 {
@@ -518,25 +407,6 @@ Double_t Ostap::MoreRooFit::ConvexOnly::analyticalIntegral
   //
   return a * ( xmax - xmin ) + b * m_convex.integral ( xmin , xmax ) ;
 }
-
-
-// ===========================================================================
-//                                                                     The END 
-// ===========================================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

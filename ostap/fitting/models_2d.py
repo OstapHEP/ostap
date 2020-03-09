@@ -174,7 +174,7 @@ class PolyPos2Dsym_pdf(PolyBase2) :
         assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
         ## 
         self.__n = n 
-        PolyBase2.__init__ ( self , name , xvar , yvar , ( n + 1 ) * ( n + 2 ) / 2 , the_phis )
+        PolyBase2.__init__ ( self , name , xvar , yvar , ( n + 1 ) * ( n + 2 ) / 2 - 1 , the_phis )
 
         if self.xminmax() != self.yminmax() :
             logger.warning( 'PolyPos2Dsym: x&y have different edges %s vs %s' % ( self.xminmax() , self.yminmax() ) )

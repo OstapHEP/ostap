@@ -215,7 +215,11 @@ def test_comp_3dSymfit () :
         model.C[3].release (  )
         
         r = model.fitTo ( dataset , ncpu=8 )
-
+        
+        model.draw1 ( dataset )
+        model.draw2 ( dataset )
+        model.draw3 ( dataset )
+        
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
     
@@ -223,6 +227,7 @@ def test_comp_3dSymfit () :
 if '__main__' == __name__ :
 
     test_comp_3dSymfit ()
+    
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -64,7 +64,10 @@ def test_polypos2D() :
                                    ny = 2 )
     
     with rooSilent() : 
-        result, f = model.fitTo ( dataset ) 
+        result, f = model.fitTo ( dataset )
+        
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
 
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -90,6 +93,8 @@ def test_polypossym2D() :
 
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
 
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -119,6 +124,8 @@ def test_pspol2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -145,6 +152,8 @@ def test_pspolsym2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -173,6 +182,8 @@ def test_expopspol2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -199,6 +210,8 @@ def test_expopol2D() :
 
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -224,6 +237,8 @@ def test_expopolsym2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -256,6 +271,8 @@ def test_spline2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -279,6 +296,8 @@ def test_splinesym2D() :
 
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
+        model.draw1 ( dataset )        
+        model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -321,5 +340,5 @@ if '__main__' == __name__ :
     test_db           ()          
     
 # =============================================================================
-# The END 
+##                                                                     The END 
 # ============================================================================= 

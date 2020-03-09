@@ -109,6 +109,8 @@ def test_const () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -146,6 +148,8 @@ def test_p2xp2 () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -183,6 +187,8 @@ def test_p1xp1_BB () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -221,6 +227,8 @@ def test_p1xp1_BBs () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -264,6 +272,8 @@ def test_p1xp1_BBss () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -300,6 +310,8 @@ def test_p1xp1_BBsym () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -339,6 +351,8 @@ def test_pbxpb_BB  () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -378,6 +392,8 @@ def test_pbxpb_BBs () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -414,6 +430,8 @@ def test_pbxpb_BBsym () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -452,6 +470,8 @@ def test_psxps_BBs () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -489,6 +509,8 @@ def test_psxps_BBsym () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '

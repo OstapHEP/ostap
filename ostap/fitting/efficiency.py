@@ -19,9 +19,10 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
-from   ostap.fitting.basic import PDF , Generic1D_pdf
-from   ostap.fitting.fit2d import PDF2, Generic2D_pdf
-from   ostap.fitting.fit3d import PDF3, Generic3D_pdf
+from   ostap.fitting.funbasic import FUNC 
+from   ostap.fitting.basic    import PDF , Generic1D_pdf
+from   ostap.fitting.fit2d    import PDF2, Generic2D_pdf
+from   ostap.fitting.fit3d    import PDF3, Generic3D_pdf
 # =============================================================================
 # logging 
 # =============================================================================
@@ -51,6 +52,8 @@ class Efficiency ( object ) :
         self.__cut    = cut
         self.__accept = str(accept) 
 
+        assert eff_pdf or eff_fun ,'Function or PDF must be specified!'
+        
         assert isinstance ( cut , ROOT.RooCategory ) , "``Cut'' is not RooCategory!"
 
         self.__eff_pdf = eff_pdf
@@ -72,7 +75,7 @@ class Efficiency ( object ) :
                 self.__scale = scale
             else : 
                 self.__scale = ROOT.RooRealVar ( 'effscale_%s' % self.name , 'scale factor for efficiency (%s)' % self.name , *scale )
-                
+
             self.__lst     = ROOT.RooArgList ( self.__scale , self.__eff_pdf.pdf )
             _s = self.scale.GetName()
             _p = self.eff_pdf.pdf.GetName() 
@@ -299,20 +302,30 @@ class Efficiency1D (Efficiency) :
     
     def __init__  ( self              ,
                     name              ,
-                    efficiency        , ## the function or PDF 
+                    efficiency        , ## the function, FUNC or PDF 
                     cut               ,
                     xvar   = None     ,
                     accept = 'accept' ,
                     scale  = None     ) :
+
+        self.__eff = efficiency
         
-        if isinstance   ( efficiency , PDF  ) :
+        if   isinstance   ( efficiency , PDF  ) :
             eff_pdf = efficiency
             xvar    = efficiency.xvar
             eff_fun = None
+        elif isinstance   ( efficiency , FUNC ) :
+            eff_fun = efficiency.fun 
+            xvar    = efficiency.xvar
+            eff_pdf = None  
+        elif isinstance ( efficiency , ROOT.RooAbsPdf   ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
+            eff_pdf = Generic1D_pdf ( efficiency , xvar )                
+            xvar    = xvar            
+            eff_fun = None 
         elif isinstance ( efficiency , ROOT.RooAbsReal  ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :            
             eff_pdf = Generic1D_pdf ( efficiency , xvar , special = True )                
             xvar    = xvar            
-            eff_fun = None  if isinstance ( efficiency , ROOT.RooAbsPdf ) else efficiency            
+            eff_fun = None if isinstance ( efficiency , ROOT.RooAbsPdf ) else efficiency            
         else :
             raise AttributeError('Invalid efficiency/xvar combination  %s/%s;%s/%s'  %
                                  ( efficiency ,  type(efficiency) , xvar , type(xvar) ) )

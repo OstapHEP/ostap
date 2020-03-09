@@ -30,6 +30,7 @@ ClassImp(Ostap::MoreRooFit::Fraction      )
 ClassImp(Ostap::MoreRooFit::RelDifference )
 ClassImp(Ostap::MoreRooFit::Power         )
 ClassImp(Ostap::MoreRooFit::Exp           )
+ClassImp(Ostap::MoreRooFit::ScaleAndShift )
 // ============================================================================
 namespace 
 {
@@ -345,6 +346,54 @@ Double_t Ostap::MoreRooFit::Exp::evaluate () const
   const long double b = m_B ;
   //
   return s_zero ( a ) || s_zero ( b ) ? 0 : std::exp ( a * b ) ;
+}
+// ============================================================================
+
+// ============================================================================
+// constructor with three variables 
+// ============================================================================
+Ostap::MoreRooFit::ScaleAndShift::ScaleAndShift 
+( const char* name  , 
+  const char* title , 
+  RooAbsReal& a     , 
+  RooAbsReal& b     ,
+  RooAbsReal& c     ) 
+  : RooAbsReal ( name , title )
+  , m_a ( "!a" , "shift/bias"   , this , a ) 
+  , m_b ( "!b" , "scale"        , this , b ) 
+  , m_c ( "!c" , "function"     , this , c ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::ScaleAndShift::ScaleAndShift 
+( const Ostap::MoreRooFit::ScaleAndShift& right , 
+  const char*               name  ) 
+  : RooAbsReal ( right , name ) 
+  , m_a ( "!a" , "shift/bias" , this , right.m_a ) 
+  , m_b ( "!b" , "scale"      , this , right.m_b ) 
+  , m_c ( "!c" , "function"   , this , right.m_c ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::ScaleAndShift::~ScaleAndShift(){}
+// ============================================================================
+// cloning
+// ============================================================================
+Ostap::MoreRooFit::ScaleAndShift*
+Ostap::MoreRooFit::ScaleAndShift::clone ( const char* newname ) const 
+{ return new ScaleAndShift ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::ScaleAndShift::evaluate () const 
+{
+  const double a = m_a ;
+  const double b = m_b ;
+  const double c = m_c ;  
+  //
+  return a + b * c ;
 }
 // ============================================================================
 //                                                                      The END

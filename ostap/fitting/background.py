@@ -53,7 +53,7 @@ from   ostap.core.core     import cpp, Ostap
 from   ostap.core.ostap_types    import integer_types , num_types 
 from   ostap.math.base     import iszero
 from   ostap.fitting.basic import PDF , Sum1D
-from   ostap.fitting.utils import Phases, RooPolyBase 
+from   ostap.fitting.utils import Phases, ParamsPoly 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
@@ -1965,14 +1965,14 @@ class PSSmear_pdf ( PDF ) :
 # ==============================================================================
 ##  @class RooPoly
 #   helper base class to implement various polynomial-like shapes
-class RooPoly(PDF,RooPolyBase) :
+class RooPoly(PDF,ParamsPoly) :
     """Helper base class to implement various polynomial-like shapes
     """
-    def __init__ ( self , name , power , xvar = None , coefficients  = None ) :
+    def __init__ ( self , name , power , xvar = None , pars = None ) :
         ## check  the arguments 
         xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
-        PDF        .__init__ ( self , name  , xvar         )
-        RooPolyBase.__init__ ( self , power , coefficients )
+        PDF        .__init__  ( self , name  , xvar          )
+        ParamsPoly .__init__  ( self , power , pars          )
 
 # =============================================================================        
 ## @class RooPoly_pdf

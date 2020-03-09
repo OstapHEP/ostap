@@ -81,6 +81,7 @@ vars    = ROOT.RooArgList ( x , a , b , c , x0 )
 # =============================================================================
 # use RooFormulaVar to parameterise efficiency:
 def test_formula () :
+## if 1 < 2 :
     
     effFunc = ROOT.RooFormulaVar ( "effFunc" , "a+0.5*b*(1+tanh((x-x0)*c))" , vars )
     
@@ -92,8 +93,9 @@ def test_formula () :
     for p in points :
         print(' Point/Eff %4.1f %s%% %.2f%%'   % ( p , (100*eff1 ( p , error = True )).toString ( '(%5.2f+-%4.2f)' ) , 100*eff0(p) ))
 
-
+# =============================================================================
 def test_pyvar () :
+## if 1 < 2 : 
 
     from ostap.fitting.pyvar import PyVAR
     class MyVar(PyVAR) :
@@ -123,6 +125,7 @@ def test_pyvar () :
     for p in points :
         print(' Point/Eff %4.1f %s%% %.2f%%'   % ( p , (100*eff2 ( p , error = True )).toString ( '(%5.2f+-%4.2f)' ) , 100*eff0(p) ))
 
+# =============================================================================
 def test_pyvar2 () :
 
     from ostap.fitting.pyvar import PyVAR2
@@ -142,13 +145,12 @@ def test_pyvar2 () :
     
 # =============================================================================
 if '__main__' == __name__ :
-
+    
     with timing ('RooFormulaVar : ') : test_formula ()
     with timing ('PyVAR         : ') : test_pyvar   ()
     with timing ('PyVAR2        : ') : test_pyvar   ()
 
 
-
 # =============================================================================
-# The END 
+##                                                                      The END 
 # ============================================================================= 

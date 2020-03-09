@@ -153,6 +153,9 @@ def test_comp_2dfit () :
         model.C[3].release (  )
         
         r = model.fitTo ( dataset , ncpu=8 )
+        
+        model.draw1 ( dataset , ncpu=8 )
+        model.draw2 ( dataset , ncpu=8 )
 
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 

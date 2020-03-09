@@ -114,8 +114,6 @@ bb_cmp=bkg_x*bkg_y
 
 
 
-
-
 # =============================================================================
 ## Test  multi-component  3d fit'
 def test_comp_2dSymfit () :
@@ -153,7 +151,10 @@ def test_comp_2dSymfit () :
         model.C[2].release (  )
         
         r = model.fitTo ( dataset , ncpu=8 )
-
+        
+        model.draw1 (   dataset )
+        model.draw2 (   dataset )
+        
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
     
@@ -163,5 +164,5 @@ if '__main__' == __name__ :
     test_comp_2dSymfit    () 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

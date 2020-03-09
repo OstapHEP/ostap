@@ -26,14 +26,14 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random
-from   ostap.core.core      import dsID , hID ,  VE , Ostap 
-from   ostap.core.ostap_types     import integer_types
-from   ostap.logger.utils   import roo_silent , rooSilent
-from   ostap.fitting.utils  import H3D_dset , component_similar , component_clone
-from   ostap.fitting.basic  import PDF  , Flat1D 
-from   ostap.fitting.fit2d  import PDF2 , Model2D 
-from   ostap.fitting.roofit import SETVAR
-from   builtins             import range
+from   ostap.core.core        import dsID , hID ,  VE , Ostap , valid_pointer
+from   ostap.core.ostap_types import integer_types
+from   ostap.logger.utils     import roo_silent , rooSilent
+from   ostap.fitting.utils    import H3D_dset , component_similar , component_clone
+from   ostap.fitting.basic    import PDF  , Flat1D 
+from   ostap.fitting.fit2d    import PDF2 , Model2D 
+from   ostap.fitting.roofit   import SETVAR
+from   builtins               import range
 # =============================================================================
 from   ostap.logger.logger  import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit3d' )

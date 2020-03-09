@@ -67,7 +67,7 @@ def test_gauss () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_gauss. fitTo ( dataset0 )
-        result, frame = reso_gauss. fitTo ( dataset0 )
+        result, frame = reso_gauss. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -93,7 +93,7 @@ def test_2gauss () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_2gauss. fitTo ( dataset0 )
-        result, frame = reso_2gauss. fitTo ( dataset0 )
+        result, frame = reso_2gauss. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -120,7 +120,7 @@ def test_apo2 () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_apo2. fitTo ( dataset0 )
-        result, frame = reso_apo2. fitTo ( dataset0 )
+        result, frame = reso_apo2. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -148,7 +148,7 @@ def test_cb2 () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_cb2. fitTo ( dataset0 )
-        result, frame = reso_cb2. fitTo ( dataset0 )
+        result, frame = reso_cb2. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -174,7 +174,7 @@ def test_sech () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_sech. fitTo ( dataset0 )
-        result, frame = reso_sech. fitTo ( dataset0 )
+        result, frame = reso_sech. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -200,7 +200,7 @@ def test_bukin () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_bukin. fitTo ( dataset0 )
-        result, frame = reso_bukin. fitTo ( dataset0 )
+        result, frame = reso_bukin. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )

@@ -33,13 +33,14 @@ import ostap.fitting.roocollections
 from   builtins                import range
 from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
 from   ostap.math.base         import iszero , frexp10 
-from   ostap.core.ostap_types  import ( is_good_number , is_integer , string_types , 
-                                        integer_types  , num_types  , list_types   ,
-                                        dictlike_types ) 
+from   ostap.core.ostap_types  import ( is_integer     , string_types   , 
+                                        integer_types  , num_types      ,
+                                        list_types     , dictlike_types ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
-from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , 
-                                       fit_status , cov_qual , H1D_dset , get_i  ) 
+from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu , 
+                                        fit_status , cov_qual , H1D_dset , get_i  )
+from   ostap.fitting.funbasic  import FUNC 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -49,13 +50,12 @@ else                       : logger = getLogger ( __name__              )
 #  The helper base class for implementation of various PDF-wrappers 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-21
-class PDF (MakeVar) :
+class PDF (FUNC) :
     """Useful helper base class for implementation of various PDF-wrappers 
     """
     def __init__ ( self , name ,  xvar = None , special = False ) :
-            
-        ## name is defined via base class MakeVar 
-        self.name  = name ## name is defines via base class MakeVar 
+
+        FUNC.__init__  ( self , name , xvar = xvar ) 
 
         self.__signals               = ROOT.RooArgList ()
         self.__backgrounds           = ROOT.RooArgList ()
@@ -68,154 +68,54 @@ class PDF (MakeVar) :
         ## take care about sPlots 
         self.__splots          = []
         self.__histo_data      = None
-        self.__draw_var        = None
-        self.__fit_result      = None
-        self.__vars            = ROOT.RooArgSet  ()
-        self.__tricks          = True
-        self.__draw_options    = {} ## predefined drawing options for this PDF
         self.__fit_options     = () ## predefined fit options for this PDF
         self.__special         = True if special else False
         
-        if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
-        elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
-            
-        self.__xvar = None 
-        ## create the variable 
-        if isinstance ( xvar , tuple ) and 2 == len(xvar) :  
-            self.__xvar = self.make_var ( xvar               , ## var 
-                                          'x'                , ## name 
-                                          'x-variable(mass)' , ## title/comment
-                                          None               , ## fix ? 
-                                          *xvar              ) ## min/max 
-        elif isinstance ( xvar , ROOT.RooAbsReal ) :
-            self.__xvar = self.make_var ( xvar               , ## var 
-                                          'x'                , ## name 
-                                          'x-variable/mass'  , ## title/comment
-                                          fix = None         ) ## fix ? 
-        else :
-            self.warning('PDF : ``x-variable''is not specified properly %s/%s' % ( xvar , type ( xvar ) ) )
-            self.__xvar = self.make_var( xvar , 'x' , 'x-variable' )
-            
         self.__alist1     = ROOT.RooArgList()
         self.__alist2     = ROOT.RooArgList()
         self.__alist3     = []
-        self.__config     = {}
+
         self.__pdf        = None
         
-        self.vars.add ( self.__xvar ) 
-
         self.config = { 'name' : self.name , 'xvar' : self.xvar ,  'special' : self.special }
-
         
     ## conversion to string 
     def __str__ (  self ) :
         return '%s(%s,xvar=%s)' % ( self.__class__.__name__ , self.name , self.xvar.name )
     __repr__ = __str__ 
     
-    ## Min/max values for x-variable (when applicable)
-    def xminmax ( self ) :
-        """Min/max values for x-variable (when applicable)"""
-        return self.__xvar.minmax() if self.__xvar else () 
-
-    ## get the proper xmin/xmax range 
-    def xmnmx    ( self , xmin , xmax ) :
-        """Get the proper xmin/xmax range
-        """
-        if self.xminmax() :
-            
-            xmn , xmx = self.xminmax ()
-            
-            if   is_good_number ( xmin ) : xmin = max ( xmin , xmn )
-            else                         : xmin = xmn
-            
-            if   is_good_number ( xmax ) : xmax = min ( xmax , xmx )
-            else                         : xmax = xmx
-            
-        assert is_good_number ( xmin ),\
-               'Invalid type of ``xmin'' %s/%s'  %  ( xmin , type ( xmin ) )
-        assert is_good_number ( xmax ),\
-               'Invalid type of ``xmin'' %s/%s'  %  ( xmin , type ( xmin ) )
-
-        assert xmin < xmax, 'Invalid xmin/xmax range: %s/%s' % ( xmin , xmax )
-
-        return xmin , xmax 
-
     @property
     def pdf  ( self ) :
         """The actual PDF (ROOT.RooAbsPdf)"""
-        return self.__pdf
+        return self.fun 
     @pdf.setter
     def pdf  ( self , value ) :
         if value is None :
-            self.__pdf = value
+            self.fun = value
             return        
-        assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
         if not self.special :
             assert isinstance ( value , ROOT.RooAbsPdf ) , "``pdf'' is not ROOT.RooAbsPdf"
-
-        self.__pdf = value
-
+        self.fun = value
+        
     @property
     def pdf_name ( self ) :
         """``pdf_name'' : get the name of the underlying RooAbsPdf"""
-        return  self.pdf.GetName() if self.pdf else ''
+        return  self.fun_name 
         
-    @property 
-    def vars ( self ) :
-        """``vars'' : fitting variables/observables (as ROOT.RooArgSet)"""
-        return self.__vars    
     @property
     def value ( self ) :
         """``value''  :  get the value of PDF"""
         v = float ( self )
         if self.fit_result :
             e = self.pdf.getPropagatedError ( self.fit_result )
-            if 0<= e : return  VE ( v ,  e * e )           ## RETURN
-        return  v    
-    @property 
-    def xvar ( self ) :
-        """``x''-variable for the fit (same as ``x'')"""
-        return self.__xvar
-    @property 
-    def x    ( self ) :
-        """``x''-variable for the fit (same as ``xvar'')"""
-        return self.__xvar
-    @property
-    def config ( self ) :
-        """The full configuration info for the PDF"""
-        conf = {}
-        conf.update ( self.__config )
-        return conf
-    @config.setter
-    def config ( self , value ) :
-        conf = {}
-        conf.update ( value )
-        self.__config = conf
+            if 0 <= e : return  VE ( v ,  e * e )           ## RETURN
+        return  v
+    
     @property
     def special ( self ) :
         """``special'' : is this PDF ``special''   (does nor conform some requirements)?"""
         return self.__special
-    @property
-    def tricks ( self ) :
-        """``tricks'' : flag to allow some  tricks&shortcuts """
-        return self.__tricks
-    @tricks.setter
-    def tricks ( self , value ) :
-        val = True if value else False 
-        if val and not self.__tricks :
-            raise ValueError("Can't allow tricks&shortcuts!")
-        self.__tricks = val
-    @property
-    def fit_result ( self ) :
-        """``fit_result'' : (the latest) fit resut (TFitResult)"""
-        return self.__fit_result
-    @fit_result.setter
-    def fit_result ( self , value ) :
-        assert value is None or isinstance ( value , ROOT.RooFitResult ) , \
-               "Invalid value: %s/%s" % ( value , type ( value ) )
-        self.__fit_result = None
-        if isinstance ( value , ROOT.RooFitResult ) and valid_pointer ( value ) : 
-            self.__fit_result = value    
+    
     @property
     def title ( self ) :
         """``title'' : get the title for RooAbsPdf"""
@@ -313,23 +213,6 @@ class PDF (MakeVar) :
             self.__histo_data = value 
         else :
             raise AttributeError("``histo_data'' has invalid type %s/%s" % (   value , type(value) ) )
-                                 
-    @property
-    def draw_var ( self ) :
-        """``draw_var''  :  variable to be drawn if not specified explicitely"""
-        return self.__draw_var
-    @draw_var.setter
-    def draw_var ( self , value ) :
-        assert value is None or isinstance ( value , ROOT.RooAbsReal ) , \
-               "``draw_var'' has invalid type %s/%s" % ( value , type(value) )
-        self.__draw_var = value 
-
-    @property
-    def draw_options ( self ) :
-        """``draw_options'' : disctionary with predefined draw-options for this PDF
-        """
-        return self.__draw_options
-
     @property
     def fit_options ( self ) :
         """``fit_options'' : the predefined ``fitTo''-options for this PDF
@@ -349,54 +232,6 @@ class PDF (MakeVar) :
             _opts.append ( v )
         self.__fit_options = tuple ( _opts ) 
             
-    # =========================================================================
-    ## make a clone for the given PDF with optional  replacement of certain parameters
-    #  @code
-    #  >>> xpdf = ...
-    #  >>> ypdf = xpdf.clone ( xvar = yvar ,  name = 'PDFy' ) 
-    #  @endcode 
-    def clone ( self , **kwargs ) :
-        """Make a clone for the given PDF with the optional replacement of the certain parameters
-        >>> xpdf = ...
-        >>> ypdf = xpdf.clone ( xvar = yvar ,  name = 'PDFy' ) 
-        """
-
-        ## get config 
-        conf = {}
-        conf.update ( self.config ) 
-
-        ## modify the name if the name is in config  
-        if 'name' in conf :
-            name_prefix = kwargs.pop ( 'name_prefix' , '' )
-            name_suffix = kwargs.pop ( 'name_suffix' , '' )
-            if name_prefix or name_suffix :
-                conf['name']  = name_prefix + conf [ 'name' ] + name_suffix
-            else :
-                conf['name'] += '_copy'
-                
-        ## update (if needed)
-        conf.update ( kwargs )
-
-        KLASS = self.__class__
-        cloned = KLASS ( **conf )
-        
-        return cloned 
-
-    # =========================================================================
-    ## make a copy/clone for the given PDF 
-    #  @code
-    #  >>> import copy 
-    #  >>> xpdf = ...
-    #  >>> ypdf = copy.copy ( xpdf ) 
-    #  @endcode 
-    def __copy__ ( self ) :
-        """Make a copy/clone for the given PDF 
-        >>> import copy 
-        >>> xpdf = ...
-        >>> ypdf = copy.copy ( xpdf ) 
-        """
-        return self.clone()
-
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
     #  @code
@@ -587,7 +422,7 @@ class PDF (MakeVar) :
         
         for i , cmp in enumerate ( what ) :
 
-            st         = style  ( i ) if callable  ( style ) else ()
+            st         = style  ( i ) if style and callable  ( style ) else ()
 
             cmps       = ROOT.RooArgSet         ( cmp  )             
             components = ROOT.RooFit.Components ( cmps )
@@ -891,102 +726,6 @@ class PDF (MakeVar) :
 
             return frame, rframe, pframe  
 
-    # =========================================================================
-    ## get the certain predefined drawing option
-    #  @code
-    #  options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
-    #  pdf = ...
-    #  pdf.draw_options['signal_style'] = [ options ]
-    #  ## and later:
-    #  options = pdf.draw_option ( 'signal_style' )
-    #  @endcode 
-    def draw_option ( self , key , default = () , **kwargs ) :
-        """Get the certain predefined drawing option
-        >>> options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
-        >>> pdf = ...
-        >>> pdf.draw_options['signal_style'] = [ options ]
-        - and later:
-        >>> options = pdf.draw_option ( 'signal_style' )
-        """
-        import ostap.plotting.fit_draw as FD
-
-        key_transform = lambda s : s.lower().replace('_','')
-
-        the_key = key_transform ( key ) 
-
-        ## 1. check the explicitely provided arguments
-        for k in kwargs :
-            if key_transform ( k ) == the_key :
-                return kwargs[ k ]
-            
-        ## check the predefined drawing options for this PDF 
-        for k in self.draw_options :
-            if key_transform ( k ) == the_key :
-                return self.draw_options.get ( k)
-            
-        ## check the default options
-        for k in dir ( FD ) :
-            if k.startswith ( '__' ) or k.endswith ( '__' ) : continue 
-            if key_transform ( k ) == the_key :
-                return getattr ( FD , k ) 
-
-        ##  use the default value 
-        return default 
-
-    # ==========================================================================
-    ## Add/define new default draw option
-    #  @code
-    #  pdf = ...
-    #  pdf.add_draw_option( 'background_style' ) = Line ( 4 , 2 , 1 ) 
-    #  pdf.add_draw_option( 'components_style' ) = Styles ( Line (... ), Area ( ...) , ... ] ) 
-    #  pdf.add_draw_option( 'signal_style'     ) = ROOT.RooFit.LineColor ( 2 )
-    #  @endcode
-    #  @see ostap.plotting.fit_draw
-    #  @see ostap.plotting.fit_draw.Style
-    #  @see ostap.plotting.fit_draw.Styles
-    #  @see ostap.plotting.fit_draw.Styles
-    #  @see ostap.plotting.fit_draw.Line
-    #  @see ostap.plotting.fit_draw.Area
-    def add_draw_option ( self , key , options = () ) :
-        """Add/define new default draw option
-        - see ostap.plotting.fit_draw
-        - see ostap.plotting.fit_draw.Style
-        - see ostap.plotting.fit_draw.Styles
-        - see ostap.plotting.fit_draw.Styles
-        - see ostap.plotting.fit_draw.Line
-        - see ostap.plotting.fit_draw.Area
-        >>> pdf = ...
-        >>> pdf.add_draw_option ( 'data_options'     ) = ROOT.RooFit.MarkerStyle ( 20 ) , ROOT.RooFit.DrawOption  ( 'zp' )
-        >>> pdf.add_draw_option ( 'background_style' ) = Line ( 4 , 2 , 1 ) 
-        >>> pdf.add_draw_option ( 'components_style' ) = Styles ( Line (... ), Area ( ...) , ... ] 
-        >>> pdf.add_draw_option ( 'signal_style'     ) = ROOT.RooFit.LineColor ( 2 )
-        """
-
-        key = key.lower() 
-
-        import ostap.plotting.fit_draw as FD
-        if not key in FD.keys :
-            self.warning("Unknown draw_option '%s'" % key )
-            
-        option = key.endswith ( '_options' ) 
-        style  = key.endswith ( '_style'   )
-        if   options :
-            if   isinstance ( options , list_types     ) : options = tuple ( options )
-            elif isinstance ( options , ROOT.RooCmdArg ) : options = options , 
-            else                                         : options = options ,  
-        elif style   :
-            if   isinstance ( options , FD.Styles      ) : pass
-            elif isinstance ( options , FD.Style       ) : options = options , 
-            elif isinstance ( options , ROOT.RooCmdArg ) :
-                args    = tuple( 5*[None] + [ options ] )
-                options = FD.Styles ( [ FD.Style ( *args ) ] )
-            elif isinstance ( options , list_types     ) : options = tuple ( options )
-        else :
-            self.warning("Neither ``options'' nor ``style''...")
-
-        self.draw_options [ key ] = options 
-        
-            
     # =========================================================================
     ## fit the 1D-histogram (and draw it)
     #  @code
@@ -1790,38 +1529,8 @@ class PDF (MakeVar) :
         >>> x = 1
         >>> y = pdf ( x ) 
         """
-        if error and not normalized :
-            self.error("Can't get error for non-normalized call" )
-            error = False
-            
-        with_error = error and self.fit_result 
+        return FUNC.__call__ ( self , x , error = error , normalized = normalized ) 
 
-        if isinstance ( self.xvar , ROOT.RooRealVar ) :
-            mn , mx = self.xminmax()
-            if mn <= x <= mx :
-                with SETVAR( self.xvar ) :
-                    self.xvar.setVal ( x )
-                    
-                    v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getValV ()  
-                    
-                    if error :
-                        e = self.pdf.getPropagatedError ( self.fit_result )
-                        if 0<= e : return  VE ( v ,  e * e )
-                    return v 
-            else :
-                return 0.0                    ## RETURN 
-            
-        raise AttributeError('Something wrong goes here')
-
-    # ========================================================================
-    ## convert to float 
-    def __float__ ( self ) :
-        """Convert to float
-        >>> pdf = ...
-        >>> v = float ( pdf )
-        """
-        return self.pdf.getVal ( self.vars ) 
-       
     # ========================================================================
     ## check minmax of the PDF using the random shoots
     #  @code
@@ -1894,80 +1603,28 @@ class PDF (MakeVar) :
         self.__fit_result = None
         
     # ========================================================================
-    # some generic stuff 
-    # ========================================================================
-    ## helper  function to implement some math stuff 
-    def _get_stat_ ( self , funcall , *args , **kwargs ) :
-        """Helper  function to implement some math stuff 
-        """
-        pdf         = self.pdf
-        xmin , xmax = self.xminmax()
-
-        xmin = kwargs.pop ( 'xmin' , xmin )
-        xmax = kwargs.pop ( 'xmax' , xmax )
-        
-        if self.tricks and hasattr ( pdf , 'function' ) :    
-            fun = pdf.function()
-            if   hasattr  ( pdf , 'setPars'   ) : pdf.setPars()             
-        else :
-            fun = PDF_fun ( pdf , self.xvar , xmin , xmax )
-            
-        return funcall (  fun , xmin , xmax , *args , **kwargs ) 
-        
-    # ========================================================================
     ## get the effective RMS 
     def rms ( self , **kwargs ) :
         """Get the effective RMS
-        >>>  pdf = ...
-        >>>  pdf.fitTo ( ... )
-        >>>  print 'RMS: %s ' % pdf.rms()
+        >>>  fun = ...
+        >>>  print 'RMS: %s ' % fun.rms()
         """
-        pdf  = self.pdf 
-        if   hasattr ( pdf , 'rms'            ) : return pdf.rms()        
-        elif hasattr ( pdf , 'Rms'            ) : return pdf.Rms()        
-        elif hasattr ( pdf , 'RMS'            ) : return pdf.RMS()        
-        elif self.tricks and hasattr ( pdf , 'function' ) :
+        fun  = self.fun 
+        if   hasattr ( fun , 'rms'            ) : return fun.rms()        
+        elif hasattr ( fun , 'Rms'            ) : return fun.Rms()        
+        elif hasattr ( fun , 'RMS'            ) : return fun.RMS()        
+        elif self.tricks and hasattr ( fun , 'function' ) :
             
-            fun = pdf.function()
-            if   hasattr ( pdf , 'setPars'    ) : pdf.setPars() 
-            if   hasattr ( fun , 'rms'        ) : return fun.rms()
-            elif hasattr ( fun , 'variance'   ) : return fun.variance   ()**0.5  
-            elif hasattr ( fun , 'dispersion' ) : return fun.dispersion ()**0.5 
+            if   hasattr ( fun , 'setPars'    ) : fun.setPars()
+            
+            ff = fun.function()            
+            if   hasattr ( ff , 'rms'        ) : return ff.rms()
+            elif hasattr ( ff , 'variance'   ) : return ff.variance   ()**0.5  
+            elif hasattr ( ff , 'dispersion' ) : return ff.dispersion ()**0.5 
             
         from ostap.stats.moments import rms as _rms
         return  self._get_stat_ ( _rms , **kwargs )
 
-    # ========================================================================
-    ## get the effective Full Width at Half Maximum
-    def fwhm ( self , **kwargs ) :
-        """Get the effective Full Width at  Half Maximum
-        >>>  pdf = ...
-        >>>  pdf.fitTo ( ... )
-        >>>  print 'FWHM: %s ' % pdf.fwhm()
-        """
-        ## use generic machinery 
-        from ostap.stats.moments import width as _width
-        w = self._get_stat_ ( _width , **kwargs )
-        return  w [ 1 ] - w [ 0 ]
-
-    # ========================================================================
-    ## Get the effective midpoint/location:
-    #  a mid point of an interval \f$ [x_{low}, x_{high}]\f$,
-    #  \f$ x_{mid} = \frac{ x_{low} + x_{high}}{2}\f$, where  
-    #  where \f$ f(x_{low}) = f(x_{high}) = \frac{f_{max}(x)}{2} \f$ 
-    # (the same points are used for FWHM)
-    def mid_point ( self , **kwargs ) :
-        """Get the effective midpoint/location:
-        - a mid point of an interval  x_low, x_high
-        x_mid = (x_low + x_high)/2 {2},
-        where  f(x_low) = f(x_high) = f_{max}(x)
-        - the same points are used for FWHM
-        """
-        ## use generic machinery 
-        from ostap.stats.moments import width as _width
-        w = self._get_stat_ ( _width , **kwargs )
-        return 0.5 * ( w [ 1 ] + w [ 0 ] )
-    
     # =========================================================================
     ## get the effective Skewness
     def skewness ( self , **kwargs ) :
@@ -1991,17 +1648,6 @@ class PDF (MakeVar) :
         ## use generic machinery 
         from ostap.stats.moments import kurtosis as _kurtosis
         return self._get_stat_ ( _kurtosis , **kwargs )
-
-    # =========================================================================
-    ## get the effective mode 
-    def mode ( self , **kwargs ) :
-        """Get the effective mode
-        >>>  pdf = ...
-        >>>  pdf.fitTo ( ... )
-        >>>  print 'MODE: %s ' % pdf.mode()
-        """
-        from ostap.stats.moments import mode as _mode
-        return self._get_stat_ ( _mode , **kwargs )
 
     # =========================================================================
     ## get the effective median
@@ -2129,84 +1775,6 @@ class PDF (MakeVar) :
 
         return value
 
-    # =========================================================================
-    ## get the derivative at  point x 
-    def derivative ( self , x ) :
-        """Get derivative at point x 
-        >>> pdf = ...
-        >>> print pdf.derivative ( 0 ) 
-        """
-        ## check limits 
-        if hasattr ( self.xvar , 'getMin' ) and x < self.xvar.getMin() : return 0.
-        if hasattr ( self.xvar , 'getMax' ) and x > self.xvar.getMax() : return 0.
-
-        ## make a try to use analytical derivatives 
-        if self.tricks  and hasattr ( self , 'pdf' ) :
-            _pdf = self.pdf 
-            if hasattr ( _pdf , 'setPars'  ) : _pdf.setPars() 
-            try: 
-                if hasattr ( _pdf , 'function' ) :
-                    _func = _pdf.function() 
-                    if hasattr ( _func , 'integral' ) :
-                        return _func.derivative ( x )
-            except:
-                pass
-            
-        ## use numerical derivatives 
-        from ostap.math.derivative import derivative as _derivatve
-        return _derivative ( self , x )
-
-    # ==========================================================================
-    ## get a minimum of PDF for certain interval
-    #  @code
-    #  pdf = ...
-    #  x   = pdf.minimum() 
-    #  @endcode 
-    def minimum ( self , xmin = None , xmax = None , x0 = None ) :
-        """Get a minimum of PDF for certain interval
-        >>> pdf = ...
-        >>> x = pdf.minimum()
-        """
-        if xmin is None : xmin = self.xminmax()[0]
-        if xmax is None : xmax = self.xminmax()[1]
-        if self.xminmax() :
-            xmin =  max ( xmin , self.xminmax()[0] )
-            xmax =  min ( xmax , self.xminmax()[1] )
-            
-        if x0 is None           : x0 = 0.5 * ( xmin + xmax )
-        
-        if not xmin <= x0 <= xmax :
-            logger.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
-        
-        from ostap.math.minimize import sp_minimum_1D
-        return sp_minimum_1D (  self , xmin , xmax , x0 )
-
-    # ==========================================================================
-    ## get a maximum of PDF for certain interval
-    #  @code
-    #  pdf = ...
-    #  x   = pdf.maximum() 
-    #  @endcode 
-    def maximum ( self , xmin = None , xmax = None , x0 = None ) :
-        """Get a maximum of PDF for certain interval
-        >>> pdf = ...
-        >>> x = pdf.maximum()
-        """
-        if xmin is None : xmin = self.xminmax()[0]
-        if xmax is None : xmax = self.xminmax()[1]
-        if self.xminmax() :
-            xmin =  max ( xmin , self.xminmax()[0] )
-            xmax  = min ( xmax , self.xminmax()[1] )
-            
-        if x0 is None           : x0 = 0.5 * ( xmin + xmax )
-
-        if not xmin <= x0 <= xmax :
-            logger.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
-        
-        from ostap.math.minimize import sp_maximum_1D
-        return sp_maximum_1D (  self , xmin , xmax , x0 )
-
-        
     # ==========================================================================
     ## convert PDF into TF1 object, e.g. to profit from TF1::Draw options
     #  @code

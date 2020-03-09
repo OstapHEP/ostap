@@ -15,7 +15,7 @@ __all__    = () ## nothing to import
 import ROOT, random, math 
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
-from   ostap.core.core          import cpp, VE, dsID
+from   ostap.core.core          import cpp, VE, dsID, Ostap
 from   ostap.logger.utils       import rooSilent
 from   ostap.fitting.efficiency import Efficiency1D
 # =============================================================================
@@ -61,8 +61,9 @@ points = [ dx * i for i in range ( np + 1 ) ]
 
 # =============================================================================
 # use some PDF to parameterize efficiciency
-def test_pdf () : 
-    
+def test_pdf () :
+
+
     effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 3 , increasing = True )
 
     maxe   = margin * effPdf ( xmax )
@@ -70,7 +71,7 @@ def test_pdf () :
     s0     = min ( 1.0 / emax , 1.0 / maxe ) 
     scale  = ROOT.RooRealVar ( 'scaleX' , 'scaleX' , s0 , 0.2 * s0 , 5.0 * s0  )
     
-    eff2   = Efficiency1D( 'E2' , effPdf , cut = acc  , scale = scale )
+    eff2   = Efficiency1D ( 'E2' , effPdf , cut = acc  , scale = scale )
     
     r2     = eff2.fitTo ( ds )
     f2     = eff2.draw  ( ds )
@@ -83,15 +84,67 @@ def test_pdf () :
         e0 = eff0 ( p ) / emax  
         print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
 
+
+# =============================================================================
+# use some functions  to parameterize efficiciency
+def test_vars1 () :
+
+    from ostap.fitting.roofuncs import BernsteinPoly as BP 
+    
+    f      = BP ( 'G' , xvar = x , power = 4 )
+    f.pars = 0.2 , 0.2 , 0.2 , 0.2 
+        
+    eff2   = Efficiency1D ( 'E3' , f.fun , cut = acc  , xvar = x )
+    
+    r2     = eff2.fitTo ( ds )
+    f2     = eff2.draw  ( ds )
+    
+    print (r2)
+    
+    for p in points :
+        e  = eff2 ( p , error = True )
+        ev = e.value()
+        e0 = eff0 ( p ) / emax  
+        print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
+
+
+# =============================================================================
+# use some functions  to parameterize efficiciency
+def test_vars2 () :
+    
+    from ostap.fitting.roofuncs import MonotonicPoly as MP 
+
+    f      = MP ( 'G' , xvar = x , increasing = True , power = 4 )
+    f.pars = 0.6 , 0.8 , -0.1 , -0.6
+    f.a    = 0.06
+    f.b    = 2.72
+    f.a.release ()
+    f.b.release ()
+
+    eff2   = Efficiency1D ( 'E4' , f , cut = acc  , xvar = x )
+    
+    r2     = eff2.fitTo ( ds )
+    f2     = eff2.draw  ( ds )
+    
+    print (r2)
+    
+    for p in points :
+        e  = eff2 ( p , error = True )
+        ev = e.value()
+        e0 = eff0 ( p ) / emax  
+        print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
+
+
+
     
 # =============================================================================
 if '__main__' == __name__ :
 
 
-    test_pdf     ()
-
-
+    test_pdf    ()
+    test_vars1  ()
+    test_vars2  ()
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # ============================================================================= 
