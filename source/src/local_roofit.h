@@ -29,7 +29,7 @@ namespace
 {
   // ==========================================================================
   /// size of RooArgList 
-  std::size_t size ( const RooArgList& lst ) 
+  inline std::size_t size ( const RooArgList& lst ) 
   {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     return lst.getSize () ;

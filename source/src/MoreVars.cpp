@@ -52,14 +52,14 @@ Ostap::MoreRooFit::Bernstein::Bernstein
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "x"    , "Dependent"  , this , xvar ) 
   , m_pars      ( "pars" , "Parameters" , this ) 
-  , m_bernstein ( pars.size() - 1 , xmin , xmax ) 
+  , m_bernstein ( ::size ( pars ) - 1 , xmin , xmax ) 
 {
   //
-  Ostap::Assert ( 1 <= pars.size () , s_EMPTYPARS  , s_v1 , 510 ) ;
+  Ostap::Assert ( 1 <= ::size ( pars ) , s_EMPTYPARS  , s_v1 , 510 ) ;
   //
   ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v1 ) ;
   //
-  Ostap::Assert ( m_bernstein.npars() == m_pars.size() , s_INVALIDPARS , s_v1 , 512 ) ;
+  Ostap::Assert ( m_bernstein.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v1 , 512 ) ;
   //
 }
 // =============================================================================
@@ -137,14 +137,14 @@ Ostap::MoreRooFit::Monotonic::Monotonic
   , m_a         ( "a"    , "shift/bias" , this , a    ) 
   , m_b         ( "b"    , "scale"      , this , b    ) 
   , m_pars      ( "pars" , "Parameters" , this ) 
-  , m_monotonic ( pars.size () , xmin , xmax , increasing ) 
+  , m_monotonic ( ::size ( pars ) , xmin , xmax , increasing ) 
 {
   //
-  Ostap::Assert ( 0 <= pars.size () , s_EMPTYPARS  , s_v2 , 510 ) ;
+  Ostap::Assert ( 0 <= ::size ( pars ) , s_EMPTYPARS  , s_v2 , 510 ) ;
   //
   ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v2 ) ;
   //
-  Ostap::Assert ( m_monotonic.npars() == m_pars.size() , s_INVALIDPARS , s_v2 , 512 ) ;
+  Ostap::Assert ( m_monotonic.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v2 , 512 ) ;
   //
 }
 // =============================================================================
@@ -235,14 +235,14 @@ Ostap::MoreRooFit::Convex::Convex
   , m_a         ( "a"    , "shift/bias" , this , a    ) 
   , m_b         ( "b"    , "scale"      , this , b    ) 
   , m_pars      ( "pars" , "Parameters" , this ) 
-  , m_convex    ( pars.size() , xmin , xmax , increasing , convex ) 
+  , m_convex    ( ::size ( pars ) , xmin , xmax , increasing , convex ) 
 {
   //
-  Ostap::Assert ( 0 <= pars.size () , s_EMPTYPARS  , s_v3 , 510 ) ;
+  Ostap::Assert ( 0 <= ::size ( pars ) , s_EMPTYPARS  , s_v3 , 510 ) ;
   //
   ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v3 ) ;
   //
-  Ostap::Assert ( m_convex.npars() == m_pars.size() , s_INVALIDPARS , s_v3 , 512 ) ;
+  Ostap::Assert ( m_convex.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v3 , 512 ) ;
   //
 }
 // =============================================================================
@@ -332,14 +332,14 @@ Ostap::MoreRooFit::ConvexOnly::ConvexOnly
   , m_a         ( "a"    , "shift/bias" , this , a    ) 
   , m_b         ( "b"    , "scale"      , this , b    ) 
   , m_pars      ( "pars" , "Parameters" , this ) 
-  , m_convex    ( pars.size() , xmin , xmax , convex ) 
+  , m_convex    ( ::size ( pars ) , xmin , xmax , convex ) 
 {
   //
-  Ostap::Assert ( 0 <= pars.size () , s_EMPTYPARS  , s_v4 , 510 ) ;
+  Ostap::Assert ( 0 <= :: size ( pars ) , s_EMPTYPARS  , s_v4 , 510 ) ;
   //
   ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v4 ) ;
   //
-  Ostap::Assert ( m_convex.npars() == m_pars.size() , s_INVALIDPARS , s_v4 , 512 ) ;
+  Ostap::Assert ( m_convex.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v4 , 512 ) ;
   //
 }
 // =============================================================================
