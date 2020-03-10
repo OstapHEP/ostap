@@ -73,7 +73,7 @@ Ostap::Models::Poly3DPositive::Poly3DPositive
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Poly3DPositive"          ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_positive.npars ()     , 
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars () , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::Poly3DPositive"          ) ;
   //
@@ -241,7 +241,7 @@ Ostap::Models::Poly3DSymPositive::Poly3DSymPositive
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Poly3DSymPositive"       ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_positive.npars ()     , 
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars () , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::Poly3DSymPositive"       ) ;
   //
@@ -412,7 +412,7 @@ Ostap::Models::Poly3DMixPositive::Poly3DMixPositive
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Poly2DMixPositive"       ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_positive.npars ()     , 
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars () , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::Poly3DMixPositive"       ) ;
   //

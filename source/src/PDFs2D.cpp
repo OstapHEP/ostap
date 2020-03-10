@@ -67,7 +67,7 @@ Ostap::Models::Poly2DPositive::Poly2DPositive
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Poly2DPositive"          ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_positive.npars () , 
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars () , 
                   "Widths/#channels mismatch" , 
                   "Ostap::Models::Poly2DPositive"      ) ;
   //
@@ -195,15 +195,10 @@ Ostap::Models::Poly2DSymPositive::Poly2DSymPositive
   //
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Poly2DSymPositive"       ) ;
-  
-  std::cout 
-    << " #phis : "  << phis.size() 
-    << " #m_phis: " << m_phis.size() 
-    << " #npars: "  << m_positive.npars() << std::endl ;
   //
-  Ostap::Assert ( m_phis.size() == m_positive.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Poly2DSymPositive"      ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Poly2DSymPositive"       ) ;
   //
   setPars () ;
 }
@@ -333,9 +328,9 @@ Ostap::Models::PS2DPol::PS2DPol
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol          "       ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol"                ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol"                 ) ;
   //
   setPars () ;
   //
@@ -361,9 +356,9 @@ Ostap::Models::PS2DPol::PS2DPol
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol"                 ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol"                ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol"                 ) ;
   //
   setPars () ;
 }
@@ -493,9 +488,9 @@ Ostap::Models::PS2DPol2::PS2DPol2
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol2"                ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol2"               ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol2"                ) ;
   //
   setPars () ;
   //
@@ -518,12 +513,12 @@ Ostap::Models::PS2DPol2::PS2DPol2
   , m_function ( ps ) 
 {
   //
-  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
-                  "Ostap::Models::PS2DPol2"                ) ;
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!"   ,
+                  "Ostap::Models::PS2DPol2"                  ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol2"               ) ;
+  Ostap::Assert ( ::size ( m_phis )   == m_function.npars () , 
+                  "Widths/#channels mismatch"                , 
+                  "Ostap::Models::Ps2DPol2"                  ) ;
   //
   setPars () ;
 }
@@ -655,9 +650,9 @@ Ostap::Models::PS2DPol3::PS2DPol3
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol3"                ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol3"               ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol3"                ) ;
   //
   setPars () ;
   //
@@ -683,9 +678,9 @@ Ostap::Models::PS2DPol3::PS2DPol3
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol3"                ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol3"               ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol3"                ) ;
   //
   setPars () ;
   //
@@ -813,9 +808,9 @@ Ostap::Models::PS2DPolSym::PS2DPolSym
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPolSym"              ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPolSym"             ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPolSym"              ) ;
   //
   setPars () ;
   //
@@ -841,9 +836,9 @@ Ostap::Models::PS2DPolSym::PS2DPolSym
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPolSym"              ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPolSym"             ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPolSym"              ) ;
   //
   setPars () ;
   //
@@ -969,9 +964,9 @@ Ostap::Models::PS2DPol2Sym::PS2DPol2Sym
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol2Sym"             ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol2Sym"            ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol2Sym"             ) ;
   //
   setPars () ;
   //
@@ -997,9 +992,9 @@ Ostap::Models::PS2DPol2Sym::PS2DPol2Sym
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol2Sym"             ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol2Sym"            ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol2Sym"             ) ;
   //
   setPars () ;
   //
@@ -1124,9 +1119,9 @@ Ostap::Models::PS2DPol3Sym::PS2DPol3Sym
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol3Sym"             ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol3Sym"            ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol3Sym"             ) ;
   //
   setPars () ;
   //
@@ -1152,9 +1147,9 @@ Ostap::Models::PS2DPol3Sym::PS2DPol3Sym
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::PS2DPol3Sym"             ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()    , 
-                  "Widths/#channels mismatch"             , 
-                  "Ostap::Models::Ps2DPol3Sym"            ) ;
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Ps2DPol3Sym"             ) ;
   //
   setPars () ;
   //
@@ -1287,7 +1282,7 @@ Ostap::Models::ExpoPS2DPol::ExpoPS2DPol
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::ExpoPS2DPol"             ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()     , 
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::ExpoPS2DPol"             ) ;
   //
@@ -1317,7 +1312,7 @@ Ostap::Models::ExpoPS2DPol::ExpoPS2DPol
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::ExpoPS2DPol"             ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()     , 
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::ExpoPS2DPol"             ) ;
   //
@@ -1458,7 +1453,7 @@ Ostap::Models::Expo2DPol::Expo2DPol
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Expo2DPol"               ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()     , 
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::Expo2DPol"               ) ;
   //
@@ -1600,7 +1595,7 @@ Ostap::Models::Expo2DPolSym::Expo2DPolSym
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Expo2DPolSym"            ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_function.npars ()     , 
+  Ostap::Assert ( ::size ( m_phis ) == m_function.npars () , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::Expo2DPolSym"            ) ;
   //
@@ -1741,7 +1736,7 @@ Ostap::Models::Spline2D::Spline2D
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Spline2D"                ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_spline.npars ()       , 
+  Ostap::Assert ( ::size ( m_phis ) == m_spline.npars ()   , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::Spline2D"                ) ;
   //
@@ -1869,7 +1864,7 @@ Ostap::Models::Spline2DSym::Spline2DSym
   ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
                   "Ostap::Models::Spline2DSym"             ) ;
   //
-  Ostap::Assert ( m_phis.size() == m_spline.npars ()       , 
+  Ostap::Assert ( ::size ( m_phis ) == m_spline.npars ()   , 
                   "Widths/#channels mismatch"              , 
                   "Ostap::Models::Spline2DSym"             ) ;
   //

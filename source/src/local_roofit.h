@@ -96,6 +96,15 @@ namespace
     //
   }
   // ==========================================================================
+  std::size_t size ( const RooListProxy& lst ) 
+  {
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+    return lst.getSize () ;
+#else 
+    return lst.size    () ;
+#endif
+  }
+  // ==========================================================================
 } //                                             The end of anynymous namespace 
 // ============================================================================
 //                                                                      The END 

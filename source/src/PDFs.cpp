@@ -235,7 +235,7 @@ Ostap::Models::BreitWignerMC::BreitWignerMC
   ::copy_real   ( widths , m_widths , "Invalid width parameter!" ,
                   "Ostap::Models::BreitWignerMC" ) ;
   //
-  Ostap::Assert ( m_widths.size() == m_bw->nChannels() , 
+  Ostap::Assert ( ::size ( m_widths ) == m_bw->nChannels() , 
                   "Widths/#channels mismatch" , 
                   "Ostap::Models::BreitWignerMC" ) ;
   //
@@ -4129,7 +4129,7 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
 {
   //
   ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PhaseSpacePol" );
-  Ostap::Assert ( m_phis.size() == m_ps.npars() , 
+  Ostap::Assert ( ::size ( m_phis ) == m_ps.npars() , 
                   "#phis/#npars mismatch!"            , "Ostap::Models::PhaseSpacePol" );
   //
   const RooRealVar* v = dynamic_cast<RooRealVar*>(&x) ;
@@ -4250,7 +4250,7 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
 {
   //
   ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PhaseSpacePol" );
-  Ostap::Assert ( m_phis.size() == m_ps.npars() , 
+  Ostap::Assert ( ::size ( m_phis ) == m_ps.npars() , 
                   "#phis/#npars mismatch!"            , "Ostap::Models::PhaseSpacePol" );
   //
   const RooRealVar* v = dynamic_cast<RooRealVar*>(&x) ;
@@ -4376,7 +4376,7 @@ Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   //
   ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
                   "Ostap::Models::PhaseSpaceLeftExpoPol" ) ;
-  Ostap::Assert ( m_phis.size() == m_ps.npars() , 
+  Ostap::Assert ( ::size ( m_phis ) == m_ps.npars() , 
                   "#phis/#npars mismatch!"            , 
                   "Ostap::Models::PhaseSpaceLeftExpoPol" ) ;
   //
@@ -4494,7 +4494,7 @@ Ostap::Models::PolyPositive::PolyPositive
   //
   ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
                   "Ostap::Models::PolyPositive" ) ;
-  Ostap::Assert ( m_phis.size() == m_positive.npars()  , 
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars()  , 
                   "#phis/#npars mismatch!"             ,
                   "Ostap::Models::PolyPositive" ) ;
   //
@@ -4611,7 +4611,7 @@ Ostap::Models::PolyPositiveEven::PolyPositiveEven
   //
   ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
                   "Ostap::Models::PolyPositiveEven" ) ;
-  Ostap::Assert ( m_phis.size() == m_even.npars() , 
+  Ostap::Assert ( ::size ( m_phis ) == m_even.npars() , 
                   "#phis/#npars mismatch!"            ,
                   "Ostap::Models::PolyPositiveEven" ) ;
   //
