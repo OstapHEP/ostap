@@ -28,6 +28,16 @@
 namespace
 {
   // ==========================================================================
+  /// size of RooArgList 
+  std::size_t size ( const RooArgList& lst ) 
+  {
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+    return lst.getSize () ;
+#else 
+    return lst.size    () ;
+#endif
+  }
+  // ==========================================================================
   /** copy RooAbsReal from lsy to proxy
    *  @param from objects to be copied from this list 
    *  @param to   objects to be copied to this proxy 
@@ -41,7 +51,7 @@ namespace
     //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     //
-    Ostap::Utils::Iterator tmp ( pars ) ;
+    Ostap::Utils::Iterator tmp ( from ) ;
     RooAbsArg* c = 0 ;
     while ( c = (RooAbsArg*) tmp.next() )
     {
@@ -61,7 +71,7 @@ namespace
     //
 #endif 
     //
-    return from.size() ;
+    return ::size ( from ) ;
     //
   }
   // ==========================================================================
@@ -86,7 +96,7 @@ namespace
 #else
     //
     const unsigned int N = lst.size() ;
-    for ( unsigned  int k = 0 ; k < N ; ++k ) 
+    for ( unsigned int k = 0 ; k < N ; ++k ) 
     {
       const RooAbsReal& r = static_cast<const RooAbsReal&>( lst [ k ] ) ;
       obj.setPar ( k , r.getVal ( nset ) ) ;  
@@ -94,15 +104,6 @@ namespace
     //
 #endif
     //
-  }
-  // ==========================================================================
-  std::size_t size ( const RooListProxy& lst ) 
-  {
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    return lst.getSize () ;
-#else 
-    return lst.size    () ;
-#endif
   }
   // ==========================================================================
 } //                                             The end of anynymous namespace 
