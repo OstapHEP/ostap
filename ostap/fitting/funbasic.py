@@ -1212,7 +1212,340 @@ class Fun3D ( FUNC3 ) :
 
         return FUNC3.clone ( self , **kwargs ) 
 
+
+# =============================================================================
+## Operator for `3D-function (op) other`:
+def _f3_oper_ ( fun1 , fun2 , ftype , fname ) :
+    """ Operator for `3D-function (op) other`:
+    """
     
+    xvar, yvar, zvar = fun1.xvar , fun1.yvar , fun1.zvar
+    
+    if   isinstance ( fun2 , FUNC3 ) :
+        
+        if  fun2.xvar in fun1.vars and fun2.yvar in fun1.vars and fun2.zvar in fun1.vars :
+            ## sum 
+            s = ftype ( fun1.fun , fun2.fun )
+            return Fun3D ( s ,
+                           xvar = xvar ,
+                           yvar = yvar ,
+                           zvar = zvar ,
+                           name = fname % ( fun1.name , fun2.name ) )
+                          
+    elif isinstance ( fun2 , FUNC2 ) :
+        
+        if fun2.xvar in fun1.vars and fun2.yvar in fun1.vars :
+            ## sum 
+            s = ftype ( self.fun , other.fun )
+            return Fun3D ( s ,
+                           xvar = xvar ,
+                           yvar = yvar ,
+                           zvar = zvar ,
+                           name = fname % ( fun1.name , fun2.name ) )
+
+    elif isinstance ( fun2 , FUNC1 ) :
+        
+        if fun2.xvar in fun1.vars :
+            ## sum 
+            s = ftype ( fun1.fun , fun2.fun )
+            return Fun3D ( s ,
+                           xvar = xvar ,
+                           yvar = yvar ,
+                           zvar = zvar ,
+                           name = fname % ( fun1.name , fun2.name ) )
+
+    elif isinstance ( fun2 , num_types ) :
+        
+        o = ROOT.RooRealConstant.value ( float ( fun2 )  ) 
+        s = ftype  ( fun1.fun , o )
+        return Fun3D ( s ,
+                       xvar = xvar ,
+                       yvar = yvar ,
+                       zvar = zvar ,
+                       name = fname % ( fun1.name , o ) )
+
+    return NotImplemented 
+
+# =============================================================================
+## operator for "3D-function + other"
+def _f3_add_ ( self , other ) :
+    """Operator for ``3D-function + other''
+    """
+    return _f3_oper_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
+
+# =============================================================================
+## operator for "3D-function - other"
+def _f3_sub_ ( self , other ) :
+    """Operator for ``3D-function - other''
+    """
+    return _f3_oper_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+
+# =============================================================================
+## operator for "3D-function * other"
+def _f3_mul_ ( self , other ) :
+    """Operator for ``3D-function * other''
+    """
+    return _f3_oper_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+
+# =============================================================================
+## operator for "3D-function / other"
+def _f3_div_ ( self , other ) :
+    """Operator for ``3D-function / other''
+    """
+    return _f3_oper_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+
+# =============================================================================
+## operator for "3D-function ** other"
+def _f3_pow_ ( self , other ) :
+    """Operator for ``3D-function **  other''
+    """
+    return _f3_oper_ ( self , other , Ostap.MoreRooFit.Pow         , "Pow_%s_%s"  )
+        
+
+FUNC3.__add__     = _f3_add_
+FUNC3.__mul__     = _f3_mul_
+FUNC3.__sub__     = _f3_sub_
+FUNC3.__div__     = _f3_div_
+FUNC3.__truediv__ = _f3_div_
+FUNC3.__pow__     = _f3_pow_
+
+# ==============================================================================
+
+
+
+# =============================================================================
+## Operator for `2D-function (op) other`:
+def _f2_oper_ ( fun1 , fun2 , ftype , fname ) :
+    """ Operator for `2D-function (op) other`:
+    """
+    
+    xvar, yvar, zvar  = fun1.xvar , fun1.yvar, None 
+    
+    if   isinstance ( fun2 , FUNC3 ) :
+
+        if xvar in fun2.vars and yvar in fun2.vars :
+
+            ## operation 
+            s = ftype ( fun1.fun , fun2.fun )
+            return Fun3D ( s ,
+                           xvar = fun2.xvar ,
+                           yvar = fun2.yvar ,
+                           zvar = fun2.zvar ,
+                           name = fname     % ( fun1.name , fun2.name ) )
+        
+    elif isinstance ( fun2 , FUNC2 ) :
+
+        if xvar in fun2.vars and yvar in fun2.vars :
+            
+            ## operation  
+            s = ftype ( self.fun , other.fun )
+            return Fun2D ( s ,
+                           xvar = xvar  ,
+                           yvar = yvar  ,
+                           name = fname % ( fun1.name , fun2.name ) )
+        
+        elif ( xvar in fun2.vars ) or ( yvar in fun2.vars ) : 
+            
+            if zvar is None : zvar = fun2.xvar if not fun2.xvar in fun1.vars else None 
+            if zvar is None : zvar = fun2.yvar if not fun2.yvar in fun1.vars else None
+            
+            ## operation  
+            s = ftype ( self.fun , other.fun )
+            return Fun3D ( s ,
+                           xvar = xvar  ,
+                           yvar = yvar  ,
+                           zvar = zvar  ,
+                           name = fname % ( fun1.name , fun2.name ) )
+        
+    elif isinstance ( fun2 , FUNC1 ) :
+
+        if fun2.xvar in fun1.vars :
+            
+            ## operation 
+            op = ftype ( fun1.fun , fun2.fun )
+            return Fun2D ( s ,
+                           xvar = xvar ,
+                           yvar = yvar ,
+                           name = fname % ( fun1.name , fun2.name ) )
+        else :
+            
+            ## operation
+            op = ftype ( fun1.fun , fun2.fun )
+            return Fun3D ( s ,
+                           xvar =      xvar ,
+                           yvar =      yvar ,
+                           zvar = fun2.xvar , 
+                           name = fname     % ( fun1.name , fun2.name ) )
+
+    elif isinstance ( fun2 , num_types ) :
+        
+        o = ROOT.RooRealConstant.value ( float ( fun2 )  ) 
+        s = ftype  ( fun1.fun , o )
+        return Fun2D ( s ,
+                       xvar = xvar  ,
+                       yvar = yvar  ,
+                       name = fname % ( fun1.name , o ) )
+
+    return NotImplemented 
+
+
+# =============================================================================
+## operator for "2D-function + other"
+def _f2_add_ ( self , other ) :
+    """Operator for ``2D-function + other''
+    """
+    return _f2_oper_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
+
+# =============================================================================
+## operator for "2D-function - other"
+def _f2_sub_ ( self , other ) :
+    """Operator for ``2D-function - other''
+    """
+    return _f2_oper_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+
+# =============================================================================
+## operator for "3D-function * other"
+def _f2_mul_ ( self , other ) :
+    """Operator for ``2D-function * other''
+    """
+    return _f2_oper_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+
+# =============================================================================
+## operator for "2D-function / other"
+def _f2_div_ ( self , other ) :
+    """Operator for ``2D-function / other''
+    """
+    return _f2_oper_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+        
+# =============================================================================
+## operator for "2D-function ** other"
+def _f2_pow_ ( self , other ) :
+    """Operator for ``2D-function **  other''
+    """
+    return _f2_oper_ ( self , other , Ostap.MoreRooFit.Pow         , "Pow_%s_%s"     )
+        
+
+FUNC2.__add__     = _f2_add_
+FUNC2.__mul__     = _f2_mul_
+FUNC2.__sub__     = _f2_sub_
+FUNC2.__div__     = _f2_div_
+FUNC2.__truediv__ = _f2_div_
+FUNC2.__pow__     = _f2_pow_
+
+
+
+# =============================================================================
+## Operator for `1D-function (op) other`:
+def _f1_oper_ ( fun1 , fun2 , ftype , fname ) :
+    """ Operator for `1D-function (op) other`:
+    """
+    
+    xvar, yvar, zvar  = fun1.xvar , None , None 
+    
+    if   isinstance ( fun2 , FUNC3 ) :
+
+        if xvar in fun2.vars :
+            
+            ## operation 
+            s = ftype ( fun1.fun , fun2.fun )
+            return Fun3D ( s ,
+                           xvar = fun2.xvar ,
+                           yvar = fun2.yvar ,
+                           zvar = fun2.zvar ,
+                           name = fname     % ( fun1.name , fun2.name ) )
+        
+    elif isinstance ( fun2 , FUNC2 ) :
+
+        if xvar in fun2.vars : 
+            
+            ## operation  
+            s = ftype ( self.fun , other.fun )
+            return Fun2D ( s ,
+                           xvar = fun2.xvar ,
+                           yvar = fun2.yvar ,
+                           name = fname     % ( fun1.name , fun2.name ) )
+        else :
+            
+            ## operation  
+            s = ftype ( self.fun , other.fun )
+            return Fun3D ( s ,
+                           xvar = fun2.xvar ,
+                           yvar = fun2.yvar ,
+                           zvar =      xvar ,
+                           name = fname     % ( fun1.name , fun2.name ) )
+        
+    elif isinstance ( fun2 , FUNC1 ) :
+
+        if fun2.xvar in fun1.vars :
+            
+            ## operation 
+            op = ftype ( fun1.fun , fun2.fun )
+            return Fun2D ( s ,
+                           xvar =      xvar ,
+                           yvar = fun2.xvar ,
+                           name = fname     % ( fun1.name , fun2.name ) )
+        else :
+            
+            ## operation
+            op = ftype ( fun1.fun , fun2.fun )
+            return Fun1D ( s ,
+                           xvar = xvar      ,
+                           name = fname     % ( fun1.name , fun2.name ) )
+
+    elif isinstance ( fun2 , num_types ) :
+        
+        o = ROOT.RooRealConstant.value ( float ( fun2 )  ) 
+        s = ftype  ( fun1.fun , o )
+        return Fun1D ( s ,
+                       xvar = xvar  ,
+                       name = fname % ( fun1.name , o ) )
+
+    return NotImplemented 
+
+# =============================================================================
+## operator for "1D-function + other"
+def _f1_add_ ( self , other ) :
+    """Operator for ``1D-function + other''
+    """
+    return _f1_oper_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
+
+# =============================================================================
+## operator for "1D-function - other"
+def _f1_sub_ ( self , other ) :
+    """Operator for ``2D-function - other''
+    """
+    return _f1_oper_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+
+# =============================================================================
+## operator for "1D-function * other"
+def _f1_mul_ ( self , other ) :
+    """Operator for ``2D-function * other''
+    """
+    return _f1_oper_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+
+# =============================================================================
+## operator for "1D-function / other"
+def _f1_div_ ( self , other ) :
+    """Operator for ``1D-function / other''
+    """
+    return _f1_oper_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+        
+# =============================================================================
+## operator for "1D-function ** other"
+def _f1_pow_ ( self , other ) :
+    """Operator for ``1D-function **  other''
+    """
+    return _f1_oper_ ( self , other , Ostap.MoreRooFit.Pow         , "Pow_%s_%s"  )
+        
+
+FUNC.__add__     = _f1_add_
+FUNC.__mul__     = _f1_mul_
+FUNC.__sub__     = _f1_sub_
+FUNC.__div__     = _f1_div_
+FUNC.__truediv__ = _f1_div_
+FUNC.__pow__     = _f1_pow_
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
