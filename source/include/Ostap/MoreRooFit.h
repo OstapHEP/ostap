@@ -7,6 +7,7 @@
 // ROOT/RooFit 
 // ============================================================================
 #include "RooAddition.h"
+#include "RooProduct.h"
 #include "RooRealProxy.h"
 // ============================================================================
 namespace Ostap 
@@ -20,38 +21,109 @@ namespace Ostap
   namespace MoreRooFit 
   {
     // ========================================================================
+    /** @class Addition
+     *  A simple modification of class RooAddition
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */ 
+    class Addition : public RooAddition
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Addition , 1 ) ;  // sum of RooAbsReal objects
+      // ========================================================================
+    public:
+      // ========================================================================
+      Addition () = default ;
+      /// constructor with two variables 
+      Addition ( const std::string& name  , 
+                 const std::string& title , 
+                 RooAbsReal&        a     , 
+                 RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Addition ( RooAbsReal&        a           , 
+                 RooAbsReal&        b           ,
+                 const std::string& name  = ""  , 
+                 const std::string& title = ""  ) 
+        : Addition ( name , title , a , b )
+      {}
+      /// copy 
+      Addition ( const Addition&    right       , 
+                 const char*        newname = 0 ) ;
+      /// destructor
+      virtual ~Addition () ;
+      /// clone 
+      Addition* clone ( const char* newname ) const override ;
+      // ======================================================================
+    }; // 
+    // ========================================================================
+    /** @class Product
+     *  A simple modification of class RooProduct
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */ 
+    class Product : public RooProduct
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Product , 1 ) ;  // sum of RooAbsReal objects
+      // ========================================================================
+    public:
+      // ========================================================================
+      Product () = default ;
+      /// constructor with two variables 
+      Product ( const std::string& name  , 
+                const std::string& title , 
+                RooAbsReal&        a     , 
+                RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Product ( RooAbsReal&        a           , 
+                RooAbsReal&        b           ,
+                const std::string& name  = ""  , 
+                const std::string& title = ""  ) 
+        : Product ( name , title , a , b )
+      {}
+      /// copy 
+      Product ( const Product&    right       , 
+                const char*        newname = 0 ) ;
+      /// destructor 
+      virtual ~Product () ;
+      /// clone 
+      Product* clone ( const char* newname ) const override ;
+      // ======================================================================
+    }; // 
+    // ========================================================================
     /** @class Subtraction 
      *  A simple modification of class RooAddition
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */ 
-    class Subtraction : public RooAddition
+    class Subtraction : public Addition
     {
       // ========================================================================
       ClassDef(Ostap::MoreRooFit::Subtraction , 1 ) ;  // Difference of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
-      Subtraction () ;
+      Subtraction () = default ;
       /// constructor with list of variables 
-      Subtraction ( const char*        name                   , 
-                    const char*        title                  , 
-                    const RooArgList&  vars                   , 
-                    const Bool_t       takeOwnerShip = kFALSE ) ;
-      /// construtor with two variables 
-      Subtraction ( const char*        name                   , 
-                    const char*        title                  , 
-                    RooAbsReal&        a                      , 
-                    RooAbsReal&        b                      , 
-                    const Bool_t       takeOwnerShip = kFALSE ) ;
-      // copy 
+      Subtraction ( const std::string& name  , 
+                    const std::string& title , 
+                    RooAbsReal&        a     , 
+                    RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Subtraction ( RooAbsReal&        a           , 
+                    RooAbsReal&        b           ,
+                    const std::string& name  = ""  , 
+                    const std::string& title = ""  ) 
+        : Subtraction ( name , title , a , b )
+      {}
+      /// copy 
       Subtraction ( const Subtraction& right       , 
                     const char*        newname = 0 ) ;
-      //
+      /// destructir
       virtual ~Subtraction() ;
-      //
+      /// clone 
       Subtraction* clone ( const char* newname ) const override ;
-      //
+      /// integrals 
       Double_t analyticalIntegral ( Int_t code ,
                                     const char* rangeName = 0 ) const override ;
       Double_t evaluate           () const override ;    
@@ -70,11 +142,17 @@ namespace Ostap
       // ========================================================================
     public:
       // ======================================================================
+      Division  ( const std::string& name  , 
+                  const std::string& title , 
+                  RooAbsReal&        a     , 
+                  RooAbsReal&        b     ) ;
       /// constructor with two variables 
-      Division  ( const char*    name  , 
-                  const char*    title , 
-                  RooAbsReal&    a     , 
-                  RooAbsReal&    b     ) ;
+      Division ( RooAbsReal&         a           , 
+                 RooAbsReal&         b           ,
+                 const std::string&  name  = ""  , 
+                 const std::string&  title = ""  ) 
+        : Division ( name , title , a , b )
+      {}
       // ======================================================================
       /// default constructor 
       Division  () =  default ;
@@ -116,10 +194,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor with two variables 
-      Fraction  ( const char*    name  , 
-                  const char*    title , 
-                  RooAbsReal&    a     , 
-                  RooAbsReal&    b     ) : Division ( name , title , a , b ) {}
+      Fraction  ( const std::string& name  , 
+                  const std::string& title , 
+                  RooAbsReal&        a     , 
+                  RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Fraction ( RooAbsReal&         a           , 
+                 RooAbsReal&         b           ,
+                 const std::string&  name  = ""  , 
+                 const std::string&  title = ""  ) 
+        : Fraction ( name , title , a , b )
+      {}
       // ======================================================================
       /// default constructor 
       Fraction  () =  default ;
@@ -141,36 +226,43 @@ namespace Ostap
       // ======================================================================
     }; //
     // ========================================================================
-    /** @class RelDifference
+    /** @class Asymmetry
      *  Evaluate \f$ \frac{a-b}{a+b}\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class RelDifference : public Division
+    class Asymmetry: public Division
     {
       // ======================================================================
-      ClassDef(Ostap::MoreRooFit::RelDifference , 1 ) ;  // Relative difference 
+      ClassDef(Ostap::MoreRooFit::Asymmetry , 1 ) ;  // Relative difference 
       // ======================================================================
     public:
       // ======================================================================
       /// constructor with two variables 
-      RelDifference ( const char*    name  , 
-                      const char*    title , 
-                      RooAbsReal&    a     , 
-                      RooAbsReal&    b     ) : Division ( name , title , a , b ) {}
+      Asymmetry  ( const std::string& name  , 
+                   const std::string& title , 
+                   RooAbsReal&        a     , 
+                   RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Asymmetry ( RooAbsReal&         a           , 
+                  RooAbsReal&         b           ,
+                  const std::string&  name  = ""  , 
+                  const std::string&  title = ""  ) 
+        : Asymmetry ( name , title , a , b )
+      {}
       // ======================================================================
       /// default constructor 
-      RelDifference () =  default ;
+      Asymmetry () =  default ;
       // ======================================================================
       // copy 
-      RelDifference ( const RelDifference& right       , 
-                      const char*          newname = 0 ) ;
+      Asymmetry ( const Asymmetry&    right       , 
+                  const char*         newname = 0 ) ;
       // ======================================================================
       // destructor 
-      virtual ~RelDifference () ;
+      virtual ~Asymmetry () ;
       // ======================================================================
       // clone method 
-      RelDifference * clone ( const char* newname ) const override ;
+      Asymmetry * clone ( const char* newname ) const override ;
       // ======================================================================
     protected:
       // ======================================================================
@@ -191,11 +283,18 @@ namespace Ostap
       // ========================================================================
     public:
       // ======================================================================
-      /// constructor 
-      Power ( const char*    name  , 
-              const char*    title , 
-              RooAbsReal&    a     , 
-              RooAbsReal&    b     ) : Division ( name , title , a , b ) {}
+      /// constructor with two variables 
+      Power  ( const std::string& name  , 
+               const std::string& title , 
+               RooAbsReal&        a     , 
+               RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Power ( RooAbsReal&         a           , 
+              RooAbsReal&         b           ,
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Power ( name , title , a , b )
+      {}
       // ======================================================================
       /// default constructor 
       Power () =  default ;
@@ -229,11 +328,18 @@ namespace Ostap
       // ========================================================================
     public:
       // ======================================================================
-      /// constructor 
-      Exp ( const char*    name  , 
-            const char*    title , 
-            RooAbsReal&    a     , 
-            RooAbsReal&    b     ) : Division ( name , title , a , b ) {}
+      /// constructor with two variables 
+      Exp  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Exp ( RooAbsReal&         a           , 
+            RooAbsReal&         b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Exp ( name , title , a , b )
+      {}
       // ======================================================================
       /// default constructor 
       Exp () =  default ;
@@ -268,11 +374,22 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor with three variables 
-      ScaleAndShift  ( const char*    name  , 
-                       const char*    title , 
-                       RooAbsReal&    a     , 
-                       RooAbsReal&    b     , 
-                       RooAbsReal&    c     ) ;
+      ScaleAndShift  
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&    a     , 
+        RooAbsReal&    b     , 
+        RooAbsReal&    c     ) ;
+      // ======================================================================   
+      /// constructor with three variables 
+      ScaleAndShift  
+      ( RooAbsReal&        a          , 
+        RooAbsReal&        b          , 
+        RooAbsReal&        c          ,
+        const std::string& name  = "" , 
+        const std::string& title = "" ) 
+        : ScaleAndShift ( name ,  title , a , b , c ) 
+      {} 
       // ======================================================================
       /// default constructor 
       ScaleAndShift   () =  default ;

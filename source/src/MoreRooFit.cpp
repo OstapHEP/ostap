@@ -27,7 +27,7 @@
 ClassImp(Ostap::MoreRooFit::Subtraction   )
 ClassImp(Ostap::MoreRooFit::Division      )
 ClassImp(Ostap::MoreRooFit::Fraction      )
-ClassImp(Ostap::MoreRooFit::RelDifference )
+ClassImp(Ostap::MoreRooFit::Asymmetry )
 ClassImp(Ostap::MoreRooFit::Power         )
 ClassImp(Ostap::MoreRooFit::Exp           )
 ClassImp(Ostap::MoreRooFit::ScaleAndShift )
@@ -35,37 +35,122 @@ ClassImp(Ostap::MoreRooFit::ScaleAndShift )
 namespace 
 {
   const std::string s_division_by_zero { "division by zero" } ;
+  inline std::string  name_  ( const std::string&  name , 
+                               const std::string&  oper , 
+                               const TNamed&       a    ,
+                               const TNamed&       b    )
+  { 
+    return 
+      name.empty () ? ( name + "_" + a.GetName() + "_" + b.GetName() ) : name ; 
+  }  
+  inline std::string  title_ ( const std::string& title , 
+                               const std::string& oper  , 
+                               const TNamed&      a    ,
+                               const TNamed&      b    )
+  { return 
+      title.empty () ? std::string ( "(" ) + a.GetName() + oper + b.GetName() + ")" : title  ; }                        
+  inline std::string  name1_  ( const std::string&  name , 
+                                const TNamed&       a    ,
+                                const TNamed&       b    ,
+                                const TNamed&       c    )
+  { 
+    return 
+      name.empty () ? ( std::string ( "scaleshift_"  )
+                        + a.GetName() + "_" 
+                        + b.GetName() + "_" + c.GetName() ) : name ; 
+  } 
+  inline std::string  title1_  ( const std::string&  name , 
+                                 const TNamed&       a    ,
+                                 const TNamed&       b    ,
+                                 const TNamed&       c    )
+  { 
+    return 
+      name.empty () ? ( std::string ( "scaleshift(" ) 
+                        + a.GetName() + "," 
+                        + b.GetName() + "," + c.GetName() + ")") : name ; 
+  }
 }
 // ============================================================================
-// default constructor 
+// constructor with two variables 
 // ============================================================================
-Ostap::MoreRooFit::Subtraction::Subtraction()
-  : RooAddition () 
+Ostap::MoreRooFit::Addition::Addition
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     )
+  : RooAddition 
+    ( name_  ( name  , "sum" , a , b ).c_str() , 
+      title_ ( title , "+"   , a , b ).c_str() , a , b ) 
 {}
 // ============================================================================
+//  copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::Addition::Addition
+( const Ostap::MoreRooFit::Addition& right   , 
+  const char*                        newname ) 
+  : RooAddition ( right , newname )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Addition::~Addition(){}
+// ============================================================================
+Ostap::MoreRooFit::Addition* 
+Ostap::MoreRooFit::Addition::clone ( const char* newname ) const 
+{ return new Addition ( *this , newname ) ; }
+// ============================================================================
+
+
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Product::Product
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     )
+  : RooProduct 
+    ( name_  ( name  , "mult" , a , b ).c_str() , 
+      title_ ( title , "*"    , a , b ).c_str() , RooArgList ( a , b ) ) 
+{}
+// ============================================================================
+//  copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::Product::Product
+( const Ostap::MoreRooFit::Product& right   , 
+  const char*                        newname ) 
+  : RooProduct ( right , newname )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Product::~Product(){}
+// ============================================================================
+Ostap::MoreRooFit::Product* 
+Ostap::MoreRooFit::Product::clone ( const char* newname ) const 
+{ return new Product ( *this , newname ) ; }
+// ============================================================================
+
+
+
+// ============================================================================
+// constructor with two variables
+// ============================================================================
 Ostap::MoreRooFit::Subtraction::Subtraction
-( const char*       name          , 
-  const char*       title         , 
-  const RooArgList& vars          , 
-  const Bool_t      takeOwnerShip ) 
-  : RooAddition ( name ,  title , vars , takeOwnerShip )
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     )
+  : Addition 
+    ( name_  ( name , "subtract" , a , b )  ,
+      title_ ( name , "-"        , a , b )  , a , b )
 {}
 // ============================================================================
 Ostap::MoreRooFit::Subtraction::Subtraction
 ( const Ostap::MoreRooFit::Subtraction& right   , 
   const char*                           newname ) 
-  : RooAddition ( right , newname )
-{}
-// ============================================================================
-// construtor with two variables 
-// ============================================================================
-Ostap::MoreRooFit::Subtraction::Subtraction
-( const char* name  , 
-  const char* title , 
-  RooAbsReal& a     , 
-  RooAbsReal& b     ,
-  const Bool_t takeOwnerShip ) 
-  : RooAddition ( name , title , RooArgList ( a , b ) , takeOwnerShip )
+  : Addition ( right , newname )
 {}
 // ============================================================================
 // destructor 
@@ -167,11 +252,13 @@ Double_t Ostap::MoreRooFit::Subtraction::evaluate() const
 // constructor with two variables 
 // ============================================================================
 Ostap::MoreRooFit::Division::Division 
-( const char* name  , 
-  const char* title , 
-  RooAbsReal& a     , 
-  RooAbsReal& b     ) 
-  : RooAbsReal ( name , title )
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : RooAbsReal 
+    ( name_  ( name , "divide" , a , b ).c_str() ,
+      title_ ( name , "/"      , a , b ).c_str() )
   , m_A ( "!A" , "Nominator"   , this , a ) 
   , m_B ( "!B" , "Denominator" , this , b ) 
 {}
@@ -208,8 +295,22 @@ Double_t Ostap::MoreRooFit::Division::evaluate () const
   //
   return a / b ;
 }
+// ============================================================================
 
 
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Fraction::Fraction
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : Division 
+    ( name_  ( name , "divide" , a , b ) , 
+      title_ ( name , "/"      , a , b ) , a , b )
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================
@@ -241,41 +342,66 @@ Double_t Ostap::MoreRooFit::Fraction::evaluate () const
   //
   return a / ( a + b ) ;
 }
+// ============================================================================
 
-
+ 
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Asymmetry::Asymmetry 
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : Division 
+    ( name_  ( name , "asymmetry" , a , b ) , 
+      title_ ( name , " asym "    , a , b ) , a , b )
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================
-Ostap::MoreRooFit::RelDifference::RelDifference
-( const Ostap::MoreRooFit::RelDifference& right , 
+Ostap::MoreRooFit::Asymmetry::Asymmetry
+( const Ostap::MoreRooFit::Asymmetry& right , 
   const char*                            name  ) 
   : Division ( right , name ) 
 {}
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::MoreRooFit::RelDifference::~RelDifference(){}
+Ostap::MoreRooFit::Asymmetry::~Asymmetry(){}
 // ============================================================================
 // cloning
 // ============================================================================
-Ostap::MoreRooFit::RelDifference* 
-Ostap::MoreRooFit::RelDifference::clone ( const char* newname ) const 
-{ return new RelDifference ( *this , newname ) ; }
+Ostap::MoreRooFit::Asymmetry* 
+Ostap::MoreRooFit::Asymmetry::clone ( const char* newname ) const 
+{ return new Asymmetry ( *this , newname ) ; }
 // ============================================================================
 // the actual evaluation of the result 
 // ============================================================================
-Double_t Ostap::MoreRooFit::RelDifference::evaluate () const 
+Double_t Ostap::MoreRooFit::Asymmetry::evaluate () const 
 {
   const double a = m_A ;
   const double b = m_B ;
   //
-  static const std::string s_self { "Ostap::MoreRooFit::RelDifference" } ;
+  static const std::string s_self { "Ostap::MoreRooFit::Asymmetry" } ;
   Ostap::Assert ( a + b != 0 , s_division_by_zero , s_self ) ;
   //
   return ( a - b ) / ( a + b ) ;
 }
 
 
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Power::Power
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : Division 
+    ( name_  ( name , "pow" , a , b ) , 
+      title_ ( name , "** " , a , b ) , a , b )
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================
@@ -321,6 +447,18 @@ Double_t Ostap::MoreRooFit::Power::evaluate () const
 }
 
 // ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Exp::Exp
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : Division 
+    ( name_  ( name , "exp"   , a , b ) , 
+      title_ ( name , " exp " , a , b ) , a , b )
+{}
+// ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::MoreRooFit::Exp::Exp
@@ -353,12 +491,14 @@ Double_t Ostap::MoreRooFit::Exp::evaluate () const
 // constructor with three variables 
 // ============================================================================
 Ostap::MoreRooFit::ScaleAndShift::ScaleAndShift 
-( const char* name  , 
-  const char* title , 
-  RooAbsReal& a     , 
-  RooAbsReal& b     ,
-  RooAbsReal& c     ) 
-  : RooAbsReal ( name , title )
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ,
+  RooAbsReal&        c     ) 
+  : RooAbsReal 
+    ( name1_  ( name  , a , b , c ).c_str() , 
+      title1_ ( title , a , b , c ).c_str() )
   , m_a ( "!a" , "shift/bias"   , this , a ) 
   , m_b ( "!b" , "scale"        , this , b ) 
   , m_c ( "!c" , "function"     , this , c ) 

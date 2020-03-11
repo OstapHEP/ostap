@@ -671,19 +671,10 @@ class MakeVar ( object ) :
             var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_multiply ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Multiply_%s_%s'  % vnames 
-        title = title if title else '(%s) times (%s)' % vnames 
-        
-        varlist = ROOT.RooArgList    ( var1 , var2  )
-        self.aux_keep.append ( varlist )
-        
-        ## formula = '(%s*%s)' % vnames
-        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
-        result = ROOT.RooProduct ( self.var_name ( name ) , title , varlist )
-        
-        #
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit. Product  ( var1 , var2 )
         self.aux_keep.append ( result  )
         
         return result
@@ -728,21 +719,12 @@ class MakeVar ( object ) :
             var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_add ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Add_%s_%s'  % vnames 
-        title = title if title else '(%s) plus (%s)' % vnames 
-        
-        varlist = ROOT.RooArgList    ( var1 , var2 )
-        self.aux_keep.append ( varlist )
-        
-        ## formula = '(%s+%s)' % vnames
-        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
-        
-        result  = ROOT.RooAddition ( self.var_name ( name ) , title , varlist )
-        #
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Addition  ( var1 , var2 )
         self.aux_keep.append ( result  )
-        
+                
         return result
 
     # =============================================================================
@@ -765,15 +747,32 @@ class MakeVar ( object ) :
         >>> var5 = xxx.vars_difference ( var1 , var2   )
         >>> var6 = xxx.vars_difference ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
-        
+
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
-        
-        if   f1 and 0 == var1  : return self.vars_multiply ( -1 , var2 ) ## SHORTCUT 
-        elif f2 and 0 == var2  : return var1                             ## SHORTCUT 
 
-        var3 = self.vars_multiply ( -1 , var2 )
-        return self.vars_add ( var1 , var2 , name ,  title ) 
+        if f1 and f2 :
+            ##
+            res  = float ( var1 ) - float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## 
+            var1 = ROOT.RooRealConstant.value ( var1 )                         
+            return self.vars_subtract ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return var1                      ## SHORTCUT
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
+            return self.vars_subtract ( var1 , var2 , name , title )
+
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Subtraction  ( var1 , var2 )
+        self.aux_keep.append ( result  )
+                
+        return result
             
     # =============================================================================
     ## construct (on-flight) variable for the ratio of
@@ -808,24 +807,13 @@ class MakeVar ( object ) :
         elif f2 :
             return self.vars_multiply ( var1 , 1.0/var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Divide_%s_%s'     % vnames 
-        title = title if title else '(%s) divide (%s)' % vnames 
-        #
-        #
-        ## varlist = ROOT.RooArgList    ( var1 , var2 )
-        ## self.aux_keep.append ( varlist )
-        ##
-        ## formula = '(%s/%s)' % vnames
-        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula , varlist )
-        #
-        result = Ostap.MoreRooFit.Division ( self.var_name ( name ) , title , var1 , var2 )
-        
-        self.aux_keep.append ( result  )
-        
-        return result
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
 
+        result = Ostap.MoreRooFit.Division  ( var1 , var2 )
+        self.aux_keep.append ( result  )
+                
+        return result
 
     # =============================================================================
     ## construct (on-flight) variable  for the fraction  of
@@ -863,18 +851,10 @@ class MakeVar ( object ) :
             var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_fraction ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Fraction_%s_%s'     % vnames 
-        title = title if title else '(%s) fraction (%s)' % vnames 
-        
-        ## varlist = ROOT.RooArgList    ( var1 , var2                     )
-        ## self.aux_keep.append ( varlist )
-        ## formula = '(%s/(%s+%s))' %   ( var1.name , var1.name , var2.name )
-        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
-        
-        result = Ostap.MoreRooFit.Fraction ( self.var_name ( name ) , title , var1 , var2  )
-        #
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Fraction  ( var1 , var2 )
         self.aux_keep.append ( result  )
         
         return result
@@ -904,7 +884,7 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res  = float ( var1 ) / ( float ( var2 ) + float ( var1 ) )
+            res  = ( float ( var1 ) - float ( var2 ) ) / ( float ( var2 ) + float ( var1 ) )
             return ROOT.RooRealConstant.value ( res ) 
         elif f1 :
             ## shortcut 
@@ -919,18 +899,10 @@ class MakeVar ( object ) :
             var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_asymmetry ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Asymmetry_%s_%s'     % vnames 
-        title = title if title else '(%s) asymmetry (%s)' % vnames 
-        
-        ## varlist = ROOT.RooArgList    ( var1 , var2                     )
-        ## self.aux_keep.append ( varlist )
-        ## formula = '(%s-%s)/(%s+%s))' % ( var1.name , var2.name , var1.name , var2.name )
-        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
-        
-        result  = Ostap.MoreRooFit.RelDifference ( self.var_name ( name ) , title , var1 , var2  )
-        #
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Asymmetry ( var1 , var2 )
         self.aux_keep.append ( result  )
         
         return result
@@ -972,18 +944,10 @@ class MakeVar ( object ) :
             var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_power ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Power_%s_%s'     % vnames 
-        title = title if title else '(%s) ** (%s)' % vnames 
-        
-        ## varlist = ROOT.RooArgList    ( var1 , var2                     )
-        ## self.aux_keep.append ( varlist )
-        ## formula = '(%s-%s)/(%s+%s))' % ( var1.name , var2.name , var1.name , var2.name )
-        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
-        
-        result  = Ostap.MoreRooFit.Power ( self.var_name ( name ) , title , var1 , var2  )
-        #
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Power ( var1 , var2 )
         self.aux_keep.append ( result  )
         
         return result
@@ -1025,21 +989,14 @@ class MakeVar ( object ) :
             var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_exp ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Exp_%s_%s'           % vnames 
-        title = title if title else 'exp ( (%s) * (%s) )' % vnames 
-        
-        ## varlist = ROOT.RooArgList    ( var1 , var2                     )
-        ## self.aux_keep.append ( varlist )
-        ## formula = '(%s-%s)/(%s+%s))' % ( var1.name , var2.name , var1.name , var2.name )
-        ## result  = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula, varlist )
-        
-        result  = Ostap.MoreRooFit.Exp ( self.var_name ( name ) , title , var1 , var2  )
-        #
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Exp ( var1 , var2 )
         self.aux_keep.append ( result  )
         
         return result
+
     
     vars_sum           = vars_add 
     vars_product       = vars_multiply
