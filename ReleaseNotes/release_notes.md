@@ -14,6 +14,7 @@
   1. add `Fun1D`, `Fun2D`  and `Fun3D` wrappers 
   1. update `efficiency.py`
   1. reshuffle a bit the existins strustures
+  1. add operations and operators for `FUNC`, `FUNC2` and `FUNC3` objects 
 
 ## Backward incompatible changes
 
