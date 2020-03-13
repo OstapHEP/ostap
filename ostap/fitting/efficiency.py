@@ -19,7 +19,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
-from   ostap.fitting.funbasic import FUNC 
+from   ostap.fitting.funbasic import FUNC, FUNC2 , FUNC3 , Fun1D , Fun2D , Fun3D 
 from   ostap.fitting.basic    import PDF , Generic1D_pdf
 from   ostap.fitting.fit2d    import PDF2, Generic2D_pdf
 from   ostap.fitting.fit3d    import PDF3, Generic3D_pdf
@@ -320,12 +320,10 @@ class Efficiency1D (Efficiency) :
             eff_pdf = None  
         elif isinstance ( efficiency , ROOT.RooAbsPdf   ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
             eff_pdf = Generic1D_pdf ( efficiency , xvar )                
-            xvar    = xvar            
             eff_fun = None 
         elif isinstance ( efficiency , ROOT.RooAbsReal  ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :            
-            eff_pdf = Generic1D_pdf ( efficiency , xvar , special = True )                
-            xvar    = xvar            
-            eff_fun = None if isinstance ( efficiency , ROOT.RooAbsPdf ) else efficiency            
+            eff_pdf = Fun1D        ( efficiency , xvar =  xvar )                
+            eff_fun = efficiency            
         else :
             raise AttributeError('Invalid efficiency/xvar combination  %s/%s;%s/%s'  %
                                  ( efficiency ,  type(efficiency) , xvar , type(xvar) ) )
@@ -443,12 +441,29 @@ class Efficiency2D (Efficiency) :
             eff_pdf = efficiency
             xvar    = efficiency.xvar
             eff_fun = None            
+        elif isinstance   ( efficiency , FUNC2 ) :
+            eff_fun = efficiency.fun 
+            xvar    = efficiency.xvar
+            yvar    = efficiency.yvar
+            eff_pdf = None  
         elif isinstance ( efficiency , ROOT.RooAbsReal  ) :            
             okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
             oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
             assert oix and oky, 'Invalid efficiency/xvar/yvar setting!'            
             eff_pdf = Generic2D_pdf ( efficiency , xvar , yvar , special = True )                
             eff_fun = None  if isinstance ( efficiency , ROOT.RooAbsPdf ) else efficiency            
+        elif isinstance ( efficiency , ROOT.RooAbsPdf   ) :            
+            okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
+            oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
+            assert oix and oky, 'Invalid efficiency/xvar/yvar setting!'            
+            eff_pdf = Generic2D_pdf ( efficiency , xvar , yvar , special = True )                
+            eff_fun = None       
+        elif isinstance ( efficiency , ROOT.RooAbsReal  ) :            
+            okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
+            oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
+            assert oix and oky, 'Invalid efficiency/xvar/yvar setting!'            
+            eff_pdf = Fun2D ( efficiency , xvar = xvar , yvar = yvar )  
+            eff_fun = efficiency 
         else :
             raise AttributeError('Invalid efficiency/xvar/yvat combination  %s/%s/%s/%s'  %
                                  ( efficiency ,  type(efficiency) , xvar , yvar ) )
@@ -609,15 +624,28 @@ class Efficiency3D (Efficiency) :
             yvar    = efficiency.yvar
             zvar    = efficiency.zvar
             eff_fun = None            
+        elif isinstance   ( efficiency , FUNC3 ) :
+            eff_fun = efficiency.fun 
+            xvar    = efficiency.xvar
+            yvar    = efficiency.yvar
+            zvar    = efficiency.zvar
+            eff_pdf = None  
+        elif isinstance ( efficiency , ROOT.RooAbsPdf  ) :            
+            okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
+            oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
+            okz = zvar and isinstance ( zvar , ROOT.RooAbsReal )
+            assert oix and oky and okz, 'Invalid efficiency/xvar/yvar/zvar setting!'            
+            eff_pdf = Generic3D_pdf ( efficiency , xvar , yvar , zvar , special = True )
+            eff_fun = None  
         elif isinstance ( efficiency , ROOT.RooAbsReal  ) :            
             okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
             oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
             okz = zvar and isinstance ( zvar , ROOT.RooAbsReal )
             assert oix and oky and okz, 'Invalid efficiency/xvar/yvar/zvar setting!'            
-            eff_pdf = Generic3D_pdf ( efficiency , xvar , yvar , zvar , special = True )                
-            eff_fun = None  if isinstance ( efficiency , ROOT.RooAbsPdf ) else efficiency            
+            eff_pdf = Fun3D ( efficiency , xvar = xvar , yvar = yvar , zvar = zvar )                
+            eff_fun = efficiency            
         else :
-            raise AttributeError('Invalid efficiency/xvar/yvat combination  %s/%s/%s/%s/%s'  %
+            raise AttributeError('Invalid efficiency/xvar/yvar/zvar combination  %s/%s/%s/%s/%s'  %
                                  ( efficiency ,  type(efficiency) , xvar , yvar ,  zvar ) )
         
         

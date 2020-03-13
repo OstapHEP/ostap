@@ -205,6 +205,7 @@ _new_methods_ += [
 # =============================================================================
 ## Math operations 
 # =============================================================================
+val_types = num_types + ( VE , ROOT.RooAbsReal )
 
 # ============================================================================
 ## Addition of RooRealVar and ``number''
@@ -216,6 +217,8 @@ def _rrv_add_ ( s , o ) :
     >>> res = var + num
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+    
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -232,7 +235,9 @@ def _rrv_sub_ ( s , o ) :
     >>> num = ...
     >>> res = var - num
     
-    """
+    """    
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -249,7 +254,9 @@ def _rrv_mul_ ( s , o ) :
     >>> num = ...
     >>> res = var * num
     
-    """
+    """    
+    if not isinstance ( o , val_types ) : return NotImplemented
+    
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -267,6 +274,8 @@ def _rrv_div_ ( s , o ) :
     >>> res = var / num
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -284,6 +293,8 @@ def _rrv_radd_ ( s , o ) :
     >>> res = num + var 
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -301,6 +312,8 @@ def _rrv_rsub_ ( s , o ) :
     >>> res = num - var 
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -317,6 +330,8 @@ def _rrv_rmul_ ( s , o ) :
     >>> num = ...
     >>> res = num * var     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -333,6 +348,8 @@ def _rrv_rdiv_ ( s , o ) :
     >>> num = ...
     >>> res = num / var     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -349,6 +366,8 @@ def _rrv_pow_ ( s , o ) :
     >>> num = ...
     >>> res = var ** num     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -366,13 +385,14 @@ def _rrv_rpow_ ( s , o ) :
     >>> res = num ** var 
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
     v = s.getVal() if s.isConstant() else s.ve()
     #
     return o**v   
-
 
 # ============================================================================
 def _rrv_iadd_ ( s , o ) :

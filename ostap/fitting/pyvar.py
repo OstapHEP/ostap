@@ -156,7 +156,7 @@ class PyVAR (object) :
                    title  = ''   ,   ## the title 
                    pyvar  = None ) : ## helper 
 
-        assert vars or ( pypdf and isinstance ( pyvar , Ostap.Functions.PyVar ) ),\
+        assert vars or ( pyvar and isinstance ( pyvar , Ostap.Functions.PyVar ) ),\
                "Invaild configuration of PyVAR: %s/%s" % ( vars , pypdf ) 
         
         if not pyvar :
@@ -318,7 +318,7 @@ class PyVAR2 (object) :
         ## function must be valid function! 
         assert function and callable ( function ) , "``function'' is not callable!"
 
-        if not title : title = "PyVAR(%s)"  % name
+        if not title : title = "PyVAR2(%s)"  % name
         
         self.__pyfunction = function
         self.__argvars    = vars
@@ -376,5 +376,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

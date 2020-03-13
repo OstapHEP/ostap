@@ -1022,6 +1022,13 @@ class Generic3D_pdf(PDF3) :
         ## PDF! 
         self.pdf = pdf
 
+        if not self.xvar in self.pdf.getParameters ( 0 ) : 
+            self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
+        if not self.yvar in self.pdf.getParameters ( 0 ) : 
+            self.warning ( "Function/PDF does not depend on yvar=%s" % self.yvar.name )
+        if not self.zvar in self.pdf.getParameters ( 0 ) :
+            self.warning ( "Function/PDF does not depend on zvar=%s" % self.zvar.name )
+
         ## add it to the list of signal components ?
         self.__add_to_signals = True if add_to_signals else False
         

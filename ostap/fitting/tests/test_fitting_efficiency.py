@@ -63,7 +63,6 @@ points = [ dx * i for i in range ( np + 1 ) ]
 # use some PDF to parameterize efficiciency
 def test_pdf () :
 
-
     effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 3 , increasing = True )
 
     maxe   = margin * effPdf ( xmax )
@@ -136,14 +135,45 @@ def test_vars2 () :
 
 
 
+# =============================================================================
+# use some functions  to parameterize efficiciency
+def test_vars3 () :
+
+    a  = ROOT.RooRealVar  ( 'A', 'a' , 0.05  ,   0   , 1   )
+    b  = ROOT.RooRealVar  ( 'B', 'b' , 0.02  , -0.05 , 0.1 )
+    c  = ROOT.RooRealVar  ( 'C', 'c' , 0.005 ,   0   , 0.1 )
+
+    import ostap.fitting.roofuncs as     R
+    from   ostap.fitting.funbasic import Fun1D 
+    X   = Fun1D ( x , xvar = x , name = 'X' )
+    
+    ##F   = (X**2) * c + X * b + a 
+    F   = a +  b * X + c * X**2
+    
+    eff2   = Efficiency1D ( 'E5' , F , cut = acc  , xvar = x )
+    
+    r2     = eff2.fitTo ( ds )
+    f2     = eff2.draw  ( ds )
+    
+    print (r2)
+    
+    for p in points :
+        e  = eff2 ( p , error = True )
+        ev = e.value()
+        e0 = eff0 ( p ) / emax  
+        print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
+
+
+
     
 # =============================================================================
 if '__main__' == __name__ :
 
 
-    test_pdf    ()
-    test_vars1  ()
-    test_vars2  ()
+    test_pdf   ()
+    test_vars1 ()
+    test_vars2 ()
+    test_vars3 ()
 
 # =============================================================================
 ##                                                                      The END 

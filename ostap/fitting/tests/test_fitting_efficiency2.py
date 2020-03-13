@@ -131,7 +131,7 @@ def test_pyvar2 () :
     from ostap.fitting.pyvar import PyVAR2
 
     
-    myEff3 = PyVAR2 ( name = 'myEff3' , vars =   vars , function  = eff )
+    myEff3 = PyVAR2 ( name = 'myEff3' , vars = vars , function  = eff )
     
     eff3 = Efficiency1D( 'E3' , myEff3.var , cut  = acc , xvar = x )
 

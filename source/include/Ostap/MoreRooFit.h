@@ -8,6 +8,7 @@
 // ============================================================================
 #include "RooAddition.h"
 #include "RooProduct.h"
+#include "RooRealConstant.h"
 #include "RooRealProxy.h"
 // ============================================================================
 namespace Ostap 
@@ -340,16 +341,24 @@ namespace Ostap
             const std::string&  title = ""  ) 
         : Exp ( name , title , a , b )
       {}
+      /// constructor with one variable
+      Exp  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     ) 
+        : Exp ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
       // ======================================================================
       /// default constructor 
       Exp () =  default ;
       // ======================================================================
       // copy 
       Exp ( const Exp&     right       , 
-            const char*    newname = 0 ) ;
+            const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
       // ======================================================================
       // destructor 
-      virtual ~Exp () ;
+      virtual ~Exp () {} ;
       // ======================================================================
       // clone method 
       Exp* clone ( const char* newname ) const override ;
@@ -361,61 +370,535 @@ namespace Ostap
       // ======================================================================
     }; //
     // ========================================================================
-    /** @class ScaleAndShift 
-     *  \f[ f = a +  b c \f]
+    /** @class Log
+     *  Evaluate \f$ \log ab  \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class ScaleAndShift : public RooAbsReal 
+    class Log: public Division 
     {
-      // ======================================================================
-      ClassDef(Ostap::MoreRooFit::ScaleAndShift, 1 ) ;  // Fraction 
-      // ======================================================================
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Log , 1 ) ;  // power function
+      // ========================================================================
     public:
       // ======================================================================
-      /// constructor with three variables 
-      ScaleAndShift  
-      ( const std::string& name  , 
-        const std::string& title , 
-        RooAbsReal&    a     , 
-        RooAbsReal&    b     , 
-        RooAbsReal&    c     ) ;
-      // ======================================================================   
-      /// constructor with three variables 
-      ScaleAndShift  
-      ( RooAbsReal&        a          , 
-        RooAbsReal&        b          , 
-        RooAbsReal&        c          ,
-        const std::string& name  = "" , 
-        const std::string& title = "" ) 
-        : ScaleAndShift ( name ,  title , a , b , c ) 
-      {} 
+      /// constructor with two variables 
+      Log  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Log ( RooAbsReal&         a           , 
+            RooAbsReal&         b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Log  ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Log  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     ) 
+        : Log ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
       // ======================================================================
       /// default constructor 
-      ScaleAndShift   () =  default ;
+      Log () =  default ;
       // ======================================================================
       // copy 
-      ScaleAndShift  ( const ScaleAndShift& right       , 
-                       const char*          newname = 0 ) ;
+      Log ( const Log&     right       , 
+            const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
       // ======================================================================
       // destructor 
-      virtual ~ScaleAndShift () ;
+      virtual ~Log () {} ;
       // ======================================================================
       // clone method 
-      ScaleAndShift * clone ( const char* newname ) const override ;
-      // ======================================================================
+      Log* clone ( const char* newname ) const override ;
+      // ====================================================================== 
     protected:
       // ======================================================================
       // the actual evaluation of the result 
       Double_t evaluate () const override ;    
       // ======================================================================
-    private:
+    }; //
+    // ========================================================================
+    /** @class Erf
+     *  Evaluate \f$ erf(ab) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Erf: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Erf , 1 ) ;  // power function
+      // ========================================================================
+    public:
       // ======================================================================
-      RooRealProxy m_a ; // a 
-      RooRealProxy m_b ; // b 
-      RooRealProxy m_c ; // c 
+      /// constructor with two variables 
+      Erf  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Erf ( RooAbsReal&         a           , 
+            RooAbsReal&         b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Erf ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Erf  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     ) 
+        : Erf ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
       // ======================================================================
-    };
+      /// default constructor 
+      Erf () =  default ;
+      // ======================================================================
+      // copy 
+      Erf ( const Erf&     right       , 
+            const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Erf () {} ;
+      // ======================================================================
+      // clone method 
+      Erf* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Gamma
+     *  Evaluate \f$ \Gamma(ab) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Gamma: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Gamma , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Gamma  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Gamma ( RooAbsReal&         a           , 
+              RooAbsReal&         b           ,
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Gamma ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Gamma  ( const std::string& name  , 
+               const std::string& title , 
+               RooAbsReal&        a     ) 
+        : Gamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      Gamma () =  default ;
+      // ======================================================================
+      // copy 
+      Gamma ( const Gamma&   right       , 
+              const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Gamma() {} ;
+      // ======================================================================
+      // clone method 
+      Gamma* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class LGamma
+     *  Evaluate \f$ \log\Gamma(ab) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class LGamma: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::LGamma , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      LGamma  ( const std::string& name  , 
+                const std::string& title , 
+                RooAbsReal&        a     , 
+                RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      LGamma ( RooAbsReal&         a           , 
+               RooAbsReal&         b           ,
+               const std::string&  name  = ""  , 
+               const std::string&  title = ""  ) 
+        : LGamma ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      LGamma  ( const std::string& name  , 
+                const std::string& title , 
+                RooAbsReal&        a     ) 
+        : LGamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      LGamma () =  default ;
+      // ======================================================================
+      // copy 
+      LGamma ( const LGamma&  right       , 
+               const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~LGamma() {} ;
+      // ======================================================================
+      // clone method 
+      LGamma* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class IGamma
+     *  Evaluate \f$ \frac{1}{\Gamma(ab)} \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class IGamma: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::IGamma , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      IGamma  ( const std::string& name  , 
+                const std::string& title , 
+                RooAbsReal&        a     , 
+                RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      IGamma ( RooAbsReal&         a           , 
+               RooAbsReal&         b           ,
+               const std::string&  name  = ""  , 
+               const std::string&  title = ""  ) 
+        : IGamma ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      IGamma  ( const std::string& name  , 
+                const std::string& title , 
+                RooAbsReal&        a     ) 
+        : IGamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      IGamma () =  default ;
+      // ======================================================================
+      // copy 
+      IGamma ( const IGamma&  right       , 
+               const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~IGamma() {} ;
+      // ======================================================================
+      // clone method 
+      IGamma* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Sin
+     *  Evaluate \f$ \sin ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Sin: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Sin , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Sin  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Sin ( RooAbsReal&         a           , 
+            RooAbsReal&         b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Sin ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Sin ( const std::string& name  , 
+            const std::string& title , 
+            RooAbsReal&        a     ) 
+        : Sin ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      Sin  () =  default ;
+      // ======================================================================
+      // copy 
+      Sin  ( const Sin&     right       , 
+             const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Sin () {} ;
+      // ======================================================================
+      // clone method 
+      Sin* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Cos
+     *  Evaluate \f$ \cos ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Cos: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Cos , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Cos  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Cos ( RooAbsReal&         a           , 
+            RooAbsReal&         b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Cos ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Cos ( const std::string& name  , 
+            const std::string& title , 
+            RooAbsReal&        a     ) 
+        : Cos ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      Cos  () =  default ;
+      // ======================================================================
+      // copy 
+      Cos  ( const Cos&     right       , 
+             const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Cos () {} ;
+      // ======================================================================
+      // clone method 
+      Cos* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Tan
+     *  Evaluate \f$ \tan ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Tan: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Tan , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Tan  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Tan ( RooAbsReal&         a           , 
+            RooAbsReal&         b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Tan ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Tan ( const std::string& name  , 
+            const std::string& title , 
+            RooAbsReal&        a     ) 
+        : Tan ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      Tan  () =  default ;
+      // ======================================================================
+      // copy 
+      Tan  ( const Tan&     right       , 
+             const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Tan () {} ;
+      // ======================================================================
+      // clone method 
+      Tan* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Tanh
+     *  Evaluate \f$ \tanh ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Tanh: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Tanh , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Tanh  ( const std::string& name  , 
+              const std::string& title , 
+              RooAbsReal&        a     , 
+              RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Tanh ( RooAbsReal&         a           , 
+             RooAbsReal&         b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Tanh ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Tanh ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     ) 
+        : Tanh ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      Tanh () =  default ;
+      // ======================================================================
+      // copy 
+      Tanh ( const Tanh&    right             , 
+             const char*    newname = nullptr )
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Tanh () {} ;
+      // ======================================================================
+      // clone method 
+      Tanh* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Atan2
+     *  Evaluate \f$ atan2 ( a , b)  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Atan2: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Atan2 , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Atan2  ( const std::string& name  , 
+              const std::string& title , 
+              RooAbsReal&        a     , 
+              RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Atan2 ( RooAbsReal&         a           , 
+              RooAbsReal&         b           ,
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Atan2 ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Atan2 ( const std::string& name  , 
+              const std::string& title , 
+              RooAbsReal&        a     ) 
+        : Atan2 ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      Atan2 () =  default ;
+      // ======================================================================
+      // copy 
+      Atan2 ( const Atan2&   right             , 
+              const char*    newname = nullptr )
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Atan2 () {} ;
+      // ======================================================================
+      // clone method 
+      Atan2* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================
