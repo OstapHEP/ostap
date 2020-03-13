@@ -17,6 +17,7 @@
   1. add operations and operators for `FUNC`, `FUNC2` and `FUNC3` objects 
   1. improve baseclasess for functions and PDFs, add more operators/operations 
 
+
 ## Backward incompatible changes
 
 ## Bug fixes:  
