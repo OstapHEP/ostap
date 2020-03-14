@@ -638,7 +638,11 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Exp ( a, b , name , title ) 
+    result    = Ostap.MoreRooFit.Exp ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 # ==============================================================================
 ## logarithm  \f$ f = \log ab \f$
@@ -659,7 +663,11 @@ def var_log ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Log ( a , b , name , title ) 
+    result    = Ostap.MoreRooFit.Log ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 # ==============================================================================
 ## error function \f$ f = erf ( ab) \f$
@@ -680,7 +688,11 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Erf ( a , b , name , title ) 
+    result    = Ostap.MoreRooFit.Erf ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 
 # ==============================================================================
@@ -702,7 +714,12 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Sin ( a , b , name , title ) 
+    result    = Ostap.MoreRooFit.Sin ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
+
 
 # ==============================================================================
 ## Cosine \f$ f = \cos ab\f$
@@ -723,7 +740,11 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Cos ( a, b , name , title ) 
+    result    = Ostap.MoreRooFit.Cos ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 # ==============================================================================
 ## Tangent\f$ f = \tan ab\f$
@@ -744,7 +765,11 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Tan ( a, b , name , title ) 
+    result    = Ostap.MoreRooFit.Tan ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 
 # ==============================================================================
@@ -766,7 +791,11 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Tanh ( a, b , name , title ) 
+    result    = Ostap.MoreRooFit.Tanh ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 # ==============================================================================
 ## arctangent\f$ f = atan2 (a,b)\f$
@@ -787,7 +816,11 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Atan2 ( a, b , name , title ) 
+    result    = Ostap.MoreRooFit.Atan2 ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 # ==============================================================================
 ## Gamma function \f$ f =    \Gamma(ab) \f$
@@ -808,7 +841,11 @@ def var_gamma ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.Gamma ( a, b , name , title ) 
+    result    = Ostap.MoreRooFit.Gamma ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 # ==============================================================================
 ## logarithm of Gamma function \f$ f = \log \Gamma(ab) \f$
@@ -829,7 +866,11 @@ def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.LGamma ( a, b , name , title ) 
+    result    = Ostap.MoreRooFit.LGamma ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 # ==============================================================================
 ## 1/Gamma function \f$ f = \frac{1}{\Gamma(ab)} \f$
@@ -850,7 +891,11 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    return Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
+    result    = Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
+    result._a = a
+    result._b = b
+    #
+    return result
 
 
 # =============================================================================
@@ -877,7 +922,11 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    return Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
+    result     = Ostap.MoreRooFit.Addition ( v1 , v2 , name , title ) 
+    result._v1 = v1
+    result._v2 = v2
+    #
+    return result
 
 # =============================================================================
 ## Product of two RooAbsReal objects
@@ -903,7 +952,11 @@ def var_mul ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    return Ostap.MoreRooFit.Product ( v1 , v2 , name , title )
+    result     = Ostap.MoreRooFit.Product ( v1 , v2 , name , title ) 
+    result._v1 = v1
+    result._v2 = v2
+    #
+    return result
 
 # =============================================================================
 ## Subtraction of two RooAbsReal objects
@@ -929,7 +982,12 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     # 
-    return Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title )
+    result     = Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title ) 
+    result._v1 = v1
+    result._v2 = v2
+    #
+    return result
+
 
 # =============================================================================
 ## Division of two RooAbsReal objects
@@ -954,8 +1012,11 @@ def var_div ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    return Ostap.MoreRooFit.Division ( v1 , v2 , name , title )
-
+    result     = Ostap.MoreRooFit.Division ( v1 , v2 , name , title ) 
+    result._v1 = v1
+    result._v2 = v2
+    #
+    return result
 
 # ==============================================================================
 ## "Fraction" of two RooAbsReal objects: f = a/(a+b)
@@ -981,7 +1042,11 @@ def var_fraction ( a , b , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    return Ostap.MoreRooFit.Fraction ( a, b , name , title ) 
+    result     = Ostap.MoreRooFit.Fraction ( v1 , v2 , name , title ) 
+    result._v1 = v1
+    result._v2 = v2
+    #
+    return result
 
 
 # ==============================================================================
@@ -1008,7 +1073,11 @@ def var_asymmetry ( a , b , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    return Ostap.MoreRooFit.Asymmetry ( a, b , name , title ) 
+    result     = Ostap.MoreRooFit.Asymmetry ( v1 , v2 , name , title ) 
+    result._v1 = v1
+    result._v2 = v2
+    #
+    return result
 
 
 # =============================================================================
@@ -1035,7 +1104,11 @@ def var_pow ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    return Ostap.MoreRooFit.Power ( v1 , v2 , name , title )
+    result     = Ostap.MoreRooFit.Power ( v1 , v2 , name , title ) 
+    result._v1 = v1
+    result._v2 = v2
+    #
+    return result
 
 # =============================================================================
 if '__main__' == __name__ :
