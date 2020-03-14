@@ -16,7 +16,7 @@
   1. reshuffle a bit the existins strustures
   1. add operations and operators for `FUNC`, `FUNC2` and `FUNC3` objects 
   1. improve baseclasess for functions and PDFs, add more operators/operations 
-
+  1. modify `roofuncs` avoiding the dangling references 
 
 ## Backward incompatible changes
 
