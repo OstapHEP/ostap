@@ -694,8 +694,6 @@ class Trainer(object):
                 
                 factory.BookMethod ( dataloader , *m )
            
-            print 'here-10'
-
             # Train MVAs
             ms = tuple( i[1] for i in  self.methods )
             logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
