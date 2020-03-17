@@ -54,7 +54,7 @@ else                       : logger = getLogger ( __name__                 )
 # =============================================================================
 from ostap.core.core                import Ostap 
 from ostap.core.ostap_types         import num_types
-from ostap.fitting.utils            import ParamsPoly , ShiftScalePoly  
+from ostap.fitting.utils            import ParamsPoly , ShiftScalePoly, MakeVar  
 from ostap.fitting.funbasic         import FUNC
 # =============================================================================
 ## @class BernsteinPoly
@@ -619,6 +619,9 @@ class Tanh ( FUNC ) :
             self.b  
             )
 
+# =============================================================================
+## local storage of temporary variables 
+KEEPER = MakeVar()
 # ==============================================================================
 ## exponent  \f$ f = \mathrm{e}^{ab}\f$
 #  @code
@@ -638,9 +641,11 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Exp ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    result    = Ostap.MoreRooFit.Exp ( a, b , name , title )
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -664,8 +669,10 @@ def var_log ( a , b = 1 , name = '' , title = '' ) :
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
     result    = Ostap.MoreRooFit.Log ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -689,8 +696,10 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
     result    = Ostap.MoreRooFit.Erf ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -715,8 +724,10 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
     result    = Ostap.MoreRooFit.Sin ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -740,9 +751,11 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Cos ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    result    = Ostap.MoreRooFit.Cos ( a, b , name , title )
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -765,9 +778,11 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Tan ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    result    = Ostap.MoreRooFit.Tan ( a, b , name , title )
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -791,9 +806,11 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Tanh ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    result    = Ostap.MoreRooFit.Tanh ( a, b , name , title )
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -816,9 +833,11 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Atan2 ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    result    = Ostap.MoreRooFit.Atan2 ( a, b , name , title )
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -842,8 +861,10 @@ def var_gamma ( a , b = 1 , name = '' , title = '' ) :
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
     result    = Ostap.MoreRooFit.Gamma ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -867,8 +888,10 @@ def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
     result    = Ostap.MoreRooFit.LGamma ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -892,11 +915,12 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
     result    = Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
-    result._a = a
-    result._b = b
+    #
+    KEEPER.aux_keep.add ( a )
+    KEEPER.aux_keep.add ( b )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
-
 
 # =============================================================================
 ## Sum of two RooAbsReal objects
@@ -922,9 +946,11 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    result     = Ostap.MoreRooFit.Addition ( v1 , v2 , name , title ) 
-    result._v1 = v1
-    result._v2 = v2
+    result     = Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
+    #
+    KEEPER.aux_keep.add ( v1 )
+    KEEPER.aux_keep.add ( v2 )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -953,10 +979,13 @@ def var_mul ( v1 , v2 , name = '' , title = '' ) :
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
     result     = Ostap.MoreRooFit.Product ( v1 , v2 , name , title ) 
-    result._v1 = v1
-    result._v2 = v2
+    #
+    KEEPER.aux_keep.add ( v1 )
+    KEEPER.aux_keep.add ( v2 )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
+
 
 # =============================================================================
 ## Subtraction of two RooAbsReal objects
@@ -983,8 +1012,10 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     # 
     result     = Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title ) 
-    result._v1 = v1
-    result._v2 = v2
+    #
+    KEEPER.aux_keep.add ( v1 )
+    KEEPER.aux_keep.add ( v2 )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -1013,10 +1044,13 @@ def var_div ( v1 , v2 , name = '' , title = '' ) :
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
     result     = Ostap.MoreRooFit.Division ( v1 , v2 , name , title ) 
-    result._v1 = v1
-    result._v2 = v2
+    #
+    KEEPER.aux_keep.add ( v1 )
+    KEEPER.aux_keep.add ( v2 )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
+
 
 # ==============================================================================
 ## "Fraction" of two RooAbsReal objects: f = a/(a+b)
@@ -1043,8 +1077,10 @@ def var_fraction ( a , b , name = '' , title = '' ) :
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
     result     = Ostap.MoreRooFit.Fraction ( v1 , v2 , name , title ) 
-    result._v1 = v1
-    result._v2 = v2
+    #
+    KEEPER.aux_keep.add ( v1 )
+    KEEPER.aux_keep.add ( v2 )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
 
@@ -1074,11 +1110,12 @@ def var_asymmetry ( a , b , name = '' , title = '' ) :
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
     result     = Ostap.MoreRooFit.Asymmetry ( v1 , v2 , name , title ) 
-    result._v1 = v1
-    result._v2 = v2
+    #
+    KEEPER.aux_keep.add ( v1 )
+    KEEPER.aux_keep.add ( v2 )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
-
 
 # =============================================================================
 ## pow for two RooAbsReal objects
@@ -1105,10 +1142,13 @@ def var_pow ( v1 , v2 , name = '' , title = '' ) :
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
     result     = Ostap.MoreRooFit.Power ( v1 , v2 , name , title ) 
-    result._v1 = v1
-    result._v2 = v2
+    #
+    KEEPER.aux_keep.add ( v1 )
+    KEEPER.aux_keep.add ( v2 )
+    KEEPEP.aux_keep.add ( result )
     #
     return result
+
 
 # =============================================================================
 if '__main__' == __name__ :

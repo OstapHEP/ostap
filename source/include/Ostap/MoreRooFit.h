@@ -6,6 +6,7 @@
 // ============================================================================
 // ROOT/RooFit 
 // ============================================================================
+#include "RVersion.h"
 #include "RooAddition.h"
 #include "RooProduct.h"
 #include "RooRealConstant.h"
@@ -900,6 +901,85 @@ namespace Ostap
       // ======================================================================
     }; //
     // ========================================================================
+    /** @class Id
+     *  Trivial variable: identical trnaformation 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2020-03-17
+     */ 
+    class Id : public RooAbsReal 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Id , 1 ) ;  // sum of RooAbsReal objects
+      // ========================================================================
+    public:
+      // ========================================================================
+      Id () = default ;
+      /// constructor with two variables 
+      Id ( const std::string& name  , 
+           const std::string& title , 
+           RooAbsReal&        a     ) ;
+      /// constructor with two variables 
+      Id ( RooAbsReal&        a           , 
+           const std::string& name  = ""  , 
+           const std::string& title = ""  ) 
+        : Id ( name , title , a )
+      {}
+      /// copy 
+      Id ( const Id&   right       , 
+           const char* newname = 0 ) ;
+      /// destructor 
+      virtual ~Id () ;
+      /// clone 
+      Id* clone ( const char* newname ) const override ;
+      // ======================================================================
+    public: // delegation 
+      // ======================================================================
+      Double_t    analyticalIntegral
+      ( Int_t            code            ,
+        const char*      range = nullptr ) const override
+      { return m_V.arg().analyticalIntegral    ( code , range ) ; }
+      //
+      Double_t    analyticalIntegralWN
+      ( Int_t            code            ,
+        const RooArgSet* normset         ,
+        const char*      range = nullptr ) const override
+      { return m_V.arg().analyticalIntegralWN  ( code , normset , range ) ; }
+      //
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&       allVars         ,
+        RooArgSet&       analVars        ,
+        const char*      range = nullptr ) const override 
+      { return m_V.arg().getAnalyticalIntegral   ( allVars , analVars , range ) ; }
+      //
+      Int_t    getAnalyticalIntegralWN
+      ( RooArgSet&       allVars         ,
+        RooArgSet&       analVars        ,
+        const RooArgSet* normset         ,
+        const char*      range = nullptr ) const override 
+      { return m_V.arg().getAnalyticalIntegralWN ( allVars , analVars , normset , range ) ; }
+      // ======================================================================
+//     protected:
+//       // ======================================================================
+// #if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+//       // ======================================================================
+//       RooSpan<double> evaluateBatch 
+//       ( std::size_t begin     , 
+//         std::size_t batchSize ) const override
+//       { return m_V.arg().evaluateBatch ( begin , batchSize  ) ; }
+//       // ======================================================================
+// #endif
+//       // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// variable
+      RooRealProxy m_V {} ; // variable
+      // ======================================================================
+    }; //    
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================
 } //                                                 The end of namespace Ostap

@@ -628,9 +628,7 @@ class Fun1D ( FUNC ) :
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert fun  and isinstance ( fun  , ROOT.RooAbsReal ) , "``fun''  must be ROOT.RooAbsReal"
 
-        if fun is xvar :
-            z   = ROOT.RooRealConstant.value ( 0        ) 
-            fun = Ostap.MoreRooFit.Addition  ( xvar , z )            
+        if fun is xvar : fun = Ostap.MoreRooFit.Id ( "" , "" , xvar )            
             
         if not name : name = 'Fun1D_%s' % fun.GetName() 
 
@@ -901,15 +899,9 @@ class Fun2D ( FUNC2 ) :
 
         assert not xvar is yvar, "xvar and yvar must be different!"
 
-        if fun is xvar :
-            z   = ROOT.RooRealConstant.value ( 0        ) 
-            fun = Ostap.MoreRooFit.Addition  ( xvar , z )
-
-        if fun is yvar :
-            z   = ROOT.RooRealConstant.value ( 0        ) 
-            fun = Ostap.MoreRooFit.Addition  ( yvar , z )
+        if fun is xvar : fun = Ostap.MoreRooFit.Addition  ( "" , "" , xvar )
+        if fun is yvar : fun = Ostap.MoreRooFit.Addition  ( "" , "" , yvar )
             
-
         if not name : name = 'Fun2D_%s' % fun.GetName() 
 
         FUNC2.__init__ ( self , name , xvar = xvar , yvar = yvar )
@@ -1237,17 +1229,9 @@ class Fun3D ( FUNC3 ) :
         assert not xvar is zvar, "xvar and zvar must be different!"
         assert not yvar is zvar, "yvar and zvar must be different!"
         
-        if fun is xvar :
-            z   = ROOT.RooRealConstant.value ( 0        ) 
-            fun = Ostap.MoreRooFit.Addition  ( xvar , z )
-
-        if fun is yvar :
-            z   = ROOT.RooRealConstant.value ( 0        ) 
-            fun = Ostap.MoreRooFit.Addition  ( yvar , z )
-            
-        if fun is zvar :
-            z   = ROOT.RooRealConstant.value ( 0        ) 
-            fun = Ostap.MoreRooFit.Addition  ( zvar , z )
+        if fun is xvar : fun = Ostap.MoreRooFit.Id ( xvar )
+        if fun is yvar : fun = Ostap.MoreRooFit.Id ( yvar )
+        if fun is zvar : fun = Ostap.MoreRooFit.Id ( zvar )
             
         if not name : name = 'Fun3D_%s' % fun.GetName() 
 

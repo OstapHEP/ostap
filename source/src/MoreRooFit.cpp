@@ -25,6 +25,7 @@
  *  @date 2019-11-21
  */
 // ============================================================================
+ClassImp(Ostap::MoreRooFit::Addition      )
 ClassImp(Ostap::MoreRooFit::Subtraction   )
 ClassImp(Ostap::MoreRooFit::Division      )
 ClassImp(Ostap::MoreRooFit::Fraction      )
@@ -41,6 +42,7 @@ ClassImp(Ostap::MoreRooFit::Atan2         )
 ClassImp(Ostap::MoreRooFit::Gamma         )
 ClassImp(Ostap::MoreRooFit::LGamma        )
 ClassImp(Ostap::MoreRooFit::IGamma        )
+ClassImp(Ostap::MoreRooFit::Id            )
 // ============================================================================
 namespace 
 {
@@ -70,6 +72,20 @@ namespace
                                 const TNamed&      b    )
   { return 
       title.empty () ? oper + "(" + a.GetName() + "," + b.GetName() + ")" : title  ; }
+  // ==========================================================================
+  inline std::string  name2_ ( const std::string&  name , 
+                               const std::string&  oper , 
+                               const TNamed&       b    )
+  { 
+    return 
+      name.empty () ? ( oper + "_" + b.GetName() ) : name ; 
+  }  
+  // ==========================================================================
+  inline std::string  title2_ ( const std::string& title , 
+                               const std::string&  oper  , 
+                               const TNamed&        b    )
+  { return 
+      title.empty () ? oper + "(" + b.GetName() + ")" : title  ; }
   // ==========================================================================
 }
 // ============================================================================
@@ -145,8 +161,8 @@ Ostap::MoreRooFit::Subtraction::Subtraction
   RooAbsReal&        a     , 
   RooAbsReal&        b     )
   : Addition 
-    ( name_  ( name , "subtract" , a , b )  ,
-      title_ ( name , "-"        , a , b )  , a , b )
+    ( name_  ( name  , "subtract" , a , b )  ,
+      title_ ( title , "-"        , a , b )  , a , b )
 {}
 // ============================================================================
 Ostap::MoreRooFit::Subtraction::Subtraction
@@ -259,8 +275,8 @@ Ostap::MoreRooFit::Division::Division
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
   : RooAbsReal 
-    ( name_  ( name , "divide" , a , b ).c_str() ,
-      title_ ( name , "/"      , a , b ).c_str() )
+    ( name_  ( name  , "divide" , a , b ).c_str() ,
+      title_ ( title , "/"      , a , b ).c_str() )
   , m_A ( "!A" , "A" , this , a ) 
   , m_B ( "!B" , "B" , this , b ) 
 {}
@@ -310,8 +326,8 @@ Ostap::MoreRooFit::Fraction::Fraction
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
   : Division 
-    ( name_  ( name , "divide" , a , b ) , 
-      title_ ( name , "/"      , a , b ) , a , b )
+    ( name_  ( name  , "divide" , a , b ) , 
+      title_ ( title , "/"      , a , b ) , a , b )
 {}
 // ============================================================================
 // copy constructor 
@@ -356,8 +372,8 @@ Ostap::MoreRooFit::Asymmetry::Asymmetry
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
   : Division 
-    ( name_  ( name , "asymmetry" , a , b ) , 
-      title_ ( name , " asym "    , a , b ) , a , b )
+    ( name_  ( name  , "asymmetry" , a , b ) , 
+      title_ ( title , " asym "    , a , b ) , a , b )
 {}
 // ============================================================================
 // copy constructor 
@@ -401,8 +417,8 @@ Ostap::MoreRooFit::Power::Power
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
   : Division 
-    ( name_  ( name , "pow" , a , b ) , 
-      title_ ( name , "** " , a , b ) , a , b )
+    ( name_  ( name  , "pow" , a , b ) , 
+      title_ ( title , "** " , a , b ) , a , b )
 {}
 // ============================================================================
 // copy constructor 
@@ -797,6 +813,48 @@ Double_t Ostap::MoreRooFit::IGamma::evaluate () const
   const long double b  = m_B ;
   //
   return Ostap::Math::igamma ( a * b ) ;
+}
+// ============================================================================
+
+// ============================================================================
+// constructor with variable
+// ============================================================================
+Ostap::MoreRooFit::Id::Id
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        v     ) 
+  : RooAbsReal 
+    ( name2_  ( name  , "Id" , v ).c_str() ,
+      title2_ ( title , "Id" , v ).c_str() )
+  , m_V ( "!V" , "V" , this , v ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::Id::Id
+( const Ostap::MoreRooFit::Id& right , 
+  const char*               name  ) 
+  : RooAbsReal ( right , name ) 
+  , m_V ( "!V" , this , right.m_V ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Id::~Id(){}
+// ============================================================================
+// cloning
+// ============================================================================
+Ostap::MoreRooFit::Id* 
+Ostap::MoreRooFit::Id::clone ( const char* newname ) const 
+{ return new Id( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::Id::evaluate () const 
+{
+  const double v = m_V ;
+  //
+  return v ;
 }
 // ============================================================================
 

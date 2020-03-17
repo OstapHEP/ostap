@@ -17,7 +17,9 @@
   1. add operations and operators for `FUNC`, `FUNC2` and `FUNC3` objects 
   1. improve baseclasess for functions and PDFs, add more operators/operations 
   1. modify `roofuncs` avoiding the dangling references 
-
+  1. Add `Ostap::MoreRooFit::Id`
+  1. make use of `Ostap::MoreRoofit::Id` in `Fun(1,2,3)D`
+  
 ## Backward incompatible changes
 
 ## Bug fixes:  
