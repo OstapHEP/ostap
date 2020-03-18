@@ -43,7 +43,13 @@ __all__     = (
     'var_atan2'      , ## inverse tangent     function for RooAbsReal objects           
     'var_gamma'      , ## gamma               function for RooAbsReal objects           
     'var_lgamma'     , ## logaruithm of gamma function for RooAbsReal objects           
-    'var_igamma'     , ## 1/gamma             function for RooAbsReal objects           
+    'var_igamma'     , ## 1/gamma             function for RooAbsReal objects
+    'scale_var'      , ## var_mul
+    'add_var'        , ## var_sum
+    'sum_var'        , ## var_sum
+    'ratio_var'      , ## var_div
+    'fraction_var'   , ## var_fraction
+    'asymmetry_var'  , ## var_asymmetry
     )
 # =============================================================================
 import ROOT, math
@@ -1117,6 +1123,8 @@ def var_asymmetry ( a , b , name = '' , title = '' ) :
     #
     return result
 
+
+
 # =============================================================================
 ## pow for two RooAbsReal objects
 #  @code
@@ -1148,6 +1156,14 @@ def var_pow ( v1 , v2 , name = '' , title = '' ) :
     KEEPEP.aux_keep.add ( result )
     #
     return result
+
+
+scale_var     = var_mul
+add_var       = var_sum
+sum_var       = var_sum
+ratio_var     = var_div
+fraction_var  = var_fraction
+asymmetry_var = var_asymmetry
 
 
 # =============================================================================
