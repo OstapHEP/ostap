@@ -20,8 +20,6 @@ __all__     = (
     'SETVAR'          , ## context manager to preserve the current value for RooRealVar
     'FIXVAR'          , ## context manager to fix/unfix variables
     'KeepBinning'     , ## context manager to preserve the binning scheme
-    'scale_var'       , ## construct "easy" RooFormulaVar  
-    'add_var'         , ## construct "easy" RooFormulaVar
     ## ``converters''
     'total_ratio'     , ## ``converter'': A,B ->  (T,R) == ( A+B , A/B     )
     'total_ratio'     , ## ``converter'': A,B ->  (T,F) == ( A+B , A/(A+B) ) 
@@ -1060,5 +1058,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
