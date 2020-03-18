@@ -19,6 +19,7 @@
   1. modify `roofuncs` avoiding the dangling references 
   1. Add `Ostap::MoreRooFit::Id`
   1. make use of `Ostap::MoreRoofit::Id` in `Fun(1,2,3)D`
+  1. exclude serialization in `test_fitting_models3_2D` for ROOT 6.18 & python3
   
 ## Backward incompatible changes
 
