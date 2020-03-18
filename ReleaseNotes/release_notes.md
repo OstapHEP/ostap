@@ -21,6 +21,7 @@
   1. make use of `Ostap::MoreRoofit::Id` in `Fun(1,2,3)D`
   1. exclude serialization in `test_fitting_models3_2D` for ROOT 6.18 & python3
   1. remove duplication betwen `ostap/fitting/roofuncs` and `ostap/fitting/variables`
+  1. disable `pathos` for python_version<=3.7
   
 ## Backward incompatible changes
 

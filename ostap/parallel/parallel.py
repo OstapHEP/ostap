@@ -48,7 +48,7 @@ if not worker :
 
 # ===============================================================================
 from sys import version_info  as python_version
-if 3 == python_version.major and 6 >= python_version.minor :
+if 3 == python_version.major and 7 >= python_version.minor :
     ## for python 3.6 dill fails to serialize ROOT objects
     worker = 'GAUDIMP'
     
