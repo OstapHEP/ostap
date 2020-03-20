@@ -58,8 +58,7 @@ else                      : logger = getLogger ( __name__                   )
 # =============================================================================
 logger.debug ( "Absract class for  (c)Pickle-based ``compressed''-database")
 # =============================================================================
-## to be compatible between  Python2 and Python3 
-PROTOCOL = 2
+PROTOCOL = -1 
 ENCODING = 'utf-8'
 # ==============================================================================
 import os, sys, abc, shelve, shutil , time 

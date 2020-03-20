@@ -141,6 +141,7 @@ def test_db() :
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
         db['vars'    ] = varset
+        for m in models : db['model:' + m.name ] = m
         db['models'  ] = models
         db['dataset' ] = dataset
         db.ls()

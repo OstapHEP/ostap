@@ -20,7 +20,7 @@ __all__     = (
     'Fun3D'             , ## wrapper for 3D-function
     )
 # =============================================================================
-import ROOT, math
+import ROOT, math, sys 
 from   ostap.core.ostap_types        import list_types , num_types, is_good_number      
 from   ostap.core.core               import Ostap , valid_pointer
 from   ostap.fitting.variables       import SETVAR
@@ -34,17 +34,20 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.funbasic' )
 else                       : logger = getLogger ( __name__                 )
 # =============================================================================
+py2 = 2 >= sys.version_info.major  
+# =============================================================================
+## helper factory function
+def func_factory ( klass , config ) :
+    """Helper factory function, used for unpickling"""
+    return klass ( **config ) 
+# =============================================================================
 ## @class FUNC
 #  Helper base class for impolementation of various (Roo)Function-wrappers
 class FUNC(MakeVar) :
     """Helper base class for implementation of various (Roo)Function-wrappers
     """
     def __new__  ( cls  , *args  , **kwargs  ) :
-
-        obj = super(FUNC,cls).__new__( cls )
-        
-        return obj
-    
+        return super(FUNC,cls).__new__( cls )
         
     def __init__ ( self , name , xvar = None ) :
         
@@ -89,12 +92,16 @@ class FUNC(MakeVar) :
 
     ## pickling via reduce 
     def __reduce__ ( self ) :
+        print ('REDUCE', self.config)
+        for k in self.config :
+            print( 'KEY/value/type %s/%s/%s'  % ( k , self.config[k], type(self.config[k])))
+        if py2 :  return func_factory , ( type(self) , self.config, )
         return type(self).factory , ( self.config, )
     ## factory method 
     @classmethod
     def factory ( klass , config ) :
-        """Factory method, used for unpickling"""
-        return klass ( **config ) 
+         """Factory method, used for unpickling"""
+         return klass ( **config ) 
         
     ## conversion to string 
     def __str__ (  self ) :

@@ -1171,6 +1171,7 @@ def test_bwi () :
     models.add ( model )
 
 
+import pickle 
 
 # =============================================================================
 ## check that everything is serializable
@@ -1182,6 +1183,7 @@ def test_db() :
     with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
         db['mass,vars'] = mass, varset0
         db['dataset'  ] = dataset0
+        for m in models : db['model:' + m.name ] = m
         db['models'   ] = models
         db.ls() 
         
