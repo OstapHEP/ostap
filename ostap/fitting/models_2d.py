@@ -1052,14 +1052,15 @@ class ExpoPSPol2D_pdf(PolyBase2) :
                    psy = None       ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
                    nx  = 2          ,   ##  polynomial degree in X 
                    ny  = 2          ,   ##  polynomial degree in Y 
-                   tau = None       ) : ##  the exponent 
+                   tau = None       , ##  the exponent 
+                   the_phis = None  ) :
         
         ## check arguments 
         assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
         assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
 
         ## the base 
-        PolyBase2.__init__ ( self , name , xvar , yvar , ( nx + 1 ) * ( ny + 1 ) - 1 )
+        PolyBase2.__init__ ( self , name , xvar , yvar , ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis = the_phis )
         
         limits_tau = () 
         if self.xminmax() : 

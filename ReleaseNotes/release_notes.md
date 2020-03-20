@@ -22,6 +22,7 @@
   1. exclude serialization in `test_fitting_models3_2D` for ROOT 6.18 & python3
   1. remove duplication betwen `ostap/fitting/roofuncs` and `ostap/fitting/variables`
   1. disable `pathos` for python_version<=3.7
+  1. change pickling for all `FUNC`-based objects
   
 ## Backward incompatible changes
 

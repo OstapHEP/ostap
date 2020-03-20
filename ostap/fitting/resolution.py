@@ -543,7 +543,7 @@ class ResoBukin (RESOLUTION) :
             'xvar'     : self.xvar  ,
             'sigma'    : self.sigma ,
             'mean'     : self.mean  ,
-            'who'      : self.rho   ,
+            'rho'      : self.rho   ,
             'fudge'    : self.fudge
             }
 

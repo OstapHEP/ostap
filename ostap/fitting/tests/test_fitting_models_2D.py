@@ -336,12 +336,8 @@ if '__main__' == __name__ :
     test_spline2D     () 
     test_splinesym2D  () 
     
-    from sys import version_info as python_version
-    if 61800 <= ROOT.gROOT.GetVersionInt() < 62000 and 3 == python_version.major :
-        pass
-    else  :
-        ## check finally that everything is serializeable:
-        test_db           ()          
+    ## check finally that everything is serializeable:
+    test_db           ()          
     
 # =============================================================================
 ##                                                                     The END 

@@ -38,7 +38,14 @@ else                       : logger = getLogger ( __name__                 )
 #  Helper base class for impolementation of various (Roo)Function-wrappers
 class FUNC(MakeVar) :
     """Helper base class for implementation of various (Roo)Function-wrappers
-    """    
+    """
+    def __new__  ( cls  , *args  , **kwargs  ) :
+
+        obj = super(FUNC,cls).__new__( cls )
+        
+        return obj
+    
+        
     def __init__ ( self , name , xvar = None ) :
         
         ## name is defined via base class MakeVar 
@@ -79,7 +86,16 @@ class FUNC(MakeVar) :
         self.__draw_options = {} ## predefined drawing options for this FUNC/PDF
 
         self.config = { 'name' : self.name , 'xvar' : self.xvar  }
-                
+
+    ## pickling via reduce 
+    def __reduce__ ( self ) :
+        return type(self).factory , ( self.config, )
+    ## factory method 
+    @classmethod
+    def factory ( klass , config ) :
+        """Factory method, used for unpickling"""
+        return klass ( **config ) 
+        
     ## conversion to string 
     def __str__ (  self ) :
         return '%s(%s,xvar=%s)' % ( self.__class__.__name__ , self.name , self.xvar.name )
@@ -320,10 +336,13 @@ class FUNC(MakeVar) :
         ## update (if needed)
         conf.update ( kwargs )
 
-        KLASS = self.__class__
-        cloned = KLASS ( **conf )
-        
+        ## KLASS = self.__class__
+        ## cloned = KLASS ( **conf )
+
+        cloned = self.factory ( conf )
+            
         return cloned 
+            
 
     # =========================================================================
     ## make a copy/clone for the given function/PDF 

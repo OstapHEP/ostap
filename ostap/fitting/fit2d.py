@@ -1631,7 +1631,7 @@ class Fit2D (PDF2) :
             'ss'         : self.SS              ,
             'sb'         : self.SB              ,
             'bs'         : self.BS              ,
-            'BB'         : self.BB              ,
+            'bb'         : self.BB              ,
             'components' : self.more_components ,
             'xvar'       : self.xvar            , 
             'yvar'       : self.yvar            , 
