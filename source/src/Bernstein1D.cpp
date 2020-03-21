@@ -154,15 +154,24 @@ Ostap::Math::Positive::Positive
 // // ============================================================================
 // // constructor from the list of phases 
 // // ============================================================================
-// Ostap::Math::Positive::Positive
-// ( const std::vector<double>& pars ,
-//   const double               xmin ,
-//   const double               xmax )
-//   : m_bernstein ( pars.size() , xmin , xmax )
-//   , m_sphere    ( pars , 3 ) 
-// {
-//   updateBernstein () ;
-// }
+ Ostap::Math::Positive::Positive
+ ( const std::vector<double>& pars ,
+   const double               xmin ,
+   const double               xmax )
+   : m_bernstein ( pars.size() , xmin , xmax )
+   , m_sphereA   ( 1 ) 
+   , m_sphereR   (std::max ( 1 , int(pars.size())- 1 )) 
+  , m_rs        ( std::max ( 1 , int(pars.size())- 1 ) , 0.0  ) 
+  , m_v1        ( pars.size() + 1 , 0.0 ) 
+  , m_v2        ( pars.size() + 1 , 0.0 ) 
+  , m_aux       ( pars.size() + 1 , 0.0 ) 
+ {
+    for ( unsigned short  i = 0 ; i < pars.size() ; ++i ){
+      setPar(i,pars[i]);
+    }
+
+   updateBernstein () ;
+ }
 // // ============================================================================
 // // constructor from the sphere with coefficients  
 // // ============================================================================
