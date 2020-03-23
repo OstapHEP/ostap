@@ -1,0 +1,26 @@
+jobs:
+- job: osx
+  pool:
+    vmImage: macOS-10.13
+  timeoutInMinutes: 360
+  steps:
+  - script: |
+     brew install root
+     mkdir build
+     cd build
+     cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install
+    displayName: 'build'
+  - script: |
+     export PYTHONPATH=/usr/local/lib/root:$PYTHONPATH
+     export PATH=/usr/local/bin/root:$PATH
+     export LD_LIBRARY_PATH=/usr/local/lib/root/:$LD_LIBRARY_PATH
+     source build/INSTALL/thisostap.sh
+     cd build
+     ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j 16
+    displayName: 'test'
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName:   osx
+      targetPath: '$(System.DefaultWorkingDirectory)/build'
+    condition: always()
+  

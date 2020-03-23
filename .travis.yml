@@ -16,6 +16,7 @@ install:
   - mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install && cd ../
   - pip install coverage coveralls
 
+
 script: source build/INSTALL/thisostap.sh && nosetests  --with-coverage  --cover-package=ostap
 
 after_success:
