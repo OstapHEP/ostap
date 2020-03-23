@@ -1,7 +1,7 @@
 Setup
 -----
 
-There are several options to start working with ostap, you can build ostap on the Linux or lxplus/7 and also run the docker container.  
+There are several options to start working with ostap, you can build ostap on the Linux or lxplus/7, run the docker container and futhermore now the ostap  is available on conda and SWAN services.  
 
 Linux
 -----
@@ -34,6 +34,7 @@ or to get the head version:
 
     git pull origin master
 For the latest tag check the page https://github.com/OstapHEP/ostap/releases
+
 Docker
 -----
 We also provide Dockerfile to build the ostap image. You can run Ostap interactively using the command line or via Docker Desktop which is available on MacOS and Windows. To create the docker image from the Ostap directory run:
