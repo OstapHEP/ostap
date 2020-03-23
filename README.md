@@ -44,7 +44,7 @@ Setup
 
 There are several possibilities to start working with Ostap, you can build Ostap on the Linux or lxplus/7, run the docker container and now the Ostap is available on conda and SWAN.   
 
-The possible  setup ways are desctibed in  [here](INSTALL.md)
+The possible  setup options are described  [here](INSTALL.md)
 
 [ROOT]: http://root.cern.ch
 [RooFit]: https://root.cern.ch/roofit 
